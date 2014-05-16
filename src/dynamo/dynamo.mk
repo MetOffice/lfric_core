@@ -44,7 +44,7 @@ $(OBJ_DIR)/%.o: %.f90 | $(OBJ_DIR)
 
 $(OBJ_DIR)/$(EXE): $($(shell echo $(EXE) | tr a-z A-Z)_OBJS)
 	@echo "Linking $@"
-	$(FC) $(FFLAGS) -o $@ $^
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $^
 
 .PHONY: clean
 clean:

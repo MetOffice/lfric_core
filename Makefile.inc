@@ -32,7 +32,7 @@ ifeq '$(COMPILER)' 'ifort'
   # Intel compiler
   $(info ** Chosen Intel Fortran compiler)
   FC     = ifort
-  FFLAGS = -g -O0 -xhost
+  FFLAGS += -g -O0 -xhost
   IFORT_VERSION = $(shell ifort -v 2>&1 | awk '{ print $$NF }' \
                    | awk -F . '{ printf "%03i%02i%02i", $$1, $$2, $$3 }')
   $(info ** Version $(IFORT_VERSION))
@@ -41,14 +41,14 @@ else ifeq '$(COMPILER)' 'xlf'
   # IBM compiler
   $(info ** Chosen IBM XL Fortran compiler)
   FC     = xlf
-  FFLAGS =
+  FFLAGS +=
   F_MOD_DESTINATION_ARG = -qmoddir=$(OBJ_DIR)
 
 else ifeq '$(COMPILER)' 'gfortran'
   # GNU compiler
   $(info ** Chosen GNU Fortran compiler)
   FC     = gfortran
-  FFLAGS = -g -O0
+  FFLAGS += -g -O0
   FWARNINGFLAGS = -Wall -Werror
   F_MOD_DESTINATION_ARG = -J $(OBJ_DIR)
   GFORTRAN_VERSION = $(shell $(FC95) --version 2>&1 \

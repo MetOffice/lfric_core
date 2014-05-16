@@ -6,6 +6,7 @@
 ##############################################################################
 
 IGNORE_DEPENDENCIES = netcdf
+EXTERNAL_LIBRARIES = netcdff
 
 ROOT = ../..
 include $(ROOT)/Makefile.inc
@@ -16,6 +17,8 @@ IGNORE_DEPENDENCIES := $(patsubst %,-ignore %,$(IGNORE_DEPENDENCIES))
 export SRC        = $(wildcard *.F90)
 export OBJ_DIR    = $(BUILD_DIR)/dynamo
 export DEP_FILE   = dependencies.mk
+
+export LDFLAGS += $(patsubst %, -l%,$(EXTERNAL_LIBRARIES))
 
 OBJ_SUBDIRS = $(patsubst %,$(OBJ_DIR)/%,$(SUBDIRS))
 
