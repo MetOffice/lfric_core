@@ -13,7 +13,7 @@ module field_mod_test
                                       field_proxy_type
   use function_space_mod,      only : function_space_type, W0
   use constants_mod,           only : r_def, i_def
-  use mesh_mod,                only : num_cells, v_unique_dofs, num_layers
+  use mesh_mod,                only : num_cells, w_unique_dofs, num_layers
   use gaussian_quadrature_mod, only : gaussian_quadrature_type, &
                                       ngp_h, ngp_v, GQ3
   use basis_function_mod,      only : w0_basis, &
@@ -50,8 +50,8 @@ contains
     num_dofs=4
     num_unique_dofs = 100
     do i = 1, 4
-      v_unique_dofs(i,1)=num_unique_dofs
-      v_unique_dofs(i,2)=num_dofs
+      w_unique_dofs(i,1)=num_unique_dofs
+      w_unique_dofs(i,2)=num_dofs
     enddo
 
     if ( allocated(w0_basis) ) then
@@ -61,10 +61,10 @@ contains
       deallocate( w0_dofmap )
     end if
 
-    allocate(w0_basis(1,v_unique_dofs(1,2),ngp_h,ngp_v))
-    allocate(w0_diff_basis(3,v_unique_dofs(1,2),ngp_h,ngp_v))
-    allocate(w0_nodal_coords(3,v_unique_dofs(1,2)))
-    allocate( w0_dofmap(0:num_cells,v_unique_dofs(1,2)) )
+    allocate(w0_basis(1,w_unique_dofs(1,2),ngp_h,ngp_v))
+    allocate(w0_diff_basis(3,w_unique_dofs(1,2),ngp_h,ngp_v))
+    allocate(w0_nodal_coords(3,w_unique_dofs(1,2)))
+    allocate( w0_dofmap(0:num_cells,w_unique_dofs(1,2)) )
 
     w0_basis=sqrt(2.0)
     w0_diff_basis=atan(4.0)

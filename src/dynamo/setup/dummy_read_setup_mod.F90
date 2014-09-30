@@ -14,8 +14,8 @@
 !> @param[out] num_cells the number of cells in a horizontal layer
 !> @param[out] num_layers the number of vertical layers
 !> @param[out] element_order the polynomial order of the elmenets
-!> @param[out] v_unique_dofs the number of unique dofs for the function spaces
-!> @param[out] v_dof_entity the number of dofs for each function space on each grid entity
+!> @param[out] w_unique_dofs the number of unique dofs for the function spaces
+!> @param[out] w_dof_entity the number of dofs for each function space on each grid entity
 
 module dummy_read_setup_mod
 
@@ -26,7 +26,7 @@ implicit none
 contains
 
 subroutine dummy_read_setup(filename ,num_cells, num_layers, element_order, &
-     v_unique_dofs,v_dof_entity)
+     w_unique_dofs,w_dof_entity)
 
   use mesh_generator_mod,    only : mesh_generator_init,        &
                                     mesh_generator_cubedsphere, &
@@ -38,8 +38,8 @@ subroutine dummy_read_setup(filename ,num_cells, num_layers, element_order, &
   implicit none
   character(*), intent(in)    :: filename 
   integer , intent(out)       :: num_cells,  num_layers, element_order
-  integer, intent(out)        :: v_unique_dofs(4,2)
-  integer, intent(out)        :: v_dof_entity(4,0:3)
+  integer, intent(out)        :: w_unique_dofs(4,2)
+  integer, intent(out)        :: w_dof_entity(4,0:3)
   logical                     :: l_spherical
   real(kind=r_def), parameter :: delta = 1.0_r_def
 
@@ -63,7 +63,7 @@ subroutine dummy_read_setup(filename ,num_cells, num_layers, element_order, &
 ! Extend connectivity ( cells->faces, cells->edges )  
   call mesh_connectivity(num_cells)    
 ! initialise numbers of dofs    
-  call num_dof_init(num_cells,num_layers,element_order,v_unique_dofs,v_dof_entity)
+  call num_dof_init(num_cells,num_layers,element_order,w_unique_dofs,w_dof_entity)
     
   return
   

@@ -61,29 +61,29 @@ contains
 !> @param[in] nlayers the number of vertical layers
 !> @param[in] function_space the function space
 !> @param[in] ndf_entity the number of dofs on each grid entity
-subroutine get_dofmap(nlayers, v_dof_entity, &
-                      ncell, v_unique_dofs )
+subroutine get_dofmap(nlayers, w_dof_entity, &
+                      ncell, w_unique_dofs )
   
   implicit none
   
   integer, intent(in)       :: nlayers
-  integer, intent(in)       :: v_dof_entity(4,0:3)
+  integer, intent(in)       :: w_dof_entity(4,0:3)
   integer, intent(in)       :: ncell
-  integer, intent(in)       :: v_unique_dofs(4,2) 
+  integer, intent(in)       :: w_unique_dofs(4,2) 
 
-  allocate( w0_dofmap(0:ncell,v_unique_dofs(1,2)) )
-  allocate( w1_dofmap(0:ncell,v_unique_dofs(2,2)) )
-  allocate( w2_dofmap(0:ncell,v_unique_dofs(3,2)) )
-  allocate( w3_dofmap(0:ncell,v_unique_dofs(4,2)) )
+  allocate( w0_dofmap(0:ncell,w_unique_dofs(1,2)) )
+  allocate( w1_dofmap(0:ncell,w_unique_dofs(2,2)) )
+  allocate( w2_dofmap(0:ncell,w_unique_dofs(3,2)) )
+  allocate( w3_dofmap(0:ncell,w_unique_dofs(4,2)) )
   
   call dofmap_populate(ncell, nlayers, &
-                       v_unique_dofs(1,2), v_dof_entity(1,:), w0_dofmap)
+                       w_unique_dofs(1,2), w_dof_entity(1,:), w0_dofmap)
   call dofmap_populate(ncell, nlayers, &
-                       v_unique_dofs(2,2), v_dof_entity(2,:), w1_dofmap)
+                       w_unique_dofs(2,2), w_dof_entity(2,:), w1_dofmap)
   call dofmap_populate(ncell, nlayers, &
-                       v_unique_dofs(3,2), v_dof_entity(3,:), w2_dofmap)
+                       w_unique_dofs(3,2), w_dof_entity(3,:), w2_dofmap)
   call dofmap_populate(ncell, nlayers, &
-                       v_unique_dofs(4,2), v_dof_entity(4,:), w3_dofmap)
+                       w_unique_dofs(4,2), w_dof_entity(4,:), w3_dofmap)
 
 end subroutine get_dofmap
 
@@ -258,8 +258,8 @@ end subroutine dofmap_populate
 
 !> Subroutine to compute the orientation of vectors
 !> @param[in] ncell the number of horizontal cells
-!> @param[in] v_unique_dofs The number of dofs in each function space
-subroutine get_orientation(ncell,v_unique_dofs)
+!> @param[in] w_unique_dofs The number of dofs in each function space
+subroutine get_orientation(ncell,w_unique_dofs)
 !-----------------------------------------------------------------------------
 ! Subroutine to read orientation
 !-----------------------------------------------------------------------------
@@ -267,17 +267,17 @@ subroutine get_orientation(ncell,v_unique_dofs)
   implicit none
 
   integer, intent(in) :: ncell
-  integer, intent(in) :: v_unique_dofs(4,2)
+  integer, intent(in) :: w_unique_dofs(4,2)
 
-  allocate( w0_orientation(0:ncell,v_unique_dofs(1,2)) )
-  allocate( w1_orientation(0:ncell,v_unique_dofs(2,2)) )
-  allocate( w2_orientation(0:ncell,v_unique_dofs(3,2)) )
-  allocate( w3_orientation(0:ncell,v_unique_dofs(4,2)) )
+  allocate( w0_orientation(0:ncell,w_unique_dofs(1,2)) )
+  allocate( w1_orientation(0:ncell,w_unique_dofs(2,2)) )
+  allocate( w2_orientation(0:ncell,w_unique_dofs(3,2)) )
+  allocate( w3_orientation(0:ncell,w_unique_dofs(4,2)) )
 
-  call orientation_populate(ncell, v_unique_dofs(1,2), w0_orientation)
-  call orientation_populate(ncell, v_unique_dofs(2,2), w1_orientation)
-  call orientation_populate(ncell, v_unique_dofs(3,2), w2_orientation)
-  call orientation_populate(ncell, v_unique_dofs(4,2), w3_orientation)
+  call orientation_populate(ncell, w_unique_dofs(1,2), w0_orientation)
+  call orientation_populate(ncell, w_unique_dofs(2,2), w1_orientation)
+  call orientation_populate(ncell, w_unique_dofs(3,2), w2_orientation)
+  call orientation_populate(ncell, w_unique_dofs(4,2), w3_orientation)
 
 end subroutine get_orientation
 
@@ -298,7 +298,7 @@ subroutine orientation_populate(ncells,ndof_sum,orientation)
 
   do cell = 0, ncells
      do df = 1, ndof_sum
-       orientation(ncells,df) = 1
+       orientation(cell,df) = 1
      end do
   end do
 

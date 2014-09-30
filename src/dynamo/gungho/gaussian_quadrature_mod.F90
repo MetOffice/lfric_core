@@ -47,22 +47,6 @@ contains
   !! @return real the value of the function thus integrated
   procedure :: integrate
 
-  !> function evaluate 1D basis function of arbitrary order at xk
-  !! @param order The order of the basis function
-  !! @param ik quadrature point to evaluate basis function at
-  !! @param xindex The point at which the function is unity
-  !! @param x The grid points
-  !! @param bindex The index of the basis function
-  procedure :: poly1d
-
-  !> function evaluate 1D basis function of arbitrary order at xk
-  !! @param order The order of the basis function
-  !! @param ik quadrature point to evaluate basis function at
-  !! @param xindex The point at which the function is unity
-  !! @param x The grid points
-  !! @param bindex The index of the basis function
-  procedure :: poly1d_deriv  
-  
   !> function returns the 2-d array of horizontal quadrature points
   procedure :: get_xgp_h
   
@@ -256,109 +240,6 @@ function integrate(self,f)
   return
 end function integrate
 
-!----------------------------------------------------------------------------
-! Evaluate 1D basis functions of arbitary order at the points of quadrature
-!----------------------------------------------------------------------------
-!> Function computes the value of a arbritrary order polynomial at a given point
-!> @param[in] self the calling quadrature rule
-!> @param[in] order the order of the polynomial
-!> @param[in] ik the index of the quadrature point array to evaluate the polynomial at
-!> @param[in] xindex the value of x at which the polynomial = 1
-!> @param[in] x the coordinate array
-!> @param[in] bindex the index of x at which x(bindex) = xindex
-function poly1d(self, order, ik, xindex, x , bindex)
-  implicit none
-  class(gaussian_quadrature_type), intent(in) :: self
-  ! order of the basis function 
-  integer,                         intent(in) :: order
-  ! quadrature point to evaluate basis function at
-  integer,                         intent(in) :: ik
-  ! Point function is unity at
-  real(kind=r_def),                intent(in) :: xindex
-  ! Index of basis function
-  integer,                         intent(in) :: bindex
-  ! grid points
-  real(kind=r_def),                intent(in) :: x(order+bindex)
-
-  real(kind=r_def) :: poly1d
-  ! internal tempories
-  ! loop counters
-  integer       :: j
-  
-  poly1d = 1.0 
-  
-  do j=1,bindex-1
-     poly1d = poly1d*(self%xgp(ik)-x(j))/(xindex-x(j))
-  end do
-  do j=bindex+1,order+1
-     poly1d = poly1d*(self%xgp(ik)-x(j))/(xindex-x(j))
-  end do
-  
-  return
-end function poly1d
-
-!-----------------------------------------------------------------------------
-! evaluate derivative of 1D basis function of arbitrary order at xk
-!-----------------------------------------------------------------------------
-!> Function computes the value of the derivative of a arbritrary order polynomial at a given point
-!> @param[in] self the calling quadrature rule
-!> @param[in] order the order of the polynomial
-!> @param[in] ik the index of the quadrature point array to evaluate the polynomial at
-!> @param[in] xindex the value of x at which the polynomial = 1
-!> @param[in] x the coordinate array
-!> @param[in] bindex the index of x at which x(bindex) = xindex
-function poly1d_deriv(self, order,ik,xindex,x,bindex)
-  
-  implicit none
-  class(gaussian_quadrature_type), intent(in) :: self  
-  ! Order of basis function
-  integer,                         intent(in) :: order
-  ! Index of basis function
-  integer,                         intent(in) :: bindex
-  ! quadrature point to evaluate basis function at
-  integer,                         intent(in) :: ik
-  ! Point function is unity at
-  real(kind=r_def),                intent(in) :: xindex
-  ! grid points
-  real(kind=r_def),                intent(in) :: x(order+1)
-
-  ! tempories
-  real(kind=r_def) :: poly1d_deriv
-  real(kind=r_def) :: denom,t
-  integer          :: k, j
-
-
-  poly1d_deriv = 0.0_r_def
-  denom = 1.0_r_def
-
-  do j=1,bindex-1
-    denom = denom * 1.0_r_def/(xindex-x(j))  
-  end do
-  do j=bindex+1,order+1
-    denom = denom * 1.0_r_def/(xindex-x(j))  
-  end do
-
-  do k=1,bindex-1
-    t = 1.0_r_def
-    do j=1,order+1
-      if (j .ne. bindex .and. j .ne. k ) then
-        t = t * (self%xgp(ik) - x(j))
-      end if
-    end do
-    poly1d_deriv = poly1d_deriv + t*denom
-  end do  
-  do k=bindex+1,order+1
-    t = 1.0_r_def
-    do j=1,order+1
-      if (j .ne. bindex .and. j .ne. k ) then
-        t = t * (self%xgp(ik) - x(j))
-      end if
-    end do
-    poly1d_deriv = poly1d_deriv + t*denom
-  end do 
-
-  end function poly1d_deriv
-  
 !-----------------------------------------------------------------------------
 ! Return Gaussian quadrature points
 !-----------------------------------------------------------------------------

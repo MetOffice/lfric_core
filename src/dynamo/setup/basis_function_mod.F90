@@ -23,7 +23,8 @@ module basis_function_mod
   use constants_mod, only: r_def
   use gaussian_quadrature_mod, only: gaussian_quadrature_type, GQ3, &
                                      ngp_v, ngp_h !parameter for how many GQ points
-
+  use polynomial_mod, only: poly1d, poly1d_deriv
+     
   implicit none
 
   !> 4-dim allocatable arrays of reals which hold the values of the basis
@@ -70,6 +71,16 @@ module basis_function_mod
   integer, allocatable :: w2_dof_on_vert_boundary(:,:)
   integer, allocatable :: w3_dof_on_vert_boundary(:,:)
 
+  integer, allocatable :: w0_basis_order(:,:), w0_basis_index(:,:), &
+                          w1_basis_order(:,:), w1_basis_index(:,:), &
+                          w2_basis_order(:,:), w2_basis_index(:,:), &
+                          w3_basis_order(:,:), w3_basis_index(:,:)
+  real(kind=r_def), allocatable :: w0_basis_vector(:,:), w0_basis_x(:,:,:), &
+                                   w1_basis_vector(:,:), w1_basis_x(:,:,:), &
+                                   w2_basis_vector(:,:), w2_basis_x(:,:,:), &
+                                   w3_basis_vector(:,:), w3_basis_x(:,:,:)
+
+
 contains 
 
     !> Subroutine to read test/trial functions on quadrature points. (at
@@ -77,49 +88,73 @@ contains
     !> and because we're only testing with a simpel system, just 
     !> compute the basis functions and nodal co-ordinates)
   subroutine get_basis(k, &
-                       v_unique_dofs, v_dof_entity)
+                       w_unique_dofs, w_dof_entity)
 
     ! order of elements
     integer, intent(in) :: k
-    integer, intent(in) :: v_unique_dofs(4,2), v_dof_entity(4,0:3)
+    integer, intent(in) :: w_unique_dofs(4,2), w_dof_entity(4,0:3)
 
     integer :: i, jx, jy, jz, order, idx, j1, j2, h_ctr
     integer :: j(3), j2l_edge(12,3), j2l_face(6,3), face_idx(6), edge_idx(12,2)
     integer, allocatable :: lx(:), ly(:), lz(:)
     real(kind=r_def)     :: fx, fy, fz, gx, gy, gz, dfx, dfy, dfz
     real(kind=r_def)     :: x1(k+2), x2(k+2)
-    !real(kind=r_def)     :: unit_vec_w2(nw2,3), unit_vec_w1(nw1,3)
     real(kind=r_def), allocatable    :: unit_vec_w2(:,:), unit_vec_w1(:,:)
     type( gaussian_quadrature_type ), pointer :: gq
+    real(kind=r_def), allocatable :: xqp(:)
 
-    allocate(w0_basis(1,v_unique_dofs(1,2),ngp_h,ngp_v))
-    allocate(w1_basis(3,v_unique_dofs(2,2),ngp_h,ngp_v))
-    allocate(w2_basis(3,v_unique_dofs(3,2),ngp_h,ngp_v))
-    allocate(w3_basis(1,v_unique_dofs(4,2),ngp_h,ngp_v))
-    allocate(w0_diff_basis(3,v_unique_dofs(1,2),ngp_h,ngp_v))
-    allocate(w1_diff_basis(3,v_unique_dofs(2,2),ngp_h,ngp_v))
-    allocate(w2_diff_basis(1,v_unique_dofs(3,2),ngp_h,ngp_v))
-    allocate(w3_diff_basis(1,v_unique_dofs(4,2),ngp_h,ngp_v))
-    allocate(w0_nodal_coords(3,v_unique_dofs(1,2)))
-    allocate(w1_nodal_coords(3,v_unique_dofs(2,2)))
-    allocate(w2_nodal_coords(3,v_unique_dofs(3,2)))
-    allocate(w3_nodal_coords(3,v_unique_dofs(4,2)))
-    allocate(w0_dof_on_vert_boundary(v_unique_dofs(1,2),2))
-    allocate(w1_dof_on_vert_boundary(v_unique_dofs(2,2),2))
-    allocate(w2_dof_on_vert_boundary(v_unique_dofs(3,2),2))
-    allocate(w3_dof_on_vert_boundary(v_unique_dofs(4,2),2))
+    allocate(w0_basis(1,w_unique_dofs(1,2),ngp_h,ngp_v))
+    allocate(w1_basis(3,w_unique_dofs(2,2),ngp_h,ngp_v))
+    allocate(w2_basis(3,w_unique_dofs(3,2),ngp_h,ngp_v))
+    allocate(w3_basis(1,w_unique_dofs(4,2),ngp_h,ngp_v))
+    allocate(w0_diff_basis(3,w_unique_dofs(1,2),ngp_h,ngp_v))
+    allocate(w1_diff_basis(3,w_unique_dofs(2,2),ngp_h,ngp_v))
+    allocate(w2_diff_basis(1,w_unique_dofs(3,2),ngp_h,ngp_v))
+    allocate(w3_diff_basis(1,w_unique_dofs(4,2),ngp_h,ngp_v))
+    allocate(w0_nodal_coords(3,w_unique_dofs(1,2)))
+    allocate(w1_nodal_coords(3,w_unique_dofs(2,2)))
+    allocate(w2_nodal_coords(3,w_unique_dofs(3,2)))
+    allocate(w3_nodal_coords(3,w_unique_dofs(4,2)))
+    allocate(w0_dof_on_vert_boundary(w_unique_dofs(1,2),2))
+    allocate(w1_dof_on_vert_boundary(w_unique_dofs(2,2),2))
+    allocate(w2_dof_on_vert_boundary(w_unique_dofs(3,2),2))
+    allocate(w3_dof_on_vert_boundary(w_unique_dofs(4,2),2))
 
     ! Allocate to be larger than should be needed
     allocate ( lx(3*(k+2)**3) )
     allocate ( ly(3*(k+2)**3) )
     allocate ( lz(3*(k+2)**3) )
 
-    allocate(unit_vec_w2(v_unique_dofs(3,2),3))
-    allocate(unit_vec_w1(v_unique_dofs(2,2),3))
+    allocate(unit_vec_w2(w_unique_dofs(3,2),3))
+    allocate(unit_vec_w1(w_unique_dofs(2,2),3))
+
+   ! Allocate arrays to allow on the fly evaluation of basis functions
+   allocate(w0_basis_index(3,w_unique_dofs(1,2)))
+   allocate(w1_basis_index(3,w_unique_dofs(2,2)))
+   allocate(w2_basis_index(3,w_unique_dofs(3,2)))
+   allocate(w3_basis_index(3,w_unique_dofs(4,2)))
+   allocate(w0_basis_order(3,w_unique_dofs(1,2)))
+   allocate(w1_basis_order(3,w_unique_dofs(2,2)))
+   allocate(w2_basis_order(3,w_unique_dofs(3,2)))
+   allocate(w3_basis_order(3,w_unique_dofs(4,2)))
+   allocate(w0_basis_vector(1,w_unique_dofs(1,2)))
+   allocate(w1_basis_vector(3,w_unique_dofs(2,2)))
+   allocate(w2_basis_vector(3,w_unique_dofs(3,2)))
+   allocate(w3_basis_vector(1,w_unique_dofs(4,2)))
+   allocate(w0_basis_x(k+2,3,w_unique_dofs(1,2)))
+   allocate(w1_basis_x(k+2,3,w_unique_dofs(2,2)))
+   allocate(w2_basis_x(k+2,3,w_unique_dofs(3,2)))
+   allocate(w3_basis_x(k+2,3,w_unique_dofs(4,2)))
+ 
+
 
     ! Create a gq object for now - Todo: we probably don't need to instantiate
     ! gq as all we ever do is call a method from it. Sort out later
     gq=>gq%get_instance(GQ3)
+
+    ! Allocate & fetch quadrature point arrays for precomputed basis functions
+    allocate( xqp(ngp_v) )
+    xqp(:) = gq%get_xgp_v()
 
     ! positional arrays - need two, i.e quadratic and linear for RT1
     do i=1,k+2
@@ -165,7 +200,7 @@ contains
     j2l_edge(12,:) = (/ 2, 1, 3 /)
 
     !-----------------------------------------------------------------------------
-    ! Section for test/trial functions of w0 fields
+    ! Section for test/trial functions of CG spaces 
     !-----------------------------------------------------------------------------
     order = k+1
 
@@ -215,26 +250,26 @@ contains
     ! dofs on vertices
     do i=1,nverts
     !  do j1=1,nw0_vert
-      do j1=1,v_dof_entity(1,0)
+      do j1=1,w_dof_entity(1,0)
         lx(idx) =  1+(k+1)*int(x_vert(i,1))
         ly(idx) =  1+(k+1)*int(x_vert(i,2))
         lz(idx) =  1+(k+1)*int(x_vert(i,3))
         idx = idx + 1
       end do
     end do
-    do i=1,v_unique_dofs(1,2)
+    do i=1,w_unique_dofs(1,2)
     !do i=1,nw0
        ! explicitly for quads, as ngp_h = ngp_v * ngp_v
        h_ctr = 1
        do jx=1,ngp_v
-          fx = gq%poly1d(order,jx,x1(lx(i)),x1,lx(i))
-          dfx = gq%poly1d_deriv(order,jx,x1(lx(i)),x1,lx(i))
+          fx = poly1d(order,xqp(jx),x1,lx(i))
+          dfx = poly1d_deriv(order,xqp(jx),x1,lx(i))
           do jy=1,ngp_v
-             fy = gq%poly1d(order,jy,x1(ly(i)),x1,ly(i))
-             dfy = gq%poly1d_deriv(order,jy,x1(ly(i)),x1,ly(i))
+             fy = poly1d(order,xqp(jy),x1,ly(i))
+             dfy = poly1d_deriv(order,xqp(jy),x1,ly(i))
              do jz=1,ngp_v
-                fz = gq%poly1d(order,jz,x1(lz(i)),x1,lz(i))
-                dfz = gq%poly1d_deriv(order,jz,x1(lz(i)),x1,lz(i))
+                fz = poly1d(order,xqp(jz),x1,lz(i))
+                dfz = poly1d_deriv(order,xqp(jz),x1,lz(i))
                 w0_basis(1,i,h_ctr,jz)=fx*fy*fz
                 w0_diff_basis(1,i,h_ctr,jz)=dfx*fy*fz
                 w0_diff_basis(2,i,h_ctr,jz)=fx*dfy*fz
@@ -247,15 +282,25 @@ contains
        w0_nodal_coords(1,i)=x1(lx(i))
        w0_nodal_coords(2,i)=x1(ly(i))
        w0_nodal_coords(3,i)=x1(lz(i))
+
+       w0_basis_order(:,i) = order
+       w0_basis_x(:,1,i) = x1
+       w0_basis_x(:,2,i) = x1
+       w0_basis_x(:,3,i) = x1
     end do
+    w0_basis_index(1,:) = lx(1:w_unique_dofs(1,2))
+    w0_basis_index(2,:) = ly(1:w_unique_dofs(1,2))
+    w0_basis_index(3,:) = lz(1:w_unique_dofs(1,2))
+    w0_basis_vector(1,:) = 1.0_r_def
+
 
     !-----------------------------------------------------------------------------
-    ! section for test/trial functions of w1 fields
+    ! section for test/trial functions of Hcurl spaces
     !-----------------------------------------------------------------------------
     order = k+1
 
     !do idx=1,nw1
-    do idx = 1,v_unique_dofs(2,2)
+    do idx = 1,w_unique_dofs(2,2)
       do i=1,3
         unit_vec_w1(idx,i) = 0.0_r_def
       end do
@@ -346,30 +391,30 @@ contains
 
     ! this needs correcting
     !do i=1,nw1  
-    do i=1,v_unique_dofs(2,2)
+    do i=1,w_unique_dofs(2,2)
        ! Quads only as ngp_h = ngp_v * ngp_v
        h_ctr = 1
        do jx=1,ngp_v
-          fx = gq%poly1d(order,jx,x1(lx(i)),x1,lx(i))
-          dfx = gq%poly1d_deriv(order,jx,x1(lx(i)),x1,lx(i))
+          fx = poly1d(order,xqp(jx),x1,lx(i))
+          dfx = poly1d_deriv(order,xqp(jx),x1,lx(i))
           if (lx(i) <= order) then
-             gx = gq%poly1d(order-1,jx,x2(lx(i)),x2,lx(i))
+             gx = poly1d(order-1,xqp(jx),x2,lx(i))
           else
              gx = 0.0_r_def
           end if
           do jy=1,ngp_v
-             fy = gq%poly1d(order,jy,x1(ly(i)),x1,ly(i))
-             dfy = gq%poly1d_deriv(order,jy,x1(ly(i)),x1,ly(i))
+             fy = poly1d(order,xqp(jy),x1,ly(i))
+             dfy = poly1d_deriv(order,xqp(jy),x1,ly(i))
              if (ly(i) <= order) then 
-                gy = gq%poly1d(order-1,jy,x2(ly(i)),x2,ly(i))
+                gy = poly1d(order-1,xqp(jy),x2,ly(i))
              else
                 gy = 0.0_r_def
              end if
              do jz=1,ngp_v
-                fz = gq%poly1d(order,jz,x1(lz(i)),x1,lz(i))
-                dfz = gq%poly1d_deriv(order,jz,x1(lz(i)),x1,lz(i))
+                fz = poly1d(order,xqp(jz),x1,lz(i))
+                dfz = poly1d_deriv(order,xqp(jz),x1,lz(i))
                 if (lz(i) <= order) then     
-                   gz = gq%poly1d(order-1,jz,x2(lz(i)),x2,lz(i))
+                   gz = poly1d(order-1,xqp(jz),x2,lz(i))
                 else
                    gz = 0.0_r_def
                 end if
@@ -395,18 +440,32 @@ contains
              unit_vec_w1(i,2)*x2(ly(i)) + (1.0_r_def - unit_vec_w1(i,2))*x1(ly(i))
        w1_nodal_coords(3,i)= &
              unit_vec_w1(i,3)*x2(lz(i)) + (1.0_r_def - unit_vec_w1(i,3))*x1(lz(i))
+
+       w1_basis_order(1,i) = order - int(unit_vec_w1(i,1))
+       w1_basis_order(2,i) = order - int(unit_vec_w1(i,2))
+       w1_basis_order(3,i) = order - int(unit_vec_w1(i,3))
+
+       w1_basis_vector(:,i) = unit_vec_w1(i,:)
+       w1_basis_x(:,1,i) = unit_vec_w1(i,1)*x2(:) + (1.0_r_def - unit_vec_w1(i,1))*x1(:)
+       w1_basis_x(:,2,i) = unit_vec_w1(i,2)*x2(:) + (1.0_r_def - unit_vec_w1(i,2))*x1(:)
+       w1_basis_x(:,3,i) = unit_vec_w1(i,3)*x2(:) + (1.0_r_def - unit_vec_w1(i,3))*x1(:)
+
     end do
+    w1_basis_index(1,:) = lx(1:w_unique_dofs(2,2))
+    w1_basis_index(2,:) = ly(1:w_unique_dofs(2,2))
+    w1_basis_index(3,:) = lz(1:w_unique_dofs(2,2))
+
 
 
     !-----------------------------------------------------------------------------
-    ! Section for test/trial functions of w2 fields
+    ! Section for test/trial functions of Hdiv spaces
     !-----------------------------------------------------------------------------
     order = k + 1
 
     w2_dof_on_vert_boundary(:,:) = 1
 
     !do idx=1,nw2
-    do idx=1,v_unique_dofs(3,2)
+    do idx=1,w_unique_dofs(3,2)
       do i=1,3
         unit_vec_w2(idx,i) = 0.0_r_def
       end do
@@ -470,30 +529,30 @@ contains
     end do
 
     !do i=1,nw2
-    do i=1,v_unique_dofs(3,2)
+    do i=1,w_unique_dofs(3,2)
        ! Quads only as ngp_h = ngp_h * ngp_h
        h_ctr = 1
        do jx=1,ngp_v
-          fx = gq%poly1d(order,jx,x1(lx(i)),x1,lx(i))
-          dfx = gq%poly1d_deriv(order,jx,x1(lx(i)),x1,lx(i))
+          fx = poly1d(order,xqp(jx),x1,lx(i))
+          dfx = poly1d_deriv(order,xqp(jx),x1,lx(i))
           if (lx(i) <= order) then
-             gx = gq%poly1d(order-1,jx,x2(lx(i)),x2,lx(i))
+             gx = poly1d(order-1,xqp(jx),x2,lx(i))
           else
              gx = 0.0_r_def
           end if
           do jy=1,ngp_v
-             fy = gq%poly1d(order,jy,x1(ly(i)),x1,ly(i))
-             dfy = gq%poly1d_deriv(order,jy,x1(ly(i)),x1,ly(i))
+             fy = poly1d(order,xqp(jy),x1,ly(i))
+             dfy = poly1d_deriv(order,xqp(jy),x1,ly(i))
              if (ly(i) <= order) then
-                gy = gq%poly1d(order-1,jy,x2(ly(i)),x2,ly(i))
+                gy = poly1d(order-1,xqp(jy),x2,ly(i))
              else
                 gy = 0.0_r_def
              end if
              do jz=1,ngp_v
-                fz = gq%poly1d(order,jz,x1(lz(i)),x1,lz(i))
-                dfz = gq%poly1d_deriv(order,jz,x1(lz(i)),x1,lz(i))
+                fz = poly1d(order,xqp(jz),x1,lz(i))
+                dfz = poly1d_deriv(order,xqp(jz),x1,lz(i))
                 if (lz(i) <= order) then
-                   gz = gq%poly1d(order-1,jz,x2(lz(i)),x2,lz(i))
+                   gz = poly1d(order-1,xqp(jz),x2,lz(i))
                 else
                    gz = 0.0_r_def
                 end if
@@ -515,10 +574,24 @@ contains
              unit_vec_w2(i,2)*x1(ly(i)) + (1.0 - unit_vec_w2(i,2))*x2(ly(i))
        w2_nodal_coords(3,i)= &
              unit_vec_w2(i,3)*x1(lz(i)) + (1.0 - unit_vec_w2(i,3))*x2(lz(i))
+
+       w2_basis_order(1,i) = order - int(1 - unit_vec_w2(i,1))
+       w2_basis_order(2,i) = order - int(1 - unit_vec_w2(i,2))
+       w2_basis_order(3,i) = order - int(1 - unit_vec_w2(i,3))
+
+       w2_basis_vector(:,i) = unit_vec_w2(i,:)
+       w2_basis_x(:,1,i) = unit_vec_w2(i,1) *x1(:) + (1.0 - unit_vec_w2(i,1))*x2(:)
+       w2_basis_x(:,2,i) = unit_vec_w2(i,2) *x1(:) + (1.0 - unit_vec_w2(i,2))*x2(:)
+       w2_basis_x(:,3,i) = unit_vec_w2(i,3) *x1(:) + (1.0 - unit_vec_w2(i,3))*x2(:)
     end do
+    w2_basis_index(1,:) = lx(1:w_unique_dofs(3,2))
+    w2_basis_index(2,:) = ly(1:w_unique_dofs(3,2))
+    w2_basis_index(3,:) = lz(1:w_unique_dofs(3,2))
+
+
 
     !-----------------------------------------------------------------------------
-    ! Section for test/trial functions of w3 fields
+    ! Section for test/trial functions of DG spaces
     !-----------------------------------------------------------------------------
     order = k
     ! compute indices of functions
@@ -537,14 +610,14 @@ contains
 
     !do i=1,nw3
     ! For Quads only as ngp_h = ngp_v * ngp_v
-    do i=1,v_unique_dofs(4,2)
+    do i=1,w_unique_dofs(4,2)
        h_ctr = 1
        do jx=1,ngp_v
-          gx = gq%poly1d(order,jx,x2(lx(i)),x2,lx(i))
+          gx = poly1d(order,xqp(jx),x2,lx(i))
           do jy=1,ngp_v
-             gy = gq%poly1d(order,jy,x2(ly(i)),x2,ly(i))
+             gy = poly1d(order,xqp(jy),x2,ly(i))
              do jz=1,ngp_v
-                gz = gq%poly1d(order,jz,x2(lz(i)),x2,lz(i))
+                gz = poly1d(order,xqp(jz),x2,lz(i))
                 w3_basis(1,i,h_ctr,jz)=gx*gy*gz              
              end do
              h_ctr = h_ctr + 1
@@ -553,7 +626,16 @@ contains
        w3_nodal_coords(1,i)=x2(lx(i))
        w3_nodal_coords(2,i)=x2(ly(i))
        w3_nodal_coords(3,i)=x2(lz(i))
-    end do
+
+       w3_basis_order(:,i) = order
+       w3_basis_x(:,1,i) = x2(:)
+       w3_basis_x(:,2,i) = x2(:)
+       w3_basis_x(:,3,i) = x2(:)
+ end do
+    w3_basis_index(1,:) = lx(1:w_unique_dofs(4,2))
+    w3_basis_index(2,:) = ly(1:w_unique_dofs(4,2))
+    w3_basis_index(3,:) = lz(1:w_unique_dofs(4,2))
+    w3_basis_vector(1,:) = 1.0_r_def
 
     ! tidy up
     deallocate ( lx )

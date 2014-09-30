@@ -20,7 +20,7 @@ contains
   !> @param nlayers Number of vertical cells.
   !> @param k Order of RT space ( = 0 for lowest order )
   !>
-  subroutine num_dof_init( ncells, nlayers, k, v_unique_dofs, v_dof_entity )
+  subroutine num_dof_init( ncells, nlayers, k, w_unique_dofs, w_dof_entity )
 
     use log_mod, only : log_event, log_scratch_space, LOG_LEVEL_INFO
 
@@ -30,8 +30,8 @@ contains
     integer, intent( in ) :: nlayers
     integer, intent( in ) :: k
 
-    integer, intent( out ) :: v_unique_dofs(4,2) ! there are 4 vspaces
-    integer, intent( out ) :: v_dof_entity(4,0:3)
+    integer, intent( out ) :: w_unique_dofs(4,2) ! there are 4 vspaces
+    integer, intent( out ) :: w_dof_entity(4,0:3)
 
     ! numbers of dofs in each space for an element 
     integer :: nw0,nw0_cell,nw0_face,nw0_edge,nw0_vert,            &
@@ -71,15 +71,15 @@ contains
     nw0_g = ncells*nlayers*nw0_cell + nface_g*nw0_face + nedge_g*nw0_edge + nvert_g*nw0_vert
 
     ! populate the returned arrays
-    v_unique_dofs(1,1) = nw0_g
-    v_unique_dofs(2,1) = nw1_g
-    v_unique_dofs(3,1) = nw2_g
-    v_unique_dofs(4,1) = nw3_g
+    w_unique_dofs(1,1) = nw0_g
+    w_unique_dofs(2,1) = nw1_g
+    w_unique_dofs(3,1) = nw2_g
+    w_unique_dofs(4,1) = nw3_g
 
-    v_unique_dofs(1,2) = nw0
-    v_unique_dofs(2,2) = nw1
-    v_unique_dofs(3,2) = nw2
-    v_unique_dofs(4,2) = nw3
+    w_unique_dofs(1,2) = nw0
+    w_unique_dofs(2,2) = nw1
+    w_unique_dofs(3,2) = nw2
+    w_unique_dofs(4,2) = nw3
 
     ! Number of dofs per mesh entity for each space
     ndof_entity_w0(:) = (/ nw0_vert, nw0_edge, nw0_face, nw0_cell /)
@@ -88,10 +88,10 @@ contains
     ndof_entity_w3(:) = (/ 0       , 0       , 0       , nw3_cell /)
 
     !populate the returned arrays
-    v_dof_entity(1,:) = ndof_entity_w0(:)
-    v_dof_entity(2,:) = ndof_entity_w1(:)
-    v_dof_entity(3,:) = ndof_entity_w2(:)
-    v_dof_entity(4,:) = ndof_entity_w3(:)
+    w_dof_entity(1,:) = ndof_entity_w0(:)
+    w_dof_entity(2,:) = ndof_entity_w1(:)
+    w_dof_entity(3,:) = ndof_entity_w2(:)
+    w_dof_entity(4,:) = ndof_entity_w3(:)
 
     ! diagnostic output
     write( log_scratch_space, '(A, I0, A, I0)' ) &

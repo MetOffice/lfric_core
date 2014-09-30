@@ -49,7 +49,13 @@ type, public :: function_space_type
   real(kind=r_def), allocatable :: mass_matrix(:,:,:)  
   
   integer, allocatable :: dof_on_vert_boundary(:,:)
-  
+
+  !> Arrays needed for on the fly basis evaluations
+  integer, allocatable          :: basis_order(:,:)
+  integer, allocatable          :: basis_index(:,:)
+  real(kind=r_def), allocatable :: basis_vector(:,:)
+  real(kind=r_def), allocatable :: basis_x(:,:,:)
+
 contains
   !final :: destructor
 
@@ -112,6 +118,11 @@ contains
 !> Accessor function to get the flag (0) for dofs on bottom and top faces of element
 !! @return A pointer to the two dimensional array, (ndf,2)
   procedure :: get_boundary_dofs
+
+!> Accessor function to evaluate a basis function
+  procedure evaluate_basis
+!> Accessor function to evaluate the differential of a basis function
+  procedure evaluate_diff_basis
   
 end type function_space_type
 !-------------------------------------------------------------------------------
@@ -140,14 +151,18 @@ function get_instance(function_space) result(instance)
               w0_diff_basis, w1_diff_basis, w2_diff_basis, w3_diff_basis, &
               w0_nodal_coords, w1_nodal_coords, w2_nodal_coords, w3_nodal_coords, &
               w0_dof_on_vert_boundary, w1_dof_on_vert_boundary, &
-              w2_dof_on_vert_boundary, w3_dof_on_vert_boundary
+              w2_dof_on_vert_boundary, w3_dof_on_vert_boundary, &
+              w0_basis_order, w0_basis_index, w0_basis_vector, w0_basis_x, &
+              w1_basis_order, w1_basis_index, w1_basis_vector, w1_basis_x, &
+              w2_basis_order, w2_basis_index, w2_basis_vector, w2_basis_x, &
+              w3_basis_order, w3_basis_index, w3_basis_vector, w3_basis_x
 
   use dofmap_mod,              only : &
               w0_dofmap, w1_dofmap, w2_dofmap, w3_dofmap, &
               w0_orientation, w1_orientation, w2_orientation, w3_orientation
 
   use gaussian_quadrature_mod, only : ngp_h, ngp_v
-  use mesh_mod,                only : num_cells, v_unique_dofs, num_layers
+  use mesh_mod,                only : num_cells, w_unique_dofs, num_layers
 
   implicit none
 
@@ -160,15 +175,17 @@ function get_instance(function_space) result(instance)
       allocate(w0_function_space)   
       call init_function_space(self=w0_function_space, &
          num_cells = num_cells , num_layers = num_layers, &
-         num_dofs = v_unique_dofs(1,2), &
-         num_unique_dofs = v_unique_dofs(1,1) ,  &
+         num_dofs = w_unique_dofs(1,2), &
+         num_unique_dofs = w_unique_dofs(1,1) ,  &
          dim_space = 1, dim_space_diff = 3,  &
          ngp_h = ngp_h, ngp_v = ngp_v, &
          dofmap=w0_dofmap, &
          basis=w0_basis, diff_basis=w0_diff_basis, &
          nodal_coords=w0_nodal_coords, &
          dof_on_vert_boundary=w0_dof_on_vert_boundary, &
-         orientation=w0_orientation, fs=W0) 
+         orientation=w0_orientation, fs=W0, &
+         basis_order=w0_basis_order, basis_index=w0_basis_index, &
+         basis_vector=w0_basis_vector, basis_x=w0_basis_x) 
     end if
     instance => w0_function_space
   case (W1)
@@ -176,15 +193,17 @@ function get_instance(function_space) result(instance)
       allocate(w1_function_space) 
       call init_function_space(self=w1_function_space, &
          num_cells = num_cells ,num_layers = num_layers, &
-         num_dofs = v_unique_dofs(2,2), &
-         num_unique_dofs = v_unique_dofs(2,1) ,  &
+         num_dofs = w_unique_dofs(2,2), &
+         num_unique_dofs = w_unique_dofs(2,1) ,  &
          dim_space = 3, dim_space_diff = 3,  &
          ngp_h = ngp_h, ngp_v = ngp_v, &
          dofmap=w1_dofmap, &
          basis=w1_basis, diff_basis=w1_diff_basis, &
          nodal_coords=w1_nodal_coords, &
          dof_on_vert_boundary=w1_dof_on_vert_boundary, &
-         orientation=w1_orientation, fs=W1 )
+         orientation=w1_orientation, fs=W1, &
+         basis_order=w1_basis_order, basis_index=w1_basis_index, &
+         basis_vector=w1_basis_vector, basis_x=w1_basis_x )
     end if
     instance => w1_function_space
   case (W2)
@@ -192,15 +211,17 @@ function get_instance(function_space) result(instance)
       allocate(w2_function_space)
       call init_function_space(self=w2_function_space, &
          num_cells = num_cells ,num_layers = num_layers, &
-         num_dofs = v_unique_dofs(3,2), &
-         num_unique_dofs = v_unique_dofs(3,1) ,  &
+         num_dofs = w_unique_dofs(3,2), &
+         num_unique_dofs = w_unique_dofs(3,1) ,  &
          dim_space = 3, dim_space_diff = 1,  &
          ngp_h = ngp_h, ngp_v = ngp_v, &
          dofmap=w2_dofmap, &
          basis=w2_basis, diff_basis=w2_diff_basis, &
          nodal_coords=w2_nodal_coords, &
          dof_on_vert_boundary=w2_dof_on_vert_boundary, &
-         orientation=w2_orientation, fs=W2 )
+         orientation=w2_orientation, fs=W2, &
+         basis_order=w2_basis_order, basis_index=w2_basis_index, &
+         basis_vector=w2_basis_vector, basis_x=w2_basis_x )
     end if
     instance => w2_function_space
   case (W3)
@@ -208,15 +229,17 @@ function get_instance(function_space) result(instance)
       allocate(w3_function_space)
       call init_function_space(self=w3_function_space, &
          num_cells = num_cells ,num_layers = num_layers, &
-         num_dofs = v_unique_dofs(4,2), &
-         num_unique_dofs = v_unique_dofs(4,1) ,  &
+         num_dofs = w_unique_dofs(4,2), &
+         num_unique_dofs = w_unique_dofs(4,1) ,  &
          dim_space = 1, dim_space_diff = 1,  &
          ngp_h = ngp_h, ngp_v = ngp_v, &
          dofmap=w3_dofmap, &
          basis=w3_basis, diff_basis=w3_diff_basis, &
          nodal_coords=w3_nodal_coords, &
          dof_on_vert_boundary=w3_dof_on_vert_boundary, &
-         orientation=w3_orientation, fs=W3 )
+         orientation=w3_orientation, fs=W3, &
+         basis_order=w3_basis_order, basis_index=w3_basis_index, &
+         basis_vector=w3_basis_vector, basis_x=w3_basis_x )
     end if
     instance => w3_function_space
   case default
@@ -246,7 +269,9 @@ subroutine init_function_space(self, &
                                basis, diff_basis, &
                                nodal_coords, &
                                dof_on_vert_boundary, &
-                               orientation ,fs)
+                               orientation ,fs, &
+                               basis_order, basis_index, &
+                               basis_vector, basis_x)
   implicit none
 
   class(function_space_type) :: self
@@ -262,6 +287,8 @@ subroutine init_function_space(self, &
   integer,          intent(inout), allocatable  :: dof_on_vert_boundary(:,:)
   integer,          intent(inout), allocatable  :: orientation(:,:)
   integer,          intent(in)                  :: fs
+  integer,          intent(inout), allocatable  :: basis_order(:,:),  basis_index(:,:)
+  real(kind=r_def), intent(inout), allocatable  :: basis_vector(:,:), basis_x(:,:,:)
 
   self%ncell           =  num_cells
   self%nlayers         =  num_layers
@@ -278,6 +305,10 @@ subroutine init_function_space(self, &
   call move_alloc(dof_on_vert_boundary , self%dof_on_vert_boundary) 
   call move_alloc(orientation , self%orientation) 
   self%fs              = fs
+  call move_alloc(basis_order,self%basis_order)
+  call move_alloc(basis_index,self%basis_index)
+  call move_alloc(basis_vector,self%basis_vector)
+  call move_alloc(basis_x,self%basis_x)
 
   return
 end subroutine init_function_space
@@ -442,5 +473,73 @@ function which(self) result(fs)
   fs = self%fs
   return
 end function which
+
+!-----------------------------------------------------------------------------
+! Evaluate a basis function at a point
+!-----------------------------------------------------------------------------
+!> Function to evaluate the basis function at a point
+!> @param[in] self The calling function space
+!> @param[in] df The dof to compute the basis function of
+!> @param[in] xi The (x,y,z) coodinates to evaluate the basis function
+pure function evaluate_basis(self, df, xi) result(p)
+  use polynomial_mod, only: poly1d
+
+  class(function_space_type), intent(in)  :: self
+  integer,                    intent(in)  :: df
+  real(kind=r_def),           intent(in)  :: xi(3)
+  real(kind=r_def)                        :: p(self%dim_space)
+
+  p(:) = poly1d(self%basis_order(1,df), xi(1), self%basis_x(:,1,df), self%basis_index(1,df)) &
+        *poly1d(self%basis_order(2,df), xi(2), self%basis_x(:,2,df), self%basis_index(2,df)) &
+        *poly1d(self%basis_order(3,df), xi(3), self%basis_x(:,3,df), self%basis_index(3,df)) &
+        *self%basis_vector(:,df)
+
+end function evaluate_basis
+
+!-----------------------------------------------------------------------------
+! Evaluate the differential of a basis function at a point
+!-----------------------------------------------------------------------------
+!> Function to evaluate the differential of a basis function at a point
+!> @param[in] self The calling function space
+!> @param[in] df The dof to compute the basis function of
+!> @param[in] xi The (x,y,z) coodinates to evaluate the basis function
+pure function evaluate_diff_basis(self, df, xi) result(dp)
+  use polynomial_mod, only: poly1d, poly1d_deriv
+  class(function_space_type), intent(in)  :: self
+  integer,                    intent(in)  :: df
+  real(kind=r_def),           intent(in)  :: xi(3)  
+  real(kind=r_def)                        :: dp(self%dim_space_diff)
+  real(kind=r_def)                        :: dpdx(3)
+
+  dpdx(1) = poly1d_deriv(self%basis_order(1,df), xi(1), self%basis_x(:,1,df), self%basis_index(1,df)) &
+           *poly1d      (self%basis_order(2,df), xi(2), self%basis_x(:,2,df), self%basis_index(2,df)) &
+           *poly1d      (self%basis_order(3,df), xi(3), self%basis_x(:,3,df), self%basis_index(3,df))
+  dpdx(2) = poly1d      (self%basis_order(1,df), xi(1), self%basis_x(:,1,df), self%basis_index(1,df)) &
+           *poly1d_deriv(self%basis_order(2,df), xi(2), self%basis_x(:,2,df), self%basis_index(2,df)) &
+           *poly1d      (self%basis_order(3,df), xi(3), self%basis_x(:,3,df), self%basis_index(3,df))
+  dpdx(3) = poly1d      (self%basis_order(1,df), xi(1), self%basis_x(:,1,df), self%basis_index(1,df)) &
+           *poly1d      (self%basis_order(2,df), xi(2), self%basis_x(:,2,df), self%basis_index(2,df)) &
+           *poly1d_deriv(self%basis_order(3,df), xi(3), self%basis_x(:,3,df), self%basis_index(3,df))
+
+
+  if ( self%dim_space == 1 .and. self%dim_space_diff == 3 ) then
+! grad(p)
+    dp(1) = dpdx(1)
+    dp(2) = dpdx(2) 
+    dp(3) = dpdx(3)
+  elseif ( self%dim_space == 3 .and. self%dim_space_diff == 3 ) then
+! curl(p)
+    dp(1) = dpdx(2)*self%basis_vector(3,df) - dpdx(3)*self%basis_vector(2,df)
+    dp(2) = dpdx(3)*self%basis_vector(1,df) - dpdx(1)*self%basis_vector(3,df)
+    dp(3) = dpdx(1)*self%basis_vector(2,df) - dpdx(2)*self%basis_vector(1,df)
+  elseif ( self%dim_space == 3 .and. self%dim_space_diff == 1 ) then
+! div(p)
+    dp(1) = dpdx(1)*self%basis_vector(1,df) + dpdx(2)*self%basis_vector(2,df) + dpdx(3)*self%basis_vector(3,df)
+  else
+    dp(:) = 0.0_r_def
+  end if
+
+end function evaluate_diff_basis
+
 
 end module function_space_mod

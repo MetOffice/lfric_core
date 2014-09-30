@@ -1,0 +1,51 @@
+!-----------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown, 
+! Met Office and NERC 2014. 
+! However, it has been created with the help of the GungHo Consortium, 
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-----------------------------------------------------------------------------
+
+!> Test the polynomial module
+!>
+module polynomial_mod_test
+
+  implicit none 
+
+contains
+
+  !> Empty test to ensure that the polynomial mod is found
+  !>
+  @test
+  subroutine test_polynomial_mod( )
+
+    use pFUnit_Mod
+    use polynomial_mod, only : poly1d, poly1d_deriv
+    use constants_mod,  only : r_def
+
+    implicit none
+
+    real(kind=r_def) :: x(3), xi, p, dpdx
+    real(kind=r_def) :: one, zero, tol
+    integer          :: i, order
+
+    order = 2
+    x(:) = (/ 0.0_r_def, 0.5_r_def, 1.0_r_def /)
+    xi = 0.5_r_def
+    i = 2
+
+    p    = poly1d      (order, xi, x, i)
+    dpdx = poly1d_deriv(order, xi, x, i)
+
+    one  = 1.0_r_def
+    zero = 0.0_r_def
+    tol  = 1.0e-14_r_def
+
+    @assertEqual( one,  p,    tol)
+    @assertEqual( zero, dpdx, tol)
+
+  end subroutine test_polynomial_mod
+
+end module polynomial_mod_test
+
+!-----------------------------------------------------------------------------
+

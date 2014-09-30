@@ -18,8 +18,8 @@ integer :: num_layers
 integer :: element_order
 logical :: l_spherical
 
-integer :: v_unique_dofs(4,2)
-integer :: v_dof_entity(4,0:3)    
+integer :: w_unique_dofs(4,2)
+integer :: w_dof_entity(4,0:3)    
 
 real(kind=r_def)  :: dx, dy, dz
 

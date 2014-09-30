@@ -16,7 +16,7 @@ contains
     use pFUnit_Mod
     use function_space_mod, only : function_space_type, W0, W1, W2, W3
     use constants_mod, only : r_def
-    use mesh_mod, only : num_cells, v_unique_dofs, num_layers
+    use mesh_mod, only : num_cells, w_unique_dofs, num_layers
     use gaussian_quadrature_mod, only : ngp_h, ngp_v
     use basis_function_mod,         only : &
               w0_basis, w1_basis, w2_basis, w3_basis, &
@@ -83,8 +83,8 @@ contains
     num_dofs=4
     num_unique_dofs = 100
     do i=1,4
-      v_unique_dofs(i,1)=num_unique_dofs
-      v_unique_dofs(i,2)=num_dofs
+      w_unique_dofs(i,1)=num_unique_dofs
+      w_unique_dofs(i,2)=num_dofs
     enddo
 
     if ( allocated( w0_basis ) ) then
@@ -112,22 +112,22 @@ contains
       deallocate( w3_dofmap )
     end if
 
-    allocate(w0_basis(1,v_unique_dofs(1,2),ngp_h,ngp_v))
-    allocate(w1_basis(3,v_unique_dofs(2,2),ngp_h,ngp_v))
-    allocate(w2_basis(3,v_unique_dofs(3,2),ngp_h,ngp_v))
-    allocate(w3_basis(1,v_unique_dofs(4,2),ngp_h,ngp_v))
-    allocate(w0_diff_basis(3,v_unique_dofs(1,2),ngp_h,ngp_v))
-    allocate(w1_diff_basis(3,v_unique_dofs(2,2),ngp_h,ngp_v))
-    allocate(w2_diff_basis(1,v_unique_dofs(3,2),ngp_h,ngp_v))
-    allocate(w3_diff_basis(1,v_unique_dofs(4,2),ngp_h,ngp_v))
-    allocate(w0_nodal_coords(3,v_unique_dofs(1,2)))
-    allocate(w1_nodal_coords(3,v_unique_dofs(2,2)))
-    allocate(w2_nodal_coords(3,v_unique_dofs(3,2)))
-    allocate(w3_nodal_coords(3,v_unique_dofs(4,2)))
-    allocate( w0_dofmap(0:num_cells,v_unique_dofs(1,2)) )
-    allocate( w1_dofmap(0:num_cells,v_unique_dofs(2,2)) )
-    allocate( w2_dofmap(0:num_cells,v_unique_dofs(3,2)) )
-    allocate( w3_dofmap(0:num_cells,v_unique_dofs(4,2)) )
+    allocate(w0_basis(1,w_unique_dofs(1,2),ngp_h,ngp_v))
+    allocate(w1_basis(3,w_unique_dofs(2,2),ngp_h,ngp_v))
+    allocate(w2_basis(3,w_unique_dofs(3,2),ngp_h,ngp_v))
+    allocate(w3_basis(1,w_unique_dofs(4,2),ngp_h,ngp_v))
+    allocate(w0_diff_basis(3,w_unique_dofs(1,2),ngp_h,ngp_v))
+    allocate(w1_diff_basis(3,w_unique_dofs(2,2),ngp_h,ngp_v))
+    allocate(w2_diff_basis(1,w_unique_dofs(3,2),ngp_h,ngp_v))
+    allocate(w3_diff_basis(1,w_unique_dofs(4,2),ngp_h,ngp_v))
+    allocate(w0_nodal_coords(3,w_unique_dofs(1,2)))
+    allocate(w1_nodal_coords(3,w_unique_dofs(2,2)))
+    allocate(w2_nodal_coords(3,w_unique_dofs(3,2)))
+    allocate(w3_nodal_coords(3,w_unique_dofs(4,2)))
+    allocate( w0_dofmap(0:num_cells,w_unique_dofs(1,2)) )
+    allocate( w1_dofmap(0:num_cells,w_unique_dofs(2,2)) )
+    allocate( w2_dofmap(0:num_cells,w_unique_dofs(3,2)) )
+    allocate( w3_dofmap(0:num_cells,w_unique_dofs(4,2)) )
 
     w0_basis=sqrt(2.0)
     w1_basis=sqrt(2.0)

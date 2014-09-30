@@ -43,7 +43,7 @@ contains
 
     use log_mod,  only : log_event, LOG_LEVEL_INFO
     use mesh_mod, only : num_cells, num_layers, element_order, l_spherical, &
-                         v_unique_dofs, v_dof_entity, dx, dy, dz,           &
+                         w_unique_dofs, w_dof_entity, dx, dy, dz,           &
                          num_cells_x, num_cells_y
 
     implicit none
@@ -94,23 +94,23 @@ contains
 ! ----------------------------------------------------------
 
     ! initialise numbers of dofs    
-    call num_dof_init(num_cells,num_layers,element_order,v_unique_dofs,v_dof_entity)
+    call num_dof_init(num_cells,num_layers,element_order,w_unique_dofs,w_dof_entity)
          
-    call mass_matrix_init(v_unique_dofs(1,2),v_unique_dofs(2,2),v_unique_dofs(3,2),num_cells*num_layers)
+    call mass_matrix_init(w_unique_dofs(1,2),w_unique_dofs(2,2),w_unique_dofs(3,2),num_cells*num_layers)
 
     call log_event( "set_up: computing basis functions", LOG_LEVEL_INFO )
 
     ! read the values of the basis functions. 
     call get_basis( k=element_order, &
-                    v_unique_dofs=v_unique_dofs,v_dof_entity=v_dof_entity )  
+                    w_unique_dofs=w_unique_dofs,w_dof_entity=w_dof_entity )  
 
     call log_event( "set_up: computing the dof_map", LOG_LEVEL_INFO )
     ! compute the dof maps for each function space
-    call get_dofmap(nlayers=num_layers,v_dof_entity=v_dof_entity, &
-                    ncell=num_cells,v_unique_dofs=v_unique_dofs)
+    call get_dofmap(nlayers=num_layers,w_dof_entity=w_dof_entity, &
+                    ncell=num_cells,w_unique_dofs=w_unique_dofs)
     
     ! compute cell local orientations for vector spaces
-    call get_orientation(num_cells, v_unique_dofs)
+    call get_orientation(num_cells, w_unique_dofs)
 
     return
 
