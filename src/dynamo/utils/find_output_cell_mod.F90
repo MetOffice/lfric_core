@@ -7,10 +7,9 @@
 module find_output_cell_mod
 
 use constants_mod,        only: r_def, large_real, earth_radius
-use mesh_generator_mod,   only: llr2xyz
 use field_mod,            only: field_type, field_proxy_type 
 use mesh_mod,             only: l_spherical
-use coord_algorithms_mod, only: cartesian_distance
+use coord_algorithms_mod, only: cartesian_distance, llr2xyz
 
 implicit none
 

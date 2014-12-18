@@ -804,27 +804,6 @@ subroutine mesh_connectivity( ncells )
 
 end subroutine mesh_connectivity
 
-subroutine llr2xyz(long,lat,r,x,y,z)
-!-------------------------------------------------------------------------------
-!  Subroutine to convert longitude and latitude to cartesian coordinates
-!-------------------------------------------------------------------------------
-      
-  real(kind=r_def), intent(in)  :: long,lat,r
-  real(kind=r_def), intent(out) :: x,y,z
-  real(kind=r_def)              :: cln,sln,clt,slt
-
-  sln=sin(long)
-  cln=cos(long)
-  slt=sin(lat)
-  clt=cos(lat)
-
-  x=r*cln*clt
-  y=r*sln*clt
-  z=r*slt
-
-  return
-      
-end  subroutine llr2xyz
 !-------------------------------------------------------------------------------
       
 subroutine xyz2llr(x,y,z,long,lat,r)

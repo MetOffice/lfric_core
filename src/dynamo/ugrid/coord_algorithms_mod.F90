@@ -44,16 +44,16 @@ subroutine ll2xyz(long,lat,x,y,z)
   real(kind=r_def), intent(out) :: x,y,z 
  
   !Internal variables
-  real(kind=r_def) :: cln, sln, clt, slt
+  real(kind=r_def) :: cos_long, sin_long, cos_lat, sin_lat
  
-  sln=sin(long)
-  cln=cos(long)
-  slt=sin(lat)
-  clt=cos(lat)
+  sin_long = sin(long)
+  cos_long = cos(long)
+  sin_lat  = sin(lat)
+  cos_lat  = cos(lat)
  
-  x=cln*clt
-  y=sln*clt
-  z=slt
+  x = cos_long * cos_lat
+  y = sin_long * cos_lat
+  z = sin_lat
  
   return
 end subroutine ll2xyz
@@ -78,16 +78,16 @@ subroutine llr2xyz(long,lat,radius,x,y,z)
   real(kind=r_def), intent(out) :: x,y,z 
  
   !Internal variables
-  real(kind=r_def) :: cln, sln, clt, slt
+  real(kind=r_def) :: cos_long, sin_long, cos_lat, sin_lat
  
-  sln = sin(long)
-  cln = cos(long)
-  slt = sin(lat)
-  clt = cos(lat)
+  sin_long = sin(long)
+  cos_long = cos(long)
+  sin_lat  = sin(lat)
+  cos_lat  = cos(lat)
  
-  x = radius * cln * clt
-  y = radius * sln * clt
-  z = radius * slt
+  x = radius * cos_long * cos_lat
+  y = radius * sin_long * cos_lat
+  z = radius * sin_lat
  
   return
 end subroutine llr2xyz
@@ -111,7 +111,7 @@ subroutine xyz2ll(x,y,z,long,lat)
   real(kind=r_def), intent(out) :: long, lat
 
   !Internal variables
-  real(kind=r_def) :: tln, tlt, r
+  real(kind=r_def) :: tan_long, tan_lat, radius
 
   if (x == 0.0_r_def) then
     if (y >= 0.0_r_def) then
@@ -120,8 +120,8 @@ subroutine xyz2ll(x,y,z,long,lat)
       long = 1.5_r_def*pi
     end if
   else
-    tln=y/x
-    long=atan(tln)
+    tan_long=y/x
+    long=atan(tan_long)
     if (x < 0.0_r_def) then
       long=long+pi
     endif
@@ -130,16 +130,16 @@ subroutine xyz2ll(x,y,z,long,lat)
     endif
   end if
 
-  r=sqrt(x*x+y*y)
-  if (r == 0.0_r_def) then
+  radius = sqrt(x*x+y*y)
+  if (radius == 0.0_r_def) then
     if (z > 0.0_r_def) then
       lat=0.5_r_def*pi
     else
       lat=-0.5_r_def*pi
     end if
   else
-    tlt=z/r
-    lat=atan(tlt)
+    tan_lat = z / radius
+    lat = atan(tan_lat)
   end if
 
   return

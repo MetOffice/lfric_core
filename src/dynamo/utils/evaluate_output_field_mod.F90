@@ -9,9 +9,8 @@ module evaluate_output_field_mod
 use constants_mod,           only: r_def, earth_radius, large_real
 use field_mod,               only: field_type, field_proxy_type
 use coordinate_jacobian_mod, only: coordinate_jacobian, coordinate_jacobian_inverse
-use mesh_generator_mod,      only: llr2xyz 
 use mesh_mod,                only: l_spherical, dz
-use coord_algorithms_mod,    only: cartesian_distance
+use coord_algorithms_mod,    only: cartesian_distance, llr2xyz
 
 
 implicit none
