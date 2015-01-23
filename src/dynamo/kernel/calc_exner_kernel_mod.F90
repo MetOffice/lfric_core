@@ -156,7 +156,7 @@ subroutine calc_exner_code(nlayers,ndf_w3,undf_w3, & ! integers
           end do
           rhs_eos = kappa / (1.0_r_def - kappa) * exner_s_at_quad                 &
                   *( rho_at_quad/rho_s_at_quad + theta_at_quad/theta_s_at_quad )
-          rhs_e(df1) = rhs_e(df1) + 0.125_r_def*wqp_h(qp1)*wqp_v(qp2)*w3_basis(1,df1,qp1,qp2) * rhs_eos * dj(qp1,qp2)
+          rhs_e(df1) = rhs_e(df1) + wqp_h(qp1)*wqp_v(qp2)*w3_basis(1,df1,qp1,qp2) * rhs_eos * dj(qp1,qp2)
         end do
       end do
     end do
@@ -167,7 +167,7 @@ subroutine calc_exner_code(nlayers,ndf_w3,undf_w3, & ! integers
           do qp2 = 1, nqp_v
              do qp1 = 1, nqp_h
                  mass_matrix_w3(df1,df2) = mass_matrix_w3(df1,df2) &
-                                         + 0.125_r_def*wqp_h(qp1)*wqp_v(qp2)* &
+                                         + wqp_h(qp1)*wqp_v(qp2)* &
                                          w3_basis(1,df1,qp1,qp2) * &
                                          w3_basis(1,df2,qp1,qp2) * dj(qp1,qp2)
              end do

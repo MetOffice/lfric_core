@@ -187,7 +187,7 @@ subroutine rrho_code(nlayers,                                                  &
       end do
     end do
     do df = 1, ndf_w3
-      r_rho( map_w3(df) + k ) =  0.125_r_def*rrho_e(df)
+      r_rho( map_w3(df) + k ) =  rrho_e(df)
     end do 
   end do
   

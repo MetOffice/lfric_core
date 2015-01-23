@@ -139,7 +139,7 @@ subroutine gp_rhs_code(nlayers, &
               rhs_cell = rhs_cell + f_basis(1,df2,qp1,qp2)*field(map_f(df2) + k)
             end do
             rhs(map(df) + k) = rhs(map(df) + k) &
-                             + 0.125_r_def*wqp_h(qp1)*wqp_v(qp2)*basis(1,df,qp1,qp2) &
+                             + wqp_h(qp1)*wqp_v(qp2)*basis(1,df,qp1,qp2) &
                              * rhs_cell * dj(qp1,qp2)
           end do
        end do      

@@ -127,8 +127,8 @@ subroutine compute_mass_matrix_w2_code(cell, nlayers, ndf, ncell_3d,          &
           mm(df,df2,ik) = 0.0_r_def
           do qp2 = 1, nqp_v
              do qp1 = 1, nqp_h
-                integrand = 0.125_r_def * wqp_h(qp1) * wqp_v(qp2) *      & 
-                     dot_product(                                        &
+                integrand = wqp_h(qp1) * wqp_v(qp2) *                 & 
+                     dot_product(                                     &
                      matmul(jac(:,:,qp1,qp2), basis(:,df,qp1,qp2)),   &
                      matmul(jac(:,:,qp1,qp2), basis(:,df2,qp1,qp2)) ) &
                      /dj(qp1,qp2) 

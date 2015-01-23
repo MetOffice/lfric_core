@@ -122,7 +122,7 @@ subroutine solver_w3_code(nlayers, ndf_w3, undf_w3, map_w3, w3_basis, &
                 integrand =  w3_basis(1,df1,qp1,qp2) * &
                              w3_basis(1,df2,qp1,qp2) * dj(qp1,qp2)
                  mass_matrix_w3(df1,df2) = mass_matrix_w3(df1,df2) &
-                                         + 0.125_r_def*wqp_h(qp1)*wqp_v(qp2)*integrand
+                                         + wqp_h(qp1)*wqp_v(qp2)*integrand
              end do
           end do
        end do

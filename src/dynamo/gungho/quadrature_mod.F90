@@ -128,6 +128,8 @@ subroutine init_quadrature(self, qr, nqp_h, nqp_v)
   integer             :: i, j, m
   real(kind=r_def)    :: p1, p2, p3, pp, z, z1
   integer, intent(in) :: qr
+  real(kind=r_def), parameter :: DOMAIN_CHANGE_FACTOR = 0.5_r_def
+  real(kind=r_def), parameter :: DOMAIN_SHIFT_FACTOR  = 1.0_r_def
 
   self%nqp_h = nqp_h
   self%nqp_v = nqp_v
@@ -177,7 +179,8 @@ subroutine init_quadrature(self, qr, nqp_h, nqp_v)
 
   !Shift quad points from [-1,1] to [0,1]
   do i=1,nqp_v
-    self%xqp(i) = 0.5_r_def*(self%xqp(i) + 1.0_r_def)
+    self%xqp(i) = DOMAIN_CHANGE_FACTOR*(self%xqp(i) + DOMAIN_SHIFT_FACTOR)
+    self%wqp(i) = DOMAIN_CHANGE_FACTOR*self%wqp(i)
   end do
 
 ! This is correct for quads (will need modification for hexes/triangles)
@@ -249,8 +252,6 @@ function integrate(self,f)
     end do
   end do
   
-  integrate = 0.125_r_def*integrate
-
   return
 end function integrate
 

@@ -157,7 +157,7 @@ subroutine rtheta_code(nlayers,                                                &
       end do
     end do
     do df = 1, ndf_w0
-      r_theta( map_w0(df) + k ) =  r_theta( map_w0(df) + k ) + 0.125_r_def*rtheta_e(df)
+      r_theta( map_w0(df) + k ) =  r_theta( map_w0(df) + k ) + rtheta_e(df)
     end do 
   end do
   

@@ -163,7 +163,7 @@ subroutine gp_vector_rhs_code(nlayers, &
           else
             u_physical(:) = u_at_quad(:)
           end if   
-          integrand = 0.125_r_def*wqp_h(qp1)*wqp_v(qp2)*basis(1,df,qp1,qp2)*dj(qp1,qp2)
+          integrand = wqp_h(qp1)*wqp_v(qp2)*basis(1,df,qp1,qp2)*dj(qp1,qp2)
           rhs1(map(df) + k) = rhs1(map(df) + k) + integrand * u_physical(1) 
           rhs2(map(df) + k) = rhs2(map(df) + k) + integrand * u_physical(2)
           rhs3(map(df) + k) = rhs3(map(df) + k) + integrand * u_physical(3)

@@ -205,7 +205,7 @@ subroutine ru_code(nlayers,                                                    &
       end do
     end do
     do df = 1, ndf_w2
-      r_u( map_w2(df) + k ) =  r_u( map_w2(df) + k ) + 0.125_r_def*ru_e(df)
+      r_u( map_w2(df) + k ) =  r_u( map_w2(df) + k ) + ru_e(df)
     end do 
   end do 
   

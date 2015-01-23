@@ -129,7 +129,7 @@ subroutine compute_mass_matrix_w0_code(cell, nlayers,               &
           mm(df,df2,ik) = 0.0_r_def
           do qp2 = 1, nqp_v
              do qp1 = 1, nqp_h
-                integrand = 0.125_r_def * wqp_h(qp1) * wqp_v(qp2) * & 
+                integrand = wqp_h(qp1) * wqp_v(qp2) * & 
                      basis(1,df,qp1,qp2)*basis(1,df2,qp1,qp2)     * &
                      dj(qp1,qp2) 
                 mm(df,df2,ik) = mm(df,df2,ik) + integrand
