@@ -54,6 +54,10 @@ modules: applications
 applications:
 	$(MAKE) -f dynamo.mk applications
 
+.PHONY: unused-check
+unused-check:
+	$(MAKE) -f examine.mk unused-check
+
 .PHONY: clean
 clean:
 	$(MAKE) -f dynamo.mk clean

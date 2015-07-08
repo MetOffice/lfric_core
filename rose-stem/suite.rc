@@ -1,11 +1,11 @@
 #!jinja2
 {% set targets = ['full-debug', 'fast-debug'] %}
-
 {% set module_setup_script = "/data/cr1/mhambley/modules/setup" %}
 
 {% set environment_commands = "source " + module_setup_script + "; module load environment/dynamo/base" %}
 {% set display_environment = "module list 2>&1" %}
 
+{% set default_compiler, default_version = DEFAULT_ENVIRONMENT %}
 [cylc]
     UTC mode = True 
     [[event hooks]]
@@ -38,6 +38,9 @@
             members = REMOTE
     [[dependencies]]
         graph = """
+{{ prepare_pipeline_schedule( 'cleanliness' ) }}
+                export_for_cleanliness => check_for_unused_source
+
 {{ prepare_pipeline_schedule( 'documentation' ) }}
                 export_for_documentation => api_documentation
                 export_for_documentation => design_documentation
@@ -130,6 +133,23 @@
                             make -C $SOURCE_DIRECTORY/Docs design
                             """
 
+{#############################################################################}
+
+{{ prepare_pipeline( 'cleanliness' ) }}
+
+    [[CLEANLINESS_COMPILER]]
+        inherit = CLEANLINESS_ENVIRONMENT
+        pre-command scripting = """
+                                {{ environment_commands }}
+                                module load environment/dynamo/compiler/{{default_compiler}}/{{default_version}}
+                                {{ display_environment }}
+                                """
+
+    [[check_for_unused_source]]
+        inherit = CLEANLINESS, CLEANLINESS_COMPILER
+        command scripting = """
+                            make -C $SOURCE_DIRECTORY/src/dynamo unused-check
+                            """
 {#############################################################################}
 {% macro pipeline_tasks( compiler, version, target ) %}
 {#   A set of tasks for an "extract, compile, unit test, run, check" pipeline #}

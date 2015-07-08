@@ -1,0 +1,66 @@
+#!/usr/bin/env python2.7
+# -*- coding: utf-8 -*-
+##############################################################################
+# (c) The copyright relating to this work is owned jointly by the Crown,
+# Met Office and NERC 2014. However, it has been created with the help of the
+# GungHo Consortium, whose members are identified at
+# https://puma.nerc.ac.uk/trac/GungHo/wiki
+##############################################################################
+'''
+Compare a list of source files against the dependency database to see if any
+of them are unused.
+'''
+
+from __future__ import print_function;
+
+import argparse
+import os.path
+import sys
+
+from dependencyanalysis import __version__
+import dependencyanalysis.database as database
+import dependencyanalysis.logging  as logging
+
+###############################################################################
+# Entry point
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser( add_help=False, \
+                                      description=__doc__ )
+    parser.add_argument( '-help', '-h', '--help', action='help', \
+                         help='Show this help message and exit' )
+    parser.add_argument( '-version', action='version', \
+                         version='%(prog)s {}'.format( __version__ ) )
+    parser.add_argument( '-verbose', action='store_true', \
+                         help='Provide a running commentry' )
+    parser.add_argument( '-database', metavar='filename', required=True, \
+                         help='Database file to use' )
+    parser.add_argument( 'sourceFiles', metavar='source-file', nargs='*', \
+                         help='Dependency details are put here' )
+    args = parser.parse_args()
+
+    if args.verbose:
+        logger = logging.PrintLogger( sys.stdout )
+    else:
+        logger = logging.NoLogger()
+
+    dependencyStore = database.Dependencies( args.database )
+
+    sourceFiles = set()
+    for key in args.sourceFiles:
+        filename = key[len('./'):] if key.startswith('./') else key
+        sourceFiles.add( filename )
+        logger.logEvent( 'Tidying source filename {} -> {}'.format( key, \
+                                                                    filename ) )
+
+    usedSources = set()
+    for program, sourceBundle in dependencyStore.getProgramSourceList():
+        for sourceFile in sourceBundle:
+            usedSources.add( sourceFile )
+            logger.logEvent( 'Found usage of file {}'.format( sourceFile ) )
+
+    sourceFiles = sourceFiles - usedSources
+
+    if len( sourceFiles ) != 0:
+        print( 'Unused files: {}'.format( ', '.join( sourceFiles ) ) )
+        sys.exit( 1 )

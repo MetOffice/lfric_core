@@ -21,31 +21,16 @@ PROGRAMS = $(patsubst %.o,%,$(notdir $(PROG_OBJS)))
 # dereference that to get a list of all objects needed by all programs:
 ALL_OBJS = $(foreach proj, $(shell echo $(PROGRAMS) | tr a-z A-Z), $($(proj)_OBJS))
 
-# Compile a list of all possible objects by substituting .[Ff]90 with .o on all
-# source files:
-ALL_POSSIBLE_OBJS = $(patsubst ./%, $(OBJ_DIR)/%.o, $(basename $(shell find . -name "[^.]*.[Ff]90")))
-
-# Find any objects which could be built but aren't used:
-UNUSED_OBJS = $(filter-out $(ALL_OBJS), $(ALL_POSSIBLE_OBJS))
-
 # Remove the program objects from the list of all objects, leaving modules
 ALL_MODULES = $(filter-out $(PROG_OBJ),$(ALL_OBJS))
-
-# If no programs objects were found then the dependency analysis probably
-# hasn't happened yet
-ifneq ($(words $(ALL_OBJS)), 0)
-  ifneq ($(words $(UNUSED_OBJS)), 0)
-    $(error Found the following unused source files: $(patsubst $(OBJ_DIR)/%.o, %.[Ff]90, $(UNUSED_OBJS)))
-  endif
-endif
 
 .SECONDEXPANSION:
 
 .PHONY: applications
 applications: $(patsubst %,$(BIN_DIR)/%,$(PROGRAMS))
 
-.PHONY: modules | $(OBJ_DIR)
-modules: $(OBJ_DIR)/modules.a
+.PHONY: modules
+modules: $(OBJ_DIR)/modules.a | $(OBJ_DIR)
 
 $(BIN_DIR)/%: $(OBJ_DIR)/%.x | $(BIN_DIR)
 	@echo -e $(VT_BOLD)Installing\$(VT_RESET) $@

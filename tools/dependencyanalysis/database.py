@@ -181,6 +181,8 @@ INSERT OR REPLACE INTO programs VALUES ( "{name}" );
     # Get all the dependency relationships.
     #
     # Arguments:
+    # Return:
+    #   Yields dependor, dependees tuples
     #
     # Return:
     #   A generator yielding (dependor, [dependee]) tuples.
