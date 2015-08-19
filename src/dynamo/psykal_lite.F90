@@ -129,7 +129,7 @@ contains
     ndf = x_p%vspace%get_ndf( )
     undf = x_p%vspace%get_undf( )
     fs = x%which_function_space()  
-    if(fs .eq. W2) then 
+    if(fs  ==  W2) then 
        boundary_dofs => x_p%vspace%get_boundary_dofs()
     end if
     
@@ -146,7 +146,7 @@ contains
                                    map                 &
                                    )
        
-       if(fs.eq.W2) then ! this is yuk but haven't done others yet              
+       if(fs == W2) then ! this is yuk but haven't done others yet              
           call enforce_bc_w2(nlayers,ndf,undf,map,boundary_dofs,Ax_p%data)           
        end if    
     end do

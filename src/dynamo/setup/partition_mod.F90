@@ -5,7 +5,7 @@
 ! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
 !-------------------------------------------------------------------------------
 
-!> @brief A module providing a partitioning class
+!> @brief Provides a partitioning class
 
 !> @details When instantiated, this module partitions the mesh for the
 !> supported mesh types: bi-periodic plane and cubed sphere.
@@ -22,6 +22,7 @@ module partition_mod
 use global_mesh_mod, only : global_mesh_type
 use log_mod,         only : log_event,         &
                             LOG_LEVEL_ERROR
+use constants_mod,   only: i_def, r_def
 
 use ESMF
 
@@ -58,47 +59,61 @@ type, public :: partition_type
   integer              :: halo_depth
 !> The total number of cells in the global domain
   integer              :: global_num_cells
+
+!-------------------------------------------------------------------------------
+! Contained functions/subroutines
+!-------------------------------------------------------------------------------
 contains
-!> Returns the total of core, owned and all halo cells in a 2d slice on the
-!> local partition
-!> @return num_cells The total number of the core, owned and all halo cells
-!> on the local partition
+  !> @brief  Returns the total of core, owned and all halo cells in a 2d slice on
+  !> the local partition
+  !> @return num_cells The total number of the core, owned and all halo cells
+  !> on the local partition
   procedure, public :: get_num_cells_in_layer
-!> Returns the total number of core cells in a 2d slice on the local partition
-!> @return core_cells The total number of core cells on the local partition
+
+  !> @brief  Returns the total number of core cells in a 2d slice on the local partition
+  !> @return core_cells The total number of core cells on the local partition
   procedure, public :: get_num_cells_core
-!> Returns the total number of owned cells in a 2d slice on the local partition
-!> @return core_cells The total number of owned cells on the local partition
+
+  !> @brief  Returns the total number of owned cells in a 2d slice on the local partition
+  !> @return core_cells The total number of owned cells on the local partition
   procedure, public :: get_num_cells_owned
-!> Returns the maximum depth of the halo
-!> @return halo_depth The maximum depth of halo cells
+
+  !> @brief Returns the maximum depth of the halo
+  !> @return halo_depth The maximum depth of halo cells
   procedure, public :: get_halo_depth
-!> Returns the total number of halo cells in a particular depth of halo in a 2d
-!> slice on the local partition
-!> @param[in] depth The depth of the halo being queried
-!> @return halo_cells The total number of halo cells of the particular depth
-!> on the local partition
+
+  !> @brief  Gets number of cells in a halo 
+  !> @details Returns the total number of halo cells in a particular depth of halo in a
+  !> 2d slice on the local partition
+  !> @param[in] depth The depth of the halo being queried
+  !> @return halo_cells The total number of halo cells of the particular depth
+  !> on the local partition
   procedure, public :: get_num_cells_halo
-!> Returns the local rank number
-!> @return local_rank The number of the local rank
+
+  !> @brief Returns the local rank number
+  !> @return local_rank The number of the local rank
   procedure, public :: get_local_rank
-!> Returns the total number of ranks
-!> @return total_ranks The total number of ranks
+
+  !> @brief Returns the total number of ranks
+  !> @return total_ranks The total number of ranks
   procedure, public :: get_total_ranks
-!> Returns the owner of a cell on the local partition
-!> @param[in] cell_number The local id of of the cell being queried
-!> @return cell_owner The owner of the given cell
+
+  !> @brief  Returns the owner of a cell on the local partition
+  !> @param[in] cell_number The local id of of the cell being queried
+  !> @return cell_owner The owner of the given cell
   procedure, public :: get_cell_owner
-!> Returns the global index of the cell that corresponds to the given
-!! local index on the local partition
-!> @param[in] lid The id of a cell in local index space
-!> @return gid The id of a cell in global index space
+
+  !> @brief  Returns the global index of the cell that corresponds to the given
+  !! local index on the local partition
+  !> @param[in] lid The id of a cell in local index space
+  !> @return gid The id of a cell in global index space
   procedure, public :: get_gid_from_lid
-!> @brief Returns the local index of the cell on the local
-!> partition that corresponds to the given global index.
-!> @param[in] gid The global index to search for on the local partition
-!> @return lid The local index that corresponds to the given global index
-!> or -1 if the cell with the given global index is not present of the local partition
+
+  !> @brief  Returns the local index of the cell on the local
+  !> partition that corresponds to the given global index.
+  !> @param[in] gid The global index to search for on the local partition
+  !> @return lid The local index that corresponds to the given global index
+  !> or -1 if the cell with the given global index is not present of the local partition
   procedure, public :: get_lid_from_gid
 
 end type partition_type
@@ -109,6 +124,9 @@ interface partition_type
 end interface
 
 interface
+!-------------------------------------------------------------------------------
+! Interface for the partitioner function pointer that is supplied to the constructor
+!-------------------------------------------------------------------------------
   subroutine partitioner_interface( global_mesh, &
                                     xproc, &
                                     yproc, &
@@ -131,7 +149,10 @@ end interface
 
 contains
 
-!> Construct a <code>partition_type</code> object
+!-------------------------------------------------------------------------------
+! Constructs partition object
+!-------------------------------------------------------------------------------
+!> @brief Constructs a <code>partition_type</code> object
 !>
 !> @param [in] global_mesh A global mesh object that describes the layout
 !>                         of the global mesh
@@ -145,7 +166,7 @@ contains
 !> @param [in] local_rank Number of the local process rank
 !> @param [in] total_ranks Total number of process ranks available
 !> @return self the partition object
-!>
+!-------------------------------------------------------------------------------
 function partition_constructor( global_mesh, &
                                 partitioner, &
                                 xproc, &
@@ -241,7 +262,9 @@ if (rc /= ESMF_SUCCESS) call log_event( 'Failed to ascertain the ownership of ha
 
 end function partition_constructor
 
-
+!-------------------------------------------------------------------------------
+! Biperiodic partitioner
+!-------------------------------------------------------------------------------
 !> Partitions the mesh on a bi-periodic plane. It returns the global ids of
 !> the cells in the given partition.
 !>
@@ -265,6 +288,7 @@ end function partition_constructor
 !> @param num_halo [out] Number of cells that are halo cells. The cell ids
 !>                 of these cells follow the owned cells in the
 !>                 <code>partitioned_cells</code> array
+!-------------------------------------------------------------------------------
   subroutine partitioner_biperiodic( global_mesh, &
                                      xproc, &
                                      yproc, &
@@ -303,6 +327,9 @@ end function partition_constructor
 
   end subroutine partitioner_biperiodic
 
+!-------------------------------------------------------------------------------
+! Cubed sphere partitioner
+!-------------------------------------------------------------------------------
 !> Partitions the mesh on cubed_sphere. It returns the global ids of
 !> the cells in the given partition.
 !>
@@ -326,6 +353,7 @@ end function partition_constructor
 !> @param num_halo [out] Number of cells that are halo cells. The cell ids
 !>                 of these cells follow the owned cells in the
 !>                 <code>partitioned_cells</code> array
+!-------------------------------------------------------------------------------
   subroutine partitioner_cubedsphere( global_mesh, &
                                       xproc, &
                                       yproc, &
@@ -364,7 +392,9 @@ end function partition_constructor
 
   end subroutine partitioner_cubedsphere
 
-
+!-------------------------------------------------------------------------------
+! Serial cubed sphere partitioner
+!-------------------------------------------------------------------------------
 !> Returns a single partition of cubed-sphere mesh for use when running the
 !> code in serial
 !>
@@ -388,6 +418,7 @@ end function partition_constructor
 !> @param num_halo [out] Number of cells that are halo cells. The cell ids
 !>                 of these cells follow the owned cells in the
 !>                 <code>partitioned_cells</code> array
+!-------------------------------------------------------------------------------
   subroutine partitioner_cubedsphere_serial( global_mesh, &
                                              xproc, &
                                              yproc, &
@@ -445,9 +476,10 @@ end function partition_constructor
 
   end subroutine partitioner_cubedsphere_serial
 
-
-
-  ! Helper function that partitions a mesh that is formed from a number of rectangular panels.
+!-------------------------------------------------------------------------------
+! Helper routine that partitions a mesh that is formed from a number
+! of rectangular panels.
+!-------------------------------------------------------------------------------
   subroutine partitioner_rectangular_panels( global_mesh, &
                                              num_panels, &
                                              xproc, &
@@ -548,14 +580,14 @@ end function partition_constructor
   !the local partition - this algorithm should spread out the number of
   !cells each partition gets fairly evenly
   start_x = int( ( real( local_xproc ) * real( num_cells_x )/ &
-                   real( xproc ) ) + 0.5 ) + 1
+                   real( xproc ) ) + 0.5_r_def ) + 1
   num_x   = int( ( real( local_xproc + 1 ) * real( num_cells_x )/ &
-                   real( xproc ) ) + 0.5 ) - start_x + 1
+                   real( xproc ) ) + 0.5_r_def ) - start_x + 1
 
   start_y = int( ( real( local_yproc ) * real( num_cells_y )/ &
-                   real( yproc ) ) + 0.5 ) + 1
+                   real( yproc ) ) + 0.5_r_def ) + 1
   num_y   = int( ( real( local_yproc + 1 ) * real( num_cells_y )/ &
-                   real( yproc ) ) + 0.5 ) - start_y + 1
+                   real( yproc ) ) + 0.5_r_def ) - start_y + 1
 
   !Create a linked list of cells known to this partition
   !Start with the core cells - those with all dofs wholly owned by the partition
@@ -634,7 +666,7 @@ end function partition_constructor
     curr => curr%next
   end do
 
-  !Deallocate the list
+  ! Deallocate the list
   call clear_list( start )
 
   ! Cell ids within the separate groups have to be in numerical order.
@@ -672,7 +704,7 @@ end function partition_constructor
     if( .not.swapped )exit
   end do
   !
-  !Sort halo cells in their groups of halo depths
+  ! Sort halo cells in their groups of halo depths
   do depth = 1,halo_depth
     start_sort = end_sort + 1
     end_sort = start_sort + num_halo(depth) - 1
@@ -692,16 +724,24 @@ end function partition_constructor
 
   end subroutine partitioner_rectangular_panels
 
-
-!> @brief Applies a single depth stencil around a collection of cells and adds
-!> the global ids of the stencil cells to a list of cells known to the partition
-!> - if they are not already in the list.
-!> @param[in] global_mesh A global mesh object that describes the layout of the global mesh
-!> @param[in] input_cells A pointer to the start of a portion of the linked list over which the stencil will be applied
-!> @param[in] number_of_cells The number of cells in the portion of the linked list over which the stencil will be applied
-!> @param[in] start Start of the linked-list that holds cells known to this partition
-!> @param[inout] curr Current position at which items will be added to the list that holds cells known to this partition
-!> @param[inout] num_in_list Total number of cells known to this partition
+!-------------------------------------------------------------------------------
+! Applies a stencil around a collection of cells. PRIVATE subroutine.
+!-------------------------------------------------------------------------------
+! Details: Applies a single depth stencil around a collection of cells and adds
+!          the global ids of the stencil cells to a list of cells known to the 
+!          partition - if they are not already in the list.
+! Input:   global_mesh      A global mesh object that describes the layout of 
+!                           the global mesh
+!          input_cells      A pointer to the start of a portion of the linked list
+!                           over which the stencil will be applied
+!          number_of_cells  The number of cells in the portion of the linked list
+!                           over which the stencil will be applied
+!          start            Start of the linked-list that holds cells known to 
+!                           this partition
+! In/Out:  curr             Current position at which items will be added to the
+!                           list that holds cells known to this partition
+!          num_in_list      Total number of cells known to this partition
+!-------------------------------------------------------------------------------
   subroutine apply_stencil( global_mesh, &
                             input_cells, &
                             number_of_cells, &
@@ -748,7 +788,9 @@ end function partition_constructor
 
   end subroutine apply_stencil
 
-
+!-------------------------------------------------------------------------------
+! Gets total number of cells in a layer
+!-------------------------------------------------------------------------------
 function get_num_cells_in_layer( self ) result ( num_cells )
   implicit none
 
@@ -765,7 +807,9 @@ function get_num_cells_in_layer( self ) result ( num_cells )
 
 end function get_num_cells_in_layer
 
-
+!-------------------------------------------------------------------------------
+! Gets total number of core cells in a 2d slice on the local partition
+!-------------------------------------------------------------------------------
 function get_num_cells_core( self ) result ( core_cells )
   implicit none
 
@@ -777,7 +821,9 @@ function get_num_cells_core( self ) result ( core_cells )
 
 end function get_num_cells_core
 
-
+!-------------------------------------------------------------------------------
+! Gets total number of owned cells in a 2d slice on the local partition
+!-------------------------------------------------------------------------------
 function get_num_cells_owned( self ) result ( owned_cells )
   implicit none
 
@@ -790,6 +836,9 @@ function get_num_cells_owned( self ) result ( owned_cells )
 end function get_num_cells_owned
 
 
+!-------------------------------------------------------------------------------
+! Gets the depth of the halos that have been set up
+!-------------------------------------------------------------------------------
 function get_halo_depth( self ) result ( halo_depth )
   implicit none
 
@@ -802,6 +851,10 @@ function get_halo_depth( self ) result ( halo_depth )
 end function get_halo_depth
 
 
+!-------------------------------------------------------------------------------
+! Gets total number of halo cells in a particular depth of halo in a 2d
+! slice on the local partition
+!-------------------------------------------------------------------------------
 function get_num_cells_halo( self, depth ) result ( halo_cells )
   implicit none
 
@@ -819,6 +872,9 @@ function get_num_cells_halo( self, depth ) result ( halo_cells )
 end function get_num_cells_halo
 
 
+!-------------------------------------------------------------------------------
+! Gets the local rank number
+!-------------------------------------------------------------------------------
 function get_local_rank( self ) result ( local_rank )
   implicit none
 
@@ -831,6 +887,9 @@ function get_local_rank( self ) result ( local_rank )
 end function get_local_rank
 
 
+!-------------------------------------------------------------------------------
+! Gets the total number of ranks being used
+!-------------------------------------------------------------------------------
 function get_total_ranks( self ) result ( total_ranks )
   implicit none
 
@@ -842,7 +901,9 @@ function get_total_ranks( self ) result ( total_ranks )
 
 end function get_total_ranks
 
-
+!-------------------------------------------------------------------------------
+! Gets the owner of a cell on the local partition
+!-------------------------------------------------------------------------------
 function get_cell_owner( self, cell_number ) result ( cell_owner )
 
   implicit none
@@ -857,7 +918,10 @@ function get_cell_owner( self, cell_number ) result ( cell_owner )
 
 end function get_cell_owner
 
-
+!-------------------------------------------------------------------------------
+! Gets the global index of the cell that corresponds to the given
+! local index on the local partition
+!-------------------------------------------------------------------------------
 function get_gid_from_lid( self, lid ) result ( gid )
 
   implicit none
@@ -882,10 +946,13 @@ function get_gid_from_lid( self, lid ) result ( gid )
 
 end function get_gid_from_lid
 
-
+!-------------------------------------------------------------------------------
+! Gets the local index of the cell on the local partition that corresponds
+! to the given global index
+!-------------------------------------------------------------------------------
 function get_lid_from_gid( self, gid ) result ( lid )
 !
-! Perform a search through the global cell lookup table looking for the
+! Performs a search through the global cell lookup table looking for the
 ! required global index.
 !
 ! The partitioned_cells array holds global indices in three groups: core cells,
@@ -957,12 +1024,16 @@ function get_lid_from_gid( self, gid ) result ( lid )
 
 end function get_lid_from_gid
 
-!> @brief Performs a binary search through the given array looking for
-!> a particular entry and returns the index of the entry found
-!> or -1 if no matching entry can be found. The values held in "array_to_be_searched"
-!> must be in numerically increasing order
-!> @param[in] array_to_be_searched The array that will be searched for the given entry
-!> @param[in] value_to_find The entry that is to be searched for
+!-------------------------------------------------------------------------------
+! Performs a binary search through the given array. PRIVATE function.
+!-------------------------------------------------------------------------------
+! Details: Performs a binary search through the given array looking for a
+!          particular entry and returns the index of the entry found or -1 if no
+!          matching entry can be found. The values held in "array_to_be_searched"
+!          must be in numerically increasing order.
+! Input:   array_to_be_searched  The array that will be searched for the given entry
+!          value_to_find         The entry that is to be searched for
+!-------------------------------------------------------------------------------
 pure function binary_search( array_to_be_searched, value_to_find ) result ( id )
 
   implicit none

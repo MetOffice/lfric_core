@@ -69,7 +69,7 @@ contains
     tol = 1.0e-6_r_def  
     qr => qr%get_instance(QR3,9,3)
     l_spherical = .false.
-    f_lat       = 0.0
+    f_lat       = 0.0_r_def
 
     ! Dummy mesh mod has 9 cells, 3 layers
     mesh = mesh_type(PLANE_BI_PERIODIC)

@@ -137,8 +137,8 @@ contains
 
     orientation_w2 => u_proxy%vspace%get_cell_orientation ( cell )
 !   Create the data
-    r_theta_proxy%data(:) = 0.0
-    u_proxy%data(:) = 0.0
+    r_theta_proxy%data(:) = 0.0_r_def
+    u_proxy%data(:) = 0.0_r_def
     phi_proxy%data(:) = GRAVITY*chi_p(3)%data(:)
 
     call linear_rtheta_code( nlayers, &

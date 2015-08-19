@@ -86,7 +86,7 @@ contains
     ! check the arguments qr .or. mm not both or neither
     if( present(qr) .and. .not.present(mm) ) then
        ! quadrature present, only for W3
-       if( (fs_l.eq.W3) .and. (fs_r.eq.W3) ) then
+       if( (fs_l == W3) .and. (fs_r == W3) ) then
           ! we are on the right space
           call invoke( w3_solver_kernel_type(lhs,rhs,chi,qr) )
        else
@@ -95,7 +95,7 @@ contains
        end if
     else if( .not.present(qr) .and. present(mm) ) then
        ! mass matrix
-       if(fs_l.eq.W3) then
+       if(fs_l == W3) then
           write(log_scratch_space,'(A)') "solver_algorithm: mass-matrix not implemented for W3, stopping"
           call log_event(log_scratch_space, LOG_LEVEL_ERROR)
        else
@@ -386,7 +386,7 @@ contains
 
     end do
 
-    if(iter.ge.MAX_ITER) then
+    if(iter >= MAX_ITER) then
       write( log_scratch_space, '(A, I3, A, E15.8)' ) &
            "cg solver_algorithm: NOT converged in", iter, " iters, Res=", err
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )

@@ -5,7 +5,7 @@
 ! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
 !-------------------------------------------------------------------------------
 
-!> @brief A module that describes the cell ordering within the global mesh
+!> @brief  Describes the cell ordering within the global mesh
 
 !> @details This object holds the connectivities that fully
 !>          describe the 2D topology of the global mesh
@@ -44,63 +44,68 @@ type, public :: global_mesh_type
 !> maximum number of cells around a vertex
   integer              :: max_cells_per_vertex
 
+!-------------------------------------------------------------------------------
+! Contained functions/subroutines
+!-------------------------------------------------------------------------------
 contains
-!> Get the cell id that is x_cells across (E is +ve) and
-!> y_cells up/down (N is +ve) from given cell_number.
-!> NOTE: For a cubed -sphere mesh, this will only return correct cell ids if
-!> the offset cell remains on same the cubed-sphere "face" as the start cell
-!> @param[in] cell_number Start position in the global cell id array
-!> @param[in] x_cells Offset in the E/W direction
-!> @param[in] y_cells Offset in the N/S direction
-!> @return the cell id of the cell at the given offset to the start cell
+  !> @brief  Returns id of a cell in a mesh
+  !> @details Gets the cell id that is x_cells across (E is +ve) and
+  !> y_cells up/down (N is +ve) from given cell_number.
+  !> NOTE: For a cubed -sphere mesh, this will only return correct cell ids if
+  !> the offset cell remains on same the cubed-sphere "face" as the start cell
+  !> @param[in] cell_number Start position in the global cell id array
+  !> @param[in] x_cells Offset in the E/W direction
+  !> @param[in] y_cells Offset in the N/S direction
+  !> @return cell_id The cell id of the cell at the given offset to the start cell
   procedure, public :: get_cell_id
-!> Get the cells that are incident on a particular vertex
-!> @param[in] vertex_number The number of the vertex being queried
-!> @param[out] cells The cells around the given vertex
+
+  !> @brief  Gets the cells that are incident on a particular vertex
+  !> @param[in] vertex_number The number of the vertex being queried
+  !> @param[out] cells The cells around the given vertex
   procedure, public :: get_cell_on_vert 
-!> Get the cells that are incident on a particular edge
-!> @param[in] edge_number The number of the edge being queried
-!> @param[out] cells The cells either side of the given edge
+
+  !> @brief  Gets the cells that are incident on a particular edge
+  !> @param[in] edge_number The number of the edge being queried
+  !> @param[out] cells The cells either side of the given edge
   procedure, public :: get_cell_on_edge
-!> Get the total number of cells in the global domain
-!> @return The total number of cells in the global domain
+
+  !> @brief  Gets the total number of cells in the global domain
+  !> @return ncells The total number of cells in the global domain
   procedure, public :: get_ncells
-!> Get the maximum number of cells that can be incident with a vertex (the
-!> actual number of cells at a particular vertex could be less (eg. in a cubed
-!> sphere mesh, there are generally four cells incident with a vertex except
-!> for the "corner" vertices where there are three.
-!> @return The maximum number of cells that can be incident with a vertex
+
+  !> @brief  Returns maximum number of cells around a vertex.
+  !> @details The maximum number of cells that can be incident with a vertex (the
+  !> actual number of cells at a particular vertex could be less (eg. in a cubed
+  !> sphere mesh, there are generally four cells incident with a vertex except
+  !> for the "corner" vertices where there are three.
+  !> @return max_cells_per_vertex The maximum number of cells that can be incident with a vertex
   procedure, public :: get_max_cells_per_vertex
 
-  !> @brief Type-bound function
-  !> @details    Get the edges that are incident with a
-  !>             particular cell
+  !> @brief  Gets the edges that are incident with a particular cell
   !> @param[in]  cell_gid The global id of the cell being queried 
   !> @param[out] The edges around the given cell
   procedure, public :: get_edge_on_cell
 
-  !> @brief Type-bound subroutine
-  !> @details    Get the vertices that are incident with a
-  !>             particular cell
+  !> @brief  Gets the vertices that are incident with a particular cell
   !> @param[in]  cell_gid The global id of the cell being queried 
-  !> @parma[out] The vertices around the given cell
+  !> @param[out] The vertices around the given cell
   procedure, public :: get_vert_on_cell
 
-  !> Type-bound function
-  !> @return Number of vertices per 2D-cell
+  !> @brief  Returns number of vertices per 2D-cell
+  !> @return nverts_per_cell Number of vertices per 2D-cell
   procedure, public :: get_nverts_per_cell
 
-  !> Type-bound function
-  !> @return Number of edges per 2D-cell
+  !> @brief  Returns number of edges on each cell
+  !> @return nedges_per_cell Number of edges per 2D-cell
   procedure, public :: get_nedges_per_cell
 
-  !> Type-bound function
+  !> @brief  Returns cells adjacent to a cell
   !> @param [in]  cell_gid   The global id of the requested cell
   !> @return An array containing the global ids of cells adjacent to
   !>         the cell with global id [cell_gid]
   procedure, public :: get_cell_next
 
-  !> Type-bound function
+  !> @brief  Returns vertex coordinates
   !> @param [in]  vert_gid   The global id of the requested vertex
   !> @return A three-element array containing the coordinates of a 
   !>         single vertex on the global mesh. Currently, these are in
@@ -114,10 +119,18 @@ interface global_mesh_type
   module procedure global_mesh_constructor_unit_test_data
 end interface
 
+!-------------------------------------------------------------------------------
+! Contained functions/subroutines
+!-------------------------------------------------------------------------------
 contains
 
-!> Construct a global mesh object to hold the connectivities
-!> that fully describe the 2D topology of the mesh
+!-------------------------------------------------------------------------------
+! Constructs a global mesh object
+!-------------------------------------------------------------------------------
+!>  @brief   Constructs a global mesh object
+!>  @details Constructs a global mesh object to hold the connectivities
+!!           that fully describe the 2D topology of the mesh
+!-------------------------------------------------------------------------------
 function global_mesh_constructor( filename ) result(self)
 
 use constants_mod,  only: str_def
@@ -194,6 +207,19 @@ call calc_cell_on_edge( self%edge_on_cell_2d, &
 
 end function global_mesh_constructor
 
+!-------------------------------------------------------------------------------
+! Returns the cells on vertices. PRIVATE subroutine.
+!-------------------------------------------------------------------------------
+! Details: Calculates the cells that are incident on a vertex by looping through
+!          the vertices on all cells (which we store) and filling an array based 
+!          on vertex number with the cells around it.
+! Input:   vert_on_cell    Array with indices of vertices on cells
+!          verts_per_cell  Number of vertices per cell
+!          ncell           Number of cells
+!          cells_per_vert  Number of cells per vertex
+!          nvert           Number of vertices
+! Output:  cell_on_vert    Array with indices of cells on vertices
+!-------------------------------------------------------------------------------
 subroutine calc_cell_on_vertex(vert_on_cell, &
                                verts_per_cell, &
                                ncell, &
@@ -211,10 +237,6 @@ integer :: cell
 integer :: vertno
 integer :: cellno
 integer :: vert
-
-! Calculate the cells that are incident on a vertex by looping through the
-! vertices on all cells (which we store) and filling an array based on vertex
-! number with the cells around it
 
 cell_on_vert = 0
 
@@ -235,6 +257,18 @@ end do
 
 end subroutine calc_cell_on_vertex
 
+!-------------------------------------------------------------------------------
+! Returns the cells on edges. PRIVATE subroutine.
+!-------------------------------------------------------------------------------
+! Details: Calculates the cells that are either side of an edge by looping
+!          through the edges on all cells (which we store) and filling an array 
+!          based on edge number with the cells around it
+! Input:   edge_on_cell    Array with indices of edges on cells
+!          edges_per_cell  Number of edges per cell
+!          ncell           Number of cells
+!          nedge           Number of edges
+! Output:  cell_on_edge    Array with indices of cells on edges
+!-------------------------------------------------------------------------------
 subroutine calc_cell_on_edge( edge_on_cell, &
                               edges_per_cell, &
                               ncell, &
@@ -251,10 +285,6 @@ integer :: cell
 integer :: edgeno
 integer :: cellno
 integer :: edge
-
-! Calculate the cells that are either side of an edge by looping through the
-! edges on all cells (which we store) and filling an array based on edge
-! number with the cells around it
 
 cell_on_edge=0
 
@@ -275,6 +305,9 @@ end do
 
 end subroutine calc_cell_on_edge
 
+!-------------------------------------------------------------------------------
+! Returns id of a cell in a mesh
+!-------------------------------------------------------------------------------
 function get_cell_id( self, cell_number, x_cells, y_cells ) result ( cell_id )
 
 use reference_element_mod, only : W, S, E, N
@@ -322,19 +355,9 @@ end do
 
 end function get_cell_id
 
-
-subroutine get_vert_on_cell(self, cell_gid, verts)
-
-  implicit none
-  class (global_mesh_type), intent(in)  :: self
-  integer (i_def),          intent(in)  :: cell_gid
-  integer (i_def),          intent(out) :: verts(:)
-
-  verts(:) = self%vert_on_cell_2d(:,cell_gid)
-
-end subroutine get_vert_on_cell
-
-
+!-------------------------------------------------------------------------------
+! Gets the cells that are incident on a particular vertex
+!-------------------------------------------------------------------------------
 subroutine get_cell_on_vert( self, vertex_number, cells)
 
 implicit none
@@ -348,19 +371,9 @@ cells = self%cell_on_vert_2d(:,vertex_number)
 
 end subroutine get_cell_on_vert
 
-
-subroutine get_edge_on_cell(self, cell_gid, edges)
-
-  implicit none
-  class (global_mesh_type), intent(in)  :: self
-  integer (i_def),          intent(in)  :: cell_gid
-  integer (i_def),          intent(out) :: edges(:)
-
-  edges(:) = self%edge_on_cell_2d(:,cell_gid)
-
-end subroutine get_edge_on_cell
-
-
+!-------------------------------------------------------------------------------
+! Gets the cells that are incident on a particular edge
+!-------------------------------------------------------------------------------
 subroutine get_cell_on_edge( self, edge_number, cells)
 
 implicit none
@@ -373,8 +386,9 @@ cells=self%cell_on_edge_2d(:,edge_number)
 
 end subroutine get_cell_on_edge
 
-
-
+!-------------------------------------------------------------------------------
+! Gets the total number of cells in the global domain
+!-------------------------------------------------------------------------------
 function get_ncells( self ) result (ncells)
 
 class(global_mesh_type), intent(in) :: self
@@ -385,20 +399,9 @@ ncells = self%ncells
 
 end function get_ncells
 
-
-
-function get_nverts_per_cell( self ) result (nverts_per_cell)
-
-  implicit none
-  class(global_mesh_type), intent(in) :: self
-  integer :: nverts_per_cell
-
-  nverts_per_cell = self%nverts_per_cell
-
-end function get_nverts_per_cell
-
-
-
+!-------------------------------------------------------------------------------
+! Gets maximum number of cells around a vertex
+!-------------------------------------------------------------------------------
 function get_max_cells_per_vertex( self ) result (max_cells_per_vertex)
 
 class(global_mesh_type), intent(in) :: self
@@ -409,7 +412,50 @@ max_cells_per_vertex = self%max_cells_per_vertex
 
 end function get_max_cells_per_vertex
 
+!-------------------------------------------------------------------------------
+! Gets edges that are incident with a particular cell
+!-------------------------------------------------------------------------------
+subroutine get_edge_on_cell(self, cell_gid, edges)
 
+  implicit none
+  class (global_mesh_type), intent(in)  :: self
+  integer (i_def),          intent(in)  :: cell_gid
+  integer (i_def),          intent(out) :: edges(:)
+
+  edges(:) = self%edge_on_cell_2d(:,cell_gid)
+
+end subroutine get_edge_on_cell
+
+!-------------------------------------------------------------------------------
+! Gets the vertices that are incident with a particular cell
+!-------------------------------------------------------------------------------
+subroutine get_vert_on_cell(self, cell_gid, verts)
+
+  implicit none
+  class (global_mesh_type), intent(in)  :: self
+  integer (i_def),          intent(in)  :: cell_gid
+  integer (i_def),          intent(out) :: verts(:)
+
+  verts(:) = self%vert_on_cell_2d(:,cell_gid)
+
+end subroutine get_vert_on_cell
+
+!-------------------------------------------------------------------------------
+! Gets the number of vertices per 2D-cell
+!-------------------------------------------------------------------------------
+function get_nverts_per_cell( self ) result (nverts_per_cell)
+
+  implicit none
+  class(global_mesh_type), intent(in) :: self
+  integer :: nverts_per_cell
+
+  nverts_per_cell = self%nverts_per_cell
+
+end function get_nverts_per_cell
+
+!-------------------------------------------------------------------------------
+! Gets the number of edges on each cell
+!-------------------------------------------------------------------------------
 function get_nedges_per_cell( self ) result (nedges_per_cell)
 
   implicit none
@@ -420,7 +466,23 @@ function get_nedges_per_cell( self ) result (nedges_per_cell)
 
 end function get_nedges_per_cell
 
+!-------------------------------------------------------------------------------
+! Gets ids of cells adjacent to a cell with global id
+!-------------------------------------------------------------------------------
+subroutine get_cell_next (self, cell_gid, cell_next)
 
+  implicit none
+  class (global_mesh_type), intent(in)  :: self
+  integer (i_def),          intent(in)  :: cell_gid
+  integer(i_def),           intent(out) :: cell_next(:)
+
+  cell_next(:) = self%cell_next_2d(:,cell_gid)
+
+end subroutine get_cell_next
+
+!-------------------------------------------------------------------------------
+! Gets vertex coordinates
+!-------------------------------------------------------------------------------
 subroutine get_vert_coords (self, vert_gid, vert_coords)
 
   implicit none
@@ -432,17 +494,6 @@ subroutine get_vert_coords (self, vert_gid, vert_coords)
 
 end subroutine get_vert_coords
 
-
-subroutine get_cell_next (self, cell_gid, cell_next)
-
-  implicit none
-  class (global_mesh_type), intent(in)  :: self
-  integer (i_def),          intent(in)  :: cell_gid
-  integer(i_def),           intent(out) :: cell_next(:)
-
-  cell_next(:) = self%cell_next_2d(:,cell_gid)
-
-end subroutine get_cell_next
 
 !==============================================================================
 ! The following routines are only available when setting data for unit testing.
@@ -481,22 +532,22 @@ function global_mesh_constructor_unit_test_data() result (self)
   allocate( self%vert_coords     (3, nverts) )
 
   ! Note: These test coordinates are in [Long, Lat] in units of Radians
-  self%vert_coords(1:2,1)  = [-2.0, -2.0]
-  self%vert_coords(1:2,2)  = [-1.0, -2.0]
-  self%vert_coords(1:2,3)  = [ 1.0, -2.0]
-  self%vert_coords(1:2,4)  = [ 2.0, -2.0]
-  self%vert_coords(1:2,5)  = [-2.0, -1.0]
-  self%vert_coords(1:2,6)  = [-1.0, -1.0]
-  self%vert_coords(1:2,7)  = [ 1.0, -1.0]
-  self%vert_coords(1:2,8)  = [ 2.0, -1.0]
-  self%vert_coords(1:2,9)  = [-2.0,  1.0]
-  self%vert_coords(1:2,10) = [-1.0,  1.0]
-  self%vert_coords(1:2,11) = [ 1.0,  1.0]
-  self%vert_coords(1:2,12) = [ 2.0,  1.0]
-  self%vert_coords(1:2,13) = [-2.0,  2.0]
-  self%vert_coords(1:2,14) = [-1.0,  2.0]
-  self%vert_coords(1:2,15) = [ 1.0,  2.0]
-  self%vert_coords(1:2,16) = [ 2.0,  2.0]
+  self%vert_coords(1:2,1)  = [-2.0_r_def, -2.0_r_def]
+  self%vert_coords(1:2,2)  = [-1.0_r_def, -2.0_r_def]
+  self%vert_coords(1:2,3)  = [ 1.0_r_def, -2.0_r_def]
+  self%vert_coords(1:2,4)  = [ 2.0_r_def, -2.0_r_def]
+  self%vert_coords(1:2,5)  = [-2.0_r_def, -1.0_r_def]
+  self%vert_coords(1:2,6)  = [-1.0_r_def, -1.0_r_def]
+  self%vert_coords(1:2,7)  = [ 1.0_r_def, -1.0_r_def]
+  self%vert_coords(1:2,8)  = [ 2.0_r_def, -1.0_r_def]
+  self%vert_coords(1:2,9)  = [-2.0_r_def,  1.0_r_def]
+  self%vert_coords(1:2,10) = [-1.0_r_def,  1.0_r_def]
+  self%vert_coords(1:2,11) = [ 1.0_r_def,  1.0_r_def]
+  self%vert_coords(1:2,12) = [ 2.0_r_def,  1.0_r_def]
+  self%vert_coords(1:2,13) = [-2.0_r_def,  2.0_r_def]
+  self%vert_coords(1:2,14) = [-1.0_r_def,  2.0_r_def]
+  self%vert_coords(1:2,15) = [ 1.0_r_def,  2.0_r_def]
+  self%vert_coords(1:2,16) = [ 2.0_r_def,  2.0_r_def]
 
   self%cell_next_2d(:,1)     = [0, 0, 2, 4]
   self%cell_next_2d(:,2)     = [1, 0, 3, 5]

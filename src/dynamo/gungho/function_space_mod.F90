@@ -7,7 +7,7 @@
 !
 !-------------------------------------------------------------------------------
 
-!> @brief A type which holds information about the function space.
+!> @brief Holds information about the function space.
 
 !> @details A container which holds type definition of the function space and 
 !> has holds a number of static copies of the function spaces require by the
@@ -58,86 +58,103 @@ type, public :: function_space_type
 contains
   !final :: destructor
 
-  !> Function returns a pointer to a function space. If the required function
-  !> space had not yet been created, it creates one before returning the pointer
-  !> to it
+  !> @brief Returns a pointer to a function space
+  !> @detail Returns a pointer to a function space. If the required function space
+  !> had not yet been created, it creates one before returning the pointer to it
   !> @param[in] mesh           The parent mesh of the function space
   !> @param[in] function_space The function space id (e.g. W0)
   procedure, nopass :: get_instance
-!> Function to get the total unique degrees of freedom for this space
-!! returns an integer
-!! @param[in] self the calling function space
+
+  !> @brief Gets the total unique degrees of freedom for this space,
+  !! returns an integer
+  !! @param[in] self The calling function space
   procedure :: get_undf
 
-!> Function Returns the number of cells in the function space
-!> @param[in] self the calling function space.
-!> @return Integer the number of cells
+  !> @brief Returns the number of cells in the function space
+  !> @param[in] self The calling function space.
+  !> @return Integer, the number of cells
   procedure :: get_ncell
 
-!> Function Returns the number of cells in the function space
-!> @param[in] self the calling function space.
-!> @return Integer the number of layers
+  !> @brief Returns the number of cells in the function space
+  !> @param[in] self The calling function space.
+  !> @return Integer, the number of layers
   procedure :: get_nlayers
 
-!> Subroutine Returns a pointer to the dofmap for the cell 
-!! @param[in] self The calling function_space
-!! @param[in] cell Which cell
-!! @return The pointer which points to a slice of the dofmap
+  !> @brief Returns a pointer to the dofmap for the cell 
+  !> @param[in] self The calling function_space
+  !> @param[in] cell Which cell
+  !> @return The pointer which points to a slice of the dofmap
   procedure :: get_cell_dofmap
 
-!> Function which obtains the number of dofs per cell
-!! @param[in] self The calling functions space
-!! return an integer, the number of dofs per cell
+  !> @brief Obtains the number of dofs per cell
+  !> @param[in] self The calling functions space
+  !> @return Integer, the number of dofs per cell
   procedure :: get_ndf
 
-!> Accessor function to get the coordinates of the function space
-!! @return A pointer to the two dimensional array, (xyz,ndf)
+  !> Gets the coordinates of the function space
+  !> @param[in] self The calling function_space
+  !> @return A pointer to the two dimensional array of nodal_coords, (xyz,ndf)
   procedure :: get_nodes
   
-  !> function returns the enumerated integer for the functions_space which
+  !> @brief Returns the enumerated integer for the functions_space which
   !! is this function_space
+  !> @param[in] self The calling function_space_type
+  !> @return fs The enumerated integer for the functions space
   procedure :: which
 
-!> Subroutine Returns a pointer to the orientation for the cell 
-!! @param[in] self The calling function_space
-!! @param[in] cell Which cell
-!! @return The pointer which points to a slice of the orientation
+  !> @brief Returns a pointer to the orientation for the cell 
+  !> @param[in] self The calling function_space
+  !> @param[in] cell Which cell
+  !> @return The pointer which points to a slice of the orientation
   procedure :: get_cell_orientation
 
-!> Accessor function to get the flag (0) for dofs on bottom and top faces of element
-!! @return A pointer to the two dimensional array, (ndf,2)
+  !> @brief Gets the flag (0) for dofs on bottom and top faces of element
+  !> @param[in] self The calling function_space
+  !> @return A pointer to boundary_dofs(ndf,2) the flag for bottom (:,1) and top (:,2) boundaries
   procedure :: get_boundary_dofs
 
-!> Accessor function to evaluate a basis function
+  !> @brief Evaluates the basis function at a point
+  !> @param[in] self The calling function space
+  !> @param[in] df The dof to compute the basis function of
+  !> @param[in] xi The (x,y,z) coodinates to evaluate the basis function
   procedure evaluate_basis
-!> Accessor function to evaluate the differential of a basis function
+
+  !> @brief Evaluates the differential of a basis function
+  !> @param[in] self The calling function space
+  !> @param[in] df The dof to compute the basis function of
+  !> @param[in] xi The (x,y,z) coodinates to evaluate the basis function
   procedure evaluate_diff_basis
 
-  !> Subroutine to evaluate the basis function for a given quadrature
+  !> @brief Evaluates the basis function for a given quadrature
+  !> @param[in] ndf integer number of dofs
+  !> @param[in] qp_h integer number of quadrature points in the horizontal
+  !> @param[in] qp_v integer number of quadrature points in the vertical
+  !> @param[in] x_qp real two dimensional array holding the x's horizontal
+  !> @param[in] z_qp real two dimensional array holding the x's vertical
   !> @param[out] basis real 3 dimensional array holding the evaluated basis 
   !! functions
+  procedure compute_basis_function
+
+  !> @brief Evaluates the differential basis function for a given quadrature
   !> @param[in] ndf integer number of dofs
   !> @param[in] qp_h integer number of quadrature points in the horizontal
   !> @param[in] qp_v integer number of quadrature points in the vertical
   !> @param[in] x_qp real two dimensional array holding the x's horizontal
   !> @param[in] z_qp real two dimensional array holding the x's vertical
-  procedure compute_basis_function
-  !> Subroutine to evaluate the differential basis function for a given quadrature
   !> @param[out] dbasis real 3 dimensional array holding the evaluated basis 
   !! functions
-  !> @param[in] ndf integer number of dofs
-  !> @param[in] qp_h integer number of quadrature points in the horizontal
-  !> @param[in] qp_v integer number of quadrature points in the vertical
-  !> @param[in] x_qp real two dimensional array holding the x's horizontal
-  !> @param[in] z_qp real two dimensional array holding the x's vertical
   procedure compute_diff_basis_function
 
-  !> Accessor function to get the size of the space 
+  !> @brief Gets the size of the space 
   !!(1 is scalar 3 is vector). Returns dim
-  !> @param
+  !> @param[in] self The calling get_dim_space
+  !> @return dim The size of the space
   procedure get_dim_space
-  !> Accessor function to get the size of the differential space 
+
+  !> @brief Gets the size of the differential space 
   !! (1 is scalar 3 is vector). Returns dim
+  !> @param[in] self The calling get_dim_space_diff
+  !> @return dim The size of the differential space
   procedure get_dim_space_diff
 
 end type function_space_type
@@ -161,6 +178,9 @@ type(function_space_type), target, allocatable, save :: w3_function_space
 !-------------------------------------------------------------------------------
 contains
 
+!-------------------------------------------------------------------------------
+! Returns a pointer to a function space
+!-------------------------------------------------------------------------------
 function get_instance(mesh, function_space) result(instance)
   use basis_function_mod,      only : &
               w0_order, w1_order, w2_order, w3_order, &
@@ -263,15 +283,18 @@ function get_instance(mesh, function_space) result(instance)
   return
 end function get_instance
 
-
-!> Subroutine initialises a function space.
-!! @param[in] mesh object to assign function space to
-!! @param[in] num_dofs
-!! @param[in] num_unique_dofs
-!! @param[in] dim_space The dimension of this function space
-!! @param[in] dim_space_diff The dimension of the differentiated function space
-!! @param[in] ngp_h The number of guassian quadrature points in the horizonal
-!! @param[in] ngp_v The number of guassian quadrature points in the vertical
+!-----------------------------------------------------------------------------
+! Initialises a function space
+!-----------------------------------------------------------------------------
+!> @brief Initialises a function space.
+!> @param[in] mesh object to assign function space to
+!> @param[in] num_dofs
+!> @param[in] num_unique_dofs
+!> @param[in] dim_space The dimension of this function space
+!> @param[in] dim_space_diff The dimension of the differentiated function space
+!> @param[in] ngp_h The number of guassian quadrature points in the horizonal
+!> @param[in] ngp_v The number of guassian quadrature points in the vertical
+!-----------------------------------------------------------------------------
 subroutine init_function_space(self, &
                                order, &
                                mesh,&
@@ -320,13 +343,10 @@ subroutine init_function_space(self, &
 
   return
 end subroutine init_function_space
-!-----------------------------------------------------------------------------
-! Get total unique dofs for this space
-!-----------------------------------------------------------------------------
 
-!> Function to get the total unique degrees of freedom for this space
-!! returns an integer
-!! @param[in] self the calling function space
+!-----------------------------------------------------------------------------
+! Gets total unique dofs for this space
+!-----------------------------------------------------------------------------
 integer function get_undf(self)
   implicit none
   class(function_space_type), intent(in) :: self
@@ -337,11 +357,8 @@ integer function get_undf(self)
 end function get_undf
 
 !-----------------------------------------------------------------------------
-! Get the number of cells for this function space
+! Gets the number of cells for this function space
 !-----------------------------------------------------------------------------
-!> Function Returns the number of cells in the function space
-!> @param[in] self the calling function space.
-!> @return Integer the number of cells
 integer function get_ncell(self)
   implicit none
   class(function_space_type), intent(in) :: self
@@ -351,7 +368,7 @@ integer function get_ncell(self)
 end function get_ncell
 
 !-----------------------------------------------------------------------------
-! Get the number of layers for this functions space 
+! Gets the number of layers for this functions space 
 !-----------------------------------------------------------------------------
 integer function get_nlayers(self)
   implicit none
@@ -363,7 +380,7 @@ integer function get_nlayers(self)
 end function get_nlayers
 
 !-----------------------------------------------------------------------------
-! Get the number of dofs for a single cell 
+! Gets the number of dofs for a single cell 
 !-----------------------------------------------------------------------------
 integer function get_ndf(self)
   implicit none
@@ -375,12 +392,8 @@ integer function get_ndf(self)
 end function get_ndf
 
 !-----------------------------------------------------------------------------
-! Get the dofmap for a single cell
+! Gets the dofmap for a single cell
 !-----------------------------------------------------------------------------
-!> Subroutine Returns a pointer to the dofmap for the cell 
-!! @param[in] self The calling function_space
-!! @param[in] cell Which cell
-!! @return The pointer which points to a slice of the dofmap
 function get_cell_dofmap(self,cell) result(map)
   implicit none
   class(function_space_type), target, intent(in) :: self
@@ -392,11 +405,8 @@ function get_cell_dofmap(self,cell) result(map)
 end function get_cell_dofmap
 
 ! ----------------------------------------------------------------
-! Get the nodal coordinates of the function_space
+! Gets the nodal coordinates of the function_space
 ! ----------------------------------------------------------------
-!> Subroutine to return the dof is location
-!! @param[in] self The calling function_space
-!! @return The pointer which points to the nodal_coords
 function get_nodes(self) result(nodal_coords)
   implicit none
   class(function_space_type), target, intent(in)  :: self
@@ -408,12 +418,8 @@ function get_nodes(self) result(nodal_coords)
 end function get_nodes
 
 !-----------------------------------------------------------------------------
-! Get the orientation for a single cell
+! Gets the orientation for a single cell
 !-----------------------------------------------------------------------------
-!> Subroutine Returns a pointer to the orientation for the cell 
-!! @param[in] self The calling function_space
-!! @param[in] cell Which cell
-!! @return The pointer which points to a slice of the orientation
 function get_cell_orientation(self,cell) result(cell_orientation)
   implicit none
   class(function_space_type), target, intent(in) :: self
@@ -425,11 +431,8 @@ function get_cell_orientation(self,cell) result(cell_orientation)
 end function get_cell_orientation
 
 !-----------------------------------------------------------------------------
-! Get a flag for dofs on vertical boundaries
+! Gets a flag for dofs on vertical boundaries
 !-----------------------------------------------------------------------------
-!> Subroutine returns a pointer to flag for dofs on vertical boundaries 
-!! @param[in] self The calling function_space
-!! @param[in] boundary_dofs(ndf,2) the flag for bottom (:,1) and top (:,2) boundaries
 function get_boundary_dofs(self) result(boundary_dofs)
   implicit none
   class(function_space_type), target, intent(in) :: self
@@ -439,6 +442,9 @@ function get_boundary_dofs(self) result(boundary_dofs)
   return
 end function get_boundary_dofs
 
+!-----------------------------------------------------------------------------
+! Gets enumerated integer for the function space
+!-----------------------------------------------------------------------------
 function which(self) result(fs)
   implicit none
   class(function_space_type),  intent(in) :: self
@@ -448,6 +454,9 @@ function which(self) result(fs)
   return
 end function which
 
+!-----------------------------------------------------------------------------
+! Gets the size of the function space
+!-----------------------------------------------------------------------------
 function get_dim_space(self) result(dim)
   implicit none
   class(function_space_type), intent(in) :: self
@@ -456,6 +465,9 @@ function get_dim_space(self) result(dim)
   return
 end function get_dim_space
 
+!-----------------------------------------------------------------------------
+! Gets the size of the diferential function space
+!-----------------------------------------------------------------------------
 function get_dim_space_diff(self) result(dim)
   implicit none
   class(function_space_type), intent(in) :: self
@@ -465,12 +477,8 @@ function get_dim_space_diff(self) result(dim)
 end function get_dim_space_diff
 
 !-----------------------------------------------------------------------------
-! Evaluate a basis function at a point
+! Evaluates a basis function at a point
 !-----------------------------------------------------------------------------
-!> Function to evaluate the basis function at a point
-!> @param[in] self The calling function space
-!> @param[in] df The dof to compute the basis function of
-!> @param[in] xi The (x,y,z) coodinates to evaluate the basis function
  function evaluate_basis(self, df, xi) result(p)
   use polynomial_mod, only: poly1d
 
@@ -487,12 +495,8 @@ end function get_dim_space_diff
 end function evaluate_basis
 
 !-----------------------------------------------------------------------------
-! Evaluate the differential of a basis function at a point
+! Evaluates the differential of a basis function at a point
 !-----------------------------------------------------------------------------
-!> Function to evaluate the differential of a basis function at a point
-!> @param[in] self The calling function space
-!> @param[in] df The dof to compute the basis function of
-!> @param[in] xi The (x,y,z) coodinates to evaluate the basis function
 pure function evaluate_diff_basis(self, df, xi) result(dp)
   use polynomial_mod, only: poly1d, poly1d_deriv
   class(function_space_type), intent(in)  :: self
@@ -531,8 +535,11 @@ pure function evaluate_diff_basis(self, df, xi) result(dp)
 
 end function evaluate_diff_basis
 
+!-----------------------------------------------------------------------------
+! Evaluates the basis function for a given quadrature
+!-----------------------------------------------------------------------------
 subroutine compute_basis_function(self, &
-     basis, ndf,qp_h, qp_v, x_qp, z_qp)
+     basis, ndf, qp_h, qp_v, x_qp, z_qp)
   implicit none
   class(function_space_type), intent(in)  :: self
   integer,                                             intent(in)  :: ndf
@@ -561,6 +568,9 @@ subroutine compute_basis_function(self, &
   
 end subroutine compute_basis_function
 
+!-----------------------------------------------------------------------------
+! Evaluates the differential basis function for a given quadrature
+!-----------------------------------------------------------------------------
 subroutine compute_diff_basis_function(self, &
      dbasis, ndf, qp_h, qp_v, x_qp, z_qp )
   implicit none
@@ -590,13 +600,13 @@ subroutine compute_diff_basis_function(self, &
   end do
 
 end subroutine compute_diff_basis_function
-!-----------------------------------------------------------------------------
-! Get order for this space
-!-----------------------------------------------------------------------------
 
-!> Function to get the polynomial order for this space
-!! returns an integer
-!! @param[in] self the calling function space
+!-----------------------------------------------------------------------------
+! Gets order for this space
+!-----------------------------------------------------------------------------
+!> @brief Gets the polynomial order for this space, returns an integer
+!> @param[in] self the calling function space
+!-----------------------------------------------------------------------------
 integer function get_order(self)
   implicit none
   class(function_space_type), intent(in) :: self

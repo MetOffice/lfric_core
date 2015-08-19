@@ -88,10 +88,10 @@ subroutine mesh_structure_test()
   @assertEqual(nodes_on_face(:,20), (/ 9,4,17,20 /), "Incorrect vertex sequence on faces.")
 
   ! Mesh connectivity is complete
-  @assertTrue(minval(faces_on_face, 2).ne.0, "Incomplete faces_on_face connectivity.")
-  @assertTrue(minval(nodes_on_face, 2).ne.0, "Incomplete nodes_on_face connectivity.")
-  @assertTrue(minval(edges_on_face, 2).ne.0, "Incomplete edges_on_face connectivity.")
-  @assertTrue(minval(nodes_on_edge, 2).ne.0, "Incomplete nodes_on_edge connectivity.")
+  @assertTrue(minval(faces_on_face, 2) /= 0, "Incomplete faces_on_face connectivity.")
+  @assertTrue(minval(nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
+  @assertTrue(minval(edges_on_face, 2) /= 0, "Incomplete edges_on_face connectivity.")
+  @assertTrue(minval(nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
   ! Mesh connectivity has expected values at certain points
   @assertEqual(faces_on_face(:,1), (/ 5,6,2,16 /), "Incorrect faces_on_face connectivity.")
@@ -113,8 +113,8 @@ subroutine mesh_structure_test()
   call bpgen%get_coordinates(coords)
 
   ! Mesh coordinates have expected values at certain points
-  @assertTrue(coords(:,1) == (/ -12000.0, 4000.0 /), "Incorrect mesh coordinates.")
-  @assertTrue(coords(:,20) == (/ 12000.0, 0.0 /), "Incorrect mesh coordinates.")
+  @assertTrue(coords(:,1) == (/ -12000.0_r_def, 4000.0_r_def /), "Incorrect mesh coordinates.")
+  @assertTrue(coords(:,20) == (/ 12000.0_r_def, 0.0_r_def /), "Incorrect mesh coordinates.")
 
 
 end subroutine mesh_structure_test

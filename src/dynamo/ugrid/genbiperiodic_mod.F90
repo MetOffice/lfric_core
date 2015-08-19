@@ -130,7 +130,7 @@ subroutine calc_adjacency(self, cell_next)
 
   allocate(cell_next(4, ncells), stat=astat)
 
-  if(astat.ne.0) call log_event(prefix//"Failure to allocate cell_next.", &
+  if(astat /= 0) call log_event(prefix//"Failure to allocate cell_next.", &
                                         LOG_LEVEL_ERROR)
 
   do cell=1, ncells
@@ -188,7 +188,7 @@ subroutine calc_face_to_vert(self, mesh)
 
   allocate(mesh(4, ncells), stat=astat)
 
-  if(astat.ne.0) call log_event(prefix//"Failure to allocate mesh.", &
+  if(astat /= 0) call log_event(prefix//"Failure to allocate mesh.", &
                                         LOG_LEVEL_ERROR)
 
   do vert = 1, 4
@@ -316,12 +316,12 @@ subroutine calc_edges(self, edges_on_cell, verts_on_edge)
 
   allocate(edges_on_cell(4, nx*ny), stat=astat)
 
-  if(astat.ne.0) call log_event(prefix//"Failure to allocate edges_on_cell.", &
+  if(astat /= 0) call log_event(prefix//"Failure to allocate edges_on_cell.", &
                                         LOG_LEVEL_ERROR)
 
   allocate(verts_on_edge(2, 2*nx*ny), stat=astat)
 
-  if(astat.ne.0) call log_event(prefix//"Failure to allocate verts_on_edge.", &
+  if(astat /= 0) call log_event(prefix//"Failure to allocate verts_on_edge.", &
                                         LOG_LEVEL_ERROR)
 
   ! Top row
@@ -410,7 +410,7 @@ subroutine calc_coords(self, vert_coords)
 
   allocate(vert_coords(2, ncells), stat=astat)
 
-  if(astat.ne.0) call log_event(prefix//"Failure to allocate vert_coords.", &
+  if(astat /= 0) call log_event(prefix//"Failure to allocate vert_coords.", &
                                         LOG_LEVEL_ERROR)
 
   do cell = 1, ncells

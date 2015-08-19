@@ -38,39 +38,59 @@ type, public :: quadrature_type
   integer :: nqp_v
 
 contains
-  !> Function returns a pointer to the quadrature. If a quadrature
-  !> quadrature had not yet been created, it creates one before returning the pointer
-  !> to it
+  !> @brief Returns a pointer to the quadrature. If a quadrature had not
+  !! yet been created, it creates one before returning the pointer to it.
+  !> @param[in] quadrature Integer, quadrature rule
+  !> @param[in] nqp_h Integer, number of quadrature points in the horizontal
+  !> @param[in] nqp_v Integer, number of quadrature points in the vertical
   procedure, nopass :: get_instance
+
   !final     :: final_gauss
-  !> Subroutine writes out an answer for a test
-  !! @param self the calling gaussian quadrature
+  !> @brief Writes out an answer for a test
+  !> @param self The calling gaussian quadrature
   procedure :: test_integrate
 
-  !> Function quadrature integration of a function f 
-  !! @param self the calling gp type
-  !! @param f real 3D array each of size ngp which holds the sample values of the
-  !! function to be integrated
-  !! @return real the value of the function thus integrated
+  !> @brief Computes 3D quadrature integration of function f
+  !> @param[in] self The calling quadrature rule
+  !> @param f Real 3D array each of size ngp which holds the sample values of the
+  !! function to be integrated on the quadrature points
+  !> @return real The value of the function thus integrated
   procedure :: integrate
 
-  !> function returns the 2-d array of horizontal quadrature points
+  !> @brief Returns the 2-d array of quadrature points in the horizontal
+  !> @param[in] self The calling quadrature rule
+  !> @return xgp_h The array to copy the quadrature points into
   procedure :: get_xqp_h
 
-  !> function returns the 1-d array of vertical quadrature points
+  !> @brief Returns the 1-d array of vertical quadrature points
+  !> @param[in] self The calling quadrature rule
+  !> @return xqp_v The array to copy the quadrature points into
   procedure :: get_xqp_v
 
-  !> function returns the enumerated integer for the gaussian_quadrature
+  !> @brief Returns the enumerated integer for the gaussian_quadrature
   !! which is this gaussian_quadrature
+  !> @param[in] self The calling quadrature rule
+  !> @return qr The quadrature rule
   procedure :: which
 
-  !> function returns the 1-d array of horizontal quadrature weights
+  !> @brief Returns the 1-d array of horizontal quadrature weights
+  !> @param[in] self The calling quadrature rule
+  !> @return wqp_h The pointer to the horizontal quadrature weights
   procedure :: get_wqp_h
 
-  !> function returns the 1-d array of vertical quadrature weights
+  !> @brief Returns the 1-d array of vertical quadrature weights
+  !> @param[in] self The calling quadrature rule
+  !> @return wqp_v The pointer to the vertical quadrature weights
   procedure :: get_wqp_v
 
+  !> @brief Returns the number of quadrature points in the vertical
+  !> @param[in] self The calling quadrature rule
+  !> @return nqp_v Number of quadrature points in the vertical
   procedure :: get_nqp_v
+
+  !> @brief Returns the number of quadrature points in the horizontal
+  !> @param[in] self The calling quadrature rule
+  !> @return nqp_h Number of quadrature points in the horizontal
   procedure :: get_nqp_h
 
 end type
@@ -78,7 +98,7 @@ end type
 !-------------------------------------------------------------------------------
 ! Module parameters
 !-------------------------------------------------------------------------------
-!> integer that defines the type of Gaussian quadrature required
+!> Integer that defines the type of Gaussian quadrature required
 integer, public, parameter      :: QR3 = 1001, QRnewton = 1002
 
 !> All fields are integrated onto a fixed Guassian quadrature.
@@ -90,6 +110,9 @@ type(quadrature_type), target, allocatable, save :: qr_3, qr_newton
 !-------------------------------------------------------------------------------
 contains
 
+!-------------------------------------------------------------------------------
+! Returns a pointer to the quadrature
+!-------------------------------------------------------------------------------
 function get_instance(quadrature,nqp_h,nqp_v) result(instance)
 
   use log_mod, only : log_event, LOG_LEVEL_ERROR
@@ -126,10 +149,16 @@ function get_instance(quadrature,nqp_h,nqp_v) result(instance)
   return
 end function get_instance
 
+!-------------------------------------------------------------------------------
+! Initialises the quadrature rule
+!-------------------------------------------------------------------------------
+!> @brief Initialises the quadrature rule 
+!> @param[in] nqp_h Integer, number of quadrature points in the horizontal
+!> @param[in] nqp_v Integer, number of quadrature points in the vertical
+!> @param[in] qr Integer, quadrature rule
+!-------------------------------------------------------------------------------
 subroutine init_quadrature(self, qr, nqp_h, nqp_v)
-!-----------------------------------------------------------------------------
-!> @brief Subroutine to initialise the quadrature rule 
-!-----------------------------------------------------------------------------
+
   implicit none
 
   class(quadrature_type) :: self
@@ -151,10 +180,14 @@ subroutine init_quadrature(self, qr, nqp_h, nqp_v)
   self%qr = qr
 end subroutine init_quadrature 
 
+!-----------------------------------------------------------------------------
+! Computes Gaussian quadrature points and weights 
+!-----------------------------------------------------------------------------
+!> @brief Computes Gaussian quadrature points (xqp) and weights (wqp)
+!> @param[in] self The calling quadrature rule
+!-----------------------------------------------------------------------------
 subroutine create_gaussian_quadrature(self)
-!-----------------------------------------------------------------------------
-!> @brief Subroutine to compute Gaussian quadrature points (xqp) and (wqp) wgphts 
-!-----------------------------------------------------------------------------
+
   implicit none
 
   class(quadrature_type) :: self 
@@ -223,11 +256,14 @@ subroutine create_gaussian_quadrature(self)
   return
 end subroutine create_gaussian_quadrature
 
+!-----------------------------------------------------------------------------
+! Computes Newton Cotes quadrature points and weights
+!-----------------------------------------------------------------------------
+!> @brief Computes Newton Cotes quadrature points (xqp) and weights (wqp)
+!> @param[in] self The calling quadrature rule
+!-----------------------------------------------------------------------------
 subroutine create_newton_cotes_quadrature(self)
-!-----------------------------------------------------------------------------
-!> @brief Subroutine to compute Newton Cotes quadrature 
-!>        points (xqp) and weights (wqp)
-!-----------------------------------------------------------------------------
+
   use matrix_invert_mod, only: matrix_invert
  
   implicit none
@@ -258,7 +294,7 @@ subroutine create_newton_cotes_quadrature(self)
 
   ! Compute weights
   do i = 1,self%nqp_v
-    b(i) = (real(self%nqp_v)**i-1.0)/real(i)
+    b(i) = (real(self%nqp_v)**i-1.0_r_def)/real(i)
   end do
   ! Compute coefficient matrix A
   do i = 1,self%nqp_v
@@ -277,10 +313,10 @@ subroutine create_newton_cotes_quadrature(self)
   
 end subroutine create_newton_cotes_quadrature
 
+!-----------------------------------------------------------------------------
+! Writes out an answer for a test
+!-----------------------------------------------------------------------------
 subroutine test_integrate(self)
-  !-----------------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------------
 
   use log_mod, only : log_event, log_scratch_space, LOG_LEVEL_INFO
 
@@ -307,10 +343,8 @@ subroutine test_integrate(self)
 end subroutine test_integrate
   
 !-----------------------------------------------------------------------------
-!> @brief Compute 3D quadrature integration of function f  
+! Computes 3D quadrature integration of function f  
 !-----------------------------------------------------------------------------  
-!> @param[in] self the calling quadrature rule
-!> @param[in] f the function to be integrated evaluated on the quadrature points
 function integrate(self,f)
   implicit none
 
@@ -332,10 +366,8 @@ function integrate(self,f)
 end function integrate
 
 !-----------------------------------------------------------------------------
-!> @brief function to return the quadrature points in the horizontal
+! Returns the quadrature points in the horizontal
 !-----------------------------------------------------------------------------
-!> @param[in] self the calling quadrature rule
-!> @param[in] xgp_h the array to copy the quadrature points into
 function get_xqp_h(self) result(xqp_h)
   implicit none
   class(quadrature_type), target, intent(in) :: self
@@ -345,9 +377,9 @@ function get_xqp_h(self) result(xqp_h)
   return
 end function get_xqp_h
 
-!> @brief Function to return the quadrature points in the vertical
-!> @param[in] self the calling quadrature rule
-!> @param[in] xqp_v the array to copy the quadrature points into
+!-----------------------------------------------------------------------------
+! Returns the quadrature points in the vertical
+!-----------------------------------------------------------------------------
 function get_xqp_v(self) result(xqp_v)
   implicit none
   class(quadrature_type), target, intent(in) :: self
@@ -357,6 +389,9 @@ function get_xqp_v(self) result(xqp_v)
   return
 end function get_xqp_v
 
+!-----------------------------------------------------------------------------
+! Returns the enumerated integer for quadrature rule
+!-----------------------------------------------------------------------------
 function which(self) result(qr)
   implicit none
   class(quadrature_type),  intent(in) :: self
@@ -366,6 +401,9 @@ function which(self) result(qr)
   return
 end function which
 
+!-----------------------------------------------------------------------------
+! Returns the number of quadrature points in the vertical
+!-----------------------------------------------------------------------------
 function get_nqp_v(self) result(nqp_v)
   implicit none
   class(quadrature_type), intent(in) :: self
@@ -375,6 +413,9 @@ function get_nqp_v(self) result(nqp_v)
   return
 end function get_nqp_v
 
+!-----------------------------------------------------------------------------
+! Returns the number of quadrature points in the horizontal
+!-----------------------------------------------------------------------------
 function get_nqp_h(self) result(nqp_h)
   implicit none
   class(quadrature_type), intent(in) :: self
@@ -384,12 +425,9 @@ function get_nqp_h(self) result(nqp_h)
   return
 end function get_nqp_h
 
-
 !-----------------------------------------------------------------------------
-!> @brief Function to return the quadrature points in the horizontal
+! Returns the quadrature weights in the horizontal
 !-----------------------------------------------------------------------------
-!> @param[in] self the calling quadrature rule
-!> @param[in] wqp_h the pointer to the quadrature weights
 function get_wqp_h(self) result(wqp_h)
   implicit none
   class(quadrature_type), target, intent(in) :: self
@@ -400,10 +438,8 @@ function get_wqp_h(self) result(wqp_h)
 end function get_wqp_h 
 
 !-----------------------------------------------------------------------------
-!> @brief Function to return the quadrature points in the horizontal
+! Returns the quadrature weights in the vertical
 !-----------------------------------------------------------------------------
-!> @param[in] self the calling quadrature rule
-!> @param[in] wgp_v the pointer to the quadrature weights
 function get_wqp_v(self) result(wqp_v)
   implicit none
   class(quadrature_type), target, intent(in) :: self
@@ -412,7 +448,6 @@ function get_wqp_v(self) result(wqp_v)
   wqp_v => self%wqp
   return
 end function get_wqp_v 
-
 
 
 end module quadrature_mod

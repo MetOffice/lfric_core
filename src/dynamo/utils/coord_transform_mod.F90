@@ -32,7 +32,7 @@ public :: cart2sphere_vector
 contains
 
 !--------------------------------------------------------------------------------
-!>  @brief  Convert longitude and latitude to Cartesian coordinates on the unit
+!>  @brief  Converts longitude and latitude to Cartesian coordinates on the unit
 !!          sphere.
 !!
 !!  @param[in]   long  The longitude to convert.
@@ -41,7 +41,6 @@ contains
 !!  @param[out]  y     The y coordinate.
 !!  @param[out]  z     The z coordinate.
 !--------------------------------------------------------------------------------
-
 subroutine ll2xyz(long,lat,x,y,z)
   implicit none
  
@@ -65,7 +64,7 @@ subroutine ll2xyz(long,lat,x,y,z)
 end subroutine ll2xyz
 
 !--------------------------------------------------------------------------------
-!>  @brief  Convert longitude and latitude to Cartesian coordinates on 
+!>  @brief  Converts longitude and latitude to Cartesian coordinates on 
 !!          a sphere with some specified radius.
 !!
 !!  @param[in]   long    The longitude to convert.
@@ -75,7 +74,6 @@ end subroutine ll2xyz
 !!  @param[out]  y       The y coordinate.
 !!  @param[out]  z       The z coordinate.
 !--------------------------------------------------------------------------------
-
 subroutine llr2xyz(long,lat,radius,x,y,z)
   implicit none
  
@@ -99,7 +97,7 @@ subroutine llr2xyz(long,lat,radius,x,y,z)
 end subroutine llr2xyz
 
 !--------------------------------------------------------------------------------
-!>  @brief  Convert Cartesian coordinates to longitude and latitude.
+!>  @brief  Converts Cartesian coordinates to longitude and latitude.
 !!
 !!  @param[in]   x     The x coordinate to convert.
 !!  @param[in]   y     The y coordinate to convert.
@@ -107,7 +105,6 @@ end subroutine llr2xyz
 !!  @param[out]  long  The longitude.
 !!  @param[out]  lat   The latitude.
 !--------------------------------------------------------------------------------
-
 subroutine xyz2ll(x,y,z,long,lat)
   use constants_mod, only : PI
   implicit none
@@ -151,17 +148,18 @@ subroutine xyz2ll(x,y,z,long,lat)
   return
 end subroutine xyz2ll
 
-
 !-------------------------------------------------------------------------------
-      
+!>  @brief  Converts Cartesian coordinates to longitude, latitude and radius
+!!  @param[in]   x     The x coordinate to convert.
+!!  @param[in]   y     The y coordinate to convert.
+!!  @param[in]   z     The z coordinate to convert.
+!!  @param[out]  long  The longitude.
+!!  @param[out]  lat   The latitude.
+!!  @param[out]  radius  The radius of the sphere..
+!-------------------------------------------------------------------------------     
 subroutine xyz2llr(x,y,z,long,lat,r)
-  
-!-------------------------------------------------------------------------------
-!  Subroutine to convert cartesian coordinates to longitude and latitude
-!------------------------------------------------------------------------------- 
-
   use constants_mod, only: PI
-
+  implicit none
 
   real(kind=r_def), intent(in)  :: x, y, z
   real(kind=r_def), intent(out) :: long, lat, r
@@ -203,9 +201,9 @@ end subroutine xyz2llr
 
 
 !-------------------------------------------------------------------------------
-!>  @brief  Calculate the area of a spherical triangle.
+!>  @brief  Calculates the area of a spherical triangle.
 !!
-!!  @details Calculate the area of the spherical triangle whose corners have
+!!  @details Calculates the area of the spherical triangle whose corners have
 !!           Cartesian coordinates (X0,Y0,Z0), (X1,Y1,Z1), (X2,Y2,Z2).
 !!           The formula below is more robust to roundoff error than the better
 !!           known sum of angle - PI formula
@@ -221,7 +219,6 @@ end subroutine xyz2llr
 !!  @param[in]   z2    Coordinate of a triangle corner.
 !!  @param[out]  area  Area of the spherical triangle.
 !-------------------------------------------------------------------------------
-
 subroutine starea2(x0,y0,z0,x1,y1,z1,x2,y2,z2,area)
   implicit none
 
@@ -255,9 +252,9 @@ subroutine starea2(x0,y0,z0,x1,y1,z1,x2,y2,z2,area)
 end subroutine starea2
 
 !-------------------------------------------------------------------------------
-!> @brief  Calculate the spherical distance between two points.
+!> @brief  Calculates the spherical distance between two points.
 !!
-!! @details  Calculate the spherical distance s between two points with 
+!! @details  Calculates the spherical distance s between two points with 
 !!           Cartesian coordinates (x1,y1,z1), (x2,y2,z2) on the unit sphere.
 !!
 !! @param[in]  x1  First Cartesian coordinate.
@@ -268,7 +265,6 @@ end subroutine starea2
 !! @param[in]  y3  Second Cartesian coordinate.
 !! @param[out] s   Spherical distance between the points.
 !-------------------------------------------------------------------------------
-
 subroutine spdist(x1,y1,z1,x2,y2,z2,s)
   implicit none
 
@@ -291,16 +287,15 @@ subroutine spdist(x1,y1,z1,x2,y2,z2,s)
 end subroutine spdist
 
 !-------------------------------------------------------------------------------
-!> @brief  Calculate the cartesian distance between two points.
+!> @brief  Calculates the Cartesian distance between two points.
 !!
-!! @details  Calculate the cartesian distance s between two points with 
+!! @details  Calculates the Cartesian distance s between two points with 
 !!           Cartesian coordinates (x1,y1,z1), (x2,y2,z2) 
 !!
 !! @param[in]  x(3)  First point in Cartesian coordinates.
 !! @param[in]  y(3)  Second point in Cartesian coordinates.
 !! @param[out] s   Cartesian distance between the points.
 !-------------------------------------------------------------------------------
-
 pure function cartesian_distance(x,y) result( s )
   implicit none
 
@@ -321,11 +316,12 @@ end function cartesian_distance
 
 
 !-------------------------------------------------------------------------------
-!> @brief Function to convert a vector in sperical coordinates to one in
-!> cartesian coodinates
+!> @brief Converts a vector in sperical coordinates to one in
+!> Cartesian coodinates
 !> @param[in]  llr location in spherical coodinates
 !> @param[in]  dlambda input vector in spherical coordinates
-!> @param[return] dx output vector in cartesian coordinates
+!> @param[return] dx output vector in Cartesian coordinates
+!-------------------------------------------------------------------------------
 function sphere2cart_vector( dlambda, llr ) result ( dx )
   use constants_mod,     only: r_def
   use matrix_invert_mod, only: matrix_invert_3x3
@@ -349,13 +345,14 @@ function sphere2cart_vector( dlambda, llr ) result ( dx )
 end function sphere2cart_vector
 
 !-------------------------------------------------------------------------------
-!> @brief Function to convert a flux vector in cartesian coordinates (x,y,z) 
+!> @brief Converts a flux vector in Cartesian coordinates (x,y,z) 
 !> to one in spherical coodinates (lambda,phi,r)
-!> @detail convert 3d cartesian velocity u = (u1,u2,u3) in cartesian coordinates at (x,y,z) 
+!> @detail Converts 3d Cartesian velocity u = (u1,u2,u3) in Cartesian coordinates at (x,y,z) 
 !> to spherical velocity v = (v1,v2,v3) (in m/s) in spherical coordinates at (lambda,phi,r)
-!> @param[in]  x_vec vector (x,y,z) location in cartesian coodinates
-!> @param[in]  cartesian_vec components of a flux vector (u,v,w) in cartesian coordinates
+!> @param[in]  x_vec vector (x,y,z) location in Cartesian coodinates
+!> @param[in]  Cartesian_vec components of a flux vector (u,v,w) in Cartesian coordinates
 !> @param[out] spherical_vec components of a flux vector (u,v,w) on spherical coordinates
+!-------------------------------------------------------------------------------
 pure function cart2sphere_vector(x_vec, cartesian_vec) result ( spherical_vec )
      use constants_mod, only: r_def, PI
 
