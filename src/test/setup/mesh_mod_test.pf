@@ -72,6 +72,7 @@ contains
     ! Dummy test variables
     integer(i_def) :: gid, lid, iface, iedge
     integer(i_def) :: test_integer
+    integer(i_def) :: test_integer2
     real(r_def)    :: test_real
 
     real(r_def), allocatable :: test_real_array1(:)
@@ -385,10 +386,8 @@ contains
     !-------------------------------------------------------------------
     ! Test Mesh_1 and Mesh_2 have different ids
     test_integer = mesh_1%get_id()
-    @assertEqual ( 1, test_integer )
-
-    test_integer = mesh_2%get_id()
-    @assertEqual ( 2, test_integer )
+    test_integer2 = mesh_2%get_id()
+    @assertFalse ( test_integer == test_integer2 )
 
   end subroutine test_mesh
 
