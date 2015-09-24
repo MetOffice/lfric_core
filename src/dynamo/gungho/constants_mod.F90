@@ -158,5 +158,20 @@ module constants_mod
   real(kind=r_def), parameter :: ALPHA = 0.5_r_def !< Time off-centering parameter
   real(kind=r_def), parameter :: BETA = (1.0_r_def - ALPHA) !< 1 - Time off-centering parameter
   !> @}
+ !> @name Enumeration of the available choices for the initialisation profiles
+ !> @{
+ integer, parameter :: ZERO_WIND                = 0
+ integer, parameter :: SOLID_BODY_ROTATION_WIND = 1
+ integer, parameter :: CONSTANT_UV_WIND         = 2
+ integer, parameter :: CONSTANT_SHEAR_UV_WIND   = 3
+ !> @{
+
+ !> @{
+ !> @name Initialisation options
+ integer(kind=i_def), parameter :: INITIAL_U_PROFILE = zero_wind
+ real(kind=r_def),    parameter :: U0 = 0.0_r_def
+ real(kind=r_def),    parameter :: V0 = 0.0_r_def
+ real(kind=r_def),    parameter :: ROTATION_ANGLE = 0.0_r_def
+ !> @{
 end module constants_mod
 

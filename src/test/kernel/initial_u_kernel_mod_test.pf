@@ -1,0 +1,158 @@
+!-----------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown, 
+! Met Office and NERC 2014. 
+! However, it has been created with the help of the GungHo Consortium, 
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-----------------------------------------------------------------------------
+
+module initial_u_kernel_mod_test
+
+  implicit none 
+
+
+contains
+
+  @test
+  subroutine initial_u_kernel_test()
+
+    use pFUnit_Mod
+    use function_space_build_mod,   only : fs_build, fs_destroy
+    use field_mod,                  only : field_type,      &
+                                           field_proxy_type
+    use function_space_mod,         only : function_space_type, W0, W2
+    use initial_u_kernel_mod,  &
+                                    only : initial_u_code
+    use constants_mod,              only : r_def, PLANE_BI_PERIODIC
+    use quadrature_mod,             only : quadrature_type, QR3
+    use slush_mod,                  only : l_spherical
+    use mesh_mod,                   only : mesh_type
+
+   implicit none
+    type(field_type) :: chi(3)
+    type(field_proxy_type )   :: chi_p(3) 
+    type(function_space_type) :: fs
+    type( quadrature_type), pointer :: qr => null()
+    type(mesh_type)  :: mesh
+    real(kind=r_def) :: tol
+    real(kind=r_def) :: answer
+
+    integer :: i, j, k, cell
+    real(kind=r_def), parameter :: dx = 6000.0_r_def, &
+                                   dy = 1000.0_r_def, &
+                                   dz = 2000.0_r_def
+! Required for calling kernel 
+    type( field_type ) :: r_u 
+
+    integer                 :: nlayers, nqp_h, nqp_v
+    integer                 :: ndf_w0, ndf_w2
+    integer                 :: undf_w0, undf_w2
+    integer                 :: diff_dim_w0, dim_w0, dim_w2
+    integer, pointer        :: map_w2(:), map_w0(:) => null()
+    integer, pointer        :: orientation_w2(:) => null()
+
+    type( field_proxy_type )        :: r_u_proxy 
+    
+    real(kind=r_def), allocatable  :: basis_w2(:,:,:,:), &
+                                      basis_w0(:,:,:,:), &
+                                      diff_basis_w0(:,:,:,:) 
+
+    real(kind=r_def), pointer :: xp(:,:) => null()
+    real(kind=r_def), pointer :: zp(:) => null()
+    real(kind=r_def), pointer :: wh(:), wv(:) => null()
+   
+    tol = 1.0e-12_r_def  
+    qr => qr%get_instance(QR3,9,3)
+    l_spherical = .false.
+    ! Dummy mesh mod has 9 cells, 3 layers
+    mesh = mesh_type(PLANE_BI_PERIODIC)
+    ! build some function spaces ...
+    call fs_build(mesh)
+    
+    ! make a coordinate field with a function space
+    do i = 1,3
+      chi(i) = field_type( vector_space = fs%get_instance( mesh, W0 ) )
+      chi_p(i) = chi(i)%get_proxy()
+    end do
+    ! Compute coordinates
+    cell = 1
+    do j = 1,3
+      do i = 1,3
+        map_w0 => chi_p(1)%vspace%get_cell_dofmap( cell )
+        do k = 0,3          
+          chi_p(1)%data(map_w0(1) + k) = real(i-1)*dx
+          chi_p(2)%data(map_w0(1) + k) = real(j-1)*dy
+          chi_p(3)%data(map_w0(1) + k) = real(k)  *dz
+        end do
+        cell = cell + 1
+      end do
+    end do
+
+    ! Test kernel
+    r_u   = field_type( vector_space = fs%get_instance( mesh, W2 ) )
+
+    r_u_proxy  = r_u%get_proxy()
+    
+    nlayers = r_u_proxy%vspace%get_nlayers()
+    nqp_h=qr%get_nqp_h()
+    nqp_v=qr%get_nqp_v()
+    zp=>qr%get_xqp_v()
+    xp=>qr%get_xqp_h()
+    wh=>qr%get_wqp_h()
+    wv=>qr%get_wqp_v()
+
+    ndf_w2      = r_u_proxy%vspace%get_ndf( )
+    dim_w2      = r_u_proxy%vspace%get_dim_space( )
+    undf_w2     = r_u_proxy%vspace%get_undf()
+    allocate(basis_w2(dim_w2,ndf_w2,nqp_h,nqp_v))
+
+    ndf_w0      = chi_p(1)%vspace%get_ndf( )
+    dim_w0      = chi_p(1)%vspace%get_dim_space( )
+    diff_dim_w0 = chi_p(1)%vspace%get_dim_space_diff( )
+    undf_w0     = chi_p(1)%vspace%get_undf()
+    allocate(basis_w0(dim_w0,ndf_w0,nqp_h,nqp_v))
+    allocate(diff_basis_w0(diff_dim_w0,ndf_w0,nqp_h,nqp_v))
+
+    call r_u_proxy%vspace%compute_basis_function( &
+         basis_w2, ndf_w2, nqp_h, nqp_v, xp, zp)    
+
+    call chi_p(1)%vspace%compute_basis_function( &
+         basis_w0, ndf_w0, nqp_h, nqp_v, xp, zp)
+
+    call chi_p(1)%vspace%compute_diff_basis_function( &
+         diff_basis_w0, ndf_w0, nqp_h, nqp_v, xp, zp)
+
+    cell = 1
+
+    map_w2 => r_u_proxy%vspace%get_cell_dofmap( cell )
+    map_w0 => chi_p(1)%vspace%get_cell_dofmap( cell )
+    orientation_w2 => r_u_proxy%vspace%get_cell_orientation ( cell )
+
+! Create the data
+    r_u_proxy%data(:) = 0.0_r_def
+
+    call initial_u_code( nlayers,                                              &
+                         r_u_proxy%data,                                       &
+                         chi_p(1)%data,                                        &
+                         chi_p(2)%data,                                        &
+                         chi_p(3)%data,                                        &
+                         ndf_w2, undf_w2,                                      &
+                         map_w2, basis_w2,                                     &
+                         orientation_w2,                                       &
+                         ndf_w0, undf_w0,                                      &
+                         map_w0, basis_w0, diff_basis_w0,                      &   
+                         nqp_h, nqp_v, wh, wv                                  &
+                         )           
+    deallocate(basis_w2, basis_w0, diff_basis_w0)
+! Simple test, if u, F, xi = 0 check data is in hydrostatic balance
+    answer = 0.0_r_def
+    do k = 0,2
+      @assertEqual(answer, r_u_proxy%data(map_w2(5)+k), tol)
+      @assertEqual(answer, r_u_proxy%data(map_w2(6)+k), tol)
+    end do
+
+    !tear down ...
+    call fs_destroy()
+  
+  end subroutine initial_u_kernel_test
+
+end module initial_u_kernel_mod_test

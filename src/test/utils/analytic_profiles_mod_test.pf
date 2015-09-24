@@ -1,0 +1,58 @@
+!-------------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown, 
+! Met Office and NERC 2014. 
+! However, it has been created with the help of the GungHo Consortium, 
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-------------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------------
+
+module analytic_profiles_mod_test
+  implicit none
+
+contains 
+
+  @test
+  subroutine analytic_profiles_test()
+
+    use pFUnit_Mod
+    use constants_mod, only: r_def, &
+                             PI, &
+                             earth_radius, &
+                             ZERO_WIND, &
+                             SOLID_BODY_ROTATION_WIND, &
+                             CONSTANT_UV_WIND, &
+                             CONSTANT_SHEAR_UV_WIND
+    use analytic_profiles_mod, only: analytic_wind
+
+    implicit none
+
+    real(kind=r_def) :: u(3), v(3), llr(3), xyz(3)
+    real(kind=r_def) :: u0, v0, a, h
+
+    llr = (/ PI, PI/4.0_r_def, earth_radius + 10000.0_r_def /)
+    xyz = (/ 1000.0_r_def, 75000.0_r_def, 5000.0_r_def /)
+    u0 = 20.0_r_def
+    a = PI/8.0_r_def
+   
+    u = analytic_wind(llr, SOLID_BODY_ROTATION_WIND, 2, (/ u0, a /))
+    
+    v(1) = u0 * ( cos(llr(2))*cos(a) &
+                + sin(llr(1))*sin(llr(2))*sin(a) )
+    v(2) = u0 * cos(llr(1))*sin(a)
+    v(3) = 0.0_r_def
+
+    @assertEqual(v, u)
+
+    v0 = 5.0_r_def
+    h = 30000.0_r_def
+    u = analytic_wind(xyz, CONSTANT_SHEAR_UV_WIND, 3, (/ u0, v0, h /))
+    v(1) = u0*xyz(3)/h
+    v(2) = v0*xyz(3)/h
+    v(3) = 0.0_r_def 
+
+    @assertEqual(v, u)
+
+  end subroutine analytic_profiles_test
+
+end module analytic_profiles_mod_test

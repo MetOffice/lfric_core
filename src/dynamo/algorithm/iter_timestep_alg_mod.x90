@@ -36,6 +36,7 @@ module iter_timestep_alg_mod
   use compute_mass_matrix_kernel_w2_mod, only: compute_mass_matrix_kernel_w2_type
   use compute_geopotential_kernel_mod,   only: compute_geopotential_kernel_type
   use initial_rho_kernel_mod,            only: initial_rho_kernel_type
+  use initial_u_kernel_mod,              only: initial_u_kernel_type
 
   ! Derived Types
   use mesh_mod,                          only: mesh_type
@@ -138,11 +139,6 @@ contains
     !=== Section 2: Initialise Fields ========================================!
     call log_event( "Dynamo: computing initial fields", LOG_LEVEL_INFO )
     call invoke( compute_geopotential_kernel_type( geopotential, chi ) )
-    call invoke( initial_theta_kernel_type( theta, chi ) )   
-    call invoke( initial_rho_kernel_type( rho, chi, qr ) )
-    call invoke_set_field_scalar(0.0_r_def, u) 
-    call invoke_set_field_scalar(0.0_r_def, xi) 
-
     call invoke( compute_mass_matrix_kernel_w0_type(mm_w0, chi, qr), &
                  compute_mass_matrix_kernel_w1_type(mm_w1, chi, qr), &
                  compute_mass_matrix_kernel_w2_type(mm_w2, chi, qr) )
@@ -150,6 +146,16 @@ contains
     ! Create fixed state container
     runtime_constants = runtime_constants_type(mesh, chi, geopotential, &
                                                mm_w0, mm_w1, mm_w2)
+    ! Prognostics
+    call invoke( initial_theta_kernel_type( theta, chi ) )   
+    call invoke( initial_rho_kernel_type( rho, chi, qr ) )
+    call invoke_set_field_scalar(0.0_r_def, r_u) 
+    call invoke( initial_u_kernel_type( r_u, chi, qr ) )
+    call invoke_set_field_scalar(0.0_r_def, u) 
+    call solver_algorithm(u, r_u, mesh, chi, SOLVER_OPTION, mm=mm_w2)
+
+    call invoke_set_field_scalar(0.0_r_def, xi) 
+
 
     !=== Intial output and output frequency ==================================! 
     call output_alg(0, theta, u, rho, chi, mesh, mm_w0)
