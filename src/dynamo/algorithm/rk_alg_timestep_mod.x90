@@ -50,6 +50,7 @@ module rk_alg_timestep_mod
   use operator_mod,  only : operator_type
   use conservation_algorithm_mod, &
                      only : conservation_algorithm
+  use output_alg_mod, only: output_alg
 
   implicit none
 
@@ -95,8 +96,6 @@ contains
     type( field_type ), allocatable :: rt_prediction(:),  &
                                        ru_prediction(:),  &
                                        rr_prediction(:)
-    type( field_type ) :: W0_projected_field(3)
-    type( field_type ) :: W3_projected_field(1)
 
     integer :: theta_fs, u_fs, rho_fs, xi_fs
     integer :: n, output_freq
@@ -154,13 +153,6 @@ contains
     mm_w1 = operator_type(fs%get_instance(mesh, W1),fs%get_instance(mesh, W1))
     mm_w2 = operator_type(fs%get_instance(mesh, W2),fs%get_instance(mesh, W2))
 
-    do stage = 1,3
-      W0_projected_field(stage) = field_type                                      &
-                               (vector_space = fs%get_instance(mesh, theta_fs))
-    end do
-    W3_projected_field(stage) = field_type                                     &
-                               (vector_space = fs%get_instance(mesh, u_fs))
-
 
     !Construct PSy layer given a list of kernels. This is the line the code
     !generator may parse and do its stuff.
@@ -181,51 +173,7 @@ contains
                  compute_mass_matrix_kernel_w1_type(mm_w1, chi, qr),           &
                  compute_mass_matrix_kernel_w2_type(mm_w2, chi, qr) )
 
-    call galerkin_projection_algorithm( W0_projected_field(1)                     &
-                                      , theta                                  &
-                                      , mesh                                   &
-                                      , chi                                    &
-                                      , SCALAR_FIELD                           &
-                                      , qr                                     &
-                                      , mm=mm_w0 )
-    call interpolated_output( 0                                                &
-                            , SCALAR_FIELD                                     &
-                            , W0_projected_field(1)                               &
-                            , mesh                                             &
-                            , chi                                              &
-                            , 'theta_' )
-
-    call invoke_set_field_scalar( 0.0_r_def, W3_projected_field(1) )
-
-    call galerkin_projection_algorithm( W3_projected_field(1)                     &
-                                      , rho                                    &
-                                      , mesh                                   &
-                                      , chi                                    &
-                                      , SCALAR_FIELD                           &
-                                      , qr                                     &
-                                      , mm=mm_w0 )
-
-    call interpolated_output( 0                                                &
-                            , SCALAR_FIELD                                     &
-                            , W0_projected_field(1)                               &
-                            , mesh                                             &
-                            , chi                                              &
-                            , 'rho___' )
-
-    call galerkin_projection_algorithm( W0_projected_field(:)                     &
-                                      , u                                      &
-                                      , mesh                                   &
-                                      , chi                                    &
-                                      , VECTOR_FIELD                           &
-                                      , qr                                     &
-                                      , mm=mm_w0 )
-    call interpolated_output( 0                                                &
-                            , VECTOR_FIELD                                     &
-                            , W0_projected_field(:)                               &
-                            , mesh                                             &
-                            , chi                                              &
-                            , 'u_____' )
-
+    call output_alg(0, theta, u, rho, chi, mesh, mm_w0)
     call conservation_algorithm(0, mesh, rho, u, theta, xi, geopotential, chi)
 
     !==========================================================================
@@ -334,47 +282,7 @@ contains
       end do
 
       if ( mod(n, output_freq) == 0 ) then
-        call galerkin_projection_algorithm( W0_projected_field(1) &
-                                          , theta              &
-                                          , mesh               &
-                                          , chi                &
-                                          , SCALAR_FIELD       &
-                                          , qr                 &
-                                          , mm=mm_w0 )
-        call interpolated_output( n                  &
-                                , SCALAR_FIELD       & 
-                                , W0_projected_field(1) &
-                                , mesh               &
-                                , chi                &
-                                , 'theta_' )
-
-        call galerkin_projection_algorithm( W3_projected_field(1) &
-                                          , rho                &
-                                          , mesh               &
-                                          , chi                &
-                                          , SCALAR_FIELD       &
-                                          , qr                 &
-                                          , mm=mm_w0 )
-        call interpolated_output( n                   &
-                                , SCALAR_FIELD        &
-                                , W3_projected_field(1), &
-                                , mesh                &
-                                , chi                 &
-                                , 'rho___' )
-
-        call galerkin_projection_algorithm( W0_projected_field(:) &
-                                          , u                  &
-                                          , mesh               &
-                                          , chi                &
-                                          , VECTOR_FIELD       &
-                                          , qr                 &
-                                          , mm=mm_w0)
-        call interpolated_output( n                            &
-                                , VECTOR_FIELD                 &
-                                , W0_projected_field(:)           &
-                                , mesh                         &
-                                , chi                          &
-                                , 'u_____' )
+        call output_alg(n, theta, u, rho, chi, mesh, mm_w0)
       end if
       call conservation_algorithm(n, mesh, rho, u, theta, xi, geopotential, chi)
 
