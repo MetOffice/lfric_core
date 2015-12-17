@@ -10,12 +10,16 @@ DOXYGEN  ?= doxygen
 DOCUMENT_DIRECTORIES = $(patsubst %/,%,$(dir $(wildcard */*.latex)))
 
 .PHONY: most
-most: documents api
+most: documents api/infrastructure api/gungho
 
-.PHONY: api
+.PHONY: api/%
+api/%: Doxyfile.% | api
+	echo Building $* API documentation
+	$(DOXYGEN) $<
+
 api:
-	echo Building API documentation
-	$(DOXYGEN) Doxyfile
+	echo Creating directory "$@"
+	mkdir $@
 
 .PHONY: documents
 documents: $(DOCUMENT_DIRECTORIES)
@@ -29,7 +33,7 @@ gource:
 	$(MAKE) -C visualisation
 
 clean: $(addprefix clean_,$(DOCUMENT_DIRECTORIES))
-	-rm -rf docs/api/*
+	-rm -rf api/*
 
 clean_%: ALWAYS
 	$(MAKE) -f ../make/latex.mk -C $* clean
