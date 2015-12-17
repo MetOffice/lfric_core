@@ -110,11 +110,11 @@ contains
       do j = 1,nx(2)
         do k = 1,nx(3)    
           if ( n_out == 1) then
-            write(OUTPUT_UNIT,'(4e16.8)') x_out(1,k,j,i), x_out(2,k,j,i), x_out(3,k,j,i), &
-                                          f_out(1,k,j,i)
+            write(OUTPUT_UNIT,'(4e18.8e3)') x_out(1,k,j,i), x_out(2,k,j,i), x_out(3,k,j,i), &
+                                            f_out(1,k,j,i)
           else
-            write(OUTPUT_UNIT,'(6e16.8)') x_out(1,k,j,i), x_out(2,k,j,i), x_out(3,k,j,i), &
-                                          f_out(1,k,j,i), f_out(2,k,j,i), f_out(3,k,j,i)
+            write(OUTPUT_UNIT,'(6e18.8e3)') x_out(1,k,j,i), x_out(2,k,j,i), x_out(3,k,j,i), &
+                                            f_out(1,k,j,i), f_out(2,k,j,i), f_out(3,k,j,i)
           end if 
         end do
       end do
