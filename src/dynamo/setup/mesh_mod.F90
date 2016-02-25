@@ -368,7 +368,7 @@ contains
       ! Vertex ownership
       call global_mesh%get_vert_on_cell(partition%get_gid_from_lid(i), verts)
       do j=1, nverts_per_2d_cell
-        self%vert_cell_owner(j,i) = partition%get_lid_from_gid( &                                       &
+        self%vert_cell_owner(j,i) = partition%get_lid_from_gid( &
                                      global_mesh%get_vert_cell_owner( verts(j) ) &
                                                                )
         if (self%vert_cell_owner(j,i) > 0) then
@@ -383,7 +383,7 @@ contains
       ! Edge ownership
       call global_mesh%get_edge_on_cell(partition%get_gid_from_lid(i), edges)
       do j=1, nedges_per_2d_cell
-        self%edge_cell_owner(j,i) = partition%get_lid_from_gid( &                                        &
+        self%edge_cell_owner(j,i) = partition%get_lid_from_gid( &
                                      global_mesh%get_edge_cell_owner( edges(j) ) &
                                                               )
         if (self%edge_cell_owner(j,i) > 0) then
