@@ -79,11 +79,11 @@ contains
 
     class(gp_rhs_test_type), intent(inout) :: this
 
-    integer :: num_layers, undf
+    integer :: num_layers
     type(quadrature_type) :: qr
     real(kind=r_def) :: f_data(1), rhs(8)
     real(kind=r_def) :: answer, tol
-    integer :: ndf_w0, map_w0(8), ndf_f, map_f(1), undf_f
+    integer :: map_w0(8), map_f(1)
     real(kind=r_def) :: chi(8,3)
     real(kind=r_def) :: x_vert(8,3)
     real(kind=r_def),pointer :: xqp_h(:,:), xqp_v(:) => null()

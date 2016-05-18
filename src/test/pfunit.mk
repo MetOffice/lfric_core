@@ -64,6 +64,7 @@ $(PFUNIT_BUILD_DIR)/Makefile: | $(PFUNIT_BUILD_DIR)
                                           -DMPI=YES \
                                           $(MPI_RUN_SCRIPT) $(MPI_RUN_SCRIPT_COMPILER) \
                                           -DINSTALL_PATH=$(PFUNIT_INSTALL_DIR) \
+                                          -DCMAKE_INSTALL_PREFIX=$(PFUNIT_INSTALL_DIR) \
 	                                  $(PFUNIT_SOURCE_DIR)
 
 $(PFUNIT_BUILD_DIR) $(dir $(DRIVER_OBJ)):
