@@ -81,6 +81,7 @@ $(OBJ_DIR)/%.x: $$($$(shell echo $$* | tr a-z A-Z)_OBJS)
 
 # Dependencies
 
+ifndef SKIPDEP
 # It is important that the two dependency files are build sequentially
 # otherwise they will fight over the dependency database.
 #
@@ -89,6 +90,7 @@ $(OBJ_DIR)/programs.mk: $(OBJ_DIR)/dependencies.mk | $(OBJ_DIR)
 
 $(OBJ_DIR)/dependencies.mk: generate-psykal generate-configuration | $(OBJ_DIR)
 	$(MAKE) -f make/examine.mk $(OBJ_DIR)/dependencies.mk
+endif
 
 include make/psyclone.mk
 include make/configuration.mk

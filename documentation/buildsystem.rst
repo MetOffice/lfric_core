@@ -90,6 +90,18 @@ By default the build system will suppress as much output as possible to reduce
 clutter. When resolving problems it may be useful to see the output. If you want
 to see the actual commands being run by the build use ``make VERBOSE=1``.
 
+Building Without a Dependency Check
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+At the moment building the dependency information is much slower than it should
+be. This can hinder interactive development.
+
+Until the problem is fixed properly you can set the ``SKIPDEP`` knob to bypass
+the dependency check. Only do this if you know for a fact you have not changed
+the dependencies.
+
+  ``make SKIPDEP=1``
+
 MPI
 ^^^
 
@@ -296,7 +308,7 @@ way.
    the ongoing development of Dynamo and PSyclone.
 
 Optimisation
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 PSyclone is able to make use of scripts to apply optimisations to the code as
 it is generating it.
