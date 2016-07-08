@@ -24,6 +24,12 @@ ifdef CRAY_ENVIRONMENT
 LD_COMPILER_LIBRARIES = stdc++
 endif
 
+ifeq ($(FORTRAN_COMPILER), ifort)
+# This will be required until Intel promote it to default behaviour. Possibly
+# in ifort 17
+FFLAGS += -assume realloc_lhs
+endif
+
 PFUNIT_INSTALL_DIR      = $(DYNAMO_BUILD_ROOT)/pfunit-install
 PFUNIT_EXTRA_USAGE      = suite_fixture_mod
 PFUNIT_EXTRA_INITIALIZE = set_up_suite

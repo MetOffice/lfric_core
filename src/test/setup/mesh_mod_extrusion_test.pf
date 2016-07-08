@@ -1,0 +1,164 @@
+!-----------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown,
+! Met Office and NERC 2014.
+! However, it has been created with the help of the GungHo Consortium,
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-----------------------------------------------------------------------------
+
+module mesh_mod_extrusion_test
+
+  use constants_mod,   only : i_def, i_native, r_def
+  use global_mesh_mod, only: global_mesh_type
+  use partition_mod,   only: partition_type
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: mesh_extrusion_test_type, mesh_extrusion_test_constructor, &
+            get_parameters, test_extrusion
+
+  @TestCase(testParameters={get_parameters()}, constructor=mesh_extrusion_test_constructor)
+  type, extends(ParameterizedTestCase) :: mesh_extrusion_test_type
+    private
+    integer(i_native), public :: method
+    real(r_def),       public :: expected
+
+    type(global_mesh_type) :: global_mesh
+    type(partition_type)   :: partition
+  contains
+    private
+    procedure setUp
+    procedure tearDown
+    procedure test_extrusion
+  end type mesh_extrusion_test_type
+
+  @testParameter
+  type, public, extends(AbstractTestParameter) :: extrusion_parameter_type
+    integer(i_native), public :: method
+    real(r_def),       public :: expected
+  contains
+    procedure :: toString => parameter_to_string
+  end type extrusion_parameter_type
+
+  integer(i_def), parameter :: nlayers    = 5_i_def
+  real(r_def),    parameter :: domain_top = 10000.0_r_def
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function parameter_to_string( this ) result(string)
+
+    use extrusion_config_mod, only : key_from_method
+
+    implicit none
+
+    class(extrusion_parameter_type), intent(in) :: this
+    character(:), allocatable :: string
+
+    string = trim( key_from_method( this%method ) )
+
+  end function parameter_to_string
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function get_parameters() result(parameters)
+
+    use extrusion_config_mod, only : extrusion_method_uniform,   &
+                                     extrusion_method_quadratic, &
+                                     extrusion_method_geometric, &
+                                     extrusion_method_dcmip
+
+    implicit none
+
+    type(extrusion_parameter_type) :: parameters(4)
+
+    parameters = [ extrusion_parameter_type(extrusion_method_uniform,   &
+                                            2000.0_r_def),              &
+                   extrusion_parameter_type(extrusion_method_quadratic, &
+                                            400.0_r_def),               &
+                   extrusion_parameter_type(extrusion_method_geometric, &
+                                            1883.545714005761_r_def),   &
+                   extrusion_parameter_type(extrusion_method_dcmip,     &
+                                            883.0368802245059_r_def) ]
+
+  end function get_parameters
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function mesh_extrusion_test_constructor( testParameter ) result( new_test )
+
+    implicit none
+
+    type(extrusion_parameter_type), intent( in ) :: testParameter
+    type(mesh_extrusion_test_type) :: new_test
+
+    new_test%method   = testParameter%method
+    new_test%expected = testParameter%expected
+
+  end function mesh_extrusion_test_constructor
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use base_mesh_config_mod,      only : base_mesh_geometry_spherical, &
+                                          base_mesh_partitioner_cubedsphere
+    use feign_config_mod,          only : feign_base_mesh_config
+    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use reference_element_mod,     only : reference_cube, reference_element
+
+    implicit none
+
+    class(mesh_extrusion_test_type), intent( inout ) :: this
+
+    call feign_base_mesh_config( 'foo',                             &
+                                 base_mesh_geometry_spherical,      &
+                                 base_mesh_partitioner_cubedsphere, &
+                                 .false., 0.0_r_def )
+
+    reference_element = finite_element_shape_quadrilateral
+    call reference_cube()
+
+    this%global_mesh = global_mesh_type()
+    this%partition   = partition_type()
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    use reference_element_mod, only : deallocate_reference
+
+    implicit none
+
+    class(mesh_extrusion_test_type), intent( inout ) :: this
+
+    call deallocate_reference()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_extrusion(this)
+
+    use mesh_mod, only : mesh_type
+
+    implicit none
+
+    class(mesh_extrusion_test_type), intent(inout) :: this
+
+    type(mesh_type) :: mesh
+
+    real(r_def) :: dz_test(nlayers)
+
+    mesh = mesh_type( this%global_mesh, &
+                      this%partition,   &
+                      nlayers,          &
+                      domain_top,       &
+                      this%method )
+
+    dz_test = 0.0_r_def
+    call mesh%get_dz(dz_test)
+    @assertEqual( this%expected, dz_test(1), 1.0e-2_r_def )
+
+  end subroutine test_extrusion
+
+end module mesh_mod_extrusion_test

@@ -25,9 +25,7 @@ module mesh_mod_test
   public :: mesh_test_type,  &
             test_get_scalar, test_get_integer, test_get_boolean, &
             test_get_1d_array, test_get_2d_array, test_get_3d_array, &
-            test_extrude_uniform, test_extrude_quadratic, test_extrude_geometric, &
-            test_extrude_dcmip
-
+            test_get_domain
 
   @testCase
   type, extends( TestCase ) :: mesh_test_type
@@ -41,10 +39,6 @@ module mesh_mod_test
     procedure :: test_get_1d_array
     procedure :: test_get_2d_array
     procedure :: test_get_3d_array
-    procedure :: test_extrude_uniform
-    procedure :: test_extrude_quadratic
-    procedure :: test_extrude_geometric
-    procedure :: test_extrude_dcmip
   end type mesh_test_type
 
   integer(i_def), parameter :: nlayers    = 5_i_def
@@ -408,105 +402,6 @@ contains
 
   end subroutine test_get_3d_array
 
-  @test 
-  subroutine test_extrude_uniform(this)
-    implicit none
-    class(mesh_test_type), intent(inout) :: this
-
-    real(r_def), parameter :: dz   = 2000.0_r_def
-    type (mesh_type) :: mesh_1
-
-    real(r_def) :: dz_test(nlayers)
-    real(r_def) :: test_real
-
-    mesh_1 = mesh_type( this%global_mesh, &
-                        this%partition,   &
-                        nlayers,          &
-                        domain_top,       &
-                        extrusion_method_uniform )
-
-    dz_test = 0.0_r_def
-    call mesh_1%get_dz(dz_test)
-    test_real = dz_test(1)
-    @assertEqual ( test_real, dz, 1.0e-2_r_def )
-
-  end subroutine test_extrude_uniform
-
-  @test 
-  subroutine test_extrude_quadratic(this)
-    use extrusion_config_mod, only: extrusion_method_quadratic
-    implicit none
-    class(mesh_test_type), intent(inout) :: this
-
-    real(r_def), parameter :: dz   = 400.0_r_def
-    type (mesh_type) :: mesh_1
-
-    real(r_def) :: dz_test(nlayers)
-    real(r_def) :: test_real
-
-    mesh_1 = mesh_type( this%global_mesh, &
-                        this%partition,   &
-                        nlayers,          &
-                        domain_top,       &
-                        extrusion_method_quadratic)
-
-    dz_test = 0.0_r_def
-    call mesh_1%get_dz(dz_test)
-    test_real = dz_test(1)
-    @assertEqual ( test_real, dz, 1.0e-2_r_def )
-
-  end subroutine test_extrude_quadratic
-
- @test 
-  subroutine test_extrude_geometric(this)
-    use extrusion_config_mod, only: extrusion_method_geometric
-    implicit none
-    class(mesh_test_type), intent(inout) :: this
-
-    real(r_def), parameter :: dz   = 1883.545714005761_r_def
-    type (mesh_type) :: mesh_1
-
-    real(r_def) :: dz_test(nlayers)
-    real(r_def) :: test_real
-
-    mesh_1 = mesh_type( this%global_mesh, &
-                        this%partition,   &
-                        nlayers,          &
-                        domain_top,       &
-                        extrusion_method_geometric)
-
-    dz_test = 0.0_r_def
-    call mesh_1%get_dz(dz_test)
-    test_real = dz_test(1)
-    @assertEqual ( test_real, dz, 1.0e-2_r_def )
-
-  end subroutine test_extrude_geometric
-
-@test 
-  subroutine test_extrude_dcmip(this)
-    use extrusion_config_mod, only: extrusion_method_dcmip
-    implicit none
-    class(mesh_test_type), intent(inout) :: this
-
-    real(r_def), parameter :: dz   = 883.0368802245059_r_def
-    type (mesh_type) :: mesh_1
-    
-    real(r_def) :: dz_test(nlayers)
-    real(r_def) :: test_real
-    
-    mesh_1 = mesh_type( this%global_mesh, &
-                        this%partition,   &
-                        nlayers,          &
-                        domain_top,       &
-                        extrusion_method_dcmip)
-    
-    dz_test = 0.0_r_def
-    call mesh_1%get_dz(dz_test)
-    test_real = dz_test(1)
-    @assertEqual ( test_real, dz, 1.0e-2_r_def )
-
-  end subroutine test_extrude_dcmip
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
   subroutine test_get_integer( this )
@@ -607,6 +502,7 @@ contains
   end subroutine test_get_boolean
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
   subroutine test_get_domain( this )
 
     implicit none

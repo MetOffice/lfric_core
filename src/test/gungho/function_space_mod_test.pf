@@ -29,7 +29,7 @@ module function_space_mod_test
 
   @testParameter
   type, public, extends(AbstractTestParameter) :: function_space_parameter_type
-    integer(i_def),                        public :: function_space
+    integer(i_def), public :: function_space
   contains
     procedure :: toString
   end type function_space_parameter_type
@@ -317,6 +317,7 @@ contains
   end subroutine test_get_whole_dofmap
 
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ @test
   subroutine test_stencil_point( this )
 
     use stencil_dofmap_mod,    only: stencil_dofmap_type, STENCIL_POINT
@@ -343,6 +344,7 @@ contains
   end subroutine test_stencil_point
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
   subroutine test_stencil_1dx( this )
 
     use stencil_dofmap_mod,    only: stencil_dofmap_type, STENCIL_1DX
@@ -377,6 +379,7 @@ contains
   end subroutine test_stencil_1dx
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
   subroutine test_stencil_1dy( this )
 
     use stencil_dofmap_mod,    only: stencil_dofmap_type, STENCIL_1DY
@@ -417,6 +420,7 @@ contains
   end subroutine test_stencil_1dy
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
   subroutine test_stencil_cross( this )
 
     use stencil_dofmap_mod,    only: stencil_dofmap_type, STENCIL_CROSS
@@ -453,6 +457,7 @@ contains
   end subroutine test_stencil_cross
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
   subroutine test_mesh( this )
 
     implicit none
@@ -487,6 +492,7 @@ contains
   end subroutine test_mesh
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
   subroutine test_colouring( this )
 
     implicit none
