@@ -24,10 +24,11 @@ module linked_list_mod
   integer(i_def), parameter, public :: after = 1
 
   type, public                           :: linked_list_type
-    integer(i_def) :: length                        !The number of items in the list
-    type(linked_list_item_type), pointer :: head    !The first entry in the linked list
-    type(linked_list_item_type), pointer :: tail    !The last entry in the linked list
-    type(linked_list_item_type), pointer :: current !The entry currently pointed to
+    private
+    integer(i_def) :: length ! The number of items in the list                        
+    type(linked_list_item_type), pointer :: head    ! The first entry in the linked list 
+    type(linked_list_item_type), pointer :: tail    ! The last entry in the linked list 
+    type(linked_list_item_type), pointer :: current ! The entry currently pointed to
 
   contains
     procedure, public              :: insert_item

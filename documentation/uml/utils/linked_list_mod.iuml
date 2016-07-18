@@ -1,8 +1,8 @@
 class linked_list_mod::linked_list_type {
-  +current : linked_list_item_type <<pointer>>
-  +head    : linked_list_item_type <<pointer>>
-  +length  : integer
-  +tail    : linked_list_item_type <<pointer>>
+  -current : linked_list_item_type <<pointer>>
+  -head    : linked_list_item_type <<pointer>>
+  -length  : integer
+  -tail    : linked_list_item_type <<pointer>>
 
   +<<create>> linked_list_constructor() : linked_list_type
 
