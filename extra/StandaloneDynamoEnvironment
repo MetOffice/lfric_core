@@ -247,7 +247,7 @@ if [ ! -e $INSTALLDIR/lib/libO/Linux.gfortran.$BITNESS.mpiuni.default/libesmf.so
   mkdir -p $WORKDIR
   if [ ! -r $WORKDIR/esmf_6_3_0rp1_src.tar.gz ] ; then
     echo Getting tarball
-    wget -P $WORKDIR http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_6_3_0rp1/esmf_6_3_0rp1_src.tar.gz
+    wget -P $WORKDIR http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_7_0_0/esmf_7_0_0_src.tar.gz
   fi
 
   if [ ! -d $WORKDIR/esmf ] ; then

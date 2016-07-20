@@ -8,9 +8,9 @@ running quickly and easily.
 
 .. note::
    The canonical version of this document is held as reStructured text in
-   the repository at ``Dynamo/trunk/documentation/quickstart.rst``. Any changes
-   in a branch which render this document inaccurate should also include
-   updates to the version of this document on that branch. The version
+   the repository at `source:Dynamo/trunk/documentation/quickstart.rst`:trac:.
+   Any changes in a branch which render this document inaccurate should also
+   include updates to the version of this document on that branch. The version
    displayed on the wiki is generated from the head of trunk.
 
 Build Environment
@@ -58,7 +58,7 @@ Dynamo environment to set up libraries and compiler:
 Render your own video using the "gource" documentation target is only available
 on the Met Office desktop. You will need to do the following::
 
-  ``module load environment/visualisation``
+  module load base-environment/gource
 
 Outwith the Met Office
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +118,7 @@ The requirements for building Dynamo are:
 +=========+==========+=================+=======================================+==========================================+
 | CMake   | 2.8.12.2 | Build           | pFUnit builds are prepared using this | PATH                                     |
 +---------+----------+-----------------+---------------------------------------+------------------------------------------+
-| ESMF    | 6.3.0rp1 | Build, Run      | Framework & Infrastructure library    | FFLAGS, LDFLAGS, LD_LIBRARY_PATH         |
+| ESMF    | 7.0.0    | Build, Run      | Framework & Infrastructure library    | FFLAGS, LDFLAGS, LD_LIBRARY_PATH         |
 +---------+----------+-----------------+---------------------------------------+------------------------------------------+
 | GMake   | 3.81     | Build           | GNU's version of "make"               | PATH                                     |
 +---------+----------+-----------------+---------------------------------------+------------------------------------------+
@@ -171,18 +171,18 @@ Checkout Dynamo
 To checkout a working copy of the code to a new directory, named 'trunk' in
 this example, run one of the following commands::
 
-  svn co https://puma.nerc.ac.uk/svn/GungHo_svn/Dynamo/trunk trunk
+  svn co https://code.metoffice.gov.uk/svn/lfric/Dynamo/trunk trunk
   svn co $REPO/trunk trunk # Alternative once environment/dynamo/base module is loaded
 
 or::
 
-  fcm co https://puma.nerc.ac.uk/svn/GungHo_svn/Dynamo/trunk trunk
+  fcm co https://code.metoffice.gov.uk/svn/lfric/Dynamo/trunk trunk
 
 FCM users, particularly developers, may want to set up a suitable keyword to
 make this easier. In ``~/.metomi/fcm/keyword.cfg`` add the following lines::
 
   # Gung-Ho / LFRic : Dynamo project
-  location{primary}[Dynamo] = https://puma.nerc.ac.uk/svn/GungHo_svn/Dynamo
+  location{primary}[Dynamo] = https://code.metoffice.gov.uk/svn/lfric/Dynamo
 
 This would allow the URL for the trunk in an fcm command to be specified as
 ``fcm:Dynamo_tr`` and the root of the path to all branches to be
@@ -284,7 +284,7 @@ The `test-suite` target may then be used thus::
 
 The Met Office environment module sets up this variable for local platforms.
 
-Using the command {{{rose stem}}} will launch the suite against the Met Office
+Using the command ``rose stem`` will launch the suite against the Met Office
 SPICE server farm. This is useful during development.
 
 Building The Documentation
@@ -295,8 +295,18 @@ following::
 
   make docs
 
-To view the documentation point a browser at
-``documentation/api/html/index.html``
+To view Doxygen documentation for the !GungHo science code point a browser at::
+``documentation/api/gungho/html/index.html``
+
+For the software infrastructure, point a browser at::
+``documentation/api/infrastructure/html/index.html``
+
+A pdf of the scientific formulation is found at::
+``documentation/formulation/dynamo_formulation.pdf``
+
+A pdf that provides an introduction to the data model is found at::
+``documentation/datamodel/dynamo_datamodel.pdf``
+
 
 Possible Issues
 ---------------
@@ -305,6 +315,4 @@ Slow builds
 ~~~~~~~~~~~
 
 You may find that builds stall around dependency analysis. If this is the case
-refer to the
-`build system documentation <https://puma.nerc.ac.uk/trac/GungHo/wiki/DynamoBuildSystem#RelocateBuildArtifacts>`_.
-
+refer to `Dynamo/BuildSystem#RelocateBuildArtifacts`:trac:.
