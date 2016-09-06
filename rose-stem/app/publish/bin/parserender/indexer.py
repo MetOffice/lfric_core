@@ -76,55 +76,54 @@ class DynamoIndexer(Indexer):
 
     def findDocumentation( self, rootPath ):
         '''
-        Looks for directories below the root and tries to find an "index.html"
-        file in them. If none is found then try to determine a sensible name.
-        The logic of this is a little tortuous and is ripe for improvement.
-
-        Things would be easier if we didn't generate LaTeX output from Doxygen.
+        Walks through the directory tree from the bottom upwards, examining
+        the contents of each directory. If an index.html file is found
+        it generates a SubsiteDetails object linking to that. If no
+        index.html is found then the directory is linked to instead
         '''
         subsites = {}
-        highWaterLevel = -1
-        highWaterPath = None
-        foundIndex = False
-        for path, directorynames, filenames in os.walk( rootPath ):
+        for path, directorynames, filenames in os.walk( rootPath, topdown=False ):
+
             relativePath = os.path.relpath( path, rootPath )
+
             if relativePath != '.': relativePath = relativePath + os.sep
-            level = relativePath.count( os.sep )
+
 
             if 'index.html' in filenames and relativePath != '.':
+                # Found an index.html file 
+                # Determine the timestamp of index.html
                 timestamp = os.path.getmtime( os.path.join( path, \
                                                             'index.html' ) )
                 timestamp = datetime.datetime.utcfromtimestamp( timestamp )
+                # Add it to the list of subsites
                 subsites[relativePath] = SubsiteDetails( relativePath, \
                                 relativePath.replace( os.sep, ' ' ).title(), \
                                                          timestamp )
-                del directorynames[:] # Go no deeper
-                foundIndex = True
 
-            if level <= highWaterLevel:
-                if not foundIndex:
-                    timestamp = os.path.getmtime( os.path.join( rootPath, \
-                                                             highWaterPath ) )
-                    timestamp = datetime.datetime.utcfromtimestamp( timestamp )
-                    subsites[highWaterPath] = SubsiteDetails( highWaterPath, \
-                               highWaterPath.replace( os.sep, ' ' ).title(), \
-                                                              timestamp )
-                else:
-                    foundIndex = False
-                highWaterPath = relativePath
-                highWaterLevel = level
             else:
-                highWaterLevel = level
-
-        if not foundIndex and highWaterPath:
-            timestamp = os.path.getmtime( os.path.join( rootPath, \
-                                                        highWaterPath ) )
-            timestamp = datetime.datetime.utcfromtimestamp( timestamp )
-            subsites[highWaterPath] = SubsiteDetails( highWaterPath, \
-                               highWaterPath.replace( os.sep, ' ' ).title(), \
-                                                      timestamp )
+                if (len(directorynames) > 0):
+                    if(relativePath != '.'):
+                      for d in directorynames:
+                        # Need to check that we are not duplicating top level of paths
+                        # that have index.html and have already been added
+                        if not(self.siteExists(relativePath, subsites)):
+                          timestamp = os.path.getmtime( os.path.join( path, d ) )
+                          timestamp = datetime.datetime.utcfromtimestamp( timestamp )
+                          subsites[relativePath] = SubsiteDetails( relativePath, \
+                                     relativePath.replace( os.sep, ' ' ).title(), \
+                                                                      timestamp )
 
         return subsites
+
+   
+    def siteExists(self, relPath, subsites):
+       # Checks if a path is a subpath of an entry in the current subsites list
+       exists = False
+       # Check if relPath is a substring of each entry in subsites
+       for s in subsites:
+         if relPath in s:
+           exists = True
+       return exists
 
     def findPages( self, rootPath ):
         '''
@@ -137,7 +136,6 @@ class DynamoIndexer(Indexer):
             relativeFilename = os.path.relpath( filename, rootPath )
             if relativeFilename == 'index.html': continue
             leafname = os.path.basename( filename )
-
             document = et.parse( filename )
             compiler = document.getroot().find( './/span[@id=\'compiler\']' ).text
             contextNode  = document.getroot().find( './/span[@id=\'context\']' )

@@ -9,6 +9,7 @@
       a.aged:link    { color: #444; }
       a.aged:visited { color: #222; }
       #doclist li { display: inline; list-style-type: none; padding-right: 1em; }
+      #outputlist li { display: inline; list-style-type: none; padding-right: 1em; }
       #loglist li { display: inline; list-style-type: none; padding-right: 1em; }
     </style>
   </head>
@@ -24,8 +25,14 @@
     </p>
     <h2>Documentation</h2>
     <ul id="doclist">
-{%- for url, details in subsites|dictsort %}
+{%- for url, details in subsites|dictsort if not "Model_Output" in details.name %}
       <li><a href="{{url}}">{{details.name|replace(' ', '&nbsp;')}}</a></li>
+{%- endfor %}
+    </ul>
+    <h2>Model Output</h2>
+    <ul id="outputlist">
+{%- for url, details in subsites|dictsort if "Model_Output" in details.name %}
+      <li><a href="{{url}}">{{details.name.split(' ')[1]|replace('foo','_')}}</a></li>
 {%- endfor %}
     </ul>
     <h2>Logs</h2>

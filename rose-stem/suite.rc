@@ -1,7 +1,7 @@
 #!jinja2
 {%- set science_configurations = 'runge-kutta', 'semi-implicit',
-                                 'si-helmholtz', 'transport-cosmic',
-                                 'transport-rk' %}
+                                 'semi-implicit-360ts', 'si-helmholtz', 
+                                 'transport-cosmic', 'transport-rk' %}
 {%- set groups = {'developer': ['science(semi-implicit)',
                                 'science(si-helmholtz)',
                                 'science(runge-kutta)',
@@ -10,7 +10,8 @@
                                 'check_compilers(fast-debug)',
                                 'godlines',
                                 'cleanlines'],
-                  'nightly': ['check_compilers(full-debug, True)',
+                  'nightly': ['science(semi-implicit-360ts, True)',
+                              'check_compilers(full-debug, True)',
                               'godlines(True)',
                               'publish_index']} %}
 {%- set mesh_types = ['cubedsphere', 'biperiodic'] %}
@@ -41,7 +42,7 @@
         timeout = 180 # 3 hours
 
 {#- #########################################################################}
-{%- macro science( configuration ) %}
+{%- macro science( configuration, plotting=False ) %}
 {%-   set label =  TARGET_SCIENCE_COMPILER | lower|replace('-','foo') + '_fastfoodebug' %}
             purge_local => purge_target
             purge_target => export_for_{{label}}
@@ -53,6 +54,9 @@
             run_{{configuration|replace('-','foo')}}_{{label}} => check_{{configuration|replace('-','foo')}}_{{label}}
             run_{{label}}_boundary_test => check_{{label}}_boundary_test
 {%-     endif %}
+{%-   endif %}
+{%-   if plotting %}
+            run_{{configuration|replace('-','foo')}}_{{label}} => plot_{{configuration|replace('-','foo')}}_{{label}}
 {%-   endif %}
 {%- endmacro %}
 {#- #########################################################################}
@@ -355,6 +359,12 @@
                       cp dynamo-checksums.txt $DYNAMO_DESTINATION_DIRECTORY/dynamo.{{configuration}}.{{compiler}}.checksums
                       # Future publisher stages need this information
                       echo $CYLC_TASK_LOG_ROOT > $DYNAMO_DESTINATION_DIRECTORY/dynamo.{{configuration}}.{{compiler}}.log.path
+                      mkdir -p ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data
+                      chmod 755 ~/public_html/dynamo-{{TARGET_OPT}}/model_output
+                      chmod 755 ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}
+                      chmod 755 ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data
+                      cp $CYLC_TASK_WORK_DIR/diagDynamo*.m ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data
+                      chmod 754 ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data/*.m
                       """
         [[[environment]]]
             OMP_NUM_THREADS=2
@@ -363,6 +373,22 @@
 {%-         for DIRECTIVE in TARGET_RUN_BATCHER_DIRECTIVES %}
             {{DIRECTIVE}}
 {%-         endfor %}
+{%-       endif %}
+
+{%-       if 'plot_' + configuration_label in scheduledTasks %}
+    [[plot_{{configuration_label}}]]
+        inherit = {{family}}, TARGET, PUBLISH
+        script = rose task-run --app-key=plot
+        post-script = """
+                      chmod 754 $PLOT_DIR/*.png
+                      """
+
+        [[[environment]]]
+             NODAL_DATA_DIR = ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data
+             PLOT_DIR = ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}
+             FIELDS = theta,rho
+             TS = T000360
+
 {%-       endif %}
 
 {%-       if 'publish_' + label + '_' +  configuration|lower|replace('-','foo') in scheduledTasks %}

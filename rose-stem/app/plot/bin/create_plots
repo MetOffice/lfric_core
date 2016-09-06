@@ -1,0 +1,163 @@
+#!/usr/bin/env python2.7
+# -*- coding: utf-8 -*-
+##############################################################################
+# (c) The copyright relating to this work is owned jointly by the Crown,
+# Met Office and NERC 2014. However, it has been created with the help of the
+# GungHo Consortium, whose members are identified at
+# https://puma.nerc.ac.uk/trac/GungHo/wiki
+##############################################################################
+
+'''
+Python script to plot all levels from a Dynamo output file. Levels are determined
+from the data as they are different for different fields.
+
+This version takes nodal format output files and interpolates onto a regular
+grid.
+
+This version stitches together a directory of files and extracts all levels
+so it can work in the serial case where there is one file or the parallel
+case where there is a file for each processor.
+
+This version is for plotting under suites and accepts command line args
+for the field and timestep to plot. It also plots to file rather than to screen 
+
+'''
+
+
+import numpy as np
+
+# Need to set a non-interactive backend for suites
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.mlab as mlab
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+import math
+
+import glob
+import sys
+
+
+# Make an empty list to hold the levels we find in the data
+
+levels = []
+
+# Set up some empty lists for
+# x,y coordinates and value
+
+x = []
+y = []
+z = []
+
+
+def process_file_list(filestem):
+
+  # get the list of files to stitch together
+  dirlist = glob.glob(filestem)
+
+  for f in dirlist:
+
+    fo = open(f, "r")
+
+    # Step through all lines in the file, split the lines
+    # and where the level matches the specifed one, append 
+    # data to appropriate list 
+    for strline in fo:
+      strsplit = strline.split()
+      # check we got a valid data line
+      if (len(strsplit) == 5):
+         # get the level
+         level = float(strsplit[3])
+         # Is the level already in the levels list?
+         if (level in levels):
+            # If it is then append the data into the correct list
+            x[levels.index(level)].append(float(strsplit[0]))
+            y[levels.index(level)].append(float(strsplit[1]))
+            z[levels.index(level)].append(float(strsplit[4]))
+         else:
+            # add the level to the levels list and append
+            # corresponding empty lists to x, y and z lists
+            levels.append(level)
+            x.append([])
+            y.append([])
+            z.append([])
+            # ...and then append the data
+            x[levels.index(level)].append(float(strsplit[0]))
+            y[levels.index(level)].append(float(strsplit[1]))
+            z[levels.index(level)].append(float(strsplit[4]))
+
+            
+
+    fo.close()
+
+
+def make_figure(plotpath, field, timestep):
+
+  # Do the interpolation and make the plot
+
+  interp_fig = plt.figure(figsize=(15,10))
+
+
+  for p in xrange(len(levels)):
+
+    # get min and max of x,y data for plot axes
+    xmin =  min(x[p])
+    xmax = max(x[p])
+    ymin =  min(y[p])
+    ymax = max(y[p])
+   
+
+    # Size of regular grid
+    ny, nx = 100, 200
+
+    # Generate a regular grid to interpolate the data onto
+    xi = np.linspace(xmin, xmax, nx)
+    yi = np.linspace(ymin, ymax, ny)
+    xi, yi = np.meshgrid(xi, yi)
+
+    # Interpolate using delaunay triangulation 
+
+    zi = mlab.griddata(x[p], y[p], z[p], xi, yi)
+
+    # Conversion factor from radians to degrees
+    r2d = 180.0/math.pi;
+
+    # Plot the interpolated data using contourf
+
+    ax = interp_fig.add_subplot(3,2,p+1)
+    cf = plt.contourf(xi *r2d, yi * r2d, zi)
+    plt.colorbar(cf,  cmap=cm.spectral, format='%0e')
+    plt.axis([np.amin(xi *r2d), np.amax(xi *r2d), np.amin(yi *r2d), np.amax(yi *r2d)])
+    ax.set_title("Level : "  + str(levels[p]))
+    plt.suptitle(field + " " + timestep + " interpolated")
+
+  # Save file as .png
+  out_file_name = plotpath + "/" + field + "_" + timestep + ".png"
+  interp_fig.savefig(out_file_name , bbox_inches='tight')
+
+if __name__ == "__main__":
+  
+  try:
+    datapath, fields, timestep, plotpath = sys.argv[1:5]
+  except ValueError:
+    print("Usage: {0} <datapath> <field_names> <timestep> <plotpath>".format(sys.argv[0]))
+    exit(1)
+
+  # Split out the list of fields
+  field_list = fields.split(',')
+
+  for field in field_list:
+
+    # clear the lists in between plots
+    del levels[:]
+    del x[:]
+    del y[:]
+    del z[:]
+
+    filestem =  datapath + "/diagDynamo_nodal_" + field + "_" + timestep + "*"
+
+    process_file_list(filestem)
+    make_figure(plotpath,field, timestep)
+

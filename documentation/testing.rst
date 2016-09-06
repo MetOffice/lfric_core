@@ -119,13 +119,13 @@ Following is a minimal example of a full test class with example fixtures::
 
     subroutine setUp( this )
 
-        use frig_config_mod, only :: frig_stuff_config
+        use feign_config_mod, only :: feign_stuff_config
 
         implicit none
 
         class(test_simple_type), intent(inout) :: this
 
-        call frig_stuff_config( 'foo', 13 )
+        call feign_stuff_config( 'foo', 13 )
 
         allocate( this%data_block(256) )
 
@@ -177,14 +177,14 @@ initialised for each test. This may be done in ``setUp`` if every test needs
 the same initial condition or locally to the test if they need different
 starting points.
 
-Also notice the use of the "frig" procedure to set up configuration for the
-unit under test. Bare in mind that you must frig everything the code being
+Also notice the use of the "feign" procedure to set up configuration for the
+unit under test. Bear in mind that you must feign everything the code being
 tested will use. You can not rely on them having been set up by a previous test
 as they have not been. You can not rely on them defaulting to a particular
 value because they do not.
 
 If the unit calls down to help procedures any configuration they make use of
-must also be frigged.
+must also be feigned.
 
 Problems With pFUnit
 ~~~~~~~~~~~~~~~~~~~~
@@ -355,7 +355,49 @@ Finally decide which group or groups you would like your test to appear in and
 add it to them in the ``groups`` structure just below. The form to use is
 ``'science(<test name>)'``.
 
+Science tests by default do a kgo comparison so you also need to provide a file
+``rose-stem/app/check-dynamo/file/<platform>/checksum.<test name>.<compiler>.kgo.txt``
+
 From that point everything should be taken care of for you.
+
+Adding new tasks
+----------------
+
+This requires a little more work. The basic steps to add a task 'new_task' are as follows:
+
+* Add a new app directory ``rose-stem/app/<new_task>``
+* Populate the ``rose-stem/app/<new_task>/rose-app.conf`` file to add desired commands 
+  (e.g. to run a script)
+* If your task runs a script, then put the script in ``rose-stem/app/<new_task>/bin``
+* Add ``new_task`` to the appropriate ``groups`` structure near the top of the suite.rc
+* Add a Jinja2 macro with the same name as the task, add in any task dependencies::
+
+    {%- macro new_task() %}
+
+       some_other_task => new_task
+
+    {%- endmacro %}
+
+in this example ``new_task`` will run after ``some_other_task`` completes.
+
+* Add Jinja2 code to define the actual task::
+
+    {%- if 'new_task' in scheduledTasks %}
+
+        [[new_task]]
+            inherit = None, LOCAL
+
+            script = rose task-run --app-key=<new_task> --command-key=<command>
+
+            [[[environment]]]
+
+            # set up any environment variables here
+ 
+    {%- endif %}
+
+where ``<new_task>`` is the app name and ``<command>`` is the name of a command in
+``rose-stem/app/<new_task>/rose-app.conf``. 
+
 
 suite.rc
 --------
@@ -408,3 +450,16 @@ to the parent section.
 
 Capitalise group task names. Non executive tasks which exist to group other
 tasks should have their name in all caps.
+
+Other useful tips
+-----------------
+
+It is not always obvious where stuff is located, for example, if you want to copy files
+to another location at the end of a task. The ``$CYLC_TASK_WORK_DIR`` environment
+variable can be used for the current working directory (e.g. where model output
+goes after a run). Other environment variables can be found in any Cylc job output
+log.
+
+You can define pre- and post-script commands for tasks to do things like copy
+files or create directories. There are many examples of these in the LFRic suite.rc.   
+  
