@@ -248,6 +248,9 @@ contains
                                ndf_theta, undf_theta,             &
                                map_theta,                         &
                                this%diff_basis_theta,             &
+                               ndf_theta, undf_theta,             &
+                               map_theta,                         &
+                               this%diff_basis_theta,             &
                                nqp_h, nqp_v,                      &
                                wh, wv)
 

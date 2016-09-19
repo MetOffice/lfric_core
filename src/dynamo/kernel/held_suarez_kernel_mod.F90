@@ -11,14 +11,14 @@
 
 !> @details Kernel adds a Held-Suarez forcing based on Wedi and Smolarkiewicz 2009:
 !> Wedi, N. P. and Smolarkiewicz, P. K. (2009), A framework for testing global 
-!> non-hydrostatic models. Q.J.R. Meteorol. Soc., 135: 469–484. doi: 10.1002/qj.377
+!> non-hydrostatic models. Q.J.R. Meteorol. Soc., 135: 469-484. doi: 10.1002/qj.377
 
 module held_suarez_kernel_mod
   
 use kernel_mod,               only: kernel_type
 use argument_mod,             only: arg_type, func_type,                 &
                                     GH_FIELD, GH_WRITE, GH_READ, GH_INC, &
-                                    W0, W2, W3,                          &
+                                    W0, W2, W3, ANY_SPACE_9,             &
                                     GH_BASIS, GH_DIFF_BASIS,             &
                                     CELLS
 use constants_mod,            only: r_def
@@ -39,12 +39,13 @@ type, public, extends(kernel_type) :: held_suarez_kernel_type
        arg_type(GH_FIELD,   GH_READ,  W2),                             &
        arg_type(GH_FIELD,   GH_READ,  W0),                             &
        arg_type(GH_FIELD,   GH_READ,  W3),                             &
-       arg_type(GH_FIELD*3, GH_READ,  W0)                              &
+       arg_type(GH_FIELD*3, GH_READ,  ANY_SPACE_9)                              &
        /)
-  type(func_type) :: meta_funcs(3) = (/                                &
+  type(func_type) :: meta_funcs(4) = (/                                &
        func_type(W2, GH_BASIS),                        &
-       func_type(W0, GH_BASIS, GH_DIFF_BASIS),                         &
-       func_type(W3, GH_BASIS)                                         &
+       func_type(W0, GH_BASIS),                         &
+       func_type(W3, GH_BASIS),                                         &
+       func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                 &
        /)
   integer :: iterates_over = CELLS
 contains
@@ -100,7 +101,6 @@ end function held_suarez_kernel_constructor
 !! @param[in] undf_w0 Number of unique degrees of freedom for w0
 !! @param[in] map_w0 Dofmap for the cell at the base of the column for w0
 !! @param[in] basis_w0 Basis functions evaluated at gaussian quadrature points for w0
-!! @param[in] diff_basis_w0 Differential basis functions evaluated at gaussian quadrature points for w0
 !! @param[in] ndf_w2 Number of degrees of freedom per cell for w2
 !! @param[in] undf_w2 Number of unique degrees of freedom for w2
 !! @param[in] map_w2 Dofmap for the cell at the base of the column for w2
@@ -109,18 +109,23 @@ end function held_suarez_kernel_constructor
 !! @param[in] undf_w3 Number of unique degrees of freedom for w3
 !! @param[in] map_w3 Dofmap for the cell at the base of the column for w3
 !! @param[in] basis_w3 Basis functions evaluated at gaussian quadrature points for w3
-!! @param[in] nqp_h Number of horizontal quadrature points
-!! @param[in] nqp_v Number of vertical quadrature points
-!! @param[in] wqp_h Weights of the horizontal quadrature points
-!! @param[in] wqp_v Weights of the vertical quadrature points
-subroutine held_suarez_code(nlayers,                                     &
-                            du, dtheta, u, theta, rho,                   &
-                            chi_1, chi_2, chi_3,                         &
-                            ndf_w2, undf_w2, map_w2, basis_w2,           & 
-                            ndf_w0, undf_w0, map_w0, basis_w0,           &
-                            diff_basis_w0,                               &
-                            ndf_w3, undf_w3, map_w3, basis_w3,           & 
-                            nqp_h, nqp_v, wqp_h, wqp_v                   &
+!! @param[in] ndf_chi The number of degrees of freedom per cell for chi
+!! @param[in] undf_chi The number of unique degrees of freedom for chi
+!! @param[in] map_chi Dofmap for the cell at the base of the column for chi
+!! @param[in] basis_chi Basis functions evaluated at gaussian quadrature points for chi
+!! @param[in] diff_basis_chi Differential basis functions evaluated at gaussian quadrature points for chi
+!! @param[in] nqp_h the number of horizontal quadrature points
+!! @param[in] nqp_v the number of vertical quadrature points
+!! @param[in] wqp_h the weights of the horizontal quadrature points
+!! @param[in] wqp_v the weights of the vertical quadrature points
+subroutine held_suarez_code(nlayers,                                           &
+                            du, dtheta, u, theta, rho,                         &
+                            chi_1, chi_2, chi_3,                               &
+                            ndf_w2, undf_w2, map_w2, basis_w2,                 &
+                            ndf_w0, undf_w0, map_w0, basis_w0,                 &
+                            ndf_w3, undf_w3, map_w3, basis_w3,                 &
+                            ndf_chi, undf_chi, map_chi, basis_chi, &
+                            diff_basis_chi, nqp_h, nqp_v, wqp_h, wqp_v      &
                             )
   
   use coordinate_jacobian_mod,  only: coordinate_jacobian
@@ -133,23 +138,27 @@ subroutine held_suarez_code(nlayers,                                     &
   integer, intent(in) :: ndf_w0, undf_w0  
   integer, intent(in) :: ndf_w2, undf_w2
   integer, intent(in) :: ndf_w3, undf_w3
+  integer, intent(in) :: ndf_chi, undf_chi
   integer, intent(in) :: nqp_h, nqp_v
   real(kind=r_def), dimension(undf_w0), intent(inout) :: dtheta
   real(kind=r_def), dimension(undf_w2), intent(inout) :: du
   real(kind=r_def), dimension(undf_w0), intent(in)    :: theta
   real(kind=r_def), dimension(undf_w2), intent(in)    :: u
   real(kind=r_def), dimension(undf_w3), intent(in)    :: rho
-  real(kind=r_def), dimension(undf_w0), intent(in)    :: chi_1, chi_2, chi_3
+  real(kind=r_def), dimension(undf_chi), intent(in)    :: chi_1, chi_2, chi_3
 
   integer, dimension(ndf_w0),  intent(in)                          :: map_w0
   real(kind=r_def), dimension(1, ndf_w0, nqp_h, nqp_v), intent(in) :: basis_w0
-  real(kind=r_def), dimension(3, ndf_w0, nqp_h, nqp_v), intent(in) :: diff_basis_w0
 
   integer, dimension(ndf_w2),  intent(in)                          :: map_w2
   real(kind=r_def), dimension(3, ndf_w2, nqp_h, nqp_v), intent(in) :: basis_w2 
 
   integer, dimension(ndf_w3),  intent(in)                          :: map_w3
   real(kind=r_def), dimension(1, ndf_w3, nqp_h, nqp_v), intent(in) :: basis_w3 
+
+  integer, dimension(ndf_chi),  intent(in)                          :: map_chi
+  real(kind=r_def), dimension(1, ndf_chi, nqp_h, nqp_v), intent(in) :: basis_chi
+  real(kind=r_def), dimension(3, ndf_chi, nqp_h, nqp_v), intent(in) :: diff_basis_chi
 
   real(kind=r_def), dimension(nqp_h), intent(in) :: wqp_h
   real(kind=r_def), dimension(nqp_v), intent(in) :: wqp_v
@@ -161,8 +170,8 @@ subroutine held_suarez_code(nlayers,                                     &
   real(kind=r_def)            :: lon, r
   integer                     :: qp1, qp2
   
-  real(kind=r_def), dimension(ndf_w0)          :: chi_1_at_dof, chi_2_at_dof, chi_3_at_dof
-  real(kind=r_def), dimension(ndf_w0)          :: rho_at_dof
+  real(kind=r_def), dimension(ndf_chi)         :: chi_1_at_dof, chi_2_at_dof, chi_3_at_dof
+  real(kind=r_def), dimension(ndf_w3)          :: rho_at_dof
   real(kind=r_def), dimension(ndf_w2)          :: u_at_dof
   real(kind=r_def), dimension(ndf_w0)          :: theta_at_dof
   real(kind=r_def), dimension(nqp_h,nqp_v)     :: dj
@@ -183,12 +192,14 @@ subroutine held_suarez_code(nlayers,                                     &
     du_at_dof(:) = 0.0
 
    ! Store the values for each degree of freedom
-   do df = 1, ndf_w0
-     loc = map_w0(df) + k
+   do df = 1, ndf_chi
+     loc = map_chi(df) + k
      chi_1_at_dof(df) = chi_1( loc )
      chi_2_at_dof(df) = chi_2( loc )
      chi_3_at_dof(df) = chi_3( loc )
-     theta_at_dof(df) = theta( loc )
+   end do
+   do df = 1, ndf_w0
+     theta_at_dof(df) = theta( map_w0(df) + k )
    end do   
    do df = 1, ndf_w2
      u_at_dof(df) = u( map_w2(df) + k )
@@ -208,9 +219,11 @@ subroutine held_suarez_code(nlayers,                                     &
         do df = 1, ndf_w0
           theta_at_quad   = theta_at_quad                                      &
                           + theta_at_dof(df)*basis_w0(1,df,qp1,qp2)
-          chi_at_quad(1)     = chi_at_quad(1) + chi_1_at_dof(df)*basis_w0(1,df,qp1,qp2)
-          chi_at_quad(2)     = chi_at_quad(2) + chi_2_at_dof(df)*basis_w0(1,df,qp1,qp2)
-          chi_at_quad(3)     = chi_at_quad(3) + chi_3_at_dof(df)*basis_w0(1,df,qp1,qp2)
+        end do
+        do df = 1, ndf_chi
+          chi_at_quad(1)     = chi_at_quad(1) + chi_1_at_dof(df)*basis_chi(1,df,qp1,qp2)
+          chi_at_quad(2)     = chi_at_quad(2) + chi_2_at_dof(df)*basis_chi(1,df,qp1,qp2)
+          chi_at_quad(3)     = chi_at_quad(3) + chi_3_at_dof(df)*basis_chi(1,df,qp1,qp2)
         end do
 
         ! Now calculate rhs for theta 
@@ -238,9 +251,9 @@ subroutine held_suarez_code(nlayers,                                     &
         end do
 
         ! Now calculate rhs for winds
-        call coordinate_jacobian(ndf_w0, nqp_h, nqp_v,                      &
+        call coordinate_jacobian(ndf_chi, nqp_h, nqp_v,                      &
                                  chi_1_at_dof, chi_2_at_dof, chi_3_at_dof,  &
-                                 diff_basis_w0, jac, dj)
+                                 diff_basis_chi, jac, dj)
 
         u_at_quad(:) = wqp_h(qp1)*wqp_v(qp2)&
            * matmul(jac(:,:,qp1,qp2), u_at_quad(:)*held_suarez_damping(sigma))/dj(qp1,qp2)

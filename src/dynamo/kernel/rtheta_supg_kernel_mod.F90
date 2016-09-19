@@ -14,7 +14,7 @@ module rtheta_supg_kernel_mod
 
 use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_INC,               &
-                                    W0, W2, W3,                              &
+                                    W0, W2, W3, ANY_SPACE_9,                 &
                                     GH_BASIS, GH_DIFF_BASIS,                 &
                                     CELLS
 use constants_mod,           only : r_def, EPS
@@ -38,12 +38,13 @@ type, public, extends(kernel_type) :: rtheta_supg_kernel_type
        arg_type(GH_FIELD,   GH_READ, W0),                              &
        arg_type(GH_FIELD,   GH_READ, W2),                              &
        arg_type(GH_FIELD,   GH_READ, W3),                              &
-       arg_type(GH_FIELD*3, GH_READ, W0)                               &
+       arg_type(GH_FIELD*3, GH_READ, ANY_SPACE_9)                               &
        /)
-  type(func_type) :: meta_funcs(3) = (/                                &
+  type(func_type) :: meta_funcs(4) = (/                                &
        func_type(W0, GH_BASIS, GH_DIFF_BASIS),                         &
        func_type(W2, GH_BASIS),                                        &
-       func_type(W3, GH_BASIS)                                         &
+       func_type(W3, GH_BASIS),                                        &
+       func_type(ANY_SPACE_9, GH_DIFF_BASIS)                          &
        /)
   integer :: iterates_over = CELLS
 contains
@@ -99,6 +100,11 @@ end function rtheta_supg_kernel_constructor
 !! @param[in] undf_w3 Number of unique degrees of freedom  for w3
 !! @param[in] map_w3 Dofmap for the cell at the base of the column for w3
 !! @param[in] w3_basis Basis functions evaluated at gaussian quadrature points
+!! @param[in] ndf_chi Number of degrees of freedom per cell for chi
+!! @param[in] undf_chi  Number of unique degrees of freedom  for chi
+!! @param[in] map_chi Dofmap for the cell at the base of the column for chi
+!! @param[in] chi_diff_basis Differential basis functions evaluated at gaussian
+!!                          quadrature points
 !! @param[in] rho Density
 !! @param[inout] chi1 Chi in the 1st dir
 !! @param[inout] chi2 Chi in the 2nd dir
@@ -114,24 +120,27 @@ subroutine rtheta_supg_code(nlayers,                                          &
                             ndf_w0, undf_w0, map_w0, w0_basis, w0_diff_basis,  &
                             ndf_w2, undf_w2, map_w2, w2_basis,                 &
                             ndf_w3, undf_w3, map_w3, w3_basis,                 &
+                            ndf_chi, undf_chi, map_chi, chi_diff_basis,  &
                             nqp_h, nqp_v, wqp_h, wqp_v )
 
   !Arguments
   integer, intent(in) :: nlayers, nqp_h, nqp_v
-  integer, intent(in) :: ndf_w0, ndf_w2, ndf_w3, undf_w0, undf_w2, undf_w3
+  integer, intent(in) :: ndf_w0, ndf_w2, ndf_w3, undf_w0, undf_w2, undf_w3, ndf_chi, undf_chi
 
-  integer, dimension(ndf_w0), intent(in) :: map_w0
-  integer, dimension(ndf_w2), intent(in) :: map_w2
-  integer, dimension(ndf_w3), intent(in) :: map_w3
+  integer, dimension(ndf_w0), intent(in)  :: map_w0
+  integer, dimension(ndf_w2), intent(in)  :: map_w2
+  integer, dimension(ndf_w3), intent(in)  :: map_w3
+  integer, dimension(ndf_chi), intent(in) :: map_chi
 
-  real(kind=r_def), dimension(1,ndf_w0,nqp_h,nqp_v), intent(in) :: w0_basis
-  real(kind=r_def), dimension(3,ndf_w0,nqp_h,nqp_v), intent(in) :: w0_diff_basis
-  real(kind=r_def), dimension(3,ndf_w2,nqp_h,nqp_v), intent(in) :: w2_basis 
-  real(kind=r_def), dimension(1,ndf_w3,nqp_h,nqp_v), intent(in) :: w3_basis
+  real(kind=r_def), dimension(1,ndf_w0,nqp_h,nqp_v), intent(in)  :: w0_basis
+  real(kind=r_def), dimension(3,ndf_w0,nqp_h,nqp_v), intent(in)  :: w0_diff_basis
+  real(kind=r_def), dimension(3,ndf_w2,nqp_h,nqp_v), intent(in)  :: w2_basis
+  real(kind=r_def), dimension(1,ndf_w3,nqp_h,nqp_v), intent(in)  :: w3_basis
+  real(kind=r_def), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: chi_diff_basis
 
   real(kind=r_def), dimension(undf_w0), intent(inout) :: r_theta
   real(kind=r_def), dimension(undf_w0), intent(in)    :: theta, theta_n
-  real(kind=r_def), dimension(undf_w0), intent(in)    :: chi1, chi2, chi3
+  real(kind=r_def), dimension(undf_chi), intent(in)   :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf_w2), intent(in)    :: f
   real(kind=r_def), dimension(undf_w3), intent(in)    :: rho
 
@@ -143,8 +152,8 @@ subroutine rtheta_supg_code(nlayers,                                          &
   integer               :: qp1, qp2
 
   real(kind=r_def), dimension(ndf_w0)          :: rtheta_e, theta_e, &
-                                                  theta_n_e, &
-                                                  chi1_e, chi2_e, chi3_e
+                                                  theta_n_e
+  real(kind=r_def), dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
   real(kind=r_def), dimension(ndf_w2)          :: f_e
   real(kind=r_def), dimension(ndf_w3)          :: rho_e
   real(kind=r_def), dimension(nqp_h,nqp_v)     :: dj
@@ -157,16 +166,18 @@ subroutine rtheta_supg_code(nlayers,                                          &
 
   do k = 0, nlayers-1
   ! Extract element arrays of chi
+    do df = 1, ndf_chi
+      chi1_e(df) = chi1( map_chi(df) + k )
+      chi2_e(df) = chi2( map_chi(df) + k )
+      chi3_e(df) = chi3( map_chi(df) + k )
+    end do
+    call coordinate_jacobian(ndf_chi, nqp_h, nqp_v, chi1_e, chi2_e, chi3_e,  &
+                             chi_diff_basis, jac, dj)
     do df = 1, ndf_w0
       rtheta_e(df) = 0.0_r_def
       theta_e(df)   = theta( map_w0(df) + k )
       theta_n_e(df) = theta_n( map_w0(df) + k )
-      chi1_e(df) = chi1( map_w0(df) + k )
-      chi2_e(df) = chi2( map_w0(df) + k )
-      chi3_e(df) = chi3( map_w0(df) + k )
     end do
-    call coordinate_jacobian(ndf_w0, nqp_h, nqp_v, chi1_e, chi2_e, chi3_e,  &
-                             w0_diff_basis, jac, dj)
     do df = 1, ndf_w2
       f_e(df) = f( map_w2(df) + k )
     end do

@@ -17,7 +17,7 @@ module function_space_collection_mod
 
   use constants_mod,      only: i_def, l_def
   use function_space_mod, only: function_space_type
-  use fs_continuity_mod,  only: W0, W1, W2, W3, Wtheta, W2V, W2H, fs_name
+  use fs_continuity_mod,  only: W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi, fs_name
   use log_mod,            only: log_event, log_scratch_space                  &
                               , LOG_LEVEL_ERROR, LOG_LEVEL_TRACE
   use linked_list_mod,    only : linked_list_type, &
@@ -83,11 +83,11 @@ function get_fs(self, mesh_id, element_order, dynamo_fs) result(fs)
 
   select case (dynamo_fs)
 
-  case (W0,W1,W2,W3,WTHETA,W2V,W2H)
+  case (W0,W1,W2,W3,WTHETA,W2V,W2H, WCHI)
   case default
     write(log_scratch_space, '(2(A,I0),A)')                                    &
       'Function space type not defined for Dynamo. Available types are '     //&
-      '[W0 | W1 | W2 | W3 | WTHETA | W2V | W2H]'
+      '[W0 | W1 | W2 | W3 | WTHETA | W2V | W2H | WCHI]'
     call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     return
 

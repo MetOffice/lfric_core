@@ -75,6 +75,7 @@ contains
     dx(2) = (domain_size%maximum%y - domain_size%minimum%y)/real(nx(2)-1)
     dx(3) = (domain_size%maximum%z - domain_size%minimum%z)/real(nx(3)-1)
 
+
     do i = 1,nx(1)
       do j = 1,nx(2)
         do k = 1,nx(3)
@@ -85,6 +86,7 @@ contains
       end do
     end do
 
+
 ! For each point on regular grid find the computational cell that it is located
 ! in and evaluate the field at that point -> This is very inefficient for large
 ! grids
@@ -92,6 +94,7 @@ contains
       do j = 1,nx(2)
 ! find grid cell each output point lives in
         out_cell = find_output_cell( chi, x_out(:,1,j,i) )
+
 ! evaluate field at output points
         do dir = 1,n_out
           call evaluate_output_field( f(dir), chi, x_out(:,:,j,i), out_cell, nx(3), f_out(dir,:,j,i) )

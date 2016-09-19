@@ -20,7 +20,7 @@ module calc_departure_wind_kernel_mod
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_WRITE,             &
-                                    W0, W2,                                  &
+                                    ANY_SPACE_9, W2,                                  &
                                     GH_DIFF_BASIS, GH_BASIS,                 &
                                     CELLS
 use constants_mod,           only : r_def
@@ -36,11 +36,11 @@ type, public, extends(kernel_type) :: calc_departure_wind_kernel_type
   type(arg_type) :: meta_args(3) = (/                                  &
        arg_type(GH_FIELD,    GH_WRITE, W2),                            &
        arg_type(GH_FIELD,    GH_READ,  W2),                            &
-       arg_type(GH_FIELD*3,  GH_READ,  W0)                             &
+       arg_type(GH_FIELD*3,  GH_READ,  ANY_SPACE_9)                             &
        /)
   type(func_type) :: meta_funcs(2) = (/                                &
        func_type(W2, GH_BASIS),                                        &
-       func_type(W0, GH_DIFF_BASIS)                                    &
+       func_type(ANY_SPACE_9, GH_DIFF_BASIS)                                    &
        /)
   integer :: iterates_over = CELLS
 contains

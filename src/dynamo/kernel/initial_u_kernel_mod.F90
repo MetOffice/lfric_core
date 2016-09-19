@@ -11,7 +11,7 @@ module initial_u_kernel_mod
 
 use argument_mod,            only : arg_type, func_type,           &
                                     GH_FIELD, GH_INC, GH_READ,     &
-                                    W0, W2,                        &
+                                    ANY_SPACE_9, W2,               &
                                     GH_BASIS, GH_DIFF_BASIS,       &
                                     CELLS
 use constants_mod,           only : r_def, PI
@@ -28,11 +28,11 @@ type, public, extends(kernel_type) :: initial_u_kernel_type
   private
   type(arg_type) :: meta_args(2) = (/                                  &
        arg_type(GH_FIELD,   GH_INC,  W2),                              &
-       ARG_TYPE(GH_FIELD*3, GH_READ, W0)                               &
+       ARG_TYPE(GH_FIELD*3, GH_READ, ANY_SPACE_9)                               &
        /)
   type(func_type) :: meta_funcs(2) = (/                                &
        func_type(W2, GH_BASIS),                                        &
-       func_type(W0, GH_BASIS, GH_DIFF_BASIS)                          &
+       func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                          &
        /)
   integer :: iterates_over = CELLS
 

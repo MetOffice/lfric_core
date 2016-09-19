@@ -15,8 +15,9 @@
 &finite_element
   shape         = 'quadrilateral'
   element_order = 0
+  coordinate_order = 1
   rehabilitate  = .true.
-  wtheta_on     = .false.
+  wtheta_on = .false. 
 /
 
 &formulation

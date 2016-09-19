@@ -57,25 +57,25 @@ end subroutine rotation_vector_fplane
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 !> Subroutine Computes the element rotation (omega) vector in W2 space for the
-!! RHS of momentum equation on the SPHERE. The coordinate field is in W0.
-!! @param[in] ndf            Size of the chi arrays
-!! @param[in] ngp_h          Number of quadrature points in horizontal direction
-!! @param[in] ngp_v          Number of quadrature points in vertical direction
-!! @param[in] chi_1          Chi_1 coordinate field
-!! @param[in] chi_2          Chi_2 coordinate field
-!! @param[in] chi_3          Chi_3 coordinate field
-!! @param[in] basis          W0 basis functions
-!! @param[out] rotation_vec  Rotation vector on quadrature points
-subroutine rotation_vector_sphere(ndf, ngp_h, ngp_v, chi_1, chi_2, chi_3, basis, rotation_vec)
+!! RHS of momentum equation on the SPHERE. The coordinate field is in Wchi.
+!! @param[in] ndf_chi        The size of the chi arrays
+!! @param[in] ngp_h          The number of quadrature points in horizontal direction
+!! @param[in] ngp_v          The number of quadrature points in vertical direction
+!! @param[in] chi_1          Holds the chi_1 coordinate field
+!! @param[in] chi_2          Holds the chi_2 coordinate field
+!! @param[in] chi_3          Holds the chi_3 coordinate field
+!! @param[in] chi_basis       Holds the chi basis functions
+!! @param[out] rotation_vec  Holds the values of the rotation vector on quadrature points
+subroutine rotation_vector_sphere(ndf_chi, ngp_h, ngp_v, chi_1, chi_2, chi_3, chi_basis, rotation_vec)
 !-------------------------------------------------------------------------------
 ! Compute the rotation vector Omega = (0, 2*cos(lat), 2*sin(lat)) on quadrature points 
 !-------------------------------------------------------------------------------
 
 use coord_transform_mod, only: xyz2llr, sphere2cart_vector
 
-integer,          intent(in)  :: ndf, ngp_h, ngp_v
-real(kind=r_def), intent(in)  :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-real(kind=r_def), intent(in), dimension(1,ndf,ngp_h,ngp_v) :: basis 
+integer,          intent(in)  :: ndf_chi, ngp_h, ngp_v
+real(kind=r_def), intent(in)  :: chi_1(ndf_chi), chi_2(ndf_chi), chi_3(ndf_chi)
+real(kind=r_def), intent(in), dimension(1,ndf_chi,ngp_h,ngp_v) :: chi_basis
 real(kind=r_def), intent(out) :: rotation_vec(3,ngp_h,ngp_v)
 
 integer :: i, j, df
@@ -91,10 +91,10 @@ do j = 1, ngp_v
     x = 0.0_r_def  
     y = 0.0_r_def 
     z = 0.0_r_def   
-    do df = 1, ndf
-        x = x + chi_1(df)*basis(1,df,i,j)
-        y = y + chi_2(df)*basis(1,df,i,j)
-        z = z + chi_3(df)*basis(1,df,i,j)        
+    do df = 1, ndf_chi
+        x = x + chi_1(df)*chi_basis(1,df,i,j)
+        y = y + chi_2(df)*chi_basis(1,df,i,j)
+        z = z + chi_3(df)*chi_basis(1,df,i,j)
     end do 
     call xyz2llr(x,y,z,long,lat,r)
     rotation_vec(1,i,j) = 0.0_r_def

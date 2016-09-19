@@ -13,7 +13,7 @@ use constants_mod,           only : r_def
 use quadrature_mod,          only : quadrature_type
 use argument_mod,            only : arg_type, func_type,           &
                                     GH_FIELD, GH_INC, GH_READ,     &
-                                    W0, ANY_SPACE_1, ANY_SPACE_2,  &
+                                    ANY_SPACE_9, ANY_SPACE_1, ANY_SPACE_2,  &
                                     GH_BASIS, GH_DIFF_BASIS,       &
                                     CELLS
 
@@ -28,12 +28,12 @@ type, public, extends(kernel_type) :: gp_rhs_kernel_type
   type(arg_type) :: meta_args(3) = (/                                  &
        arg_type(GH_FIELD,   GH_INC,  ANY_SPACE_1),                     &
        ARG_TYPE(GH_FIELD,   GH_READ, ANY_SPACE_2),                     &
-       ARG_TYPE(GH_FIELD*3, GH_READ, W0)                               &
+       ARG_TYPE(GH_FIELD*3, GH_READ, ANY_SPACE_9)                               &
        /)
   type(func_type) :: meta_funcs(3) = (/                                &
        func_type(ANY_SPACE_1, GH_BASIS),                               &
        FUNC_TYPE(ANY_SPACE_2, GH_BASIS),                               &
-       FUNC_TYPE(W0,          GH_DIFF_BASIS)                           &
+       FUNC_TYPE(ANY_SPACE_9, GH_DIFF_BASIS)                           &
        /)
   integer :: iterates_over = CELLS
 

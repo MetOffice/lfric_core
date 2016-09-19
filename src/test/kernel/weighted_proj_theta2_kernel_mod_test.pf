@@ -69,7 +69,7 @@ contains
     integer :: i
 
     call feign_finite_element_config( finite_element_shape_quadrilateral, &
-                                      0, .true., .false. )
+                                      0, 1, .true., .false. )
 
     reference_element = finite_element_shape_quadrilateral
     call reference_cube()

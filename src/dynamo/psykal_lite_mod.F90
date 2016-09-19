@@ -31,6 +31,63 @@ module psykal_lite_mod
 
 contains
 
+    !------------------------------------------------------------------------------------------
+    !> Computation of nodal basis function for coordinates chi not currently supported PSyClone,
+    !> will be introduced in modification of quadrature strategy, see ticket #723.
+    SUBROUTINE invoke_compute_geopotential_kernel_type(geopotential, chi)
+      USE compute_geopotential_kernel_mod, ONLY: compute_geopotential_code
+      USE mesh_mod, ONLY: mesh_type
+      TYPE(field_type), intent(inout) :: geopotential, chi(3)
+      INTEGER, pointer :: map_w0(:), map_chi(:) => null()
+      INTEGER cell
+      REAL(KIND=r_def), allocatable :: basis_chi(:,:,:)
+      INTEGER ndf_w0, undf_w0, ndf_chi, undf_chi, dim_chi
+      TYPE(mesh_type) mesh
+      INTEGER nlayers
+      TYPE(field_proxy_type) geopotential_proxy, chi_proxy(3)
+
+      real(kind=r_def), pointer :: nodes(:,:) => null()
+
+      !
+      ! Initialise field proxies
+      !
+      geopotential_proxy = geopotential%get_proxy()
+      chi_proxy(1) = chi(1)%get_proxy()
+      chi_proxy(2) = chi(2)%get_proxy()
+      chi_proxy(3) = chi(3)%get_proxy()
+      !
+      ! Initialise number of layers
+      !
+      nlayers = geopotential_proxy%vspace%get_nlayers()
+      !
+      ! Create a mesh object
+      !
+      mesh = geopotential%get_mesh()
+      !
+      ! Initialise sizes and allocate any basis arrays for w0
+      !
+      ndf_w0 = geopotential_proxy%vspace%get_ndf()
+      undf_w0 = geopotential_proxy%vspace%get_undf()
+      !
+      ndf_chi  = chi_proxy(1)%vspace%get_ndf( )
+      undf_chi  = chi_proxy(1)%vspace%get_undf( )
+      dim_chi  = chi_proxy(1)%vspace%get_dim_space( )
+
+      allocate( basis_chi(dim_chi, ndf_chi, ndf_w0) )
+
+      nodes => geopotential_proxy%vspace%get_nodes( )
+
+      call chi_proxy(1)%vspace%compute_nodal_basis_function( basis_chi, ndf_chi, ndf_w0, nodes)
+
+      DO cell=1, geopotential_proxy%vspace%get_ncell()
+
+        map_w0 => geopotential_proxy%vspace%get_cell_dofmap(cell)
+        map_chi => chi_proxy(1)%vspace%get_cell_dofmap(cell)
+
+        CALL compute_geopotential_code(nlayers, geopotential_proxy%data, chi_proxy(1)%data, chi_proxy(2)%data, chi_proxy(3)%data, ndf_w0, undf_w0, map_w0, ndf_chi, undf_chi, map_chi, basis_chi)
+      END DO
+    END SUBROUTINE invoke_compute_geopotential_kernel_type
+
   !------------------------------------------------------------------------------
   !> invoke_initial_theta_kernel: invoke the potential temperature initialization for a generic space
   subroutine invoke_initial_theta_kernel( theta, chi )
@@ -892,7 +949,7 @@ contains
 
   end subroutine invoke_set_field_scalar
 
-!-------------------------------------------------------------------------------   
+!-------------------------------------------------------------------------------
 !> invoke_divide_field: Divide the values of field1 by field2 and put result in
 !>field_res
 !> c = a/b

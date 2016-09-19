@@ -79,7 +79,7 @@ contains
     integer :: i
 
     call feign_finite_element_config( finite_element_shape_quadrilateral, &
-                                      0, .true., .false. )
+                                      0, 1, .true., .false. )
     call feign_planet_config( gravity, radius, omega, rd, cp, p_zero, scaling )
 
     reference_element = finite_element_shape_quadrilateral

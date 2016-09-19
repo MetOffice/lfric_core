@@ -138,7 +138,7 @@ subroutine compute_curl_operator_code(cell, nlayers, ncell_3d,          &
         curl(df2,df1,ik) = 0.0_r_def
         do qp2 = 1, nqp_v
           do qp1 = 1, nqp_h
-            v  = matmul(jac(:,:,qp1,qp2),     basis_w2(:,df2,qp1,qp2))
+            v  = matmul(jac(:,:,qp1,qp2),basis_w2(:,df2,qp1,qp2))
             dc = matmul(jac(:,:,qp1,qp2),diff_basis_w1(:,df1,qp1,qp2))
             integrand = wqp_h(qp1)*wqp_v(qp2)*dot_product(v,dc)/dj(qp1,qp2)
             curl(df2,df1,ik) = curl(df2,df1,ik) + integrand

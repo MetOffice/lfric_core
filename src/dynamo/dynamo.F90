@@ -132,9 +132,8 @@ program dynamo
   ! Create and initialise prognostic fields
   call init_dynamo(mesh_id, chi, u, rho, theta, xi, restart)
 
-
   ! Create runtime_constants object. This in turn creates various things
-  ! needed by the timstepping algorithms such as mass matrix operators, mass
+  ! needed by the timestepping algorithms such as mass matrix operators, mass
   ! matrix diagonal fields and the geopotential field
 
   call create_runtime_constants(mesh_id, chi)

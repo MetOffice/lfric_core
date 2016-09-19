@@ -24,7 +24,7 @@ module vorticity_advection_kernel_mod
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,                 &
                                     GH_FIELD, GH_READ, GH_INC,           &
-                                    W0, W1, W2, W3,                      &
+                                    ANY_SPACE_9, W1, W2, W3,                      &
                                     GH_BASIS, GH_DIFF_BASIS,             &
                                     CELLS 
 use constants_mod,           only : r_def
@@ -43,13 +43,13 @@ type, public, extends(kernel_type) :: vorticity_advection_kernel_type
        arg_type(GH_FIELD,   GH_READ, W2),                              &
        arg_type(GH_FIELD,   GH_READ, W3),                              &
        arg_type(GH_FIELD,   GH_READ, W1),                              &
-       arg_type(GH_FIELD*3, GH_READ, W0)                               &
+       arg_type(GH_FIELD*3, GH_READ, any_space_9)                               &
        /)
   type(func_type) :: meta_funcs(4) = (/                                &
        func_type(W2, GH_BASIS),                                        &
        func_type(W3, GH_BASIS),                                        &
        func_type(W1, GH_BASIS),                                        &
-       func_type(W0, GH_DIFF_BASIS)                                    &
+       func_type(ANY_SPACE_9, GH_DIFF_BASIS)                                    &
        /)
   integer :: iterates_over = CELLS
 contains
@@ -93,13 +93,13 @@ end function vorticity_advection_kernel_constructor
 !! @param[in] map_w1 Dofmap for the cell at the base of the column for w1
 !! @param[in] w1_basis Basis functions evaluated at gaussian quadrature points 
 !! @param[in] xi Vorticity
-!! @param[in] ndf_w0 Number of degrees of freedom per cell for w0
-!! @param[in] undf_w0 Number unique of degrees of freedom  for w0
-!! @param[in] map_w0 Dofmap for the cell at the base of the column for w0
-!! @param[in] w0_diff_basis Differential of the basis functions evaluated at gaussian quadrature point
-!! @param[in] chi_1 Physical x coordinate in w0
-!! @param[in] chi_2 Physical y coordinate in w0
-!! @param[in] chi_3 Physical z coordinate in w0
+!! @param[in] ndf_chi Number of degrees of freedom per cell for chi
+!! @param[in] undf_chi Number unique of degrees of freedom  for chi
+!! @param[in] map_chi Dofmap for the cell at the base of the column for chi
+!! @param[in] chi_diff_basis Differential of the basis functions evaluated at gaussian quadrature point
+!! @param[in] chi_1 Physical x coordinate in chi
+!! @param[in] chi_2 Physical y coordinate in chi
+!! @param[in] chi_3 Physical z coordinate in chi
 !! @param[in] nqp_h Number of quadrature points in the horizontal
 !! @param[in] nqp_v Number of quadrature points in the vertical
 !! @param[in] wqp_h Horizontal quadrature weights
@@ -110,7 +110,7 @@ subroutine vorticity_advection_code(nlayers,                                    
                                     ndf_w2, undf_w2, map_w2, w2_basis,                 &
                                     ndf_w3, undf_w3, map_w3, w3_basis,                 &
                                     ndf_w1, undf_w1, map_w1, w1_basis,                 &
-                                    ndf_w0, undf_w0, map_w0, w0_diff_basis,            &
+                                    ndf_chi, undf_chi, map_chi, chi_diff_basis,        &
                                     nqp_h, nqp_v, wqp_h, wqp_v                         &
                                     )
                            
@@ -119,9 +119,9 @@ subroutine vorticity_advection_code(nlayers,                                    
   
   !Arguments
   integer, intent(in) :: nlayers,nqp_h, nqp_v
-  integer, intent(in) :: ndf_w0, ndf_w1, ndf_w2, ndf_w3
-  integer, intent(in) :: undf_w0, undf_w1, undf_w2, undf_w3
-  integer, dimension(ndf_w0), intent(in) :: map_w0
+  integer, intent(in) :: ndf_chi, ndf_w1, ndf_w2, ndf_w3
+  integer, intent(in) :: undf_chi, undf_w1, undf_w2, undf_w3
+  integer, dimension(ndf_chi), intent(in) :: map_chi
   integer, dimension(ndf_w1), intent(in) :: map_w1
   integer, dimension(ndf_w2), intent(in) :: map_w2
   integer, dimension(ndf_w3), intent(in) :: map_w3
@@ -129,13 +129,13 @@ subroutine vorticity_advection_code(nlayers,                                    
   real(kind=r_def), dimension(1,ndf_w3,nqp_h,nqp_v), intent(in) :: w3_basis  
   real(kind=r_def), dimension(3,ndf_w2,nqp_h,nqp_v), intent(in) :: w2_basis 
   real(kind=r_def), dimension(3,ndf_w1,nqp_h,nqp_v), intent(in) :: w1_basis 
-  real(kind=r_def), dimension(3,ndf_w0,nqp_h,nqp_v), intent(in) :: w0_diff_basis   
+  real(kind=r_def), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: chi_diff_basis
 
   real(kind=r_def), dimension(undf_w2), intent(inout) :: r_u
   real(kind=r_def), dimension(undf_w2), intent(in)    :: mass_flux
   real(kind=r_def), dimension(undf_w3), intent(in)    :: rho
   real(kind=r_def), dimension(undf_w1), intent(in)    :: xi
-  real(kind=r_def), dimension(undf_w0), intent(in)    :: chi_1, chi_2, chi_3
+  real(kind=r_def), dimension(undf_chi), intent(in)    :: chi_1, chi_2, chi_3
 
   real(kind=r_def), dimension(nqp_h), intent(in)      ::  wqp_h
   real(kind=r_def), dimension(nqp_v), intent(in)      ::  wqp_v
@@ -144,7 +144,7 @@ subroutine vorticity_advection_code(nlayers,                                    
   integer               :: df, k, loc 
   integer               :: qp1, qp2
   
-  real(kind=r_def), dimension(ndf_w0)          :: chi_1_e, chi_2_e, chi_3_e
+  real(kind=r_def), dimension(ndf_chi)         :: chi_1_e, chi_2_e, chi_3_e
   real(kind=r_def), dimension(nqp_h,nqp_v)     :: dj
   real(kind=r_def), dimension(3,3,nqp_h,nqp_v) :: jac, jac_inv
   real(kind=r_def), dimension(ndf_w3)          :: rho_e
@@ -157,14 +157,14 @@ subroutine vorticity_advection_code(nlayers,                                    
   
   do k = 0, nlayers-1
   ! Extract element arrays of chi
-    do df = 1, ndf_w0
-      loc = map_w0(df) + k
+    do df = 1, ndf_chi
+      loc = map_chi(df) + k
       chi_1_e(df) = chi_1( loc )
       chi_2_e(df) = chi_2( loc )
       chi_3_e(df) = chi_3( loc )
     end do
-    call coordinate_jacobian(ndf_w0, nqp_h, nqp_v, chi_1_e, chi_2_e, chi_3_e,  &
-                             w0_diff_basis, jac, dj)
+    call coordinate_jacobian(ndf_chi, nqp_h, nqp_v, chi_1_e, chi_2_e, chi_3_e,  &
+                             chi_diff_basis, jac, dj)
     call coordinate_jacobian_inverse(nqp_h, nqp_v, jac, dj, jac_inv)   
 
     do df = 1, ndf_w3

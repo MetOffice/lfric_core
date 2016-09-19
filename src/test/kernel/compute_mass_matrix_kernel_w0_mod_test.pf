@@ -213,9 +213,10 @@ contains
                                       chi_p(2)%data,                     &
                                       chi_p(3)%data,                     &
                                       ndf,                               &
+                                      this%basis,                        &
+                                      ndf,                               &
                                       undf,                              &
                                       map,                               &
-                                      this%basis,                        &
                                       this%diff_basis,                   &
                                       nqp_h,                             &
                                       nqp_v,                             &

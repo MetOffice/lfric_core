@@ -15,7 +15,7 @@ module vorticity_rhs_kernel_mod
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_INC,               &
-                                    W0, W1, W2,                              &
+                                    ANY_SPACE_9, W1, W2,                              &
                                     GH_BASIS, GH_DIFF_BASIS,                 &
                                     CELLS
 use constants_mod,           only : r_def
@@ -30,12 +30,12 @@ type, public, extends(kernel_type) :: vorticity_rhs_kernel_type
   type(arg_type) :: meta_args(3) = (/                                  &
        arg_type(GH_FIELD,   GH_INC,  W1),                              &
        arg_type(GH_FIELD,   GH_READ, W2),                              &
-       arg_type(GH_FIELD*3, GH_READ, W0)                               &
+       arg_type(GH_FIELD*3, GH_READ, ANY_SPACE_9)                               &
        /)
   type(func_type) :: meta_funcs(3) = (/                                &
        func_type(W1, GH_DIFF_BASIS),                                   &
        func_type(W2, GH_BASIS),                                        &
-       func_type(W0, GH_DIFF_BASIS)                                    &
+       func_type(ANY_SPACE_9, GH_DIFF_BASIS)                                    &
        /)
   integer :: iterates_over = CELLS
 contains
@@ -77,9 +77,9 @@ end function vorticity_rhs_kernel_constructor
 !! @param[in] undf_chi Unique number of degrees of freedom for the chi arrays
 !! @param[in] map_chi Dofmap for the cell at the base of the column for the function space containing chi
 !! @param[in] diff_basis_chi Differntial of the basis functions evaluated at gaussian quadrature point
-!! @param[in] chi_1 Physical x coordinate in w0
-!! @param[in] chi_2 Physical y coordinate in w0
-!! @param[in] chi_3 Physical z coordinate in w0
+!! @param[in] chi_1 Physical x coordinate in chi
+!! @param[in] chi_2 Physical y coordinate in chi
+!! @param[in] chi_3 Physical z coordinate in chi
 !! @param[in] nqp_h Number of horizontal quadrature points
 !! @param[in] nqp_v Number of vertical quadrature points
 !! @param[in] wqp_h Weights of the horizontal quadrature points

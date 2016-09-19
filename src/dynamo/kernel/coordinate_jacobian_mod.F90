@@ -6,7 +6,7 @@
 !-------------------------------------------------------------------------------
 !
 !-------------------------------------------------------------------------------
-!> @brief Module for computing the Jacobian matrix, its derterminant and
+!> @brief Module for computing the Jacobian matrix, its determinant and
 !> inverse for a coordinate field
 module coordinate_jacobian_mod
 

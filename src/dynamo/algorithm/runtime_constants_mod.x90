@@ -31,7 +31,8 @@ module runtime_constants_mod
 
 
   ! PsyKAl-lite kernels
-  use psykal_lite_mod,                   only: invoke_set_field_scalar
+  use psykal_lite_mod,                   only: invoke_set_field_scalar,  &
+                                               invoke_compute_geopotential_kernel_type
 
   ! PsyKAl PSYClone kernels
   use compute_mass_matrix_kernel_w0_mod, only: compute_mass_matrix_kernel_w0_type
@@ -123,7 +124,7 @@ contains
 
     geopotential = field_type( vector_space = w0_fs )
 
-    call invoke( compute_geopotential_kernel_type( geopotential, chi ) )
+    call invoke_compute_geopotential_kernel_type( geopotential, chi )
 
     !=================== Create mass matrix operators =========================!
 

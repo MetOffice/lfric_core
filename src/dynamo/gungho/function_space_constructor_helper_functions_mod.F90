@@ -14,7 +14,7 @@ module function_space_constructor_helper_functions_mod
 
 use constants_mod,         only: i_def, r_def
 use mesh_mod,              only: mesh_type
-use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, W2V, W2H
+use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi
 use reference_element_mod, only: nfaces_h, nedges_h, nverts_h                  &
                                , nfaces,   nedges,   nverts,   x_vert          &
                                , edge_on_face, tangent_to_edge, normal_to_face &
@@ -136,7 +136,6 @@ contains
 
   k = element_order
 
-
   ! Possible modifications to number of dofs
   ! on edges depending on presets
   select case (dynamo_fs)
@@ -214,6 +213,9 @@ contains
     ndof_vol   = 1*k*(k+1)*(k+1)
     ndof_cell  = 1*(k+2)*(k+1)*(k+1)
 
+  case (WCHI)
+    ndof_vol  = (k+1)*(k+1)*(k+1)
+    ndof_cell = ndof_vol
 
   end select
 
@@ -227,7 +229,7 @@ contains
 
   ! Calculated the global number of dofs on the function space
   select case (dynamo_fs)
-  case (W0,W1,W2,W3)
+  case (W0,W1,W2,W3,WCHI)
     ndof_glob = ncells*nlayers*ndof_vol + nface_g*ndof_face                    &
                 + nedge_g*ndof_edge     + nvert_g*ndof_vert
 
@@ -997,6 +999,42 @@ subroutine basis_setup( element_order, dynamo_fs, ndof_vert,  ndof_cell,       &
     basis_index(2,:) = ly(1:ndof_cell)
     basis_index(3,:) = lz(1:ndof_cell)
 
+    case(WCHI)
+    !---------------------------------------------------------------------------
+    ! Section for test/trial functions of DG spaces
+    !---------------------------------------------------------------------------
+    poly_order = k
+
+    ! compute indices of functions
+    idx = 1
+
+    ! dofs in volume
+    do jz=1, k+1
+      do jy=1,k+1
+        do jx=1,k+1
+          lx(idx) = jx
+          ly(idx) = jy
+          lz(idx) = jz
+          idx = idx + 1
+        end do
+      end do
+    end do
+
+    do i=1, ndof_cell
+      nodal_coords(1,i) = x2(lx(i))
+      nodal_coords(2,i) = x2(ly(i))
+      nodal_coords(3,i) = x2(lz(i))
+      basis_x(:,1,i) = x2
+      basis_x(:,2,i) = x2
+      basis_x(:,3,i) = x2
+    end do
+
+    basis_index(1,:)  = lx(1:ndof_cell)
+    basis_index(2,:)  = ly(1:ndof_cell)
+    basis_index(3,:)  = lz(1:ndof_cell)
+    basis_vector(1,:) = 1.0_r_def
+    basis_order(:,:)  = poly_order
+
   end select
 
   deallocate ( lx )
@@ -1200,7 +1238,7 @@ subroutine dofmap_setup( mesh, dynamo_fs, ncells_2d_with_ghost,                &
          mesh%get_num_cells_halo(1)
 
   select case (dynamo_fs)
-  case(W0,W1,W2,W3)
+  case(W0,W1,W2,W3,WCHI)
     select_entity => select_entity_all
   case(WTHETA)
     select_entity => select_entity_theta

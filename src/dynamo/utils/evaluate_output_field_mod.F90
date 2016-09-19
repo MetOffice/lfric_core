@@ -119,6 +119,7 @@ subroutine evaluate_output_field( field, chi, x_in, cell, nz, field_out )
     do df = 1,ndf
       dgamma(:,df) = chi_proxy(1)%vspace%evaluate_diff_basis(df, x_out)
     end do
+
     call coordinate_jacobian( ndf, &
                               1,   &
                               1,   &

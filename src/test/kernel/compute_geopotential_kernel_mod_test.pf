@@ -20,7 +20,7 @@ module compute_geopotential_kernel_mod_test
   type, extends(TestCase) :: compute_geopotential_kernel_test_type
     private
     integer(i_def), allocatable :: map(:)
-    real(r_def),    allocatable :: x(:), y(:), z(:), phi(:)
+    real(r_def),    allocatable :: x(:), y(:), z(:), phi(:), basis(:,:,:)
   contains
     procedure setUp
     procedure tearDown
@@ -67,7 +67,7 @@ contains
 
     class(compute_geopotential_kernel_test_type), intent(inout) :: this
 
-    deallocate( this%map, this%x, this%y, this%z, this%phi )
+    deallocate( this%map, this%x, this%y, this%z, this%phi, this%basis )
 
   end subroutine tearDown
 
@@ -85,15 +85,18 @@ contains
 
     real(r_def) :: answer
 
+    allocate(this%basis(1,ndf,ndf))
+
     this%map(1) = 1
     this%x(1) = 0.0_r_def
     this%y(1) = 0.0_r_def
     this%z(1) = radius
+    this%basis(1,1,1) = 1.0_r_def
 
     call compute_geopotential_code( nlayers,                         &
                                    this%phi, this%x, this%y, this%z, &
                                    ndf, undf,                        &
-                                   this%map )
+                                   this%map, ndf, undf, this%map, this%basis )
 
     answer = radius * gravity
 

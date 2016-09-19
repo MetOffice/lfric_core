@@ -34,7 +34,7 @@ use reference_element_mod, only: tangent_to_edge, normal_to_face               &
                                , select_entity_all, select_entity_theta        &
                                , select_entity_w2h, select_entity_w2v
 
-use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, W2V, W2H
+use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi
 use function_space_constructor_helper_functions_mod, &
                            only: ndof_setup, basis_setup, dofmap_setup
 
@@ -46,7 +46,7 @@ use mesh_collection_mod,   only : mesh_collection
 implicit none
 
 private
-public :: W0, W1, W2, W3, Wtheta, W2V, W2H
+public :: W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi
 
 !-------------------------------------------------------------------------------
 ! Public types
@@ -412,7 +412,7 @@ subroutine init_function_space( self )
 
 
   select case (self%fs)
-  case (W0,WTHETA)
+  case (W0,WTHETA,WCHI)
     self%dim_space      = 1  ! Scalar field
     self%dim_space_diff = 3  ! Vector field
 
@@ -425,13 +425,14 @@ subroutine init_function_space( self )
     self%dim_space_diff = 1  ! Scalar field
 
   case (W3)
-    self%dim_space      = 1  ! Scalar field
-    self%dim_space_diff = 1  ! Scalar field
+    self%dim_space      = 1  ! Vector field
+    self%dim_space_diff = 1  ! Vector field
+
   end select
 
-  call ndof_setup ( self%mesh, self%element_order, self%fs                   &
-                  , self%ndof_vert, self%ndof_edge, self%ndof_face           &
-                  , self%ndof_vol,  self%ndof_cell, self%ndof_glob           &
+  call ndof_setup ( self%mesh, self%element_order, self%fs   &
+                  , self%ndof_vert, self%ndof_edge, self%ndof_face               &
+                  , self%ndof_vol,  self%ndof_cell, self%ndof_glob               &
                   , self%ndof_interior, self%ndof_exterior )
 
 
@@ -442,9 +443,9 @@ subroutine init_function_space( self )
   allocate( self%nodal_coords (                     3, self%ndof_cell) )
   allocate( self%dof_on_vert_boundary (self%ndof_cell,2) )
 
-  call basis_setup ( self%element_order, self%fs, self%ndof_vert               &
-                   , self%ndof_cell, self%basis_index,  self%basis_order       &
-                   , self%basis_vector, self%basis_x                           &
+  call basis_setup ( self%element_order, self%fs, self%ndof_vert  &
+                   , self%ndof_cell, self%basis_index,  self%basis_order              &
+                   , self%basis_vector, self%basis_x                                  &
                    , self%nodal_coords, self%dof_on_vert_boundary )
 
   ncells_2d_with_ghost = self%mesh % get_ncells_2d_with_ghost()

@@ -17,7 +17,7 @@ module nodal_coordinates_kernel_mod
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_WRITE,             &
-                                    W0, ANY_SPACE_1,                         &
+                                    ANY_SPACE_9, ANY_SPACE_1,                         &
                                     GH_BASIS,                                &
                                     CELLS
 use constants_mod,           only : r_def
@@ -32,10 +32,10 @@ type, public, extends(kernel_type) :: nodal_coordinates_kernel_type
   private
   type(arg_type) :: meta_args(2) = (/                                  &
        arg_type(GH_FIELD*3,   GH_WRITE, ANY_SPACE_1),                  &
-       arg_type(GH_FIELD*3,   GH_READ,  W0)                            &
+       arg_type(GH_FIELD*3,   GH_READ,  ANY_SPACE_9)                            &
        /)
   type(func_type) :: meta_funcs(1) = (/                                &
-       func_type(W0, GH_BASIS)                                         &
+       func_type(ANY_SPACE_9, GH_BASIS)                                         &
        /)
   integer :: iterates_over = CELLS
 contains
