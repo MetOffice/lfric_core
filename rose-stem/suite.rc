@@ -67,7 +67,9 @@
             purge_local => purge_target
             purge_target => export_for_{{label}}
             export_for_{{label}} => compile_with_{{label}}
-            compile_with_{{label}} => check_for_unused_source
+{#- The following line removed due to a bug brought to light by #730. #}
+{#- Ticket #762 has been created to fix this.                         #}
+{#-            compile_with_{{label}} => check_for_unused_source #}
 {%-   endif %}
 {%- endmacro %}
 {#- Documentation, it's next to cleanlines ##################################}
@@ -223,6 +225,7 @@
                      {{'\n'|commandList(LOCAL_BASE_SETUP, LOCAL_TECHNICAL_SETUP, LOCAL_REVEAL_SETUP, "mkdir -p $DYNAMO_BUILD_ROOT", "cp -rp $DYNAMO_SOURCE_DIRECTORY/build/* $DYNAMO_BUILD_ROOT")}}
                      """
         script = make -C $DYNAMO_SOURCE_DIRECTORY/src/dynamo unused-check
+        post-script = rm -rf $DYNAMO_BUILD_ROOT
         [[[directives]]]
 {%-   for DIRECTIVE in TARGET_TECHNICAL_BATCHER_DIRECTIVES %}
             {{DIRECTIVE}}
@@ -300,6 +303,8 @@
             DYNAMO_SOURCE_DIRECTORY      = $SOURCE_ROOT/{{label}}
             DYNAMO_DESTINATION_DIRECTORY = $OUTPUT_ROOT/{{label}}
             DYNAMO_COMPILER              = {{compiler}}
+            {#- We can't define DYNAMO_BUILD_ROOT here as it may contain    #}
+            {#- target specific variables not existing on the local machine #}
 
     # Export must be performed locally as it needs access to any working copy
     # involved. Such a working copy may well be on a local disc.
@@ -411,7 +416,6 @@
 
     # Copy of model results back to user's public_html must be performed locally as the target machine may
     # not allow outgoing ssh connections
-    
 {%-       if 'copy_results_' + configuration_label in scheduledTasks %}
     [[copy_results_{{configuration_label}}]]
         inherit = PUBLISH, {{family}}, LOCAL
@@ -475,9 +479,9 @@
         pre-script = """
                      {{'\n'|commandList(TARGET_BASE_SETUP, compiler_setup[compiler], TARGET_BUILD_SETUP, TARGET_REVEAL_SETUP, "mkdir -p $DYNAMO_BUILD_ROOT", "cp -rp $DYNAMO_SOURCE_DIRECTORY/build/* $DYNAMO_BUILD_ROOT")}}
                      """
-        script = make -C $DYNAMO_SOURCE_DIRECTORY test
+        script = make -C $DYNAMO_SOURCE_DIRECTORY/src/test
         post-script = """
-                      {{'\n'|commandList("cp -rp $DYNAMO_BUILD_ROOT $DYNAMO_SOURCE_DIRECTORY/build", "rm -rf $DYNAMO_BUILD_ROOT")}}
+                      {{'\n'|commandList("cp -rp $DYNAMO_BUILD_ROOT/* $DYNAMO_SOURCE_DIRECTORY/build", "rm -rf $DYNAMO_BUILD_ROOT")}}
                       """
         [[[environment]]]
             DYNAMO_BUILD_ROOT = {{TARGET_BUILD_ROOT}}/{{label}}
@@ -488,7 +492,6 @@
 {%-     endif %}
 
 {%-     if 'functional_test_with_' + label in scheduledTasks %}
-
     [[functional_test_with_{{label}}]]
         inherit = {{family}}, TARGET
         pre-script = """
@@ -496,7 +499,7 @@
                      """
         script = make -C $DYNAMO_SOURCE_DIRECTORY/src/functional-test
         post-script = """
-                      {{'\n'|commandList("cp -rp $DYNAMO_BUILD_ROOT $DYNAMO_SOURCE_DIRECTORY/build", "rm -rf $DYNAMO_BUILD_ROOT")}}
+                      {{'\n'|commandList("cp -rp $DYNAMO_BUILD_ROOT/* $DYNAMO_SOURCE_DIRECTORY/build", "rm -rf $DYNAMO_BUILD_ROOT")}}
                       """
         [[[environment]]]
             DYNAMO_BUILD_ROOT = {{TARGET_BUILD_ROOT}}/{{label}}
