@@ -425,8 +425,8 @@ subroutine init_function_space( self )
     self%dim_space_diff = 1  ! Scalar field
 
   case (W3)
-    self%dim_space      = 1  ! Vector field
-    self%dim_space_diff = 1  ! Vector field
+    self%dim_space      = 1  ! Scalar field
+    self%dim_space_diff = 3  ! Vector field
 
   end select
 
