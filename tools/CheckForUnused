@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     usedSources = set()
     for unit, unitFilename, prerequisite, prerequisiteFilename \
-                                   in fortranDependencies.getAllDependencies():
+                                   in fortranDependencies.getCompileDependencies():
         if unit in programUnits:
             usedSources.add( unitFilename )
             logger.logEvent( 'Found program {}'.format( unitFilename ) )

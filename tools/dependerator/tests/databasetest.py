@@ -13,193 +13,160 @@ import shutil
 import sqlite3
 import tempfile
 
-import dependencyanalysis.database
+import dependerator.database
 
-###############################################################################
+##############################################################################
 class DatabaseTest( unittest.TestCase):
-    ###########################################################################
+    ##########################################################################
     def setUp( self ):
         self._scratchDirectory = tempfile.mkdtemp()
         self._dbFilename = os.path.join( self._scratchDirectory, 'test.db' )
-        self._database = sqlite3.connect( self._dbFilename )
 
-    ###########################################################################
+    ##########################################################################
     def tearDown( self ):
-        self._database.close()
+        shutil.rmtree( self._scratchDirectory )
+
+    ##########################################################################
+    def testSQLiteDatabase( self ):
+        uut = dependerator.database.SQLiteDatabase( self._dbFilename )
+
+        uut.ensureTable( 'test', ["'alpha' integer primary key"] )
+
+        result = uut.query( 'select * from test' )
+        self.assertEqual( 0, len(result) )
+
+        result = uut.query( "insert into 'test' values ( 1 )" )
+        self.assertEqual( 0, len(result) )
+
+        result = uut.query( 'select * from test' )
+        self.assertEqual( 1, len(result) )
+        self.assertEqual( 1, result[0][0] )
+
+##############################################################################
+class FileDependencyTest(unittest.TestCase):
+    ##########################################################################
+    def setUp( self ):
+        self._scratchDirectory = tempfile.mkdtemp()
+        self._dbFilename = os.path.join( self._scratchDirectory, 'file.db' )
+        self._database = dependerator.database.SQLiteDatabase( self._dbFilename )
+
+    ##########################################################################
+    def tearDown( self ):
+        del self._database
+        shutil.rmtree( self._scratchDirectory )
+
+    ##########################################################################
+    def testAll( self ):
+        uut = dependerator.database.FileDependencies( self._database )
+
+        result = uut.getDependencies()
+        self.assertEquals( [], list(result) )
+
+        uut.addFileDependency( 'foo.f90', 'bar' )
+        result = uut.getDependencies()
+        self.assertEquals( [(u'foo.f90', [u'bar'])], list(result) )
+
+        uut.addFileDependency( 'foo.f90', 'baz' )
+        uut.addFileDependency( 'qux.f90', 'bar' )
+        result = uut.getDependencies()
+        self.assertEquals( [(u'foo.f90', [u'bar', u'baz']), \
+                            (u'qux.f90', [u'bar'])], list(result) )
+
+        uut.removeFile( 'foo.f90' )
+        result = uut.getDependencies()
+        self.assertEquals( [(u'qux.f90', [u'bar'])], list(result) )
+
+##############################################################################
+class FortranDependencyTest(unittest.TestCase):
+    ##########################################################################
+    def setUp( self ):
+        self._scratchDirectory = tempfile.mkdtemp()
+        self._dbFilename = os.path.join( self._scratchDirectory, 'fortran.db' )
+        self._database = dependerator.database.SQLiteDatabase( self._dbFilename )
+
+    ##########################################################################
+    def tearDown( self ):
+        del self._database
         shutil.rmtree( self._scratchDirectory )
 
     ###########################################################################
-    def testConstructor( self ):
-        # First we test an empty DB
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-
-        cursor = self._database.cursor()
-
-        cursor.execute( 'SELECT * FROM provides' )
-        row = cursor.fetchall()
-        self.assertEqual( len(row), 0 )
-
-        cursor.execute( 'SELECT * FROM dependencies' )
-        row = cursor.fetchall()
-        self.assertEqual( len(row), 0 )
-
-        cursor.execute( 'SELECT * FROM programs' )
-        row = cursor.fetchall()
-        self.assertEqual( len(row), 0 )
-
-        # Now that we've create a DB make sure we don't nuke it.
-        # First put some dummy data in.
-        cursor.execute( 'INSERT INTO provides VALUES ( "foo.x", "fu" )' )
-        self.assertEqual( cursor.rowcount, 1 )
-        cursor.execute( 'INSERT INTO dependencies VALUES ( "bar", "qux" )' )
-        self.assertEqual( cursor.rowcount, 1 )
-        cursor.execute( 'INSERT INTO programs VALUES ( "baz" )' )
-        self.assertEqual( cursor.rowcount, 1 )
-
-        # Then create a new object and check the DB still contains what we
-        # think it should
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-
-        cursor.execute( 'SELECT * FROM provides' )
-        row = cursor.fetchall()
-        self.assertEqual( row, [('foo.x', 'fu' )] )
-
-        cursor.execute( 'SELECT * FROM dependencies' )
-        row = cursor.fetchall()
-        self.assertEqual( row, [('bar', 'qux')] )
-
-        cursor.execute( 'SELECT * FROM programs' )
-        row = cursor.fetchall()
-        self.assertEqual( row, [('baz',)] )
-
-    ###########################################################################
     def testAddProgram( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        uut.addProgram( 'foo', 'bar.x' )
+        uut = dependerator.database.FortranDependencies( self._database )
+        uut.addProgram( 'foo', 'bar.f90' )
 
-        row = self._database.execute( 'select * from provides' ).fetchall()
-        self.assertEqual( row, [('bar.x', 'foo')] )
+        result = uut.getPrograms()
+        self.assertEqual( [u'foo'], result )
 
-        row = self._database.execute( 'select * from programs' ).fetchall()
-        self.assertEqual( row, [('foo',)] )
-
-    ###########################################################################
-    def testAddModule( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        uut.addModule( 'foo', 'bar.x' )
-
-        row = self._database.execute( 'select * from provides' ).fetchall()
-        self.assertEqual( row, [('bar.x', 'foo')] )
-
-    ###########################################################################
-    def testAddDependency( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        uut.addDependency( 'foo', 'bar' )
-
-        row = self._database.execute( 'select * from dependencies' ).fetchall()
-        self.assertEqual( row, [('foo', 'bar')] )
-
-        # Add a second dependency on the same dependor
-        uut.addDependency( 'foo', 'qux' )
-
-        row = self._database.execute( 'select * from dependencies' ).fetchall()
-        self.assertEqual( row, [('foo', 'bar'), ('foo', 'qux')] )
+        # Should test that filename is correctly stored.
 
     ###########################################################################
     def testRemoveSourceFile( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        self._populateDB()
+        uut = dependerator.database.FortranDependencies( self._database )
+        self._populateDB( uut )
 
         # Delete something from the middle of a dependency chain
-        uut.removeSourceFile( 'bar.x' )
+        uut.removeFile( 'bar.f90' )
 
-        rows = self._database.execute( 'SELECT * FROM provides' ).fetchall()
-        self.assertEqual( rows, [('foo.x', 'foo'), \
-                                 ('baz.x', 'baz'), \
-                                 ("qux.x", "qux"), \
-                                 ("fred.x", "fred"), \
-                                 ("wilma.x", "wilma")] )
+        result = uut.getPrograms()
+        self.assertEqual( [u'foo', u'fred'], list(result) )
 
-        rows = self._database.execute( 'SELECT * FROM dependencies' ).fetchall()
-        self.assertEqual( rows,[("foo", "bar"), \
-                                ("foo", "baz"), \
-                                ("fred", "wilma")] )
+        result = uut.getCompileDependencies()
+        self.assertEqual( [(u'foo', u'foo.f90', u'baz', u'baz.f90'), \
+                           (u'fred', u'fred.f90', u'wilma', u'wilma.f90')], \
+                          list(result) )
 
-        rows = self._database.execute( 'SELECT * FROM programs' ).fetchall()
-        self.assertEqual( rows, [('foo',), ("fred",)] )
+        self.assertEqual( [(u'baz', u'baz.f90', u'foo', u'foo.f90')], \
+                          list(uut.getLinkDependencies( 'baz' )) )
+        self.assertEqual( [(u'wilma', u'wilma.f90', u'fred', u'fred.f90')], \
+                          list(uut.getLinkDependencies( 'wilma' )) )
 
     ###########################################################################
-    def testGetDependencySources( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        self._populateDB()
+    def testPrograms( self ):
+        uut = dependerator.database.FortranDependencies( self._database )
+        self._populateDB( uut )
 
-        dependencies = [tuple(row) for row in uut.getDependencySources( 'foo.x' )]
-        self.assertEqual( len(dependencies), 2 )
-        self.assertItemsEqual( dependencies, [('foo.x', 'bar.x', 'bar'), \
-                                              ('foo.x', 'baz.x', 'baz')] )
-
-    ###########################################################################
-    def testProgramSourceList( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        self._populateDB()
-
-        sources = [tuple(row) for row in uut.getProgramSourceList()]
-        self.assertEqual( len(sources), 2 )
-        programs = []
-        expected = { 'foo':['foo.x', 'bar.x', 'baz.x', 'qux.x'], \
-                     'fred':['fred.x', 'wilma.x'] }
-        for program, files in sources:
-            programs.append( program )
-            self.assertIn( program, expected.keys() )
-            self.assertItemsEqual( expected[program], files )
-        self.assertItemsEqual( ['foo', 'fred'], programs )
-
-    ###########################################################################
-    def testProgramSources( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        self._populateDB()
-
-        sources = uut.getProgramSources()
-        self.assertEqual( {'foo':'foo.x', 'fred':'fred.x'}, sources )
+        programs = uut.getPrograms()
+        self.assertEqual( [u'foo', u'fred'], list(programs) )
 
     ###########################################################################
     def testGetAllFileDependencies( self ):
-        uut = dependencyanalysis.database.Dependencies( self._dbFilename )
-        self._populateDB()
+        uut = dependerator.database.FortranDependencies( self._database )
+        self._populateDB( uut )
 
-        found = []
-        expected = { 'foo.x':['bar.x', 'baz.x'], \
-                     'bar.x':['qux.x'], \
-                     'fred.x':['wilma.x'] }
-        for dependor, dependees in uut.getAllFileDependencies():
-            found.append(dependor)
-            self.assertIn( dependor, expected.keys() )
-            self.assertItemsEqual( expected[dependor], dependees )
-        self.assertItemsEqual( ['foo.x', 'bar.x', 'fred.x'], found )
+        dependencies = list( uut.getCompileDependencies() )
+        self.assertEqual( [(u'bar', u'bar.f90', u'qux', u'qux.f90'), \
+                           (u'foo', u'foo.f90', u'bar', u'bar.f90'), \
+                           (u'foo', u'foo.f90', u'baz', u'baz.f90'), \
+                           (u'fred', u'fred.f90', u'wilma', u'wilma.f90')], \
+                          dependencies )
+
+        self.assertEqual( [(u'bar', u'bar.f90', u'foo', u'foo.f90')], \
+                          list(uut.getLinkDependencies('bar')) )
+        self.assertEqual( [(u'baz', u'baz.f90', u'foo', u'foo.f90')], \
+                          list(uut.getLinkDependencies('baz')) )
+        self.assertEqual( [(u'qux', u'qux.f90', u'bar', u'bar.f90')], \
+                          list(uut.getLinkDependencies('qux')) )
+        self.assertEqual( [(u'wilma', u'wilma.f90', u'fred', u'fred.f90')], \
+                          list(uut.getLinkDependencies('wilma')) )
 
     ###########################################################################
-    def _populateDB( self ):
-        affected = self._database.executemany( 'INSERT INTO provides VALUES (?,?)', \
-                                               [("foo.x", "foo"), \
-                                                ("bar.x", "bar"), \
-                                                ("baz.x", "baz"), \
-                                                ("qux.x", "qux"), \
-                                                ("fred.x", "fred"), \
-                                                ("wilma.x", "wilma")] ).rowcount
-        self.assertEqual( affected, 6 )
+    def _populateDB( self, database ):
+        database.addProgram( 'foo', 'foo.f90' )
+        database.addModule( 'bar', 'bar.f90' )
+        database.addModule( 'baz', 'baz.f90' )
+        database.addModule( 'qux', 'qux.f90' )
+        database.addProgram( 'fred', 'fred.f90' )
+        database.addModule( 'wilma', 'wilma.f90' )
 
-        affected = self._database.executemany( 'INSERT INTO dependencies VALUES (?,?)', \
-                                               [("foo", "bar"), \
-                                                ("foo", "baz"), \
-                                                ("bar", "qux"), \
-                                                ("fred", "wilma")] ).rowcount
-        self.assertEqual( affected, 4 )
+        database.addModuleCompileDependency( 'foo', 'bar' )
+        database.addModuleCompileDependency( 'foo', 'baz' )
+        database.addModuleCompileDependency( 'bar', 'qux' )
+        database.addModuleCompileDependency( 'fred', 'wilma' )
 
-        affected = self._database.executemany( 'INSERT INTO programs VALUES (?)', \
-                                               [("foo",), ("fred",)] ).rowcount
-        self.assertEqual( affected, 2 )
-
-        self._database.commit()
+        database.addModuleLinkDependency( 'bar', 'foo' )
+        database.addModuleLinkDependency( 'baz', 'foo' )
+        database.addModuleLinkDependency( 'qux', 'bar' )
+        database.addModuleLinkDependency( 'wilma', 'fred' )
 
 if __name__ == '__main__':
     unittest.main()

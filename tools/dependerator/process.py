@@ -39,9 +39,9 @@ class FortranProcessor():
     # Arguments:
     #   fileStore - FileDependencies object to accept computed dependencies.
     #
-    def determineFileDependencies( self, fileStore ):
+    def determineCompileDependencies( self, fileStore ):
         for unit, unitFilename, prerequisite, prerequisiteFilename \
-                in self._database.getAllDependencies():
+                in self._database.getCompileDependencies():
             self._logger.logEvent( '{} depends on {}'.format( unit, \
                                                               prerequisite ) )
 
@@ -61,24 +61,27 @@ class FortranProcessor():
     # TODO: Once we have a more recent version of SQLite we could consider
     # doing this at the database level.
     #
-    def determineProgramDependencies( self ):
+    def determineLinkDependencies( self ):
         for program in self._database.getPrograms():
             self._logger.logEvent( 'Program {}'.format( program ) )
 
             prerequisites = set()
             self._descend( program, prerequisites )
-            unit, unit_file, prereq, prereq_file = self._database.getDependencies( program ).next()
-            program_object_file = replaceExtension( unit_file, 'o' )
+            unit, unit_file, prereq, prereq_file = self._database.getLinkDependencies( program ).next()
+            program_object_file = os.path.join( self._objectDirectory, \
+                                          replaceExtension( unit_file, 'o' ) )
             prerequisites.add( program_object_file )
-            yield program, prerequisites
+            yield os.path.join( self._objectDirectory, program ), \
+                  list(prerequisites)
 
-    ###########################################################################
+    ##########################################################################
     def _descend( self, programUnit, prerequisites ):
         for unit, unit_file, prereq, prereq_file \
-                              in self._database.getDependencies( programUnit ):
+                         in self._database.getLinkDependencies( programUnit ):
             self._logger.logEvent( '  Requires {}'.format( unit ) )
 
-            prereq_object_file = replaceExtension( prereq_file, 'o' )
+            prereq_object_file = os.path.join( self._objectDirectory, \
+                                        replaceExtension( prereq_file, 'o' ) )
 
             if prereq_object_file in prerequisites:
                 self._logger.logEvent( '    Seen already, stopping descent' )

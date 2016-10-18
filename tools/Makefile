@@ -7,6 +7,4 @@
 
 .PHONY: test
 test:
-	python2.7 -m unittest discover -s dependencyanalysis/tests \
-	                               -s configurator/tests \
-	                               -p '*test.py'
+	python2.7 -m unittest discover -p '*test.py'

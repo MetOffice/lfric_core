@@ -73,12 +73,11 @@ if __name__ == '__main__':
         with open( args.output, 'w' ) as listFile:
             print('# Program objects', file=listFile)
             programs = []
-            for program, objects in processor.determineProgramDependencies():
+            for program, objects in processor.determineLinkDependencies():
                 programs.append( program + '.o' )
                 text = '{program}_OBJS = {objects}'
-                objectFiles = [os.path.join( args.objectdir, leaf) for leaf in objects]
-                print( text.format( program=program.upper(),         \
-                                    objects=' '.join(objectFiles) ), \
+                print( text.format( program=program[len(args.objectdir)+1:].upper(), \
+                                    objects=' '.join(objects) ), \
                        file=listFile )
                 print( file=listFile )
 

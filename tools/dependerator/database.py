@@ -158,21 +158,25 @@ class FortranDependencies(object):
     #
     def __init__( self, database ):
         self._database = database
+
         self._database.ensureTable( 'fortran_unit_type', \
                                     [('type', 'TEXT', 'PRIMARY KEY')] )
         self._database.query( 'INSERT OR IGNORE INTO fortran_unit_type VALUES("program")' )
         self._database.query( 'INSERT OR IGNORE INTO fortran_unit_type VALUES("module")' )
 
+        self._database.ensureTable( 'fortran_dependency_type', \
+                                    [('type', 'TEXT', 'PRIMARY KEY')] )
+        self._database.query( 'INSERT OR IGNORE INTO fortran_dependency_type VALUES("compile")' )
+        self._database.query( 'INSERT OR IGNORE INTO fortran_dependency_type VALUES("link")' )
+
         self._database.ensureTable( 'fortran_program_unit',           \
                                     (('unit', 'TEXT', 'PRIMARY KEY'), \
                                      ('file', 'TEXT', 'NOT NULL'),    \
                                      ('type', 'REFERENCES fortran_unit_type(type)')) )
-        self._database.ensureTable( 'fortran_unit_dependency',     \
-                                    (('unit', 'TEXT', 'NOT NULL'), \
-                                     ('prerequisite', 'TEXT', 'NOT NULL')) )
-        self._database.ensureTable( 'fortran_program_dependency',     \
-                                    [('program', 'TEXT', 'NOT NULL'), \
-                                     ('prerequisite', 'TEXT', 'NOT NULL')] )
+        self._database.ensureTable( 'fortran_unit_dependency',             \
+                                    (('unit', 'TEXT', 'NOT NULL'),         \
+                                     ('prerequisite', 'TEXT', 'NOT NULL'), \
+                                     ('type', 'REFERENCES fortran_dependency_type(type)')) )
 
     ###########################################################################
     def removeFile( self, filename ):
@@ -209,14 +213,25 @@ class FortranDependencies(object):
         self._database.query( query.format( name, filename ) )
 
     ###########################################################################
-    # Add a dependency to the database.
+    # Add a compile dependency to the database.
     #
     # Arguments:
-    #   module       - name.
-    #   prerequisite - module name.
+    #   module       - module name
+    #   prerequisite - module name
     #
-    def addModuleDependency( self, module, prerequisite ):
-        query = "INSERT INTO fortran_unit_dependency VALUES ( '{}', '{}' )"
+    def addModuleCompileDependency( self, module, prerequisite ):
+        query = "INSERT INTO fortran_unit_dependency VALUES ( '{}', '{}', 'compile' )"
+        self._database.query( query.format( module, prerequisite ) )
+
+    ###########################################################################
+    # Add a link dependency to the database.
+    #
+    # Arguments:
+    #   module       - module name
+    #   prerequisite - module name
+    #
+    def addModuleLinkDependency( self, module, prerequisite ):
+        query = "INSERT INTO fortran_unit_dependency VALUES ( '{}', '{}', 'link' )"
         self._database.query( query.format( module, prerequisite ) )
 
     ###########################################################################
@@ -241,12 +256,12 @@ class FortranDependencies(object):
     # Return:
     #   Yields (unit, unit filename, prerequisite, prerequisite filename) tuples
     #
-    def getDependencies( self, programUnit ):
+    def getLinkDependencies( self, programUnit ):
         query = '''
 SELECT d.unit, df.file AS unit_file, d.prerequisite, pf.file AS prerequisite_file
 FROM fortran_unit_dependency AS d, fortran_program_unit AS df, fortran_program_unit as pf
-WHERE df.unit=d.unit AND pf.unit=d.prerequisite AND d.unit="{}"
-ORDER BY d.prerequisite
+WHERE df.unit=d.unit AND pf.unit=d.prerequisite AND d.unit="{}" AND d.type='link'
+ORDER BY d.unit
                 '''.strip()
         rows = self._database.query( query.format( programUnit ) )
 
@@ -254,18 +269,18 @@ ORDER BY d.prerequisite
             yield unit, unit_file, prerequisite, prerequisite_file
 
     ###########################################################################
-    # Gets all program unit dependencies from database.
+    # Gets all program unit dependencies from database for compilation.
     #
     # Arguments:
     #
     # Return:
     #   Yields (unit, unit filename, prerequisite, prerequisite filename) tuples
     #
-    def getAllDependencies( self ):
+    def getCompileDependencies( self ):
         query = '''
 SELECT d.unit, df.file AS unit_file, d.prerequisite, pf.file AS prerequisite_file
 FROM fortran_unit_dependency AS d, fortran_program_unit AS df, fortran_program_unit as pf
-WHERE df.unit=d.unit AND pf.unit=d.prerequisite
+WHERE df.unit=d.unit AND pf.unit=d.prerequisite AND d.type='compile'
 ORDER BY d.unit
                 '''.strip()
         rows = self._database.query( query )

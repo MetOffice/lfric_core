@@ -24,7 +24,6 @@ import os.path
 import re
 import shutil
 import subprocess
-import sys
 
 '''
 Examine Fortran source and build dependency information for use by "make".
@@ -133,6 +132,24 @@ class FortranAnalyser(Analyser):
         self._logger.logEvent( '  Scanning ' + sourceFilename )
         self._database.removeFile( sourceFilename )
 
+        def addDependency( programUnit, prerequisiteUnit, reverseLink=False ):
+            if prerequisiteUnit in self._ignoreModules:
+                self._logger.logEvent( '      - Ignored 3rd party prerequisite' )
+            elif prerequisiteUnit in modules:
+                self._logger.logEvent( '      - Ignored self' )
+            elif prerequisiteUnit in dependencies:
+                self._logger.logEvent( '      - Ignore duplicate prerequisite' )
+            else:
+                dependencies.append( prerequisiteUnit )
+                self._database.addModuleCompileDependency( programUnit, \
+                                                           prerequisiteUnit )
+                if reverseLink:
+                    self._database.addModuleLinkDependency( prerequisiteUnit, \
+                                                            programUnit )
+                else:
+                    self._database.addModuleLinkDependency( programUnit, \
+                                                            prerequisiteUnit )
+
         programUnit = None
         modules = []
         dependencies = []
@@ -144,27 +161,38 @@ class FortranAnalyser(Analyser):
                 self._logger.logEvent( '    Contains program: ' + programUnit )
                 self._database.addProgram( programUnit, sourceFilename )
 
-            match = re.match( r'^\s*MODULE\s+(?!PROCEDURE)(\S+)', line, \
-                                flags=re.IGNORECASE)
+            match = re.match( \
+                     r'^\s*MODULE\s+(?!(?:PROCEDURE|SUBROUTINE|FUNCTION)\s+)(\S+)', \
+                              line, flags=re.IGNORECASE)
             if match is not None:
                 programUnit = match.group( 1 )
                 self._logger.logEvent( '    Contains module ' + programUnit )
                 modules.append( programUnit )
                 self._database.addModule( programUnit, sourceFilename )
 
+            match = re.match( r'^\s*SUBMODULE\s+\((?:([^:]+):)?([^)]+)\)\s+(\S+)', line, \
+                              flags=re.IGNORECASE )
+            if match is not None:
+                ancestorUnit = match.group(1)
+                parentUnit  = match.group(2)
+                programUnit = match.group(3)
+
+                message = '{}Contains submodule {} of {}'.format(            \
+                                                                ' ' * 4,     \
+                                                                programUnit, \
+                                                                parentUnit )
+                if ancestorUnit:
+                    message = message + '({})'.format( ancestorUnit )
+                self._logger.logEvent( message )
+
+                self._database.addModule( programUnit, sourceFilename )
+                # I don't think it's necessary to append this to "modules".
+                # It's really just a dependency.
+                addDependency( programUnit, parentUnit, True )
+
             match = re.match( r'^\s*USE\s+([^,\s]+)', line, \
                                 flags=re.IGNORECASE)
             if match is not None:
                 moduleName = match.group( 1 )
                 self._logger.logEvent( '    Depends on module ' + moduleName )
-                if moduleName in self._ignoreModules :
-                    self._logger.logEvent( '      - Ignored 3rd party module' )
-                elif moduleName in modules:
-                    self._logger.logEvent( '      - Ignored self' )
-                else :
-                    if moduleName in dependencies:
-                        self._logger.logEvent( '      - Ignoring duplicate module' )
-                    else:
-                        dependencies.append( moduleName )
-                        self._database.addModuleDependency( programUnit, \
-                                                            moduleName )
+                addDependency( programUnit, moduleName )

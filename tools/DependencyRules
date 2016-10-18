@@ -75,7 +75,7 @@ if __name__ == '__main__':
                                           args.objectdir, args.moduledir )
 
     fileStore = database.FileDependencies( backend )
-    processor.determineFileDependencies( fileStore )
+    processor.determineCompileDependencies( fileStore )
 
     try:
         with open( args.output, 'w' ) as listFile:
