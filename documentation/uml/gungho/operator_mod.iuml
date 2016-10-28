@@ -1,15 +1,18 @@
-class operator_mod::operator_type {
+abstract class operator_mod::base_operator_type{
   -fs_from       : function_space_type <<pointer>>
   -fs_to         : function_space_type <<pointer>>
-  -local_stencil : real[:::] <<allocatable>>
   -ncell_3d      : integer
+  +which_from():integer
+  +which_to():integer
+  +get_mesh():mesh_mod::mesh_type
+  <<destroy>>+operator_destructor()
+}
 
+class operator_mod::operator_type {
+  -local_stencil : real[:::] <<allocatable>>
   <<create>>+operator_constructor( <<in>>fs_to: function_space_type, <<in>>fs_from: function_space_type ) : operator_type
 
   +get_proxy()     : operator_proxy_type
-  +which_fs_from() : integer
-  +which_fs_to()   : integer
-  +get_mesh()      : mesh
 }
 
 class operator_mod::operator_proxy_type {
@@ -19,4 +22,72 @@ class operator_mod::operator_proxy_type {
   +ncell_3d      : integer
 }
 
+class operator_mod::columnwise_operator_type {
+  __ private data __
+  .. scalars ..
+  -alpha   : integer
+  -beta    : integer
+  -gamma_m : integer
+  -gamma_p : integer
+  -bandwidth : integer
+  -nrow : integer
+  -ncol : integer
+  -ndof_face_to : integer
+  -ndof_face_from : integer
+  -ndof_interior_to : integer
+  -ndof_interior_from : integer
+  -ndof_cell_to : integer
+  -ndof_cell_from : integer
+  -ncell_2d : integer
+  .. integer maps ..
+  -column_dofmap_to: integer[::] <<allocatable>>
+  -column_dofmap_from: integer[::] <<allocatable>>
+  -column_banded_dofmap_to: integer[::] <<allocatable>>
+  -column_banded_dofmap_from: integer[::] <<allocatable>>
+  -indirection_dofmap_to: integer[:] <<allocatable>>
+  -indirection_dofmap_from: integer[:] <<allocatable>>
+  .. real data ..
+  -columnwise_matrix : real[:::] <<allocatable>>
+ == contains ==
+  -- private procedures --
+  -allocate_memory()
+  <<nopass>>-get_gcd()
+  -build_dofmaps()
+  -extract_mesh_fs_info()
+  -- public procedures --
+  <<create>>+columnwise_operator_constructor()
+  <<destroy>>+columnwise_operator_destructor()
+  +get_proxy()
+  +get_alpha()
+  +get_beta()
+  +get_gamma_m()
+  +get_gamma_p()
+  +columnwise_operator_product()
+  +columnwise_operator_sum()
+}
+
+class operator_mod::columnwise_operator_proxy_type {
+  +fs_from       : function_space_type <<pointer>>
+  +fs_to         : function_space_type <<pointer>>
+  +alpha   : integer
+  +beta    : integer
+  +gamma_m : integer
+  +gamma_p : integer
+  +bandwidth : integer
+  +nrow : integer
+  +ncol : integer
+  +ncell_2d : integer
+  +columnwise_matrix[:::] : real <<pointer>>
+  +column_banded_dofmap_to[::] : integer <<pointer>>
+  +column_banded_dofmap_from[::] : integer <<pointer>>
+  +indirection_dofmap_to[:] : integer <<pointer>>
+  +indirection_dofmap_from[:] : integer <<pointer>>
+}
+
+operator_mod::base_operator_type --|> operator_mod::operator_type
+operator_mod::base_operator_type --|> operator_mod::columnwise_operator_type
 operator_mod::operator_proxy_type -> operator_mod::operator_type : operator accessor
+
+
+operator_mod::columnwise_operator_proxy_type -> operator_mod::columnwise_operator_type : operator accessor
+

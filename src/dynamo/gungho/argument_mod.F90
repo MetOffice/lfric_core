@@ -32,15 +32,16 @@
 
 module argument_mod
 
-  use fs_continuity_mod, only : W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi
+  use fs_continuity_mod, only : W0, W1, W2, W3, Wtheta, W2V, W2H
 
   implicit none
 
 ! argument types
-  integer, public, parameter :: GH_FIELD    = 1 
-  integer, public, parameter :: GH_OPERATOR = 2
-  integer, public, parameter :: GH_REAL     = 3
-  integer, public, parameter :: GH_INTEGER  = 4
+  integer, public, parameter :: GH_FIELD               = 1 
+  integer, public, parameter :: GH_OPERATOR            = 2
+  integer, public, parameter :: GH_COLUMNWISE_OPERATOR = 3
+  integer, public, parameter :: GH_REAL                = 4
+  integer, public, parameter :: GH_INTEGER             = 5
 
 ! access descriptors
   integer, public, parameter :: GH_READ  = 11
@@ -68,13 +69,17 @@ module argument_mod
   integer, public, parameter :: GH_BASIS       = 301 
   integer, public, parameter :: GH_DIFF_BASIS  = 302
   integer, public, parameter :: GH_ORIENTATION = 303
+  integer, public, parameter :: GH_COLUMN_BANDED_DOFMAP = 304
+  integer, public, parameter :: GH_COLUMN_INDIRECTION_DOFMAP = 305
+
 
 ! kernel iterator
   integer, public, parameter :: CELLS     = 401
   integer, public, parameter :: ALL_DOFS  = 402
 
   type, public :: arg_type
-     integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_REAL, GH_INTEGER}
+     integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_COLUMNWISE_OPERATOR,&
+                                 !  GH_REAL, GH_INTEGER}
      integer :: arg_intent       ! {GH_READ, GH_WRITE, GH_RW, GH_INC, GH_SUM, GH_MIN, GH_MAX}
      integer :: wspace      = -1 ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+}
      integer :: from_wspace = -1 ! { " } only required for gh_operator
@@ -82,7 +87,9 @@ module argument_mod
 
   type, public :: func_type
      integer :: wspace            ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+}
-     integer :: wproperties1      ! {GH_BASIS, GH_DIFF_BASIS, GH_OPERATOR}
+     integer :: wproperties1      ! {GH_BASIS, GH_DIFF_BASIS, GH_OPERATOR, &
+                                  !  GH_COLUMN_BANDED_DOFMAP, & 
+                                  !  GH_COLUMN_INDIRECTION_DOFMAP}
      integer :: wproperties2 = -1 ! { " } optional and must be a distinct property
      integer :: wproperties3 = -1 ! { " } optional and must be a distinct property
   end type func_type

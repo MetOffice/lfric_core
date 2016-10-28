@@ -1,0 +1,212 @@
+!-----------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown, 
+! Met Office and NERC 2014. 
+! However, it has been created with the help of the GungHo Consortium, 
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-----------------------------------------------------------------------------
+
+!> Test the multiplication of two columnwise assembled operators
+!> For this, multiply the operators and check that the product operator
+!> has the same entries as the corresponding dense matrix.
+!> The operators it uses are D : W_theta -> W_3 and D^T, where D is a
+!> derivative operator.
+module columnwise_op_mul_kernel_mod_test
+
+  use constants_mod,                 only : i_def, r_def
+  use function_space_collection_mod, only : function_space_collection_type, &
+                                            function_space_collection
+  use mesh_collection_mod,           only : mesh_collection_type, &
+                                            mesh_collection
+  use field_mod,                     only : field_type, field_proxy_type
+  use fs_continuity_mod,             only : Wtheta, W3
+  use function_space_mod,            only : function_space_type
+
+  use operator_mod,                  only : columnwise_operator_type, &
+                                            columnwise_operator_proxy_type
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: columnwise_op_mul_test_type
+    private
+    type(function_space_type), pointer :: wtheta_fs => null()
+    type(function_space_type), pointer :: w3_fs => null()
+    type(columnwise_operator_type)     :: columnwise_op_D, &
+                                          columnwise_op_DT, &
+                                          columnwise_op_DT_D
+    integer(i_def)                     :: mesh_id
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type columnwise_op_mul_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use feign_config_mod,           only : feign_finite_element_config
+    use mesh_mod,                  only : PLANE_BI_PERIODIC
+    use reference_element_mod,     only : reference_cube, reference_element
+
+    implicit none
+
+    class(columnwise_op_mul_test_type), intent(inout) :: this
+    call feign_finite_element_config( finite_element_shape_quadrilateral, &
+                                      0, 0, .true., .false. )
+
+    reference_element = finite_element_shape_quadrilateral
+    call reference_cube()
+    ! Create top level mesh collection
+    mesh_collection = mesh_collection_type()
+    ! Create top level function space collection
+    function_space_collection = function_space_collection_type()
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    this%mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
+
+    this%wtheta_fs => function_space_collection%get_fs( this%mesh_id, &
+                                                    0, &
+                                                    Wtheta )
+
+    this%w3_fs => function_space_collection%get_fs( this%mesh_id, &
+                                                    0, &
+                                                    W3 )
+
+    this%columnwise_op_D = columnwise_operator_type( this%w3_fs, this%wtheta_fs )
+    this%columnwise_op_DT = columnwise_operator_type( this%wtheta_fs, this%w3_fs )
+    this%columnwise_op_DT_D =  &
+         this%columnwise_op_DT%columnwise_operator_product( &
+                                this%columnwise_op_D )
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    use reference_element_mod, only : deallocate_reference
+
+    implicit none
+
+    class(columnwise_op_mul_test_type), intent(inout) :: this
+
+    call function_space_collection%clear()
+    call deallocate_reference()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_all( this )
+
+    use columnwise_op_mul_kernel_mod, only : &
+         columnwise_op_mul_kernel_code
+
+    implicit none
+
+    class(columnwise_op_mul_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+
+    integer :: i, j, cell
+
+    type(columnwise_operator_proxy_type) :: columnwise_op_D_p, &
+                                            columnwise_op_DT_p, &
+                                            columnwise_op_DT_D_p
+
+    ! dense representations of the operators D and D^T.D
+    real(kind=r_def), allocatable, dimension(:,:) :: densematrix_D, &
+                                                     densematrix_DT_D
+
+    integer(kind=i_def) :: j_minus, j_plus
+    real(kind=r_def) :: matrixentry ! sparse matrix entry to compare in test
+
+    ! Test mass matrix kernel
+    columnwise_op_D_p = this%columnwise_op_D%get_proxy()
+    columnwise_op_DT_p = this%columnwise_op_DT%get_proxy()
+    columnwise_op_DT_D_p = this%columnwise_op_DT_D%get_proxy()
+
+    cell = 1
+
+    ! construct banded and dense matrix representation,
+    ! fill with (scaled) theta mass matrix.
+    allocate(densematrix_D( columnwise_op_D_p%nrow,                           &
+                            columnwise_op_D_p%ncol) )
+    allocate(densematrix_DT_D( columnwise_op_DT_D_p%nrow,                     &
+                               columnwise_op_DT_D_p%ncol) )
+    densematrix_D(:,:) = 0.0_r_def
+    columnwise_op_D_p%columnwise_matrix(:,:,:) = 0.0_r_def
+    columnwise_op_DT_p%columnwise_matrix(:,:,:) = 0.0_r_def
+    columnwise_op_DT_D_p%columnwise_matrix(:,:,:) = 0.0_r_def
+
+    do i = 1, columnwise_op_D_p%nrow
+       columnwise_op_D_p%columnwise_matrix(1,i,cell) = +1.0_r_def
+       columnwise_op_D_p%columnwise_matrix(2,i,cell) = -1.0_r_def
+       densematrix_D(i,i)   = +1.0_r_def
+       densematrix_D(i,i+1) = -1.0_r_def
+    end do
+    do i = 1, columnwise_op_DT_p%nrow
+       columnwise_op_DT_p%columnwise_matrix(1,i,cell) = -1.0_r_def
+       columnwise_op_DT_p%columnwise_matrix(2,i,cell) = +1.0_r_def
+    end do
+
+    call columnwise_op_mul_kernel_code(cell,                                  &
+                                       columnwise_op_DT_p%ncell_2d,           &
+                                       columnwise_op_DT_p%columnwise_matrix,   &
+                                       columnwise_op_D_p%columnwise_matrix,   &
+                                       columnwise_op_DT_D_p%columnwise_matrix, &
+                                       columnwise_op_DT_p%nrow,               &
+                                       columnwise_op_DT_p%ncol,               &
+                                       columnwise_op_DT_p%bandwidth,          &
+                                       columnwise_op_DT_p%alpha,              &
+                                       columnwise_op_DT_p%beta,               &
+                                       columnwise_op_DT_p%gamma_m,            &
+                                       columnwise_op_DT_p%gamma_p,            &
+                                       columnwise_op_D_p%nrow,                &
+                                       columnwise_op_D_p%ncol,                &
+                                       columnwise_op_D_p%bandwidth,           &
+                                       columnwise_op_D_p%alpha,               &
+                                       columnwise_op_D_p%beta,                &
+                                       columnwise_op_D_p%gamma_m,             &
+                                       columnwise_op_D_p%gamma_p,             &
+                                       columnwise_op_DT_D_p%nrow,             &
+                                       columnwise_op_DT_D_p%ncol,             &
+                                       columnwise_op_DT_D_p%bandwidth,        &
+                                       columnwise_op_DT_D_p%alpha,            &
+                                       columnwise_op_DT_D_p%beta,             &
+                                       columnwise_op_DT_D_p%gamma_m,          &
+                                       columnwise_op_DT_D_p%gamma_p)
+
+    ! Same calculation with dense matrices
+    densematrix_DT_D(:,:) = matmul( transpose( densematrix_D(:,:) ), &
+                                               densematrix_D(:,:)    )
+
+    ! Check result by comparing non-zero matrix entries in columnwise and
+    ! dense matrices
+    do i = 1, columnwise_op_DT_D_p%nrow
+       j_minus = ceiling( ( columnwise_op_DT_D_p%alpha*i &
+                          - columnwise_op_DT_D_p%gamma_p) &
+                            / (1.0_r_def*columnwise_op_DT_D_p%beta),i_def )
+       j_plus = floor( ( columnwise_op_D_p%alpha*i  &
+                          + columnwise_op_DT_D_p%gamma_m) &
+                          / (1.0_r_def*columnwise_op_DT_D_p%beta),i_def )
+       do j = MAX(1,j_minus), MIN( columnwise_op_DT_D_p%ncol, j_plus )
+          matrixentry &
+             = columnwise_op_DT_D_p%columnwise_matrix(j-j_minus+1,i,cell)
+          @assertEqual( densematrix_DT_D(i,j), matrixentry, tol )
+          
+       end do
+    end do
+    
+    deallocate(densematrix_D)
+    deallocate(densematrix_DT_D)
+
+  end subroutine test_all
+
+end module columnwise_op_mul_kernel_mod_test

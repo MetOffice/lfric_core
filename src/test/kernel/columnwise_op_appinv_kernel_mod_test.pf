@@ -1,0 +1,204 @@
+!-----------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown, 
+! Met Office and NERC 2014. 
+! However, it has been created with the help of the GungHo Consortium, 
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-----------------------------------------------------------------------------
+
+!> Test the Wtheta mass columnwise matrix application.
+!> For this first apply the columnwise inverse of a know matrix and then
+!> apply the same matrix in a dense representation. This should bring us
+!> back to where we started, which is verified in this test.
+
+module columnwise_op_appinv_kernel_mod_test
+
+  use constants_mod,                 only : i_def, r_def
+  use function_space_collection_mod, only : function_space_collection_type, &
+                                            function_space_collection
+  use mesh_collection_mod,           only : mesh_collection_type, &
+                                            mesh_collection
+  use field_mod,                     only : field_type, field_proxy_type
+  use fs_continuity_mod,             only : Wtheta
+  use function_space_mod,            only : function_space_type
+
+  use operator_mod,                  only : columnwise_operator_type, &
+                                            columnwise_operator_proxy_type
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: columnwise_op_appinv_test_type
+    private
+    type(function_space_type), pointer :: wtheta_fs => null()
+    type(field_type)                   :: lhs, rhs
+    type(columnwise_operator_type)     :: columnwise_mm
+    integer(i_def)                     :: mesh_id
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type columnwise_op_appinv_test_type
+
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use feign_config_mod,           only : feign_finite_element_config
+    use mesh_mod,                  only : PLANE_BI_PERIODIC
+    use reference_element_mod,     only : reference_cube, reference_element
+
+    implicit none
+
+    class(columnwise_op_appinv_test_type), intent(inout) :: this
+
+    call feign_finite_element_config( finite_element_shape_quadrilateral, &
+         0, 0, .true., .false. )
+
+    reference_element = finite_element_shape_quadrilateral
+    call reference_cube()
+
+    ! Create top level mesh collection
+    mesh_collection = mesh_collection_type()
+    ! Create top level function space collection
+    function_space_collection = function_space_collection_type()
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    this%mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
+
+    this%wtheta_fs => function_space_collection%get_fs( this%mesh_id, &
+                                                    0, &
+                                                    Wtheta )
+
+    this%lhs = field_type( vector_space = this%wtheta_fs )
+    this%rhs = field_type( vector_space = this%wtheta_fs )
+
+    this%columnwise_mm = columnwise_operator_type( this%wtheta_fs, this%wtheta_fs )
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    use reference_element_mod, only : deallocate_reference
+
+    implicit none
+
+    class(columnwise_op_appinv_test_type), intent(inout) :: this
+
+    call function_space_collection%clear()
+    call deallocate_reference()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_all( this )
+
+    use columnwise_op_appinv_kernel_mod, only : &
+         columnwise_op_appinv_kernel_code
+
+    implicit none
+
+    class(columnwise_op_appinv_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+
+    integer :: i, cell
+
+    ! Required for calling mass matrix kernel
+
+    integer :: ndf, undf
+
+    integer, pointer        ::  map(:) => null()
+    type(field_proxy_type) :: lhs_p, rhs_p
+    real(kind=r_def), allocatable, dimension(:) :: rhs_result
+    type(columnwise_operator_proxy_type) :: columnwise_mm_p
+
+    real(kind=r_def), allocatable, dimension(:,:) :: densematrix
+
+    ! Test mass matrix kernel
+    columnwise_mm_p = this%columnwise_mm%get_proxy()
+
+    ndf  = columnwise_mm_p%fs_from%get_ndf()
+
+    ! Fields
+    lhs_p=this%lhs%get_proxy()
+    rhs_p=this%rhs%get_proxy()
+    undf = lhs_p%vspace%get_undf()
+    cell = 1
+    map => lhs_p%vspace%get_cell_dofmap( cell )
+    
+    ! fill RHS with random data
+    call random_number(rhs_p%data(:))
+    lhs_p%data(:) = 0.0_r_def
+
+    allocate(rhs_result(columnwise_mm_p%nrow))
+    rhs_result(:) = 0.0_r_def
+
+    ! construct banded and dense matrix representation,
+    ! fill with (scaled) theta mass matrix.
+    allocate(densematrix(columnwise_mm_p%nrow,columnwise_mm_p%ncol))
+    densematrix(:,:) = 0.0_r_def
+    columnwise_mm_p%columnwise_matrix(:,:,:) = 0.0_r_def
+
+    do i = 1,columnwise_mm_p%nrow
+       if (i == 1) then
+          columnwise_mm_p%columnwise_matrix(2,i,cell) = 1.0_r_def/3.0_r_def
+          columnwise_mm_p%columnwise_matrix(3,i,cell) = 1.0_r_def/6.0_r_def
+          densematrix(i,i)   = 1.0_r_def/3.0_r_def
+          densematrix(i,i+1) = 1.0_r_def/6.0_r_def
+       else if (i == columnwise_mm_p%nrow) then
+          columnwise_mm_p%columnwise_matrix(1,i,cell) = 1.0_r_def/6.0_r_def
+          columnwise_mm_p%columnwise_matrix(2,i,cell) = 1.0_r_def/3.0_r_def
+          densematrix(i,i-1) = 1.0_r_def/6.0_r_def
+          densematrix(i,i)   = 1.0_r_def/3.0_r_def
+       else
+          columnwise_mm_p%columnwise_matrix(1,i,cell) = 1.0_r_def/6.0_r_def
+          columnwise_mm_p%columnwise_matrix(2,i,cell) = 2.0_r_def/3.0_r_def
+          columnwise_mm_p%columnwise_matrix(3,i,cell) = 1.0_r_def/6.0_r_def
+          densematrix(i,i-1) = 1.0_r_def/6.0_r_def
+          densematrix(i,i)   = 2.0_r_def/3.0_r_def
+          densematrix(i,i+1) = 1.0_r_def/6.0_r_def
+       end if
+    end do
+
+    ! Apply columnwise inverse of matrix
+    call columnwise_op_appinv_kernel_code(cell,                      &
+                                               columnwise_mm_p%ncell_2d,  &
+                                               lhs_p%data,                &
+                                               rhs_p%data,                &
+                                               columnwise_mm_p%columnwise_matrix,    &
+                                               ndf, undf, map,            &
+                                               ndf, undf, map,            &
+                                               columnwise_mm_p%nrow,      &
+                                               columnwise_mm_p%ncol,      &
+                                               columnwise_mm_p%bandwidth, &
+                                               columnwise_mm_p%alpha,     &
+                                               columnwise_mm_p%beta,      &
+                                               columnwise_mm_p%gamma_m,   &
+                                               columnwise_mm_p%gamma_p,   &
+                                               columnwise_mm_p%indirection_dofmap_to, &
+                                               columnwise_mm_p%indirection_dofmap_from)
+
+    ! Apply dense matrix to get back to original field
+    rhs_result(1:columnwise_mm_p%nrow) &
+       = matmul( densematrix, lhs_p%data(1:columnwise_mm_p%ncol) )
+
+    ! Compare the two results
+    do i = 1, columnwise_mm_p%nrow
+       @assertEqual(rhs_result(i), rhs_p%data(i), tol)
+    end do
+    
+    deallocate(densematrix)
+    deallocate(rhs_result)
+
+  end subroutine test_all
+
+end module columnwise_op_appinv_kernel_mod_test

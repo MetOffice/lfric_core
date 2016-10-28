@@ -174,7 +174,15 @@ contains
   !> @brief Obtains the number of dofs per cell
   !> @return Integer, the number of dofs per cell
   procedure, public :: get_ndf
+  !> @brief Obtains the number of interior dofs
+  !> @return Integer, the number of dofs associated with the interior of 
+  !>         each cell
+  procedure, public :: get_ndof_interior
 
+  !> @brief Obtains the number of face dofs
+  !> @return Integer, the number of dofs associated with the faces of 
+  !>         each cell
+  procedure, public :: get_ndof_face
   !> Gets the coordinates of the function space
   !> @return A pointer to the two dimensional array of nodal_coords, (xyz,ndf)
   procedure, public :: get_nodes
@@ -561,6 +569,33 @@ function get_ndf(self) result(ndof_cell)
 
   return
 end function get_ndf
+!-----------------------------------------------------------------------------
+! Gets the number of interior dofs for a single cell
+!-----------------------------------------------------------------------------
+function get_ndof_interior(self) result(ndof_interior)
+
+  implicit none
+  class(function_space_type), intent(in) :: self
+  integer(i_def) :: ndof_interior
+
+  ndof_interior = self%ndof_interior
+
+  return
+end function get_ndof_interior
+
+!-----------------------------------------------------------------------------
+! Gets the number of face dofs for a single cell
+!-----------------------------------------------------------------------------
+function get_ndof_face(self) result(ndof_face)
+
+  implicit none
+  class(function_space_type), intent(in) :: self
+  integer(i_def) :: ndof_face
+
+  ndof_face = self%ndof_face
+
+  return
+end function get_ndof_face
 
 !-----------------------------------------------------------------------------
 ! Gets the dofmap for a single cell
@@ -1130,7 +1165,7 @@ subroutine clear(self)
 
   if (allocated(self%dof_on_vert_boundary)) &
                                       deallocate( self%dof_on_vert_boundary )
-
+  nullify(self%mesh)
   err = self%master_dofmap%clear()
   call self%dofmap_list%clear()
 
