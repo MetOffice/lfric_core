@@ -16,14 +16,14 @@
                                 'canned_test',
                                 'godlines',
                                 'cleanlines'],
-                  'nightly': ['science(semi-implicit-360ts, True)',
-                              'science(dcmip301, True)',
+                  'nightly': ['science(semi-implicit-360ts, True, T000360)',
+                              'science(dcmip301, True, T000018)',
                               'miniapp(gravity_wave)',
                               'check_compilers(full-debug, True)',
                               'godlines(True)',
                               'publish_index']} %}
 {%- set mesh_types = ['cubedsphere', 'biperiodic'] %}
-
+{%- set ts_config = {} %}
 {%- set compiler_setup = {} -%}
 {%- for compiler, setup in TARGET_COMPILER_SETUP|batch(2) -%}
 {%-     do compiler_setup.update({compiler : [setup]}) -%}
@@ -50,7 +50,7 @@
         timeout = PT3H
 
 {#- #########################################################################}
-{%- macro science( configuration, plotting=False ) %}
+{%- macro science( configuration, plotting=False, timestep='T000360') %}
 {%-   set label =  TARGET_SCIENCE_COMPILER + '_fast-debug' %}
             purge_local => purge_target
             purge_target => export_for_{{label}}
@@ -62,6 +62,7 @@
 {%-     endif %}
 {%-   endif %}
 {%-   if plotting %}
+{%-     do ts_config.update( {configuration : timestep} ) %}
             run_{{configuration}}_{{label}} => plot_{{configuration}}_{{label}}
             plot_{{configuration}}_{{label}} => copy_results_{{configuration}}_{{label}}
 {%-   endif %}
@@ -425,8 +426,8 @@
         script = rose task-run --app-key=dynamo --command-key={{TARGET_RUN_METHOD}} --opt-conf-key={{configuration}}
         post-script = """
                       cp dynamo-checksums.txt $DYNAMO_DESTINATION_DIRECTORY/dynamo.{{configuration}}.{{compiler}}.checksums
-                      mkdir -p $DYNAMO_DESTINATION_DIRECTORY/results
-                      cp $CYLC_TASK_WORK_DIR/diagDynamo*.m $DYNAMO_DESTINATION_DIRECTORY/results/
+                      mkdir -p $DYNAMO_DESTINATION_DIRECTORY/{{configuration}}/results
+                      cp $CYLC_TASK_WORK_DIR/diagDynamo*.m $DYNAMO_DESTINATION_DIRECTORY/{{configuration}}/results/
                       # Future publisher stages need this information
                       echo $CYLC_TASK_LOG_ROOT > $DYNAMO_DESTINATION_DIRECTORY/dynamo.{{configuration}}.{{compiler}}.log.path
                       """
@@ -439,6 +440,7 @@
 {%-       endif %}
 
 {%-       if 'plot_' + configuration_label in scheduledTasks %}
+{%-         set ts_label = configuration %}
     [[plot_{{configuration_label}}]]
         inherit = PUBLISH, {{family}}, TARGET
         pre-script = """
@@ -447,7 +449,9 @@
                      chmod 755 ~/public_html/dynamo-{{TARGET_OPT}}/model_output
                      chmod 755 ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}
                      chmod 755 ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data
-                     cp $DYNAMO_DESTINATION_DIRECTORY/results/* $NODAL_DATA_DIR
+                     rm -rf $NODAL_DATA_DIR/*.m
+                     rm -rf $PLOT_DIR/*.png
+                     cp $DYNAMO_DESTINATION_DIRECTORY/{{configuration}}/results/* $NODAL_DATA_DIR
                      chmod 754 $NODAL_DATA_DIR/*.m
                      """
         script = rose task-run --app-key=plot
@@ -458,7 +462,7 @@
              NODAL_DATA_DIR = ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}/nodal_data
              PLOT_DIR = ~/public_html/dynamo-{{TARGET_OPT}}/model_output/{{configuration_label}}
              FIELDS = theta,rho
-             TS = T000360
+             TS = {{ts_config[ts_label]}}
 
 {%-       endif %}
 

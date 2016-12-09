@@ -57,6 +57,11 @@ def process_file_list(filestem):
   # get the list of files to stitch together
   dirlist = glob.glob(filestem)
 
+  # If no files are found then don't try to plot
+  if len(dirlist) < 1:
+    print("No files found to plot")
+    sys.exit(1)
+
   for f in dirlist:
 
     fo = open(f, "r")
@@ -88,54 +93,74 @@ def process_file_list(filestem):
             y[levels.index(level)].append(float(strsplit[1]))
             z[levels.index(level)].append(float(strsplit[4]))
 
-            
 
     fo.close()
 
 
 def make_figure(plotpath, field, timestep):
 
-  # Do the interpolation and make the plot
 
-  interp_fig = plt.figure(figsize=(15,10))
+  # Determine indices of plots for each page, based upon
+  # 6 plots (2 columns and 3 rows) per page
+
+  pool = range(0, len(levels))
+  plots_on_page = []
+  for first in range(0, len(levels), 6):
+    plots_on_page.append( pool[first:first+6] )
+
+  page = 1
+
+  # Loop through the pages in the list and plot the relevant levels
+  # by indexing into the global levels array
+
+  for plots in plots_on_page:
+
+    count = 1  # set a count for the subplot position on this page 
+
+    # create the figure for this page
+    interp_fig = plt.figure(figsize=(15,10))
+
+    for p in plots:
 
 
-  for p in xrange(len(levels)):
-
-    # get min and max of x,y data for plot axes
-    xmin =  min(x[p])
-    xmax = max(x[p])
-    ymin =  min(y[p])
-    ymax = max(y[p])
+      # get min and max of x,y data for plot axes
+      xmin =  min(x[p])
+      xmax = max(x[p])
+      ymin =  min(y[p])
+      ymax = max(y[p])
    
 
-    # Size of regular grid
-    ny, nx = 100, 200
+      # Size of regular grid
+      ny, nx = 100, 200
 
-    # Generate a regular grid to interpolate the data onto
-    xi = np.linspace(xmin, xmax, nx)
-    yi = np.linspace(ymin, ymax, ny)
-    xi, yi = np.meshgrid(xi, yi)
+      # Generate a regular grid to interpolate the data onto
+      xi = np.linspace(xmin, xmax, nx)
+      yi = np.linspace(ymin, ymax, ny)
+      xi, yi = np.meshgrid(xi, yi)
 
-    # Interpolate using delaunay triangulation 
+      # Interpolate using delaunay triangulation 
 
-    zi = mlab.griddata(x[p], y[p], z[p], xi, yi, interp='linear')
+      zi = mlab.griddata(x[p], y[p], z[p], xi, yi, interp='linear')
 
-    # Conversion factor from radians to degrees
-    r2d = 180.0/math.pi;
+      # Conversion factor from radians to degrees
+      r2d = 180.0/math.pi;
 
-    # Plot the interpolated data using contourf
+      # Plot the interpolated data using contourf
 
-    ax = interp_fig.add_subplot(3,2,p+1)
-    cf = plt.contourf(xi *r2d, yi * r2d, zi)
-    plt.colorbar(cf,  cmap=cm.spectral, format='%0e')
-    plt.axis([np.amin(xi *r2d), np.amax(xi *r2d), np.amin(yi *r2d), np.amax(yi *r2d)])
-    ax.set_title("Level : "  + str(levels[p]))
-    plt.suptitle(field + " " + timestep + " interpolated")
+      ax = interp_fig.add_subplot(3,2,count)
+      cf = plt.contourf(xi *r2d, yi * r2d, zi)
+      plt.colorbar(cf,  cmap=cm.spectral, format='%0e')
+      plt.axis([np.amin(xi *r2d), np.amax(xi *r2d), np.amin(yi *r2d), np.amax(yi *r2d)])
+      ax.set_title("Level : "  + str(levels[p]))
+      plt.suptitle(field + " " + timestep + " interpolated")
 
-  # Save file as .png
-  out_file_name = plotpath + "/" + field + "_" + timestep + ".png"
-  interp_fig.savefig(out_file_name , bbox_inches='tight')
+      count +=1
+
+    # Save file as .png
+    out_file_name = plotpath + "/" + field + "_" + timestep + "_" + str(page) +  ".png"
+    interp_fig.savefig(out_file_name , bbox_inches='tight')
+
+    page +=1
 
 if __name__ == "__main__":
   
