@@ -30,9 +30,10 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 
-import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+
+from scipy.interpolate import griddata
 
 import math
 
@@ -138,14 +139,12 @@ def make_figure(plotpath, field, timestep):
       yi = np.linspace(ymin, ymax, ny)
       xi, yi = np.meshgrid(xi, yi)
 
-      # Interpolate using delaunay triangulation 
-
-      zi = mlab.griddata(x[p], y[p], z[p], xi, yi, interp='linear')
 
       # Conversion factor from radians to degrees
       r2d = 180.0/math.pi;
 
-      # Plot the interpolated data using contourf
+      # Interpolate using delaunay triangulation 
+      zi = griddata((np.asarray(x[p]), np.asarray(y[p])), np.asarray(z[p]), (xi, yi), method='linear')
 
       ax = interp_fig.add_subplot(3,2,count)
       cf = plt.contourf(xi *r2d, yi * r2d, zi)
