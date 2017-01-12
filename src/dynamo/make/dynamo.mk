@@ -39,7 +39,7 @@ $(BIN_DIR)/%: $(OBJ_DIR)/%.x | $(BIN_DIR)
 # Directories
 
 # Find all the subdirectories within the source directory:
-SUBDIRS = $(shell find . -type d -print -name make -prune)
+SUBDIRS = $(shell find . -name make -prune -or -type d -print)
 
 $(BIN_DIR) $(OBJ_DIR):
 	@echo -e $(VT_BOLD)Creating$(VT_RESET) $@
