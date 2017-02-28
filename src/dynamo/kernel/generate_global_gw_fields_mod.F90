@@ -21,6 +21,7 @@ use planet_config_mod,              only : gravity, &
                                            scaled_radius, scaled_omega, &
                                            Rd, Cp, p_zero, kappa, scaling_factor
 use initial_wind_config_mod,        only : u0
+use formulation_config_mod,         only : rotating
 implicit none
 
 contains
@@ -53,6 +54,7 @@ implicit none
   real(kind=r_def) :: temperature, pressure                   ! temperature(k) and pressure (Pa)
   real(kind=r_def) :: exp_fac
   real(kind=r_def) :: p_equator
+  real(kind=r_def) :: u00
 
   p_equator = p_zero
 
@@ -65,7 +67,9 @@ implicit none
   u(3) = 0.0_r_def
 
 ! 
-  exp_fac = (u0+2.0_r_def*scaled_omega*scaled_radius)*(cos(2.0_r_def*lat)-1.0_r_def)
+  u00 = u0
+  if ( rotating ) u00 = u00 + 2.0_r_def*scaled_omega*scaled_radius
+  exp_fac = u00*(cos(2.0_r_def*lat)-1.0_r_def)
 
 ! Compute surface temperture
   tsurf = bigG + (T_EQUATOR - bigG)*exp( -(u0*bvf_square/(4.0_r_def*gravity**2))*exp_fac )
