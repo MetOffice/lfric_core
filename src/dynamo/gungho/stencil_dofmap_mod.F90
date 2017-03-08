@@ -65,7 +65,7 @@ contains
 !> @param[in] st_extent Number of stencil cells each side of the centre cell in relevant directions
 !> @param[in] master_dofmap The cell dofmap to create the stencil from
 !> @return The dofmap object
-function stencil_dofmap_constructor( st_shape, st_extent, ndf, mesh, master_dofmap) result(self)
+function stencil_dofmap_constructor( st_shape, st_extent, cell_extent, ndf, mesh, master_dofmap) result(self)
 
     use log_mod,  only: log_event,         &
                         log_scratch_space, &
@@ -74,6 +74,7 @@ function stencil_dofmap_constructor( st_shape, st_extent, ndf, mesh, master_dofm
     use reference_element_mod, only: W, E, N, S
 
     integer(i_def),           intent(in) :: st_shape, st_extent, ndf
+    integer(i_def), intent(in), optional :: cell_extent
     type(mesh_type), pointer, intent(in) :: mesh
     type(master_dofmap_type), intent(in) :: master_dofmap
     type(stencil_dofmap_type), target    :: self
@@ -104,7 +105,16 @@ function stencil_dofmap_constructor( st_shape, st_extent, ndf, mesh, master_dofm
     ! call base class set_id()
     call self%set_id(st_shape*100 + st_extent)
 
-    ncells = mesh%get_ncells_2d()
+    if (present(cell_extent)) then
+      if (cell_extent == 0) then
+        ncells = mesh%get_last_edge_cell()
+      else
+        ncells = mesh%get_last_halo_cell(cell_extent)
+      end if
+    else
+      ncells = mesh%get_ncells_2d()
+    end if
+
     ! Allocate the dofmap array
     allocate( self%dofmap( ndf, self%dofmap_size, ncells ) )
 

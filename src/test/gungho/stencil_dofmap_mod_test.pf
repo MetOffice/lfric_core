@@ -37,6 +37,7 @@ module stencil_dofmap_mod_test
     private
     integer(i_native), public :: stencil
     integer(i_def),    public :: st_extent
+    integer(i_def),    public :: cell_extent
     integer(i_def),    public :: st_expected_size
 
     integer(i_def),    public        :: mesh_id
@@ -54,6 +55,7 @@ module stencil_dofmap_mod_test
   type, public, extends(AbstractTestParameter) :: stencil_parameter_type
     integer(i_native), public :: stencil
     integer(i_def),    public :: st_extent
+    integer(i_def),    public :: cell_extent
     integer(i_def),    public :: st_expected_size
   contains
     procedure :: toString => parameter_to_string
@@ -95,11 +97,11 @@ contains
 
     type(stencil_parameter_type) :: parameters(5)
 
-    parameters = [ stencil_parameter_type(STENCIL_CROSS,2,9),              &
-                   stencil_parameter_type(STENCIL_1DX,1,3),                &
-                   stencil_parameter_type(STENCIL_1DY,2,5),                &
-                   stencil_parameter_type(STENCIL_1DY,3,7),                &
-                   stencil_parameter_type(STENCIL_POINT,1,1) ]
+    parameters = [ stencil_parameter_type(STENCIL_CROSS,2,0,9),              &
+                   stencil_parameter_type(STENCIL_1DX,1,0,3),                &
+                   stencil_parameter_type(STENCIL_1DY,2,0,5),                &
+                   stencil_parameter_type(STENCIL_1DY,3,0,7),                &
+                   stencil_parameter_type(STENCIL_POINT,1,0,1) ]
 
   end function get_parameters
 
@@ -113,6 +115,7 @@ contains
 
     new_test%stencil            = testParameter%stencil
     new_test%st_extent          = testParameter%st_extent
+    new_test%cell_extent        = testParameter%cell_extent
     new_test%st_expected_size   = testParameter%st_expected_size
 
   end function stencil_dofmap_test_constructor
@@ -212,6 +215,7 @@ contains
    ! Create stencil of required type and extent
    stencil_dofmap = stencil_dofmap_type(this%stencil,        &
                                         this%st_extent,      &
+                                        this%cell_extent,    &
                                         ndf,mesh,            &
                                         this%master_dofmap)
 
