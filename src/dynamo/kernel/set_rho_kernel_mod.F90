@@ -9,13 +9,13 @@
 
 !> @brief Computes LHS of Galerkin projection and solves equation in W3 space
 
-module initial_rho_kernel_mod
+module set_rho_kernel_mod
 
 use argument_mod,               only : arg_type, func_type,            &
                                        GH_FIELD, GH_READ, GH_WRITE,    &
                                        ANY_SPACE_9, W3,                &
                                        GH_BASIS, GH_DIFF_BASIS,        &
-                                       CELLS, QUADRATURE_XYoZ
+                                       CELLS, QUADRATURE_XYoZ, GH_REAL
 use constants_mod,              only : r_def
 use idealised_config_mod,       only : test
 use kernel_mod,                 only : kernel_type
@@ -26,11 +26,12 @@ implicit none
 ! Public types
 !-------------------------------------------------------------------------------
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
-type, public, extends(kernel_type) :: initial_rho_kernel_type
+type, public, extends(kernel_type) :: set_rho_kernel_type
   private
-  type(arg_type) :: meta_args(2) = (/                                  &
+  type(arg_type) :: meta_args(3) = (/                                  &
        arg_type(GH_FIELD,   GH_WRITE,  W3),                            &
-       arg_type(GH_FIELD*3, GH_READ, ANY_SPACE_9)                      &
+       arg_type(GH_FIELD*3, GH_READ, ANY_SPACE_9),                     &
+       arg_type(GH_REAL,    GH_READ)                                   &
        /)
   type(func_type) :: meta_funcs(2) = (/                                &
        func_type(W3, GH_BASIS),                                        &
@@ -39,7 +40,7 @@ type, public, extends(kernel_type) :: initial_rho_kernel_type
   integer :: iterates_over = CELLS
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
-  procedure, nopass ::initial_rho_code
+  procedure, nopass ::set_rho_code
 end type
 
 !-------------------------------------------------------------------------------
@@ -47,19 +48,19 @@ end type
 !-------------------------------------------------------------------------------
 
 ! overload the default structure constructor for function space
-interface initial_rho_kernel_type
-   module procedure initial_rho_kernel_constructor
+interface set_rho_kernel_type
+   module procedure set_rho_kernel_constructor
 end interface
 
 !-------------------------------------------------------------------------------
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
-public initial_rho_code
+public set_rho_code
 contains
 
-type(initial_rho_kernel_type) function initial_rho_kernel_constructor() result(self)
+type(set_rho_kernel_type) function set_rho_kernel_constructor() result(self)
   return
-end function initial_rho_kernel_constructor
+end function set_rho_kernel_constructor
 
 !> @brief Computes LHS of Galerkin projection and solves equation in W3 space
 !! @param[in] nlayers Number of layers
@@ -68,6 +69,7 @@ end function initial_rho_kernel_constructor
 !! @param[in] map_w3 Dofmap for the cell at the base of the column
 !! @param[in] w3_basis Basis functions evaluated at gaussian quadrature points 
 !! @param[inout] rho Density
+!! @param[inout] time Time evaluated as a real value
 !! @param[in] ndf_chi Number of degrees of freedom per cell for chi
 !! @param[in] undf_chi Number of degrees of freedom for chi
 !! @param[in] map_chi Dofmap for the cell at the base of the column for chi
@@ -80,7 +82,7 @@ end function initial_rho_kernel_constructor
 !! @param[in] nqp_v Number of vertical quadrature points
 !! @param[in] wqp_h Weights of horizontal quadrature points
 !! @param[in] wqp_v Weights of vertical quadrature points
-subroutine initial_rho_code(nlayers, rho, chi_1, chi_2, chi_3, &
+subroutine set_rho_code(nlayers, rho, chi_1, chi_2, chi_3, time, &
                             ndf_w3, undf_w3, map_w3, w3_basis, &
                             ndf_chi, undf_chi, map_chi, chi_basis, chi_diff_basis, &
                             nqp_h, nqp_v, wqp_h, wqp_v )
@@ -97,6 +99,7 @@ subroutine initial_rho_code(nlayers, rho, chi_1, chi_2, chi_3, &
   integer, dimension(ndf_chi), intent(in) :: map_chi
   real(kind=r_def), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in)    :: w3_basis
   real(kind=r_def), dimension(undf_w3),               intent(inout) :: rho
+  real(kind=r_def),                                   intent(in)    :: time
   real(kind=r_def), dimension(undf_chi),              intent(in)    :: chi_1, chi_2, chi_3
   real(kind=r_def), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in)    :: chi_diff_basis
   real(kind=r_def), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in)    :: chi_basis
@@ -135,7 +138,7 @@ subroutine initial_rho_code(nlayers, rho, chi_1, chi_2, chi_3, &
             x(2) = x(2) + chi_2_e(df2)*chi_basis(1,df2,qp1,qp2)
             x(3) = x(3) + chi_3_e(df2)*chi_basis(1,df2,qp1,qp2)
           end do
-          rho_ref = analytic_density(x, test)
+          rho_ref = analytic_density(x, test, time)
 
           integrand =  w3_basis(1,df1,qp1,qp2) * rho_ref * dj(qp1,qp2)
           rhs_e(df1) = rhs_e(df1) + wqp_h(qp1)*wqp_v(qp2)*integrand
@@ -164,6 +167,6 @@ subroutine initial_rho_code(nlayers, rho, chi_1, chi_2, chi_3, &
     end do
   end do
 
-end subroutine initial_rho_code
+end subroutine set_rho_code
 
-end module initial_rho_kernel_mod
+end module set_rho_kernel_mod

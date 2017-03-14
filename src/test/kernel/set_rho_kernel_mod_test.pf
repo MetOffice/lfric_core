@@ -7,7 +7,7 @@
 
 !> Test the initial rho computation
 !>
-module initial_rho_kernel_mod_test
+module set_rho_kernel_mod_test
 
   use constants_mod,                 only : i_def, r_def
   use function_space_collection_mod, only : function_space_collection_type, &
@@ -24,16 +24,17 @@ module initial_rho_kernel_mod_test
   implicit none 
 
   private
-  public :: initial_rho_kernel_test_type, test_all
+  public :: set_rho_kernel_test_type, test_all
 
   @TestCase
-  type, extends(TestCase) :: initial_rho_kernel_test_type
+  type, extends(TestCase) :: set_rho_kernel_test_type
     private
     type(quadrature_type)              :: qr
     type(function_space_type), pointer :: w0_fs => null()
     type(function_space_type), pointer :: w3_fs => null()
     type(field_type)                   :: chi(3)
     type(field_type)                   :: rho
+    real(r_def)                        :: time
     real(r_def), allocatable           :: basis_rho(:,:,:,:), &
                                           basis_chi(:,:,:,:), &
                                           diff_basis_chi(:,:,:,:)
@@ -42,7 +43,7 @@ module initial_rho_kernel_mod_test
     procedure setUp
     procedure tearDown
     procedure test_all
-  end type initial_rho_kernel_test_type
+  end type set_rho_kernel_test_type
 
   integer(i_def), parameter :: element_order = 0
 
@@ -81,7 +82,7 @@ contains
 
     implicit none
 
-    class(initial_rho_kernel_test_type), intent(inout) :: this
+    class(set_rho_kernel_test_type), intent(inout) :: this
 
     type(field_proxy_type)    :: rho_p
     type(field_proxy_type)    :: chi_p(3)
@@ -160,7 +161,7 @@ contains
 
     implicit none
 
-    class(initial_rho_kernel_test_type), intent(inout) :: this
+    class(set_rho_kernel_test_type), intent(inout) :: this
 
     deallocate( this%basis_rho, this%basis_chi )
 
@@ -174,12 +175,12 @@ contains
   @test
   subroutine test_all( this )
 
-    use initial_rho_kernel_mod,     only : initial_rho_code
+    use set_rho_kernel_mod,     only : set_rho_code
     use mesh_mod,                   only : mesh_type
 
     implicit none
 
-    class(initial_rho_kernel_test_type), intent(inout) :: this
+    class(set_rho_kernel_test_type), intent(inout) :: this
 
     real(r_def), parameter :: tol = 1.0e-6_r_def
     real(r_def), parameter :: dx = 6000.0_r_def, &
@@ -188,6 +189,7 @@ contains
     ! Information for testing initial rho
     type(field_proxy_type)    :: rho_p
     type(field_proxy_type )   :: chi_p(3)
+    real(kind=r_def)          :: time
 
     type(mesh_type),pointer   :: mesh => null()
 
@@ -257,27 +259,29 @@ contains
     call chi_p(1)%vspace%compute_diff_basis_function( &
          this%diff_basis_chi, ndf_chi, nqp_h, nqp_v, xp, zp)
 
+    time = 0.0_r_def
     cell = 1
     map_rho => rho_p%vspace%get_cell_dofmap( cell )
     map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
-    call initial_rho_code( rho_p%vspace%get_nlayers(), &
-                           rho_p%data,                 &
-                           chi_p(1)%data,              &
-                           chi_p(2)%data,              &
-                           chi_p(3)%data,              &
-                           ndf_rho,                    &
-                           undf_rho,                   &
-                           map_rho,                    &
-                           this%basis_rho,             &
-                           ndf_chi,                    &
-                           undf_chi,                   &
-                           map_chi,                    &
-                           this%basis_chi,             &
-                           this%diff_basis_chi,        &
-                           nqp_h,                      &
-                           nqp_v,                      &
-                           wh,                         &
-                           wv )
+    call set_rho_code( rho_p%vspace%get_nlayers(), &
+                       rho_p%data,                 &
+                       chi_p(1)%data,              &
+                       chi_p(2)%data,              &
+                       chi_p(3)%data,              &
+                       time,                       &
+                       ndf_rho,                    &
+                       undf_rho,                   &
+                       map_rho,                    &
+                       this%basis_rho,             &
+                       ndf_chi,                    &
+                       undf_chi,                   &
+                       map_chi,                    &
+                       this%basis_chi,             &
+                       this%diff_basis_chi,        &
+                       nqp_h,                      &
+                       nqp_v,                      &
+                       wh,                         &
+                       wv )
 
     answer(1) = 1.059869_r_def
     answer(2) = 0.8758241_r_def
@@ -288,4 +292,4 @@ contains
 
   end subroutine test_all
 
-end module initial_rho_kernel_mod_test
+end module set_rho_kernel_mod_test

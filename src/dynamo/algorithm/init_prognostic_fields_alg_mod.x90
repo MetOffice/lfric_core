@@ -25,6 +25,7 @@ module init_prognostic_fields_alg_mod
                                              transport_scheme_method_of_lines, &
                                              transport_operators_fv
   use restart_control_mod,             only: restart_type
+  use timestepping_config_mod,         only: dt
   ! I/O tools
   use field_io_mod,                    only: read_state_netcdf
 
@@ -35,7 +36,7 @@ module init_prognostic_fields_alg_mod
                                              invoke_initial_theta_kernel
 
   ! PsyKAl PSYClone kernels
-  use initial_rho_kernel_mod,          only: initial_rho_kernel_type
+  use set_rho_kernel_mod,              only: set_rho_kernel_type
   use initial_u_kernel_mod,            only: initial_u_kernel_type
   use compute_mass_matrix_kernel_w2_mod, only: compute_mass_matrix_kernel_w2_type
 
@@ -90,6 +91,8 @@ contains
     integer :: n_checkpoint  ! number of fields to checkpoint
     character(5) :: name
 
+    real(kind=r_def) :: initial_time
+
     qr = quadrature_type( element_order + 3, GAUSSIAN )
 
     !=== Initialise global prognostic fields ==================================!
@@ -117,7 +120,8 @@ contains
       call invoke( compute_mass_matrix_kernel_w2_type(mm_w2, chi, qr) )
       call solver_algorithm(u, r_u, mesh_id, chi, method, mm=mm_w2)
 
-      call invoke( initial_rho_kernel_type ( rho, chi, qr ) )
+      initial_time = 0.0_r_def
+      call invoke( set_rho_kernel_type ( rho, chi, initial_time, qr ) )
 
       call log_event( "Dynamo: Mapping rho->rho_in_wth in same space as theta..", LOG_LEVEL_INFO )
 

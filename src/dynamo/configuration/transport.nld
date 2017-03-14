@@ -1,5 +1,5 @@
 namelist transport
-  scheme             : enumeration[ method_of_lines, cosmic ]
+  scheme             : enumeration[ method_of_lines, bip_cosmic, cusph_cosmic ]
   operators          : enumeration[ fv, fem ]
   fv_flux_order      : integer
   fv_advective_order : integer

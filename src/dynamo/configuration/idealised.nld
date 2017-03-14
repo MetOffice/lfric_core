@@ -9,6 +9,7 @@ namelist idealised
                      slotted_cylinder,    ! Pair of slotted cylinders (planer or spherical)
                      constant_field,      ! Constant density value everywhere (planer or spherical)
                      cosine_stripe,       ! Cosine profile which is a function of longitude only (planer or spherical)
+                     vortex_field,        ! Pair of vortices (spherical)
                      held_suarez,         ! Held-Suarez idealised forcing test
                      solid_body_rotation, ! Solid body rotation test
                      deep_baroclinic_wave]! Deep atmosphere baroclinic wave (Ullrich 13)

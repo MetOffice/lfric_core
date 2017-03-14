@@ -41,7 +41,8 @@ program dynamo
                                              rk_alg_step
   use transport_config_mod,           only : scheme, &
                                              transport_scheme_method_of_lines, &
-                                             transport_scheme_cosmic
+                                             transport_scheme_bip_cosmic, &
+                                             transport_scheme_cusph_cosmic
   use rk_transport_mod,               only : rk_transport_init, &
                                              rk_transport_step, &
                                              rk_transport_final
@@ -69,6 +70,7 @@ program dynamo
   use diagnostic_alg_mod,             only : divergence_diagnostic_alg
   use mr_indices_mod,                 only : imr_v, imr_c, imr_r, imr_nc, &
                                              imr_nr, nummr
+  use set_rho_alg_mod,                only : set_rho_alg
 
   implicit none
 
@@ -99,7 +101,7 @@ program dynamo
 
 
   integer                          :: timestep, ts_init
-  
+
   integer :: i
   character(5) :: name
 
@@ -142,6 +144,7 @@ program dynamo
   call init_gungho(mesh_id, local_rank, total_ranks)
 
   ! Create and initialise prognostic fields
+  timestep = 0
   call init_dynamo(mesh_id, chi, u, rho, theta, rho_in_wth, mr, xi, restart)
 
   ! Create runtime_constants object. This in turn creates various things
@@ -189,13 +192,15 @@ program dynamo
             call log_event( "Dynamo: Outputting initial fields", LOG_LEVEL_INFO )
           end if
           call rk_transport_step( mesh_id, chi, u, rho, theta)
-        case ( transport_scheme_cosmic)
+        case ( transport_scheme_bip_cosmic)
           if (timestep == restart%ts_start()) then 
             ! Initialise and output initial conditions on first timestep
             call cosmic_transport_init(mesh_id, u)
             call log_event( "Dynamo: Outputting initial fields", LOG_LEVEL_INFO )
           end if
           call cosmic_transport_step( mesh_id, chi, rho)
+        case ( transport_scheme_cusph_cosmic)
+          call set_rho_alg(mesh_id, chi, rho, timestep)
         case default
          call log_event("Dynamo: Incorrect transport option chosen, "// &
                         "stopping program! ",LOG_LEVEL_ERROR)

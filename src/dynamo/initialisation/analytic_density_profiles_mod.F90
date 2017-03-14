@@ -23,6 +23,7 @@ use idealised_config_mod,       only : idealised_test_cold_bubble_x, &
                                        idealised_test_slotted_cylinder, &
                                        idealised_test_constant_field,   &
                                        idealised_test_cosine_stripe,    &
+                                       idealised_test_vortex_field, &
                                        idealised_test_gravity_wave, &
                                        idealised_test_solid_body_rotation, &
                                        idealised_test_deep_baroclinic_wave
@@ -37,17 +38,70 @@ use deep_baroclinic_wave_mod,   only : deep_baroclinic_wave
 
 implicit none
 
+private
+
+public :: vortex_field
+public :: analytic_density
+
 contains
+
+function vortex_field(lat,long,radius,time) result(density)
+  implicit none
+  real(kind=r_def), intent(in) :: lat
+  real(kind=r_def), intent(in) :: long
+  real(kind=r_def), intent(in) :: radius
+  real(kind=r_def), intent(in) :: time
+  real(kind=r_def)             :: density
+
+  real(kind=r_def) :: lat_pole, lon_pole
+  real(kind=r_def) :: lat_dash, lon_dash
+  real(kind=r_def) :: r0, v0, V
+  real(kind=r_def) :: gamma_value, radial_distance, omega
+
+  ! Equations below have been taken from Nair and Jablonowski, "Moving vortices
+  ! on the sphere: A test case for horizontal advection problems", AMS 2008,
+  ! equations (18)-(22)
+  ! lat_pole and lon_pole denote the position of one of the vortices
+  ! Parameter values have been taken from the paper and are currently
+  ! hard-wired
+
+  lat_pole = 0.0_r_def
+  lon_pole = 0.0_r_def
+  r0 = 3.0_r_def
+  v0 = 38.61073731_r_def
+  gamma_value = 5.0_r_def
+
+  lat_dash = asin(sin(lat)*sin(lat_pole) + cos(lat)*cos(lat_pole)   &
+                                                          *cos(long-lon_pole))
+  lon_dash = atan2(cos(lat)*sin(long-lon_pole),                     &
+         cos(lat)*sin(lat_pole)*cos(long-lon_pole) -  cos(lat_pole)*sin(lat) )
+
+  radial_distance = r0*cos(lat_dash)
+  V = v0*3.0_r_def*(sqrt(3.0_r_def)/2.0_r_def)*  &
+                              (sinh(radial_distance)/cosh(radial_distance)**3)
+
+  if (abs(radial_distance)<1E-10) then
+    omega = 0.0_r_def
+  else
+    omega = V/(radius*radial_distance)
+  end if
+
+  density = 1.0_r_def - tanh((radial_distance/gamma_value)*     &
+                                                    sin(lon_dash-omega*time))
+
+end function vortex_field
+
 
 !> @brief Compute an analytic density field
 !> @param[in] chi Position in physical coordinates
 !> @param[in] choice Integer defining which specified formula to use
 !> @result density The result density field
-function analytic_density(chi, choice) result(density)
+function analytic_density(chi, choice, time) result(density)
 
   implicit none
   real(kind=r_def), intent(in) :: chi(3)
   integer,          intent(in) :: choice
+  real(kind=r_def), intent(in) :: time
   real(kind=r_def)             :: density
 
   real(kind=r_def)             :: l, dt
@@ -64,7 +118,7 @@ function analytic_density(chi, choice) result(density)
   real(kind=r_def)             :: u, v, w
 
   integer                      :: id
-          
+
   if ( geometry == base_mesh_geometry_spherical ) then
     call xyz2llr(chi(1),chi(2),chi(3),long,lat,radius)
     call central_angle(long,lat,x1,y1,l1)
@@ -155,6 +209,10 @@ function analytic_density(chi, choice) result(density)
     else
       density = tracer_background
     end if
+
+
+  case( idealised_test_vortex_field )
+    density = vortex_field(lat,long,radius,time)
 
   case( idealised_test_solid_body_rotation )
     t0 = 280.0_r_def

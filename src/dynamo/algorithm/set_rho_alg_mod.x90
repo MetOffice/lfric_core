@@ -1,0 +1,56 @@
+!-------------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown,
+! Met Office and NERC 2014.
+! However, it has been created with the help of the GungHo Consortium,
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-------------------------------------------------------------------------------
+
+!>@brief Setting of rho field
+module set_rho_alg_mod
+
+  use constants_mod,                   only: r_def, i_def
+  use finite_element_config_mod,       only: element_order
+  use timestepping_config_mod,         only: dt
+
+  ! PsyKAl PSYClone kernels
+  use set_rho_kernel_mod,              only: set_rho_kernel_type
+
+  ! Derived Types
+  use field_mod,                       only: field_type
+  use quadrature_mod,                  only: quadrature_type, GAUSSIAN
+
+  implicit none
+
+  private
+  public :: set_rho_alg
+
+contains
+  !> @details An algorithm for setting rho field
+  !> @param[in] mesh_id Id of Mesh object on which the model runs
+  !> @param[inout] chi  The finite element form of the coordinates
+  !> @param[inout] rho Density field
+  !> @param[in] timestep Loop counter for timestep iterations
+  subroutine set_rho_alg( mesh_id, chi, rho, timestep)
+
+    implicit none
+
+    ! Mesh id, timestep
+    integer(i_def),  intent(in)         :: mesh_id, timestep
+    ! Coordinate fields
+    type( field_type ), intent( inout ) :: chi(3)
+    ! Prognostic fields
+    type( field_type ), intent( inout ) :: rho
+
+    type( quadrature_type )             :: qr
+
+    real(kind=r_def) :: time
+
+    qr = quadrature_type( element_order + 3, GAUSSIAN )
+
+    ! Set rho according to formulation
+    time = real(timestep,r_def)*dt
+    call invoke( set_rho_kernel_type ( rho, chi, time, qr ) )
+
+  end subroutine set_rho_alg
+
+end module set_rho_alg_mod

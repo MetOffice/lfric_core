@@ -1,7 +1,7 @@
 #!jinja2
 {%- set science_configurations = 'runge-kutta', 'semi-implicit',
                                  'semi-implicit-360ts', 'si-helmholtz', 
-                                 'transport-cosmic', 'transport-rk', 'transport-biperiodic',
+                                 'transport-bip_cosmic', 'transport-rk', 'transport-biperiodic',
                                  'biperiodic_p0_gw', 'biperiodic_p1_gw',
                                  'dcmip301', 'robert', 'robert-moist',
                                  'sbr', 'sbr_spinupwinds', 'sbr_spinupalpha',
@@ -12,7 +12,7 @@
                                 'science(si-helmholtz)',
                                 'science(runge-kutta)',
                                 'science(transport-rk)',
-                                'science(transport-cosmic, serial=True)',
+                                'science(transport-bip_cosmic, serial=True)',
                                 'science(transport-biperiodic, serial=True)',
                                 'science(biperiodic_p0_gw)',
                                 'science(biperiodic_p1_gw)',

@@ -1,0 +1,46 @@
+!-------------------------------------------------------------------------------
+! (c) The copyright relating to this work is owned jointly by the Crown, 
+! Met Office and NERC 2014. 
+! However, it has been created with the help of the GungHo Consortium, 
+! whose members are identified at https://puma.nerc.ac.uk/trac/GungHo/wiki
+!-------------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------------
+
+module analytic_density_profiles_mod_test
+
+  use constants_mod, only : r_def
+  use pFUnit_Mod
+
+  implicit none
+
+contains
+
+  @test
+  subroutine vortex_field_test( )
+
+    use constants_mod,              only: PI
+    use analytic_density_profiles_mod, only:    vortex_field
+
+    implicit none
+
+    real(kind=r_def) :: density, time, lat, long, radius
+    real(kind=r_def) :: tol
+
+    tol = 10.0e-8_r_def
+
+    time = 1.0_r_def
+    lat = 0.0_r_def
+    long = 0.0_r_def
+    radius = 6371229.0_r_def
+
+    density = vortex_field(lat,long,radius,time)
+    @assertEqual(1.0_r_def, density,tol)
+
+    long = PI/4.0_r_def
+    density = vortex_field(lat,long,radius,time)
+    @assertEqual(0.599483410782824_r_def, density,tol)
+
+  end subroutine vortex_field_test
+
+end module analytic_density_profiles_mod_test
