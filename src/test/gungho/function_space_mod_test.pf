@@ -505,6 +505,7 @@ contains
     integer(i_def) :: total_colours
     integer(i_def) :: nc_colour
     integer(i_def) :: cic_colour
+    integer(i_def) :: npanels
 
     integer(i_def), pointer :: num_cell_per_colour(:)
     integer(i_def), pointer :: cells_in_colour(:,:)
@@ -516,7 +517,10 @@ contains
                                     this%function_space )
 
     ! Must set colours before use...
-    call test_fs%set_colours()
+    ! Set npanels so generic colour algorithm is used
+    npanels=999
+
+    call test_fs%set_colours(npanels)
 
     call test_fs%get_colours(num_colours, num_cell_per_colour, cells_in_colour)
 

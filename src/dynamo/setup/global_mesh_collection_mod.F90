@@ -459,8 +459,6 @@ function get_global_mesh( self, global_mesh_id ) result( global_mesh )
 
 end function get_global_mesh
 
-
-
 !==============================================================================
 subroutine clear(self)
 

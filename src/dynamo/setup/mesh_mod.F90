@@ -164,7 +164,8 @@ module mesh_mod
     integer(i_def), allocatable, private :: ncells_per_colour(:)
     !> integer 2-d array, which cells are in each colour.
     integer(i_def), allocatable, private :: cells_in_colour(:,:)
-
+    !> integer Number of cells in the global 2D mesh
+    integer(i_def)                       :: ncells_global_mesh
     !==========================================================================
     ! Maps that this mesh connects to
     !
@@ -362,6 +363,7 @@ contains
     self%ncells_with_ghost    = self%ncells_2d_with_ghost * self%nlayers
     self%domain_top           = domain_top
     self%ncolours             = -1     ! Initialise ncolours to error status
+    self%ncells_global_mesh   = global_mesh%get_ncells()
 
     allocate( self%eta ( 0:self%nlayers ) )
     allocate( self%dz  ( self%nlayers   ) )
@@ -1573,18 +1575,32 @@ contains
   !>
   !> @param[in] self  The mesh_type instance.
   !============================================================================
-  subroutine set_colours(self)
+  subroutine set_colours(self, npanels)
     use mesh_colouring_mod, only : colour_mod_set_colours => set_colours
     implicit none
-    class(mesh_type), intent(inout) :: self
+    class(mesh_type), intent(inout)    :: self
+    integer(kind=i_def),intent(inout)  :: npanels
 
+    integer(kind=i_def),allocatable :: gid_from_lid(:)
+    integer(kind=i_def)             :: cell
 
-    call colour_mod_set_colours(self%get_ncells_2d(), &
-                                self%cell_next, &
-                                self%ncolours, &
-                                self%ncells_per_colour, &
-                                self%cells_in_colour)
+    allocate(gid_from_lid(self%ncells_global_mesh))
 
+    ! Set default global ID as 0
+    gid_from_lid(:)=0
+    ! Global ID is set only for cells in local partition
+    do cell = 1,self%get_ncells_2d()
+      gid_from_lid(cell) = self%get_gid_from_lid(cell)
+    end do
+
+    call colour_mod_set_colours(self%get_ncells_2d(),    &
+                                self%cell_next,          &
+                                self%ncolours,           &
+                                self%ncells_per_colour,  &
+                                self%cells_in_colour,    &
+                                npanels,                 &
+                                self%ncells_global_mesh, &
+                                gid_from_lid)
   end subroutine set_colours
 
 
@@ -1819,6 +1835,7 @@ contains
     self%nverts_per_cell = 8
     self%nedges_per_cell = 12
     self%nfaces_per_cell = 6
+    self%ncells_global_mesh = 9
     self%ncolours        = -1  ! Initialise ncolours to error status
 
     mesh_id_counter = mesh_id_counter+1

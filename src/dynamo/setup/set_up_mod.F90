@@ -244,7 +244,7 @@ contains
 
     prime_mesh_ptr => mesh_collection%get_mesh( prime_mesh_id )
 
-    call prime_mesh_ptr%set_colours()
+    call prime_mesh_ptr%set_colours(npanels)
 
     return
   end subroutine set_up

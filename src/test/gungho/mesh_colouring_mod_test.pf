@@ -26,7 +26,8 @@ module mesh_colouring_mod_test
 
   private
   public setUp, tearDown, test_compute_colours_cubedsphere, &
-                          test_compute_colours_biperiodic
+                          test_compute_colours_biperiodic,  &
+                          test_compute_colours_generic
 
 @testCase
 type, public, extends(TestCase) :: compute_colours_test_type
@@ -138,7 +139,6 @@ subroutine test_compute_colours_cubedsphere(this)
                             1, &
                             this%local_rank, &
                             this%total_ranks)
-
   ! Construct a mesh which is  uniform in vertical for purpose of the test
   mesh_id = mesh_collection%add_new_mesh( global_mesh,     &
                                           partition,       &
@@ -149,12 +149,11 @@ subroutine test_compute_colours_cubedsphere(this)
 
   ! Mesh is not yet coloured...
   @assertFalse(mesh%is_coloured(), "Mesh is unexpectedly coloured")
-  call mesh%set_colours()
+  call mesh%set_colours(npanels)
   ! Mesh is now coloured...
-  @assertTrue(mesh%is_coloured(), "Mesh uncoloured after set_colours()")
+  @assertTrue(mesh%is_coloured(), "Mesh uncoloured after set_colours(npanels)")
 
   num_cells = partition%get_num_cells_in_layer()
-  num_colours = mesh%get_ncolours()
 
   call mesh%get_colours(num_colours, num_cell_per_colour, cells_in_colour)
 
@@ -162,7 +161,7 @@ subroutine test_compute_colours_cubedsphere(this)
   @assertTrue(associated(cells_in_colour), "Colours not set for function space.")
 
   ! Is total number of colours used meaningful...
-  @assertTrue(num_colours > 0, "Non-positive used colour count.")
+  @assertTrue(num_colours == 4, "Failed to colour cubed-sphere with 4 colours")
 
   ! Did we colour everything...
   total_cells = sum(num_cell_per_colour)
@@ -241,12 +240,102 @@ subroutine test_compute_colours_biperiodic(this)
 
   ! Mesh is not yet coloured...
   @assertFalse(mesh%is_coloured(), "Mesh is unexpectedly coloured")
-  call mesh%set_colours()
+  call mesh%set_colours(npanels)
   ! Mesh is now coloured...
-  @assertTrue(mesh%is_coloured(), "Mesh uncoloured after set_colours()")
+  @assertTrue(mesh%is_coloured(), "Mesh uncoloured after set_colours(npanels)")
 
   num_cells = partition%get_num_cells_in_layer()
-  num_colours = mesh%get_ncolours()
+
+  call mesh%get_colours(num_colours, num_cell_per_colour, cells_in_colour)
+
+  ! Is there storage for colour maps...
+  @assertTrue(associated(cells_in_colour), "Colours not set for function space.")
+
+  ! Is total number of colours used meaningful...
+  @assertTrue(num_colours == 4, "Failed to colour biperiodic mesh with 4 colours")
+
+  ! Did we colour everything...
+  total_cells = sum(num_cell_per_colour)
+  @assertEqual(total_cells, num_cells, "Not all cells coloured.")
+
+  ! Did we use all claimed colours...
+  total_colours = size(cells_in_colour, 1)
+  @assertEqual(total_colours, num_colours, "Reported used colours unequal to actual used total.")
+
+  ! Does the total in each colour match the cells in the colour map...
+  do colour_idx=1, num_colours
+    nc_colour = num_cell_per_colour(colour_idx)
+    cic_colour = count(cells_in_colour(colour_idx,:) /= 0)
+    @assertEqual(nc_colour, cic_colour, "Mismatch between num-per-colour total and cell count.")
+  end do
+
+
+  return
+end subroutine test_compute_colours_biperiodic
+! This test uses a cubed sphere mesh but sneakily does not set panel number to 6 so
+! forcing the colour algorithm to use the generic colour test
+@test
+subroutine test_compute_colours_generic(this)
+
+  use mesh_mod,             only : mesh_type
+  use partition_mod,        only : partition_type, &
+                                   partitioner_interface, &
+                                   partitioner_cubedsphere_serial
+  use extrusion_config_mod, only : extrusion_method_uniform
+
+  implicit none
+
+  class(compute_colours_test_type), intent(inout)  :: this
+
+  character(len=str_max_filename)  :: filename
+  integer                          :: total_colours, total_cells, colour_idx
+  integer                          :: nc_colour, cic_colour
+  type(partition_type)             :: partition
+  type(global_mesh_type), pointer  :: global_mesh => null()
+  procedure(partitioner_interface), pointer  :: partitioner_ptr => null()
+
+  integer(i_def)                   :: num_cells
+  integer(i_def)                   :: num_colours
+  integer(kind=i_def), pointer :: num_cell_per_colour(:)
+  integer(kind=i_def), pointer :: cells_in_colour(:,:)
+
+  integer(i_def)           :: npanels
+  integer(i_def)           :: global_mesh_id
+  integer(i_def)           :: mesh_id
+  type(mesh_type), pointer :: mesh => null()
+  integer(i_def)           :: err
+
+  ! Force colour generator to use generic colour routine by not saying it's a cubed sphere
+  npanels = 999
+  filename = "data/ugrid_quads_2d_cubedsphere_6x4x4.nc"
+  global_mesh_id =  global_mesh_collection%add_new_global_mesh( filename       &
+                                                              , npanels )
+  global_mesh    => global_mesh_collection%get_global_mesh( global_mesh_id )
+
+  partitioner_ptr => partitioner_cubedsphere_serial
+
+  partition = partition_type( global_mesh, &
+                            partitioner_ptr, &
+                            this%xproc, &
+                            this%yproc, &
+                            1, &
+                            this%local_rank, &
+                            this%total_ranks)
+  ! Construct a mesh which is  uniform in vertical for purpose of the test
+  mesh_id = mesh_collection%add_new_mesh( global_mesh,     &
+                                          partition,       &
+                                          this%num_layers, &
+                                          10000.0_r_def,   &
+                                          extrusion_method_uniform )
+  mesh => mesh_collection%get_mesh( mesh_id )
+
+  ! Mesh is not yet coloured...
+  @assertFalse(mesh%is_coloured(), "Mesh is unexpectedly coloured")
+  call mesh%set_colours(npanels)
+  ! Mesh is now coloured...
+  @assertTrue(mesh%is_coloured(), "Mesh uncoloured after set_colours(npanels)")
+
+  num_cells = partition%get_num_cells_in_layer()
 
   call mesh%get_colours(num_colours, num_cell_per_colour, cells_in_colour)
 
@@ -273,7 +362,8 @@ subroutine test_compute_colours_biperiodic(this)
 
 
   return
-end subroutine test_compute_colours_biperiodic
+end subroutine test_compute_colours_generic
+!-------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------
 end module mesh_colouring_mod_test
 !-------------------------------------------------------------------------------

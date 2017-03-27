@@ -31,6 +31,7 @@ class mesh_mod::mesh_type {
   -ncolours:integer
   -ncells_per_colour:integer[  ] <<allocatable>>
   -cells_in_colour:integer[::] <<allocatable>>
+  -ncells_global_mesh:integer
 
   +<<create>>  mesh_constructor(<<in>>global_mesh: global_mesh_type, <<in>>partition: partition_type,<<in>>nlayers_in: integer, <<in>>domain_top: real,<<in>>vgrid_option: integer ) : mesh_type
   +<<create>>  mesh_constructor_unit_test_data(<<in>>mesh_cfg: integer ) : mesh_type
@@ -86,6 +87,6 @@ class mesh_mod::mesh_type {
   +is_coloured() : logical
   +is_edge_owned( <<in>>edge_index: integer, <<in>>cell_lid: integer ) : logical
   +is_vertex_owned( <<in>>vertex_index: integer, <<in>>cell_lid: integer ) : logical
-  +set_colours()
+  +set_colours( <<in>>npanels: integer )
   -set_vertical_coordinate( <<in>>vgrid_option: integer )
 }
