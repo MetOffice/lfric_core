@@ -18,7 +18,8 @@ use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_INC,               &
                                     W2, Wtheta,                              &
                                     GH_BASIS, GH_DIFF_BASIS, GH_ORIENTATION, &
-                                    CELLS, QUADRATURE_XYoZ
+                                    CELLS, GH_QUADRATURE_XYoZ,               &
+                                    QUADRATURE_XYoZ
 use constants_mod,           only : r_def, i_def
 
 implicit none
@@ -39,8 +40,8 @@ type, public, extends(kernel_type) :: rtheta_wtheta_kernel_type
        func_type(W2, GH_BASIS, GH_DIFF_BASIS)                          &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, nopass ::rtheta_wtheta_code

@@ -14,8 +14,8 @@ use argument_mod,      only : arg_type, func_type,                 &
                               GH_FIELD, GH_OPERATOR,               &
                               GH_READ, GH_WRITE,                   &
                               ANY_SPACE_1, ANY_SPACE_2, W3,        &
-                              GH_BASIS, GH_DIFF_BASIS, &                    
-                              CELLS, QUADRATURE_XYoZ
+                              GH_BASIS, GH_DIFF_BASIS, CELLS,      &                    
+                              GH_QUADRATURE_XYoZ, QUADRATURE_XYoZ
 use constants_mod,     only : r_def
 use kernel_mod,        only : kernel_type
 
@@ -40,8 +40,8 @@ type, public, extends(kernel_type) :: project_pressure_kernel_type
        func_type(ANY_SPACE_2, GH_DIFF_BASIS)                           &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, nopass ::project_pressure_code

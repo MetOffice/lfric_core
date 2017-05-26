@@ -13,11 +13,12 @@
 !>         rtheta = u.grad(theta)
 module rtheta_kernel_mod
 use kernel_mod,              only : kernel_type
-use argument_mod,            only : arg_type, func_type,                     &
-                                    GH_FIELD, GH_READ, GH_INC,               &
-                                    W0, W2,                                  &
-                                    GH_BASIS, GH_DIFF_BASIS,                 &
-                                    CELLS, QUADRATURE_XYoZ
+use argument_mod,            only : arg_type, func_type,               &
+                                    GH_FIELD, GH_READ, GH_INC,         &
+                                    W0, W2,                            &
+                                    GH_BASIS, GH_DIFF_BASIS,           &
+                                    CELLS, GH_QUADRATURE_XYoZ,         &
+                                    QUADRATURE_XYoZ
 use constants_mod,           only : r_def, i_def
 
 implicit none
@@ -38,8 +39,8 @@ type, public, extends(kernel_type) :: rtheta_kernel_type
        func_type(W2, GH_BASIS)                                         &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, nopass ::rtheta_code

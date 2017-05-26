@@ -14,10 +14,11 @@
 !>         rtheta_bd = theta * gamma * u * normal
 module rtheta_bd_kernel_mod
     use kernel_mod,              only : kernel_type
-    use argument_mod,            only : arg_type, func_type,                       &
-                                        GH_FIELD, GH_READ, GH_INC, &
-                                        W2, Wtheta, GH_BASIS, GH_DIFF_BASIS,   &
-                                        CELLS, QUADRATURE_XYoZ
+    use argument_mod,            only : arg_type, func_type,                 &
+                                        GH_FIELD, GH_READ, GH_INC,           &
+                                        W2, Wtheta, GH_BASIS, GH_DIFF_BASIS, &
+                                        CELLS, GH_QUADRATURE_XYoZ,           &
+                                        QUADRATURE_XYoZ
     use constants_mod,           only : r_def, i_def
     use cross_product_mod,       only : cross_product
     use planet_config_mod,       only : cp
@@ -43,8 +44,8 @@ module rtheta_bd_kernel_mod
             func_type(Wtheta, GH_BASIS)                                   &
             /)
         integer :: iterates_over = CELLS
-        integer :: gungho_shape = QUADRATURE_XYoZ
-        ! gungho_shape replaces evaluator_shape and will be removed by #1066
+        integer :: gh_shape = GH_QUADRATURE_XYoZ
+        ! gh_shape replaces evaluator_shape and will be removed by #1066
         integer :: evaluator_shape = QUADRATURE_XYoZ
     contains
         procedure, nopass ::rtheta_bd_code

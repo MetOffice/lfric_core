@@ -18,7 +18,7 @@ module weighted_proj_theta2_bd_kernel_mod
     use argument_mod,            only : arg_type, func_type,                       &
                                         GH_OPERATOR, GH_FIELD, GH_READ, GH_INC,    &
                                         W2, Wtheta, GH_BASIS,                      &
-                                        CELLS, QUADRATURE_XYoZ
+                                        CELLS, GH_QUADRATURE_XYoZ, QUADRATURE_XYoZ
     use constants_mod,           only : r_def, i_def
     use cross_product_mod,       only : cross_product
     use planet_config_mod,       only : cp
@@ -43,8 +43,8 @@ module weighted_proj_theta2_bd_kernel_mod
             func_type(W2, GH_BASIS)                                       &
             /)
         integer :: iterates_over = CELLS
-        integer :: gungho_shape = QUADRATURE_XYoZ
-        ! gungho_shape replaces evaluator_shape and will be removed by #1066
+        integer :: gh_shape = GH_QUADRATURE_XYoZ
+        ! gh_shape replaces evaluator_shape and will be removed by #1066
         integer :: evaluator_shape = QUADRATURE_XYoZ
     contains
         procedure, nopass ::weighted_proj_theta2_bd_code

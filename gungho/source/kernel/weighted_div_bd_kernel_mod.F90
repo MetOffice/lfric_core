@@ -23,7 +23,8 @@ module weighted_div_bd_kernel_mod
                                       GH_OPERATOR, GH_FIELD,               &
                                       GH_READ, GH_INC,                     &
                                       W2, W3, Wtheta, GH_BASIS,            &
-                                      CELLS, QUADRATURE_XYoZ
+                                      CELLS, GH_QUADRATURE_XYoZ,           &
+                                      QUADRATURE_XYoZ
   use constants_mod,           only : r_def, i_def
   use reference_element_mod,   only : nfaces_h, out_face_normal
 
@@ -46,8 +47,8 @@ module weighted_div_bd_kernel_mod
        func_type(Wtheta, GH_BASIS)                                    &
       /)
     integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+    integer :: gh_shape = GH_QUADRATURE_XYoZ
+    ! gh_shape replaces evaluator_shape and will be removed by #1066
     integer :: evaluator_shape = QUADRATURE_XYoZ
   contains
     procedure, nopass :: weighted_div_bd_code

@@ -15,7 +15,8 @@ use argument_mod,            only : arg_type, func_type,           &
                                     ANY_SPACE_9, ANY_SPACE_1,      &
                                     ANY_SPACE_2,                   &
                                     GH_BASIS, GH_DIFF_BASIS,       &
-                                    CELLS, QUADRATURE_XYoZ
+                                    CELLS, GH_QUADRATURE_XYoZ,     &
+                                    QUADRATURE_XYoZ
 
 implicit none
 
@@ -36,8 +37,8 @@ type, public, extends(kernel_type) :: gp_rhs_kernel_type
        FUNC_TYPE(ANY_SPACE_9, GH_DIFF_BASIS)                           &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, public, nopass :: gp_rhs_code

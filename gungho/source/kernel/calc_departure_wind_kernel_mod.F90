@@ -21,7 +21,7 @@ use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_WRITE,             &
                                     ANY_SPACE_9, W2,                         &
                                     GH_DIFF_BASIS, GH_BASIS,                 &
-                                    CELLS, EVALUATOR
+                                    CELLS, EVALUATOR, GH_EVALUATOR
 use constants_mod,           only : r_def
 
 implicit none
@@ -42,8 +42,8 @@ type, public, extends(kernel_type) :: calc_departure_wind_kernel_type
        func_type(ANY_SPACE_9, GH_DIFF_BASIS)                           &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = EVALUATOR
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_EVALUATOR
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = EVALUATOR
 contains
   procedure, nopass ::calc_departure_wind_code

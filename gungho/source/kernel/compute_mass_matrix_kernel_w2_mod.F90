@@ -20,7 +20,8 @@ use argument_mod,            only: arg_type, func_type,             &
                                    GH_READ, GH_WRITE,               &
                                    ANY_SPACE_9, W2,                 &
                                    GH_BASIS, GH_DIFF_BASIS,         &
-                                   CELLS, QUADRATURE_XYoZ
+                                   CELLS, GH_QUADRATURE_XYoZ,       &
+                                   QUADRATURE_XYoZ
 
 use coordinate_jacobian_mod, only: coordinate_jacobian
 implicit none
@@ -40,8 +41,8 @@ type, public, extends(kernel_type) :: compute_mass_matrix_kernel_w2_type
        func_type(W2, GH_BASIS)                                         &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, nopass :: compute_mass_matrix_w2_code

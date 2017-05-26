@@ -17,7 +17,8 @@ use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_WRITE,             &
                                     ANY_SPACE_1, W3, ANY_SPACE_9,            &
                                     GH_BASIS, GH_DIFF_BASIS,                 &
-                                    CELLS, QUADRATURE_XYoZ
+                                    CELLS, GH_QUADRATURE_XYoZ,               &
+                                    QUADRATURE_XYoZ
 use constants_mod,           only : r_def, i_def
 
 implicit none
@@ -43,8 +44,8 @@ type, public, extends(kernel_type) :: lhs_exner_kernel_type
        func_type(ANY_SPACE_1, GH_BASIS)                                &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, nopass ::lhs_exner_code

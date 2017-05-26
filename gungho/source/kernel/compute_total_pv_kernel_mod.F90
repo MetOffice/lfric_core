@@ -14,7 +14,8 @@ use argument_mod,      only : arg_type, func_type,                     &
                               GH_FIELD, GH_WRITE, GH_READ,             &
                               W0, W1, W3, ANY_SPACE_9,                 &
                               GH_BASIS, GH_DIFF_BASIS,                 &
-                              CELLS, QUADRATURE_XYoZ
+                              CELLS, GH_QUADRATURE_XYoZ,               &
+                              QUADRATURE_XYoZ
 use constants_mod,     only : r_def
 use kernel_mod,        only : kernel_type
 use planet_config_mod, only : scaled_radius
@@ -39,8 +40,8 @@ type, public, extends(kernel_type) :: compute_total_pv_kernel_type
        func_type(W1, GH_BASIS)                                         &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = QUADRATURE_XYoZ
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_QUADRATURE_XYoZ
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = QUADRATURE_XYoZ
 contains
   procedure, nopass ::compute_total_pv_code

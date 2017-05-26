@@ -77,13 +77,16 @@ module argument_mod
   integer, public, parameter :: ALL_DOFS  = 402
 
 ! Quadrature metadata
-  integer, public, parameter :: QUADRATURE_XYZ   = 501
-  integer, public, parameter :: QUADRATURE_XYoZ  = 502
-  integer, public, parameter :: QUADRATURE_XoYoZ = 503
+  integer, public, parameter :: QUADRATURE_XYZ      = 501
+  integer, public, parameter :: QUADRATURE_XYoZ     = 502
+  integer, public, parameter :: QUADRATURE_XoYoZ    = 503
+  integer, public, parameter :: GH_QUADRATURE_XYZ   = 504
+  integer, public, parameter :: GH_QUADRATURE_XYoZ  = 505
+  integer, public, parameter :: GH_QUADRATURE_XoYoZ = 506
 
 ! Evaluator metadata
-  integer, public, parameter :: EVALUATOR        = 504
-
+  integer, public, parameter :: EVALUATOR           = 507
+  integer, public, parameter :: GH_EVALUATOR        = 508
   type, public :: arg_type
      integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_COLUMNWISE_OPERATOR,&
                                  !  GH_REAL, GH_INTEGER}

@@ -19,7 +19,7 @@ use argument_mod,            only: arg_type, func_type,                      &
                                    GH_OPERATOR, GH_FIELD, GH_READ, GH_WRITE, &
                                    ANY_SPACE_9, W3, ANY_SPACE_1,             &
                                    GH_BASIS, GH_DIFF_BASIS,                  &
-                                   CELLS, EVALUATOR
+                                   CELLS, GH_EVALUATOR, EVALUATOR
 use planet_config_mod,       only : kappa, cp
 use timestepping_config_mod, only : dt, alpha
 
@@ -41,8 +41,8 @@ type, public, extends(kernel_type) :: compute_tri_precon_kernel_type
        func_type(ANY_SPACE_1, GH_DIFF_BASIS)                           &
        /)
   integer :: iterates_over = CELLS
-  integer :: gungho_shape = EVALUATOR
-  ! gungho_shape replaces evaluator_shape and will be removed by #1066
+  integer :: gh_shape = GH_EVALUATOR
+  ! gh_shape replaces evaluator_shape and will be removed by #1066
   integer :: evaluator_shape = EVALUATOR
 contains
   procedure, nopass :: compute_tri_precon_code
