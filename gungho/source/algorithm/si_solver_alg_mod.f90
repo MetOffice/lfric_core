@@ -174,7 +174,6 @@ contains
 !>@param[in]    tau_dt The offcentering parameter times the timestep
 
   subroutine mixed_gmres_alg(x0, rhs0, x_ref, tau_dt)
-    use psykal_lite_mod, only: invoke_inner_prod
 
     implicit none
 

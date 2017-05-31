@@ -122,7 +122,8 @@ contains
   use pert_pressure_gradient_kernel_mod, only: pert_pressure_gradient_kernel_type
   use exner_gradient_kernel_mod,         only: exner_gradient_kernel_type
   use psykal_lite_mod,                   only: invoke_axpy,                             &
-                                               invoke_multiply_field,                   &
+                                               invoke_inc_xpby,                         &
+                                               invoke_scale_field_data,                 &
                                                invoke_sample_flux_kernel,               &
                                                invoke_rtheta_bd_kernel,                 &
                                                invoke_exner_gradient_bd_kernel,         &
@@ -194,7 +195,7 @@ contains
                  matrix_vector_kernel_type( lhs(igh_u), u, mm_w2) )
 
   end if
-  call invoke_axpy( -tau_dt, lhs_tmp(igh_u), lhs(igh_u), lhs(igh_u) ) 
+  call invoke_inc_xpby( lhs(igh_u), -tau_dt, lhs_tmp(igh_u) ) 
   call invoke( enforce_bc_kernel_type( lhs(igh_u) ) )
  
   qr = quadrature_type(element_order+1, GAUSSIAN)
@@ -210,7 +211,7 @@ contains
     call invoke( rtheta_kernel_type( lhs_tmp(igh_t), theta_ref, u, qr), &
                  matrix_vector_kernel_type( lhs(igh_t), theta, mm_wtheta ) )
   end if
-  call invoke_axpy( tau_dt, lhs_tmp(igh_t), lhs(igh_t), lhs(igh_t) ) 
+  call invoke_inc_xpby( lhs(igh_t), tau_dt, lhs_tmp(igh_t) ) 
 
   ! Compute lhs_rho
   ! Need to create u*rho^ref \in W2 for lhs_tmp(igh_d) kernel -> sampled mass flux
@@ -219,7 +220,7 @@ contains
                set_field_scalar(0.0_r_def, lhs_tmp(igh_d)) )
   call invoke_sample_flux_kernel( f_star, u, w2_multiplicity, rho_ref )
   call invoke( matrix_vector_kernel_type(r_rho, f_star, div) )
-  call invoke_multiply_field(-1.0_r_def, r_rho, r_rho) 
+  call invoke_scale_field_data(-1.0_r_def, r_rho) 
   call invoke( matrix_vector_kernel_type( lhs_tmp(igh_d), r_rho, mm_w3_inv) )
   call invoke_axpy( -tau_dt, lhs_tmp(igh_d), rho, lhs(igh_d) )
 

@@ -34,10 +34,11 @@ module rk_transport_mod
                                                transport_operators_fem
 
   ! PsyKAl-lite kernels
-  use psykal_lite_mod,                   only: invoke_axpy,                   &
-                                               invoke_sample_poly_flux,       &
-                                               invoke_sample_poly_adv,        &
-                                               invoke_divide_field
+  use psykal_lite_mod,                   only: invoke_axpy,             &
+                                               invoke_inc_xpby,         &
+                                               invoke_sample_poly_flux, &
+                                               invoke_sample_poly_adv,  &
+                                               invoke_divide_field_data
   ! PsyKAl PSYClone kernels
   use rrho_kernel_mod,                   only: rrho_kernel_type
   use flux_rhs_kernel_mod,               only: flux_rhs_kernel_type
@@ -243,8 +244,8 @@ contains
                    set_field_scalar(0.0_r_def, r_theta) )
 
       do st = 1, stage
-        call invoke_axpy(ak(stage,st), rr_prediction(st), r_rho,   r_rho)
-        call invoke_axpy(ak(stage,st), rt_prediction(st), r_theta, r_theta)
+        call invoke_inc_xpby(r_rho, ak(stage,st), rr_prediction(st))
+        call invoke_inc_xpby(r_theta, ak(stage,st), rt_prediction(st))
       end do
 
       ! Invert mass matrices and add increments
@@ -256,7 +257,7 @@ contains
       ! Theta
       select case(operators)
         case(transport_operators_fv) ! theta in Wtheta
-          call invoke_divide_field(r_theta, mt_lumped, r_theta)
+          call invoke_divide_field_data(r_theta, mt_lumped)
           call invoke_axpy(-dt,r_theta, theta_n, theta)
         case(transport_operators_fem)
           call solver_algorithm( theta_inc, r_theta)

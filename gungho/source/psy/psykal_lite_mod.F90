@@ -1463,6 +1463,59 @@ contains
     inner_prod = inner_prod_local%get_sum()
     
   end subroutine invoke_inner_prod
+
+!-------------------------------------------------------------------------------   
+!> invoke_X_innerproduct_X:  Calculates inner product of a vector by itself  
+  subroutine invoke_X_innerproduct_X(inner_prod, x)
+    use omp_lib
+    USE log_mod, ONLY : log_event, LOG_LEVEL_ERROR
+    implicit none
+    real(kind=r_def),    intent(out) :: inner_prod
+    type( field_type ),  intent(in ) :: x
+    real(kind=r_def)                 :: inner_prod_local_tmp
+    real(kind=r_def), allocatable, dimension(:) :: lsum
+    type( scalar_type )              :: inner_prod_local
+    type( field_proxy_type)          :: x_p
+    INTEGER                          :: i,undf
+    integer                          :: thread_id, num_threads, pad_size
+
+    x_p = x%get_proxy()
+
+    undf = x_p%vspace%get_last_dof_owned()
+
+    ! get the number of threads
+    num_threads = omp_get_max_threads()
+    pad_size = cache_block / storage_size(x_p%data(1))
+    ! allocate the array, pad to avoid false sharing
+    allocate( lsum( 0 : (num_threads - 1)*pad_size ) )
+    lsum = 0.0_r_def
+
+    !$omp parallel default(none) &
+    !$omp& shared(lsum, x_p, undf, num_threads, pad_size) & 
+    !$omp& private(i, thread_id)
+    ! which thread am i?
+    thread_id = omp_get_thread_num()*pad_size
+
+    !$omp do schedule(static) 
+    do i = 1,undf
+      lsum(thread_id) = lsum(thread_id) + &
+                             ( x_p%data(i) * x_p%data(i) )
+    end do
+    !$omp end do
+
+    !$omp end parallel
+
+    inner_prod_local_tmp = 0.0_r_def 
+    do i = 0, num_threads -1
+       inner_prod_local_tmp = inner_prod_local_tmp + lsum(i*pad_size)
+    end do
+    deallocate(lsum)
+    inner_prod_local = scalar_type( inner_prod_local_tmp )
+
+    ! Get the global sum of the inner products
+    inner_prod = inner_prod_local%get_sum()
+    
+  end subroutine invoke_X_innerproduct_X
   
 !-------------------------------------------------------------------------------   
 !> invoke_axpy:  (a * x + y) ; a-scalar, x,y-vector     
@@ -1968,50 +2021,6 @@ contains
     end do
 
   end subroutine invoke_axpby
-
-!-------------------------------------------------------------------------------   
-!> invoke_multiply_field: Compute y = a*x for scalar a and fields y and x
-  subroutine invoke_multiply_field(a, x, y)
-    use log_mod, only : log_event, LOG_LEVEL_ERROR
-    use mesh_mod,only : mesh_type ! Work around for intel_v15 failues on the Cray
-    implicit none
-    type( field_type ), intent(in)    :: x
-    type( field_type ), intent(inout) :: y
-    real(kind=r_def),   intent(in)    :: a
-    type( field_proxy_type)           :: x_proxy, y_proxy
-    integer(kind=i_def)               :: i,undf
-    integer(kind=i_def)               :: depth, dplp
-    type(mesh_type), pointer          :: mesh => null()
-
-    x_proxy = x%get_proxy()
-    y_proxy = y%get_proxy()
-
-    undf = x_proxy%vspace%get_undf()
-    if(undf /= y_proxy%vspace%get_undf() ) then
-      ! they are not on the same function space
-      call log_event("Psy:multiply_field:field1 and field2 live on different w-spaces" &
-                    , LOG_LEVEL_ERROR)
-      !abort
-      stop
-    end if
-    !$omp parallel do schedule(static), default(none), shared(y_proxy,x_proxy, undf, a),  private(i)
-    do i = 1,undf
-      y_proxy%data(i) = a*x_proxy%data(i)
-    end do
-    !$omp end parallel do
-
-    mesh => y%get_mesh()
-    depth = mesh%get_halo_depth()
-    
-    do dplp = 1, depth
-      if( x_proxy%is_dirty(depth=dplp)  ) then
-        call y_proxy%set_dirty()
-      else
-        call y_proxy%set_clean(dplp)
-      end if
-    end do
-
-  end subroutine invoke_multiply_field
 
 !-------------------------------------------------------------------------------   
 !> Non pointwise Kernels
@@ -3072,7 +3081,7 @@ end subroutine invoke_calc_deppts
   
 !-------------------------------------------------------------------------------   
 
-!> invoke_divide_field: Divide the values of field1 by field2
+!> invoke_divide_field_data: Divide the values of field1 by field2
 !> c = a/b
   subroutine invoke_divide_field_data(field1, field2)
     use log_mod, only : log_event, LOG_LEVEL_ERROR
@@ -3284,61 +3293,6 @@ end subroutine invoke_calc_deppts
 
 
 !-------------------------------------------------------------------------------   
-
-!> invoke_times_field: times the values of field1 by field2 and put result in
-!>field_res
-!> c = a/b
-  subroutine invoke_times_field(field1,field2,field_res)
-    use log_mod,  only : log_event, LOG_LEVEL_ERROR
-    use mesh_mod, only: mesh_type ! Work around for intel_v15 failues on the Cray
-    implicit none
-    type( field_type ), intent(in )    :: field1,field2
-    type( field_type ), intent(inout ) :: field_res
-    type( field_proxy_type)            :: field1_proxy,field2_proxy      &
-                                        , field_res_proxy
-    integer(kind=i_def)                :: i,undf
-    integer(kind=i_def)                :: depth, dplp
-    type(mesh_type), pointer           :: mesh => null()
-
-    field1_proxy = field1%get_proxy()
-    field2_proxy = field2%get_proxy()
-    field_res_proxy = field_res%get_proxy()
-
-    !sanity check
-    undf = field1_proxy%vspace%get_undf()
-    if(undf /= field2_proxy%vspace%get_undf() ) then
-      ! they are not on the same function space
-      call log_event("Psy:times_field:field1 and field2 live on different w-spaces" &
-                    , LOG_LEVEL_ERROR)
-      !abort
-      stop
-    endif
-    if(undf /= field_res_proxy%vspace%get_undf() ) then
-      ! they are not on the same function space
-      call log_event("Psy:times_field:field1 and result_field live on different w-spaces" &
-                    , LOG_LEVEL_ERROR)
-      !abort
-      stop
-    endif
-    !$omp parallel do schedule(static), default(none), shared(field1_proxy,field2_proxy, field_res_proxy, undf),  private(i)
-    do i = 1,undf
-      field_res_proxy%data(i) = field1_proxy%data(i)*field2_proxy%data(i)
-    end do
-    !$omp end parallel do
-
-    mesh => field_res%get_mesh()
-    depth = mesh%get_halo_depth()
-    
-    do dplp = 1, depth
-      if( field1_proxy%is_dirty(depth=dplp) .or. &
-          field2_proxy%is_dirty(depth=dplp) ) then
-        call field_res_proxy%set_dirty()
-      else
-        call field_res_proxy%set_clean(dplp)
-      end if
-    end do
-
-  end subroutine invoke_times_field
 
 !-------------------------------------------------------------------------------
 !> In #937, the evaluator was removed in the PSy-lite layer. In #938, evaluator

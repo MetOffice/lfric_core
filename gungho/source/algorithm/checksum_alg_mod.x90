@@ -16,7 +16,7 @@ contains
 
   subroutine checksum_alg(model_name, field1, name1, field2, name2, field3, name3)
     use field_mod,       only: field_type
-    use psykal_lite_mod, only: invoke_inner_prod
+    use psykal_lite_mod, only: invoke_X_innerproduct_X
     use constants_mod,   only: i_def, r_def, str_max_filename
     use ESMF
     use log_mod,         only: log_event,         &
@@ -32,9 +32,9 @@ contains
     real(r_def)                     :: chksum1, chksum2, chksum3
     character(len=str_max_filename) :: fname
 
-    call invoke_inner_prod(field1, field1, chksum1) 
-    call invoke_inner_prod(field2, field2, chksum2) 
-    call invoke_inner_prod(field3, field3, chksum3) 
+    call invoke_X_innerproduct_X(chksum1, field1) 
+    call invoke_X_innerproduct_X(chksum2, field2) 
+    call invoke_X_innerproduct_X(chksum3, field3) 
 
     call ESMF_VMGetCurrent(vm=vm, rc=rc)
     call ESMF_VMGET(vm, localPet=localPET, petCount=petCount, rc=rc)

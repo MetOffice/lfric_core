@@ -13,7 +13,7 @@ use multiplicity_kernel_mod,       only: multiplicity_kernel_type
 use psykal_lite_mod,               only: invoke_nodal_coordinates_kernel,   &
                                          invoke_convert_hcurl_field,        &
                                          invoke_convert_hdiv_field,         &
-                                         invoke_divide_field,               &
+                                         invoke_divide_field_data,          &
                                          invoke_convert_cart2sphere_vector, &
                                          invoke_pointwise_convert_xyz2llr,  &
                                          invoke_compute_dof_level_kernel,   &
@@ -86,7 +86,7 @@ subroutine nodal_output_alg(field, fname )
     if ( geometry == base_mesh_geometry_spherical ) then
       if ( output_fs == W1 .or. output_fs == W2) then
         do i = 1,output_dim
-          call invoke_divide_field( nodal_output(i), nodal_multiplicity, nodal_output(i) ) 
+          call invoke_divide_field_data( nodal_output(i), nodal_multiplicity ) 
         end do
         call invoke_convert_cart2sphere_vector(nodal_output, nodal_coordinates)         
       end if

@@ -25,7 +25,7 @@ contains
     use operator_mod,                only: operator_type
     use field_mod,                   only: field_type
     use fs_continuity_mod,           only: W3
-    use psykal_lite_mod,             only: invoke_inner_prod
+    use psykal_lite_mod,             only: invoke_X_innerproduct_X
     use log_mod,                     only: log_event,         &
                                            log_scratch_space, &
                                            LOG_LEVEL_INFO
@@ -45,7 +45,7 @@ contains
     call invoke( dg_matrix_vector_kernel_type( div_u, u, div) )
 
     ! Compute l2 norm of area integrated quantity
-    call invoke_inner_prod(div_u,div_u,l2)
+    call invoke_X_innerproduct_X(l2, div_u) 
     write( log_scratch_space, '(A,E16.8)' )  &
        'L2 of divergence =',sqrt(l2)
     call log_event( log_scratch_space, LOG_LEVEL_INFO )

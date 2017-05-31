@@ -16,7 +16,8 @@ module advection_alg_mod
                                             get_mass_matrix, &
                                             get_mass_matrix_diagonal, &
                                             get_inverse_lumped_mass_matrix, &
-                                            w1_id, w2_id, w3inv_id, theta_space_id
+                                            w1_id, w2_id, w3inv_id, &
+                                            theta_space_id
   use field_bundle_mod,               only: bundle_ax
   use field_mod,                      only: field_type
   use finite_element_config_mod,      only: element_order, wtheta_on, supg, &
@@ -26,11 +27,12 @@ module advection_alg_mod
   use matrix_vector_nobc_kernel_mod,  only: matrix_vector_nobc_kernel_type
   use dg_matrix_vector_kernel_mod,    only: dg_matrix_vector_kernel_type
   use operator_mod,                   only: operator_type
-  use psykal_lite_mod,                only: invoke_multiply_field,      &
+  use psykal_lite_mod,                only: invoke_scale_field_data,    &
                                             invoke_sample_poly_flux,    &
                                             invoke_sample_poly_adv,     &
                                             invoke_rtheta_bd_kernel,    &
                                             invoke_axpy,                &
+                                            invoke_inc_xpby,            &
                                             invoke_multiply_field_data, &
                                             invoke_divide_field
   use quadrature_mod,                 only: quadrature_type, GAUSSIAN
@@ -90,8 +92,8 @@ contains
 
     if ( time_method == timestepping_method_rk ) then
       ! If using explicit timestepping then advection is called once per stage,
-      ! therefore no further sub stages are needed, setting number of stages = 1 and
-      ! coeffs = 1 short cuts the rk advection scheme
+      ! therefore no further sub stages are needed, setting number of stages = 1
+      ! and coeffs = 1 short cuts the rk advection scheme
       nstage_adv = 1
       allocate( ak_adv(nstage_adv,nstage_adv) )
       ak_adv(1,1) = 1.0_r_def
@@ -110,7 +112,8 @@ contains
         flux_stencil_extent      = int(real(fv_flux_order+1)/2.0,i_def)
         advective_stencil_extent = int(real(fv_advective_order+1)/2.0,i_def)
       else
-        call log_event( "Gungho: subgrid mappings needed for FV MoL with high order elements", LOG_LEVEL_ERROR )
+        call log_event( "Gungho: subgrid mappings needed for FV MoL with high &
+                         order elements", LOG_LEVEL_ERROR )
       end if
 
       allocate ( mr_prediction(nstage_adv) )
@@ -209,21 +212,24 @@ contains
     call mass_flux_alg(mf, rho_adv, advecting_wind)
     ! Compute m3^-1 * div * mass flux
     call invoke( dg_matrix_vector_kernel_type(r_rho, mf, div), &
-                 dg_matrix_vector_kernel_type(rrho_prediction(stage), r_rho, mm_w3_inv) )
+                 dg_matrix_vector_kernel_type(rrho_prediction(stage), r_rho, &
+                                              mm_w3_inv) )
     ! Build the rhs of the RK scheme at this stage: sum_s -ak(s)*r_rho(s)
     call invoke( set_field_scalar(0.0_r_def, r_rho) )
     do st = 1, stage
-      call invoke_axpy(-ak_adv(stage,st), rrho_prediction(st), r_rho,  r_rho)
+      call invoke_inc_xpby(r_rho, -ak_adv(stage,st), rrho_prediction(st))
+
     end do
     ! Increment the advected density field to obtain estimate at this stage
     call invoke_axpy(dt, r_rho, rho, rho_adv)
-    ! Add increment from this stage to the time integrated mass flux
-    call invoke_axpy( ak_adv(nstage_adv,stage), mf, mass_flux, mass_flux) 
+    ! Add increment from this stage to the time integrated mass flux 
+    call invoke_inc_xpby(mass_flux, ak_adv(nstage_adv,stage), mf) 
   end do
 
   ! 2) theta_advection ( u . grad(theta) )
   ! theta_np1 = theta_n - dt * u.grad(theta)
-  call log_event( "Computing advective potential temperature increment...", LOG_LEVEL_INFO)
+  call log_event( "Computing advective potential temperature increment...", &
+                   LOG_LEVEL_INFO)
   ! Advected theta field
   theta_adv    = field_type( vector_space = theta_fs )
   ! time integrated update to theta state
@@ -245,7 +251,8 @@ contains
     mm_wt         => get_mass_matrix(theta_space_id) 
     if ( wtheta_on ) then
       ! If using Wtheta use lumped approximation to inverse mass matrix
-      call invoke_multiply_field_data(r_theta, mt_lumped_inv, rtheta_prediction(stage)) 
+      call invoke_multiply_field_data(r_theta, mt_lumped_inv, &
+                                      rtheta_prediction(stage)) 
     else
       ! If using W0 use full mass matrix with iterative inverse
       ! (It would be possible to use the lumped inverse to speed things up)
@@ -254,12 +261,12 @@ contains
     ! Build the rhs of the RK scheme at this stage: sum_s -ak(s)*r_theta(s)
     call invoke( set_field_scalar(0.0_r_def, r_theta) )
     do st = 1, stage
-      call invoke_axpy(-ak_adv(stage,st), rtheta_prediction(st), r_theta,  r_theta)
+      call invoke_inc_xpby(r_theta, -ak_adv(stage,st), rtheta_prediction(st))
     end do
     call invoke_axpy(dt, r_theta, theta, theta_adv)
     ! Add increment from this stage to the time integrated u.grad(theta)
-    call invoke_axpy( -ak_adv(nstage_adv,stage), rtheta_prediction(stage), &
-                      u_grad_theta, u_grad_theta) 
+    call invoke_inc_xpby(u_grad_theta, -ak_adv(nstage_adv,stage), &
+                         rtheta_prediction(stage)) 
   end do
 
   ! Return the advective increment in the correct form, this means multiplying
@@ -275,8 +282,8 @@ contains
   end if
 
   ! 3) Vorticity advection
-  ! Currently this is just a single stage approximation using xi = curl(u), it should later be
-  ! updated to use a RK scheme for the vorticity
+  ! Currently this is just a single stage approximation using xi = curl(u), it 
+  ! should later be updated to use a RK scheme for the vorticity
   call log_event( "Computing advective vorticity...", LOG_LEVEL_INFO)
   curl   => get_curl()
   call invoke( set_field_scalar(0.0_r_def, r_xi) )
@@ -293,20 +300,23 @@ contains
   ! 4) Vorticity advection of u ( F/rho \cross curl(u))
   call log_event( "Computing advective wind increment...", LOG_LEVEL_INFO)
   call invoke( set_field_scalar(0.0_r_def, advection(1)) )
-  call invoke( vorticity_advection_kernel_type(advection(1), mass_flux, rho, xi, chi, qr) )
+  call invoke( vorticity_advection_kernel_type(advection(1), mass_flux, rho, &
+                                               xi, chi, qr) )
   call invoke( enforce_bc_kernel_type(advection(1)) )
 
-  ! 5) advection update for the continuity equation divergence of mass flux: M3^-1(div(F))
+  ! 5) advection update for the continuity equation divergence of mass flux: 
+  !    M3^-1(div(F))
   call log_event( "Computing advective density increment...", LOG_LEVEL_INFO)
   call invoke( set_field_scalar(0.0_r_def, r_rho) )
   call invoke( matrix_vector_kernel_type(r_rho, mass_flux, div) )
-  call invoke_multiply_field(-1.0_r_def, r_rho, r_rho)
+  call invoke_scale_field_data(-1.0_r_def, r_rho)
   call invoke( dg_matrix_vector_kernel_type(advection(3), r_rho, mm_w3_inv) )
 
   if ( subroutine_timers ) call timer('advection_alg')
   end subroutine advection_alg
 
-!>@details A wrapper algorithm for computing the advection of the moisture prognostic
+!>@details A wrapper algorithm for computing the advection of the moisture 
+!>         prognostic
 !> @param[inout] advection Field array containing the advective terms
 !> @param[in]    mr Field array. Mixing ratios
 !> @param[in]    wind Field array. Winds
@@ -344,7 +354,7 @@ contains
         call advective_inc_alg(mr_prediction(stage), mr(imr), wind)
         call invoke( set_field_scalar(0.0_r_def, mr_adv) )
         do st = 1, stage
-          call invoke_axpy(-ak_adv(stage,st), mr_prediction(st), mr_adv,  mr_adv)
+          call invoke_inc_xpby(mr_adv, -ak_adv(stage,st), mr_prediction(st))
         end do
         ! Use lumped mass matrix     
         mt_lumped_inv => get_inverse_lumped_mass_matrix(theta_space_id)
@@ -400,7 +410,8 @@ contains
   end subroutine mass_flux_alg
 
 
-!>@brief Compute advective update u.grad(theta) using desired spatial reconstruction
+!>@brief Compute advective update u.grad(theta) using desired spatial 
+!>       reconstruction
 !>@param[inout] rtheta Advective increment
 !>@param[in]    theta Field to advect
 !>@param[in]    wind Advecting wind field
@@ -412,8 +423,8 @@ contains
 
   select case(operators)
     case(transport_operators_fv)
-     ! Use pointwise fv operators compute u.grad(theta) with high-order polynomial
-     ! interpolation of theta
+     ! Use pointwise fv operators compute u.grad(theta) with high-order 
+     ! polynomial interpolation of theta
       call invoke_sample_poly_adv( rtheta, theta, wind, &
                                    advective_stencil_extent )
          

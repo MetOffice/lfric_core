@@ -16,8 +16,10 @@ module field_vector_mod
   use log_mod,                       only : log_event, LOG_LEVEL_ERROR, &
                                             log_scratch_space
   use psykal_lite_mod,               only : invoke_set_field_scalar, &
-                                            invoke_axpy,             &
+                                            invoke_inc_axpy,         &
+                                            invoke_inc_xpby,         &
                                             invoke_inner_prod,       &
+                                            invoke_X_innerproduct_X, &
                                             invoke_scale_field_data
 
   implicit none
@@ -104,7 +106,7 @@ contains
                fctr," has not been set"
           call log_event(log_scratch_space,LOG_LEVEL_ERROR)
        end if
-       call invoke_inner_prod(self%vector(fctr),self%vector(fctr),field_norm)
+       call invoke_X_innerproduct_X(field_norm, self%vector(fctr))
        normal=normal + field_norm
     end do
     normal = sqrt(normal)
@@ -201,7 +203,8 @@ contains
                pos," has not been set"
           call log_event(log_scratch_space,LOG_LEVEL_ERROR)
        end if
-       call invoke_axpy(alpha, self%vector(pos), y, y)
+       call invoke_inc_xpby(y, alpha, self%vector(pos))
+
   end subroutine axpy_field
 
   ! sets a field to a scalar. If a field has not previously been set in
@@ -272,7 +275,7 @@ contains
             pos," has not been set"
        call log_event(log_scratch_space,LOG_LEVEL_ERROR)
     end if
-    call invoke_axpy(alpha, y, self%vector(pos), y)
+    call invoke_inc_axpy(alpha, y, self%vector(pos))
   end subroutine aypx_field
 
   ! multiply the field vector by a scalar

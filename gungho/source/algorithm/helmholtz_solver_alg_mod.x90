@@ -147,9 +147,8 @@ contains
 !>@brief Compute the rhs to the helmholtz equation for the pressure increment
   subroutine build_helmholtz_rhs(helmholtz_rhs, rhs0)
     use psykal_lite_mod,              only: invoke_inc_X_times_Y, &
-                                            invoke_inc_axpy, &
-                                            invoke_multiply_field_data, &
-                                            invoke_scale_field_data
+                                            invoke_inc_axpy,      &
+                                            invoke_multiply_field_data
     use matrix_vector_kernel_mod,     only: matrix_vector_kernel_type
     use dg_matrix_vector_kernel_mod,  only: dg_matrix_vector_kernel_type
     use apply_variable_hx_kernel_mod, only: apply_variable_hx_kernel_type
@@ -214,8 +213,8 @@ contains
   subroutine compute_inv_hb
     use timestepping_config_mod,       only: dt
     use planet_config_mod,             only: cp
-    use psykal_lite_mod,               only: invoke_multiply_field_data, &
-                                             invoke_inc_axpy,            &
+    use psykal_lite_mod,               only: invoke_inc_X_times_Y, &
+                                             invoke_inc_axpy,      &
                                              invoke_raise_field
     use matrix_vector_nobc_kernel_mod, only: matrix_vector_nobc_kernel_type
     use operator_mod,                  only: operator_type
@@ -243,7 +242,7 @@ contains
                 set_field_scalar(0.0_r_def, theta_adv_term) )
     call invoke( matrix_vector_nobc_kernel_type(m2_u, ones, m2), &
                  matrix_vector_nobc_kernel_type(theta_adv_term, ones, ptheta2) )
-    call invoke_multiply_field_data(theta_adv_term, mt_lumped_inv, theta_adv_term)
+    call invoke_inc_X_times_Y(theta_adv_term, mt_lumped_inv)
 
     call invoke( matrix_vector_nobc_kernel_type(hb_inv, theta_adv_term, p2theta) )  
     call invoke_inc_axpy( timestep_term, hb_inv, m2_u )
@@ -321,9 +320,10 @@ contains
   subroutine bicgstab(lhs, rhs)
     use solver_config_mod,     only: maximum_iterations, &
                                      si_pressure_tolerance
-    use psykal_lite_mod,       only: invoke_inner_prod, &
-                                     invoke_axpy,       &
-                                     invoke_inc_axpy,   &
+    use psykal_lite_mod,       only: invoke_inner_prod,       &
+                                     invoke_X_innerproduct_X, &
+                                     invoke_axpy,             &
+                                     invoke_inc_axpy,         &
                                      invoke_inc_xpby
     use log_mod,               only: log_event,         &
                                      log_scratch_space, &
@@ -336,14 +336,14 @@ contains
     type(field_type),             intent(in)    :: rhs
 
     ! the scalars
-    real(kind=r_def)                   :: rho,alpha,omega,beta, norm
-    real(kind=r_def)                   :: ts,tt
+    real(kind=r_def)                   :: rho, alpha, omega, beta, norm
+    real(kind=r_def)                   :: ts, tt
     ! others
-    real(kind=r_def)                   :: err,sc_err, init_err
+    real(kind=r_def)                   :: err, sc_err, init_err
     integer(kind=i_def)                :: iter
     
     ! compute the residual this is a global sum to the PSy ---
-    call invoke_inner_prod(rhs,rhs,sc_err)
+    call invoke_X_innerproduct_X(sc_err, rhs)
     sc_err = max(sqrt(sc_err), sc_err_min)
     write( log_scratch_space, '(A,E15.8)' ) &
          "solver_algorithm: bicgstab starting ... ||b|| = ", sc_err
@@ -356,7 +356,7 @@ contains
     call invoke( set_field_scalar(0.0_r_def, lhs), &
                  copy_field(rhs,res) )
 
-    call invoke_inner_prod(res,res,err)
+    call invoke_X_innerproduct_X(err, res)
     err = sqrt(err)/sc_err
     init_err=err
     if (err < si_pressure_tolerance) then
@@ -386,7 +386,7 @@ contains
       call helmholtz_precondition( z, s )
       call apply_helmholtz_lhs( t, z )
 
-      call invoke_inner_prod(t,t,tt)
+      call invoke_X_innerproduct_X(tt, t)
       call invoke_inner_prod(t,s,ts)
 
       omega = ts/tt
@@ -399,7 +399,7 @@ contains
       norm = rho
 
       ! check for convergence
-      call invoke_inner_prod(res,res,err)
+      call invoke_X_innerproduct_X(err, res)
       err = sqrt(err)/sc_err
 
       write( log_scratch_space, '(A,I3,A,E15.8)' ) &

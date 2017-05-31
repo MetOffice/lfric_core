@@ -168,14 +168,14 @@ contains
 !> @param [inout] y Second field bundle
 !> @param [in] bundle_size Number of fields in the bundle
   subroutine bundle_divide(x, y, bundle_size)
-    use psykal_lite_mod, only: invoke_divide_field
+    use psykal_lite_mod, only: invoke_divide_field_data
     implicit none
     integer,          intent(in)    :: bundle_size
     type(field_type), intent(inout) :: x(bundle_size), y(bundle_size)
     integer :: i    
 
     do i = 1,bundle_size
-      call invoke_divide_field(x(i),y(i),x(i))
+      call invoke_divide_field_data(x(i),y(i))
     end do
   end subroutine bundle_divide
 !=============================================================================!
@@ -239,7 +239,7 @@ contains
 !> @param [inout] z Result field bundle
 !> @param [in] bundle_size Number of fields in the bundle
   subroutine add_bundle(x, y, z, bundle_size)
-    use psykal_lite_mod, only: invoke_axpy
+    use psykal_lite_mod, only: invoke_plus_field_data
     implicit none
     integer,          intent(in)    :: bundle_size
     type(field_type), intent(in)    :: x(bundle_size), y(bundle_size)
@@ -247,7 +247,7 @@ contains
     integer :: i
     
     do i = 1,bundle_size
-      call invoke_axpy(1.0_r_def, x(i), y(i), z(i))
+      call invoke_plus_field_data(x(i), y(i), z(i))
     end do
   end subroutine add_bundle
 !=============================================================================!

@@ -11,8 +11,8 @@ module rhs_alg_mod
   use constants_mod,                       only: r_def, i_def
   use enforce_bc_kernel_mod,               only: enforce_bc_kernel_type
   use runtime_constants_mod,               only: get_geopotential, &
-                                                 get_coordinates, &
-                                                 get_mass_matrix, &
+                                                 get_coordinates,  &
+                                                 get_mass_matrix,  &
                                                  w2_id, w3inv_id, theta_space_id
   use field_bundle_mod,                    only: clone_bundle
   use field_mod,                           only: field_type
@@ -24,8 +24,7 @@ module rhs_alg_mod
   use multiplicity_kernel_mod,             only: multiplicity_kernel_type
   use operator_mod,                        only: operator_type
   use pressure_gradient_kernel_mod,        only: pressure_gradient_kernel_type
-  use psykal_lite_mod,                     only: invoke_axpy,               &
-                                                 invoke_multiply_field,     &
+  use psykal_lite_mod,                     only: invoke_inc_xpby, &
                                                  invoke_ru_bd_kernel
   use quadrature_mod,                      only: quadrature_type, GAUSSIAN
   use rotation_kernel_mod,                 only: rotation_kernel_type
@@ -106,12 +105,12 @@ contains
   if ( rotating ) &
     call invoke( rotation_kernel_type( rhs_tmp(igh_u), u, chi, qr ) )
   call invoke( matrix_vector_kernel_type( rhs(igh_u), u, mm_w2) )
-  call invoke_axpy( alpha_dt, rhs_tmp(igh_u), rhs(igh_u), rhs(igh_u) ) 
-  call invoke(enforce_bc_kernel_type(rhs(igh_u)) )
+  call invoke_inc_xpby( rhs(igh_u) , alpha_dt, rhs_tmp(igh_u) ) 
+  call invoke( enforce_bc_kernel_type(rhs(igh_u)) )
  
   ! Compute rhs_theta
   call invoke( matrix_vector_kernel_type( rhs(igh_t), theta, mm_wtheta) )
-  call invoke_axpy( alpha_dt, rhs_tmp(igh_t), rhs(igh_t), rhs(igh_t) ) 
+  call invoke_inc_xpby( rhs(igh_t), alpha_dt, rhs_tmp(igh_t) ) 
 
   ! Compute rhs_rho
   call invoke( copy_field(rho, rhs(igh_d)) )
