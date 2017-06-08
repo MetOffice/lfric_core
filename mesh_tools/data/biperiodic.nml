@@ -1,4 +1,5 @@
 &biperiodic_mesh_generator
+  mesh_name = 'Mesh2'
   cells_in_x  = 40
   cells_in_y  = 40
   cell_width  = 5.0

@@ -50,6 +50,7 @@ suitible namelist.
   cell_width    = {dx}
   cell_height   = {dy}
   mesh_filename = '{filename}'
+  mesh_name = 'Mesh2'
 /
              '''.strip()
 

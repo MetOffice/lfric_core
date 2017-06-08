@@ -43,6 +43,7 @@ suitible namelist.
   edge_cells = {ndiv}
   smooth_passes = {nsmooth}
   mesh_filename = '{filename}'
+  mesh_name = 'Mesh2'
 /
              '''.strip()
 

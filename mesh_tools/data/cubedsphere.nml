@@ -1,4 +1,5 @@
 &cubedsphere_mesh_generator
+  mesh_name = 'Mesh2'
   edge_cells = 12
   smooth_passes = 0
   mesh_filename = 'cubedsphere.12x12.nc'
