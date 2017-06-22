@@ -1,0 +1,360 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2017 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the calculation of flux through a cell edge for the split 1D advection
+!> scheme.
+!>
+module fv_mass_flux_kernel_mod_test
+
+  use constants_mod,      only : i_def, r_def
+  use flux_direction_mod, only : x_direction
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: fv_mass_flux_test_type, &
+            test_positive_flux_large_cfl, test_positive_flux_small_cfl,       &
+            test_negative_flux_small_cfl, test_negative_flux_large_cfl,       &
+            test_negative_density
+
+  @TestCase
+  type, extends(TestCase) :: fv_mass_flux_test_type
+    private
+    real(kind=r_def), allocatable :: dep_pts(:), flux(:), rho(:), u_piola(:)
+    real(kind=r_def), allocatable :: a0_coeffs(:), a1_coeffs(:), a2_coeffs(:)
+    integer(i_def),   allocatable :: stencil_map(:)
+    integer(i_def) :: map_w2(1:4)
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_positive_flux_large_cfl
+    procedure test_positive_flux_small_cfl
+    procedure test_negative_flux_small_cfl
+    procedure test_negative_flux_large_cfl
+    procedure test_negative_density
+  end type fv_mass_flux_test_type
+
+    integer(i_def), parameter :: stencil_length = 9
+    integer(i_def), parameter :: nlayers = 1
+    integer(i_def), parameter :: ndf_w2  = 4
+    integer(i_def), parameter :: undf_w2 = 28
+    integer(i_def), parameter :: ndf_w3  = 1
+    integer(i_def), parameter :: undf_w3 = 9
+
+    real(r_def),    parameter :: deltaT  = 1.0_r_def
+    real(r_def),    parameter :: fr      = 5.0_r_def / 6.0_r_def
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    integer :: ii
+
+    this%map_w2 = (/ 1,2,3,4 /)
+
+    allocate( this%dep_pts(1:undf_w2) )
+    allocate( this%u_piola(1:undf_w2) )
+    allocate( this%flux(1:undf_w2) )
+    allocate( this%rho(1:undf_w3) )
+    allocate( this%a0_coeffs(1:undf_w3) )
+    allocate( this%a1_coeffs(1:undf_w3) )
+    allocate( this%a2_coeffs(1:undf_w3) )
+    allocate( this%stencil_map(1:stencil_length) )
+
+    this%flux(:) = 0.0_r_def
+
+    do ii=1,stencil_length
+      this%stencil_map(ii) = ii
+    end do
+
+    this%a0_coeffs(:) = (/ 1.0_r_def,1.0_r_def,3.0_r_def,3.0_r_def,   &
+                           7.0_r_def,7.0_r_def,13.0_r_def,13.0_r_def, &
+                           21.0_r_def /)
+    this%a1_coeffs(:) = (/ 1.0_r_def,-1.0_r_def,3.0_r_def,-3.0_r_def, &
+                           5.0_r_def,-5.0_r_def,7.0_r_def,-7.0_r_def, &
+                           9.0_r_def /)
+    this%a2_coeffs(:) = 1.0_r_def
+    this%rho(:) = (/ 1.0_r_def + fr,  fr,             &
+                     4.0_r_def + fr,  1.0_r_def + fr, &
+                     9.0_r_def + fr,  4.0_r_def + fr, &
+                     16.0_r_def + fr, 9.0_r_def + fr, &
+                     25.0_r_def + fr /)
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    deallocate( this%stencil_map )
+    deallocate( this%a2_coeffs )
+    deallocate( this%a1_coeffs )
+    deallocate( this%a0_coeffs )
+    deallocate( this%rho )
+    deallocate( this%flux )
+    deallocate( this%dep_pts )
+    deallocate( this%u_piola )
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_positive_flux_large_cfl( this )
+
+    use fv_mass_flux_kernel_mod, only : fv_mass_flux_code
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol    = 1.0e-6_r_def
+
+    integer  :: map_w3(1)
+
+    map_w3(1) = 1
+
+    this%dep_pts(:) = 3.34_r_def
+    this%u_piola(:) = 3.34_r_def
+
+    this%a0_coeffs(:) = 1.0_r_def
+    this%a1_coeffs(:) = 0.0_r_def
+    this%a2_coeffs(:) = 0.0_r_def
+    this%rho(:) = 1.0_r_def
+
+    ! Test named large_cfl since the departure point distance, which is 3.34, is
+    ! greater than 1.0.
+    ! This means that calculation of the flux involves integration over more
+    ! than one cell. The wind, given by u_piola, is positive and so we would
+    ! expect the mass flux to also be positive.
+
+    call fv_mass_flux_code(  nlayers,          &
+                             undf_w3,          &
+                             ndf_w3,           &
+                             map_w3,           &
+                             this%rho,         &
+                             this%a0_coeffs,   &
+                             this%a1_coeffs,   &
+                             this%a2_coeffs,   &
+                             undf_w2,          &
+                             ndf_w2,           &
+                             this%map_w2,      &
+                             this%flux,        &
+                             this%dep_pts,     &
+                             this%u_piola,     &
+                             stencil_length,   &
+                             this%stencil_map, &
+                             x_direction,      &
+                             deltaT )
+    @assertEqual(3.34_r_def, this%flux(1), tol)
+    @assertEqual(3.34_r_def, this%flux(3), tol)
+
+end subroutine test_positive_flux_large_cfl
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_positive_flux_small_cfl( this )
+
+    use fv_mass_flux_kernel_mod, only : fv_mass_flux_code
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol    = 1.0e-6_r_def
+
+    integer, pointer :: map_w3(:) => null()
+
+    this%dep_pts(:) = 1.0_r_def
+    this%u_piola(:) = 1.0_r_def
+
+    ! The departure point distance used in this test is exactly 1.0. This means
+    ! that the mass to integrate is exactly one cell wide.
+    ! This means that we only need to integrate within one cell and we also test
+    ! the code further by using the limit of exactly 1.0 where potential errors
+    ! could occur since the departure point lands exactly on a cell edge.
+
+    call fv_mass_flux_code(  nlayers,          &
+                             undf_w3,          &
+                             ndf_w3,           &
+                             map_w3,           &
+                             this%rho,         &
+                             this%a0_coeffs,   &
+                             this%a1_coeffs,   &
+                             this%a2_coeffs,   &
+                             undf_w2,          &
+                             ndf_w2,           &
+                             this%map_w2,      &
+                             this%flux,        &
+                             this%dep_pts,     &
+                             this%u_piola,     &
+                             stencil_length,   &
+                             this%stencil_map, &
+                             x_direction,      &
+                             deltaT )
+    @assertEqual(fr, this%flux(1), tol)
+
+  end subroutine test_positive_flux_small_cfl
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_negative_flux_small_cfl( this )
+
+    use fv_mass_flux_kernel_mod, only : fv_mass_flux_code
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol    = 1.0e-6_r_def
+
+    integer :: map_w3(1)
+
+    map_w3(1) = 1
+
+    this%dep_pts(:) = -1.0_r_def
+    this%u_piola(:) = -1.0_r_def
+
+    ! The departure point distance used in this test is exactly -1.0. This means
+    ! that the mass to integrate is exactly one cell wide and is a case which
+    ! can pose potential issues.
+    ! This test is different to above since the wind value, u_piola, is negative
+    ! and hence we expect a negative mass flux.
+
+    call fv_mass_flux_code(  nlayers,          &
+                             undf_w3,          &
+                             ndf_w3,           &
+                             map_w3,           &
+                             this%rho,         &
+                             this%a0_coeffs,   &
+                             this%a1_coeffs,   &
+                             this%a2_coeffs,   &
+                             undf_w2,          &
+                             ndf_w2,           &
+                             this%map_w2,      &
+                             this%flux,        &
+                             this%dep_pts,     &
+                             this%u_piola,     &
+                             stencil_length,   &
+                             this%stencil_map, &
+                             x_direction,      &
+                             deltaT )
+    @assertEqual(-(1.0_r_def+fr), this%flux(1), tol)
+
+  end subroutine test_negative_flux_small_cfl
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_negative_flux_large_cfl( this )
+
+    use fv_mass_flux_kernel_mod, only : fv_mass_flux_code
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol    = 1.0e-6_r_def
+
+    integer :: map_w3(1)
+
+
+    map_w3(1) = 1
+
+    this%dep_pts(:) = -2.0_r_def
+    this%u_piola(:) = -2.0_r_def
+
+    ! The departure point distance used in this test is exactly -2.0. This means
+    ! that the mass to integrate is exactly two cell wide and this special case
+    ! can cause potential issues, this test is to protect against those.
+    ! Again the wind value, u_piola, is negative and hence we expect a negative
+    ! mass flux.
+
+    call fv_mass_flux_code(  nlayers,          &
+                             undf_w3,          &
+                             ndf_w3,           &
+                             map_w3,           &
+                             this%rho,         &
+                             this%a0_coeffs,   &
+                             this%a1_coeffs,   &
+                             this%a2_coeffs,   &
+                             undf_w2,          &
+                             ndf_w2,           &
+                             this%map_w2,      &
+                             this%flux,        &
+                             this%dep_pts,     &
+                             this%u_piola,     &
+                             stencil_length,   &
+                             this%stencil_map, &
+                             x_direction,      &
+                             deltaT )
+    @assertEqual(-(1.0_r_def+fr+4.0_r_def+fr), this%flux(1), tol)
+
+  end subroutine test_negative_flux_large_cfl
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_negative_density( this )
+
+    use fv_mass_flux_kernel_mod, only : fv_mass_flux_code
+
+    implicit none
+
+    class(fv_mass_flux_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol    = 1.0e-6_r_def
+
+    integer :: map_w3(1)
+
+    map_w3(1) = 1
+
+    this%dep_pts(:) = 1.0_r_def
+    this%u_piola(:) = 1.0_r_def
+
+    this%a0_coeffs(:) = -1.0_r_def
+    this%a1_coeffs(:) = 0.0_r_def
+    this%a2_coeffs(:) = 0.0_r_def
+    this%rho(:) = -1.0_r_def
+
+    ! The departure point distance used in this test is exactly 1.0. The Cosmic
+    ! scheme is designed to handle negative input density values and so we test
+    ! for this here. In the atmospheric model it would be sensible to ensure
+    ! that density is positive and this can be set by using the
+    ! rho_approximation variable in the namelist. This variable calls different
+    ! options within the kernel subgrid_coeffs_kernel_mod.F90 for applying
+    ! limiters to density.
+
+    call fv_mass_flux_code(  nlayers,          &
+                             undf_w3,          &
+                             ndf_w3,           &
+                             map_w3,           &
+                             this%rho,         &
+                             this%a0_coeffs,   &
+                             this%a1_coeffs,   &
+                             this%a2_coeffs,   &
+                             undf_w2,          &
+                             ndf_w2,           &
+                             this%map_w2,      &
+                             this%flux,        &
+                             this%dep_pts,     &
+                             this%u_piola,     &
+                             stencil_length,   &
+                             this%stencil_map, &
+                             x_direction,      &
+                             deltaT )
+    @assertEqual(-(1.0_r_def), this%flux(1), tol)
+
+  end subroutine test_negative_density
+
+
+end module fv_mass_flux_kernel_mod_test
