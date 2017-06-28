@@ -63,6 +63,7 @@ module argument_mod
   integer, public, parameter :: ANY_SPACE_8  = 208
   integer, public, parameter :: ANY_SPACE_9  = 209
   integer, public, parameter :: ANY_SPACE_10 = 210
+  integer, public, parameter :: ANY_W2       = 211
 
 ! Function space attributes
   integer, public, parameter :: GH_BASIS       = 301 
@@ -91,12 +92,12 @@ module argument_mod
      integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_COLUMNWISE_OPERATOR,&
                                  !  GH_REAL, GH_INTEGER}
      integer :: arg_intent       ! {GH_READ, GH_WRITE, GH_RW, GH_INC, GH_SUM, GH_MIN, GH_MAX}
-     integer :: wspace      = -1 ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+}
+     integer :: wspace      = -1 ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+, ANY_W2}
      integer :: from_wspace = -1 ! { " } only required for gh_operator
   end type arg_type
 
   type, public :: func_type
-     integer :: wspace            ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+}
+     integer :: wspace            ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+, ANY_W2}
      integer :: wproperties1      ! {GH_BASIS, GH_DIFF_BASIS, GH_OPERATOR, &
                                   !  GH_COLUMN_BANDED_DOFMAP, & 
                                   !  GH_COLUMN_INDIRECTION_DOFMAP}
