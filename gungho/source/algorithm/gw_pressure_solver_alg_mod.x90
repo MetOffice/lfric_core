@@ -202,7 +202,7 @@ contains
     type(field_type),                intent(inout) :: gw_pressure_rhs
     type(field_type),                intent(in)    :: rhs0(bundle_size)
 
-    type(operator_type), pointer :: div, M3_inv => null()
+    type(operator_type), pointer :: div => null(), M3_inv => null()
 
     ! rhs = Rp - tau_p * dt * cs^2 * M3^-1 * D * HB^-1 * rhs_u
     ! rhs_u = Ru + tau_u * dt * Q * Mb^-1 * Rb
@@ -240,7 +240,7 @@ contains
     type(field_type),                intent(inout) :: Hp
     type(field_type),                intent(inout) :: p
 
-    type(operator_type), pointer :: div, M3_inv => null()
+    type(operator_type), pointer :: div => null(), M3_inv => null()
 
     ! lhs = (I + tau_p*tau_u*dt^2*cs^2*M3^-1 * D * HB^-1 * D^T)*p
     div    => get_div()

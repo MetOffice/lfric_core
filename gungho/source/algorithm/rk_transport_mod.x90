@@ -284,7 +284,7 @@ contains
     type( field_type )                 :: drho, dtheta, l2_rho, l2_theta
     type(function_space_type), pointer :: rho_fs   => null()
     type(function_space_type), pointer :: theta_fs => null()
-    type(operator_type),       pointer :: mm_wt, mm_w3 => null()
+    type(operator_type),       pointer :: mm_wt => null(), mm_w3 => null()
     real(kind=r_def)                   :: l2
 
     ! Compute L errors

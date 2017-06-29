@@ -38,7 +38,9 @@ contains
     implicit none
 
     type(field_type), intent(in) :: state(bundle_size)
-    type(function_space_type), pointer :: u_fs, b_fs, p_fs => null()
+    type(function_space_type), pointer :: u_fs => null(), &
+                                          b_fs => null(), &
+                                          p_fs => null()
     integer(i_def),                    :: mesh_id
     type(quadrature_type)              :: qr
 
@@ -97,7 +99,9 @@ contains
 
   type(operator_type), pointer :: mm_w2, mm_wt => null()
   type(operator_type), pointer :: div, m3_inv => null()
-  type(field_type),    pointer :: u ,p, b => null()
+  type(field_type),    pointer :: u => null(),  &
+                                  p => null(),  &
+                                  b => null()
   
   select case(b_space)
     case(gw_miniapp_constants_b_space_w0)  

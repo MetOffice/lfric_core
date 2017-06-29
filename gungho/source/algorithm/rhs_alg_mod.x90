@@ -70,7 +70,9 @@ contains
   type(operator_type), pointer :: mm_w2 => null(), mm_w3_inv => null(), mm_wtheta => null()
 
   type( quadrature_type )   :: qr 
-  type(field_type), pointer :: u ,theta, rho => null()
+  type(field_type), pointer :: u     => null(), &
+                               theta => null(), &
+                               rho   => null()
   type(field_type)          :: rhs_tmp(bundle_size)
 
   if ( subroutine_timers ) call timer('rhs_alg')

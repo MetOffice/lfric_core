@@ -394,7 +394,7 @@ contains
     real(kind=r_def), pointer :: xp(:,:) => null()
     real(kind=r_def), pointer :: xp_f(:,:,:) => null()
     real(kind=r_def), pointer :: zp(:) => null()
-    real(kind=r_def), pointer :: wh(:), wv(:) => null()
+    real(kind=r_def), pointer :: wh(:) => null(), wv(:) => null()
 
     mesh => theta%get_mesh()
 
