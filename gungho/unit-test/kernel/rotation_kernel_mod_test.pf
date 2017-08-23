@@ -62,7 +62,7 @@ contains
 
     use base_mesh_config_mod,      only : base_mesh_geometry_planar, &
                                           base_mesh_partitioner_planar
-    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_base_mesh_config, &
                                           feign_planet_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
@@ -92,7 +92,7 @@ contains
                                  partitioner=base_mesh_partitioner_planar, &
                                  fplane=.false., f_lat_deg=f_lat )
 
-    reference_element = finite_element_shape_quadrilateral
+    reference_element = finite_element_cellshape_quadrilateral
     call reference_cube()
 
     ! Create top level mesh collection

@@ -1,6 +1,6 @@
 namelist finite_element
 
-  shape            : enumeration[ triangle, quadrilateral ]
+  cellshape        : enumeration[ triangle, quadrilateral ]
   element_order    : integer ! Order of the function space
   coordinate_order : integer ! Order of the coordinate space
   rehabilitate     : logical ! Rehabilitation is the modification of mapping for

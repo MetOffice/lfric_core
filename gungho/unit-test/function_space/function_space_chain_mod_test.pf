@@ -83,7 +83,7 @@ subroutine setUp( this )
 
 use base_mesh_config_mod,      only: base_mesh_geometry_spherical,      &
                                      base_mesh_partitioner_cubedsphere
-use finite_element_config_mod, only: finite_element_shape_quadrilateral
+use finite_element_config_mod, only: finite_element_cellshape_quadrilateral
 use gungho_feign_config_mod,   only: feign_base_mesh_config,            &
                                      feign_planet_config,               &
                                      feign_extrusion_config
@@ -124,7 +124,7 @@ call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                           scaling_factor=scaling )
 
 
-reference_element = finite_element_shape_quadrilateral
+reference_element = finite_element_cellshape_quadrilateral
 call reference_cube()
 
 partitioner_ptr => partitioner_cubedsphere_serial

@@ -14,12 +14,12 @@
 /
 
 &finite_element
-  shape         = 'quadrilateral'
-  element_order = 0
+  cellshape        = 'quadrilateral'
+  element_order    = 0
   coordinate_order = 2
-  rehabilitate  = .true.
-  wtheta_on     = .false.
-  supg = .false.
+  rehabilitate     = .true.
+  wtheta_on        = .false.
+  supg             = .false.
 /
 
 &planet

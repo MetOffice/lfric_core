@@ -26,9 +26,9 @@ module init_mesh_mod
                                          extrusion_method_quadratic, &
                                          extrusion_method_geometric, &
                                          extrusion_method_dcmip
-  use finite_element_config_mod,  only : shape,                         &
-                                         finite_element_shape_triangle, &
-                                         finite_element_shape_quadrilateral
+  use finite_element_config_mod,  only : cellshape,                         &
+                                         finite_element_cellshape_triangle, &
+                                         finite_element_cellshape_quadrilateral
   use partitioning_config_mod,    only : auto, panel_xproc, panel_yproc
   use global_mesh_mod,            only : global_mesh_type
   use global_mesh_collection_mod, only : global_mesh_collection
@@ -117,10 +117,10 @@ contains
 
     call log_event( "set_up: Generating/reading the mesh", LOG_LEVEL_INFO )
 
-    reference_element = shape
+    reference_element = cellshape
 
     ! Currently only quad elements are fully functional
-    if ( reference_element /= finite_element_shape_quadrilateral ) then
+    if ( reference_element /= finite_element_cellshape_quadrilateral ) then
       call log_event( "set_up: Reference_element must be QUAD for now...", &
                       LOG_LEVEL_ERROR )
     end if

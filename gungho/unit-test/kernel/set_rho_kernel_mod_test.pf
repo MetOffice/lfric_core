@@ -69,7 +69,7 @@ contains
 
     use base_mesh_config_mod,      only : base_mesh_geometry_planar, &
                                           base_mesh_partitioner_planar
-    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_base_mesh_config,           &
                                           feign_idealised_config,           &
                                           feign_initial_density_config,     &
@@ -109,7 +109,7 @@ contains
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
 
-    reference_element = finite_element_shape_quadrilateral
+    reference_element = finite_element_cellshape_quadrilateral
     call reference_cube()
 
     ! Create top level mesh collection

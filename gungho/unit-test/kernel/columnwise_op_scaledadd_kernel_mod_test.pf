@@ -47,7 +47,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_finite_element_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
     use reference_element_mod,     only : reference_cube, reference_element
@@ -59,10 +59,10 @@ contains
     type(columnwise_operator_type)     :: columnwise_op_D, &
                                           columnwise_op_DT
 
-    call feign_finite_element_config( finite_element_shape_quadrilateral, &
+    call feign_finite_element_config( finite_element_cellshape_quadrilateral, &
                                       0, 0, .true., .false., .false., .false. )
 
-    reference_element = finite_element_shape_quadrilateral
+    reference_element = finite_element_cellshape_quadrilateral
     call reference_cube()
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()

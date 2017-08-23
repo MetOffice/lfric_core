@@ -47,7 +47,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
     use reference_element_mod,     only : reference_cube, reference_element
 
@@ -64,7 +64,7 @@ contains
 
     integer :: i
 
-    reference_element = finite_element_shape_quadrilateral
+    reference_element = finite_element_cellshape_quadrilateral
     call reference_cube()
 
     ! Create top level mesh collection

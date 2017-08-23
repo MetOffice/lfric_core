@@ -60,7 +60,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_finite_element_config, &
                                           feign_planet_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
@@ -79,14 +79,14 @@ contains
 
     integer :: i
 
-    call feign_finite_element_config( finite_element_shape_quadrilateral, &
+    call feign_finite_element_config( finite_element_cellshape_quadrilateral, &
                                       0, 1, .true., .false., .false., .false. )
 
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
 
-    reference_element = finite_element_shape_quadrilateral
+    reference_element = finite_element_cellshape_quadrilateral
     call reference_cube()
 
     ! Create top level function space collection

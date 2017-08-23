@@ -40,7 +40,7 @@ contains
 
     use base_mesh_config_mod,      only : base_mesh_geometry_planar, &
                                           base_mesh_partitioner_planar
-    use finite_element_config_mod, only : finite_element_shape_quadrilateral
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_base_mesh_config,           &
                                           feign_initial_temperature_config, &
                                           feign_planet_config
