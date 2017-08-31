@@ -9,6 +9,7 @@
                                  'biperiodic-cosmic', 'weak_hs_short',
                                  'baroclinic'%}
 {%- set miniapp_configurations = ['gravity_wave', 'umphysics_testbuild', 'miniapp_skeleton', 'io_miniapp'] %}
+{%- set canned_configurations  = ['gungho', 'gravity_wave'] %}
 {%- set groups = {'developer': ['science( semi-implicit, resolutions=[["C12",10.0]], env={"nrun":3})',
                                 'science( runge-kutta,   resolutions=[["C12",1.0]], env={"nrun":30})',
                                 'science( transport-rk,  resolutions=[["C12",7200.0]])',
@@ -36,7 +37,8 @@
                                           plotstr="slices.py diagDynamo $NODAL_DATA_DIR theta:rho:1u:2u:3u T000010 180 50 0 $PLOT_DIR")',
                                 'check_compilers(fast-debug, semi-implicit, resolutions=[["C12",10.0]], publish=False)',
                                 'miniapp( miniapp_skeleton, resolutions=[["C24"]])',
-                                'canned_test',
+                                'canned_test(gravity_wave)',
+                                'canned_test(gungho)',
                                 'godlines',
                                 'cleanlines'],
 
@@ -184,14 +186,14 @@
 {%- endmacro %}
 
 {#- #########################################################################}
-{%- macro canned_test() %}
+{%- macro canned_test(canned_test_name) %}
       [[[R1]]]
 {%-   set label = TARGET_SCIENCE_COMPILER | lower + '_' + 'fast-debug' %}
 {%-   if TARGET_SCIENCE_COMPILER in TARGET_PERFORM_RUN %}
             purge_local => purge_target
             purge_target => export_for_{{label}}
             export_for_{{label}} => compile_with_{{label}}
-            compile_with_{{label}} => run_canned_test_{{label}}
+            compile_with_{{label}} => run_{{canned_test_name}}_canned_test_{{label}}
 {%-   endif %}
 {%- endmacro %}
 
@@ -822,9 +824,14 @@ test -w "{{directory}}" -o ! -e "{{directory}}" && rm -rf {{directory}} || ( ech
             LOG_ERR    = $DESTINATION_DIRECTORY/compile/job.err
 {%-     endif %}
 
-{%-     if 'run_canned_test_' + label in scheduledTasks %}
-    [[run_canned_test_{{label}}]]
+    [[CANNED_TASKS_{{label|upper}}]]
         inherit = {{family}}, TARGET
+
+{%-     for configuration in canned_configurations %}
+{%-       if 'run_' + configuration + '_canned_test_' + label in scheduledTasks %}
+    [[run_{{configuration}}_canned_test_{{label}}]]
+#       inherit = {{family}}, TARGET
+        inherit = CANNED_TASKS_{{label|upper}}
         pre-script = """
                      {{'\n                     '|
                        commandList( TARGET_BASE_SETUP,
@@ -832,19 +839,26 @@ test -w "{{directory}}" -o ! -e "{{directory}}" && rm -rf {{directory}} || ( ech
                                     TARGET_RUN_SETUP,
                                     TARGET_REVEAL_SETUP )}}
                      """
-        script = rose task-run --app-key=canned_test --command-key={{TARGET_RUN_METHOD}}
+        script = rose task-run --app-key=canned_test --opt-conf-key={{configuration}} --command-key={{TARGET_RUN_METHOD}}
         [[[environment]]]
             SOURCE_DIRECTORY = $SOURCE_ROOT/{{label}}
         [[[environment]]]
             OMP_NUM_THREADS=1
         [[[directives]]]
-{%-       for DIRECTIVE in TARGET_RUN_BATCHER_DIRECTIVES %}
+{%-         for DIRECTIVE in TARGET_RUN_BATCHER_DIRECTIVES %}
             {{DIRECTIVE}}
-{%-       endfor %}
-{%-     endif %}
+{%-         endfor %}
+{%-       endif %}
+{%-     endfor %}
+
 
 {%-     for configuration in science_configurations %} {# science configurations #}
+
 {%-       if configuration in resolution_choices %}
+
+    [[{{configuration|upper}}_{{label|upper}}]]
+        inherit = {{family}}
+
 {%-         set resolution_options=resolution_choices[configuration] %}
 {%-         set configuration_label = configuration|lower + '_' + label %}
 {%-         for resolution in resolution_options %} {# science resolutions #}
@@ -877,7 +891,7 @@ test -w "{{directory}}" -o ! -e "{{directory}}" && rm -rf {{directory}} || ( ech
 {%                endif %}
 
     [[run_{{configuration_label_res}}]]
-        inherit = {{family}}, TARGET
+        inherit = {{configuration|upper}}_{{label|upper}}, TARGET
         pre-script = """
                      {{'\n                     '|
                        commandList( TARGET_BASE_SETUP,
@@ -966,7 +980,7 @@ causes override warnings when using csar.
 
 {%-             if 'publish_' + configuration_label_res in scheduledTasks %}
     [[publish_{{configuration_label_res}}]]
-        inherit = PUBLISH, {{family}}, LOCAL
+        inherit = PUBLISH, {{configuration|upper}}_{{label|upper}}, LOCAL
         pre-script = """
                      {{ensureDestination()}}
                      mkdir -p $DESTINATION_DIRECTORY/{{configuration}}
@@ -989,7 +1003,7 @@ causes override warnings when using csar.
 {%-             if 'plot_' + configuration_label_res in scheduledTasks %}
 {%-               set plot_label = configuration %}
     [[plot_{{configuration_label_res}}]]
-        inherit = PUBLISH, {{family}}, TARGET
+        inherit = PUBLISH, {{configuration|upper}}_{{label|upper}}, TARGET
         pre-script = """
                      {{ensureDestination()}}
                      mkdir -p $PLOT_DIR
@@ -1005,7 +1019,7 @@ causes override warnings when using csar.
 
 {%-             if 'publish_' + configuration_label_res + '_plots' in scheduledTasks %}
     [[publish_{{configuration_label_res}}_plots]]
-        inherit = PUBLISH, {{family}}, LOCAL
+        inherit = PUBLISH, {{configuration|upper}}_{{label|upper}}, LOCAL
         script = """
                  mkdir -p $DESTINATION/{{compiler}}/{{build}}/{{configuration}}{{configuration_res}}
                  RELATIVE_DESTINATION_DIRECTORY=`echo $DESTINATION_DIRECTORY | sed "s|$HOME/||"`
@@ -1016,7 +1030,7 @@ causes override warnings when using csar.
 
 {%-             if 'check_' + configuration_label_res in scheduledTasks %}
     [[check_{{configuration_label_res}}]]
-        inherit = {{family}}, TARGET
+        inherit = {{configuration|upper}}_{{label|upper}}, TARGET
         script = rose task-run --app-key=check_gungho
         [[[environment]]]
             TARGET_OPT = {{TARGET_OPT}}
@@ -1043,6 +1057,10 @@ causes override warnings when using csar.
 {%-       endif %}
 
 {%-       set configuration_label = configuration|lower + '_' + label %}
+
+    [[{{configuration|upper}}_{{label|upper}}]]
+        inherit = {{family}}
+
 {%-       for resolution in resolution_options %}
 {%-         set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
 {%-         for i in range(0,dt_values|length) %}
@@ -1056,7 +1074,7 @@ causes override warnings when using csar.
 
     [[run_{{configuration_res}}_{{label}}]]
 
-        inherit = {{family}}, TARGET
+        inherit = {{configuration|upper}}_{{label|upper}}, TARGET
         pre-script = """
                      {{'\n                     '|
                        commandList( TARGET_BASE_SETUP,
@@ -1083,7 +1101,7 @@ causes override warnings when using csar.
 
 {%-           if 'check_' ~ configuration_res ~ '_' ~ label in scheduledTasks %}
     [[check_{{configuration_res}}_{{label}}]]
-        inherit = {{family}}, TARGET
+        inherit = {{configuration|upper}}_{{label|upper}}, TARGET
         script = rose task-run --app-key='check_'{{configuration}}
         [[[environment]]]
             TARGET_OPT = {{TARGET_OPT}}
@@ -1095,7 +1113,7 @@ causes override warnings when using csar.
 {%-             set plot_label = configuration %}
 
     [[plot_{{configuration_res}}_{{label}}]]
-        inherit = PUBLISH, {{family}}, TARGET
+        inherit = PUBLISH, {{configuration|upper}}_{{label|upper}}, TARGET
         pre-script = """
                      {{ensureDestination()}}
                      mkdir -p $PLOT_DIR
@@ -1112,7 +1130,7 @@ causes override warnings when using csar.
 {%-           if 'publish_' ~ configuration_res ~ '_' ~ label ~ '_plots' in scheduledTasks %}
 
     [[publish_{{configuration_res}}_{{label}}_plots]]
-        inherit = PUBLISH, {{family}}, LOCAL
+        inherit = PUBLISH, {{configuration|upper}}_{{label|upper}}, LOCAL
         script = """
                  mkdir -p $DESTINATION/{{compiler}}/{{build}}/{{configuration}}
                  RELATIVE_DESTINATION_DIRECTORY=`echo $DESTINATION_DIRECTORY | sed "s|$HOME/||"`
