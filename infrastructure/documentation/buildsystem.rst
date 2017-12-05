@@ -1,18 +1,7 @@
 The LFRic Build System
 =======================
 
-This is a quick introduction to the LFRic project's build system. Such a system
-is intended to make developers' lives easier but to do so it requires a few
-conventions to be followed.
-
-.. note::
-   The first LFRic application was and is developed in close collaboration with
-   GungHo dynamical core developments, and was previously called `Dynamo`. As a
-   result there are occasional references to `Dynamo` within the code base, the
-   documentation and the Wiki pages. Such references will generally apply both
-   to the development of the Dynamo application and to other applications
-   (sometimes referred to as mini-apps) that use the LFRic infrastructure and
-   LFRic build system.
+This is a quick introduction to the LFRic Subversion project's build system.
 
 .. note::
    The canonical version of this document exists as a reStructured text file
@@ -30,9 +19,7 @@ This is achieved using a platform identifier.
 
 Platform identifiers take the form <site>-<machine>. For example the Met
 Office's XC40 is referred to as meto-xc40 while the current MONSooN machine
-is known as monsoon-xc40. The previous MONSooN would have been monsoon-power7.
-The workstation of someone working at Widget Corporation might be
-widget-tigger, assuming their workstation was called Tigger.
+is known as monsoon-xc40.
 
 Targets
 -------
@@ -42,20 +29,22 @@ Makefile offering targets "build" and "test-suite". Targets "unit-tests",
 "integration-tests" and "documentation" are offered where appropriate. Other
 targets specific to a particular sub-project may also be provided.
 
-There is also a top level Makefile. This provides targets which operate on a
-selection of sub-projects. By default this is Infrastructure, Mesh tools and
-Gung Ho but it may be changed with the ``OPERATE_ON`` variable.
+There is also a top level Makefile. This provides targets which
+operate on a selection of sub-projects. By default it operates on
+``infrastructure``, ``mesh_tools`` and ``gungho`` but it may be
+changed by setting the ``OPERATE_ON`` variable to a space-separated
+list of required sub-projects.
 
 Building
 ~~~~~~~~
 
-To perform a full build of Gung Ho simply change to the sub-project directory
-in the working copy and issue a ``make``::
+To perform a full build of ``gungho`` simply change to the sub-project
+directory in the working copy and issue a ``make``::
 
   cd r1234_MyWorkingCopy/gungho
   make
 
-Three build profiles are offered: ``full-debug``, ``fast-debug`` and
+Three build profiles are offered: ``fast-debug``, ``full-debug`` and
 ``production``. They are specified using the ``PROFILE`` variable passed to
 make. For instance, to produce a build with all debugging enabled simply use
 ``make PROFILE=full-debug``. The default is ``fast-debug`` if none is
@@ -80,31 +69,16 @@ expect inter-run reproducibility but it can not be guaranteed.
 Relocate Build Artifacts
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default all build related files end up in the directory ``working`` within
-the sub-project directory. This is convenient for interactive development as it
-allows the generated source to be examined. Unfortunately there are a number of
-situations where this is less than ideal.
+By default all build related files end up in the directory ``working``
+within the sub-project directory. This can be changed by exporting the
+``WORKING_DIR`` environment variable. It should contain an absolute
+path to a suitable temporary space in which to perform the compile.
 
-The database engine used to store dependency information interacts badly with
-NFS exported mounts. If your working copy is stored on such a mount you may
-find that builds are very slow. They will tend to stall during the construction
-of ``programs.mk``.
-
-Another filesystem which can have problems is Lustre, often used on
-supercomputers. It is tuned for large parallel access to a few files, not
-the many serial accesses to small files involved in compiling. Thus a working
-copy held on such a file system will be slow to compile and place unreasonable
-demands on the file server.
-
-Both these problems can be aleviated by relocating the build directory.
-
-This is achieved by simply exporting the ``WORKING_DIR`` environment
-variable. It should contain an absolute path to a suitible temporary space in
-which to perform the compile
-
-.. note::
-  Regardless of where the working directory is the finished build products will
-  end up in directories ``bin`` and ``tests`` in the root of the sub-project.
+On some systems (such as some HPC systems) parts of the file system
+may be optimised for large files and may perform poorly with the many
+serial accesses to small files involved in compiling. Such systems may
+provide other file systems (including temporary file systems) which
+can be pointed to so as to speed up compilation.
 
 Verbose Building
 ^^^^^^^^^^^^^^^^
@@ -115,15 +89,6 @@ want to see the actual commands being run by the build set the ``VERBOSE``
 variable::
 
   make VERBOSE=1
-
-MPI
-^^^
-
-If you are attempting to build with MPI support do *not* set ``FC`` to
-``mpif90``. For a start some compilers (Cray, IBM) deal with MPI themselves.
-
-Instead define the variable ``LDMPI`` with the command to link against the MPI
-libraries. This will generally be ``mpif90``.
 
 Linking
 ^^^^^^^
@@ -145,14 +110,18 @@ artefacts. These include working files and complete executable binaries.
 Testing
 ~~~~~~~
 
-Unit tests and integration tests will be built and run as part of a normal
-build, so there is no need to worry about that. The test suite, on the other
-hand, must be manually invoked.
+Unit tests and integration tests will be built and run as part of a
+normal build. 
 
-When ``make test-suite`` is used a number of instances of Rose Stem will be
-launched. The environment variable ``TEST_SUITE_TARGETS`` holds a space
-separated list of platform identifiers. These identify the targets to be
-used for test suite runs.
+Each sub-project includes a Rose Stem test suite which can run on a
+range of compute platforms. The Rose Stem test suite is manually
+invoked from the top-level directory using::
+
+  make test-suite 
+
+This command will invoke tests for each sub-project on each of the
+platforms listed in the ``TEST_SUITE_TARGETS`` as a space-separated
+list. Each test on each platform is run as a separate Rose Stem suite.
 
 Configurations are held in ``rose-stem/opt``. Each filename has the form
 ``rose-suite-<platform id>.conf`` using the platform identifiers described
@@ -163,19 +132,32 @@ for you. e.g. On the desktop do::
 
   module load common-environment/lfric
 
-The top level Makefile will launch the test suite for sll sub-projects listed
-in ``OPERATE_ON``. This defaults to Infrastructure, Mesh tools and Gung Ho.
+By default rose stem tests are run for ``infrastructure``,
+``mesh_tools`` and ``gungho`` but this may be changed by setting the
+``OPERATE_ON`` variable to a space-separated list of required
+sub-projects.
 
 For further information an testing see `LFRicTechnical/Testing`:trac:.
-
 
 Choosing a Compiler
 -------------------
 
-A number of compilers are supported by the build system. To choose between them
-simply set the ``FC`` environment variable. e.g. ``export FC=ifort`` This is
-often done by an automated system, as it is for users of the Met Office LFRic
-module system.
+A number of compilers are supported by the build system. However
+currently only Intel and Gnu can be used to both build and run
+applications. The following lists the environment variable settings
+required to select them:
+
+Intel::
+  FC=ifort      # Fortran compiler
+  FPP=fpp       # Fortran preprocessor
+  LDMPI=mpif90  # MPI Linker
+
+Gnu::
+  FC=gfortran                  # Fortran compiler
+  FPP=cpp -traditional-cpp     # Fortran preprocessor
+  LDMPI=mpif90                 # MPI Linker
+
+
 
 Each compiler needs a different set of arguments. These are defined by the
 LFRic build system in ``infrastructure/build/fortran/<compiler>.mk``. Each
@@ -237,9 +219,11 @@ e.g. if the module is called "my_special_stuff_mod" then the file name
 should be "my_special_stuff_mod.f90". If this is not the case these modules will
 be rebuilt every time.
 
-The current dependency analyser works well for most common uses, but it will
-fail when you rename files. If you rename a file, run ``make clean`` prior
-to rebuilding. This will force the dependency database to be rebuilt.
+The current dependency analyser caches its findings in a dependency
+database which allows reruns of make to run quicker. However, a re-run
+will fail for some operations such as renaming of files. If you get a
+failure, run ``make clean`` prior to rebuilding. This will force the
+dependency database to be rebuilt.
 
 
 External Libraries
@@ -285,8 +269,8 @@ e.g. ``export LD_LIBRARY_PATH=/path/to/libs:$LD_LIBRARY_PATH``
 Automatically Generated Code
 ----------------------------
 
-The LFRic infrastrucuture make use of the PSyclone tool, created as part of the
-Gung Ho project, to automatically generate some of the code. PSclone is
+The LFRic infrastructure makes use of the PSyclone tool, created as part of the
+GungHo project, to automatically generate some of the code. PSyclone is
 designed to generate the Parallel Systems layer (PSy-layer) code, but it also
 modifies the algorithm code as written by science developers.
 
@@ -299,7 +283,7 @@ Where PSyclone does not yet support a feature that you wish to use, you can
 override the automatically generated code with a manually written PSy-layer
 module.
 
-The simplest way to achieve this is to start by building Gung Ho with a stock
+The simplest way to achieve this is to start by building GungHo with a stock
 checkout. This will generate all the PSy-layer modules as normal. Then move the
 one you wish to override from "working/gungho/algorithm" to
 ``gungho/source/psy`` and modify it according to your needs. The file will have
@@ -319,7 +303,7 @@ it is generating it.
 
 It is necessary for PSyclone to know which platform you are building on in
 order to select the correct optimisation scripts. This is achieved through the
-`LFRIC_TARGET_PLATFORM` environment variable. It should contain a single
+``LFRIC_TARGET_PLATFORM`` environment variable. It should contain a single
 platform identifier following the convention outlined above.
 
 The build system will look for ``optimisation/<platform id>/global.py`` which
@@ -343,11 +327,11 @@ In order to build the UM code with GungHo, fcm make is used to extract and
 preprocess it; this is then rsync'd with the working build directory such that
 the LFRic build system can proceed with analysing and building the whole code.
 
-The `LFRIC_TARGET_PLATFORM` environment variable is used to determine how to
+The ``LFRIC_TARGET_PLATFORM`` environment variable is used to determine how to
 extract the UM source. A lookup table in ``um_physics/fcm-make/target-map.txt``
 is used to map LFRic target platform to UM target platform.
 
-The UM code is a conserable size so filters are specified in
+The UM code is a considerable size so filters are specified in
 ``um_physics/fcm-make/extract.cfg`` to restrict the number of files extracted.
 
 The make procedure will first carry out the FCM extract invocation, then
