@@ -11,7 +11,7 @@
 !
 module function_space_constructor_helper_functions_mod
 
-use constants_mod,         only: i_def, r_def, dp_xios, IMDI
+use constants_mod,         only: i_def, i_halo_index, r_def, dp_xios, IMDI
 use mesh_mod,              only: mesh_type
 use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi
 use reference_element_mod, only: nfaces_h, nedges_h, nverts_h                  &
@@ -1102,7 +1102,8 @@ subroutine dofmap_setup( mesh, dynamo_fs, ncells_2d_with_ghost,                &
   integer(i_def), intent(out) :: last_dof_annexed
   integer(i_def), intent(out) :: last_dof_halo(:)
   integer(i_def), intent(out) :: dofmap(ndof_cell,0:ncells_2d_with_ghost)
-  integer(i_def), intent(out) :: global_dof_id(:)
+
+  integer(i_halo_index), intent(out) :: global_dof_id(:)
 
 
   integer(i_def) :: ncells
@@ -1584,15 +1585,20 @@ subroutine dofmap_setup( mesh, dynamo_fs, ncells_2d_with_ghost,                &
 
   ! Calculate a globally unique id for each dof, such that each partition
   ! that needs access to that dof will calculate the same id
-  global_dof_id(:) = 0
+  global_dof_id(:) = 0_i_halo_index
   do icell=1, ncells
     global_cell_id = mesh % get_gid_from_lid(icell)
     do idof=1, ndof_cell
       if (icell == dof_cell_owner(idof,icell)) then
         do k=1, dof_column_height(idof, icell)
-          global_dof_id( dofmap(idof,icell)+k-1 ) =                            &
-               (global_cell_id-1)*ndof_cell*(nlayers+1) +                      &
-               (idof-1)*(nlayers+1) + k
+! The following line is very confused by the casting that is required,
+!  but it is actually calculating the global id as being:
+! (global_cell_id-1)*ndof_cell*(nlayers+1) + (idof-1)*(nlayers+1) + k 
+          global_dof_id( dofmap(idof,icell)+k-1 ) = &
+               (int(global_cell_id,i_halo_index)-1_i_halo_index)* &
+      int(ndof_cell,i_halo_index)*(int(nlayers,i_halo_index)+1_i_halo_index) + &
+               (int(idof,i_halo_index)-1_i_halo_index)* &
+               (int(nlayers,i_halo_index)+1_i_halo_index) + int(k,i_halo_index)
         end do
       end if
     end do

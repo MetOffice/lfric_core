@@ -10,7 +10,7 @@
 !>          defined in this module. Their values are also set here.
 module constants_mod
 
-  use, intrinsic :: iso_fortran_env, only : real32, real64, int32
+  use, intrinsic :: iso_fortran_env, only : real32, real64, int32, int64
 
   implicit none
 
@@ -41,8 +41,9 @@ module constants_mod
   !> @{
   integer, private   :: i_val     !< A native integer used to compute kind of native integer.
 
-  integer, parameter :: i_def     = int32       !< Default integer kind for application.
-  integer, parameter :: i_native  = kind(i_val) !< Native kind for integer.
+  integer, parameter :: i_def        = int32       !< Default integer kind for application.
+  integer, parameter :: i_native     = kind(i_val) !< Native kind for integer.
+  integer, parameter :: i_halo_index = int32       !< Integer kind for the index used in halo swapping
   !> @}
 
   !> @name Set up default kinds for logicals.

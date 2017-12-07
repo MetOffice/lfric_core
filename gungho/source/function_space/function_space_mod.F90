@@ -15,7 +15,7 @@
 module function_space_mod
 
 
-use constants_mod,         only: r_def, i_def, dp_xios
+use constants_mod,         only: r_def, i_def, i_halo_index, dp_xios
 use mesh_mod,              only: mesh_type
 use master_dofmap_mod,     only: master_dofmap_type
 use stencil_dofmap_mod,    only: stencil_dofmap_type, STENCIL_POINT
@@ -134,7 +134,7 @@ type, extends(linked_list_data_type), public :: function_space_type
 
   !> A one dimensional, allocatable array which holds a unique global index for
   !> every dof in the local domain
-  integer(i_def), allocatable :: global_dof_id(:)
+  integer(i_halo_index), allocatable :: global_dof_id(:)
 
   !> The index within the dofmap of the last "owned" dof
   integer(i_def) :: last_dof_owned
@@ -1028,7 +1028,7 @@ subroutine get_global_dof_id(self, global_dof_id)
   implicit none
   class(function_space_type) :: self
 
-  integer(i_def) :: global_dof_id(:)
+  integer(i_halo_index) :: global_dof_id(:)
 
   global_dof_id(:) = self%global_dof_id(:)
 

@@ -13,7 +13,7 @@
 
 module field_mod
 
-  use constants_mod,      only: r_def, r_double, i_def, l_def
+  use constants_mod,      only: r_def, r_double, i_def, i_halo_index, l_def
   use function_space_mod, only: function_space_type
   use mesh_mod,           only: mesh_type
 
@@ -340,7 +340,7 @@ contains
     class(field_type), intent(out)     :: dest
     class(field_type), intent(in)      :: source
 
-    integer(i_def), allocatable :: global_dof_id(:)
+    integer(i_halo_index), allocatable :: global_dof_id(:)
     integer(i_def) :: rc
     integer(i_def) :: halo_start, halo_finish
 
