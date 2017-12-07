@@ -140,27 +140,27 @@ subroutine subgrid_coeffs_code(                                               &
     ! from left to right with rho_local(1) the rho value for the left most cell,
     ! rho_local(2) the value one cell to the right and so on.
     do ii=1,stencil_length
-      rho_local(ii) = rho( stencil_map(1,stencil_ordering(ii)) )
+      rho_local(ii) = rho( stencil_map(1,stencil_ordering(ii))+k )
     end do
 
     select case(subgridrho_option)
       case (subgrid_rho_approximation_constant_subgrid)
-        a0(stencil_map(1,1)) = rho(stencil_map(1,1))
-        a1(stencil_map(1,1)) = 0.0_r_def
-        a2(stencil_map(1,1)) = 0.0_r_def
+        a0(stencil_map(1,1)+k) = rho(stencil_map(1,1)+k)
+        a1(stencil_map(1,1)+k) = 0.0_r_def
+        a2(stencil_map(1,1)+k) = 0.0_r_def
 
       case (subgrid_rho_approximation_constant_positive)
-        a0(stencil_map(1,1)) = max(rho(stencil_map(1,1)),0.0_r_def)
-        a1(stencil_map(1,1)) = 0.0_r_def
-        a2(stencil_map(1,1)) = 0.0_r_def
+        a0(stencil_map(1,1)+k) = max(rho(stencil_map(1,1)+k),0.0_r_def)
+        a1(stencil_map(1,1)+k) = 0.0_r_def
+        a2(stencil_map(1,1)+k) = 0.0_r_def
 
       case (subgrid_rho_approximation_ppm_no_limiter)
         positive=.false.
         monotone=.false.
         call second_order_coeffs(rho_local,coeffs,positive,monotone)
-        a0(stencil_map(1,1)) = coeffs(1)
-        a1(stencil_map(1,1)) = coeffs(2)
-        a2(stencil_map(1,1)) = coeffs(3)
+        a0(stencil_map(1,1)+k) = coeffs(1)
+        a1(stencil_map(1,1)+k) = coeffs(2)
+        a2(stencil_map(1,1)+k) = coeffs(3)
 
       case (subgrid_rho_approximation_ppm_positive_only, &
             subgrid_rho_approximation_ppm_positive_monotone)
@@ -168,9 +168,9 @@ subroutine subgrid_coeffs_code(                                               &
         monotone=.false.
         if ( subgridrho_option == subgrid_rho_approximation_ppm_positive_monotone) monotone=.true.
         call second_order_coeffs(rho_local,coeffs,positive,monotone)
-        a0(stencil_map(1,1)) = coeffs(1)
-        a1(stencil_map(1,1)) = coeffs(2)
-        a2(stencil_map(1,1)) = coeffs(3)
+        a0(stencil_map(1,1)+k) = coeffs(1)
+        a1(stencil_map(1,1)+k) = coeffs(2)
+        a2(stencil_map(1,1)+k) = coeffs(3)
 
     end select
 

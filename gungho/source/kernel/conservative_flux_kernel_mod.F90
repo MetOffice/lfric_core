@@ -163,10 +163,10 @@ subroutine conservative_flux_code( nlayers,              &
       ! Rearrange data such that it is in the order 1 | 2 | 3 | 4 | 5 | 6 | 7 etc
 
       do ii=1,stencil_length
-        rho_local(ii) = rho( stencil_map(stencil_ordering(ii)) )
-        a0_local(ii)  = a0_coeffs( stencil_map(stencil_ordering(ii)) )
-        a1_local(ii)  = a1_coeffs( stencil_map(stencil_ordering(ii)) )
-        a2_local(ii)  = a2_coeffs( stencil_map(stencil_ordering(ii)) )
+        rho_local(ii) = rho( stencil_map(stencil_ordering(ii)) + k )
+        a0_local(ii)  = a0_coeffs( stencil_map(stencil_ordering(ii)) + k )
+        a1_local(ii)  = a1_coeffs( stencil_map(stencil_ordering(ii)) + k )
+        a2_local(ii)  = a2_coeffs( stencil_map(stencil_ordering(ii)) + k )
       end do
 
       ! Calculates number of cells of interest and fraction of a cell to add.
