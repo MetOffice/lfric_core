@@ -27,8 +27,8 @@ module convert_hdiv_field_kernel_mod_test
     private
     type(function_space_type), pointer :: w0_fs => null()
     type(function_space_type), pointer :: w2_fs => null()
-    type(field_type)                   :: chi(3)
     type(field_type)                   :: comp_field
+    type(field_type)                   :: chi(3)
     real(r_def), allocatable           :: diff_basis_chi(:,:,:), basis(:,:,:)
   contains
     procedure setUp

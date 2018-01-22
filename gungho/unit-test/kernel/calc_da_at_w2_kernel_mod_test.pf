@@ -29,8 +29,8 @@ module calc_dA_at_w2_kernel_mod_test
     private
     type(function_space_type), pointer :: w0_fs => null()
     type(function_space_type), pointer :: w2_fs => null()
-    type(field_type)                   :: chi(3)
     type(field_type)                   :: dA_w2
+    type(field_type)                   :: chi(3)
     integer(i_def)                     :: mesh_id
     real(r_def), allocatable           :: diff_basis_chi(:,:,:)
   contains

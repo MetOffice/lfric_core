@@ -31,9 +31,9 @@ module compute_mass_matrix_kernel_w0_mod_test
   @TestCase
   type, extends(TestCase), public :: compute_mass_matrix_w0_test_type
     private
-    type(field_type)                   :: chi(3)
     type( quadrature_xyoz_type )          :: qr
     type(quadrature_xyoz_proxy_type) :: qr_proxy
+    type(field_type)                   :: chi(3)
     type(function_space_type), pointer :: w0_fs => null()
     type(operator_type)                :: mm
     real(r_def), allocatable           :: diff_basis(:,:,:,:), &

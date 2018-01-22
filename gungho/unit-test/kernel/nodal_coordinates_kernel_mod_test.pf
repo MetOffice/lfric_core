@@ -24,6 +24,9 @@ module nodal_coordinates_kernel_mod_test
   @TestCase
   type, extends(TestCase), public :: nodal_coordinates_test_type
     private
+    ! Dummy field must appear before field array to prevent GNU SIGSEGV 
+    ! described in ticket 1004
+    type(field_type)         :: dummy_for_gnu
     type(field_type)         :: x(3)
     type(field_type)         :: chi(3)
     real(r_def), allocatable :: basis_chi(:,:,:)

@@ -25,8 +25,8 @@ module calc_departure_wind_kernel_mod_test
   @TestCase
   type, extends(TestCase), public :: calc_departure_wind_test_type
     private
-    type(field_type)         :: chi(3)
     type(field_type)         :: piola_field
+    type(field_type)         :: chi(3)
     type(field_type)         :: departure_field
     real(r_def), allocatable :: diff_basis_chi(:,:,:)
     real(r_def), allocatable :: nodal_basis_u(:,:,:)

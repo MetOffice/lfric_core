@@ -27,8 +27,8 @@ module compute_tri_precon_kernel_mod_test
     private
     type(function_space_type), pointer :: w0_fs => null()
     type(function_space_type), pointer :: w3_fs => null()
-    type(field_type)                   :: chi(3)
     type(field_type)                   :: exner
+    type(field_type)                   :: chi(3)
     type(field_type)                   :: rho
     type(field_type)                   :: theta
     type(field_type)                   :: A0
