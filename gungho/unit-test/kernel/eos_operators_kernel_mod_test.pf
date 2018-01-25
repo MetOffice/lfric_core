@@ -1,0 +1,299 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2018 Met Office. All rights reserved.
+! For further details please refer to the file COPYRIGHT.txt
+! which you should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+
+!> Test the equation of state operator computation
+!>
+module eos_operators_kernel_mod_test
+
+  use constants_mod,                 only : i_def, r_def
+  use function_space_collection_mod, only : function_space_collection_type, &
+                                            function_space_collection
+  use field_mod,                     only : field_type, field_proxy_type
+  use fs_continuity_mod,             only : W0, W3, Wtheta
+  use function_space_mod,            only : function_space_type
+  use operator_mod,                  only : operator_type, &
+                                            operator_proxy_type
+  use pFUnit_Mod
+  use quadrature_xyoz_mod,           only : quadrature_xyoz_type, &
+                                            quadrature_xyoz_proxy_type
+  use quadrature_rule_gaussian_mod,  only : quadrature_rule_gaussian_type
+  use mesh_collection_mod,           only : mesh_collection_type, &
+                                            mesh_collection
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: eos_operators_test_type
+    private
+    integer(i_def)                     :: mesh_id
+    type( quadrature_xyoz_type )       :: qr
+    type(quadrature_xyoz_proxy_type)   :: qr_proxy
+    type(function_space_type), pointer :: w0_fs => null()
+    type(function_space_type), pointer :: w3_fs => null()
+    type(function_space_type), pointer :: wt_fs => null()
+    type(field_type)                   :: chi(3), rho, exner, theta
+    type(operator_type)                :: m3exner, m3rho, p3theta
+    real(r_def ), allocatable          :: diff_basis(:,:,:,:), &
+                                          basis(:,:,:,:), &
+                                          basis_wt(:,:,:,:)
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type eos_operators_test_type
+
+  integer(i_def), parameter :: element_order = 0
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
+    use gungho_feign_config_mod,   only : feign_finite_element_config
+    use mesh_mod,                  only : PLANE_BI_PERIODIC
+    use reference_element_mod,     only : reference_cube, reference_element
+    use reference_element_data_mod,only : reference_cube_data
+
+    implicit none
+
+    class(eos_operators_test_type), intent(inout) :: this
+
+    type(field_proxy_type)    :: chi_p(3)
+    type(operator_proxy_type) :: mm_p
+    type( quadrature_rule_gaussian_type ) :: quadrature_rule
+
+    integer(i_def) :: dim_mm, diff_dim
+    integer(i_def) :: nqp_h, nqp_v
+    integer(i_def) :: ndf, ndf_chi
+
+    integer(i_def) :: i
+
+    call feign_finite_element_config( finite_element_cellshape_quadrilateral, &
+                                      0, 1, .true., .false., .false., .false.,&
+                                      .false. )
+
+    reference_element = finite_element_cellshape_quadrilateral
+    call reference_cube()
+    ! This fix breaks the unit tests as other kernel do not have it yet
+    !call reference_cube_data()
+
+    ! Create top level function space collection
+
+    function_space_collection = function_space_collection_type()
+
+    this%qr = quadrature_xyoz_type(3, quadrature_rule)
+
+    this%qr_proxy = this%qr%get_quadrature_proxy()
+    nqp_h=this%qr_proxy%np_xy
+    nqp_v=this%qr_proxy%np_z
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    mesh_collection = mesh_collection_type()
+    this%mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
+
+    this%w0_fs => function_space_collection%get_fs( this%mesh_id, element_order, W0 )
+    this%w3_fs => function_space_collection%get_fs( this%mesh_id, element_order, W3 )
+    this%wt_fs => function_space_collection%get_fs( this%mesh_id, element_order, Wtheta )
+
+    do i = 1,3
+      this%chi(i) = field_type( vector_space = this%w0_fs )
+      chi_p(i)    = this%chi(i)%get_proxy()
+    end do
+    this%rho   =  field_type( vector_space = this%w3_fs )
+    this%exner =  field_type( vector_space = this%w3_fs )
+    this%theta =  field_type( vector_space = this%wt_fs )
+
+    diff_dim = chi_p(1)%vspace%get_dim_space_diff( )   
+    ndf_chi  = chi_p(1)%vspace%get_ndf()
+    allocate( this%diff_basis( diff_dim, ndf_chi, nqp_h, nqp_v ) )
+
+    this%m3rho = operator_type( this%w3_fs, this%w3_fs )
+    mm_p    = this%m3rho%get_proxy()
+
+    ndf    = mm_p%fs_from%get_ndf()
+    dim_mm = mm_p%fs_from%get_dim_space( )
+    allocate( this%basis( dim_mm, ndf, nqp_h, nqp_v ) )
+
+    this%m3exner = operator_type( this%w3_fs, this%w3_fs )
+    this%p3theta = operator_type( this%w3_fs, this%wt_fs )
+    mm_p    = this%p3theta%get_proxy()
+    ndf    = mm_p%fs_from%get_ndf()
+    dim_mm = mm_p%fs_from%get_dim_space( )
+    allocate( this%basis_wt( dim_mm, ndf, nqp_h, nqp_v ) )
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    use reference_element_mod,      only : deallocate_reference
+    use reference_element_data_mod, only : deallocate_data_reference
+    implicit none
+
+    class(eos_operators_test_type), intent(inout) :: this
+
+    deallocate( this%basis, this%diff_basis, this%basis_wt )
+
+    call function_space_collection%clear()
+    call mesh_collection%clear()
+    call deallocate_reference()
+    ! This fix breaks the unit tests as other kernel do not have it yet
+    !call deallocate_data_reference()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_all( this )
+
+    use eos_operators_kernel_mod,   only : eos_operators_code
+    use calc_exner_pointwise_mod,   only : calc_exner_pointwise
+    use mesh_mod,                   only : mesh_type
+    implicit none
+
+    class(eos_operators_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+    real(r_def), parameter :: dx = 6000.0_r_def, &
+                              dy = 1000.0_r_def
+
+    type(field_proxy_type)   :: chi_p(3), rho_p, exner_p, theta_p
+
+    real(kind=r_def) :: answer
+
+    integer(i_def) :: i, j, k, cell
+    integer(i_def) :: err
+
+    real(r_def) :: dz, dz_test(3)
+
+    ! Required for calling mass matrix kernel
+
+    integer(i_def) :: nlayers, ndf, undf, ndf_t, undf_t
+    integer(i_def) :: ndf_chi, undf_chi
+    integer(i_def) :: nqp_h, nqp_v
+
+    integer(i_def), pointer :: map(:) => null(), &
+                               map_t(:) => null(), &
+                               map_chi(:) => null()
+    type(operator_proxy_type) :: m3r_p, m3p_p, p3t_p
+
+    real(kind=r_def), pointer :: xp(:,:) => null()
+    real(kind=r_def), pointer :: zp(:)   => null()
+    real(kind=r_def), pointer :: wh(:), wv(:) => null()
+    type(mesh_type), pointer  :: mesh => null()
+
+    mesh => mesh_collection%get_mesh( this%mesh_id )
+    call mesh%get_dz(dz_test)
+    dz = dz_test(1)
+
+    do i = 1,3
+      chi_p(i) = this%chi(i)%get_proxy()
+    end do
+    ! Compute coordinates
+    cell = 1
+    do j = 1,3
+      do i = 1,3
+        map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
+        do k = 0,3
+          chi_p(1)%data(map_chi(1) + k) = real(i-1)*dx
+          chi_p(2)%data(map_chi(1) + k) = real(j-1)*dy
+          chi_p(3)%data(map_chi(1) + k) = real(k)  *dz
+        end do
+        cell = cell + 1
+      end do
+    end do
+
+    ! Test mass matrix kernel
+    m3r_p  = this%m3rho%get_proxy()
+    m3p_p  = this%m3exner%get_proxy()
+    p3t_p  = this%p3theta%get_proxy()
+    rho_p = this%rho%get_proxy()
+    exner_p = this%exner%get_proxy()
+    theta_p = this%theta%get_proxy()
+
+    nqp_h=this%qr_proxy%np_xy
+    nqp_v=this%qr_proxy%np_z
+    xp=>this%qr_proxy%points_xy
+    zp=>this%qr_proxy%points_z
+    wh=>this%qr_proxy%weights_xy
+    wv=>this%qr_proxy%weights_z
+
+    ndf_chi      = chi_p(1)%vspace%get_ndf()
+    undf_chi     = chi_p(1)%vspace%get_undf()
+
+    nlayers  = m3r_p%fs_from%get_nlayers()
+    ndf  = m3r_p%fs_from%get_ndf()
+    undf = rho_p%vspace%get_undf()
+    ndf_t  = p3t_p%fs_from%get_ndf()
+    undf_t = theta_p%vspace%get_undf()
+ 
+    call chi_p(1)%vspace%compute_diff_basis_function(                    &
+         this%diff_basis,ndf_chi, nqp_h, nqp_v, xp, zp )
+
+    call m3r_p%fs_from%compute_basis_function(                            &
+         this%basis, ndf, nqp_h, nqp_v, xp, zp )
+
+    call p3t_p%fs_from%compute_basis_function(                            &
+         this%basis_wt, ndf_t, nqp_h, nqp_v, xp, zp )
+
+    cell = 1
+    map_chi => chi_p(1)%vspace%get_cell_dofmap(cell)
+    map     => rho_p%vspace%get_cell_dofmap(cell)
+    map_t   => theta_p%vspace%get_cell_dofmap(cell)
+
+    m3r_p%local_stencil(:,:,:) = 0.0_r_def
+    m3p_p%local_stencil(:,:,:) = 0.0_r_def
+    p3t_p%local_stencil(:,:,:) = 0.0_r_def
+    rho_p%data(:) = 1.0_r_def
+    exner_p%data(:) = 1.5_r_def
+    theta_p%data(:) = 300.0_r_def
+    call eos_operators_code( cell,                              &
+                             nlayers,                           &
+                             m3p_p%ncell_3d,                    &
+                             m3p_p%local_stencil,               &
+                             m3r_p%ncell_3d,                    &
+                             m3r_p%local_stencil,               &
+                             p3t_p%ncell_3d,                    &
+                             p3t_p%local_stencil,               &
+                             exner_p%data,                      &
+                             rho_p%data,                        &
+                             theta_p%data,                      &
+                             chi_p(1)%data,                     &
+                             chi_p(2)%data,                     &
+                             chi_p(3)%data,                     &
+                             0.5_r_def,                         &
+                             ndf,                               &
+                             undf,                              &
+                             map,                               &
+                             this%basis,                        &
+                             ndf_t,                             &
+                             undf_t,                            &
+                             map_t,                             &
+                             this%basis_wt,                     &
+                             ndf_chi,                           &
+                             undf_chi,                          &
+                             map_chi,                           &
+                             this%diff_basis,                   &
+                             nqp_h,                             &
+                             nqp_v,                             &
+                             wh,                                &
+                             wv                                 &
+                             )
+
+    answer = 0.5_r_def/exner_p%data(1)
+    @assertEqual(answer, m3p_p%local_stencil(1, 1, 1 )/(dx*dy*dz), tol)
+    answer = 1.0_r_def/rho_p%data(1)
+    @assertEqual(answer, m3r_p%local_stencil(1, 1, 1 )/(dx*dy*dz), tol)
+    answer = 0.5_r_def/theta_p%data(1)
+    @assertEqual(answer, p3t_p%local_stencil(1, 1, 1 )/(dx*dy*dz), tol)
+    @assertEqual(answer, p3t_p%local_stencil(1, 2, 1 )/(dx*dy*dz), tol)
+
+  end subroutine test_all
+
+end module eos_operators_kernel_mod_test

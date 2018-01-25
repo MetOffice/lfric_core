@@ -58,7 +58,7 @@ end type
 ! Constructors
 !-------------------------------------------------------------------------------
 
-! overload the default structure constructor for function space
+! Overload the default structure constructor for function space
 interface vorticity_advection_kernel_type
    module procedure vorticity_advection_kernel_constructor
 end interface
@@ -108,8 +108,9 @@ subroutine vorticity_advection_code(nlayers,                                    
                            
   use coordinate_jacobian_mod,  only: coordinate_jacobian, &
                                       coordinate_jacobian_inverse
-  
-  !Arguments
+ 
+  implicit none 
+  ! Arguments
   integer, intent(in) :: nlayers,nqp_h, nqp_v
   integer, intent(in) :: ndf_chi, ndf_w1, ndf_w2
   integer, intent(in) :: undf_chi, undf_w1, undf_w2
@@ -124,12 +125,12 @@ subroutine vorticity_advection_code(nlayers,                                    
   real(kind=r_def), dimension(undf_w2), intent(inout) :: r_u
   real(kind=r_def), dimension(undf_w2), intent(in)    :: wind
   real(kind=r_def), dimension(undf_w1), intent(in)    :: xi
-  real(kind=r_def), dimension(undf_chi), intent(in)    :: chi_1, chi_2, chi_3
+  real(kind=r_def), dimension(undf_chi), intent(in)   :: chi_1, chi_2, chi_3
 
   real(kind=r_def), dimension(nqp_h), intent(in)      ::  wqp_h
   real(kind=r_def), dimension(nqp_v), intent(in)      ::  wqp_v
 
-  !Internal variables
+  ! Internal variables
   integer               :: df, k, loc 
   integer               :: qp1, qp2
   
@@ -162,7 +163,7 @@ subroutine vorticity_advection_code(nlayers,                                    
     do df = 1, ndf_w1
       xi_e(df) = xi( map_w1(df) + k )
     end do    
-  ! compute the RHS integrated over one cell    
+    ! Compute the RHS integrated over one cell    
     do qp2 = 1, nqp_v
       do qp1 = 1, nqp_h
         u_at_quad(:) = 0.0_r_def
@@ -171,7 +172,7 @@ subroutine vorticity_advection_code(nlayers,                                    
                        + u_e(df)*w2_basis(:,df,qp1,qp2)
         end do
 
-! Vorticity advection term
+        ! Vorticity advection term
         xi_at_quad(:) = 0.0_r_def
         do df = 1, ndf_w1
           xi_at_quad(:) = xi_at_quad(:) &

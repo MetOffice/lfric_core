@@ -1,0 +1,138 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2018 Met Office. All rights reserved.
+! For further details please refer to the file COPYRIGHT.txt
+! which you should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+
+!> Test the DeRahm complex operators
+!>
+module compute_derahm_matrices_kernel_mod_test
+
+  use constants_mod,                 only : i_def, r_def
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: compute_derahm_matrices_test_type
+    private
+  contains
+    procedure test_all
+  end type compute_derahm_matrices_test_type
+
+contains
+
+  @test
+  subroutine test_all( this )
+
+    use compute_derahm_matrices_kernel_mod, only : compute_derahm_matrices_code
+
+    implicit none
+
+    class(compute_derahm_matrices_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-12_r_def
+
+    ! Operators to test
+    real(r_def), dimension(1,1,1) :: M0, M1, M2, M3, Mt, grad, div, curl
+    ! Coordinate fields
+    real(r_def), dimension(8) :: x, y, z
+    real(r_def)               :: dx, dy, dz, zero
+    ! Maps
+    integer(i_def), dimension(8) :: mapx
+    ! Basis arrays
+    real(r_def), dimension(3)   :: v, ds
+    real(r_def), dimension(1)   :: dv, s
+    real(r_def), dimension(3,8) :: dgamma
+    ! Array sizes
+    integer(i_def), parameter :: ndf = 1_i_def
+    integer(i_def), parameter :: ndfx = 8_i_def
+    ! Quadrature
+    integer(i_def), parameter :: nqp = 1_i_def
+    real(r_def), dimension(1) :: wgt
+
+    integer(i_def) :: i
+    real(kind=r_def) :: answer
+
+    ! Set cell coordinates    
+    dx = 2.0_r_def
+    dy = 3.0_r_def
+    dz = 4.0_r_def
+    zero = 0.0_r_def
+    x = (/ zero, dx,   dx,   zero, zero, dx,   dx, zero /)
+    y = (/ zero, zero, dy,   dy,   zero, zero, dy, dy /)
+    z = (/ zero, zero, zero, zero, dz,   dz,   dz, dz /)
+
+    do i = 1,8
+      mapx(i) = int(i,i_def)
+    end do
+    
+    ! Basis functions
+    s(1) = 1.0_r_def
+    ds(:) = (/ 1.0_r_def, -1.0_r_def, 2.0_r_def /)
+    v(:) = (/ 1.0_r_def, 0.0_r_def, 0.0_r_def /)
+    dv(1) = 0.5_r_def
+
+    ! Quadrature
+    wgt(1) = 1.0_r_def
+
+    ! Coordinate basis
+    dgamma(:,1) = (/ -1.0_r_def, -1.0_r_def, -1.0_r_def /)
+    dgamma(:,2) = (/  1.0_r_def, -1.0_r_def, -1.0_r_def /)
+    dgamma(:,3) = (/  1.0_r_def,  1.0_r_def, -1.0_r_def /)
+    dgamma(:,4) = (/ -1.0_r_def,  1.0_r_def, -1.0_r_def /)
+    dgamma(:,5) = (/ -1.0_r_def, -1.0_r_def,  1.0_r_def /)
+    dgamma(:,6) = (/  1.0_r_def, -1.0_r_def,  1.0_r_def /)
+    dgamma(:,7) = (/  1.0_r_def,  1.0_r_def,  1.0_r_def /)
+    dgamma(:,8) = (/ -1.0_r_def,  1.0_r_def,  1.0_r_def /)
+    dgamma = 0.25_r_def*dgamma
+
+    call compute_derahm_matrices_code(1_i_def, 1_i_def,        & 
+                                      1_i_def, M0,             &
+                                      1_i_def, M1,             &
+                                      1_i_def, M2,             &
+                                      1_i_def, M3,             &
+                                      1_i_def, Mt,             &
+                                      1_i_def, grad,           &
+                                      1_i_def, curl,           &
+                                      1_i_def, div,            &
+                                      x, y, z,                 &
+                                      ndf, s, ds,              &
+                                      ndf, v, ds,              &
+                                      ndf, v, dv,              &
+                                      ndf, s,                  &
+                                      ndf, s,                  &
+                                      ndfx, ndfx,              &
+                                      mapx, dgamma,            &
+                                      nqp, nqp, wgt, wgt)
+   
+    answer = (dx*dy*dz)*s(1)*s(1)
+    @assertEqual(answer, M0(1,1,1), tol)
+
+    answer = v(1)/dx * v(1)/dx * (dx*dy*dz)
+    @assertEqual(answer, M1(1,1,1), tol)
+
+    answer = v(1)*dx * v(1)*dx / (dx*dy*dz)
+    @assertEqual(answer, M2(1,1,1), tol)
+
+    answer = (dx*dy*dz)*s(1)*s(1)
+    @assertEqual(answer, M3(1,1,1), tol)
+
+    answer = (dx*dy*dz)*s(1)*s(1)
+    @assertEqual(answer, Mt(1,1,1), tol)
+
+    answer = (ds(1)/dx*v(1)/dx + ds(2)/dy*v(2)/dy + ds(3)/dz*v(3)/dz)*(dx*dy*dz)
+    @assertEqual(answer, grad(1,1,1), tol)
+
+    answer = (dx*ds(1)*dx*v(1) + dy*ds(2)*dy*v(2) + dz*ds(3)*dz*v(3))/(dx*dy*dz)
+    @assertEqual(answer, curl(1,1,1), tol)
+
+    answer = s(1)*dv(1)
+    @assertEqual(answer, div(1,1,1), tol)
+
+  end subroutine test_all
+
+end module compute_derahm_matrices_kernel_mod_test

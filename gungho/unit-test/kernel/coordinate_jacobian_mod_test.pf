@@ -14,8 +14,11 @@ contains
   subroutine test_of_jacobian()
 
     use constants_mod,           only : r_def
-    use coordinate_jacobian_mod, only : coordinate_jacobian, &
-                                        coordinate_jacobian_inverse
+    use coordinate_jacobian_mod, only : coordinate_jacobian,                   &
+                                        coordinate_jacobian_inverse,           &
+                                        pointwise_coordinate_jacobian,         &
+                                        pointwise_coordinate_jacobian_inverse
+
     use pFUnit_Mod
 
     implicit none
@@ -69,12 +72,21 @@ contains
 
     @assertEqual( zero, err, tol)
 
-!    ! coordinate_jacobian is currently hardwired to diag(dx,dy,dz)
-!    ! this test needs updating when this is corrected
-!    @assertEqual( 6000.0_r_def, jac(1,1), tol )
-!    @assertEqual( 1000.0_r_def, jac(2,2), tol )
-!    @assertEqual( 2000.0_r_def, jac(3,3), tol )
-!    @assertEqual( 6000.0_r_def*1000.0_r_def*2000.0_r_def, dj(1,1), tol )
+    ! test the pointwise compuations
+    call pointwise_coordinate_jacobian(ndf, x, y, z, diff_basis, jac, dj(1,1))
+    jac_inv =  pointwise_coordinate_jacobian_inverse(jac, dj(1,1))
+    err = maxval( abs( matmul( jac_inv,jac)-identity(:,:) ) )
+    @assertEqual( zero, err, tol)
+    @assertEqual( eight, dj(1,1), tol )
+    @assertEqual( two, jac(1,1), tol )
+    @assertEqual( two, jac(2,2), tol )
+    @assertEqual( two, jac(3,3), tol )
+    @assertEqual( zero, jac(1,2), tol )
+    @assertEqual( zero, jac(1,3), tol )
+    @assertEqual( zero, jac(2,1), tol )
+    @assertEqual( zero, jac(2,3), tol )
+    @assertEqual( zero, jac(3,1), tol )
+    @assertEqual( zero, jac(3,2), tol ) 
 
   end subroutine test_of_jacobian
 

@@ -113,7 +113,7 @@ contains
   subroutine compute_si_operators(ref_state)
     use quadrature_xyoz_mod,             only: quadrature_xyoz_type
     use quadrature_rule_gaussian_mod,    only: quadrature_rule_gaussian_type
-    use weighted_m3_kernel_mod,          only: weighted_m3_kernel_type
+    use eos_operators_kernel_mod,        only: eos_operators_kernel_type
     use weighted_div_kernel_mod,         only: weighted_div_kernel_type
     use weighted_proj_2theta_kernel_mod, only: weighted_proj_2theta_kernel_type
     use weighted_proj_theta2_kernel_mod, only: weighted_proj_theta2_kernel_type
@@ -121,7 +121,6 @@ contains
                                          only: weighted_proj_theta2_wt_kernel_type
     use weighted_proj_theta2_vert_kernel_mod, &
                                          only: weighted_proj_theta2_vert_kernel_type
-    use weighted_proj_3theta_kernel_mod, only: weighted_proj_3theta_kernel_type
     use compound_operator_kernel_mod,    only: compound_operator_kernel_type
     use compute_tri_precon_kernel_mod,   only: compute_tri_precon_kernel_type
     use sample_flux_kernel_mod,          only: sample_flux_kernel_type
@@ -168,11 +167,9 @@ contains
 
     ! Operators for the equation of state
     qr = quadrature_xyoz_type(element_order+3, quadrature_rule)
-    const1 = 1.0_r_def
-    const2 = (1.0_r_def-kappa)/kappa
-    call invoke( weighted_m3_kernel_type(m3_rho_star,   rho,   chi, const1, qr), &
-                 weighted_m3_kernel_type(m3_exner_star, exner, chi, const2, qr), &
-                 weighted_proj_3theta_kernel_type(p3theta, theta, chi, qr) )
+    const1 = (1.0_r_def-kappa)/kappa
+    call invoke( eos_operators_kernel_type(m3_exner_star, m3_rho_star, p3theta, &
+                                          exner, rho, theta, chi, const1, qr) )
 
     ! The rest of the operators are topological and so do not need as high
     ! quadrature order

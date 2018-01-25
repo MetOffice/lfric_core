@@ -17,7 +17,7 @@ module runtime_constants_mod
                                                LOG_LEVEL_ERROR
   ! Configuration
   use finite_element_config_mod,         only: element_order, wtheta_on
-  use formulation_config_mod,            only: transport_only
+  use formulation_config_mod,            only: transport_only, dlayer_on
   use transport_config_mod,              only: scheme,                     &
                                                transport_scheme_cusph_cosmic
 
@@ -39,18 +39,11 @@ module runtime_constants_mod
   use multiplicity_kernel_mod,           only: multiplicity_kernel_type
 
   ! PsyKAl PSYClone kernels
-  use compute_mass_matrix_kernel_w0_mod,     only: compute_mass_matrix_kernel_w0_type
-  use compute_mass_matrix_kernel_w1_mod,     only: compute_mass_matrix_kernel_w1_type
-  use compute_mass_matrix_kernel_w2_mod,     only: compute_mass_matrix_kernel_w2_type
-  use compute_mass_matrix_kernel_w3_mod,     only: compute_mass_matrix_kernel_w3_type
-  use compute_mass_matrix_kernel_wtheta_mod, only: compute_mass_matrix_kernel_wtheta_type
+  use compute_derahm_matrices_kernel_mod,    only: compute_derahm_matrices_kernel_type
   use compute_dl_matrix_kernel_mod,          only: compute_dl_matrix_kernel_type
   use compute_geopotential_kernel_mod,       only: compute_geopotential_kernel_type
   use mm_diagonal_kernel_mod,                only: mm_diagonal_kernel_type
   use invert_local_operator_kernel_mod,      only: invert_local_operator_kernel_type
-  use compute_grad_operator_kernel_mod,      only: compute_grad_operator_kernel_type
-  use compute_curl_operator_kernel_mod,      only: compute_curl_operator_kernel_type
-  use compute_div_operator_kernel_mod,       only: compute_div_operator_kernel_type
   use matrix_vector_kernel_mod,              only: matrix_vector_kernel_type
   use get_height_kernel_mod,                 only: get_height_kernel_type
   use compute_geopotential_kernel_mod,       only: compute_geopotential_kernel_type
@@ -204,7 +197,7 @@ contains
     call invoke( setval_c(dA_at_w2, 9999.0_r_def),&
                  calc_dA_at_w2_kernel_type(dA_at_w2, chi) )
 
-    !=================== Create mass matrix operators =========================!
+    !=================== Create DeRahm cochain operators =========================!
 
     mm_w0 = operator_type( w0_fs, w0_fs )
     mm_w1 = operator_type( w1_fs, w1_fs )
@@ -213,28 +206,21 @@ contains
     mm_w3 = operator_type( w3_fs, w3_fs )
     mm_w3_inv = operator_type( w3_fs, w3_fs )
     mm_wtheta = operator_type( wtheta_fs, wtheta_fs )
-
-    call invoke( name = "Create mass matrix operators",                      &
-                 compute_mass_matrix_kernel_w0_type(mm_w0, chi, qr),         &
-                 compute_mass_matrix_kernel_w1_type(mm_w1, chi, qr),         &
-                 compute_mass_matrix_kernel_w2_type(mm_w2, chi, qr),         &
-                 compute_mass_matrix_kernel_w3_type(mm_w3, chi, qr),         &
-                 compute_mass_matrix_kernel_wtheta_type(mm_wtheta, chi, qr), &
-                 compute_dl_matrix_kernel_type(mm_dl, chi, qr),              &
-                 invert_local_operator_kernel_type(mm_w3_inv, mm_w3) )
-
-    !=================== Create grad, div, curl operators =====================!
-
     grad = operator_type( w1_fs, w0_fs )
     curl = operator_type( w2_fs, w1_fs )
     div  = operator_type( w3_fs, w2_fs )
 
-    ! These are separate invokes as chi is defined as any space and PSyclone
-    ! does not support multiple any_spaces in the same invoke
-    call invoke( compute_grad_operator_kernel_type(grad, chi, qr), &
-                 compute_curl_operator_kernel_type(curl, chi, qr), &
-                 compute_div_operator_kernel_type (div,  chi, qr) )
+    call invoke( name = "Create mass matrix operators",                   &
+                 compute_derahm_matrices_kernel_type(mm_w0, mm_w1, mm_w2, &
+                                                     mm_w3, mm_wtheta,    &
+                                                     grad, curl, div,     &
+                                                     chi, qr),            &
+                 invert_local_operator_kernel_type(mm_w3_inv, mm_w3) )
 
+    ! Compute W2 mass matrix with damping layer
+    ! Eventually this may be absorbed into the DeRham complex computations
+    ! but until the final form is settled upon it is left separate
+    if (dlayer_on) call invoke( compute_dl_matrix_kernel_type(mm_dl, chi, qr) )
 
     !================= Create mass matrix diagonal fields =====================!
 
