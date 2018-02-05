@@ -8,6 +8,7 @@ namelist idealised
                      warm_bubble_3d,      ! 3d Warm bubble test (planar domain only)
                      gaussian_hill,       ! Pair of Gaussian hills (planer or spherical)
                      cosine_hill,         ! Pair of cosine hills (planer or spherical)
+                     yz_cosine_hill,      ! Pair of cosine hills (in a y-z slice of the planar domain)
                      slotted_cylinder,    ! Pair of slotted cylinders (planer or spherical)
                      constant_field,      ! Constant density value everywhere (planer or spherical)
                      cosine_stripe,       ! Cosine profile which is a function of longitude only (planer or spherical)

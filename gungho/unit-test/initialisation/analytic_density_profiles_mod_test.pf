@@ -13,16 +13,48 @@ module analytic_density_profiles_mod_test
 
   implicit none
 
+  private
+  public :: analytic_density_profiles_test_type, vortex_field_test, yz_cosine_hill_test
+
+  @TestCase
+  type, extends(TestCase) :: analytic_density_profiles_test_type
+    private
+  contains
+    procedure setUp
+    procedure vortex_field_test
+    procedure yz_cosine_hill_test
+  end type analytic_density_profiles_test_type
+
 contains
 
+  subroutine setUp( this )
+
+    use gungho_feign_config_mod,   only : feign_initial_density_config
+
+    implicit none
+
+    class(analytic_density_profiles_test_type), intent(inout) :: this
+
+    call feign_initial_density_config( tracer_background=0.0_r_def,     &
+                                       tracer_max=1.0_r_def,            &
+                                       r1=1.0_r_def, x1=2.0_r_def,      &
+                                       y1=3.0_r_def, z1=4.0_r_def,      &
+                                       r2=1.0_r_def, x2=0.0_r_def,      &
+                                       y2=0.0_r_def, z2=0.0_r_def,      &
+                                       sample_init_rho=.false.,         &
+                                       set_hydrostatic_density=.false. )
+
+  end subroutine setUp
+
   @test
-  subroutine vortex_field_test( )
+  subroutine vortex_field_test( this )
 
     use constants_mod,              only: PI
     use analytic_density_profiles_mod, only:    vortex_field
 
     implicit none
 
+    class(analytic_density_profiles_test_type), intent(inout) :: this
     real(kind=r_def) :: density, time, lat, long, radius
     real(kind=r_def) :: tol
 
@@ -41,5 +73,30 @@ contains
     @assertEqual(0.599483410782824_r_def, density,tol)
 
   end subroutine vortex_field_test
+
+
+  @test
+  subroutine yz_cosine_hill_test( this )
+
+    use analytic_density_profiles_mod, only : analytic_density
+    use idealised_config_mod,          only : idealised_test_yz_cosine_hill
+
+    implicit none
+
+    class(analytic_density_profiles_test_type), intent(inout) :: this
+
+    real(kind=r_def) :: rho
+    real(kind=r_def) :: chi(3)
+    real(kind=r_def) :: tol
+
+    tol=10.0E-12_r_def
+
+    chi = (/ 2.0_r_def,3.25_r_def,4.5_r_def /)
+    rho = analytic_density(chi , idealised_test_yz_cosine_hill, 0.0_r_def)
+    @assertEqual(0.407826538399892_r_def, rho, tol)
+
+
+  end subroutine yz_cosine_hill_test
+
 
 end module analytic_density_profiles_mod_test

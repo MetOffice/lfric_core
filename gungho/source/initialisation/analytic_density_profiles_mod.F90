@@ -20,6 +20,7 @@ use idealised_config_mod,       only : idealised_test_cold_bubble_x,         &
                                        idealised_test_warm_bubble_3d,        &
                                        idealised_test_gaussian_hill,         &
                                        idealised_test_cosine_hill,           &
+                                       idealised_test_yz_cosine_hill,        &
                                        idealised_test_slotted_cylinder,      &
                                        idealised_test_constant_field,        &
                                        idealised_test_cosine_stripe,         &
@@ -29,7 +30,7 @@ use idealised_config_mod,       only : idealised_test_cold_bubble_x,         &
                                        idealised_test_deep_baroclinic_wave,  &
                                        idealised_test_isentropic,            &
                                        idealised_test_isot_atm
-use initial_density_config_mod, only : r1, x1, y1, r2, x2, y2,     &
+use initial_density_config_mod, only : r1, x1, y1, z1, r2, x2, y2, z2,       &
                                        tracer_max, tracer_background
 use base_mesh_config_mod,       only : geometry, &
                                        base_mesh_geometry_spherical
@@ -173,6 +174,23 @@ function analytic_density(chi, choice, time) result(density)
     density = h1 +h2
 
   case( idealised_test_cosine_hill )
+    if ( l1 < r1 ) then
+      h1 = tracer_background + (tracer_max/2.0_r_def)*(1.0_r_def+cos((l1/r1)*PI))
+    else
+      h1 = tracer_background
+    end if
+    if (l2 < r2) then
+      h2 = tracer_background + (tracer_max/2.0_r_def)*(1.0_r_def+cos((l2/r2)*PI))
+    else
+      h2 = tracer_background
+    end if
+    density = h1+h2
+
+  case( idealised_test_yz_cosine_hill )
+
+    l1 = sqrt((chi(2)-y1)**2 + (chi(3)-z1)**2)
+    l2 = sqrt((chi(2)-y2)**2 + (chi(3)-z2)**2)
+
     if ( l1 < r1 ) then
       h1 = tracer_background + (tracer_max/2.0_r_def)*(1.0_r_def+cos((l1/r1)*PI))
     else

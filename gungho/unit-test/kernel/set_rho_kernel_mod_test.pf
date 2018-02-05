@@ -102,11 +102,14 @@ contains
                                  fplane=.false., f_lat_deg=0.0_r_def )
 
     call feign_idealised_config( idealised_test_gravity_wave )
-    call feign_initial_density_config( r1=0.0_r_def, x1=0.0_r_def, &
-                                       tracer_background=tracer_background, tracer_max=tracer_max, &
-                                       r2=0.0_r_def, x2=0.0_r_def, y1=y1, y2=y2, &
-                                       sample_init_rho=.false., &
-				       set_hydrostatic_density=.false. )
+    call feign_initial_density_config( tracer_background=tracer_background,   &
+                                       tracer_max=tracer_max,                 &
+                                       r1=0.0_r_def, x1=0.0_r_def,            &
+                                       y1=y1,        z1=0.0_r_def,            &
+                                       r2=0.0_r_def, x2=0.0_r_def,            &
+                                       y2=y2,        z2=0.0_r_def,            &
+                                       sample_init_rho=.false.,               &
+                                       set_hydrostatic_density=.false. )
     call feign_initial_temperature_config( bvf_square )
 
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &

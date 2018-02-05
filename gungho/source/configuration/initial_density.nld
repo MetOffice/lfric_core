@@ -12,7 +12,9 @@ namelist initial_density
     y1 : real ! Position for one of the pair of initial tracer functions
               ! Biperiodic domain: centre of the function given in terms of metres in the chi2 direction.
               ! Cubed sphere domain: latitudinal position of the centre of the function (a value between \f$-\pi/2\f$ and \f$\pi/2\f$).
+    z1 : real ! Centre height position for one of the pair of initial tracer functions
     r2 : real ! Radius parameter for the second of the pair of initial tracer functions (see r1)
     x2 : real ! Position parameter for the second of the pair of initial tracer functions (see x1)
     y2 : real ! Position parameter for the second of the pair of initial tracer functions (see y1)
+    z2 : real ! Centre height position for one of the pair of initial tracer functions
 end namelist initial_density
