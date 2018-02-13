@@ -114,16 +114,12 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
     class(test_function_space_type), intent(inout) :: this
 
     type(function_space_description_type) :: description
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -144,8 +140,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(test_function_space_type), intent(inout) :: this
@@ -153,7 +147,6 @@ contains
     deallocate(this%test_basis)
     deallocate(this%test_diff_basis)
 
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown
@@ -179,12 +172,12 @@ contains
 
     type(function_space_type), pointer :: test_fs => null()
 
-    real(r_def), pointer :: xp(:,:), zp(:)
-
-    real(r_def),    pointer :: nodal_coords(:,:)
-    integer(i_def), pointer :: dofmap(:,:)
-    real(r_def),    pointer :: basis_function(:,:,:,:)
-    real(r_def),    pointer :: basis_diff_function(:,:,:,:)
+    real(r_def),    pointer :: xp(:,:)                      => null()
+    real(r_def),    pointer :: zp(:)                        => null()
+    real(r_def),    pointer :: nodal_coords(:,:)            => null()
+    integer(i_def), pointer :: dofmap(:,:)                  => null()
+    real(r_def),    pointer :: basis_function(:,:,:,:)      => null()
+    real(r_def),    pointer :: basis_diff_function(:,:,:,:) => null()
 
     integer(i_def) :: test_ncells
     integer(i_def) :: test_ndof_cell
@@ -370,7 +363,7 @@ contains
     type(stencil_dofmap_type), pointer :: stencil_dofmap   => null()
     integer(i_def),            pointer :: stencil_map(:,:) => null()
     integer(i_def),            pointer :: map(:)           => null()
-    type(mesh_type),           pointer :: mesh
+    type(mesh_type),           pointer :: mesh             => null()
 
     test_fs => function_space_type( this%mesh_id,  &
                                     element_order, &
@@ -405,7 +398,7 @@ contains
     type(stencil_dofmap_type), pointer :: stencil_dofmap   => null()
     integer(i_def),            pointer :: stencil_map(:,:) => null()
     integer(i_def),            pointer :: map(:)           => null()
-    type(mesh_type),           pointer :: mesh
+    type(mesh_type),           pointer :: mesh             => null()
 
     test_fs => function_space_type( this%mesh_id,  &
                                     element_order, &
@@ -446,7 +439,7 @@ contains
     type(stencil_dofmap_type), pointer :: stencil_dofmap   => null()
     integer(i_def),            pointer :: stencil_map(:,:) => null()
     integer(i_def),            pointer :: map(:)           => null()
-    type(mesh_type),           pointer :: mesh
+    type(mesh_type),           pointer :: mesh             => null()
 
     integer :: i
 

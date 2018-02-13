@@ -57,8 +57,6 @@ contains
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_finite_element_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
-    use reference_element_data_mod,only : reference_cube_data
 
     implicit none
 
@@ -76,11 +74,6 @@ contains
 
     call feign_finite_element_config( finite_element_cellshape_quadrilateral, &
                                       0, 1, .true., .false., .false., .false.)
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
-    ! This fix breaks the unit tests as other kernel do not have it yet
-    !call reference_cube_data()
 
     ! Create top level function space collection
 
@@ -131,8 +124,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod,      only : deallocate_reference
-    use reference_element_data_mod, only : deallocate_data_reference
     implicit none
 
     class(eos_operators_test_type), intent(inout) :: this
@@ -141,9 +132,6 @@ contains
 
     call function_space_collection%clear()
     call mesh_collection%clear()
-    call deallocate_reference()
-    ! This fix breaks the unit tests as other kernel do not have it yet
-    !call deallocate_data_reference()
 
   end subroutine tearDown
 

@@ -57,8 +57,7 @@ contains
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use function_space_mod,        only : function_space_type
     use mesh_mod,                  only : PLANE_BI_PERIODIC, PLANE
-    use reference_element_mod,     only : reference_cube,   &
-                                          reference_element
+
     implicit none
 
     class(limit_wind_test_type), intent(inout) :: this
@@ -86,9 +85,6 @@ contains
                                    spinup_winds=.false.    )
 
 
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
-
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
     ! Create top level function space collection
@@ -113,16 +109,13 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(limit_wind_test_type), intent(inout) :: this
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
-    
+
   end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -46,15 +46,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use reference_element_mod, only : reference_cube
-
     implicit none
 
     class(mesh_collection_test_type), intent(inout) :: this
 
     integer(i_def) :: global_test_mesh_id
-
-    call reference_cube()
 
     ! Create top level collections
     global_mesh_collection = global_mesh_collection_type()
@@ -71,13 +67,10 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(mesh_collection_test_type), intent(inout) :: this
 
-    call deallocate_reference()
     call global_mesh_collection%clear()
 
   end subroutine tearDown
@@ -90,10 +83,11 @@ contains
 
     class(mesh_collection_test_type), intent(inout) :: this
 
-    integer(i_def)           :: mesh_id, mesh_test_id
-    type(mesh_type), pointer :: mesh, mesh_test
-    integer(i_def)           :: ncells_2d_with_ghost, num_layers
+    type(mesh_type), pointer :: mesh      => null()
+    type(mesh_type), pointer :: mesh_test => null()
 
+    integer(i_def) :: mesh_id, mesh_test_id
+    integer(i_def) :: ncells_2d_with_ghost, num_layers
 
     ! Create a mesh collection
     mesh_collection = mesh_collection_type()

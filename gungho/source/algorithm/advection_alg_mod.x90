@@ -72,17 +72,19 @@ module advection_alg_mod
   real(r_def),        allocatable :: ak_adv(:,:)
   type(function_space_type), pointer :: w1_fs => null()
 
-  public  :: advection_alg
-  public  :: advection_alg_init
-  public  :: advection_mr_alg
-  private :: mass_flux_alg
-  private :: advective_inc_alg
+  public  :: advection_alg, advection_alg_init, advection_alg_final, &
+             advection_mr_alg
+  private :: mass_flux_alg, advective_inc_alg
 
 contains
 
-  !>@brief Initialisation routine to advection algorithm
-  !>@param[in] mesh_id Identity of the mesh to create all fields on
-  subroutine advection_alg_init(mesh_id)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Initialises the system for running the advenction algorithm.
+  !>
+  !> @param[in] mesh_id Identity of the mesh to create all fields on
+  !>
+  subroutine advection_alg_init( mesh_id )
+
     use mesh_mod,                          only: mesh_type
     use mesh_collection_mod,               only: mesh_collection
     use sample_poly_flux_kernel_mod,       only: sample_poly_flux_init
@@ -130,6 +132,19 @@ contains
 
   end subroutine advection_alg_init
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> Releases all resources after completion.
+  !>
+  subroutine advection_alg_final()
+
+    use sample_poly_flux_kernel_mod, only : sample_poly_flux_final
+
+    implicit none
+
+    call sample_poly_flux_final()
+
+  end subroutine advection_alg_final
+
   !=============================================================================!
   !>@details A wrapper algorithm for computing the advection of the prognostic
   !>         equations, namely:
@@ -149,7 +164,7 @@ contains
   subroutine advection_alg( advection, &
                             state, &
                             xi, advecting_wind)
-  
+
   implicit none
   ! Form of state and advection is [u,theta,rho] & [r_u,r_theta,r_rho]
   type(field_type), intent(in),    target  :: state(bundle_size)
@@ -369,7 +384,7 @@ contains
   !> @param[in]    mr Field array. Mixing ratios
   !> @param[in]    wind Field array. Winds
   subroutine advection_mr_alg( mr, wind )
-  
+
     use matrix_vector_kernel_mod, only: matrix_vector_kernel_type
     implicit none
     type(field_type), intent(inout),    target  :: mr(nummr)

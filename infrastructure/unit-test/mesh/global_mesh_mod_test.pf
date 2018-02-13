@@ -8,15 +8,11 @@
 !>
 module global_mesh_mod_test
 
-  use pFUnit_Mod
   use constants_mod,              only: r_def, i_def, str_max_filename, str_def
+  use reference_element_mod,      only: reference_cube_type
   use global_mesh_mod,            only: global_mesh_type
-  use constants_mod,              only: str_max_filename
-  use reference_element_mod,      only: reference_cube,                &
-                                        deallocate_reference
-  use global_mesh_collection_mod, only: global_mesh_collection_type,   &
-                                        global_mesh_collection
   use global_mesh_map_mod,        only: global_mesh_map_type
+  use pFUnit_Mod
 
 
   implicit none 
@@ -24,17 +20,17 @@ module global_mesh_mod_test
   private
   public :: test_cubedsphere_global_mesh,  &
             test_biperiodic_global_mesh,   &
-            test_global_mesh_map_retrival, &
             setUp, tearDown
 
   @testCase
   type, public, extends( TestCase ) :: global_mesh_test_type
+    private
   contains
-    procedure :: setUp
-    procedure :: tearDown
-    procedure :: test_cubedsphere_global_mesh
-    procedure :: test_biperiodic_global_mesh
-    procedure :: test_global_mesh_map_retrival
+    private
+    procedure, public :: setUp
+    procedure, public :: tearDown
+    procedure, public :: test_cubedsphere_global_mesh
+    procedure, public :: test_biperiodic_global_mesh
   end type global_mesh_test_type
 
   character(str_def),          parameter :: mesh_name = 'unit_test'
@@ -46,45 +42,31 @@ module global_mesh_mod_test
 
 contains
 
-  subroutine setup( this )
-
-    use reference_element_mod, only : reference_cube
+  subroutine setUp( this )
 
     implicit none
 
     class( global_mesh_test_type ), intent( inout ) :: this
 
-    ! Set up stuff that the global_mesh object needs
-    call reference_cube()
+  end subroutine setUp
 
-    global_mesh_collection = global_mesh_collection_type()
-
-  end subroutine setup
-
-  subroutine teardown( this )
-
-    use reference_element_mod, only : deallocate_reference
+  subroutine tearDown( this )
 
     implicit none
 
     class( global_mesh_test_type ), intent( inout ) :: this
 
-    call global_mesh_collection%clear()
+  end subroutine tearDown
 
-    ! clean up the reference_cube we created at the start of the test
-    call deallocate_reference()
-
-  end subroutine teardown
-
-  !> Test global_mesh module functionality
-  !>
+  ! Test global_mesh module functionality
+  !
   @test
   subroutine test_biperiodic_global_mesh( this )
 
     implicit none
 
     class( global_mesh_test_type ), intent( inout ) :: this
- 
+
     type(global_mesh_type) :: global_mesh
 
     integer(i_def) :: cell_id
@@ -98,7 +80,7 @@ contains
     integer(i_def) :: cell_owner
     integer(i_def) :: global_mesh_id1
     integer(i_def) :: global_mesh_id2
-    
+
     real(r_def) :: dx
     real(r_def) :: dy
 
@@ -110,7 +92,7 @@ contains
 
     filename = 'data/mesh_BiP8x8-6000x2000.nc' 
     global_mesh = global_mesh_type( filename, mesh_name )
-  
+
     ! Check the global mesh id
     global_mesh_id1 = global_mesh%get_id()
     @assertTrue(global_mesh_id1 > 0)
@@ -204,19 +186,19 @@ contains
     @assertEqual( 11, verts(2) )
     @assertEqual(  7, verts(3) )
     @assertEqual(  6, verts(4) )
-    
+
     call global_mesh%get_cell_on_vert( 16, cells )
     @assertEqual( 11, cells(1) )
     @assertEqual( 12, cells(2) )
     @assertEqual( 15, cells(3) )
     @assertEqual( 16, cells(4) )
-    
+
     call global_mesh%get_edge_on_cell( 6, edges )
     @assertEqual( 15, edges(1) )
     @assertEqual( 16, edges(2) )
     @assertEqual( 17, edges(3) )
     @assertEqual(  6, edges(4) )
-    
+
     call global_mesh%get_cell_on_edge( 13, cells(1:2) )
     @assertEqual(  5, cells(1) )
     @assertEqual( 56, cells(2) )
@@ -233,39 +215,5 @@ contains
     cell_owner=global_mesh%get_edge_cell_owner(1)
     @assertEqual( 65, cell_owner )
   end subroutine test_cubedsphere_global_mesh
-
-
-  @test
-  subroutine test_global_mesh_map_retrival( this )
-
-    implicit none
-
-    class( global_mesh_test_type ), intent( inout ) :: this
-    
-    type(global_mesh_type),     pointer :: global_mesh     => null()
-    type(global_mesh_map_type), pointer :: global_mesh_map => null()
-
-    integer(i_def) :: source_global_mesh_id
-    integer(i_def) :: target_global_mesh_id
-    integer(i_def) :: global_mesh_map_id
-
-    source_global_mesh_id = global_mesh_collection %                    &
-                                add_new_global_mesh( MultiGridFiles(1), &
-                                                     mesh_name, npanels )
-
-    target_global_mesh_id = global_mesh_collection %                    &
-                                add_new_global_mesh( MultiGridFiles(2), &
-                                                     mesh_name, npanels )
-
-    global_mesh_map_id = 1000*source_global_mesh_id + target_global_mesh_id
-
-    global_mesh => global_mesh_collection%get_global_mesh(source_global_mesh_id)
-    global_mesh_map => global_mesh%get_global_mesh_map(target_global_mesh_id)
-    @assertEqual( global_mesh_map%get_id(), global_mesh_map_id )
-
-    global_mesh_map => global_mesh%get_global_mesh_map(source_global_mesh_id)
-    @assertNotAssociated( global_mesh_map )
-
-  end subroutine test_global_mesh_map_retrival
 
 end module global_mesh_mod_test

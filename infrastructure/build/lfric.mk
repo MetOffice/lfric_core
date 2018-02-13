@@ -209,7 +209,8 @@ run-unit-tests: generate-unit-tests
 integration-test-run/%: PYTHONPATH := $(PYTHONPATH):$(LFRIC_BUILD)
 integration-test-run/%: generate-integration-tests
 	$(MAKE) -C $(WORKING_DIR) -f $(LFRIC_BUILD)/analyse.mk PROGRAMS=$(notdir $*)
-	$(MAKE) -C $(WORKING_DIR) -f $(LFRIC_BUILD)/compile.mk PROGRAMS=$(notdir $*)
+	$(MAKE) -C $(WORKING_DIR) -f $(LFRIC_BUILD)/compile.mk \
+	        PROGRAMS=$(notdir $*) FFLAGS="$(FFLAGS) $(FFLAGS_DEBUG) $(FFLAGS_RUNTIME)"
 	$(call MESSAGE,Running,$*)
 	$(Q)cd $(dir $*); \
 	    ./$(notdir $(addsuffix .py,$*)) $(addprefix $(BIN_DIR)/,$(notdir $*))

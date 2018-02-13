@@ -89,7 +89,6 @@ use finite_element_config_mod, only: finite_element_cellshape_quadrilateral
 use gungho_feign_config_mod,   only: feign_base_mesh_config,            &
                                      feign_planet_config,               &
                                      feign_extrusion_config
-use reference_element_mod,     only: reference_cube, reference_element
 
 implicit none
 
@@ -126,9 +125,6 @@ call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                           rd=rd, cp=cp, p_zero=p_zero,                 &
                           scaling_factor=scaling )
 
-
-reference_element = finite_element_cellshape_quadrilateral
-call reference_cube()
 
 partitioner_ptr => partitioner_cubedsphere_serial
 
@@ -171,8 +167,6 @@ end subroutine setUp
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine tearDown( this )
 
-use reference_element_mod, only : deallocate_reference
-
 implicit none
 
 class( function_space_chain_test_type ), intent( inout ) :: this
@@ -180,8 +174,6 @@ class( function_space_chain_test_type ), intent( inout ) :: this
 call global_mesh_collection%clear()
 call mesh_collection%clear()
 call function_space_collection%clear()
-
-call deallocate_reference()
 
 end subroutine tearDown
 
@@ -349,7 +341,8 @@ type(mesh_map_type), pointer :: mesh_map1to2 => null(), &
 
 integer(i_def), allocatable :: test_source_cells(:)
 integer(i_def), allocatable :: target_data(:,:)
-integer(i_def), pointer :: target_test(:)
+
+integer(i_def), pointer :: target_test(:) => null()
 
 integer(i_def) :: i
 

@@ -48,7 +48,7 @@ module analytic_orography_mod
       class(analytic_orography_type), intent(in) :: self
       real(kind=r_def),               intent(in) :: chi_1, chi_2
       real(kind=r_def)                           :: chi_surf
-  
+
     end function analytic_orography_function
 
   end interface
@@ -56,7 +56,7 @@ module analytic_orography_mod
   !-----------------------------------------------------------------------------
   !> @brief Stores functionality for a selected analytic orography profile.
   !-----------------------------------------------------------------------------
-  class(analytic_orography_type), allocatable, public :: orography_type
+  class(analytic_orography_type), allocatable, public :: orography_profile
 
 end module analytic_orography_mod
 

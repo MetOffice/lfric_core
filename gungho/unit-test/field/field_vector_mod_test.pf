@@ -40,14 +40,10 @@ contains
   subroutine setUp( this )
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
     class(field_vector_test_type), intent(inout) :: this
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -59,14 +55,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(field_vector_test_type), intent(inout) :: this
 
     call function_space_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 
@@ -122,11 +115,11 @@ contains
     call fv1%export_field(f2,2)
 
     f2_p = f2%get_proxy()
-    
+
     sum2 = f2_p%get_sum()
     min2 = f2_p%get_min()
     max2 = f2_p%get_max()
-    
+
     @assertEqual( sum1, sum2, 1.0e-2_r_def )
     @assertEqual( min1, min2, 1.0e-2_r_def )
     @assertEqual( max1, max2, 1.0e-2_r_def )
@@ -138,11 +131,11 @@ contains
          function_space_collection%get_fs(mesh_id, element_order, W3))
     call fv1%import_field(f1,1)
     call fv1%import_field(f3,3)
-    
+
     scalar = 1.23456789_r_def
     call fv1%set_scalar(scalar)
     call fv1%export_field(f3,3)
-    
+
     f3_p = f3%get_proxy()
     undf = f3_p%vspace%get_undf()
     sum1 = undf*scalar
@@ -156,7 +149,7 @@ contains
     call fv2%import_field(f1,1)
     call fv2%import_field(f2,2)
     call fv2%import_field(f3,3)
-    
+
     call fv2%set_scalar(scalar)
     scalar=2.0_r_def
     call fv2%axpy(scalar,fv1)

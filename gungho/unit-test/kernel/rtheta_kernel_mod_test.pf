@@ -54,7 +54,6 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only: reference_cube, reference_element
 
     implicit none
 
@@ -73,9 +72,6 @@ contains
     this%qr_proxy = this%qr%get_quadrature_proxy()
     nqp_h=this%qr_proxy%np_xy
     nqp_v=this%qr_proxy%np_z
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -111,8 +107,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(rtheta_test_type), intent(inout) :: this
@@ -124,7 +118,6 @@ contains
     deallocate( this%answer )
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown

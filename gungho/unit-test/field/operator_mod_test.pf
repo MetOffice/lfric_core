@@ -37,14 +37,10 @@ contains
   subroutine setUp( this )
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
     class(operator_test_type), intent(inout) :: this
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -56,14 +52,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(operator_test_type), intent(inout) :: this
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown

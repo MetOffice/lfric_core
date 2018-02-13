@@ -18,15 +18,17 @@
 module ru_bd_kernel_mod
   use calc_exner_pointwise_mod, only: calc_exner_pointwise
   use kernel_mod,               only : kernel_type
-  use argument_mod,             only : arg_type, func_type,                 &
-    GH_FIELD, GH_READ, GH_INC,                                              &
-    W2, W3, Wtheta, GH_BASIS,                                               &
-    GH_DIFF_BASIS, CELLS,                                                   &
-    GH_QUADRATURE_XYoZ
+  use argument_mod,             only : arg_type, func_type,       &
+                                       mesh_data_type,            &
+                                       GH_FIELD, GH_READ, GH_INC, &
+                                       W2, W3, Wtheta, GH_BASIS,  &
+                                       GH_DIFF_BASIS, CELLS,      &
+                                       GH_QUADRATURE_XYoZ,        &
+                                       adjacent_face,             &
+                                       reference_element_out_face_normal
   use constants_mod,            only : r_def, i_def
   use cross_product_mod,        only : cross_product
   use planet_config_mod,        only : cp
-  use reference_element_mod,    only : nfaces_h, out_face_normal
 
   implicit none
 
@@ -48,6 +50,10 @@ module ru_bd_kernel_mod
       /)
     integer :: iterates_over = CELLS
     integer :: gh_shape = GH_QUADRATURE_XYoZ
+    type(mesh_data_type) :: meta_init(2) = (/               &
+        mesh_data_type( adjacent_face ),                    &
+        mesh_data_type( reference_element_out_face_normal ) &
+      /)
   contains
     procedure, nopass ::ru_bd_code
   end type
@@ -93,18 +99,23 @@ contains
   !! @param[in] w3_basis_face Basis functions evaluated at gaussian quadrature points on horizontal faces
   !! @param[in] wtheta_basis_face Basis functions evaluated at gaussian quadrature points on horizontal faces
   !! @param[in] adjacent_face Vector containing information on neighbouring face index for the current cell
-  subroutine ru_bd_code(nlayers,                                                    &
-                        ndf_w2, undf_w2,                                            &
-                        map_w2,                                                     &
-                        ndf_w3, undf_w3,                                            &
-                        stencil_w3_map,                                             &
-                        stencil_w3_size,                                            &
-                        ndf_wtheta, undf_wtheta,                                    &
-                        wtheta_map,                                                 &
-                        r_u_bd,                                                     &
-                        exner, theta,                                               &
-                        nqp_v, nqp_h_1d, wqp_v, w2_basis_face, w3_basis_face,       &
-                        wtheta_basis_face, adjacent_face)
+  !! @param[in] out_face_normal Vector normal to the out faces of the
+  !!                            reference element.
+  !!
+  subroutine ru_bd_code( nlayers,                      &
+                         ndf_w2, undf_w2,              &
+                         map_w2,                       &
+                         ndf_w3, undf_w3,              &
+                         stencil_w3_map,               &
+                         stencil_w3_size,              &
+                         ndf_wtheta, undf_wtheta,      &
+                         wtheta_map,                   &
+                         r_u_bd,                       &
+                         exner, theta,                 &
+                         nqp_v, nqp_h_1d, wqp_v,       &
+                         w2_basis_face, w3_basis_face, &
+                         wtheta_basis_face,            &
+                         adjacent_face, out_face_normal )
 
     implicit none
 
@@ -124,7 +135,8 @@ contains
     real(kind=r_def), dimension(1,ndf_w3,nqp_h_1d,nqp_v,4), intent(in)  :: w3_basis_face
     real(kind=r_def), dimension(1,ndf_wtheta,nqp_h_1d,nqp_v,4), intent(in) :: wtheta_basis_face
 
-    integer(kind=i_def), dimension(nfaces_h), intent(in) :: adjacent_face
+    integer(i_def), intent(in) :: adjacent_face(:)
+    real(r_def),    intent(in) :: out_face_normal(:,:)
 
     real(kind=r_def), dimension(undf_w2), intent(inout)     :: r_u_bd
     real(kind=r_def), dimension(undf_w3), intent(in)        :: exner
@@ -149,7 +161,7 @@ contains
       do df = 1, ndf_w2
           ru_bd_e(df) = 0.0_r_def
       end do
-      do face = 1, nfaces_h
+      do face = 1, size( adjacent_face, 1 )
 
         ! Storing opposite face number on neighbouring cell
         face_next = adjacent_face(face)

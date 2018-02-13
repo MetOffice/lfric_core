@@ -13,7 +13,9 @@ module init_mesh_mod
   use constants_mod,              only: i_def, str_def, l_def, r_def
   use extrusion_mod,              only: extrusion_type, uniform_extrusion_type
   use extrusion_config_mod,       only: domain_top
-  use finite_element_config_mod,  only: cellshape, wtheta_on, &
+  use finite_element_config_mod,  only: cellshape, wtheta_on,              &
+                                        key_from_cellshape,                &
+                                        finite_element_cellshape_triangle, &
                                         finite_element_cellshape_quadrilateral
   use global_mesh_mod,            only: global_mesh_type
   use global_mesh_collection_mod, only: global_mesh_collection
@@ -34,8 +36,6 @@ module init_mesh_mod
                                         partitioner_cubedsphere,        &
                                         partitioner_biperiodic
   use partitioning_config_mod,    only: auto, panel_xproc, panel_yproc
-  use reference_element_data_mod, only: reference_cube_data
-  use reference_element_mod,      only: reference_cube, reference_element
   use subgrid_config_mod,         only: dep_pt_stencil_extent, &
                                         rho_approximation_stencil_extent
   use transport_config_mod,       only: scheme, operators, fv_flux_order, &
@@ -72,9 +72,9 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
   real(r_def), parameter    :: atmos_bottom = 0.0_r_def
 
   ! Local variables
-  procedure (partitioner_interface), pointer :: partitioner_ptr => null()
-  type(global_mesh_type),            pointer :: global_mesh_ptr => null()
-  class(extrusion_type),             pointer :: extrusion       => null()
+  procedure (partitioner_interface), pointer :: partitioner_ptr   => null()
+  type(global_mesh_type),            pointer :: global_mesh_ptr   => null()
+  class(extrusion_type),             pointer :: extrusion         => null()
   type(partition_type)                       :: partition
   type(uniform_extrusion_type)               :: extrusion_2d
 
@@ -118,17 +118,11 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
 
   call log_event( "Setting up partition mesh(es)", LOG_LEVEL_INFO )
 
-  reference_element = cellshape
-
   ! Currently only quad elements are fully functional
-  if (reference_element /= finite_element_cellshape_quadrilateral) then
+  if (cellshape /= finite_element_cellshape_quadrilateral) then
     call log_event( "Reference_element must be QUAD for now...", &
                     LOG_LEVEL_ERROR )
   end if
-
-  ! Setup reference cube
-  call reference_cube()
-  call reference_cube_data()
 
   ! Setup the partitioning strategy
   if (geometry == base_mesh_geometry_spherical) then

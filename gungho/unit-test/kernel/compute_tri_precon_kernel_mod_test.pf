@@ -76,7 +76,6 @@ contains
                                           feign_planet_config,              &
                                           feign_timestepping_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -99,9 +98,6 @@ contains
     call feign_timestepping_config(method, dt, alpha, tau_u, tau_t, tau_r, &
                                    nout, nin, rk_method,&
                                    spinup_period, spinup_alpha, spinup_winds    )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -139,15 +135,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(compute_tri_precon_test_type), intent(inout) :: this
 
     deallocate( this%diff_basis_chi )
 
-    call deallocate_reference()
     call function_space_collection%clear()
     call mesh_collection%clear()
 

@@ -8,29 +8,30 @@
 !>
 module partition_mod_test
 
-  use ESMF
-  use pFUnit_Mod
-  use partition_mod
-
-  use infrastructure_suite_fixture_mod, only: get_esmf_handle
   use constants_mod,                    only: r_def, i_def, str_max_filename, &
                                               str_def
+  use ESMF
   use global_mesh_mod,                  only: global_mesh_type
   use global_mesh_collection_mod,       only: global_mesh_collection_type, &
                                               global_mesh_collection
+  use infrastructure_suite_fixture_mod, only: get_esmf_handle
+  use partition_mod
+  use pFUnit_Mod
+  use reference_element_mod,            only: reference_cube_type
 
-  implicit none 
+  implicit none
 
   private
-  public setUp                        &
-       , tearDown                     &
-       , test_partition_CubedSphere   &
-       , test_partition_BiPeriodic
+  public :: setUp, tearDown, &
+            test_partition_CubedSphere, test_partition_BiPeriodic
 
   @testCase
   type, public, extends( TestCase ) :: partition_test_type
+    private
     integer :: dummy ! This is here only so procedures which do not use "this"
                      ! have something they can hit.
+    integer, allocatable :: dummy_for_gfortran
+    type(reference_cube_type), pointer :: reference_element => null()
     integer :: total_ranks
     integer :: local_rank
   contains
@@ -46,8 +47,6 @@ contains
 
   subroutine setUp( this )
 
-    use reference_element_mod, only : reference_cube
-
     implicit none
 
     class( partition_test_type ), intent( inout ) :: this
@@ -61,11 +60,9 @@ contains
                     rc=rc)
     if (rc /= ESMF_SUCCESS) stop 'Unable to get VM'
 
+    allocate( this%reference_element, source=reference_cube_type() )
     this%total_ranks = petCount
     this%local_rank  = localPET
-
-    ! Set up stuff that the global_mesh object needs
-    call reference_cube()
 
     global_mesh_collection = global_mesh_collection_type()
 
@@ -73,14 +70,11 @@ contains
 
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class( partition_test_type ), intent( inout ) :: this
 
-    ! clean up the reference_cube we created at the start of the test
-    call deallocate_reference()
+    deallocate( this%reference_element )
 
     call global_mesh_collection%clear()
 
@@ -91,271 +85,272 @@ contains
   @test
   subroutine test_partition_BiPeriodic( this )
 
-  implicit none
+    implicit none
 
-  class( partition_test_type ), intent( inout ) :: this
+    class( partition_test_type ), intent( inout ) :: this
 
-  type(global_mesh_type), pointer :: global_mesh => null()
-  type(partition_type)            :: partition
+    type(global_mesh_type), pointer :: global_mesh => null()
+    type(partition_type)            :: partition
 
-  procedure (partitioner_interface), pointer :: partitioner_ptr => null ()
+    procedure (partitioner_interface), pointer :: partitioner_ptr => null ()
 
-  integer :: xproc
-  integer :: yproc
-  integer :: local_rank
-  integer :: total_ranks
-  integer :: max_stencil_depth
+    integer :: xproc
+    integer :: yproc
+    integer :: local_rank
+    integer :: total_ranks
+    integer :: max_stencil_depth
 
-  integer :: num_cells_in_layer
-  integer :: inner_depth
-  integer :: halo_depth  
-  integer :: num_cells_inner
-  integer :: last_inner_cell
-  integer :: num_cells_edge
-  integer :: last_edge_cell
-  integer :: num_cells_halo
-  integer :: last_halo_cell
-  integer(i_def) :: num_cells_ghost
-  integer :: cell_owner
-  integer :: lid
-  integer :: gid
+    integer :: num_cells_in_layer
+    integer :: inner_depth
+    integer :: halo_depth
+    integer :: num_cells_inner
+    integer :: last_inner_cell
+    integer :: num_cells_edge
+    integer :: last_edge_cell
+    integer :: num_cells_halo
+    integer :: last_halo_cell
+    integer(i_def) :: num_cells_ghost
+    integer :: cell_owner
+    integer :: lid
+    integer :: gid
 
-  integer(i_def) :: npanels
-  integer(i_def) :: global_mesh_id
+    integer(i_def) :: npanels
+    integer(i_def) :: global_mesh_id
 
-  character(len = str_max_filename) :: filename
+    character(len = str_max_filename) :: filename
 
-  !------------------------------------------------
-  ! Test partition_biperiodic (on a single process)
-  !------------------------------------------------
-  xproc = 1
-  yproc = 1
-  local_rank = this%local_rank
-  total_ranks = this%total_ranks
-  max_stencil_depth = 1
+    !------------------------------------------------
+    ! Test partition_biperiodic (on a single process)
+    !------------------------------------------------
+    xproc = 1
+    yproc = 1
+    local_rank = this%local_rank
+    total_ranks = this%total_ranks
+    max_stencil_depth = 1
 
-  filename = 'data/mesh_BiP8x8-6000x2000.nc' 
-  npanels  = 1
-  global_mesh_id =  global_mesh_collection%add_new_global_mesh( filename,  &
-                                                                mesh_name, &
-                                                                npanels )
-  global_mesh    => global_mesh_collection%get_global_mesh( global_mesh_id )
+    filename = 'data/mesh_BiP8x8-6000x2000.nc'
+    npanels  = 1
+    global_mesh_id =  global_mesh_collection%add_new_global_mesh( filename,  &
+                                                                  mesh_name, &
+                                                                  npanels )
+    global_mesh    => global_mesh_collection%get_global_mesh( global_mesh_id )
 
-  partitioner_ptr => partitioner_biperiodic
+    partitioner_ptr => partitioner_biperiodic
+    !
+    ! Generate the partition
+    partition = partition_type( global_mesh, &
+                                partitioner_ptr, &
+                                xproc, &
+                                yproc, &
+                                max_stencil_depth, &
+                                local_rank, &
+                                total_ranks )
+    !
+    ! Test functionality of the partition object we've just created
+    num_cells_in_layer = partition%get_num_cells_in_layer()
+    @assertEqual( 64, num_cells_in_layer )
+
+    inner_depth = partition%get_inner_depth()
+    @assertEqual( 2, inner_depth )
+
+    num_cells_inner = partition%get_num_cells_inner(1)
+    @assertEqual( 20, num_cells_inner )
+
+    last_inner_cell = partition%get_last_inner_cell(1)
+    @assertEqual( 36, last_inner_cell )
+
+    num_cells_edge = partition%get_num_cells_edge()
+    @assertEqual( 28, num_cells_edge )
+
+    last_edge_cell = partition%get_last_edge_cell()
+    @assertEqual( 64, last_edge_cell )
+
+    halo_depth = partition%get_halo_depth()
+    @assertEqual( 2, halo_depth )
+
+    num_cells_halo = partition%get_num_cells_halo(1)
+    @assertEqual( 0, num_cells_halo )
+
+    last_halo_cell = partition%get_last_halo_cell(1)
+    @assertEqual( 64, last_halo_cell )
+
+    num_cells_ghost = partition%get_num_cells_ghost()
+    @assertEqual( 0, num_cells_ghost )
+
+    cell_owner = partition%get_cell_owner( 1 )
+    @assertEqual( 0, cell_owner )
+
+    lid = 1
+    gid = partition%get_gid_from_lid( lid )
+    @assertEqual( 27, gid )
+
+    gid = 30
+    lid = partition%get_lid_from_gid( gid )
+    @assertEqual( 4, lid )
+
+    !> @todo Can't test a parallel biperiodic partition until the unit tests
+    !>       can be run in parallel - but that will be another ticket
+    !
+    !  !---------------------------------------
+    !  !Test partition_biperiodic (in parallel)
+    !  !---------------------------------------
+    !  xproc = 2
+    !  yproc = 2
+    !  local_rank = 2
+    !  total_ranks = 4
+    !  max_stencil_depth = 2
+    !  !
+    !  ! Set a new global mesh - everything else is the same as previous test
+    !  filename = 'data/ugrid_quads_2d.nc'
+    !  global_mesh = global_mesh_type( filename )
+    !  !
+    !  ! Generate the partition
+    !  partition = partition_type( global_mesh, &
+    !                              partitioner_ptr, &
+    !                              xproc, &
+    !                              yproc, &
+    !                              max_stencil_depth, &
+    !                              local_rank, &
+    !                              total_ranks )
+    !  !
+    !  ! Test functionality of the partition object we've just created
+    !  ...
+
+  end subroutine test_partition_BiPeriodic
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Test partition_cubedsphere_serial (on a single process)
   !
-  ! Generate the partition
-  partition = partition_type( global_mesh, &
-                              partitioner_ptr, &
-                              xproc, &
-                              yproc, &
-                              max_stencil_depth, &
-                              local_rank, &
-                              total_ranks )
-  !
-  ! Test functionality of the partition object we've just created
-  num_cells_in_layer = partition%get_num_cells_in_layer()
-  @assertEqual( 64, num_cells_in_layer )
-
-  inner_depth = partition%get_inner_depth()
-  @assertEqual( 2, inner_depth )
-
-  num_cells_inner = partition%get_num_cells_inner(1)
-  @assertEqual( 20, num_cells_inner )
-
-  last_inner_cell = partition%get_last_inner_cell(1)
-  @assertEqual( 36, last_inner_cell )
-
-  num_cells_edge = partition%get_num_cells_edge()
-  @assertEqual( 28, num_cells_edge )
-
-  last_edge_cell = partition%get_last_edge_cell()
-  @assertEqual( 64, last_edge_cell )
-
-  halo_depth = partition%get_halo_depth()
-  @assertEqual( 2, halo_depth )
-
-  num_cells_halo = partition%get_num_cells_halo(1)
-  @assertEqual( 0, num_cells_halo )
-
-  last_halo_cell = partition%get_last_halo_cell(1)
-  @assertEqual( 64, last_halo_cell )
-
-  num_cells_ghost = partition%get_num_cells_ghost()
-  @assertEqual( 0, num_cells_ghost )
-
-  cell_owner = partition%get_cell_owner( 1 )
-  @assertEqual( 0, cell_owner )
-
-  lid = 1
-  gid = partition%get_gid_from_lid( lid )
-  @assertEqual( 27, gid )
-
-  gid = 30
-  lid = partition%get_lid_from_gid( gid )
-  @assertEqual( 4, lid )
-
-!> @todo  Can't test a parallel biperiodic partition until the unit tests can
-!>        be run in parallel - but that will be another ticket
-!
-!  !---------------------------------------
-!  !Test partition_biperiodic (in parallel)
-!  !---------------------------------------
-!  xproc = 2
-!  yproc = 2
-!  local_rank = 2
-!  total_ranks = 4
-!  max_stencil_depth = 2
-!  !
-!  ! Set a new global mesh - everything else is the same as previous test
-!  filename = 'data/ugrid_quads_2d.nc' 
-!  global_mesh = global_mesh_type( filename )
-!  !
-!  ! Generate the partition
-!  partition = partition_type( global_mesh, &
-!                              partitioner_ptr, &
-!                              xproc, &
-!                              yproc, &
-!                              max_stencil_depth, &
-!                              local_rank, &
-!                              total_ranks )
-!  !
-!  ! Test functionality of the partition object we've just created
-!  ...
-
-end subroutine test_partition_BiPeriodic
-
   @test
   subroutine test_partition_CubedSphere( this )
 
-  !-------------------------------------------------------
-  !Test partition_cubedsphere_serial (on a single process)
-  !-------------------------------------------------------
+    implicit none
 
-  class( partition_test_type ), intent( inout ) :: this
+    class( partition_test_type ), intent( inout ) :: this
 
-  type(global_mesh_type), pointer :: global_mesh => null()
-  type(partition_type)            :: partition
+    type(global_mesh_type), pointer :: global_mesh => null()
+    type(partition_type)            :: partition
 
-  procedure (partitioner_interface), pointer :: partitioner_ptr => null ()
+    procedure (partitioner_interface), pointer :: partitioner_ptr => null ()
 
-  integer :: xproc
-  integer :: yproc
-  integer :: local_rank
-  integer :: total_ranks
-  integer :: max_stencil_depth
+    integer :: xproc
+    integer :: yproc
+    integer :: local_rank
+    integer :: total_ranks
+    integer :: max_stencil_depth
 
-  integer :: num_cells_in_layer
-  integer :: inner_depth
-  integer :: halo_depth  
-  integer :: num_cells_inner
-  integer :: last_inner_cell
-  integer :: num_cells_edge
-  integer :: last_edge_cell
-  integer :: num_cells_halo
-  integer :: last_halo_cell
-  integer(i_def) :: num_cells_ghost
-  integer :: cell_owner
-  integer :: lid
-  integer :: gid
+    integer :: num_cells_in_layer
+    integer :: inner_depth
+    integer :: halo_depth
+    integer :: num_cells_inner
+    integer :: last_inner_cell
+    integer :: num_cells_edge
+    integer :: last_edge_cell
+    integer :: num_cells_halo
+    integer :: last_halo_cell
+    integer(i_def) :: num_cells_ghost
+    integer :: cell_owner
+    integer :: lid
+    integer :: gid
 
-  integer(i_def) :: npanels
-  integer(i_def) :: global_mesh_id
+    integer(i_def) :: npanels
+    integer(i_def) :: global_mesh_id
 
-  character(len = str_max_filename) :: filename
+    character(len = str_max_filename) :: filename
 
-  xproc = 1
-  yproc = 1
-  local_rank = this%local_rank
-  total_ranks = this%total_ranks
-  max_stencil_depth = 1
+    xproc = 1
+    yproc = 1
+    local_rank = this%local_rank
+    total_ranks = this%total_ranks
+    max_stencil_depth = 1
 
 
-  filename = 'data/mesh_C4.nc' 
-  npanels  = 6
-  global_mesh_id =  global_mesh_collection%add_new_global_mesh( filename,  &
-                                                                mesh_name, &
-                                                                npanels )
-  global_mesh    => global_mesh_collection%get_global_mesh( global_mesh_id )
+    filename = 'data/mesh_C4.nc'
+    npanels  = 6
+    global_mesh_id =  global_mesh_collection%add_new_global_mesh( filename,  &
+                                                                  mesh_name, &
+                                                                  npanels )
+    global_mesh    => global_mesh_collection%get_global_mesh( global_mesh_id )
 
-  partitioner_ptr => partitioner_cubedsphere_serial
+    partitioner_ptr => partitioner_cubedsphere_serial
 
-  partition = partition_type( global_mesh, &
-                              partitioner_ptr, &
-                              xproc, &
-                              yproc, &
-                              max_stencil_depth, &
-                              local_rank, &
-                              total_ranks )
-  !
-  ! Test functionality of the partition object we've just created
-  num_cells_in_layer = partition%get_num_cells_in_layer()
-  @assertEqual( 96, num_cells_in_layer )
+    partition = partition_type( global_mesh, &
+                                partitioner_ptr, &
+                                xproc, &
+                                yproc, &
+                                max_stencil_depth, &
+                                local_rank, &
+                                total_ranks )
+    !
+    ! Test functionality of the partition object we've just created
+    num_cells_in_layer = partition%get_num_cells_in_layer()
+    @assertEqual( 96, num_cells_in_layer )
 
-  inner_depth = partition%get_inner_depth()
-  @assertEqual( 2, inner_depth )
+    inner_depth = partition%get_inner_depth()
+    @assertEqual( 2, inner_depth )
 
-  num_cells_inner = partition%get_num_cells_inner(2)
-  @assertEqual( 96, num_cells_inner )
+    num_cells_inner = partition%get_num_cells_inner(2)
+    @assertEqual( 96, num_cells_inner )
 
-  last_inner_cell = partition%get_last_inner_cell(1)
-  @assertEqual( 96, last_inner_cell )
+    last_inner_cell = partition%get_last_inner_cell(1)
+    @assertEqual( 96, last_inner_cell )
 
-  num_cells_edge = partition%get_num_cells_edge()
-  @assertEqual( 0, num_cells_edge )
+    num_cells_edge = partition%get_num_cells_edge()
+    @assertEqual( 0, num_cells_edge )
 
-  last_edge_cell = partition%get_last_edge_cell()
-  @assertEqual( 96, last_edge_cell )
+    last_edge_cell = partition%get_last_edge_cell()
+    @assertEqual( 96, last_edge_cell )
 
-  halo_depth = partition%get_halo_depth()
-  @assertEqual( 2, halo_depth )
+    halo_depth = partition%get_halo_depth()
+    @assertEqual( 2, halo_depth )
 
-  num_cells_halo = partition%get_num_cells_halo(1)
-  @assertEqual( 0, num_cells_halo )
+    num_cells_halo = partition%get_num_cells_halo(1)
+    @assertEqual( 0, num_cells_halo )
 
-  last_halo_cell = partition%get_last_halo_cell(1)
-  @assertEqual( 96, last_halo_cell )
+    last_halo_cell = partition%get_last_halo_cell(1)
+    @assertEqual( 96, last_halo_cell )
 
-  num_cells_ghost = partition%get_num_cells_ghost()
-  @assertEqual( 0, num_cells_ghost )
+    num_cells_ghost = partition%get_num_cells_ghost()
+    @assertEqual( 0, num_cells_ghost )
 
-  cell_owner = partition%get_cell_owner( 1 )
-  @assertEqual( 0, cell_owner )
+    cell_owner = partition%get_cell_owner( 1 )
+    @assertEqual( 0, cell_owner )
 
-  lid = 1
-  gid = partition%get_gid_from_lid( lid )
-  @assertEqual( 1, gid )
+    lid = 1
+    gid = partition%get_gid_from_lid( lid )
+    @assertEqual( 1, gid )
 
-  gid = 96
-  lid = partition%get_lid_from_gid( gid )
-  @assertEqual( 96, lid )
+    gid = 96
+    lid = partition%get_lid_from_gid( gid )
+    @assertEqual( 96, lid )
 
-!> @todo  Can't test a parallel cubed-sphere partition until the unit tests can
-!>        be run in parallel - but that will be another ticket
-!
-!  !----------------------------------------
-!  !Test partition_cubedsphere (in parallel)
-!  !----------------------------------------
-!  xproc = 2
-!  yproc = 2
-!  local_rank = this%local_rank
-!  total_ranks = this%total_ranks
-!  max_stencil_depth = 2
-!
-!  filename = 'data/ugrid_quads_2d.nc' 
-!  global_mesh = global_mesh_type( filename )
-!  partitioner_ptr => partitioner_cubedsphere
-!
-!  partition = partition_type( global_mesh, &
-!                              partitioner_ptr, &
-!                              xproc, &
-!                              yproc, &
-!                              max_stencil_depth, &
-!                              local_rank, &
-!                              total_ranks )
-!  !
-!  ! Test functionality of the partition object we've just created
-!  ...
+    !> @todo Can't test a parallel cubed-sphere partition until the unit tests
+    !>       can be run in parallel - but that will be another ticket.
+    !
+    !  !----------------------------------------
+    !  !Test partition_cubedsphere (in parallel)
+    !  !----------------------------------------
+    !  xproc = 2
+    !  yproc = 2
+    !  local_rank = this%local_rank
+    !  total_ranks = this%total_ranks
+    !  max_stencil_depth = 2
+    !
+    !  filename = 'data/ugrid_quads_2d.nc'
+    !  global_mesh = global_mesh_type( filename )
+    !  partitioner_ptr => partitioner_cubedsphere
+    !
+    !  partition = partition_type( global_mesh, &
+    !                              partitioner_ptr, &
+    !                              xproc, &
+    !                              yproc, &
+    !                              max_stencil_depth, &
+    !                              local_rank, &
+    !                              total_ranks )
+    !  !
+    !  ! Test functionality of the partition object we've just created
+    !  ...
 
-end subroutine test_partition_CubedSphere
+  end subroutine test_partition_CubedSphere
 
 end module partition_mod_test

@@ -29,10 +29,10 @@ module sample_poly_flux_kernel_mod_test
     private
     type(function_space_type), pointer :: w2_fs => null()
     type(function_space_type), pointer :: w3_fs => null()
-    type(field_type)                   :: rho, u, flux 
+    type(field_type)                   :: rho, u, flux
     real(r_def), allocatable           :: basis_u(:,:,:)
     type(stencil_dofmap_type), pointer :: stencil => null()
-   
+
   contains
     procedure setUp
     procedure tearDown
@@ -48,7 +48,6 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -58,9 +57,6 @@ contains
 
     integer(i_def) :: dim_u, ndf_u
     integer(i_def) :: mesh_id
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -75,7 +71,7 @@ contains
 
     this%u = field_type( vector_space = this%w2_fs )
     u_p    = this%u%get_proxy()
-    ndf_u  = u_p%vspace%get_ndf( )    
+    ndf_u  = u_p%vspace%get_ndf( )
     dim_u  = u_p%vspace%get_dim_space( )
 
     this%rho  = field_type( vector_space = this%w3_fs )
@@ -91,8 +87,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(sample_poly_flux_test_type), intent(inout) :: this
@@ -100,7 +94,6 @@ contains
     deallocate( this%basis_u )
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown
@@ -109,9 +102,11 @@ contains
   @test
   subroutine test_all( this )
 
-    use sample_poly_flux_kernel_mod,     only : sample_poly_flux_code, &
-                                                sample_poly_flux_init
-    use function_space_mod,              only : BASIS
+    use function_space_mod,          only : BASIS
+    use mesh_mod,                    only : mesh_type
+    use reference_element_mod,       only : reference_element_type
+    use sample_poly_flux_kernel_mod, only : sample_poly_flux_code, &
+                                            sample_poly_flux_init
 
     implicit none
 
@@ -124,17 +119,20 @@ contains
     integer(i_def) :: cell
 
     ! Variables for testing sample_poly_flux
+    type(field_proxy_type)    :: flux_p, rho_p, u_p
+
+    class(mesh_type),              pointer :: mesh              => null()
+    class(reference_element_type), pointer :: reference_element => null()
+    real(kind=r_def),              pointer :: nodes_u(:,:)      => null()
+    integer, pointer :: stencil_map(:,:,:) => null()
+    integer, pointer :: map_u(:,:) => null() 
+    integer, pointer :: map_rho(:,:) => null()
 
     integer          :: ndf_rho, undf_rho, dim_u, &
                         ndf_u, undf_u
     integer          :: df_u1, df_u2
 
-    integer, pointer :: stencil_map(:,:,:) => null()
-    integer, pointer :: map_u(:,:) => null() 
-    integer, pointer :: map_rho(:,:) => null() 
-
-    type(field_proxy_type)    :: flux_p, rho_p, u_p
-    real(kind=r_def), pointer :: nodes_u(:,:) => null()
+    real(r_def), allocatable :: out_face_normal(:,:)
 
     ! Test flux computation
 
@@ -174,20 +172,24 @@ contains
     call sample_poly_flux_init(2, flux_p%vspace%get_nlayers())
     flux_p%data(:) = 0.0_r_def
 
-    call sample_poly_flux_code(flux_p%vspace%get_nlayers(), &
-                               flux_p%data, & 
-                               u_p%data, &
-                               rho_p%data, &
-                               5, &
-                               stencil_map(:,:,cell), &
-                               ndf_u, & 
-                               undf_u, &
-                               map_u(:,cell), &
-                               this%basis_u, &
-                               ndf_rho, &
-                               undf_rho, &
-                               map_rho(:,cell) &
-                              )
+    mesh              => flux_p%vspace%get_mesh()
+    reference_element => mesh%get_reference_element()
+    call reference_element%get_normals_to_out_faces( out_face_normal )
+
+    call sample_poly_flux_code( flux_p%vspace%get_nlayers(), &
+                                flux_p%data,                 &
+                                u_p%data,                    &
+                                rho_p%data,                  &
+                                5,                           &
+                                stencil_map(:,:,cell),       &
+                                ndf_u,                       &
+                                undf_u,                      &
+                                map_u(:,cell),               &
+                                this%basis_u,                &
+                                ndf_rho,                     &
+                                undf_rho,                    &
+                                map_rho(:,cell),             &
+                                out_face_normal )
 
      answer = 0.0_r_def 
      @assertEqual(answer, flux_p%data(map_u(3,cell) ), tol)

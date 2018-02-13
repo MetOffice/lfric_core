@@ -29,7 +29,7 @@
 
 &gw_miniapp_constants
   speed_of_sound = 340.0
-  b_space = wtheta
+  b_space = 'wtheta'
 /
 
 &initial_wind

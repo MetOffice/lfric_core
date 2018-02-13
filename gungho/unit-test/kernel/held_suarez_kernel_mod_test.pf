@@ -74,8 +74,7 @@ contains
                                           feign_physics_config
     use function_space_mod,        only : function_space_type
     use mesh_mod,                  only : PLANE_BI_PERIODIC, PLANE
-    use reference_element_mod,     only : reference_cube,   &
-                                          reference_element
+
     implicit none
 
     class(held_suarez_test_type), intent(inout) :: this
@@ -115,9 +114,6 @@ contains
 			       l_flux_bc=.false.,              &
 			       fixed_flux_e=0.0_r_def,         &
 			       fixed_flux_h=0.0_r_def )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -165,8 +161,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(held_suarez_test_type), intent(inout) :: this
@@ -174,9 +168,8 @@ contains
     deallocate( this%answer_du, this%answer_dtheta )
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
-    
+
   end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

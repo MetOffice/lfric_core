@@ -36,7 +36,8 @@ module gungho_driver_mod
                                          output_xios_nodal, &
                                          xios_domain_init
   use iter_timestep_alg_mod,      only : iter_alg_init, &
-                                         iter_alg_step
+                                         iter_alg_step, &
+                                         iter_alg_final
   use log_mod,                    only : log_event,         &
                                          log_set_level,     &
                                          log_scratch_space, &
@@ -470,6 +471,8 @@ contains
     if ( transport_only .and. scheme == transport_scheme_method_of_lines) then
       call rk_transport_final( rho, theta)
     end if
+
+    call iter_alg_final()
 
     if ( subroutine_timers ) then
       call timer('gungho')

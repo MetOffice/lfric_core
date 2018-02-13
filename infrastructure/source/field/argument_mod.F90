@@ -93,6 +93,14 @@ module argument_mod
   integer, public, parameter               :: CROSS  = 4
   integer, public, parameter, dimension(4) :: STENCIL = -1
 
+  !> @defgroup mesh_data_items Enumeration of mesh data items.
+  !> @{
+  integer, public, parameter :: adjacent_face                             = 600
+  integer, public, parameter :: reference_element_number_horizontal_faces = 601
+  integer, public, parameter :: reference_element_normal_to_face          = 602
+  integer, public, parameter :: reference_element_out_face_normal         = 603
+  !> @}
+
 ! Metadata argument type 
   type, public :: arg_type
      integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_COLUMNWISE_OPERATOR,&
@@ -112,6 +120,12 @@ module argument_mod
      integer :: wproperties2 = -1 ! { " } optional and must be a distinct property
      integer :: wproperties3 = -1 ! { " } optional and must be a distinct property
   end type func_type
+
+  !> Describes mesh data requirements used in kernel metadata.
+  !>
+  type, public :: mesh_data_type
+    integer :: mesh_data_item
+  end type mesh_data_type
 
 end module argument_mod
 

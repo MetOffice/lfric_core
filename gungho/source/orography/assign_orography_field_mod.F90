@@ -14,7 +14,7 @@ module assign_orography_field_mod
   use mesh_collection_mod,            only : mesh_collection
   use coord_transform_mod,            only : xyz2llr, llr2xyz
   use orography_helper_functions_mod, only : z2eta_linear, eta2z_linear
-  use analytic_orography_mod,         only : orography_type
+  use analytic_orography_mod,         only : orography_profile
   use log_mod,                        only : log_event,      &
                                              LOG_LEVEL_INFO, &
                                              LOG_LEVEL_ERROR
@@ -84,7 +84,7 @@ contains
     ! Procedure pointer
     procedure(assign_orography_interface), pointer :: assign_orography => null()
 
-    if ( allocated(orography_type) ) then
+    if ( allocated(orography_profile) ) then
       call log_event( "assign_orography_field: "// &
                       "Calculating analytic orography.", LOG_LEVEL_INFO )
 
@@ -198,7 +198,7 @@ contains
         call xyz2llr(chi_1(dfk), chi_2(dfk), chi_3(dfk), longitude, latitude, r)
 
         ! Calculate surface height for each DoF using selected analytic orography
-        chi_oro = orography_type%analytic_orography(longitude, latitude)
+        chi_oro = orography_profile%analytic_orography(longitude, latitude)
 
         ! Calculate nondimensional coordinate from current height coordinate 
         ! (chi_3) with flat domain_surface
@@ -262,7 +262,7 @@ contains
         dfk = map(df)+k 
 
         ! Calculate surface height for each DoF using selected analytic orography
-        chi_oro = orography_type%analytic_orography(chi_1(dfk), chi_2(dfk))
+        chi_oro = orography_profile%analytic_orography(chi_1(dfk), chi_2(dfk))
 
         ! Calculate nondimensional coordinate from current height coordinate 
         ! (chi_3) with flat domain_surface

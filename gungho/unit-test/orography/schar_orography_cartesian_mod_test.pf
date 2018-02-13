@@ -14,7 +14,7 @@ module schar_orography_cartesian_mod_test
   use global_mesh_mod,            only : global_mesh_type
   use mesh_collection_mod,        only : mesh_collection_type, &
                                          mesh_collection
-  use analytic_orography_mod,     only : orography_type
+  use analytic_orography_mod,     only : orography_profile
 
   use pFUnit_Mod
 
@@ -54,7 +54,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp(this)
 
-    use reference_element_mod,         only : reference_cube, reference_element
     use schar_orography_cartesian_mod, only : schar_cartesian_type
     use finite_element_config_mod,     only : finite_element_cellshape_quadrilateral
     use base_mesh_config_mod,          only : base_mesh_geometry_planar, &
@@ -69,9 +68,6 @@ contains
     implicit none
 
     class(schar_orography_cartesian_test_type), intent(inout) :: this
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level collections
     global_mesh_collection = global_mesh_collection_type()
@@ -108,8 +104,8 @@ contains
                direction       = orography_schar_cartesian_direction_x )
 
     ! Initialise Schar Cartesian orography type
-    allocate( orography_type, source = schar_cartesian_type(       &
-                                             this%mountain_height, &
+    allocate( orography_profile,                                   &
+              source = schar_cartesian_type( this%mountain_height, &
                                              this%half_width_x,    &
                                              this%half_width_y,    &
                                              this%wavelength,      &
@@ -122,12 +118,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown(this)
 
-    use reference_element_mod, only : deallocate_reference
     implicit none
 
     class(schar_orography_cartesian_test_type), intent(inout) :: this
 
-    call deallocate_reference()
+    deallocate( orography_profile )
     call global_mesh_collection%clear()
     call mesh_collection%clear()
 
@@ -197,15 +192,15 @@ contains
     ! Calculate surface height for selected number of points
     itest = 159
     call global_mesh%get_vert_coords(itest,vertex_coords_2d(:,1))
-    chi_surf = orography_type%analytic_orography(vertex_coords_2d(1,1), &
-                                                 vertex_coords_2d(2,1))
+    chi_surf = orography_profile%analytic_orography(vertex_coords_2d(1,1), &
+                                                    vertex_coords_2d(2,1))
     chi_test = this%mountain_height
     @assertEqual( chi_surf, chi_test, tol )
 
     itest = 5
     call global_mesh%get_vert_coords(itest,vertex_coords_2d(:,1))
-    chi_surf = orography_type%analytic_orography(vertex_coords_2d(1,1), &
-                                                 vertex_coords_2d(2,1))
+    chi_surf = orography_profile%analytic_orography(vertex_coords_2d(1,1), &
+                                                    vertex_coords_2d(2,1))
     chi_test = 91.96986_r_def
     @assertEqual( chi_surf, chi_test, tol )
 

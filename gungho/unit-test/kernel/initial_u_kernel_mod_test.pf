@@ -63,7 +63,6 @@ contains
                                           feign_initial_wind_config
     use initial_wind_config_mod,   only : initial_wind_profile_none
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -89,9 +88,6 @@ contains
     call feign_initial_wind_config( initial_wind_profile_none,                &
                                     nl_constant, wind_time_period,            &
                                     sbr_angle_lat, sbr_angle_lon, u0, v0, .false. )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -138,8 +134,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(initial_u_test_type), intent(inout) :: this
@@ -147,7 +141,6 @@ contains
     deallocate(this%basis_w2, this%basis_w0, this%diff_basis_w0)
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown

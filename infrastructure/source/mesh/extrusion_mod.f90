@@ -4,18 +4,31 @@
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
 
-!> Provides extrusion methods for converting a 2D mesh to a unitless 3D mesh.
+!> @brief Provides extrusion methods for converting a 2D mesh to a unitless
+!>        3D mesh.
+!>
+!> An abstract extrusion_type holds the data and provides getters to access
+!> it. Concrete classes derived from it then implement the specific extrusion
+!> routine.
+!>
+!> The result of this design is that once an extrusion object is created it
+!> may be passed around as its abstract base class. Thus the ultimate point
+!> of use need know nothing about which extrusion is being used.
 !>
 module extrusion_mod
 
-  use constants_mod, only : i_def, r_def
+  use constants_mod,         only : i_def, r_def
+  use global_mesh_mod,       only : global_mesh_type
+  use log_mod,               only : log_scratch_space, log_event, &
+                                    log_level_error
+  use reference_element_mod, only : reference_element_type
 
   implicit none
 
   private
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> All extrusion implementations inherit from this class.
+  !> @brief All extrusion implementations inherit from this class.
   !>
   type, public, abstract :: extrusion_type
 
@@ -32,6 +45,7 @@ module extrusion_mod
     procedure, public :: get_atmosphere_bottom
     procedure, public :: get_atmosphere_top
     procedure, public :: get_number_of_layers
+    procedure, public :: get_reference_element
     procedure(extrude_method), public, deferred :: extrude
 
     procedure :: extrusion_constructor
@@ -47,7 +61,7 @@ module extrusion_mod
   end interface
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes with equel distribution of layers.
+  !> @brief Extrudes with equal distribution of layers.
   !>
   type, public, extends(extrusion_type) :: uniform_extrusion_type
     private
@@ -61,7 +75,8 @@ module extrusion_mod
   end interface uniform_extrusion_type
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes with layers x^2 layers.
+  !> @brief Extrudes with a @f$\left(\frac{layer}{n_{layers}}\right)^2@f$
+  !>        distribution of layers.
   !>
   type, public, extends(extrusion_type) :: quadratic_extrusion_type
     private
@@ -75,7 +90,7 @@ module extrusion_mod
   end interface quadratic_extrusion_type
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes with "geometric" layers.
+  !> @brief Extrudes with "geometric" layers.
   !>
   type, public, extends(extrusion_type) :: geometric_extrusion_type
     private
@@ -89,7 +104,7 @@ module extrusion_mod
   end interface geometric_extrusion_type
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes using DCMIP scheme.
+  !> @brief Extrudes using DCMIP scheme.
   !>
   type, public, extends(extrusion_type) :: dcmip_extrusion_type
     private
@@ -105,7 +120,13 @@ module extrusion_mod
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Creates a uniform_extrusion_type object.
+  !> @brief Creates a uniform_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New uniform_extrusion_type object.
   !>
   function uniform_extrusion_constructor( atmosphere_bottom, &
                                           atmosphere_top,    &
@@ -125,7 +146,9 @@ contains
   end function uniform_extrusion_constructor
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes the mesh to give constant delta between layers.
+  !> @brief Extrudes the mesh to give constant delta between layers.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
   !>
   subroutine uniform_extrude( this, eta )
 
@@ -143,7 +166,13 @@ contains
   end subroutine uniform_extrude
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Creates a quadratic_extrusion_type object.
+  !> @brief Creates a quadratic_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New quadratic_extrusion_type object.
   !>
   function quadratic_extrusion_constructor( atmosphere_bottom, &
                                             atmosphere_top,    &
@@ -163,7 +192,10 @@ contains
   end function quadratic_extrusion_constructor
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes the mesh to give x^2 delta between layers.
+  !> @brief Extrudes the mesh to give layer boundaries
+  !>        @f$\frac{l}{n_{layers}}^2@f$.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
   !>
   subroutine quadratic_extrude( this, eta )
 
@@ -181,7 +213,13 @@ contains
   end subroutine quadratic_extrude
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Creates a geometric_extrusion_type object.
+  !> @brief Creates a geometric_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New geometric_extrusion_type object.
   !>
   function geometric_extrusion_constructor( atmosphere_bottom, &
                                             atmosphere_top,    &
@@ -201,7 +239,9 @@ contains
   end function geometric_extrusion_constructor
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes the mesh to give a John Thuburn ENDGame non-staggered grid.
+  !> @brief Extrudes the mesh to give a John Thuburn ENDGame non-staggered grid.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
   !>
   subroutine geometric_extrude( this, eta )
 
@@ -227,7 +267,13 @@ contains
   end subroutine geometric_extrude
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Creates a dcmip_extrusion_type object.
+  !> @brief Creates a dcmip_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New dcmip_extrusion_type object.
   !>
   function dcmip_extrusion_constructor( atmosphere_bottom, &
                                         atmosphere_top,    &
@@ -247,10 +293,12 @@ contains
   end function dcmip_extrusion_constructor
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Extrudes the mesh using the DCMIP scheme.
+  !> @brief Extrudes the mesh using the DCMIP scheme.
   !>
   !> For more information see DCMIP-TestCaseDocument_v1.7.pdf,
   !> Appendix F.2. - Eq. 229.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
   !>
   subroutine dcmip_extrude( this, eta )
 
@@ -274,7 +322,7 @@ contains
   end subroutine dcmip_extrude
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Initialises the extrusion base class.
+  !> @brief Initialises the extrusion base class.
   !>
   !> This method should be called from child method constructors in order to
   !> populate the parent fields.
@@ -303,7 +351,42 @@ contains
   end subroutine extrusion_constructor
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Gets the bottom of the atmosphere or the surface of the planet.
+  !> @brief Gets the reference element for this extrusion given a particular
+  !>        base mesh.
+  !>
+  !> @param[in] mesh Base mesh object.
+  !> @param[out] reference_element Shape of a 3D element given the extrusion.
+  !>
+  subroutine get_reference_element( this, mesh, reference_element )
+
+    use reference_element_mod, only : reference_prism_type, &
+                                      reference_cube_type
+    implicit none
+
+    class(extrusion_type),   intent(in) :: this
+    class(global_mesh_type), intent(in) :: mesh
+    class(reference_element_type), &
+                             intent(out), allocatable :: reference_element
+
+    type(reference_prism_type) :: reference_prism
+    type(reference_cube_type)  :: reference_cube
+
+    select case (mesh%get_nverts_per_cell())
+      case (3)
+        allocate( reference_element, source=reference_prism_type() )
+      case (4)
+        allocate( reference_element, source=reference_cube_type() )
+      case default
+        write( log_scratch_space, &
+              '("Base mesh with ", I0, " vertices per cell not supported.")' &
+             ) mesh%get_nverts_per_cell()
+        call log_event( log_scratch_space, log_level_error )
+    end select
+
+  end subroutine get_reference_element
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Gets the bottom of the atmosphere or the surface of the planet.
   !>
   !> @return Bottom of the atmosphere in meters.
   !>
@@ -319,7 +402,7 @@ contains
   end function get_atmosphere_bottom
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Gets the top of the atmosphere.
+  !> @brief Gets the top of the atmosphere.
   !>
   !> @return Top of the atmosphere in meters.
   !>
@@ -335,7 +418,7 @@ contains
   end function get_atmosphere_top
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Gets the number of layers in the atmosphere.
+  !> @brief Gets the number of layers in the atmosphere.
   !>
   !> @return Number of layers.
   !>

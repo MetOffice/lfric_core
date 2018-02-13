@@ -52,7 +52,7 @@ end interface
 !-------------------------------------------------------------------------------
 public columnwise_op_app_kernel_code
 contains
-  
+
   type(columnwise_op_app_kernel_type) function columnwise_op_app_kernel_constructor() result(self)
     implicit none
     return
@@ -97,7 +97,7 @@ contains
                                            ndf2, undf2, map2,     &
                                            indirection_dofmap_from)
     implicit none
-    
+
     ! Arguments
     integer(kind=i_def), intent(in) :: cell,  ncell_2d
     integer(kind=i_def), intent(in) :: nrow, ncol, bandwidth
@@ -118,6 +118,7 @@ contains
     integer(kind=i_def) :: i,j, mu_i,mu_j
     ! Smallest/largest index in a particular row
     integer(kind=i_def) :: j_minus, j_plus
+
     do i=1, nrow
        ! Assumes that the first entry in the dofmaps is the smallest
        mu_i = map1(1) + indirection_dofmap_to(i) - 1

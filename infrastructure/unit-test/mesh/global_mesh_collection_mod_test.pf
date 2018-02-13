@@ -15,17 +15,15 @@ module global_mesh_collection_mod_test
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
   use global_mesh_collection_mod,     only: global_mesh_collection_type, &
                                             global_mesh_collection
-
-
   use pFUnit_Mod
 
   implicit none
 
   private
-  public :: test_cubesphere                         &
-          , test_biperiodic                         &
-          , test_initial_global_mesh_map_collection &
-          , test_multigrid
+  public :: test_cubesphere,                         &
+            test_biperiodic,                         &
+            test_initial_global_mesh_map_collection, &
+            test_multigrid
 
   @TestCase
   type, extends(TestCase), public :: global_mesh_collection_test_type
@@ -37,8 +35,8 @@ module global_mesh_collection_mod_test
   contains
     procedure :: setUp
     procedure :: tearDown
-    procedure :: test_cubesphere                         
-    procedure :: test_biperiodic 
+    procedure :: test_cubesphere
+    procedure :: test_biperiodic
     procedure :: test_initial_global_mesh_map_collection 
     procedure :: test_multigrid
 
@@ -93,7 +91,6 @@ contains
     integer (i_def) :: global_mesh_duplicate_id
     integer (i_def) :: npanels
 
-    
     npanels  = 6
     filename = CubedSphereFile
 
@@ -117,9 +114,6 @@ contains
 
   end subroutine test_cubesphere
 
-
-
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
   subroutine test_biperiodic ( this )
@@ -136,7 +130,7 @@ contains
     integer (i_def) :: global_mesh_id
     integer (i_def) :: global_mesh_duplicate_id
     integer (i_def) :: npanels
-    
+
     npanels  = 1
     filename = BiPeriodicFile
 
@@ -160,7 +154,6 @@ contains
 
   end subroutine test_biperiodic
 
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
   subroutine test_initial_global_mesh_map_collection ( this )
@@ -175,7 +168,7 @@ contains
     integer (i_def) :: global_mesh_id
     integer (i_def) :: global_mesh_duplicate_id
     integer (i_def) :: npanels
-    
+
     ! Create a mesh collection
     global_mesh_collection = global_mesh_collection_type()
 
@@ -193,10 +186,11 @@ contains
 
   end subroutine test_initial_global_mesh_map_collection
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
   subroutine test_multigrid ( this )
+
+    implicit none
 
     class(global_mesh_collection_test_type), intent(inout) :: this
 
@@ -219,8 +213,6 @@ contains
 
     integer (i_def) :: tmp_int, i
     integer (i_def) :: npanels
-    
-
 
     integer(i_def), allocatable :: tmp_gid_map(:,:)
 
@@ -230,9 +222,9 @@ contains
     npanels = 6
 
     do i=1, 4
-      MultiGrid_id(i) = global_mesh_collection %                    &
-                          add_new_global_mesh( MultiGridFiles(i),   &
-                                               mesh_name,           &
+      MultiGrid_id(i) = global_mesh_collection %                  &
+                          add_new_global_mesh( MultiGridFiles(i), &
+                                               mesh_name,         &
                                                npanels )
     end do
 
@@ -348,7 +340,6 @@ contains
     @assertEqual( [70], tmp_gid_map(:,1)  )
 
     deallocate(tmp_gid_map)
-
 
 
     ! 384 cell --> 1536 cell

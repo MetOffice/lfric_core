@@ -11,8 +11,10 @@ module rtheta_bd_kernel_mod_test
   use constants_mod,                 only : i_def, r_def
   use function_space_collection_mod, only : function_space_collection_type, &
                                             function_space_collection
+  use mesh_mod,                      only : mesh_type
   use mesh_collection_mod,           only : mesh_collection_type, &
                                             mesh_collection
+  use reference_element_mod,         only : reference_element_type
   use field_mod,                     only : field_type,      &
                                             field_proxy_type
   use fs_continuity_mod,             only : Wtheta, W2
@@ -64,19 +66,22 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only: reference_cube, reference_element, nfaces_h
 
     implicit none
 
     class(rtheta_bd_test_type), intent(inout) :: this
 
+    class(mesh_type),              pointer :: mesh              => null()
+    class(reference_element_type), pointer :: reference_element => null()
+
     type(field_proxy_type) :: r_theta_bd_proxy, u_proxy
     type( quadrature_rule_gaussian_type ) :: quadrature_rule
 
-    integer(i_def)         :: nqp_h, nqp_v, nqp_h_1d
-    integer(i_def)         :: ndf_wtheta, undf_wtheta, dim_wtheta
-    integer(i_def)         :: ndf_w2, undf_w2, dim_w2
-    integer(i_def)         :: mesh_id
+    integer(i_def) :: nqp_h, nqp_v, nqp_h_1d
+    integer(i_def) :: ndf_wtheta, undf_wtheta, dim_wtheta
+    integer(i_def) :: ndf_w2, undf_w2, dim_w2
+    integer(i_def) :: mesh_id
+    integer(i_def) :: nfaces_h
 
     this%qr = quadrature_xyoz_type(3, quadrature_rule)
 
@@ -86,9 +91,6 @@ contains
 
     ! Assumes same number of horizontal quad points in x and y
     nqp_h_1d = int(nqp_h**(1./2.))
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -105,6 +107,9 @@ contains
     u_proxy = this%u%get_proxy()
     ndf_w2  = u_proxy%vspace%get_ndf( )
     dim_w2  = u_proxy%vspace%get_dim_space( )
+    mesh              => u_proxy%vspace%get_mesh()
+    reference_element => mesh%get_reference_element()
+    nfaces_h = reference_element%get_number_horizontal_faces()
     allocate( this%basis_w2_face(dim_w2,ndf_w2,nqp_h_1d,nqp_v,nfaces_h) )
 
     this%r_theta_bd  = field_type( vector_space = this%wtheta_fs )
@@ -127,8 +132,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(rtheta_bd_test_type), intent(inout) :: this
@@ -138,7 +141,6 @@ contains
                 )
 
     call function_space_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 
@@ -146,9 +148,8 @@ contains
   @test
   subroutine test_all( this )
 
-    use rtheta_bd_kernel_mod,          only : rtheta_bd_code
-    use reference_element_mod,         only : nfaces_h
-    use mesh_mod,                      only : mesh_type
+    use rtheta_bd_kernel_mod, only : rtheta_bd_code
+    use mesh_mod,             only : mesh_type
 
     implicit none
 
@@ -157,11 +158,19 @@ contains
     real(r_def), parameter :: tol = 1.0e-6_r_def
     real(r_def), parameter :: answer = 1.0_r_def
 
+    class(mesh_type),              pointer :: mesh               => null()
+    class(reference_element_type), pointer :: reference_element  => null()
+    integer(i_def),                pointer :: adjacent_face(:,:) => null()
+
+    real(r_def), allocatable :: normal_to_face(:,:)
+    real(r_def), allocatable :: out_face_normal(:,:)
 
     integer :: cell
 
     ! Required for calling kernel 
     type(field_type)  :: theta
+
+    integer(i_def) :: nfaces_h
 
     integer                 :: nlayers, nqp_h, nqp_v, nqp_h_1d
     integer                 :: ndf_wtheta, undf_wtheta
@@ -172,13 +181,12 @@ contains
     type(field_proxy_type)  :: r_theta_bd_proxy, theta_proxy, &
                                u_proxy
 
-    real(kind=r_def), pointer :: xp(:,:), xp_f(:,:,:) => null()
-    real(kind=r_def), pointer :: zp(:)   => null()
-    real(kind=r_def), pointer :: wh(:)   => null(), &
-                                 wv(:)   => null()
+    real(kind=r_def), pointer :: xp(:,:)     => null()
+    real(kind=r_def), pointer :: xp_f(:,:,:) => null()
+    real(kind=r_def), pointer :: zp(:)       => null()
+    real(kind=r_def), pointer :: wh(:)       => null(), &
+                                 wv(:)       => null()
 
-    integer(i_def), pointer :: adjacent_face(:,:) => null()
-    type(mesh_type), pointer :: mesh => null()
     ! Test kernel
     theta   = field_type( vector_space = this%wtheta_fs )
 
@@ -197,6 +205,10 @@ contains
 
     ! Assumes same number of horizontal quad points in x and y
     nqp_h_1d = int(nqp_h**(1./2.))
+
+    mesh              => r_theta_bd_proxy%vspace%get_mesh()
+    reference_element => mesh%get_reference_element()
+    nfaces_h = reference_element%get_number_horizontal_faces()
 
     allocate(xp_f(nqp_h_1d, 2, nfaces_h))
 
@@ -235,8 +247,10 @@ contains
     theta_proxy%data(:) = 3000.0_r_def
     u_proxy%data(:) = 20.0_r_def
 
-    mesh => this%r_theta_bd%get_mesh()
+    mesh          => this%r_theta_bd%get_mesh()
     adjacent_face => mesh%get_adjacent_face()
+    call reference_element%get_normals_to_faces( normal_to_face )
+    call reference_element%get_normals_to_out_faces( out_face_normal )
     cell = 5
 
     call rtheta_bd_code( nlayers,                                 &
@@ -251,7 +265,10 @@ contains
                          u_proxy%data,                            &
                          nqp_v, nqp_h_1d, wv,                     &
                          this%basis_w2_face,                      &
-                         this%basis_wtheta_face, adjacent_face(:,cell) )
+                         this%basis_wtheta_face,                  &
+                         adjacent_face(:,cell),                   &
+                         normal_to_face,                          &
+                         out_face_normal )
 
     ! Simple test, check that when theta=constant, the code inputs no increment
     @assertEqual( answer, r_theta_bd_proxy%data(:), tol )

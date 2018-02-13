@@ -68,7 +68,6 @@ contains
     use gungho_feign_config_mod,   only : feign_finite_element_config, &
                                           feign_planet_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -90,9 +89,6 @@ contains
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level function space collection
 
@@ -140,8 +136,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(weighted_proj_2theta_test_type), intent(inout) :: this
@@ -151,7 +145,6 @@ contains
 
     call function_space_collection%clear()
     call mesh_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 

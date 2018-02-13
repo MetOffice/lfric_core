@@ -26,12 +26,7 @@ use ESMF,                  only: ESMF_RouteHandle, ESMF_DistGrid, ESMF_Array   &
 use log_mod,               only: log_event, log_scratch_space                  &
                                , LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR              &
                                , LOG_LEVEL_INFO
-use reference_element_mod, only: tangent_to_edge, normal_to_face               &
-                               , nfaces_h, nedges_h, nverts_h                  &
-                               , nfaces, nverts, nedges, x_vert                &
-                               , edge_on_face, select_entity_type              &
-                               , select_entity_all, select_entity_theta        &
-                               , select_entity_w2h, select_entity_w2v
+use reference_element_mod, only: reference_element_type
 
 use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi
 use function_space_constructor_helper_functions_mod, &
@@ -457,10 +452,12 @@ subroutine init_function_space( self )
   allocate( self%nodal_coords (                     3, self%ndof_cell) )
   allocate( self%dof_on_vert_boundary (self%ndof_cell,2) )
 
-  call basis_setup ( self%element_order, self%fs, self%ndof_vert  &
-                   , self%ndof_cell, self%basis_index,  self%basis_order              &
-                   , self%basis_vector, self%basis_x                                  &
-                   , self%nodal_coords, self%dof_on_vert_boundary )
+  call basis_setup( self%element_order, self%fs,         &
+                    self%ndof_vert, self%ndof_cell,      &
+                    self%mesh%get_reference_element(),   &
+                    self%basis_index,  self%basis_order, &
+                    self%basis_vector, self%basis_x,     &
+                    self%nodal_coords, self%dof_on_vert_boundary )
 
   ncells_2d_with_ghost = self%mesh % get_ncells_2d_with_ghost()
 
@@ -547,7 +544,8 @@ subroutine init_function_space( self )
 
   ! Set up the fractional levels (for diagnostic output) for this fs
 
-  call levels_setup ( self%get_nlayers(), self%fs, self%fractional_levels)
+  call levels_setup( self%mesh, self%get_nlayers(), &
+                     self%fs, self%fractional_levels )
 
   deallocate (dofmap)
 
@@ -751,6 +749,8 @@ end function get_dim_space_diff
 !-----------------------------------------------------------------------------
 function call_function(self, function_to_call, df, xi) result(evaluate)
 
+  implicit none
+
   class(function_space_type)  :: self
   integer(i_def), intent(in)  :: function_to_call
   integer(i_def), intent(in)  :: df
@@ -771,7 +771,7 @@ function call_function(self, function_to_call, df, xi) result(evaluate)
       call log_event( &
       'function_to_call does not match the available enumerators', &
       LOG_LEVEL_ERROR )
-  
+
   end select
 
 end function call_function
@@ -782,6 +782,8 @@ end function call_function
 function evaluate_basis(self, df, xi) result(p)
 
   use polynomial_mod, only: poly1d
+
+  implicit none
 
   class(function_space_type), intent(in)  :: self
 
@@ -802,6 +804,8 @@ end function evaluate_basis
 pure function evaluate_diff_basis(self, df, xi) result(evaluate)
 
   use polynomial_mod, only: poly1d, poly1d_deriv
+
+  implicit none
 
   class(function_space_type), intent(in)  :: self
 
@@ -983,7 +987,6 @@ function get_mesh(self) result (mesh)
 
   mesh => self%mesh
 
-  return
 end function get_mesh
 
 !-----------------------------------------------------------------------------
@@ -1135,15 +1138,14 @@ function get_stencil_dofmap(self, stencil_shape, stencil_extent) result(map)
   class(function_space_type), intent(inout) :: self
   integer(i_def),             intent(in) :: stencil_shape
   integer(i_def),             intent(in) :: stencil_extent
+  type(stencil_dofmap_type), pointer :: map ! return value
 
-  type(stencil_dofmap_type), pointer  :: map ! pointer to return instance
-  type(linked_list_item_type),pointer :: loop ! temp pointer for looping
-
+  type(linked_list_item_type), pointer :: loop => null()
 
   integer(i_def) :: id
 
   map => null()
-  
+
   ! Calculate id of the stencil_dofmap we want
   id = stencil_shape*100 + stencil_extent
 
@@ -1266,7 +1268,5 @@ subroutine function_space_destructor(self)
   call self%clear()
 
 end subroutine function_space_destructor
-
-
 
 end module function_space_mod

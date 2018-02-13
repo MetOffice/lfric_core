@@ -48,8 +48,7 @@ contains
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use function_space_mod,        only : function_space_type
     use mesh_mod,                  only : PLANE_BI_PERIODIC, PLANE
-    use reference_element_mod,     only : reference_cube,   &
-                                          reference_element
+
     implicit none
 
     class(sort_ref_test_type), intent(inout) :: this
@@ -65,9 +64,6 @@ contains
                                  geometry=base_mesh_geometry_planar,          &
                                  partitioner=base_mesh_partitioner_planar,    &
                                  fplane=.false., f_lat_deg=0.0_r_def )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -90,16 +86,13 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(sort_ref_test_type), intent(inout) :: this
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
-    
+
   end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

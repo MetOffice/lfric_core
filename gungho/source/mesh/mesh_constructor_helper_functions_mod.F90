@@ -3,12 +3,8 @@
 ! For further details please refer to the file LICENCE.original which you
 ! should have received as part of this distribution.
 !-----------------------------------------------------------------------------
-!
-!>
 !> @brief Holds helper functions for constructing a mesh object
 !>
-!
-
 module mesh_constructor_helper_functions_mod
 
 use base_mesh_config_mod,   only : geometry, &
@@ -45,41 +41,66 @@ end type domain_size_type
 
 contains
 
-  !=============================================================================
-  !> @brief Helper function to extrude the a surface 2D-mesh into the 3D-mesh.
+  !===========================================================================
+  !> @brief Helper function to extrude the surface 2D-mesh into the 3D-mesh.
+  !>
   !> (called from the mesh constructor)
-  !> @param[out] cell_next        Cell ids of adjacent cells
-  !> @param[out] vert_on_cell     Vertex ids on cell
-  !> @param[out] vertex_coords    Vertex Coordinates
-  !> @param[in]  vertex_coords_2d Local 2d cell connectivity.
-  !> @param[in]  nverts_2d        No. of vertices in a 2d layer
-  !> @param[in]  nverts_3d        No. of vertices in 3d mesh
-  !> @param[in]  ncells_2d        No. of cells in a 2d layer
-  !> @param[in]  ncells_3d        No. of cells in 3d mesh
-  !> @param[in]  nlayers          No. of layers
-  !> @param[in]  dz               Array of vertical grid spacing
-  subroutine mesh_extruder(cell_next,          &
-                           vert_on_cell,       &
-                           vertex_coords,      &
-                           cell_next_2d,       &
-                           vert_on_cell_2d,    &
-                           vertex_coords_2d,   &
-                           nverts_per_2d_cell, &
-                           nedges_per_2d_cell, &
-                           nverts_2d,          &
-                           nverts_3d,          &
-                           ncells_2d,          &
-                           ncells_3d,          &
-                           nlayers,            &
-                           dz)
+  !>
+  !> @param[out] cell_next           Cell IDs of adjacent cells.
+  !> @param[out] vert_on_cell        Vertex IDs on cell.
+  !> @param[out] vertex_coords       Vertex Coordinates.
+  !> @param[in]  nfaces              Number of faces per 3D cell.
+  !> @param[in]  nverts              Number of vertices per 3D cell.
+  !> @param[in]  cell_next_2d        List of neighbouring cells for each 2D &
+  !>                                 cell.
+  !> @param[in]  vert_on_cell_2d     List of vertices on each 2D cell.
+  !> @param[in]  vertex_coords_2d    Local 2d cell connectivity.
+  !> @param[in]  nverts_per_2d_cell  Number of vertices per cell of the 2D
+  !>                                 layer.
+  !> @param[in]  nedges_per_2d_cell  Number of edges per cell of the 2D layer.
+  !> @param[in]  nverts_2d           No. of vertices in a 2d layer
+  !> @param[in]  nverts_3d           No. of vertices in 3d mesh
+  !> @param[in]  ncells_2d           No. of cells in a 2d layer
+  !> @param[in]  ncells_3d           No. of cells in 3d mesh
+  !> @param[in]  nlayers             No. of layers
+  !> @param[in]  dz                  Array of vertical grid spacing
+  !> @param[in]  reference_element   Shape of cells in the mesh.
+  !>
+  !> @todo This should be accepting a mesh_type object rather than a pile of
+  !>       primitive types. Unfortunately that gets you into a pickle with
+  !>       cyclic dependencies. This may be fixed with submodules or better
+  !>       problem decomposition.
+  !>
+  subroutine mesh_extruder( cell_next,          &
+                            vert_on_cell,       &
+                            vertex_coords,      &
+                            nfaces,             &
+                            nverts,             &
+                            cell_next_2d,       &
+                            vert_on_cell_2d,    &
+                            vertex_coords_2d,   &
+                            nverts_per_2d_cell, &
+                            nedges_per_2d_cell, &
+                            nverts_2d,          &
+                            nverts_3d,          &
+                            ncells_2d,          &
+                            ncells_3d,          &
+                            nlayers,            &
+                            dz,                 &
+                            reference_element )
 
     use coord_transform_mod,   only : llr2xyz
-    use reference_element_mod, only : W, S, E, N, B, T, &
-                                      nfaces_h, nverts, nedges, nfaces, &
+    use reference_element_mod, only : reference_element_type, &
+                                      W, S, E, N, B, T, &
                                       SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
 
     implicit none
 
+    integer(i_def), intent(out) :: cell_next( nfaces, ncells_3d )
+    integer(i_def), intent(out) :: vert_on_cell( nverts, ncells_3d )
+    real(r_def),    intent(out) :: vertex_coords( 3, nverts_3d )
+    integer(i_def), intent(in)  :: nfaces
+    integer(i_def), intent(in)  :: nverts
     integer(i_def), intent(in)  :: nverts_per_2d_cell
     integer(i_def), intent(in)  :: nedges_per_2d_cell
     integer(i_def), intent(in)  :: nverts_2d
@@ -87,21 +108,18 @@ contains
     integer(i_def), intent(in)  :: ncells_2d
     integer(i_def), intent(in)  :: ncells_3d
     integer(i_def), intent(in)  :: nlayers
-    integer(i_def), intent(in)  :: cell_next_2d ( nedges_per_2d_cell, ncells_2d)
-    integer(i_def), intent(in)  :: vert_on_cell_2d(nverts_per_2d_cell,ncells_2d)
+    integer(i_def), intent(in)  :: cell_next_2d(nedges_per_2d_cell, ncells_2d)
+    integer(i_def), intent(in)  :: vert_on_cell_2d(nverts_per_2d_cell, &
+                                                   ncells_2d)
     real(r_def),    intent(in)  :: vertex_coords_2d( 3, nverts_2d )
     real(r_def),    intent(in)  :: dz( nlayers )
-    integer(i_def), intent(out) :: cell_next( nfaces, ncells_3d )
-    integer(i_def), intent(out) :: vert_on_cell( nverts, ncells_3d )
-    real(r_def),    intent(out) :: vertex_coords( 3, nverts_3d )
+    class(reference_element_type), &
+                    intent(in)  :: reference_element
 
     ! Loop indices
     integer(i_def) :: i, j, k, id, jd, iedge, ivert, base_id
 
-    ! From reference element
-    ! nverts   = number of vertices on 3d cell
-    ! nedges   = number of edges    on 3d cell
-    ! nfaces   = number of faces    on 3d cell
+    integer(i_def) :: nfaces_h
 
     integer(i_def) :: nverts_per_3d_cell
     integer(i_def) :: nedges_per_3d_cell
@@ -111,8 +129,10 @@ contains
     real(r_def) :: long, lat, r
 
     ! Reference element stats
+    nfaces_h = reference_element%get_number_horizontal_faces()
+
     nverts_per_3d_cell = nverts
-    nedges_per_3d_cell = nedges
+    nedges_per_3d_cell = reference_element%get_number_edges()
     nfaces_per_3d_cell = nfaces
 
     ! Apply default cell_next values
@@ -133,7 +153,7 @@ contains
     !                  (set to zero as it's the surface)
     ! index nfaces_h+2 is the top of the 3d cell
     do j=1,ncells_2d
-      cell_next(nfaces_h+2,j) = j + ncells_2d
+      cell_next(nfaces_h + 2, j) = j + ncells_2d
     end do
 
     ! Perform vertical extrusion for connectivity
@@ -148,10 +168,10 @@ contains
                                               ncells_2d
         end do
 
-        cell_next(nfaces_h+1,id) = id - ncells_2d
-        cell_next(nfaces_h+2,id) = id + ncells_2d
+        cell_next(nfaces_h + 1, id) = id - ncells_2d
+        cell_next(nfaces_h + 2, id) = id + ncells_2d
 
-        if (k==nlayers-1) cell_next(nfaces_h+2,id) = 0
+        if (k==nlayers-1) cell_next(nfaces_h + 2, id) = 0
 
       end do
     end do
@@ -244,16 +264,19 @@ contains
     return
   end subroutine mesh_extruder
 
-  !=============================================================================
+  !===========================================================================
   !> @brief Helper function to compute mesh connectivity.
+  !>
   !> @param[out] face_on_cell    All face ids on any cell
   !> @param[out] edge_on_cell    All edge ids on any cell
-  !> @param[in]  nverts_2d       No. of vertices in a 2d layer
-  !> @param[in]  nverts_3d       No. of vertices in 3d mesh
+  !> @param[in]  ncells_2d       Number of cells in 2D mesh.
+  !> @param[in]  ncells_3d       Number of cells in 3D mesh.
   !> @param[in]  nfaces_per_cell Number of faces on 3d-cell
   !> @param[in]  nedges_per_cell Number of edges on 3d-cell
   !> @param[in]  cell_next       Cell ids of all cells adjacent to any cell
   !> @param[in]  vert_on_cell    Vertex ids on any cell
+  !> @param[in]  reference_element Properties of an element in the mesh.
+  !>
   subroutine mesh_connectivity( face_on_cell,    &
                                 edge_on_cell,    &
                                 ncells_2d,       &
@@ -261,13 +284,13 @@ contains
                                 nfaces_per_cell, &
                                 nedges_per_cell, &
                                 cell_next,       &
-                                vert_on_cell )
+                                vert_on_cell,    &
+                                reference_element )
 
-    use reference_element_mod, only: W,   S,  E,  N,  B,  T,         &
+    use reference_element_mod, only: reference_element_type,         &
+                                     W,   S,  E,  N,  B,  T,         &
                                      EB, ET, WB, WT, NB, NT, SB, ST, &
                                      SW, SE, NW, NE,                 &
-                                     nfaces, nverts,                 &
-                                     nedges_h, nverts_h, nfaces_h,   &
                                      SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
 
     implicit none
@@ -278,8 +301,10 @@ contains
     integer(i_def), intent(in)  :: ncells_3d
     integer(i_def), intent(in)  :: nfaces_per_cell
     integer(i_def), intent(in)  :: nedges_per_cell
-    integer(i_def), intent(in)  :: cell_next( nfaces, ncells_3d )
-    integer(i_def), intent(in)  :: vert_on_cell( nverts, ncells_3d )
+    integer(i_def), intent(in)  :: cell_next(:, :)
+    integer(i_def), intent(in)  :: vert_on_cell(:, :)
+    class(reference_element_type), &
+                    intent(in)  :: reference_element
 
     integer (i_def) :: cell          ! cell loop index
     integer (i_def) :: face          ! face loop index
@@ -294,6 +319,14 @@ contains
     integer (i_def) :: vert_nbr      ! vert index for a edge on a neighbour cell
     integer (i_def) :: cell_nbr_nbr  ! cell index for a neighbour cell of a neighbour cell
     integer (i_def) :: vert_nbr_nbr  ! vert index for a neighbour cell of a neighbour cell
+
+    integer(i_def) :: nfaces_h
+    integer(i_def) :: nedges_h
+    integer(i_def) :: nverts_h
+
+    nfaces_h = reference_element%get_number_horizontal_faces()
+    nedges_h = reference_element%get_number_horizontal_edges()
+    nverts_h = reference_element%get_number_horizontal_vertices()
 
     face_on_cell(:,:) = 0
     edge_on_cell(:,:) = 0
@@ -361,11 +394,11 @@ contains
           ! Find matching edge in neighbouring cell
           cell_nbr = cell_next(edge,cell)
           if (cell_nbr /= 0) then
-            do edge_nbr = 1,nedges_h
+            do edge_nbr = 1, nedges_h
               if ( cell_next(edge_nbr,cell_nbr) == cell ) then
                 ! Found cell which shares edge
                 edge_on_cell(edge_nbr,cell_nbr) = edge_id
-                edge_upper = edge_nbr+nedges_h+nverts_h
+                edge_upper = edge_nbr + nedges_h + nverts_h
                 edge_on_cell(edge_upper,cell_nbr) = edge_id + 1
               end if
             end do
@@ -441,12 +474,15 @@ contains
     return
   end subroutine mesh_connectivity
 
-  !============================================================================
+  !===========================================================================
   !> @brief Helper function to compute the domain limits (x,y,z) for Cartesian
-  !> domains and (lambda,phi,r) for spherical domains.
-  !> @param[out] domain_size   Domain limits in 3d 
+  !>        domains and (lambda,phi,r) for spherical domains.
+  !>
+  !> @param[out] domain_size   Domain limits in 3d
+  !> @param[in]  domain_top    Top of 3D domain in meters.
   !> @param[in]  vertex_coords Vertex Coordinates
   !> @param[in]  nverts        No. of vertices in 3d mesh
+  !>
   subroutine set_domain_size( domain_size, domain_top, &
                               vertex_coords, nverts )
 

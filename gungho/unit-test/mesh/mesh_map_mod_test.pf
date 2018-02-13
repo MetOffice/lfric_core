@@ -158,7 +158,6 @@ contains
     use gungho_feign_config_mod,   only : feign_base_mesh_config, &
                                           feign_planet_config,    &
                                           feign_extrusion_config
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -191,9 +190,6 @@ contains
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     partitioner_ptr => partitioner_cubedsphere_serial
 
@@ -259,16 +255,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class( mesh_map_test_type ), intent( inout ) :: this
 
     call mesh_collection%clear()
     call global_mesh_collection%clear()
-
-    call deallocate_reference()
 
   end subroutine tearDown
 
@@ -289,8 +281,8 @@ contains
 
     integer(i_def), allocatable :: map(:,:)
 
-    integer(i_def), pointer :: test_1d_array_ptr(:)
-    integer(i_def), pointer :: test_2d_array_ptr(:,:)
+    integer(i_def), pointer :: test_1d_array_ptr(:)   => null()
+    integer(i_def), pointer :: test_2d_array_ptr(:,:) => null()
     integer(i_def) :: nsource_cells
     integer(i_def) :: ntarget_cells_per_source_cell
     integer(i_def) :: fine_global_mesh_id
@@ -370,8 +362,8 @@ contains
     integer(i_def), allocatable :: test_2d_array(:,:)
     integer(i_def), allocatable :: data(:,:)
 
-    integer(i_def), pointer :: test_1d_array_ptr(:)
-    integer(i_def), pointer :: test_2d_array_ptr(:,:)
+    integer(i_def), pointer :: test_1d_array_ptr(:)   => null()
+    integer(i_def), pointer :: test_2d_array_ptr(:,:) => null()
     integer(i_def) :: coarse_global_mesh_id
     integer(i_def), allocatable :: map(:,:)
     integer(i_def) :: nsource_cells

@@ -57,7 +57,6 @@ contains
                                           base_mesh_partitioner_planar
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_base_mesh_config
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -80,9 +79,6 @@ contains
                                  geometry=base_mesh_geometry_planar,          &
                                  partitioner=base_mesh_partitioner_planar,    &
                                  fplane=.false., f_lat_deg=0.0_r_def )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -127,8 +123,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(kinetic_enenrgy_gradient_test_type), intent(inout) :: this
@@ -136,7 +130,6 @@ contains
     deallocate( this%basis_w2, this%diff_basis_w2, &
                 this%diff_basis_w0 )
 
-    call deallocate_reference()
     call mesh_collection%clear()
     call function_space_collection%clear()
 

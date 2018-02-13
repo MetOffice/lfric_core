@@ -53,7 +53,6 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
     use gungho_feign_config_mod,   only : feign_transport_config, &
                                           feign_base_mesh_config
     use base_mesh_config_mod,      only : base_mesh_geometry_planar, &
@@ -74,9 +73,6 @@ contains
                                  geometry=base_mesh_geometry_planar,          &
                                  partitioner=base_mesh_partitioner_planar,    &
                                  fplane=.false., f_lat_deg=0.0_r_def )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     call feign_transport_config(scheme = transport_scheme_method_of_lines, &
                                 operators = transport_operators_fv,        &
@@ -130,8 +126,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(sample_poly_adv_test_type), intent(inout) :: this
@@ -140,7 +134,6 @@ contains
 
     call function_space_collection%clear()
     call mesh_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 

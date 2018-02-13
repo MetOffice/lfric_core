@@ -278,7 +278,7 @@ contains
                                                                mm_vel_v_inv_diag_cma ) )
     ! Set flag to true to avoid multiple initialisations
     is_initialised = .true.
-    
+
   end subroutine cma_test_init
 
   !>@brief Check if two fields are idential up to some tolerance
@@ -308,7 +308,7 @@ contains
     type(field_type), intent(in) :: x2
     real(kind=r_def), intent(in) :: tolerance
     character(len=*), intent(in) :: label
-   
+
     ! Internal variables
     type(field_type) :: dx, x_tmp
     real(kind=r_def) :: dx_nrm_sq, x1_nrm_sq, x2_nrm_sq

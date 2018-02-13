@@ -15,7 +15,7 @@ module assign_orography_field_spherical_mod_test
   use global_mesh_mod,            only : global_mesh_type
   use mesh_collection_mod,        only : mesh_collection_type, &
                                          mesh_collection
-  use analytic_orography_mod,     only : orography_type
+  use analytic_orography_mod,     only : orography_profile
 
   use pFUnit_Mod
 
@@ -62,7 +62,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp(this)
 
-    use reference_element_mod,          only : reference_cube, reference_element
     use agnesi_orography_spherical_mod, only : agnesi_spherical_type
     use finite_element_config_mod,      only : finite_element_cellshape_quadrilateral
     use base_mesh_config_mod,           only : base_mesh_geometry_spherical, &
@@ -78,9 +77,6 @@ contains
     implicit none
 
     class(assign_orography_field_spherical_test_type), intent(inout) :: this
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level collections
     global_mesh_collection = global_mesh_collection_type()
@@ -120,8 +116,8 @@ contains
                                 phi_focus_dec     = this%phi_focus_dec )
 
     ! Initialise Witch-of-Agnesi spherical orography type
-    allocate( orography_type, source = agnesi_spherical_type(       &
-                                              this%mountain_height, &
+    allocate( orography_profile,                                    &
+              source = agnesi_spherical_type( this%mountain_height, &
                                               this%half_width,      &
                                               lambda_centre,        &
                                               phi_centre,           &
@@ -133,12 +129,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown(this)
 
-    use reference_element_mod, only : deallocate_reference
     implicit none
 
     class(assign_orography_field_spherical_test_type), intent(inout) :: this
 
-    call deallocate_reference()
+    deallocate( orography_profile )
     call global_mesh_collection%clear()
     call mesh_collection%clear()
 

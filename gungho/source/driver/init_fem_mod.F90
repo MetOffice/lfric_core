@@ -34,7 +34,7 @@ module init_fem_mod
     ! Coordinate field
     type( field_type ), target, intent(inout) :: chi(:)
 
-    type(function_space_type), pointer        :: fs
+    type(function_space_type), pointer        :: fs => null()
     integer(i_def)                            :: fs_id
     integer(i_def)                            :: chi_space
     integer(i_def)                            :: coord
@@ -45,7 +45,6 @@ module init_fem_mod
     allocate( function_space_collection, &
               source = function_space_collection_type() )
 
-    
     ! Create function spaces from W0 to Wtheta
 
     do fs_id = W0, Wtheta,1

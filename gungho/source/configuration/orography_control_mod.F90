@@ -21,7 +21,7 @@ module orography_control_mod
   use log_mod,                only : log_event,         &
                                      log_scratch_space, &
                                      LOG_LEVEL_INFO
-  use analytic_orography_mod, only : orography_type
+  use analytic_orography_mod, only : orography_profile
  
   implicit none
 
@@ -48,7 +48,7 @@ contains
     implicit none
  
     ! ----------- Deallocate abstract orography type if allocated -------------!
-    if ( allocated (orography_type) ) deallocate(orography_type)
+    if ( allocated (orography_profile) ) deallocate(orography_profile)
 
     ! ----------- Read orography namelist and set orography type --------------!
     select case( profile )
@@ -101,12 +101,13 @@ contains
     implicit none
 
     ! ----------- Initialise Witch-of-Agnesi spherical orography type ---------!
-    allocate( orography_type, source = agnesi_spherical_type( mountain_height, &
-                                                              half_width,      &
-                                                              lambda_centre,   &
-                                                              phi_centre,      &
-                                                              lambda_focus,    &
-                                                              phi_focus ) )
+    allocate( orography_profile, &
+              source = agnesi_spherical_type( mountain_height, &
+                                              half_width,      &
+                                              lambda_centre,   &
+                                              phi_centre,      &
+                                              lambda_focus,    &
+                                              phi_focus ) )
 
     write(log_scratch_space,'(A,A)') "set_orography_agnesi_spherical: "// &  
           "Set analytic orography type to spherical Witch-of-Agnesi mountain."
@@ -138,12 +139,13 @@ contains
     direction_cart = int(direction, i_def)
 
     ! ----------- Initialise Witch-of-Agnesi Cartesian orography type ---------!
-    allocate( orography_type, source = agnesi_cartesian_type( mountain_height, &
-                                                              half_width_x,    &
-                                                              half_width_y,    &
-                                                              x_centre,        &
-                                                              y_centre,        &
-                                                              direction_cart ) )
+    allocate( orography_profile,                               &
+              source = agnesi_cartesian_type( mountain_height, &
+                                              half_width_x,    &
+                                              half_width_y,    &
+                                              x_centre,        &
+                                              y_centre,        &
+                                              direction_cart ) )
 
     write(log_scratch_space,'(A,A)') "set_orography_agnesi_cartesian: "// &  
           "Set analytic orography type to Cartesian Witch-of-Agnesi mountain."
@@ -168,11 +170,12 @@ contains
     implicit none
 
     ! ----------- Initialise Schar spherical orography type -------------------!
-    allocate( orography_type, source = schar_spherical_type( mountain_height, &
-                                                             half_width,      &
-                                                             wavelength,      &
-                                                             lambda_centre,   &
-                                                             phi_centre ) )
+    allocate( orography_profile,                              &
+              source = schar_spherical_type( mountain_height, &
+                                             half_width,      &
+                                             wavelength,      &
+                                             lambda_centre,   &
+                                             phi_centre ) )
 
     write(log_scratch_space,'(A,A)') "set_orography_schar_spherical: "// &  
           "Set analytic orography type to spherical Schar mountain."
@@ -205,13 +208,14 @@ contains
     direction_cart = int(direction, i_def)
 
     ! ----------- Initialise Schar Cartesian orography type -------------------!
-    allocate( orography_type, source = schar_cartesian_type( mountain_height, &
-                                                             half_width_x,    &
-                                                             half_width_y,    &
-                                                             wavelength,      &
-                                                             x_centre,        &
-                                                             y_centre,        &
-                                                             direction_cart ) )
+    allocate( orography_profile,                              &
+              source = schar_cartesian_type( mountain_height, &
+                                             half_width_x,    &
+                                             half_width_y,    &
+                                             wavelength,      &
+                                             x_centre,        &
+                                             y_centre,        &
+                                             direction_cart ) )
 
     write(log_scratch_space,'(A,A)') "set_orography_schar_cartesian: "// &  
           "Set analytic orography type to Cartesian Schar mountain."

@@ -80,7 +80,6 @@ contains
                                           feign_planet_config
     use idealised_config_mod,      only : idealised_test_gravity_wave
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -115,9 +114,6 @@ contains
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -166,8 +162,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(set_rho_kernel_test_type), intent(inout) :: this
@@ -176,7 +170,6 @@ contains
 
     call function_space_collection%clear()
     call mesh_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 

@@ -48,7 +48,7 @@ module agnesi_orography_spherical_mod
     procedure, public, pass(self) :: analytic_orography => agnesi_orography_spherical
     procedure                     :: agnesi_coordinate_spherical
     procedure                     :: write_agnesi_spherical_type
-    
+
   end type agnesi_spherical_type
 
   ! Constructor for agnesi_spherical_type

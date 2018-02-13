@@ -161,8 +161,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(stencil_dofmap_test_type), intent( inout ) :: this
@@ -187,9 +185,9 @@ contains
    type(stencil_dofmap_type)                   :: stencil_dofmap
    type(mesh_type), pointer                    :: mesh => null()
 
-   integer(i_def), pointer, dimension(:,:) :: master_map_copy
-   integer, pointer                        :: stencil_map(:,:) => null()
-   integer, pointer                        :: whole_map(:,:,:) => null()
+   integer(i_def), pointer :: master_map_copy(:,:)  => null()
+   integer(i_def), pointer :: stencil_map(:,:) => null()
+   integer(i_def), pointer :: whole_map(:,:,:) => null()
 
    ! Information about mesh
    integer(i_def)  :: ncells

@@ -45,7 +45,8 @@ module rk_transport_mod
   use rtheta_supg_kernel_mod,            only: rtheta_supg_kernel_type
 
 
-  use sample_poly_flux_kernel_mod,       only: sample_poly_flux_init
+  use sample_poly_flux_kernel_mod,       only: sample_poly_flux_init, &
+                                               sample_poly_flux_final
   use sample_poly_adv_kernel_mod,        only: sample_poly_adv_init
 
   ! Derived Types
@@ -267,7 +268,7 @@ contains
         case(transport_operators_fem)
           call solver_algorithm( theta_inc, r_theta)
           call invoke( X_minus_bY(theta, theta_n, dt, theta_inc) )
-      end select      
+      end select
     end do
 
 
@@ -299,7 +300,7 @@ contains
     dtheta = field_type( vector_space = theta_fs )
     call invoke( X_minus_Y(drho,   rho,   rho0  ), &
                  X_minus_Y(dtheta, theta, theta0) )
-    
+
     ! L2 error
     mm_w3 => get_mass_matrix(w3_id)
     mm_wt => get_mass_matrix(theta_space_id)
@@ -316,6 +317,8 @@ contains
                  X_innerproduct_Y(l2_theta_scalar, dtheta, l2_theta), &
     ! Compute L2 error for rho
                  X_innerproduct_Y(l2_rho_scalar, drho, l2_rho) )
+
+    call sample_poly_flux_final()
 
     ! Write out L2 errors
     write( log_scratch_space, '(A, E15.8)' ) "L2 theta = ", sqrt(l2_theta_scalar)

@@ -25,14 +25,14 @@ module mesh_map_collection_mod_test
   use mesh_map_collection_mod,    only: mesh_map_collection_type
   use mesh_collection_mod,        only: mesh_collection_type, mesh_collection
 
-  use pFUnit_Mod                                            
+  use pFUnit_Mod
 
 
   implicit none
 
   private
   public :: mesh_map_collection_test_type, test_mesh_map_collection
-  
+
   @testCase
   type, extends( TestCase ) :: mesh_map_collection_test_type
     private
@@ -43,7 +43,7 @@ module mesh_map_collection_mod_test
 
     integer(i_def), allocatable :: coarse_lid_gid_map(:)
     integer(i_def), allocatable :: fine_lid_gid_map(:)
-    
+
   contains
     procedure :: setUp
     procedure :: tearDown
@@ -84,7 +84,6 @@ contains
     use gungho_feign_config_mod,   only : feign_base_mesh_config, &
                                           feign_planet_config,    &
                                           feign_extrusion_config
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -120,10 +119,6 @@ contains
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
-
 
     global_mesh_collection = global_mesh_collection_type()
     mesh_collection        = mesh_collection_type()
@@ -191,8 +186,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class( mesh_map_collection_test_type ), intent( inout ) :: this
@@ -202,8 +195,6 @@ contains
 
     call global_mesh_collection%clear()
     call mesh_collection%clear()
-
-    call deallocate_reference()
 
   end subroutine tearDown
 

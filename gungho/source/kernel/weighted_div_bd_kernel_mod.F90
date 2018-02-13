@@ -19,15 +19,20 @@
 
 module weighted_div_bd_kernel_mod
   use kernel_mod,              only : kernel_type
-  use argument_mod,            only : arg_type, func_type,                 &
+  use argument_mod,            only : arg_type, func_type, mesh_data_type, &
                                       GH_OPERATOR, GH_FIELD, GH_REAL,      &
                                       GH_READ, GH_INC,                     &
                                       W2, W3, Wtheta, GH_BASIS,            &
-                                      CELLS, GH_QUADRATURE_XYoZ
+                                      CELLS, GH_QUADRATURE_XYoZ,           &
+                                      adjacent_face,                       &
+                               reference_element_number_horizontal_faces,  &
+                                      reference_element_out_face_normal
   use constants_mod,           only : r_def, i_def
-  use reference_element_mod,   only : nfaces_h, out_face_normal
+
 
   implicit none
+
+  private
 
   !-------------------------------------------------------------------------------
   ! Public types
@@ -47,6 +52,11 @@ module weighted_div_bd_kernel_mod
       /)
     integer :: iterates_over = CELLS
     integer :: gh_shape = GH_QUADRATURE_XYoZ
+    type(mesh_data_type) :: meta_init(3) = (/                        &
+        mesh_data_type( adjacent_face ),                             &
+        mesh_data_type( reference_element_number_horizontal_faces ), &
+        mesh_data_type( reference_element_out_face_normal )          &
+      /)
   contains
     procedure, nopass :: weighted_div_bd_code
   end type
@@ -64,13 +74,17 @@ module weighted_div_bd_kernel_mod
   ! Contained functions/subroutines
   !-------------------------------------------------------------------------------
   public weighted_div_bd_code
+
 contains
 
   type(weighted_div_bd_kernel_type) function weighted_div_bd_kernel_constructor() result(self)
     return
   end function weighted_div_bd_kernel_constructor
 
-  !> @brief Compute the boundary terms in the weighted divergence for the Helmholtz lhs
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Computes the boundary terms in the weighted divergence for the
+  !!        Helmholtz lhs
+  !!
   !! @param[in] cell Cell number
   !! @param[in] nlayers Number of layers
   !! @param[in] ncell_3d ncell*ndf
@@ -84,20 +98,36 @@ contains
   !! @param[in] stencil_wtheta_map W2 dofmaps for the stencil
   !! @param[in] stencil_wtheta_size Size of the W2 stencil (number of cells)
   !! @param[in] nqp_v Number of quadrature points in the vertical
-  !! @param[in] nqp_h_1d Number of quadrature points in a single horizontal direction
+  !! @param[in] nqp_h_1d  Number of quadrature points in a single horizontal
+  !!                      direction.
   !! @param[in] wqp_v Vertical quadrature weights
-  !! @param[in] w2_basis_face Basis functions evaluated at gaussian quadrature points on horizontal faces
-  !! @param[in] w3_basis_face Basis functions evaluated at gaussian quadrature points on horizontal faces
-  !! @param[in] wtheta_basis_face Basis functions evaluated at gaussian quadrature points on horizontal faces
-  !! @param[in] adjacent_face Vector containing information on neighbouring face index for the current cell
-  subroutine weighted_div_bd_code(cell, nlayers, ncell_3d,                                    &
-                                  div, theta, scalar,                                         &
-                                  ndf_w2, ndf_w3,                                             &
-                                  ndf_wtheta, undf_wtheta,                                    &
-                                  stencil_wtheta_map,                                         &
-                                  stencil_wtheta_size,                                        &
-                                  nqp_v, nqp_h_1d, wqp_v, w2_basis_face, w3_basis_face,       &
-                                  wtheta_basis_face, adjacent_face)
+  !! @param[in] w2_basis_face  Basis functions evaluated at gaussian &
+  !!                           quadrature points on horizontal faces.
+  !! @param[in] w3_basis_face  Basis functions evaluated at gaussian &
+  !!                           quadrature points on horizontal faces.
+  !! @param[in] wtheta_basis_face  Basis functions evaluated at gaussian &
+  !!                               quadrature points on horizontal faces.
+  !! @param[in] adjacent_face  Vector containing information on neighbouring &
+  !!                           face index for the current cell.
+  !! @param[in] number_horizontal_faces  Number of reference element faces
+  !!                                     bisected by a horizontal plane.
+  !! @param[in] out_face_normal  Vectors normal to the faces of the &
+  !!                             reference element.
+  !!
+  !!
+  subroutine weighted_div_bd_code( cell, nlayers, ncell_3d, &
+                                   div, theta, scalar,      &
+                                   ndf_w2, ndf_w3,          &
+                                   ndf_wtheta, undf_wtheta, &
+                                   stencil_wtheta_map,      &
+                                   stencil_wtheta_size,     &
+                                   nqp_v, nqp_h_1d, wqp_v,  &
+                                   w2_basis_face,           &
+                                   w3_basis_face,           &
+                                   wtheta_basis_face,       &
+                                   adjacent_face,           &
+                                   number_horizontal_faces, &
+                                   out_face_normal)
 
     implicit none
 
@@ -119,7 +149,9 @@ contains
 
     real(kind=r_def), dimension(nqp_v), intent(in)      ::  wqp_v
 
-    integer(kind=i_def), dimension(nfaces_h), intent(in) :: adjacent_face
+    integer(i_def), intent(in) :: adjacent_face(number_horizontal_faces)
+    integer(i_def), intent(in) :: number_horizontal_faces
+    real(r_def),    intent(in) :: out_face_normal(:,:)
 
     ! Internal variables
     integer(kind=i_def)              :: df, df2, df3, k, ik, face, face_next
@@ -134,7 +166,7 @@ contains
 
     do k = 0, nlayers - 1
       ik = k + 1 + (cell-1)*nlayers
-      do face = 1, nfaces_h
+      do face = 1, number_horizontal_faces
 
         face_next = adjacent_face(face)
 

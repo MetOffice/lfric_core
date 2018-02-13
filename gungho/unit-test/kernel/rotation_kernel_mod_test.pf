@@ -69,7 +69,6 @@ contains
     use gungho_feign_config_mod,   only : feign_base_mesh_config, &
                                           feign_planet_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -94,9 +93,6 @@ contains
                                  geometry=base_mesh_geometry_planar,          &
                                  partitioner=base_mesh_partitioner_planar,    &
                                  fplane=.false., f_lat_deg=f_lat )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -146,8 +142,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(rotation_test_type), intent(inout) :: this
@@ -155,7 +149,6 @@ contains
     deallocate( this%basis_w2, this%basis_w0, this%diff_basis_w0 )
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown

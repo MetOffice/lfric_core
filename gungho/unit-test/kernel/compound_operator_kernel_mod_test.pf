@@ -46,7 +46,6 @@ contains
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use gungho_feign_config_mod,   only : feign_finite_element_config
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -56,9 +55,6 @@ contains
 
     call feign_finite_element_config( finite_element_cellshape_quadrilateral, &
                                       0, 1, .true., .false., .false., .false.)
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level collections
     mesh_collection = mesh_collection_type()
@@ -84,15 +80,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(compound_operator_test_type), intent(inout) :: this
 
     call function_space_collection%clear()
     call mesh_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 
@@ -116,7 +109,7 @@ contains
     integer :: nlayers
     integer :: ndf_w2, ndf_w3, undf_w2
     integer, dimension(6) :: map_w2
-    
+
     real(kind=r_def), dimension(1,6) :: answer
     real(kind=r_def), dimension(1,6) :: d
     real(kind=r_def), dimension(1,1) :: m3_1, m3_2

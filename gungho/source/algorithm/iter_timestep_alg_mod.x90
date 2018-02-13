@@ -63,9 +63,13 @@ module iter_timestep_alg_mod
   ! Algorithms
   use solver_mod,                  only: solver_algorithm
   use rhs_alg_mod,                 only: rhs_alg
-  use advection_alg_mod,           only: advection_alg, advection_alg_init, advection_mr_alg
+  use advection_alg_mod,           only: advection_alg,         &
+                                         advection_alg_init,    &
+                                         advection_alg_final,   &
+                                         advection_mr_alg
   use si_solver_alg_mod,           only: si_solver_alg, si_solver_init
-  use si_operators_alg_mod,        only: create_si_operators, compute_si_operators
+  use si_operators_alg_mod,        only: create_si_operators,   &
+                                         compute_si_operators
   use helmholtz_solver_alg_mod,    only: helmholtz_solver_init, &
                                          compute_inv_hb
   use fast_physics_alg_mod,        only: fast_physics
@@ -107,8 +111,7 @@ module iter_timestep_alg_mod
   type( field_type ) :: du ! increment to u
 
 
-  public :: iter_alg_init
-  public :: iter_alg_step
+  public :: iter_alg_init, iter_alg_step, iter_alg_final
 
 contains
 
@@ -130,7 +133,7 @@ contains
     ! Mesh
     integer(i_def), intent(in) :: mesh_id 
 
-    ! Prognostic fields    
+    ! Prognostic fields
     type( field_type ), intent( inout ) :: u, rho, theta, exner, &
                                            tstar_2d, zh_2d, z0msea_2d
 
@@ -209,6 +212,17 @@ contains
 
   end subroutine iter_alg_init
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> Release all claimed resources once completed.
+  !>
+  subroutine iter_alg_final
+
+    implicit none
+
+    call advection_alg_final()
+
+  end subroutine iter_alg_final
+
   !> @details An algorithm for timestepping the 3D nonlinear equations
   !>          using an iterative process of the same form as endgame.
   !>          The algorithm splits all processes into one of three parts.
@@ -244,7 +258,7 @@ contains
 
     implicit none
 
-    ! Prognostic fields    
+    ! Prognostic fields
     type( field_type ), intent( inout ) :: u, rho, theta, exner, xi
     type( field_type ), intent( inout ) :: u1_in_w3, u2_in_w3, u3_in_w3
     type( field_type ), intent( inout ) :: rho_in_wth, theta_in_w3
@@ -375,7 +389,7 @@ contains
             call solver_algorithm(state(igh_t), inc(igh_t))
             ! exner^np1 can be directly guessed from eos
             m3_inv => get_mass_matrix(w3inv_id)
-          
+
             call invoke( project_pressure_kernel_type( state(igh_p), state(igh_d), state(igh_t), &
                                                        chi, m3_inv, qr ) )
           end if

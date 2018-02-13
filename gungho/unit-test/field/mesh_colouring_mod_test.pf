@@ -52,7 +52,6 @@ subroutine setUp(this)
 
   use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
   use ESMF
-  use reference_element_mod,     only : reference_cube, reference_element
 
   implicit none
 
@@ -65,9 +64,6 @@ subroutine setUp(this)
                   petCount=pet_count, &
                   rc=rc)
   if (rc  /=  ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-  reference_element = finite_element_cellshape_quadrilateral
-  call reference_cube()
 
   ! Create top level collections
   global_mesh_collection = global_mesh_collection_type()
@@ -84,14 +80,12 @@ end subroutine setUp
 !-------------------------------------------------------------------------------
 subroutine tearDown(this)
 
-  use reference_element_mod, only : deallocate_reference
   implicit none
 
   class(compute_colours_test_type), intent(inout) :: this
 
   integer  :: rc
 
-  call deallocate_reference()
   call global_mesh_collection%clear()
   call mesh_collection%clear()
 
@@ -120,8 +114,8 @@ subroutine test_compute_colours_cubedsphere(this)
 
   integer(i_def)                   :: num_cells
   integer(i_def)                   :: num_colours
-  integer(kind=i_def), pointer :: num_cell_per_colour(:)
-  integer(kind=i_def), pointer :: cells_in_colour(:,:)
+  integer(kind=i_def), pointer :: num_cell_per_colour(:) => null()
+  integer(kind=i_def), pointer :: cells_in_colour(:,:)   => null()
 
   integer(i_def)           :: npanels
   integer(i_def)           :: global_mesh_id
@@ -131,7 +125,7 @@ subroutine test_compute_colours_cubedsphere(this)
   character( 200 ) :: message
 
   npanels = 6
-  filename = "data/mesh_C32.nc"
+  filename = "data/mesh_C4.nc"
 
   global_mesh_id =  global_mesh_collection%add_new_global_mesh( filename,  &
                                                                 mesh_name, &
@@ -216,8 +210,8 @@ subroutine test_compute_colours_biperiodic(this)
 
   integer(i_def)                   :: num_cells
   integer(i_def)                   :: num_colours
-  integer(kind=i_def), pointer :: num_cell_per_colour(:)
-  integer(kind=i_def), pointer :: cells_in_colour(:,:)
+  integer(kind=i_def), pointer :: num_cell_per_colour(:) => null()
+  integer(kind=i_def), pointer :: cells_in_colour(:,:)   => null()
 
   integer(i_def)           :: npanels
   integer(i_def)           :: global_mesh_id
@@ -313,8 +307,8 @@ subroutine test_compute_colours_generic(this)
 
   integer(i_def)                   :: num_cells
   integer(i_def)                   :: num_colours
-  integer(kind=i_def), pointer :: num_cell_per_colour(:)
-  integer(kind=i_def), pointer :: cells_in_colour(:,:)
+  integer(kind=i_def), pointer :: num_cell_per_colour(:) => null()
+  integer(kind=i_def), pointer :: cells_in_colour(:,:)   => null()
 
   integer(i_def)           :: npanels
   integer(i_def)           :: global_mesh_id

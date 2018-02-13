@@ -49,8 +49,8 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
     use gungho_feign_config_mod,   only : feign_mixing_config
+
     implicit none
 
     class(tracer_viscosity_test_type), intent(inout) :: this
@@ -58,9 +58,6 @@ contains
     type(field_proxy_type)    :: theta_p
 
     integer(i_def) :: mesh_id
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -90,14 +87,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(tracer_viscosity_test_type), intent(inout) :: this
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown

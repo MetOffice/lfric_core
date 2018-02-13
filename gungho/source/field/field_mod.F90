@@ -210,21 +210,21 @@ module field_mod
 
     subroutine write_interface(field_name, field_proxy)
       import r_def, field_proxy_type
-      character(len=*),        intent(in)  :: field_name              
+      character(len=*),        intent(in)  :: field_name
       type(field_proxy_type ), intent(in)  :: field_proxy
     end subroutine write_interface
 
     subroutine checkpoint_interface(field_name, file_name, field_proxy)
       import r_def, field_proxy_type
       character(len=*),        intent(in)  :: field_name
-      character(len=*),        intent(in)  :: file_name              
+      character(len=*),        intent(in)  :: file_name
       type(field_proxy_type ), intent(in)  :: field_proxy
     end subroutine checkpoint_interface
 
     subroutine restart_interface(field_name, file_name, field_proxy)
       import r_def, field_proxy_type
       character(len=*),        intent(in)  :: field_name
-      character(len=*),        intent(in)  :: file_name              
+      character(len=*),        intent(in)  :: file_name
       type(field_proxy_type ), intent(inout)  :: field_proxy
     end subroutine restart_interface
 
@@ -279,7 +279,7 @@ contains
     else
       self%ospace = self%vspace%which()
     end if 
-    
+
   end function field_constructor
 
   !> Destroy a scalar <code>field_type</code> instance.
@@ -448,6 +448,7 @@ contains
   !>
   !> @param [in] pointer to procedure implementing write method 
   subroutine set_write_field_behaviour(self, write_field_behaviour)
+    implicit none
     class(field_type), intent(inout)                  :: self
     procedure(write_interface), pointer, intent(in)   :: write_field_behaviour
     self%write_field_method => write_field_behaviour
@@ -472,6 +473,7 @@ contains
   !>
   !> @param [in] pointer to procedure implementing checkpoint method 
   subroutine set_checkpoint_behaviour(self, checkpoint_behaviour)
+    implicit none
     class(field_type), intent(inout)                  :: self
     procedure(checkpoint_interface), pointer, intent(in)   :: checkpoint_behaviour
     self%checkpoint_method => checkpoint_behaviour
@@ -481,6 +483,7 @@ contains
   !>
   !> @param [in] pointer to procedure implementing restart method 
   subroutine set_restart_behaviour(self, restart_behaviour)
+    implicit none
     class(field_type), intent(inout)                  :: self
     procedure(restart_interface), pointer, intent(in)   :: restart_behaviour
     self%restart_method => restart_behaviour
@@ -498,12 +501,11 @@ contains
 
     implicit none
 
-    class (field_type) :: self
-    type (mesh_type), pointer :: mesh
+    class(field_type), intent(in) :: self
+    type(mesh_type), pointer :: mesh
 
     mesh => self%vspace%get_mesh()
 
-    return
   end function get_mesh
 
   !> Function to get mesh id from the field.
@@ -542,7 +544,7 @@ contains
     integer(i_def)          :: cell
     integer(i_def)          :: layer
     integer(i_def)          :: df
-    integer(i_def), pointer :: map( : )
+    integer(i_def), pointer :: map(:) => null()
 
     write( log_scratch_space, '( A, A)' ) trim( label ), " =["
     call log_event( log_scratch_space, dump_level )
@@ -642,7 +644,7 @@ contains
     implicit none
 
     class (field_type), target :: self
-    type( function_space_type ), pointer :: vspace
+    type(function_space_type), pointer :: vspace
 
     vspace => self%vspace
 
@@ -746,7 +748,7 @@ contains
     integer(i_def), intent(in) :: depth
     type(ESMF_RouteHandle) :: haloHandle
     integer(i_def) :: rc
-    type (mesh_type), pointer   :: mesh => null()
+    type(mesh_type), pointer   :: mesh => null()
 
     if( self%vspace%is_comms_fs() ) then
       mesh=>self%vspace%get_mesh()
@@ -784,7 +786,7 @@ contains
     integer(i_def), intent(in) :: depth
     type(ESMF_RouteHandle) :: haloHandle
     integer(i_def) :: rc
-    type (mesh_type), pointer   :: mesh => null()
+    type(mesh_type), pointer   :: mesh => null()
 
     if( self%vspace%is_comms_fs() ) then
 
@@ -819,7 +821,7 @@ contains
     integer(i_def), intent(in) :: depth
     type(ESMF_RouteHandle) :: haloHandle
     integer(i_def) :: rc
-    type (mesh_type), pointer   :: mesh => null()
+    type(mesh_type), pointer   :: mesh => null()
 
     if( self%vspace%is_comms_fs() ) then
 
@@ -973,7 +975,7 @@ contains
     class(field_proxy_type), intent(in) :: self
     integer(i_def), intent(in) :: depth
     logical(l_def) :: dirtiness
-    type (mesh_type), pointer   :: mesh => null()
+    type(mesh_type), pointer   :: mesh => null()
 
     mesh=>self%vspace%get_mesh()
     if( depth > mesh%get_halo_depth() ) &
@@ -1008,7 +1010,7 @@ contains
 
     class(field_proxy_type), intent(inout) :: self
     integer(i_def), intent(in) :: depth
-    type (mesh_type), pointer   :: mesh => null()
+    type(mesh_type), pointer   :: mesh => null()
 
     mesh=>self%vspace%get_mesh()
     if( depth > mesh%get_halo_depth() ) &

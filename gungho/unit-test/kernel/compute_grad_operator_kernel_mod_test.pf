@@ -57,7 +57,6 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -72,9 +71,6 @@ contains
     integer :: nqp_h, nqp_v
 
     integer :: i
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -123,8 +119,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(compute_grad_operator_test_type), intent(inout) :: this
@@ -133,7 +127,6 @@ contains
 
     call mesh_collection%clear()
     call function_space_collection%clear()
-    call deallocate_reference()
 
   end subroutine tearDown
 

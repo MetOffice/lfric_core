@@ -3,8 +3,7 @@
 ! For further details please refer to the file LICENCE.original which you
 ! should have received as part of this distribution.
 !-----------------------------------------------------------------------------
-
-!> @brief pFunut tests for the mesh module
+!> @brief pFunit tests for the mesh module.
 !>
 module mesh_mod_test
 
@@ -36,7 +35,7 @@ module mesh_mod_test
             test_get_1d_array, test_get_2d_array, test_get_3d_array, &
             test_get_domain,                                         &
             test_get_partition, test_get_global_mesh_id,             &
-            test_mesh_map_retrival
+            test_mesh_map_retrieval
 
   @testCase
   type, extends( TestCase ) :: mesh_test_type
@@ -53,7 +52,7 @@ module mesh_mod_test
     procedure :: test_get_3d_array
     procedure :: test_get_partition
     procedure :: test_get_global_mesh_id
-    procedure :: test_mesh_map_retrival
+    procedure :: test_mesh_map_retrieval
 
   end type mesh_test_type
 
@@ -165,7 +164,6 @@ contains
     use gungho_feign_config_mod,   only : feign_base_mesh_config, &
                                           feign_extrusion_config, &
                                           feign_planet_config
-    use reference_element_mod,     only : reference_cube, reference_element
 
     implicit none
 
@@ -185,9 +183,6 @@ contains
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling )
 
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
-
     global_mesh_collection = global_mesh_collection_type()
     global_mesh_id = global_mesh_collection%add_unit_test_global_mesh()
 
@@ -201,13 +196,10 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class( mesh_test_type ), intent( inout ) :: this
 
-    call deallocate_reference()
     call global_mesh_collection%clear()
 
   end subroutine tearDown
@@ -657,6 +649,8 @@ contains
   @test
   subroutine test_get_partition( this )
 
+    implicit none
+
     class( mesh_test_type ), intent( inout ) :: this
     type(mesh_type)      :: mesh_1
     type(partition_type), pointer :: test_partition => null()
@@ -681,6 +675,8 @@ contains
   @test
   subroutine test_get_global_mesh_id( this )
 
+    implicit none
+
     class( mesh_test_type ), intent( inout ) :: this
     type(mesh_type) :: mesh_1
 
@@ -694,7 +690,9 @@ contains
 
 !==============================================================================
   @test
-  subroutine test_mesh_map_retrival( this)
+  subroutine test_mesh_map_retrieval( this)
+
+    implicit none
 
     class( mesh_test_type ), intent( inout ) :: this
 
@@ -721,8 +719,8 @@ contains
     integer(i_def), allocatable :: test_2d_array(:,:)
     integer(i_def), allocatable :: data(:,:)
 
-    integer(i_def), pointer :: test_1d_array_ptr(:)
-    integer(i_def), pointer :: test_2d_array_ptr(:,:)
+    integer(i_def), pointer :: test_1d_array_ptr(:)   => null()
+    integer(i_def), pointer :: test_2d_array_ptr(:,:) => null()
 
     ! Clear out the global mesh collection, as it may have the 
     ! unit test global mesh which is not what we want.
@@ -850,7 +848,7 @@ contains
     partitioner_ptr => null()
 
 
-  end subroutine test_mesh_map_retrival
+  end subroutine test_mesh_map_retrieval
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

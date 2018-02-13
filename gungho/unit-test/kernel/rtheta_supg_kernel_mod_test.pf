@@ -67,7 +67,6 @@ contains
 
     use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
     use mesh_mod,                  only : PLANE_BI_PERIODIC
-    use reference_element_mod,     only : reference_cube, reference_element
     use gungho_feign_config_mod,   only : feign_timestepping_config
     use timestepping_config_mod,   only : timestepping_method_semi_implicit, &
                                           timestepping_runge_kutta_method_ssp3
@@ -97,9 +96,6 @@ contains
                                     spinup_alpha,                        &
                                     spinup_winds                         &
                                     )
-
-    reference_element = finite_element_cellshape_quadrilateral
-    call reference_cube()
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -149,8 +145,6 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use reference_element_mod, only : deallocate_reference
-
     implicit none
 
     class(rtheta_supg_test_type), intent(inout) :: this
@@ -162,7 +156,6 @@ contains
     deallocate( this%answer )
 
     call function_space_collection%clear()
-    call deallocate_reference()
     call mesh_collection%clear()
 
   end subroutine tearDown

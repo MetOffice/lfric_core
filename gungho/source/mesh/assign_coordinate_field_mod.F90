@@ -10,7 +10,7 @@ module assign_coordinate_field_mod
 
   use base_mesh_config_mod, only : geometry, &
                                    base_mesh_geometry_spherical
-  use constants_mod,        only : r_def, i_def
+  use constants_mod,        only : r_def, i_def, i_native
   use log_mod,              only : log_event, LOG_LEVEL_ERROR
   use planet_config_mod,    only : scaled_radius
   use mesh_collection_mod,  only : mesh_collection
@@ -29,25 +29,32 @@ contains
   subroutine assign_coordinate_field(chi, mesh_id)
 
     use field_mod,             only: field_type, field_proxy_type
-    use reference_element_mod, only: nverts, x_vert
+    use reference_element_mod, only: reference_element_type
     use mesh_mod,              only: mesh_type
     use mesh_constructor_helper_functions_mod, &
                                only: domain_size_type
     implicit none
 
     type( field_type ), intent( inout ) :: chi(3)
-    integer(i_def),     intent(in)      :: mesh_id  
+    integer(i_def),     intent(in)      :: mesh_id
 
-    type( field_proxy_type )      :: chi_proxy(3)
-    real(kind=r_def), pointer     :: dof_coords(:,:) => null()
-    real(kind=r_def), allocatable :: vert_coords(:,:,:)
-    real(kind=r_def), allocatable :: dz(:)  ! dz(nlayers) array
-    integer     :: cell
-    integer     :: undf, ndf, nlayers
-    integer     :: alloc_error
-    integer, pointer :: map(:) => null()
-    type( mesh_type), pointer :: mesh => null()
-    type( domain_size_type )  :: domain_size 
+    integer(i_def),                pointer :: map(:)            => null()
+    real(r_def),                   pointer :: dof_coords(:,:)   => null()
+    type(mesh_type),               pointer :: mesh              => null()
+    class(reference_element_type), pointer :: reference_element => null()
+
+    type(field_proxy_type) :: chi_proxy(3)
+    type(domain_size_type) :: domain_size
+
+    real(r_def), allocatable :: column_coords(:,:,:)
+    real(r_def), allocatable :: dz(:)  ! dz(nlayers) array
+    real(r_def), allocatable :: vertex_coords(:,:)
+
+    integer(i_def) :: cell
+    integer(i_def) :: undf, ndf, nlayers
+    integer(i_def) :: nverts
+
+    integer(i_native) :: alloc_error
 
     ! Break encapsulation and get the proxy.
     chi_proxy(1) = chi(1)%get_proxy()
@@ -62,10 +69,15 @@ contains
       call log_event( " assign_coordinate_field: Unable to allocate "// &
                       "local array dz(nlayers) ", LOG_LEVEL_ERROR )
     end if
+
     mesh => mesh_collection%get_mesh( mesh_id )
     call mesh%get_dz(dz)
 
-    allocate( vert_coords(3,nverts,nlayers ) )
+    reference_element => mesh%get_reference_element()
+    call reference_element%get_vertex_coordinates( vertex_coords )
+    nverts = reference_element%get_number_vertices()
+
+    allocate( column_coords(3,nverts,nlayers ) )
     dof_coords => chi_proxy(1)%vspace%get_nodes( )
 
     domain_size =  mesh%get_domain_size()
@@ -73,27 +85,26 @@ contains
     do cell = 1,chi_proxy(1)%vspace%get_ncell()
        map => chi_proxy(1)%vspace%get_cell_dofmap( cell )
 
-       call mesh%get_column_coords(cell,vert_coords)
+       call mesh%get_column_coords(cell,column_coords)
 
-       call assign_coordinate( nlayers, &
-                               ndf, &
-                               nverts, &
-                               undf, &
-                               map, &
-                               dz,&
-                               chi_proxy(1)%data, &
-                               chi_proxy(2)%data, &
-                               chi_proxy(3)%data, & 
-                               vert_coords, &  
-                               dof_coords, &
-                               x_vert, &
-                               domain_size%maximum%x, &
-                               domain_size%minimum%y &
-                                        )
+       call assign_coordinate( nlayers,                 &
+                               ndf,                     &
+                               nverts,                  &
+                               undf,                    &
+                               map,                     &
+                               dz,                      &
+                               chi_proxy(1)%data,       &
+                               chi_proxy(2)%data,       &
+                               chi_proxy(3)%data,       &
+                               column_coords,           &
+                               dof_coords,              &
+                               vertex_coords,           &
+                               domain_size%maximum%x,   &
+                               domain_size%minimum%y )
     end do
     ! Loop over all the cells
 
-    deallocate ( dz, vert_coords )
+    deallocate ( dz, column_coords )
 
   end subroutine assign_coordinate_field
 
@@ -107,21 +118,23 @@ contains
 !! @param[out] chi_1         real array: size undf x coord
 !! @param[out] chi_2         real array: size undf y coord
 !! @param[out] chi_3         real array: size undf z coord
-!! @param[in]  vertex_coords real array: (3,nverts,nlayers)
+!! @param[in]  column_coords real array: (3,nverts,nlayers)
 !! @param[in]  chi_hat_node  real array: (3,ndf)
 !! @param[in]  chi_hat_vert  real array: (nverts,3)
   subroutine assign_coordinate(nlayers,ndf,nverts,undf,map,dz, & 
-             chi_1,chi_2,chi_3,vertex_coords,chi_hat_node,chi_hat_vert, &
+             chi_1,chi_2,chi_3,column_coords,chi_hat_node,chi_hat_vert, &
              domain_x, domain_y)
 
-  use reference_element_mod, only: SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
+    use reference_element_mod, only: SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
+
+    implicit none
 
     ! Arguments
     integer, intent(in) :: nlayers, ndf, nverts, undf
     integer, intent(in) :: map(ndf)
     real(kind=r_def), intent(in)  :: dz(nlayers)
     real(kind=r_def), intent(out) :: chi_1(undf), chi_2(undf), chi_3(undf)
-    real(kind=r_def), intent(in)  :: vertex_coords(3,nverts,nlayers)
+    real(kind=r_def), intent(in)  :: column_coords(3,nverts,nlayers)
     real(kind=r_def), intent(in)  :: chi_hat_node(3,ndf), chi_hat_vert(nverts,3)
     real(kind=r_def), intent(in)  :: domain_x, domain_y
 
@@ -135,18 +148,18 @@ contains
 
     ! Compute the representation of the coordinate field
     do k = 0, nlayers-1
-       vertex_local_coords(:,:) = vertex_coords(:,:,k+1)
+       vertex_local_coords(:,:) = column_coords(:,:,k+1)
        if (  geometry /= base_mesh_geometry_spherical ) then
          ! Check if point cell is on right or bottom boundary,
          ! assumes a monotonic coordinate field
-         if ( vertex_coords(1,SEB,k+1) < vertex_coords(1,SWB,k+1)) then 
+         if ( column_coords(1,SEB,k+1) < column_coords(1,SWB,k+1)) then
          ! On x boundary
            vertex_local_coords(1,SEB) = domain_x
            vertex_local_coords(1,NEB) = domain_x
            vertex_local_coords(1,SET) = domain_x
            vertex_local_coords(1,NET) = domain_x
          end if
-         if ( vertex_coords(2,SWB,k+1) > vertex_coords(2,NWB,k+1)) then
+         if ( column_coords(2,SWB,k+1) > column_coords(2,NWB,k+1)) then
          ! On y boundary
            vertex_local_coords(2,SWB) = domain_y
            vertex_local_coords(2,SEB) = domain_y
