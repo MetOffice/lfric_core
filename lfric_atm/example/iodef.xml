@@ -6,7 +6,7 @@
   
   <context id = "gungho_atm"> 
   
-   <calendar type = "Gregorian" start_date = "2016-01-01 15:00:00" />
+   <calendar type = "Gregorian" start_date = "2016-01-01 15:00:00" time_origin = "2016-01-01 15:00:00" />
 
    <axis_definition>
     <axis id="vert_axis_node" name="levels_nodes"/>
@@ -59,6 +59,7 @@
      <!-- Main diagnostic group -->
      <field_group id="diagnostic_fields" freq_op="1ts" operation="instant" enabled=".TRUE." >
        <field id="theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />   
+       <field id="w_physics" name="w_physics" long_name="vertical_wind_on_physics_points" standard_name="vertical_velocity" unit="ms-1" grid_ref="full_level_face_grid" />  
        <field id="m_v" name="m_v" long_name="m_v" unit="1" grid_ref="full_level_face_grid" />
        <field id="m_c" name="m_c" long_name="m_c" unit="1" grid_ref="full_level_face_grid" />
        <field id="m_r" name="m_r" long_name="m_r" unit="1" grid_ref="full_level_face_grid" />
@@ -134,6 +135,7 @@
       
       <file id="lfric_diag" name="lfric_diag" output_freq="10ts" convention="UGRID" enabled=".TRUE.">
         <field field_ref="theta"/>
+        <field field_ref="w_physics"/>
         <field field_ref="m_v"/>
         <field field_ref="m_c"/>
         <field field_ref="m_r"/>
@@ -149,7 +151,17 @@
         <field field_ref="divergence"/>
         <field field_ref="exner"/>
       </file> 
-      
+
+      <file id="lfric_averages" name="lfric_averages" output_freq="10ts" convention="UGRID" enabled=".TRUE.">
+        <field field_ref="theta" operation="average" />
+        <field field_ref="w_physics" operation="average" />
+        <field field_ref="u1" operation="average" />
+        <field field_ref="u2" operation="average" />
+        <field field_ref="u3" operation="average" />
+        <field field_ref="divergence" operation="average" />
+        <field field_ref="exner" operation="average" />
+      </file> 
+
       <file id="lfric_initial" name="lfric_initial" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
         <field field_ref="init_theta"/>
         <field field_ref="init_m_v"/>
@@ -167,8 +179,7 @@
         <field field_ref="init_divergence"/>
         <field field_ref="init_exner"/>
       </file> 
-   
- 
+
     </file_definition>
     
   </context>

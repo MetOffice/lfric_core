@@ -5,8 +5,10 @@ namelist physics
   ! if < 0: then placement is in slow physics
   heldsuarez_thermo_placement : integer ! heldsuarez theta forcing
   heldsuarez_wind_placement   : integer ! heldsuarez wind forcing
+  boundary_layer_placement    : integer ! boundary_layer placement
   hs_random : logical                   ! Add in some random 
                                         ! perturbations to HS forcing
+					
 
 ! idealised surface options
   l_flux_bc    : logical ! Use fixed surface fluxes

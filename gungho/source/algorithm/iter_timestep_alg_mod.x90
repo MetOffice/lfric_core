@@ -54,6 +54,7 @@ module iter_timestep_alg_mod
   use project_pressure_kernel_mod, only: project_pressure_kernel_type
   use sort_ref_kernel_mod,         only: sort_ref_kernel_type
   use extract_w_kernel_mod,        only: extract_w_kernel_type
+  use matrix_vector_kernel_mod,    only: matrix_vector_kernel_type
 
   ! Derived Types
   use field_mod,                 only: field_type
@@ -98,7 +99,6 @@ module iter_timestep_alg_mod
 #ifdef UM_PHYSICS
   ! UM BL scheme
   use bl_init_mod, only: bl_init
-  use bl_alg_mod,  only: bl_alg_step
 #endif
 
   use timer_mod,                 only: timer
@@ -297,6 +297,7 @@ contains
     type( field_type ), pointer :: t_normalisation => null()
     type( field_type ), pointer :: u_normalisation => null()
     type(operator_type), pointer :: m3_inv => null()
+    type(operator_type), pointer :: mm_wt => null()
     type( field_type ), pointer  :: dA => null() ! Areas of faces
 
     integer(kind=i_def):: outer, inner, iter, imr
@@ -313,6 +314,7 @@ contains
     height_w3  => get_height(W3)
     height_wth => get_height(Wtheta)
     dA => get_da_at_w2()
+    mm_wt => get_mass_matrix(theta_space_id) 
     !--------------------------------------------------------------------
     ! Pass updated fields into state
     !--------------------------------------------------------------------
@@ -359,39 +361,53 @@ contains
       call invoke(inc_X_times_Y(du,dA)) ! This is the map back
       call invoke(name="update from slow physics", &
                   inc_X_plus_Y(state(igh_t), dtheta), &
-                  inc_X_plus_Y(state(igh_u), du), &
+                  inc_X_plus_Y(state(igh_u), du)  &
                   )
       call log_event( "slow physics: completed slow physics.", LOG_LEVEL_INFO )
     end if
 
-    if (use_wavedynamics) then
 
-      ! Update state_n and mr_n with start of timestep + slow physics values
-      call copy_bundle(state, state_n, bundle_size)
-      if (use_moisture)call copy_bundle(mr, mr_n, nummr)
+    ! Update state_n and mr_n with start of timestep + slow physics values
+    call copy_bundle(state, state_n, bundle_size)
+    if (use_moisture)call copy_bundle(mr, mr_n, nummr)
 
-      call rhs_alg(rhs_n, varbeta*dt, state_n, .false., .false.)
+    call rhs_alg(rhs_n, varbeta*dt, state_n, .false., .false.)
 
-      !============================================================================
-      ! Start the Outer (advection) loop
-      !============================================================================
-      outer_dynamics_loop: do outer = 1,outer_iterations
+    !============================================================================
+    ! Start the Outer (advection) loop
+    !============================================================================
+    outer_dynamics_loop: do outer = 1,outer_iterations
 
-        if (use_physics) then
-          ! If outer == 1 then the n+1 fields are the same as the n fields and
-          ! so the remapping does not need to be done again 
-          if ( outer > 1 ) &
-            call map_physics_fields_alg(state(igh_u), state(igh_p),              & 
-                                        state(igh_d), state(igh_t),              &
-                                        u1_in_w3, u2_in_w3, u3_in_w3,            &
-                                        theta_in_w3, exner_in_wth, rho_in_wth,   &
-                                        timestep)
-          !--------------------------------------------------------------------
-          ! Call the fast physics terms
-          !--------------------------------------------------------------------
-          call fast_physics(chi, state, rhs_phys)
-          call log_event( "iter_timestep: completed fast physics.", LOG_LEVEL_INFO )
+      if (use_physics) then
+        ! If outer == 1 then the n+1 fields are the same as the n fields and
+        ! so the remapping does not need to be done again 
+        if ( outer > 1 ) then
+          call map_physics_fields_alg(state(igh_u), state(igh_p),              &
+                                      state(igh_d), state(igh_t),              &
+                                      u1_in_w3, u2_in_w3, u3_in_w3,            &
+                                      theta_in_w3, exner_in_wth, rho_in_wth,   &
+                                      timestep)
+          call invoke( X_divideby_Y(u_physics, state(igh_u), dA) )
         end if
+        !--------------------------------------------------------------------
+        ! Call the fast physics terms
+        !--------------------------------------------------------------------
+        call invoke( setval_c(dtheta, 0.0_r_def) )
+        call invoke( setval_c(du, 0.0_r_def) )
+        call fast_physics(chi, du, u_physics, dtheta, state(igh_t),            &
+                          state(igh_d), state(igh_p), rho_in_wth, exner_in_wth,&
+                          u1_in_w3, u2_in_w3, height_w3, height_wth,           &
+                          tstar_2d, zh_2d, z0msea_2d, mr)
+        ! populate rhs_phys, including convert to weak form theta
+        ! NB there is no update to pressure or density
+        call invoke(name="update rhs_phys from fast physics", &
+                    matrix_vector_kernel_type(rhs_phys(igh_t), dtheta, mm_wt), &
+                    X_times_Y(rhs_phys(igh_u), du, dA) &
+                    )
+        call log_event( "iter_timestep: completed fast physics.", LOG_LEVEL_INFO )
+      end if
+
+      if (use_wavedynamics) then
 
         ! Set advecting velocity & terms
         call invoke( aX_plus_bY(u_adv, varbeta, state_n(igh_u), varalpha, state(igh_u)) )
@@ -479,12 +495,17 @@ contains
         ! End of Inner (nonlinear, coriolis) loop
         !--------------------------------------------------------------------
 
-      end do outer_dynamics_loop
-      !--------------------------------------------------------------------
-      ! End of Outer (advection) loop
-      !--------------------------------------------------------------------
+      else ! when use_wavedynamics=false, just add increments here
 
-    end if ! use_wavedynamics
+        !NB This is currently only updating theta
+        call invoke(inc_X_plus_Y(state(igh_t), dtheta) )
+
+      end if ! use_wavedynamics
+
+    end do outer_dynamics_loop
+    !--------------------------------------------------------------------
+    ! End of Outer (advection) loop
+    !--------------------------------------------------------------------
 
     !--------------------------------------------------------------------
     ! Apply viscosity
@@ -496,19 +517,6 @@ contains
       call invoke( inc_X_plus_bY( state(igh_t), dt, inc(igh_t) ), &
                    inc_X_plus_bY( state(igh_u), dt, inc(igh_u) ) )
     end if    
-
-#ifdef UM_PHYSICS
-    if ( use_physics ) then
-      ! Algorithm that calls the UM Boundary Layer scheme
-      ! NB. this needs moving into fast and slow physics ultimately, but
-      ! that will be done in a later ticket as changes need to happen
-      ! to the model state first...
-      call bl_alg_step(state(igh_t), rho, rho_in_wth, state(igh_p), &
-                       exner_in_wth,                                &
-                       u1_in_w3, u2_in_w3, height_w3, height_wth,   &
-                       tstar_2d, zh_2d, z0msea_2d)
-    end if
-#endif
     
     if (use_wavedynamics) then
       if (.not. (spinup_winds .and. timestep*dt <= spinup_period)) then

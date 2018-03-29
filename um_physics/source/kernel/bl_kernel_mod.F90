@@ -11,6 +11,7 @@ module bl_kernel_mod
                                  GH_FIELD, GH_READ, GH_WRITE, &
                                  CELLS
   use constants_mod,      only : r_def, i_def, r_double
+  use formulation_config_mod, only: use_moisture
   use fs_continuity_mod,  only : W3, Wtheta
   use kernel_mod,         only : kernel_type
   use physics_config_mod, only: l_flux_bc, fixed_flux_e, fixed_flux_h
@@ -24,19 +25,22 @@ module bl_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_kernel_type
     private
-    type(arg_type) :: meta_args(12) = (/         &
+    type(arg_type) :: meta_args(15) = (/         &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_WRITE,  W3),     &
+        arg_type(GH_FIELD,   GH_WRITE,  W3),     &
+        arg_type(GH_FIELD,   GH_WRITE,  W3),     &
         arg_type(GH_FIELD,   GH_WRITE,  WTHETA), &
-        arg_type(GH_FIELD,   GH_READ,   W3),     &
-        arg_type(GH_FIELD,   GH_READ,  WTHETA),  &
-        arg_type(GH_FIELD,   GH_READ,   W3),     &
-        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
-        arg_type(GH_FIELD,   GH_READ,   W3),     &
-        arg_type(GH_FIELD,   GH_READ,   W3),     &
-        arg_type(GH_FIELD,   GH_READ,   W3),     &
-        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
-        arg_type(GH_FIELD,   GH_WRITE,  W3),     &
-        arg_type(GH_FIELD,   GH_WRITE,  W3),     &
-        arg_type(GH_FIELD,   GH_WRITE,  W3)      &
+        arg_type(GH_FIELD,   GH_WRITE,  WTHETA), &
+        arg_type(GH_FIELD,   GH_WRITE,  WTHETA)  &
         /)
     integer :: iterates_over = CELLS
   contains
@@ -63,7 +67,7 @@ end function bl_kernel_constructor
 !> @brief Interface to the BL scheme
 !! @param[in] nlayers Number of layers
 !! @param[in] nlayers_2d Number of layers for 2d field (i.e. 1)
-!! @param[inout] theta_in_wth Potential temperature field
+!! @param[in] theta_in_wth Potential temperature field
 !! @param[in] rho_in_w3 density field in potential density space
 !! @param[in] rho_in_wth density field in potential temperature space
 !! @param[in] exner_in_w3 Exner pressure field in density space
@@ -75,6 +79,9 @@ end function bl_kernel_constructor
 !! @param[inout] tstar_2d   Surface tempature
 !! @param[inout] zh_2d      Boundary layer depth
 !! @param[inout] z0msea_2d  Roughness length
+!! @param[inout] theta_inc  BL theta increment
+!! @param[inout] m_v        Vapour mixing ratio
+!! @param[inout] m_cl       Cloud liquid mixing ratio
 !! @param[in] ndf_wth Number of degrees of freedom per cell for potential temperature space
 !! @param[in] undf_wth Number unique of degrees of freedom  for potential temperature space
 !! @param[in] map_wth Dofmap for the cell at the base of the column for potential temperature space
@@ -98,6 +105,9 @@ subroutine bl_code(nlayers, &
                    tstar_2d, &
                    zh_2d, &
                    z0msea_2d, &
+                   theta_inc, &
+                   m_v, &
+                   m_cl, &
                    ndf_wth, &
                    undf_wth, &
                    map_wth, &
@@ -115,7 +125,8 @@ subroutine bl_code(nlayers, &
     use bl_diags_mod, only: BL_diag
     use sf_diags_mod, only: sf_diag
     ! other modules containing stuff passed to BL
-    use atm_fields_bounds_mod, only: tdims
+    use atm_fields_bounds_mod, only: tdims, udims, vdims, udims_s, vdims_s, &
+         pdims
     use atmos_physics2_alloc_mod !everything
     use bdy_expl3_mod, only: bdy_expl3
     use conv_diag_6a_mod, only: conv_diag_6a
@@ -141,13 +152,16 @@ subroutine bl_code(nlayers, &
   integer(kind=i_def), dimension(ndf_w3),  intent(in) :: map_w3
   integer(kind=i_def), dimension(ndf_2d),  intent(in) :: map_2d
 
-  real(kind=r_def), dimension(undf_wth), intent(inout):: theta_in_wth
-  real(kind=r_def), dimension(undf_w3),  intent(in)   :: rho_in_w3, exner_in_w3, &
+  real(kind=r_def), dimension(undf_wth), intent(inout):: theta_inc, m_v, m_cl
+  real(kind=r_def), dimension(undf_w3),  intent(in)   :: rho_in_w3,          &
+                                                         exner_in_w3,        &
                                                          u1_in_w3, u2_in_w3, &
                                                          height_w3
-  real(kind=r_def), dimension(undf_wth), intent(in)   :: rho_in_wth, exner_in_wth,&
-                                                         height_wth
-  real(kind=r_def), dimension(undf_2d), intent(inout) :: tstar_2d, zh_2d, &
+  real(kind=r_def), dimension(undf_wth), intent(in)   :: rho_in_wth,         &
+                                                         exner_in_wth,       &
+                                                         height_wth,         &
+                                                         theta_in_wth
+  real(kind=r_def), dimension(undf_2d), intent(inout) :: tstar_2d, zh_2d,    &
                                                          z0msea_2d
 
   ! Local variables for the kernel
@@ -161,13 +175,13 @@ subroutine bl_code(nlayers, &
     integer :: asteps_since_triffid
     integer :: nscmdpkgs
     logical :: l_scrn, l_aero_classic, l_spec_z0, l_plsp,        &
-         l_mixing_ratio, l_extra_call
+         l_mixing_ratio, l_extra_call, l_calc_at_p
     logical :: l_scmdiags(0)
 
     ! profile fields from level 1 upwards
     real(r_double), dimension(row_length,rows,model_levels) ::              &
          p, rho_wet_rsq, rho_wet, rho_dry, z_rho, z_theta,                  &
-         bulk_cloud_fraction, bl_w_var, rhokm, rhcpt, t_latest, q_latest,   &
+         bulk_cloud_fraction, bl_w_var, rhcpt, t_latest, q_latest,          &
          qcl_latest, qcf_latest, cf_latest, cfl_latest, cff_latest, cca,    &
          cca0, ccw0, area_cloud_fraction, cloud_fraction_liquid,            &
          cloud_fraction_frozen
@@ -206,14 +220,14 @@ subroutine bl_code(nlayers, &
          photosynth_act_rad, soil_clay, soil_sand, dust_mrel1, dust_mrel2,  &
          dust_mrel3, dust_mrel4, dust_mrel5, dust_mrel6, tstar_sea, zh, dzh,&
          zhpar_shcu, flandfac, fseafac, rhokm_land, rhokm_ssi, cdr10m,      &
-         tstar_land, tstar_ssi, dtstar, t1_sd, q1_sd, wstar, wthvs,         &
+         tstar_land, tstar_ssi, dtstar_sea, t1_sd, q1_sd, wstar, wthvs,     &
          xx_cos_theta_latitude, ice_fract, ls_rain, ls_snow, conv_rain,     &
          conv_snow, cca0_2d, qcl_inv_top, co2_emits, co2flux, tscrndcl_ssi, &
          tstbtrans, sum_eng_fluxes, sum_moist_flux, drydep2, olr,           &
          surf_ht_flux_land, zlcl_mixed, theta_star_surf, qv_star_surf,      &
          snowmelt, tstar_sice, u_0_p, v_0_p, w_max, deep_flag, past_precip, &
          past_conv_ht, zlcl_uv, ql_ad, cin_undilute, cape_undilute,         &
-         entrain_coef, qsat_lcl, delthvu
+         entrain_coef, qsat_lcl, delthvu, dtstar_sice
     ! single level fields on u/v points
     real(r_double), dimension(row_length,rows) :: u_0, v_0, rhokm_u_land,   &
          rhokm_u_ssi, rhokm_v_land, rhokm_v_ssi, flandfac_u, flandfac_v,    &
@@ -227,7 +241,7 @@ subroutine bl_code(nlayers, &
     ! fields on ice categories
     real(r_double), dimension(row_length,rows,nice_use) ::                  &
          ice_fract_cat_use, k_sice, co2, ti, tstar_sice_cat, radnet_sice,   &
-         fqw_ice, ftl_ice, di_ncat, ice_fract_ncat
+         radnet_sea, fqw_ice, ftl_ice, di_ncat, ice_fract_ncat
     ! field on land points and soil levels
     real(r_double), dimension(land_field,sm_levels) :: soil_layer_moisture, &
          smvccl_levs, smvcwt_levs, smvcst_levs, sthf, sthu, ext
@@ -343,8 +357,19 @@ subroutine bl_code(nlayers, &
     u_0_p = 0.0
     v_0_p = 0.0
     ! moisture fields
-    q = 0.0
-    qcl = 0.0
+    if (use_moisture) then
+      do k = 1, model_levels
+        ! water vapour mixing ratio
+        q(1,1,k) = m_v(map_wth(1) + k)
+        ! cloud liquid mixing ratio
+        qcl(1,1,k) = m_cl(map_wth(1) + k)
+      end do
+      q(1,1,0) = m_v(map_wth(1) + 0)
+      qcl(1,1,0) = m_cl(map_wth(1) + 0)
+    else
+      q = 0.0
+      qcl = 0.0
+    end if
     qcf = 0.0
     bulk_cloud_fraction = 0.0
     ! surface height
@@ -482,7 +507,8 @@ subroutine bl_code(nlayers, &
          cdr10m, cdr10m_n, cd10m_n, tau_fd_x, tau_fd_y,                 &
          rhogamu, rhogamv, f_ngstress,                                  &
     !     OUT variables required in IMP_SOLVER
-         alpha1_sice, ashtf, bq_gb, bt_gb, dtrdz_charney_grid,rdz_charney_grid,&
+         alpha1_sea, alpha1_sice, ashtf_sea, ashtf, bq_gb, bt_gb,       &
+         dtrdz_charney_grid, rdz_charney_grid,                          &
          dtrdz_u, dtrdz_v, rdz_u, rdz_v,                                &
          k_blend_tq, k_blend_uv,uStarGBM,                               &
     !     OUT diagnostics (done after implicit solver)
@@ -498,16 +524,17 @@ subroutine bl_code(nlayers, &
          u_s_t_tile,u_s_t_dry_tile,u_s_std_tile, kent, we_lim, t_frac, zrzi,&
          kent_dsc, we_lim_dsc, t_frac_dsc, zrzi_dsc, zhsc,              &
     !     OUT additional variables for JULES
-         ftl_tile,radnet_sice,rib_tile,rho_aresist_tile,                &
+         ftl_tile,radnet_sea,radnet_sice,rib_tile,rho_aresist_tile,     &
          aresist_tile,resist_b_tile,alpha1,ashtf_tile,fqw_tile,epot_tile,&
          fqw_ice,ftl_ice,fraca,resfs,resft,rhokh_tile,rhokh_sice,rhokh_sea,&
          z0hssi,z0h_tile,z0m_gb,z0mssi,z0m_tile,chr1p5m,chr1p5m_sice,smc,&
          gpp,npp,resp_p,g_leaf,gpp_ft,npp_ft,resp_p_ft,resp_s,resp_s_tot,&
          resp_w_ft,gc,canhc_tile,wt_ext_tile,flake,tile_index,tile_pts, &
          tile_frac,fsmc,rib_ssi, vshr_land,vshr_ssi,tstar_land,tstar_ssi,&
-         dtstar_tile,dtstar,hcons,emis_tile,emis_soil,                  &
+         dtstar_tile,dtstar_sea,dtstar_sice,hcons,emis_tile,emis_soil,  &
     !     OUT fields
-         t1_sd,q1_sd,nbdsc,ntdsc,wstar,wthvs,uw0,vw0,rhokm,rhokh,rhcpt  &
+         t1_sd,q1_sd,nbdsc,ntdsc,wstar,wthvs,uw0,vw0,taux_p,tauy_p,     &
+         rhokm,rhokh,rhcpt                                              &
      )
 
     !-----------------------------------------------------------------------
@@ -528,9 +555,12 @@ subroutine bl_code(nlayers, &
     taux_fd_u=tau_fd_x
     tauy_fd_v=tau_fd_y
 
+    l_calc_at_p = .FALSE.  ! Flag for calling this routine on p-grid
       CALL bdy_expl3 (                                                 &
       ! IN grid related variables
-           bl_levels,                                                  &
+           bl_levels, l_calc_at_p,                                     &
+           udims, vdims, udims_s, vdims_s, pdims,                      &
+           udims, vdims,                                               &
       ! IN SCM diags
            nSCMDpkgs,L_SCMDiags,                                       &
       ! IN variables used in flux calculations
@@ -549,8 +579,8 @@ subroutine bl_code(nlayers, &
     !-----------------------------------------------------------------------
     t_latest(1,1,:) = theta(1,1,1:model_levels)                         &
                     * exner_theta_levels(1,1,1:model_levels)
-    q_latest = 0.0
-    qcl_latest = 0.0
+    q_latest(1,1,:)   = q(1,1,1:model_levels)
+    qcl_latest(1,1,:) = qcl(1,1,1:model_levels)
     qcf_latest = 0.0
     cf_latest = 0.0
     cfl_latest = 0.0
@@ -580,9 +610,9 @@ subroutine bl_code(nlayers, &
           , cca, lcbase, ccb0, cct0                                     &
           , ls_rain, ls_snow, conv_rain, conv_snow, L_scrn, L_plsp      &
     ! IN variables required from BDY_LAYR
-          , alpha1_sice, ashtf, bq_gb, bt_gb, dtrdz_charney_grid        &
-          , rdz_charney_grid, dtrdz_u, dtrdz_v, rdz_u, rdz_v            &
-          , cdr10m_u, cdr10m_v, cdr10m_n_u, cdr10m_n_v                  &
+          , alpha1_sea, alpha1_sice, ashtf_sea, ashtf, bq_gb, bt_gb     &
+          , dtrdz_charney_grid, rdz_charney_grid, dtrdz_u, dtrdz_v      &
+          , rdz_u, rdz_v, cdr10m_u, cdr10m_v, cdr10m_n_u, cdr10m_n_v    &
           , cd10m_n_u, cd10m_n_v, z_theta                               &
           , k_blend_tq, k_blend_uv, uStarGBM, rhokm_u, rhokm_v          &
     ! IN diagnostics (started or from) BDY_LAYR
@@ -605,7 +635,7 @@ subroutine bl_code(nlayers, &
           , sw_tile,ashtf_tile,gc,aresist_tile                          &
           , resft,rhokh_sice,rhokh_sea,z0h_tile,z0m_tile                &
           , chr1p5m_sice                                                &
-          , fland, flandg, flandg_u,flandg_v,tstar_sea,vshr_land,vshr_ssi&
+          , fland, flandg, flandg_u,flandg_v,vshr_land,vshr_ssi         &
           , emis_tile, t_soil, snow_tile, rib_ssi                       &
     ! IN JULES variables for STASH
           , gs,gpp,npp,resp_p,gpp_ft,npp_ft,resp_p_ft,resp_s            &
@@ -621,7 +651,7 @@ subroutine bl_code(nlayers, &
     ! INOUT (Note ti and ti_gb are IN only if l_sice_multilayers=T)
           , TScrnDcl_SSI, TScrnDcl_TILE, tStbTrans                      &
           , cca0,ccw0,cca0_2d,fqw,ftl,taux,tauy, rhokh                  &
-          , fqw_ice,ftl_ice,dtstar_tile,dtstar, ti                      &
+          , fqw_ice,ftl_ice,dtstar_tile,dtstar_sea,dtstar_sice,ti       &
           , area_cloud_fraction, bulk_cloud_fraction                    &
           , T_latest, q_latest, qcl_latest, qcf_latest                  &
           , cf_latest, cfl_latest, cff_latest                           &
@@ -636,8 +666,8 @@ subroutine bl_code(nlayers, &
           , co2, ozone_tracer                                           &
     ! INOUT additional variables for JULES
           , tstar_tile,fqw_tile,epot_tile,ftl_tile                      &
-          , radnet_sice,olr, tstar_sice_cat,tstar_ssi                   &
-          , taux_land,taux_ssi,tauy_land,tauy_ssi,Error_code            &
+          , radnet_sea,radnet_sice,olr,tstar_sice_cat,tstar_ssi         &
+          , tstar_sea,taux_land,taux_ssi,tauy_land,tauy_ssi,Error_code  &
     ! OUT fields
           , surf_ht_flux_land, zlcl_mixed                               &
           , theta_star_surf, qv_star_surf                               &
@@ -656,12 +686,19 @@ subroutine bl_code(nlayers, &
     !-----------------------------------------------------------------------
 
     do k = 1, model_levels
-      ! potential temperature on theta levels
-      theta_in_wth(map_wth(1) + k) = t_latest(1,1,k)                    &
-                                   / exner_theta_levels(1,1,k)
+      ! potential temperature increment on theta levels
+      theta_inc(map_wth(1) + k) = t_latest(1,1,k)                       &
+                                   / exner_theta_levels(1,1,k)          &
+                                - theta_in_wth(map_wth(1)+k)
+      ! water vapour on theta levels
+      m_v(map_wth(1) + k)  = q_latest(1,1,k)
+      ! cloud liquid water on theta levels
+      m_cl(map_wth(1) + k) = qcl_latest(1,1,k)
     end do
     ! copy down lowest level to surface as done in UM
-    theta_in_wth(map_wth(1) + 0) = theta_in_wth(map_wth(1) + 1)
+    theta_inc(map_wth(1) + 0) = theta_inc(map_wth(1) + 1)
+    m_v(map_wth(1) + 0)  = m_v(map_wth(1) + 1)
+    m_cl(map_wth(1) + 0) = m_cl(map_wth(1) + 1)
 
     ! update BL prognostics
     ! There is no need to loop over nlayers_2d, since here

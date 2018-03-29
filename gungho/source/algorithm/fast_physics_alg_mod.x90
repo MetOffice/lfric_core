@@ -9,16 +9,29 @@ module fast_physics_alg_mod
 
   use constants_mod,                only: i_def,r_def
   use log_mod,                      only: log_event,         &
-                                          LOG_LEVEL_ERROR
+                                          LOG_LEVEL_ERROR,   &
+                                          LOG_LEVEL_INFO
   use physics_config_mod,           only: heldsuarez_wind_placement, &
-                                          heldsuarez_thermo_placement
+                                          heldsuarez_thermo_placement, &
+                                          boundary_layer_placement
   use derived_config_mod,           only: bundle_size
   use finite_element_config_mod,    only: element_order
   ! PsyKAl PSYClone kernels
   
   ! Derived Types
   use field_mod,                    only: field_type
-  
+
+  ! Field indices
+  use field_indices_mod,         only: igh_u, igh_t, igh_d, igh_p
+
+  ! Moisture species
+  use mr_indices_mod,            only: nummr, imr_v, imr_c
+
+#ifdef UM_PHYSICS
+  ! UM BL scheme
+  use bl_alg_mod,  only: bl_alg_step
+#endif
+
   implicit none
 
 contains
@@ -26,9 +39,26 @@ contains
   !> @details Collection of procedures for subgrid physics that act
   !>          within the outer loop of the solver
   !> @param[in]    chi coordinate array
-  !> @param[in]    state_n Current state of the model prognostics
-  !> @param[inout] rhs_phys physics forcing terms (weak form)
-  subroutine fast_physics(chi, state_n, rhs_phys)
+  !> @param[inout] du increment to wind field 
+  !> @param[in]    u_physics wind field 
+  !> @param[inout] dtheta increment to theta field 
+  !> @param[in]    theta theta field 
+  !> @param[in]    rho        Rho on w3 space
+  !> @param[in]    exner      Exner pressure on w3 space
+  !> @param[in]    rho_in_wth Rho on wth space
+  !> @param[in]    exner_in_wth Exner pressure on wth space
+  !> @param[in]    u1_in_w3   Component of wind on w3 space
+  !> @param[in]    u2_in_w3   Component of wind on w3 space
+  !> @param[in]    height_w3  Height in w3
+  !> @param[in]    height_wth Height in wth
+  !> @param[inout] tstar_2d   Surface tempature
+  !> @param[inout] zh_2d      Boundary layer depth
+  !> @param[inout] z0msea_2d  Roughness length
+  !> @param[inout] mr Mixing ratios
+  subroutine fast_physics(chi, du, u_physics, dtheta, theta,          &
+                          rho, exner, rho_in_wth, exner_in_wth,       &
+                          u1_in_w3, u2_in_w3, height_w3, height_wth,  &
+                          tstar_2d, zh_2d, z0msea_2d, mr)
 
     implicit none
 
@@ -36,11 +66,19 @@ contains
     type( field_type ), intent( in ) :: chi(3)
 
     ! Prognostic fields    
-    type(field_type), intent( in )         :: state_n(bundle_size)
-    type(field_type), intent( inout )      :: rhs_phys(bundle_size)
+    type( field_type ), intent( in )    :: u_physics, theta, exner, rho
+    type( field_type ), intent( in )    :: rho_in_wth, exner_in_wth, &
+                                           u1_in_w3, u2_in_w3, height_w3, &
+                                           height_wth
+    type( field_type ), intent( inout ) :: du, dtheta,    &
+                                           tstar_2d, zh_2d, z0msea_2d, mr(nummr)
 
-    ! This routine is currently only a placeholder ready for implementation of fast
-    ! physics schemes
+    ! Local fields (should be created at initialization, but done here for the time being)
+    type( field_type ) :: dtheta_bl
+
+    logical :: boundary_layer_done ! Flag to indicate that boundary_layer has been calculated
+
+    boundary_layer_done=.false. 
 
     if (heldsuarez_wind_placement > 0)then      
       call log_event( &
@@ -52,6 +90,27 @@ contains
       call log_event( &
          'fast_physics: Held-Suarez thermal forcing is not currently available in fast physics.', &
          LOG_LEVEL_ERROR )
+    end if
+
+#ifdef UM_PHYSICS
+    if (boundary_layer_placement > 0) then  
+      ! Algorithm that calls the UM Boundary Layer scheme
+      call log_event( 'fast_physics: Running Boundary layer', LOG_LEVEL_INFO )
+      call dtheta%copy_field_properties(dtheta_bl)
+      call invoke( setval_c(dtheta_bl, 0.0_r_def) )
+      call bl_alg_step(theta, rho, rho_in_wth, exner, exner_in_wth,          &
+                       u1_in_w3, u2_in_w3, height_w3, height_wth,            &
+                       tstar_2d, zh_2d, z0msea_2d, dtheta_bl,                &
+                       mr(imr_v), mr(imr_c))
+      boundary_layer_done=.true. ! We've done it, so need to collect this term later on
+    end if
+#endif
+
+    !=====================================
+    ! collect individual terms in parallel
+    !=====================================
+    if (boundary_layer_done) then
+      call invoke(inc_X_plus_Y(dtheta, dtheta_bl))
     end if
 
   end subroutine fast_physics

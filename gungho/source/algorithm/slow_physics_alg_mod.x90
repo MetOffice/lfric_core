@@ -9,9 +9,11 @@ module slow_physics_alg_mod
 
   use constants_mod,             only: i_def,r_def
   use log_mod,                   only: log_event,         &
-                                       LOG_LEVEL_WARNING, LOG_LEVEL_INFO
+                                       LOG_LEVEL_WARNING, LOG_LEVEL_INFO, &
+                                       LOG_LEVEL_ERROR
   use physics_config_mod,        only: heldsuarez_thermo_placement, &
-                                       heldsuarez_wind_placement
+                                       heldsuarez_wind_placement, &
+                                       boundary_layer_placement
   ! PsyKAl PSYClone kernels
   use held_suarez_fv_kernel_mod,      only: held_suarez_fv_kernel_type
   use held_suarez_fv_wind_kernel_mod, only: held_suarez_fv_wind_kernel_type
@@ -80,6 +82,12 @@ contains
       call invoke(held_suarez_fv_wind_kernel_type(du_hs, u, w2_rmultiplicity, &
          exner_in_wth, chi))
       held_suarez_wind_done=.true. ! We've done it, so need to collect this term later on
+    end if
+
+    if (boundary_layer_placement < 0) then       
+      call log_event( &
+         'slow_physics: Boundary layer is not currently available in slow physics.', &
+         LOG_LEVEL_ERROR )
     end if
 
     !=====================================

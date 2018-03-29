@@ -26,26 +26,27 @@ contains
   !> into the halos.  As a result we can't use psyclone for this kernel as it will
   !> loop into the halos with the automatic openmp transformations
   !> This will be investigated in ticket #<open up a ticket for this>
-  subroutine invoke_bl_kernel(theta_in_wth, rho_in_w3, rho_in_wth,      &
-                              p_in_w3, p_in_wth, u1_in_w3, u2_in_w3,    &
-                              height_w3, height_wth, tstar_2d, zh_2d,   &
-                              z0msea_2d )
+  subroutine invoke_bl_kernel(theta_in_wth, rho_in_w3, rho_in_wth,           &
+                              exner_in_w3, exner_in_wth, u1_in_w3, u2_in_w3, &
+                              height_w3, height_wth, tstar_2d, zh_2d,        &
+                              z0msea_2d, theta_inc, m_v, m_cl )
 
       use bl_kernel_mod, only: bl_code
       use mesh_mod, only: mesh_type
-      type(field_type), intent(inout) :: theta_in_wth, tstar_2d, zh_2d, &
-           z0msea_2d
-      type(field_type), intent(in) :: rho_in_w3, rho_in_wth, p_in_w3,   &
-           p_in_wth, u1_in_w3, u2_in_w3, height_w3, height_wth
+      type(field_type), intent(inout) :: theta_inc, tstar_2d, zh_2d,    &
+           z0msea_2d, m_v, m_cl
+      type(field_type), intent(in) :: theta_in_wth, rho_in_w3, rho_in_wth, &
+           exner_in_w3, exner_in_wth, u1_in_w3, u2_in_w3, height_w3, height_wth
       integer :: cell
       integer :: ndf_wtheta, undf_wtheta, ndf_w3, undf_w3
       integer :: ndf_2d, undf_2d
       type(mesh_type), pointer :: mesh => null()
       integer :: nlayers, nlayers_2d
       type(field_proxy_type) theta_in_wth_proxy, rho_in_w3_proxy,       &
-           rho_in_wth_proxy, p_in_w3_proxy, p_in_wth_proxy,             &
+           rho_in_wth_proxy, exner_in_w3_proxy, exner_in_wth_proxy,     &
            u1_in_w3_proxy, u2_in_w3_proxy, height_w3_proxy,             &
-           height_wth_proxy, tstar_2d_proxy, zh_2d_proxy, z0msea_2d_proxy
+           height_wth_proxy, tstar_2d_proxy, zh_2d_proxy, z0msea_2d_proxy, &
+           theta_inc_proxy, m_v_proxy, m_cl_proxy
       integer, pointer :: map_w3(:,:) => null()
       integer, pointer :: map_wtheta(:,:) => null()
       integer, pointer :: map_2d(:,:) => null()
@@ -55,8 +56,8 @@ contains
       theta_in_wth_proxy = theta_in_wth%get_proxy()
       rho_in_w3_proxy = rho_in_w3%get_proxy()
       rho_in_wth_proxy = rho_in_wth%get_proxy()
-      p_in_w3_proxy = p_in_w3%get_proxy()
-      p_in_wth_proxy = p_in_wth%get_proxy()
+      exner_in_w3_proxy = exner_in_w3%get_proxy()
+      exner_in_wth_proxy = exner_in_wth%get_proxy()
       u1_in_w3_proxy = u1_in_w3%get_proxy()
       u2_in_w3_proxy = u2_in_w3%get_proxy()
       height_w3_proxy = height_w3%get_proxy()
@@ -64,6 +65,9 @@ contains
       tstar_2d_proxy = tstar_2d%get_proxy()
       zh_2d_proxy = zh_2d%get_proxy()
       z0msea_2d_proxy = z0msea_2d%get_proxy()
+      theta_inc_proxy = theta_inc%get_proxy()
+      m_v_proxy = m_v%get_proxy()
+      m_cl_proxy = m_cl%get_proxy()      
       !
       ! initialise number of layers
       !
@@ -102,11 +106,12 @@ contains
 
         call bl_code(nlayers, nlayers_2d, theta_in_wth_proxy%data,      &
                      rho_in_w3_proxy%data, rho_in_wth_proxy%data,       &
-                     p_in_w3_proxy%data, p_in_wth_proxy%data,           &
+                     exner_in_w3_proxy%data, exner_in_wth_proxy%data,   &
                      u1_in_w3_proxy%data, u2_in_w3_proxy%data,          &
                      height_w3_proxy%data, height_wth_proxy%data,       &
                      tstar_2d_proxy%data, zh_2d_proxy%data,             &
-                     z0msea_2d_proxy%data,                              &
+                     z0msea_2d_proxy%data, theta_inc_proxy%data,        &
+                     m_v_proxy%data, m_cl_proxy%data,                   &
                      ndf_wtheta, undf_wtheta,                           &
                      map_wtheta(:,cell), ndf_w3,                        &
                      undf_w3, map_w3(:,cell),                           &

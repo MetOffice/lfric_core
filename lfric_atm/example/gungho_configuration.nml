@@ -59,6 +59,7 @@
   v0             = 0.0
   sbr_angle_lat  = 0.0
   sbr_angle_lon  = 0.0
+  smp_init_wind=.false.
 /
 
 &output
@@ -66,16 +67,18 @@
   write_xios_output         = .true.
   write_nodal_output        = .false.
   diagnostic_frequency      = 1
+  nodal_output_on_w3        = .false.
   subroutine_timers         = .true.
 /
 
 &physics
- heldsuarez_thermo_placement = 0
- heldsuarez_wind_placement  = 0
- hs_random = .false.
- l_flux_bc=.true.
- fixed_flux_e=0.0
- fixed_flux_h=300.0
+  boundary_layer_placement    = 1
+  heldsuarez_thermo_placement = 0
+  heldsuarez_wind_placement   = 0
+  hs_random = .false.
+  l_flux_bc=.true.
+  fixed_flux_e=0.0
+  fixed_flux_h=300.0
 /
 
 &planet
@@ -108,7 +111,7 @@
   gcrk                           = 18
   si_tolerance                   = 1.0e-6
   guess_np1                      = .F
-  reference_reset_freq           = 4
+  reference_reset_freq           = 1
   normalise                      = .T
   use_operators                  = .T
 /
@@ -135,7 +138,7 @@
   tau_u              = 0.5
   tau_t              = 0.5
   tau_r              = 0.5
-  outer_iterations   = 4
+  outer_iterations   = 1
   inner_iterations   = 1
   runge_kutta_method = 'ssp3'
   spinup_period      = 0
@@ -153,6 +156,8 @@
   operators = 'fv'
   fv_flux_order = 2
   fv_advective_order = 3
+  consistent_metric  = .false.
+  enforce_monotonicity = .false.
 /
 
 &partitioning
@@ -215,5 +220,20 @@
   phi_centre_dec    = 0.0
 /
 
+&orography_dcmip200_spherical
+mountain_height     = 2000.0
+radius_dec          = 0.75
+osc_half_width_dec  = 0.0625
+lambda_centre_dec   = 1.5
+phi_centre_dec      = 0.0
+/
 
+&damping_layer
+  dl_base = 800.0
+  dl_str  = 0.5
+/
 
+&checks
+  limit_cfl = .false.
+  max_cfl   = 0.75
+/

@@ -108,7 +108,8 @@ contains
                                    spinup_period=0.0_r_def, spinup_alpha=.false.,     &
                                    spinup_winds=.false.    )
 
-    call feign_physics_config( heldsuarez_thermo_placement=-1, &
+    call feign_physics_config( boundary_layer_placement=0,     &
+                               heldsuarez_thermo_placement=-1, &
                                heldsuarez_wind_placement=-1,   &
                                hs_random=.false.,              &
 			       l_flux_bc=.false.,              &

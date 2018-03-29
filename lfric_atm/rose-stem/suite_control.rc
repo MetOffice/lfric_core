@@ -1,4 +1,4 @@
-{%- set application_configurations = { 'lfric_atm' : ['dry_conv_bl_scm' ],
+{%- set application_configurations = { 'lfric_atm' : ['dry_conv_bl_scm' ,'wet_conv_bl_scm'],
                                      } %}
 
 {%- set canned_configurations  = [] %}
@@ -7,5 +7,8 @@
 'developer': [
     'run_application( lfric_atm, dry_conv_bl_scm,  resolutions=[("BiP4x4-10000x10000",600.0)],
                                                    checkkgo=True)',
+    'run_application( lfric_atm, wet_conv_bl_scm,  resolutions=[("BiP4x4-10000x10000",600.0)],
+                                                   checkkgo=True)',
+
     'cleanlines'],
 } %}
