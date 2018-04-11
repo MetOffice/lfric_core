@@ -244,7 +244,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep, plotlevel_x, plotl
       ax1.set_xticks(np.arange(-20000, 25000, 5000))
     else:
       print 'Error: cosine orography does not have the zoom option.'
-  
+
   if zoom == 'zoom_1': # Ticks as in paper 
     ax1.set_yticks(np.arange(0, 14000, 2000))
   else:
@@ -262,12 +262,12 @@ def make_figure(plotpath, nx, ny, field, component, timestep, plotlevel_x, plotl
   else:
     ax1.tick_params(axis='both', labelsize=24)
   ax1.set_ylim(zmin, zmax)
-  
+
 
 # end for loop on fields
 
 if __name__ == "__main__":
-  
+
   try:
     datapath, nx, ny, fields, component, timesteps, plotlevel_x, plotlevel_y, case, zoom, cntrs, plotpath = sys.argv[1:13]
   except ValueError:
@@ -297,13 +297,13 @@ if __name__ == "__main__":
 
       levels0 = np.sort(data0.level.unique())
 
-  
+
   for ts in ts_list:
-        
+
     # Making space for more fields in the plot. 
 
     slice_fig = plt.figure(figsize=(15*(len(field_list)),10))
-   
+
     for i, field in enumerate(field_list):
 
       filestem =  datapath + "/diagDynamo_nodal_" + field + "_" + ts + "*"
@@ -314,7 +314,7 @@ if __name__ == "__main__":
         data = read_nodal_data(filestem, 1, component)
 
       # Sort the data (needed to be able to reshape and not regrid)
-      data = data.sort(['y','x','z'])
+      data = data.sort_values(['y','x','z'])
 
       levels = np.sort(data.level.unique())
 
@@ -322,7 +322,7 @@ if __name__ == "__main__":
       # Only try to plot if we found some files for this timestep
       if len(levels) > 0:
         make_figure(plotpath, nx, ny, field, component, ts, plotlevel_x, plotlevel_y, case, zoom, cntrs, len(field_list), i, slice_fig)
-        
+
     out_file_name = plotpath + "/" "nodal_slices_" + field + '_' + ts +  ".png"
     plt.tight_layout()
     plt.savefig(out_file_name)

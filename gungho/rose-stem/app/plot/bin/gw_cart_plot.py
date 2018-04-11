@@ -30,7 +30,7 @@ data0 = None
 def make_figure(plotpath, nx, ny, field, component, timestep):
 
   val_col = 'c' + str(component)
-       
+
   fig = plt.figure(figsize=(7,7))
 
   # Sort levels in ascending order, this is needed for high order spaces
@@ -59,7 +59,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
   ny = int(ny)
   nz = len(levels)
 
-  
+
   mid_z = math.floor(len(levels)/2)
   wi = np.zeros([ny,nx,len(levels)])
   wi0= np.zeros([ny,nx,len(levels)])
@@ -73,11 +73,11 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
     wi0[:,:,p] = (p_data0[val_col].values).reshape((ny, nx))
 
 
-  # subtracting background profile  
+  # subtracting background profile
   for l in xrange(len(levels)):
-    wi_bg[l] = wi0[0,0,l]  
+    wi_bg[l] = wi0[0,0,l]
     wi[:,:,l] -= wi_bg[l]
-    
+
   dw = np.zeros([nx,len(levels)])
   for i in range(nx):
     dw[i,:] = wi[0,i,:]
@@ -86,9 +86,9 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
   # create meshgrid to get z_i and x_i for plotting
   x2d = np.linspace(xmin, xmax, nx)
   z2d = np.linspace(zmin, zmax, nz)
-  z_i, x_i = np.meshgrid(z2d, x2d) 
+  z_i, x_i = np.meshgrid(z2d, x2d)
 
-  ax = fig.add_subplot(2,1,1) 
+  ax = fig.add_subplot(2,1,1)
 
   matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
   c_map = cm.summer
@@ -100,17 +100,17 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
   ax.set_xlabel('x (km)')
   ax.set_ylabel('z (km)')
 
-  bx =fig.add_subplot(2,1,2)
-  bx.plot(x_i*r2d, dw[:,mid_z], color='k')
-  bx.set_xlabel('x (km)')  
+  bx = fig.add_subplot(2,1,2)
+  bx.plot(x_i*r2d, dw[:,int(round(mid_z))], color='k')
+  bx.set_xlabel('x (km)')
   bx.set_ylabel('theta (K)')
-  bx.set_ylim([-0.002, 0.003])  
+  bx.set_ylim([-0.002, 0.003])
  
   out_file_name = plotpath + "/" + 'gravity_wave' + "_" + timestep + ".png"
   plt.savefig(out_file_name, bbox_inches='tight')
 
 if __name__ == "__main__":
-  
+
   try:
     datapath, nx, ny, fields, timesteps, plotpath = sys.argv[1:7]
   except ValueError:

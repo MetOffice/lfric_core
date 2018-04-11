@@ -53,10 +53,10 @@ def make_figure(field, nx, ny, component, timestep):
     xmax = p_data['x'].max()
     ymin = p_data['y'].min()
     ymax = p_data['y'].max()
-   
+
     # Size of regular grid
     nx = int(nx)
-    ny = int(ny)    
+    ny = int(ny)
 
     # Using reshape of numpy array
     w3fieldi = (p_data[val_col].values).reshape((ny, nx))
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         data = read_nodal_data(filestem, 1, component)
 
       # Sort the data (needed to be able to reshape and not regrid)
-      data = data.sort(['y','x','z'])
+      data = data.sort_values(['y','x','z'])
 
       levels = np.sort(data.level.unique())
 

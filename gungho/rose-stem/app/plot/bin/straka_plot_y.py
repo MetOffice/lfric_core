@@ -37,7 +37,7 @@ from read_data import read_nodal_data
 levels = None
 data = None
 
-       
+
 def make_figure(plotpath, nx, ny, field, component, timestep):
 
   val_col = 'c' + str(component)
@@ -61,7 +61,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
   ny = int(ny)
   nz = len(levels)
 
-   
+
   zi = np.zeros([ny,nx,len(levels)])
 
   for p in xrange(len(levels)):
@@ -92,7 +92,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
   slice_fig.savefig(out_file_name , bbox_inches='tight')
 
 if __name__ == "__main__":
-  
+
   try:
     datapath, nx, ny, fields, timesteps, plotpath = sys.argv[1:7]
   except ValueError:
@@ -115,7 +115,7 @@ if __name__ == "__main__":
       data = read_nodal_data(filestem, 1, 1)
 
       # Sort the data (needed to be able to reshape and not regrid)
-      data = data.sort(['y','x','z'])
+      data = data.sort_values(['y','x','z'])
 
       levels = np.sort(data.level.unique())
 

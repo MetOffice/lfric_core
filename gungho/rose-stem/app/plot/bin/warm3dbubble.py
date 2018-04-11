@@ -147,7 +147,7 @@ if __name__ == "__main__":
             data = read_nodal_data(filestem, 1, 1)
 
             # Sort the data (needed to be able to reshape and not regrid)
-            data = data.sort(['y', 'x', 'z'])
+            data = data.sort_values(['y', 'x', 'z'])
 
             levels = np.sort(data.level.unique())
 

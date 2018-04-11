@@ -145,7 +145,7 @@ if __name__ == "__main__":
                 if (not data.empty):
                     # Sort the data
                     # (needed to be able to reshape and not regrid)
-                    data = data.sort(['y', 'x', 'z'])
+                    data = data.sort_values(['y', 'x', 'z'])
                     levels = np.sort(data.level.unique())
                     make_figure(plotpath, nx, ny, field, comp, ts)
             else:

@@ -231,7 +231,6 @@
     [[PUBLISH]]
         [[[environment]]]
             DESTINATION = {{publish_destination}}
-            TARGET_PLOT_PYTHON = {{TARGET_PLOT_PYTHON}}
 
 ##############################################################################
 
@@ -824,6 +823,7 @@
                      mkdir -p $PLOT_DIR
                      # remove old plots before running new ones
                      rm -rf $PLOT_DIR/*.png
+                     {{TARGET_PLOT_PYTHON_SETUP}}
                      """
         script = rose task-run --app-key=plot
         [[[environment]]]
