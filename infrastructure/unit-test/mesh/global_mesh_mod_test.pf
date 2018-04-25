@@ -81,6 +81,10 @@ contains
     integer(i_def) :: global_mesh_id1
     integer(i_def) :: global_mesh_id2
 
+    integer(i_def), allocatable :: edge_on_cells(:,:)
+    integer(i_def), allocatable :: vert_on_cells(:,:)
+    integer(i_def), allocatable :: cell_next(:,:)
+
     real(r_def) :: dx
     real(r_def) :: dy
 
@@ -90,7 +94,7 @@ contains
     ! Test construction of a biperiodic mesh
     !-------------------------------------
 
-    filename = 'data/mesh_BiP8x8-6000x2000.nc' 
+    filename = 'data/mesh_BiP8x8-6000x2000.nc'
     global_mesh = global_mesh_type( filename, mesh_name )
 
     ! Check the global mesh id
@@ -134,6 +138,33 @@ contains
     max_cells_on_vert=global_mesh%get_max_cells_per_vertex()
     @assertEqual( 4, max_cells_on_vert )
 
+    allocate( edge_on_cells(4,64) )
+    edge_on_cells = global_mesh%get_edge_on_all_cells()
+    @assertEqual( [ 23,  3,   2,   1], edge_on_cells(:,1)  )
+    @assertEqual( [ 20, 24,  23,  22], edge_on_cells(:,8)  )
+    @assertEqual( [ 29, 32,  31,  12], edge_on_cells(:,12) )
+    @assertEqual( [128,  1, 121, 106], edge_on_cells(:,57) )
+    @assertEqual( [127, 22, 128, 120], edge_on_cells(:,64) )
+    deallocate( edge_on_cells )
+
+    allocate( vert_on_cells(4,64) )
+    vert_on_cells = global_mesh%get_vert_on_all_cells()
+    @assertEqual( [  1,  2,  3,   4], vert_on_cells(:,1)  )
+    @assertEqual( [ 16,  1,  4,  15], vert_on_cells(:,8)  )
+    @assertEqual( [ 20, 21, 10,   8], vert_on_cells(:,12) )
+    @assertEqual( [  4,  3, 57,  58], vert_on_cells(:,57) )
+    @assertEqual( [ 15,  4, 58,  64], vert_on_cells(:,64) )
+    deallocate( vert_on_cells )
+
+    allocate( cell_next(4,64) )
+    cell_next = global_mesh%get_all_cells_next()
+    @assertEqual( [  8, 9,  2, 57], cell_next(:,1)  )
+    @assertEqual( [  7, 16, 1, 64], cell_next(:,8)  )
+    @assertEqual( [ 11, 20, 13, 4], cell_next(:,12) )
+    @assertEqual( [ 64, 1, 58, 49], cell_next(:,57) )
+    @assertEqual( [ 63, 8, 57, 56], cell_next(:,64) )
+    deallocate( cell_next )
+
   end subroutine test_biperiodic_global_mesh
 
 
@@ -158,6 +189,10 @@ contains
     integer(i_def) :: cell_owner
     integer(i_def) :: global_mesh_id1
     integer(i_def) :: global_mesh_id2
+
+    integer(i_def), allocatable :: edge_on_cells(:,:)
+    integer(i_def), allocatable :: vert_on_cells(:,:)
+    integer(i_def), allocatable :: cell_next(:,:)
 
     real(r_def) :: dx
     real(r_def) :: dy
@@ -214,6 +249,35 @@ contains
 
     cell_owner=global_mesh%get_edge_cell_owner(1)
     @assertEqual( 65, cell_owner )
+
+
+    allocate( edge_on_cells(4,ncells) )
+    edge_on_cells = global_mesh%get_edge_on_all_cells()
+    @assertEqual( [   2,   3,   5,   1], edge_on_cells(:, 1) )
+    @assertEqual( [  71,  72, 101,  64], edge_on_cells(:,32) )
+    @assertEqual( [ 120,   2, 118, 119], edge_on_cells(:,52) )
+    @assertEqual( [ 136,  21, 128, 135], edge_on_cells(:,60) )
+    @assertEqual( [ 156, 168,  46,  73], edge_on_cells(:,80) )
+    deallocate( edge_on_cells )
+
+    allocate( vert_on_cells(4,ncells) )
+    vert_on_cells = global_mesh%get_vert_on_all_cells()
+    @assertEqual( [  5,  6,  2,  1], vert_on_cells(:, 1) )
+    @assertEqual( [ 77, 94, 45, 32], vert_on_cells(:,32) )
+    @assertEqual( [  5,  1, 52, 56], vert_on_cells(:,52) )
+    @assertEqual( [ 13,  9, 60, 64], vert_on_cells(:,60) )
+    @assertEqual( [ 73, 20, 33, 34], vert_on_cells(:,80) )
+    deallocate( vert_on_cells )
+
+    allocate( cell_next(4,ncells) )
+    cell_next = global_mesh%get_all_cells_next()
+    @assertEqual( [ 52,  5,  2, 65], cell_next(:, 1) )
+    @assertEqual( [ 31, 84, 45, 28], cell_next(:,32) )
+    @assertEqual( [ 56,  1, 65, 51], cell_next(:,52) )
+    @assertEqual( [ 64,  9, 56, 59], cell_next(:,60) )
+    @assertEqual( [ 76, 79, 20, 33], cell_next(:,80) )
+    deallocate( cell_next )
+
   end subroutine test_cubedsphere_global_mesh
 
 end module global_mesh_mod_test

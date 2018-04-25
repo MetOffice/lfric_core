@@ -29,6 +29,10 @@ supg=.false.,
 vorticity_in_w1=.false.,
 /
 
+&formulation
+use_physics=.false.
+/
+
 &multigrid
 l_multigrid=.false.,
 /

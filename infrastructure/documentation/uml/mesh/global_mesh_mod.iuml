@@ -3,6 +3,7 @@
 ' should have received as part of this distribution.
 
 class global_mesh_mod::global_mesh_type {
+  -mesh_class: string
   -cell_next_2d: integer[::] <<allocatable>>
   -cell_on_edge_2d: integer[::] <<allocatable>>
   -cell_on_vert_2d: integer[::] <<allocatable>>
@@ -24,6 +25,10 @@ class global_mesh_mod::global_mesh_type {
   +<<destroy>> global_mesh_destructor()
   +clear()
 
+
+  +get_all_cells_next(): integer[::]
+  +get_edge_on_all_cells(): integer[::]
+  +get_vert_on_all_cells(): integer[::]
   +get_cell_id(<<in>>cell_number: integer,<<in>>x_cells: integer,<<in>>y_cells: integer ): integer
   +get_cell_next( <<in>>cell_gid: integer, <<out>>cell_next: integer[] )
   +get_cell_on_edge( <<in>>edge_number: integer, <<out>>cells: integer[] )
@@ -31,6 +36,7 @@ class global_mesh_mod::global_mesh_type {
   +get_edge_cell_owner( <<in>>edge: integer ): integer
   +get_edge_on_cell( <<in>>cell_gid: integer, <<out>>edges: integer[] )
   +get_max_cells_per_vertex(): integer
+  +get_mesh_class(): string
   +get_ncells(): integer
   +get_nedges(): integer
   +get_nedges_per_cell(): integer
@@ -39,6 +45,7 @@ class global_mesh_mod::global_mesh_type {
   +get_vert_cell_owner( vert: integer ): integer
   +get_vert_coords( <<in>>vert_gid: integer, <<out>>vert_coords: real[] )
   +get_vert_on_cell( <<in>>cell_gid: integer, <<out>>verts: integer[] )
+
   +add_global_mesh_map(<<in>>target_global_mesh:global_mesh_type<<pointer>>, <<in>>map:integer[::])
   +get_global_mesh_map(<<in>>target_global_mesh_id:integer): global_mesh_map<<pointer>>
 }

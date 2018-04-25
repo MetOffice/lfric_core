@@ -11,7 +11,8 @@
 
 module global_mesh_mod
 
-  use constants_mod,                  only: r_def, i_def, str_max_filename
+  use constants_mod,                  only: r_def, i_def, str_max_filename, &
+                                            str_def
   use global_mesh_map_mod,            only: global_mesh_map_type
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
   use linked_list_data_mod,           only: linked_list_data_type
@@ -23,6 +24,9 @@ module global_mesh_mod
 
   type, extends(linked_list_data_type), public :: global_mesh_type
     private
+
+  ! Type of mesh that the global mesh describes
+    character(str_def) :: mesh_class
   ! Horizontal coords of vertices in full domain
     real(kind=r_def), allocatable :: vert_coords(:,:)
   ! Full domain cell to cell connectivities
@@ -55,6 +59,7 @@ module global_mesh_mod
     type(global_mesh_map_collection_type), allocatable :: global_mesh_maps
 
   contains
+    procedure, public :: get_mesh_class
     procedure, public :: get_cell_id
     procedure, public :: get_cell_on_vert
     procedure, public :: get_cell_on_edge
@@ -64,9 +69,12 @@ module global_mesh_mod
     procedure, public :: get_max_cells_per_vertex
     procedure, public :: get_edge_on_cell
     procedure, public :: get_vert_on_cell
+    procedure, public :: get_edge_on_all_cells
+    procedure, public :: get_vert_on_all_cells
     procedure, public :: get_nverts_per_cell
     procedure, public :: get_nedges_per_cell
     procedure, public :: get_cell_next
+    procedure, public :: get_all_cells_next
     procedure, public :: get_vert_coords
     procedure, public :: get_vert_cell_owner
     procedure, public :: get_edge_cell_owner
@@ -108,7 +116,6 @@ contains
   !>
   function global_mesh_constructor( filename, global_mesh_name ) result(self)
 
-    use constants_mod,  only: str_def
     use ugrid_2d_mod,   only: ugrid_2d_type
     use ugrid_file_mod, only: ugrid_file_type
     use ncdf_quad_mod,  only: ncdf_quad_type
@@ -147,7 +154,7 @@ contains
               num_edges_per_face     = num_edges_per_face, &
               num_nodes_per_edge     = num_nodes_per_edge, &
               max_num_faces_per_node = max_num_faces_per_node )
-
+    call ugrid_2d%get_metadata(mesh_class=self%mesh_class)
 
     global_mesh_id_counter = global_mesh_id_counter + 1
 
@@ -168,7 +175,7 @@ contains
     allocate( self%vert_on_cell_2d( num_nodes_per_face, nface_in ) )
     call ugrid_2d%get_face_node_connectivity( self%vert_on_cell_2d )
 
-    allocate( self%edge_on_cell_2d( num_edges_per_face, nedge_in ) )
+    allocate( self%edge_on_cell_2d( num_edges_per_face, nface_in ) )
     call ugrid_2d%get_face_edge_connectivity( self%edge_on_cell_2d )
 
     allocate( self%cell_on_vert_2d( self%max_cells_per_vertex, nvert_in ) )
@@ -465,6 +472,23 @@ contains
 
   end subroutine calc_cell_on_edge
 
+  !----------------------------------------------------------------------------
+  !> @brief  Returns geometry that this mesh describes
+  !>
+  !> @return mesh_class String keyword for the geometry.
+  !>
+  function get_mesh_class( self ) result ( mesh_class )
+
+    implicit none
+
+    class(global_mesh_type), intent(in) :: self
+
+    character(str_def) :: mesh_class
+
+    mesh_class = self%mesh_class
+
+  end function get_mesh_class
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief  Returns ID of a cell in this mesh.
   !>
@@ -651,6 +675,22 @@ contains
   end subroutine get_edge_on_cell
 
   !---------------------------------------------------------------------------
+  !> @brief Returns entire array for edges on 2d cells.
+  !> @return edges [Edge,Cell] connectivity array in global ids
+  !>
+  function get_edge_on_all_cells(self) result(edges)
+
+    implicit none
+
+    class(global_mesh_type), intent(in)  :: self
+
+    integer(i_def), allocatable :: edges(:,:)
+
+    edges = self%edge_on_cell_2d(:,:)
+
+  end function get_edge_on_all_cells
+
+  !---------------------------------------------------------------------------
   !> @brief Gets the vertices that are incident with a particular cell.
   !>
   !> @param[in] cell_gid Global ID of the cell being queried.
@@ -666,6 +706,22 @@ contains
     verts(:) = self%vert_on_cell_2d(:,cell_gid)
 
   end subroutine get_vert_on_cell
+
+  !---------------------------------------------------------------------------
+  !> @brief Returns entire array for vertices on 2d cells.
+  !> @return verts [vert,cell] connectivity array in global ids
+  !>
+  function get_vert_on_all_cells(self) result(verts)
+
+    implicit none
+
+    class (global_mesh_type), intent(in)  :: self
+
+    integer(i_def), allocatable :: verts(:,:)
+
+    verts = self%vert_on_cell_2d(:,:)
+
+  end function get_vert_on_all_cells
 
   !---------------------------------------------------------------------------
   !> @brief Gets the number of vertices per 2D-cell.
@@ -713,6 +769,22 @@ contains
     cell_next(:) = self%cell_next_2d(:,cell_gid)
 
   end subroutine get_cell_next
+
+  !---------------------------------------------------------------------------
+  !> @brief Returns entire cell_next connectivity array.
+  !> @return cell_next [cell_next,cell] connectivity array in global ids
+  !>
+  function get_all_cells_next (self) result(cell_next)
+
+    implicit none
+
+    class(global_mesh_type), intent(in)  :: self
+
+    integer(i_def), allocatable :: cell_next(:,:)
+
+    cell_next = self%cell_next_2d(:,:)
+
+  end function get_all_cells_next
 
   !---------------------------------------------------------------------------
   !> @brief Gets vertex coordinates.

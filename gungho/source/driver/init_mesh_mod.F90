@@ -13,10 +13,11 @@ module init_mesh_mod
   use constants_mod,              only: i_def, str_def, l_def, r_def
   use extrusion_mod,              only: extrusion_type, uniform_extrusion_type
   use extrusion_config_mod,       only: domain_top
-  use finite_element_config_mod,  only: cellshape, &
+  use finite_element_config_mod,  only: cellshape,                         &
                                         key_from_cellshape,                &
                                         finite_element_cellshape_triangle, &
                                         finite_element_cellshape_quadrilateral
+  use formulation_config_mod,     only: use_physics
   use global_mesh_mod,            only: global_mesh_type
   use global_mesh_collection_mod, only: global_mesh_collection
   use gungho_extrusion_mod,       only: create_extrusion
@@ -56,7 +57,7 @@ contains
 !> @details This will be replaced with code that reads the information in
 !> @param[in] local_rank Number of the MPI rank of this process
 !> @param[in] total_ranks Total number of MPI ranks in this job
-!> @param[out] prime_mesh_id id of paritioned prime mesh
+!> @param[out] prime_mesh_id id of partitioned prime mesh
 subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
 
   implicit none
@@ -288,13 +289,15 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
   ! Set up analytic orography parameters
   call set_orography_option()
 
-  ! Generate a '2d' mesh
-  ! probably only works for cartesian domains, as atmos_bottom hard-wired
-  ! to 0 currently...
-  extrusion_2d = uniform_extrusion_type( atmos_bottom, domain_top, one_layer )
-  twod_mesh_id = mesh_collection%add_new_mesh( global_mesh_ptr,         &
-                                               partition,               &
-                                               extrusion_2d )
+  if (use_physics) then
+    ! Generate a '2d' mesh
+    ! probably only works for cartesian domains, as atmos_bottom hard-wired
+    ! to 0 currently...
+    extrusion_2d = uniform_extrusion_type( atmos_bottom, domain_top, one_layer )
+    twod_mesh_id = mesh_collection%add_new_mesh( global_mesh_ptr,         &
+                                                 partition,               &
+                                                 extrusion_2d )
+  end if
 
   deallocate(extrusion)
 

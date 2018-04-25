@@ -411,8 +411,8 @@ contains
               self%ncells_with_ghost) )
 
     ! Get global mesh statistics to size connectivity arrays
-    self%nverts_per_2d_cell   = global_mesh%get_nverts_per_cell()
-    nedges_per_2d_cell   = global_mesh%get_nedges_per_cell()
+    self%nverts_per_2d_cell = global_mesh%get_nverts_per_cell()
+    nedges_per_2d_cell      = global_mesh%get_nedges_per_cell()
 
     self%nverts_per_cell = 2*nedges_per_2d_cell
     self%nedges_per_cell = 2*nedges_per_2d_cell + self%nverts_per_2d_cell
@@ -424,64 +424,83 @@ contains
 
 
     ! Allocate arrays to hold partition connectivities, as global ids
-    allocate( vert_on_cell_2d_gid (self%nverts_per_2d_cell, &
-                                   self%ncells_2d_with_ghost) )
+
     allocate( edge_on_cell_2d_gid (nedges_per_2d_cell, &
-                                   self%ncells_2d_with_ghost) )
-    allocate( cell_next_2d_gid    (nedges_per_2d_cell, &
                                    self%ncells_2d_with_ghost) )
 
     ! Get 2d cell lid/gid map
     allocate( self%cell_lid_gid_map(self%ncells_2d_with_ghost) )
 
-    do i=1, self%ncells_2d_with_ghost
+    allocate( vert_on_cell_2d_gid (self%nverts_per_2d_cell, self%ncells_2d_with_ghost) )
+    if ( geometry == base_mesh_geometry_spherical .and. &
+         partition%get_total_ranks() == 1 ) then
 
       ! Note: For a single partition, the global ids should be the same
-      !       as the local cell ids
-      cell_gid = partition%get_gid_from_lid(i)
-      self%cell_lid_gid_map(i) = cell_gid
+      !       as the local cell ids, so we can simply extract "map" and 
+      !       cell_next_2d arrays.
+      allocate( cell_next_2d(nedges_per_2d_cell, self%ncells_2d_with_ghost) )
 
-      call global_mesh%get_vert_on_cell (cell_gid, vert_on_cell_2d_gid(:,i))
-      call global_mesh%get_edge_on_cell (cell_gid, edge_on_cell_2d_gid(:,i))
-      call global_mesh%get_cell_next    (cell_gid, cell_next_2d_gid(:,i))
+      cell_next_2d        = global_mesh%get_all_cells_next()
+      vert_on_cell_2d_gid = global_mesh%get_vert_on_all_cells()
+      edge_on_cell_2d_gid = global_mesh%get_edge_on_all_cells()
 
-    end do
+      do i=1, self%ncells_2d_with_ghost
+         self%cell_lid_gid_map(i) = partition%get_gid_from_lid(i)
+      end do
 
 
-    !--------------------------------------------------------------------------
-    ! Now get a list of all unique entities in partition (cells/vertices/edges)
-    !--------------------------------------------------------------------------
-    ! A. Generate cell_next for partition, in local ids
-    allocate( cell_next_2d (nedges_per_2d_cell, self%ncells_2d_with_ghost) )
+    else
+      ! Note: Multiple partition, the global ids lid-gid map is required
+      !       and cell_next_2d arrays need to be constructed with local
+      !       cell ids.
+      allocate( cell_next_2d_gid(nedges_per_2d_cell, self%ncells_2d_with_ghost) )
 
-    ! Set default to 0, For missing cells, i.e. at the edge of a partition
-    ! there is no cell_next. So default to zero if a cell_next is not found
-    cell_next_2d(:,:) = 0
+      do i=1, self%ncells_2d_with_ghost
 
-    do i=1, self%ncells_2d_with_ghost
-      do j=1, nedges_per_2d_cell
-        ! For a 2D cell in the parition, get the each global id of its
-        ! adjacent cell.
-        cell_gid = cell_next_2d_gid(j,i)
+        cell_gid = partition%get_gid_from_lid(i)
+        self%cell_lid_gid_map(i) = cell_gid
 
-        do counter=1, self%ncells_2d_with_ghost
-          ! Loop over all cells in the partition, getting the cell
-          ! global id.
-          tmp_int = partition%get_gid_from_lid(counter)
-
-          ! Set the adjacent cell id to the local id if
-          ! it's global appears in the partition
-          if (tmp_int == cell_gid) then
-            cell_next_2d(j,i) = counter
-            exit
-          end if
-        end do
+        call global_mesh%get_vert_on_cell (cell_gid, vert_on_cell_2d_gid(:,i))
+        call global_mesh%get_edge_on_cell (cell_gid, edge_on_cell_2d_gid(:,i))
+        call global_mesh%get_cell_next    (cell_gid, cell_next_2d_gid(:,i))
 
       end do
-    end do
 
-    deallocate( cell_next_2d_gid )
+      !--------------------------------------------------------------------------
+      ! Now get a list of all unique entities in partition (cells/vertices/edges)
+      !--------------------------------------------------------------------------
+      ! A. Generate cell_next for partition, in local ids
+      allocate( cell_next_2d (nedges_per_2d_cell, self%ncells_2d_with_ghost) )
 
+      ! Set default to 0, For missing cells, i.e. at the edge of a partition
+      ! there is no cell_next. So default to zero if a cell_next is not found
+      cell_next_2d(:,:) = 0
+
+      do i=1, self%ncells_2d_with_ghost
+        do j=1, nedges_per_2d_cell
+          ! For a 2D cell in the partition, get the each global id of its
+          ! adjacent cell.
+          cell_gid = cell_next_2d_gid(j,i)
+
+          do counter=1, self%ncells_2d_with_ghost
+            ! Loop over all cells in the partition, getting the cell
+            ! global id.
+            tmp_int = partition%get_gid_from_lid(counter)
+
+            ! Set the adjacent cell id to the local id if
+            ! it's global appears in the partition
+            if (tmp_int == cell_gid) then
+              cell_next_2d(j,i) = counter
+              exit
+            end if
+          end do
+
+        end do
+      end do
+
+      deallocate( cell_next_2d_gid )
+
+    end if
 
     !--------------------------------------------------------------------------
     ! B. Get global ids of vertices in partition
@@ -1388,7 +1407,7 @@ contains
   !> @param[in] cell_lid      The local cell id on which the edge entity is
   !>                          associated with.
   !>
-  !> @return True if the vertex is owned by the local parition.
+  !> @return True if the vertex is owned by the local partition.
   !>
   function is_vertex_owned( self, vertex_index, cell_lid ) result (owned)
 
@@ -1413,7 +1432,7 @@ contains
   !> @param[in] cell_lid    The local cell id which the edge entity is
   !>                        associated with.
   !>
-  !> @return True if the edge is owned by the local parition.
+  !> @return True if the edge is owned by the local partition.
   !>
   function is_edge_owned( self, edge_index, cell_lid ) result (owned)
 
@@ -1435,7 +1454,7 @@ contains
   !>
   !> @param[in] cell_lid  The local cell id on the local partition.
   !>
-  !> @return True if the cell is owned by the local parition.
+  !> @return True if the cell is owned by the local partition.
   !>
   function is_cell_owned( self, cell_lid ) result (owned)
 

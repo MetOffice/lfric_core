@@ -11,7 +11,7 @@ module gungho_driver_mod
 
   use checksum_alg_mod,           only : checksum_alg
   use conservation_algorithm_mod, only : conservation_algorithm
-  use constants_mod,              only : i_def
+  use constants_mod,              only : i_def, imdi
   use cosmic_transport_alg_mod,   only : cosmic_transport_init, &
                                          cosmic_transport_step
   use cusph_cosmic_transport_alg_mod, &
@@ -108,7 +108,8 @@ module gungho_driver_mod
   ! Coordinate field
   type(field_type), target :: chi(3)
 
-  integer(i_def) :: mesh_id, twod_mesh_id
+  integer(i_def) :: mesh_id      = imdi
+  integer(i_def) :: twod_mesh_id = imdi
 
 contains
 
