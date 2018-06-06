@@ -120,6 +120,7 @@
       inner_prod_field = 0.0_r_def
       ALLOCATE (l_inner_prod_field(8,nthreads))
       l_inner_prod_field = 0.0_r_def
+
       !
       !$omp parallel default(shared), private(df,th_idx)
       th_idx = omp_get_thread_num()+1

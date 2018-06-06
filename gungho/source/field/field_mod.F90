@@ -407,8 +407,7 @@ contains
     if(source%data_extant) then
        dest%data(:) = source%data(:)
        dest%halo_dirty(:)=source%halo_dirty(:)
-    end if 
-
+    end if
   end subroutine field_type_assign
 
   !> Setter for field write behaviour

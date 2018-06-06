@@ -68,7 +68,6 @@ module field_vector_mod
      ! copies a new field_vector when called on abstract type
      procedure, public  :: copy => field_vector_type_assign
 
-
 !   private procedure of the type which either implement the vector API
      procedure, private :: set_field_vector_scalar
      procedure, private :: axpy_field_vector
@@ -119,6 +118,7 @@ contains
     type is(field_vector_type)
        dot_prod = 0.0_r_def
        do fctr = 1, size(self%vector)
+          inner_prod_field = 0.0_r_def
           !psyclone          call invoke( X_innerproduct_Y( inner_prod_field, self%vector(fctr), x%vector(fctr) ))
           call invoke_1(inner_prod_field, self%vector(fctr), x%vector(fctr))          
           dot_prod = dot_prod + inner_prod_field
@@ -158,12 +158,13 @@ contains
     class(field_vector_type), intent(inout) :: self
     real(kind=r_def),         intent(in)    :: scalar
     integer(kind=i_def) :: fctr
-
+    
     do fctr = 1, size(self%vector)
        ! check we have a field set in each position
        !psyclone       call invoke( setval_c(self%vector(fctr), scalar) )
        call invoke_3(self%vector(fctr), scalar)       
     end do
+    self%vector_set=.true.
     
   end subroutine set_field_vector_scalar
 
@@ -279,36 +280,38 @@ contains
   ! The destructor/finalizer
   subroutine field_vector_destroy(self)
     type(field_vector_type), intent(inout) :: self
+
     if(allocated(self%vector)) then
        deallocate(self%vector)
     end if
   end subroutine field_vector_destroy
 
   subroutine field_vector_type_assign(self, source)
-    class(field_vector_type), intent(inout) :: self
+    implicit none    
+    class(field_vector_type), intent(out) :: self
     class(abstract_vector_type), intent(in) :: source
     integer :: stat1
     integer :: pos
     
     ! make field_vector
     select type (source) 
-       type is (field_vector_type)
-          if(.not.allocated(self%vector)) then
-             allocate(self%vector(size(source%vector)),stat=stat1)
-          end if
-          
-          ! if fields don't exist set false, otherwise copy and set true
-          if(source%vector_set) then
-             do pos = 1, size(source%vector)
-                self%vector(pos) = source%vector(pos)
-             end do
-             self%vector_set=.true.
-          end if
-       class default
-          write(log_scratch_space,'(A)') & 
-               "field_vector_mod:copy: type mismatch"
-          call log_event(log_scratch_space,LOG_LEVEL_ERROR)
-       end select
-     end subroutine field_vector_type_assign
+    type is (field_vector_type)
+       if(.not.allocated(self%vector)) then
+          allocate(self%vector(size(source%vector)),stat=stat1)
+       end if
+       
+       ! if fields don't exist set false, otherwise copy and set true
+       if(source%vector_set) then
+          do pos = 1, size(source%vector)
+             self%vector(pos) = source%vector(pos)
+          end do
+          self%vector_set=.true.
+       end if
+    class default
+       write(log_scratch_space,'(A)') & 
+            "field_vector_mod:copy: type mismatch"
+       call log_event(log_scratch_space,LOG_LEVEL_ERROR)
+    end select
+  end subroutine field_vector_type_assign
 
 end module field_vector_mod

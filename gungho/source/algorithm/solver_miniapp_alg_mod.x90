@@ -26,10 +26,13 @@ module solver_miniapp_alg_mod
   use diagonal_preconditioner_mod,    only : diagonal_preconditioner_type
   use iterative_solver_mod,           only : abstract_iterative_solver_type, &
                                              conjugate_gradient_type,        &
-                                             bicgstab_type
+                                             bicgstab_type,                  &
+                                             gmres_type
   use solver_config_mod,              only : method, tolerance, maximum_iterations, preconditioner, &
                                              method, solver_method_cg, solver_method_bicgstab, &
-                                             solver_preconditioner_diagonal  
+                                             solver_method_gmres, &
+                                             solver_preconditioner_diagonal, &
+                                             gcrk
 
   implicit none
 
@@ -59,7 +62,7 @@ contains
     type( field_type ), pointer :: chi(:) => null()
     type( field_vector_type)    :: diag
 
-    write(log_scratch_space,'(A)') "Intitialising solver ..."
+    write(log_scratch_space,'(A)') "solver_miniapp_alg:Initialising solver ..."
     call log_event( log_scratch_space, LOG_LEVEL_INFO )
 
     select case ( preconditioner )
@@ -79,8 +82,8 @@ contains
           diag=fv_1
           call op%extract_diagonal(diag)
        class default
-          ! freak out. How did we get here?
-          call log_event("How did it come to this?",LOG_LEVEL_ERROR)
+          ! catch the type error
+          call log_event("solver_miniapp_alg: linear_op type failure: shoud be dense operator ",LOG_LEVEL_ERROR)
        end select
        
        
@@ -90,12 +93,12 @@ contains
        type is ( diagonal_preconditioner_type ) 
           prec = diagonal_preconditioner_type(diag)
        class default
-          ! freak out. How did we get here?
-          call log_event("How did it come to this. Again?",LOG_LEVEL_ERROR)
+          ! catch the type error
+          call log_event("solver_miniapp_alg: preconditioner type failure: shoud be diagonal preconditioner ",LOG_LEVEL_ERROR)
        end select
        
     case default
-       write(log_scratch_space,'(A, I0)') "preconditioner choice not supported, Bye, ", preconditioner
+       write(log_scratch_space,'(A, I0)') "solver_miniapp_alg: preconditioner choice not supported, exiting, ", preconditioner
        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end select
     
@@ -109,8 +112,8 @@ contains
           solver = conjugate_gradient_type( op, prec, tolerance, tolerance, maximum_iterations )
           
        class default
-         ! freak out. How did we get here?
-          call log_event("How did it come to this. Really?",LOG_LEVEL_ERROR)
+         ! Catch type error
+          call log_event("solver_miniapp_alg: solver type failure: Should be Conjugate Gradient",LOG_LEVEL_ERROR)
        end select
     case( solver_method_bicgstab )
        call log_event("setting solver to BiCGstab", LOG_LEVEL_INFO )
@@ -119,17 +122,26 @@ contains
        type is ( bicgstab_type )        
           solver = bicgstab_type( op, prec, tolerance, tolerance, maximum_iterations )
        class default
-          ! freak out. How did we get here?
-          call log_event("How did it come to this. Yeah?",LOG_LEVEL_ERROR)
+         ! Catch type error
+          call log_event("solver_miniapp_alg: solver type failure: Should be BiCGstab",LOG_LEVEL_ERROR)
        end select
+    case( solver_method_gmres )
+       call log_event("setting solver to GMRES", LOG_LEVEL_INFO )
+       allocate( gmres_type :: solver )
+       select type( solver )
+       type is ( gmres_type )        
+          solver = gmres_type( op, prec, gcrk, tolerance, tolerance, maximum_iterations )
+       class default
+         ! Catch type error
+          call log_event("solver_miniapp_alg: solver type failure: Should be GMRES",LOG_LEVEL_ERROR)
+       end select       
     case default
-       write(log_scratch_space,'(A, I0)') "solver choice not supported, Bye, ", method
+       write(log_scratch_space,'(A, I0)') "solver_miniapp_alg: solver choice not supported, exiting: ", method
        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end select
 
-    write(log_scratch_space,'(A)') "solver ready ..."
+    write(log_scratch_space,'(A)') "solver_miniapp_alg: solver initialised ..."
     call log_event( log_scratch_space, LOG_LEVEL_INFO )
-        
   end subroutine init_solver
 
   !> @details An algorithm for developing miniapps
@@ -159,7 +171,7 @@ contains
     
     call op%apply(fv_1, rhs)
     
-    ans = fv_1 ! copy constructor 
+    ans = fv_1 ! copy constructor
     call ans%set_scalar(0.0_r_def)
     call solver%apply(ans,rhs)
     ! write out the answer

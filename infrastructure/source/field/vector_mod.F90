@@ -131,10 +131,9 @@ module vector_mod
      !> param[in] source, the vector to be copied     
      subroutine copy_interface(self, source)
        import :: abstract_vector_type
-       class(abstract_vector_type), intent(inout) :: self
+       class(abstract_vector_type), intent(out) :: self
        class(abstract_vector_type), intent(in)  :: source
      end subroutine copy_interface
   end interface
-
 
 end module vector_mod

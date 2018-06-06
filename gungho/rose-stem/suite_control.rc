@@ -21,7 +21,7 @@
                                                               'agnesi_hyd_cart', 'agnesi_nhyd_cart', 'schar3d_cart_8s',
                                                               'schar_cart_8s', 'schar_cart_40s',
                                                               'default' ],
-                                        'solver_miniapp'   : [ 'default' ]
+                                                              'solver_miniapp'   : [ 'cg','bicgstab','gmres','default' ],
                                      } %}
 
 {%- set canned_configurations  = ['gungho'] %}
@@ -78,7 +78,9 @@
                                    ("C24",900.0):10},
                            "directives":{"default":{"mpi_parts":6,"threads":1,"xios_nodes":1,"wallclock":"00:05:00"}}},
                       plotstr="plot_zonal.py $NODAL_DATA_DIR/lfric_averages.nc $PLOT_DIR")',
-    'run_application( solver_miniapp, default,        resolutions=[["C24", 600.0 ]], checkkgo=True, run_with_compilers='~TARGET_SOLVER_COMPILER~' )',
+    'run_application( solver_miniapp, cg,       resolutions=[["C24", 600.0 ]], checkkgo=True, run_with_compilers='~TARGET_SOLVER_COMPILER~' )',
+    'run_application( solver_miniapp, bicgstab, resolutions=[["C24", 600.0 ]], checkkgo=True, run_with_compilers='~TARGET_SOLVER_COMPILER~' )',
+    'run_application( solver_miniapp, gmres, resolutions=[["C24", 600.0 ]], checkkgo=True, run_with_compilers='~TARGET_GMRES_COMPILER~' )',
     'check_compilers( gungho, semi-implicit, fast-debug,
                       resolutions=[("C12",10.0)], publish=True )',
     'canned_test(gungho)',
