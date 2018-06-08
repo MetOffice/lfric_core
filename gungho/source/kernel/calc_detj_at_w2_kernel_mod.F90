@@ -7,11 +7,11 @@
 !>
 module calc_detj_at_w2_kernel_mod
 
-  use argument_mod,      only : arg_type, func_type,         &
-                                GH_FIELD, GH_READ, GH_WRITE, &
-                                GH_DIFF_BASIS,               &
+  use argument_mod,      only : arg_type, func_type,       &
+                                GH_FIELD, GH_READ, GH_INC, &
+                                GH_DIFF_BASIS,             &
                                 CELLS, GH_EVALUATOR
-  use constants_mod,     only : r_def
+  use constants_mod,     only : r_def, i_def
   use fs_continuity_mod, only : W0, W2
   use kernel_mod,        only : kernel_type
 
@@ -26,7 +26,7 @@ module calc_detj_at_w2_kernel_mod
   type, public, extends(kernel_type) :: calc_detj_at_w2_kernel_type
     private
     type(arg_type) :: meta_args(2) = (/      &
-        arg_type(GH_FIELD,    GH_WRITE, W2), &
+        arg_type(GH_FIELD,    GH_INC,   W2), &
         arg_type(GH_FIELD*3,  GH_READ,  W0)  &
         /)
     type(func_type) :: meta_funcs(1) = (/ &
@@ -42,7 +42,7 @@ module calc_detj_at_w2_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor for function space
+  ! Overload the default structure constructor for function space
   interface calc_detj_at_w2_kernel_type
     module procedure calc_detj_at_w2_kernel_constructor
   end interface
@@ -55,6 +55,7 @@ module calc_detj_at_w2_kernel_mod
 contains
 
 type(calc_detj_at_w2_kernel_type) function calc_detj_at_w2_kernel_constructor() result(self)
+  implicit none
   return
 end function calc_detj_at_w2_kernel_constructor
 
@@ -79,21 +80,23 @@ subroutine calc_detj_at_w2_code( nlayers,                                  &
                                  diff_basis_chi                            )
 
   use coordinate_jacobian_mod, only: coordinate_jacobian
+
   implicit none
-  !Arguments
-  integer,                                        intent(in)    :: nlayers
-  integer,                                        intent(in)    :: ndf_w2
-  integer,                                        intent(in)    :: undf_w2
-  integer,                                        intent(in)    :: ndf_chi
-  integer,                                        intent(in)    :: undf_chi
+
+  ! Arguments
+  integer(kind=i_def),                            intent(in)    :: nlayers
+  integer(kind=i_def),                            intent(in)    :: ndf_w2
+  integer(kind=i_def),                            intent(in)    :: undf_w2
+  integer(kind=i_def),                            intent(in)    :: ndf_chi
+  integer(kind=i_def),                            intent(in)    :: undf_chi
   real(kind=r_def), dimension(undf_w2),           intent(inout) :: detj_w2
   real(kind=r_def), dimension(undf_chi),          intent(in)    :: chi1, chi2, chi3
-  integer,          dimension(ndf_w2),            intent(in)    :: map_w2
-  integer,          dimension(ndf_chi),           intent(in)    :: map_chi
+  integer(kind=i_def), dimension(ndf_w2),         intent(in)    :: map_w2
+  integer(kind=i_def), dimension(ndf_chi),        intent(in)    :: map_chi
   real(kind=r_def), dimension(3,ndf_chi,ndf_w2),  intent(in)    :: diff_basis_chi
 
   !Internal variables
-  integer          :: df, k
+  integer(kind=i_def)                  :: df, k
   real(kind=r_def), dimension(ndf_chi) :: chi1_e, chi2_e, chi3_e
 
   real(kind=r_def), dimension(ndf_w2)     :: dj

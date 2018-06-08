@@ -46,11 +46,11 @@ module rtheta_bd_kernel_mod_test
     type(stencil_dofmap_type), pointer :: cross_stencil_w2 => null()
     type(stencil_dofmap_type), pointer :: cross_stencil_wtheta => null()
 
-    integer, pointer        :: cross_stencil_w2_map(:,:,:) => null()
-    integer                 :: cross_stencil_w2_size
+    integer(i_def), pointer :: cross_stencil_w2_map(:,:,:) => null()
+    integer(i_def)          :: cross_stencil_w2_size
 
-    integer, pointer        :: cross_stencil_wtheta_map(:,:,:) => null()
-    integer                 :: cross_stencil_wtheta_size
+    integer(i_def), pointer :: cross_stencil_wtheta_map(:,:,:) => null()
+    integer(i_def)          :: cross_stencil_wtheta_size
 
   contains
     procedure setup
@@ -86,7 +86,7 @@ contains
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     this%qr = quadrature_xyoz_type(3, quadrature_rule)
@@ -96,7 +96,7 @@ contains
     nqp_v=this%qr_proxy%np_z
 
     ! Assumes same number of horizontal quad points in x and y
-    nqp_h_1d = int(nqp_h**(1./2.))
+    nqp_h_1d = int(nqp_h**(1./2.),i_def)
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -183,11 +183,11 @@ contains
 
     integer(i_def) :: nfaces_h
 
-    integer                 :: nlayers, nqp_h, nqp_v, nqp_h_1d
-    integer                 :: ndf_wtheta, undf_wtheta
-    integer                 :: ndf_w2, undf_w2
+    integer(i_def)          :: nlayers, nqp_h, nqp_v, nqp_h_1d
+    integer(i_def)          :: ndf_wtheta, undf_wtheta
+    integer(i_def)          :: ndf_w2, undf_w2
 
-    integer                 :: ff, ii, jj
+    integer(i_def)          :: ff, ii, jj
 
     type(field_proxy_type)  :: r_theta_bd_proxy, theta_proxy, &
                                u_proxy
@@ -215,7 +215,7 @@ contains
     wv=>this%qr_proxy%weights_z
 
     ! Assumes same number of horizontal quad points in x and y
-    nqp_h_1d = int(nqp_h**(1./2.))
+    nqp_h_1d = int(nqp_h**(1./2.),i_def)
 
     mesh              => r_theta_bd_proxy%vspace%get_mesh()
     reference_element => mesh%get_reference_element()

@@ -17,7 +17,7 @@
 module sample_poly_flux_kernel_mod
 
   use argument_mod,      only : arg_type, func_type, mesh_data_type, &
-                                GH_FIELD, GH_WRITE, GH_READ,         &
+                                GH_FIELD, GH_INC, GH_READ,           &
                                 GH_BASIS, CELLS,                     &
                                 GH_EVALUATOR, STENCIL, CROSS,        &
                                 reference_element_out_face_normal
@@ -44,8 +44,8 @@ module sample_poly_flux_kernel_mod
   !>
   type, public, extends(kernel_type) :: sample_poly_flux_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                &
-        arg_type(GH_FIELD, GH_WRITE, W2),                            &
+    type(arg_type) :: meta_args(3) = (/                              &
+        arg_type(GH_FIELD, GH_INC,   W2),                            &
         arg_type(GH_FIELD, GH_READ,  W2),                            &
         arg_type(GH_FIELD, GH_READ,  W3, stencil_map=STENCIL(CROSS)) &
         /)
@@ -65,7 +65,7 @@ module sample_poly_flux_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor for function space
+  ! Overload the default structure constructor for function space
   interface sample_poly_flux_kernel_type
     module procedure sample_poly_flux_kernel_constructor
   end interface
@@ -80,6 +80,7 @@ contains
 
   type(sample_poly_flux_kernel_type) &
   function sample_poly_flux_kernel_constructor() result(self)
+    implicit none
     return
   end function sample_poly_flux_kernel_constructor
 
@@ -120,27 +121,27 @@ contains
 
     implicit none
 
-    !Arguments
-    integer(i_def), intent(in)  :: nlayers
+    ! Arguments
+    integer(kind=i_def), intent(in)  :: nlayers
 
     ! These three arguments must be defined out of declaratino order so they
     ! may be used by subsequent definitions.
-    integer(i_def), intent(in)  :: ndf_w2
-    integer(i_def), intent(in)  :: undf_w2
-    integer(i_def), intent(in)  :: ndf_w3
-    integer(i_def), intent(in)  :: undf_w3
+    integer(kind=i_def), intent(in)  :: ndf_w2
+    integer(kind=i_def), intent(in)  :: undf_w2
+    integer(kind=i_def), intent(in)  :: ndf_w3
+    integer(kind=i_def), intent(in)  :: undf_w3
 
-    real(r_def),    intent(out) :: flux(undf_w2)
-    real(r_def),    intent(in)  :: wind(undf_w2)
-    real(r_def),    intent(in)  :: density(undf_w3)
-    integer(i_def), intent(in)  :: stencil_size
-    integer(i_def), intent(in)  :: stencil_map(ndf_w3,stencil_size)
-    integer(i_def), intent(in)  :: map_w2(ndf_w2)
-    real(r_def),    intent(in)  :: basis_w2(3,ndf_w2,ndf_w2)
-    integer(i_def), intent(in)  :: map_w3(ndf_w3)
-    real(r_def),    intent(in)  :: out_face_normal(:,:)
+    real(kind=r_def),    intent(out) :: flux(undf_w2)
+    real(kind=r_def),    intent(in)  :: wind(undf_w2)
+    real(kind=r_def),    intent(in)  :: density(undf_w3)
+    integer(kind=i_def), intent(in)  :: stencil_size
+    integer(kind=i_def), intent(in)  :: stencil_map(ndf_w3,stencil_size)
+    integer(kind=i_def), intent(in)  :: map_w2(ndf_w2)
+    real(kind=r_def),    intent(in)  :: basis_w2(3,ndf_w2,ndf_w2)
+    integer(kind=i_def), intent(in)  :: map_w3(ndf_w3)
+    real(kind=r_def),    intent(in)  :: out_face_normal(:,:)
 
-    !Internal variables
+    ! Internal variables
     integer(kind=i_def) :: k, df, p, i, nv
     real(kind=r_def)    :: direction, polynomial_density
     real(kind=r_def)    :: z0
@@ -266,7 +267,7 @@ contains
 
     ! Index of first upwind cell is  (j + (nupwindcells-1)*4)
     ! where j = [2,3,4,5] for [W,S,E,N] directions
-    nupwindcells = int(real(np,r_def)/2.0_r_def)
+    nupwindcells = int(real(np,r_def)/2.0_r_def,i_def)
     i = 1
     do p = 1,nupwindcells
       dof_stencil(i,1) = int((4 + (nupwindcells-1)*4) - (p-1)*4,i_def)
@@ -280,7 +281,7 @@ contains
     i = i + 1
     ! Index of first downwind cell is j
     ! where j = [5,4,3,2] for [W,S,E,N] directions
-    ndownwindcells = int(real(np-1,r_def)/2.0_r_def)
+    ndownwindcells = int(real(np-1,r_def)/2.0_r_def,i_def)
     do p = 1,ndownwindcells
       dof_stencil(i,1) = int(2 + (p-1)*4,i_def)
       dof_stencil(i,2) = int(3 + (p-1)*4,i_def)

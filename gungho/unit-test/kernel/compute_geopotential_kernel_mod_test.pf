@@ -28,9 +28,9 @@ module compute_geopotential_kernel_mod_test
     procedure test_all
   end type compute_geopotential_kernel_test_type
 
-  integer,parameter :: nlayers = 1, &
-                       ndf     = 1, &
-                       undf    = 1
+  integer(i_def), parameter :: nlayers = 1, &
+                               ndf     = 1, &
+                               undf    = 1
 
   real(r_def), parameter :: gravity = 10.0_r_def
   real(r_def), parameter :: radius  = 6000000_r_def

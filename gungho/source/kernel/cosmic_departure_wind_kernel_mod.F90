@@ -7,12 +7,12 @@
 !>
 module cosmic_departure_wind_kernel_mod
 
-  use argument_mod,       only : arg_type, func_type,         &
-                                 GH_FIELD, GH_READ, GH_WRITE, &
-                                 ANY_SPACE_9,                 &
-                                 GH_DIFF_BASIS, GH_BASIS,     &
+  use argument_mod,       only : arg_type, func_type,       &
+                                 GH_FIELD, GH_READ, GH_INC, &
+                                 ANY_SPACE_9,               &
+                                 GH_DIFF_BASIS, GH_BASIS,   &
                                  CELLS, GH_EVALUATOR
-  use constants_mod,      only : r_def
+  use constants_mod,      only : r_def, i_def
   use flux_direction_mod, only : x_direction, y_direction
   use fs_continuity_mod,  only : W2
   use kernel_mod,         only : kernel_type
@@ -27,14 +27,14 @@ module cosmic_departure_wind_kernel_mod
   !>
   type, public, extends(kernel_type) :: cosmic_departure_wind_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                  &
-        arg_type(GH_FIELD,    GH_WRITE, W2),                            &
-        arg_type(GH_FIELD,    GH_READ,  W2),                            &
-        arg_type(GH_FIELD*3,  GH_READ,  ANY_SPACE_9)                    &
+    type(arg_type) :: meta_args(3) = (/                     &
+        arg_type(GH_FIELD,    GH_INC,   W2),                &
+        arg_type(GH_FIELD,    GH_READ,  W2),                &
+        arg_type(GH_FIELD*3,  GH_READ,  ANY_SPACE_9)        &
         /)
-    type(func_type) :: meta_funcs(2) = (/                                &
-        func_type(W2, GH_BASIS),                                        &
-        func_type(ANY_SPACE_9, GH_DIFF_BASIS)                           &
+    type(func_type) :: meta_funcs(2) = (/                   &
+        func_type(W2,          GH_BASIS),                   &
+        func_type(ANY_SPACE_9, GH_DIFF_BASIS)               &
         /)
     integer :: iterates_over = CELLS
     integer :: gh_shape = GH_EVALUATOR
@@ -58,27 +58,22 @@ module cosmic_departure_wind_kernel_mod
 
 contains
 
-type(cosmic_departure_wind_kernel_type) function cosmic_departure_wind_kernel_constructor() result(self)
-  return
-end function cosmic_departure_wind_kernel_constructor
-!> @brief Divides the Piola wind values by detJ at W2 dofs.
-!> @details The Piola wind values are divided by detJ at the W2 dofs which rescales
-!>          the wind values to the computational grid.
-!> @param[in] nlayers Number of layers
-!> @param[inout] u_departure_wind Output field containing the departure wind used to calculate departure points
-!> @param[in] u_piola Field for the Piola wind
-!> @param[in] chi1 Coordinates in the first direction
-!> @param[in] chi2 Coordinates in the second direction
-!> @param[in] chi3 Coordinates in the third direction
-!> @param[in] ndf Number of degrees of freedom per cell for the output field
-!> @param[in] undf Number of unique degrees of freedom for the output field
-!> @param[in] map Dofmap for the cell at the base of the column for the output field
-!> @param[in] nodal_basis_u Basis functions evaluated at the nodal points for the W2 field
-!> @param[in] ndf_chi Number of degrees of freedom per cell for the coordinate field
-!> @param[in] undf_chi Number of unique degrees of freedom for the coordinate field
-!> @param[in] map_chi Dofmap for the cell at the base of the column for the coordinate field
-!> @param[in] diff_basis_chi Differential basis functions of the coordinate space evaluated at the nodal points
-!> @param[in] direction The direction in which the winds are calculated
+  type(cosmic_departure_wind_kernel_type) function cosmic_departure_wind_kernel_constructor() result(self)
+    implicit none
+    return
+  end function cosmic_departure_wind_kernel_constructor
+
+  !> @brief Divides the Piola wind values by detJ at W2 dofs.
+  !> @details The Piola wind values are divided by detJ at the W2 dofs which rescales
+  !>          the wind values to the computational grid.
+  !> @param[in] nlayers Number of layers
+  !> @param[inout] u_departure_wind Output field containing the departure wind used to calculate departure points
+  !> @param[in] u_piola Field for the Piola wind
+  !> @param[in] detj_at_w2 Input field containing the detj values at W2 locations
+  !> @param[in] ndf Number of degrees of freedom per cell for the output field
+  !> @param[in] undf Number of unique degrees of freedom for the output field
+  !> @param[in] map Dofmap for the cell at the base of the column for the output field
+  !> @param[in] direction The direction in which the winds are calculated
   subroutine cosmic_departure_wind_code(nlayers,                                  &
                                         u_departure_wind,                         &
                                         u_piola,                                  &
@@ -91,17 +86,17 @@ end function cosmic_departure_wind_kernel_constructor
 
     implicit none
 
-    !Arguments
-    integer,                                    intent(in)    :: nlayers
-    integer,                                    intent(in)    :: ndf, undf
-    integer,          dimension(ndf),           intent(in)    :: map
+    ! Arguments
+    integer(kind=i_def),                        intent(in)    :: nlayers
+    integer(kind=i_def),                        intent(in)    :: ndf, undf
+    integer(kind=i_def), dimension(ndf),        intent(in)    :: map
     real(kind=r_def), dimension(undf),          intent(in)    :: u_piola
     real(kind=r_def), dimension(undf),          intent(in)    :: detj_at_w2
     real(kind=r_def), dimension(undf),          intent(inout) :: u_departure_wind
-    integer,                                    intent(in)    :: direction
+    integer(kind=i_def),                        intent(in)    :: direction
 
-    !Internal variables
-    integer                              :: df, k
+    ! Internal variables
+    integer(kind=i_def)                  :: df, k
     real(kind=r_def)                     :: mult_factor
 
     ! Change the sign of the output winds depending on whether it is an x or y

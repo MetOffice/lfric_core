@@ -8,11 +8,10 @@
 !>
 module sort_ref_kernel_mod
 
-  use argument_mod,      only: arg_type, func_type,                 &
-                               GH_FIELD, GH_WRITE, GH_READ, GH_INC, &
-                               ANY_SPACE_9,                         &
-                               GH_BASIS, CELLS
-  use constants_mod,     only: r_def
+  use argument_mod,      only: arg_type, func_type,    &
+                               GH_FIELD, GH_READWRITE, &
+                               CELLS
+  use constants_mod,     only: r_def, i_def
   use fs_continuity_mod, only: Wtheta
   use kernel_mod,        only: kernel_type
 
@@ -26,8 +25,8 @@ module sort_ref_kernel_mod
   !>
   type, public, extends(kernel_type) :: sort_ref_kernel_type
     private
-    type(arg_type) :: meta_args(1) = (/        &
-        arg_type(GH_FIELD,   GH_INC,   WTHETA) &
+    type(arg_type) :: meta_args(1) = (/              &
+        arg_type(GH_FIELD,   GH_READWRITE,   WTHETA) &
         /)
     integer :: iterates_over = CELLS
   contains
@@ -38,7 +37,7 @@ module sort_ref_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor
+  ! Overload the default structure constructor
   interface sort_ref_kernel_type
     module procedure sort_ref_kernel_constructor
   end interface
@@ -51,6 +50,7 @@ module sort_ref_kernel_mod
 contains
 
 type(sort_ref_kernel_type) function sort_ref_kernel_constructor() result(self)
+  implicit none
   return
 end function sort_ref_kernel_constructor
 
@@ -71,15 +71,16 @@ subroutine sort_ref_code(nlayers,                   &
                                            LOG_LEVEL_INFO
   implicit none
 
-  !Arguments
-  integer, intent(in) :: nlayers
+  ! Arguments
+  integer(kind=i_def), intent(in) :: nlayers
 
-  integer, intent(in) :: ndf_wth, undf_wth  
+  integer(kind=i_def), intent(in) :: ndf_wth, undf_wth  
 
   real(kind=r_def), dimension(undf_wth), intent(inout) :: theta_ref
-  integer, dimension(ndf_wth),  intent(in)         :: map_wth
-  !Internal variables
-  integer               :: k, kcnt
+  integer(kind=i_def), dimension(ndf_wth), intent(in)  :: map_wth
+
+  ! Internal variables
+  integer(kind=i_def)         :: k, kcnt
 
   real(kind=r_def)            :: theta_k
 

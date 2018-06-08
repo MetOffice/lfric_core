@@ -47,8 +47,6 @@ contains
 
     class(correct_cosmic_wind_test_type), intent(inout) :: this
 
-    integer :: ii
-
     this%map_w3 = 1
     this%map_w2 = (/ 1,3,5,7,9,10 /)
 
@@ -255,7 +253,6 @@ contains
     @assertEqual( -this%wind_out(2), this%wind_in(2), tol)
     @assertEqual( -this%wind_out(5), this%wind_in(5), tol)
     @assertEqual( -this%wind_out(6), this%wind_in(6), tol)
-
 
   end subroutine test_all
 

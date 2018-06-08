@@ -16,13 +16,13 @@
 module rtheta_bd_kernel_mod
 
   use argument_mod,          only : arg_type, func_type, mesh_data_type, &
-                                    GH_FIELD, GH_READ, GH_INC,           &
+                                    GH_FIELD, GH_READ, GH_READWRITE,     &
                                     GH_BASIS, GH_DIFF_BASIS,             &
                                     CELLS, GH_QUADRATURE_XYoZ,           &
                                     adjacent_face,                       &
                                     reference_element_normal_to_face,    &
                                     reference_element_out_face_normal
-  use constants_mod,         only : r_def, i_def
+  use constants_mod,         only : r_def, i_def, l_def
   use cross_product_mod,     only : cross_product
   use fs_continuity_mod,     only : W2, Wtheta
   use kernel_mod,            only : kernel_type
@@ -40,12 +40,12 @@ module rtheta_bd_kernel_mod
   type, public, extends(kernel_type) :: rtheta_bd_kernel_type
       private
       type(arg_type) :: meta_args(3) = (/                               &
-          arg_type(GH_FIELD,   GH_INC,  Wtheta),                        &
-          arg_type(GH_FIELD,   GH_READ, Wtheta),                        &
-          arg_type(GH_FIELD,   GH_READ, W2)                             &
+          arg_type(GH_FIELD,   GH_READWRITE,  Wtheta),                  &
+          arg_type(GH_FIELD,   GH_READ,       Wtheta),                  &
+          arg_type(GH_FIELD,   GH_READ,       W2)                       &
           /)
       type(func_type) :: meta_funcs(2) = (/                             &
-          func_type(W2, GH_BASIS),                                      &
+          func_type(W2,     GH_BASIS),                                  &
           func_type(Wtheta, GH_BASIS)                                   &
           /)
       integer :: iterates_over = CELLS
@@ -63,7 +63,7 @@ module rtheta_bd_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor for function space
+  ! Overload the default structure constructor for function space
   interface rtheta_bd_kernel_type
       module procedure rtheta_bd_kernel_constructor
   end interface
@@ -76,6 +76,7 @@ module rtheta_bd_kernel_mod
 contains
 
     type(rtheta_bd_kernel_type) function rtheta_bd_kernel_constructor() result(self)
+        implicit none
         return
     end function rtheta_bd_kernel_constructor
 
@@ -98,7 +99,6 @@ contains
     !! @param[in] nqp_v Integer, number of quadrature points in the vertical
     !! @param[in] nqp_h_1d Integer, number of quadrature points in a single
     !!                     horizontal direction.
-    !! @param[in] wqp_h Real array. Quadrature weights horizontal
     !! @param[in] wqp_v Real array. Quadrature weights vertical
     !! @param[in] w2_basis_face Real 5-dim array holding w2 basis functions
     !!                          evaluated at gaussian quadrature points on
@@ -144,10 +144,10 @@ contains
         real(kind=r_def), dimension(3,ndf_w2,nqp_h_1d,nqp_v,4), intent(in)     :: w2_basis_face
         real(kind=r_def), dimension(1,ndf_wtheta,nqp_h_1d,nqp_v,4), intent(in) :: wtheta_basis_face
 
-        integer(i_def), intent(in) :: adjacent_face(:)
+        integer(kind=i_def), intent(in) :: adjacent_face(:)
 
-        real(r_def), intent(in) :: normal_to_face(:,:)
-        real(r_def), intent(in) :: out_face_normal(:,:)
+        real(kind=r_def), intent(in) :: normal_to_face(:,:)
+        real(kind=r_def), intent(in) :: out_face_normal(:,:)
 
         real(kind=r_def), dimension(undf_wtheta), intent(inout) :: r_theta_bd
         real(kind=r_def), dimension(undf_wtheta), intent(in)    :: theta
@@ -155,7 +155,7 @@ contains
 
         real(kind=r_def), dimension(nqp_v), intent(in)      ::  wqp_v
 
-        !Internal variables
+        ! Internal variables
         integer(kind=i_def)               :: df, k, face, face_next
         integer(kind=i_def)               :: qp1, qp2
         integer(kind=i_def)               :: i_face
@@ -168,7 +168,7 @@ contains
         real(kind=r_def) :: theta_at_uquad, theta_next_at_uquad
         real(kind=r_def) :: bdary_term, gamma_wtheta, sign_face_next_outward, flux_term
 
-        logical          :: upwind = .false.
+        logical(kind=l_def) :: upwind = .false.
 
         ! Assumes same number of horizontal qp in x and y
 

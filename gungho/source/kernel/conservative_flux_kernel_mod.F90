@@ -7,10 +7,10 @@
 !>
 module conservative_flux_kernel_mod
 
-  use argument_mod,      only : arg_type, func_type,         &
-                                GH_FIELD, GH_WRITE, GH_READ, &
+  use argument_mod,      only : arg_type, func_type,       &
+                                GH_FIELD, GH_INC, GH_READ, &
                                 GH_BASIS, CELLS
-  use constants_mod,     only : r_def
+  use constants_mod,     only : r_def, i_def
   use fs_continuity_mod, only : W0, W2, W3
   use kernel_mod,        only : kernel_type
 
@@ -25,7 +25,7 @@ module conservative_flux_kernel_mod
   type, public, extends(kernel_type) :: conservative_flux_kernel_type
     private
     type(arg_type) :: meta_args(3) = (/     &
-        arg_type(GH_FIELD,   GH_WRITE, W2), &
+        arg_type(GH_FIELD,   GH_INC,   W2), &
         arg_type(GH_FIELD,   GH_READ,  W2), &
         arg_type(GH_FIELD,   GH_READ,  W3)  &
         /)
@@ -51,6 +51,7 @@ module conservative_flux_kernel_mod
 contains
 
 type(conservative_flux_kernel_type) function conservative_flux_kernel_constructor() result(self)
+  implicit none
   return
 end function conservative_flux_kernel_constructor
 
@@ -73,7 +74,7 @@ end function conservative_flux_kernel_constructor
 !! @param[in] stencil_map Dofmaps for the stencil
 !! @param[in] direction Direction in which to calculate the fluxes
 !! @param[in] deltaT Length of a timestep
-
+!!
 subroutine conservative_flux_code( nlayers,              &
                                    undf_w3,              &
                                    ndf_w3,               &
@@ -101,27 +102,29 @@ subroutine conservative_flux_code( nlayers,              &
                                  return_part_mass
   use flux_direction_mod, only : x_direction, y_direction
 
-  !Arguments
-  integer, intent(in)                                   :: nlayers
-  integer, intent(in)                                   :: ndf_w3
-  integer, intent(in)                                   :: undf_w3
-  integer, dimension(ndf_w3), intent(in)                :: map_w3
+  implicit none
+
+  ! Arguments
+  integer(kind=i_def), intent(in)                       :: nlayers
+  integer(kind=i_def), intent(in)                       :: ndf_w3
+  integer(kind=i_def), intent(in)                       :: undf_w3
+  integer(kind=i_def), dimension(ndf_w3), intent(in)    :: map_w3
   real(kind=r_def), dimension(undf_w3), intent(in)      :: rho
   real(kind=r_def), dimension(undf_w3), intent(in)      :: a0_coeffs
   real(kind=r_def), dimension(undf_w3), intent(in)      :: a1_coeffs
   real(kind=r_def), dimension(undf_w3), intent(in)      :: a2_coeffs
-  integer, intent(in)                                   :: ndf_w2
-  integer, intent(in)                                   :: undf_w2
-  integer, dimension(ndf_w2), intent(in)                :: map_w2
+  integer(kind=i_def), intent(in)                       :: ndf_w2
+  integer(kind=i_def), intent(in)                       :: undf_w2
+  integer(kind=i_def), dimension(ndf_w2), intent(in)    :: map_w2
   real(kind=r_def), dimension(undf_w2), intent(inout)   :: flux
   real(kind=r_def), dimension(undf_w2), intent(in)      :: dep_pts
   real(kind=r_def), dimension(undf_w2), intent(in)      :: u_piola
-  integer, intent(in)                                   :: stencil_length
-  integer, intent(in)                                   :: stencil_map(1:stencil_length)
-  integer, intent(in)                                   :: direction
+  integer(kind=i_def), intent(in)                       :: stencil_length
+  integer(kind=i_def), intent(in)                       :: stencil_map(1:stencil_length)
+  integer(kind=i_def), intent(in)                       :: direction
   real(kind=r_def), intent(in)                          :: deltaT
 
-  !Internal variables
+  ! Internal variables
   real(kind=r_def) :: mass_total
   real(kind=r_def) :: departure_dist
   real(kind=r_def) :: rho_local(1:stencil_length)
@@ -135,15 +138,15 @@ subroutine conservative_flux_code( nlayers,              &
   real(kind=r_def) :: right_integration_limit
   real(kind=r_def) :: subgrid_coeffs(3)
 
-  integer, allocatable :: index_array(:)
-  integer, allocatable :: local_density_index(:)
+  integer(kind=i_def), allocatable :: index_array(:)
+  integer(kind=i_def), allocatable :: local_density_index(:)
 
-  integer :: stencil_ordering(1:stencil_length)
-  integer :: k
-  integer :: dof_iterator
-  integer :: ii
-  integer :: edge_options(1:2), local_dofs(1:2)
-  integer :: n_cells_to_sum
+  integer(kind=i_def) :: stencil_ordering(1:stencil_length)
+  integer(kind=i_def) :: k
+  integer(kind=i_def) :: dof_iterator
+  integer(kind=i_def) :: ii
+  integer(kind=i_def) :: edge_options(1:2), local_dofs(1:2)
+  integer(kind=i_def) :: n_cells_to_sum
 
 
   call calc_stencil_ordering(stencil_length,stencil_ordering)

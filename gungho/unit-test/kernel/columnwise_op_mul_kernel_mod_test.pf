@@ -61,7 +61,7 @@ contains
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     call feign_finite_element_config( finite_element_cellshape_quadrilateral, &
@@ -118,15 +118,15 @@ contains
 
     class(columnwise_op_mul_test_type), intent(inout) :: this
 
-    real(r_def), parameter :: tol = 1.0e-6_r_def
+    real(kind=r_def), parameter :: tol = 1.0e-6_r_def
 
-    integer :: i, j, cell
+    integer(kind=i_def) :: i, j, cell
 
     type(columnwise_operator_proxy_type) :: columnwise_op_D_p, &
                                             columnwise_op_DT_p, &
                                             columnwise_op_DT_D_p
 
-    ! dense representations of the operators D and D^T.D
+    ! Dense representations of the operators D and D^T.D
     real(kind=r_def), allocatable, dimension(:,:) :: densematrix_D, &
                                                      densematrix_DT_D
 
@@ -140,7 +140,7 @@ contains
 
     cell = 1
 
-    ! construct banded and dense matrix representation,
+    ! Construct banded and dense matrix representation,
     ! fill with (scaled) theta mass matrix.
     allocate(densematrix_D( columnwise_op_D_p%nrow,                           &
                             columnwise_op_D_p%ncol) )

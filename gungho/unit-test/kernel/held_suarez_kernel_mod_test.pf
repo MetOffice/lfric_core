@@ -85,17 +85,17 @@ contains
     type(field_proxy_type) :: u_proxy, theta_proxy, exner_proxy, &
                               du_proxy, dtheta_proxy, w2_rmultiplicity_proxy
 
-    integer(i_def)                 :: ndf_w2, undf_w2, dim_w2
-    integer(i_def)                 :: ndf_w3, undf_w3, dim_w3
-    integer(i_def)                 :: ndf_wth, undf_wth, dim_wth
+    integer(i_def)         :: ndf_w2, undf_w2, dim_w2
+    integer(i_def)         :: ndf_w3, undf_w3, dim_w3
+    integer(i_def)         :: ndf_wth, undf_wth, dim_wth
 
-    integer(i_def)                 :: mesh_id
+    integer(i_def)         :: mesh_id
 
-    integer(i_def)                 :: i
+    integer(i_def)         :: i
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     call feign_base_mesh_config( filename='foo', prime_mesh_name='unit_test', &
@@ -119,9 +119,9 @@ contains
                                heldsuarez_thermo_placement=-1, &
                                heldsuarez_wind_placement=-1,   &
                                hs_random=.false.,              &
-			       l_flux_bc=.false.,              &
-			       fixed_flux_e=0.0_r_def,         &
-			       fixed_flux_h=0.0_r_def )
+                               l_flux_bc=.false.,              &
+                               fixed_flux_e=0.0_r_def,         &
+                               fixed_flux_h=0.0_r_def )
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -197,21 +197,21 @@ contains
 
     class(held_suarez_test_type), intent(inout) :: this
 
-    real(r_def) :: tol ! tolerence to default precision
+    real(r_def) :: tol ! Tolerance to default precision
 
-    integer :: cell
+    integer(i_def) :: cell
     integer(i_def) :: err
 
-    integer                 :: nlayers
-    integer                 :: ndf_wchi, undf_wchi
-    integer                 :: ndf_w2, undf_w2
-    integer                 :: ndf_w3, undf_w3
-    integer                 :: ndf_wth, undf_wth
+    integer(i_def)          :: nlayers
+    integer(i_def)          :: ndf_wchi, undf_wchi
+    integer(i_def)          :: ndf_w2, undf_w2
+    integer(i_def)          :: ndf_w3, undf_w3
+    integer(i_def)          :: ndf_wth, undf_wth
 
-    integer, pointer        :: map_w2(:) => null()
-    integer, pointer        :: map_w3(:) => null()
-    integer, pointer        :: map_wth(:) => null()
-    integer, pointer        :: map_wchi(:)  => null()
+    integer(i_def), pointer :: map_w2(:) => null()
+    integer(i_def), pointer :: map_w3(:) => null()
+    integer(i_def), pointer :: map_wth(:) => null()
+    integer(i_def), pointer :: map_wchi(:)  => null()
 
     type(field_proxy_type)        :: u_proxy, theta_proxy, exner_proxy, &
                                      du_proxy, dtheta_proxy, chi_proxy(3), &
@@ -219,7 +219,7 @@ contains
 
     real(r_def), parameter  :: dlat=1.0_r_def, dlon=1.0_r_def, dz = 10000.0_r_def 
     real(r_def)             :: x, y, z, lat, lon, rad
-    integer                 :: i, j, k, df, udf
+    integer(i_def)          :: i, j, k, df, udf
     real(r_def)             :: lat0, lon0, rad0, x0, y0, z0
 
     ! Test kernel
@@ -278,7 +278,7 @@ contains
     exner_proxy%data(:)            = 1.0_r_def
     w2_rmultiplicity_proxy%data(:) = 1.0_r_def
 
-    ! only test interior cell 5
+    ! Only test interior cell 5
     cell=5
     map_w2 => u_proxy%vspace%get_cell_dofmap( cell )
     map_w3 => exner_proxy%vspace%get_cell_dofmap( cell )

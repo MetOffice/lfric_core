@@ -49,8 +49,6 @@ contains
 
     class(extract_y_test_type), intent(inout) :: this
 
-    integer :: ii
-
     this%map_w3 = 1
     this%map_w2 = (/ 1,2,3,4 /)
 
@@ -118,7 +116,7 @@ contains
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer  :: map_w3(1)
+    integer(i_def) :: map_w3(1)
     map_w3(1) = 1
 
     this%orientation(1) = 2.0_r_def
@@ -142,8 +140,6 @@ contains
 
   end subroutine test_orientation_two
 
-
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
   subroutine test_orientation_three( this )
@@ -156,7 +152,7 @@ contains
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer  :: map_w3(1)
+    integer(i_def) :: map_w3(1)
     map_w3(1) = 1
 
     this%orientation(1) = 3.0_r_def
@@ -192,7 +188,7 @@ contains
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer  :: map_w3(1)
+    integer(i_def) :: map_w3(1)
     map_w3(1) = 1
 
     this%orientation(1) = 4.0_r_def

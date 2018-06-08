@@ -43,13 +43,13 @@ module argument_mod
   integer, public, parameter :: GH_INTEGER             = 5
 
 ! Access descriptors
-  integer, public, parameter :: GH_READ  = 958
-  integer, public, parameter :: GH_WRITE = 65
-  integer, public, parameter :: GH_RW    = 811
-  integer, public, parameter :: GH_INC   = 542
-  integer, public, parameter :: GH_SUM   = 563
-  integer, public, parameter :: GH_MIN   = 718
-  integer, public, parameter :: GH_MAX   = 391
+  integer, public, parameter :: GH_READ      = 958
+  integer, public, parameter :: GH_WRITE     = 65
+  integer, public, parameter :: GH_READWRITE = 811
+  integer, public, parameter :: GH_INC       = 542
+  integer, public, parameter :: GH_SUM       = 563
+  integer, public, parameter :: GH_MIN       = 718
+  integer, public, parameter :: GH_MAX       = 391
 
 ! Distinct any_space id's. Separate id's required as we may have groups of fields
 ! that must be on the same space within a kernel.
@@ -115,9 +115,10 @@ module argument_mod
 
 ! Metadata argument type 
   type, public :: arg_type
-     integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_COLUMNWISE_OPERATOR,&
+     integer :: arg_type         ! {GH_FIELD, GH_OPERATOR, GH_COLUMNWISE_OPERATOR, &
                                  !  GH_REAL, GH_INTEGER}
-     integer :: arg_intent       ! {GH_READ, GH_WRITE, GH_RW, GH_INC, GH_SUM, GH_MIN, GH_MAX}
+     integer :: arg_intent       ! {GH_READ, GH_WRITE, GH_READWRITE, GH_INC, &
+                                 !  GH_SUM, GH_MIN, GH_MAX}
      integer :: wspace      = -1 ! {W0, W1, W2, W3, ANY_SPACE_[0-9]+, ANY_W2}
      integer :: from_wspace = -1 ! { " } only required for gh_operator
      integer :: stencil_map = -1 !{XORY1D,X1D,Y1D,CROSS} optional, type of stencil map to use

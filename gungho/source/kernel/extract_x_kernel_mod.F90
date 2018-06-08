@@ -5,16 +5,16 @@
 !-----------------------------------------------------------------------------
 !> @brief  Extracts the x direction component from a W2 field.
 !>
-!> @detail Extracts the x direction component from a W2 field and uses the
-!>         cell orientation field, currently held in W3, to do this.
-!>         The extraction of the x component of the W2 field is done for the
-!>         COSMIC transport scheme which acts in the two horizontal directions
-!>         separately.
+!> @details Extracts the x direction component from a W2 field and uses the
+!>          cell orientation field, currently held in W3, to do this.
+!>          The extraction of the x component of the W2 field is done for the
+!>          COSMIC transport scheme which acts in the two horizontal directions
+!>          separately.
 !>
 module extract_x_kernel_mod
 
-  use argument_mod,      only : arg_type, func_type,         &
-                                GH_FIELD, GH_READ, GH_WRITE, &
+  use argument_mod,      only : arg_type, func_type,       &
+                                GH_FIELD, GH_READ, GH_INC, &
                                 GH_BASIS, CELLS, GH_INTEGER
   use constants_mod,     only : r_def, i_def
   use fs_continuity_mod, only : W2, W3
@@ -33,7 +33,7 @@ module extract_x_kernel_mod
     type(arg_type) :: meta_args(4) = (/     &
         arg_type(GH_FIELD,   GH_READ,  W3), &
         arg_type(GH_FIELD,   GH_READ,  W2), &
-        arg_type(GH_FIELD,   GH_WRITE, W2), &
+        arg_type(GH_FIELD,   GH_INC,   W2), &
         arg_type(GH_INTEGER, GH_READ     )  &
         /)
     integer :: iterates_over = CELLS
@@ -45,7 +45,7 @@ module extract_x_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor for function space
+  ! Overload the default structure constructor for function space
   interface extract_x_kernel_type
     module procedure extract_x_kernel_constructor
   end interface
@@ -55,6 +55,7 @@ module extract_x_kernel_mod
 contains
 
 type(extract_x_kernel_type) function extract_x_kernel_constructor() result(self)
+  implicit none
   return
 end function extract_x_kernel_constructor
 
@@ -62,11 +63,11 @@ end function extract_x_kernel_constructor
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 !> @brief  Extracts the x direction component from a W2 field.
-!> @detail Extracts the x direction component from a W2 field and uses the
-!>         cell orientation field, currently held in W3, to do this.
-!>         The extraction of the x component of the W2 field is done for the
-!>         COSMIC transport scheme which acts in the two horizontal directions
-!>         separately.
+!> @details Extracts the x direction component from a W2 field and uses the
+!>          cell orientation field, currently held in W3, to do this.
+!>          The extraction of the x component of the W2 field is done for the
+!>          COSMIC transport scheme which acts in the two horizontal directions
+!>          separately.
 !! @param[in]  nlayers           The number of model levels
 !! @param[in]  cell_orientation  Cell orientation values held in W3 field
 !! @param[in]  w2_field_in       Input W2 field
@@ -93,22 +94,22 @@ subroutine extract_x_code( nlayers,                      &
 
   implicit none
 
-  integer, intent(in)                     :: nlayers
-  integer, intent(in)                     :: undf_w3
-  integer, intent(in)                     :: undf_w2
-  real(kind=r_def), intent(in)            :: cell_orientation(1:undf_w3)
-  real(kind=r_def), intent(in)            :: w2_field_in(1:undf_w2)
-  real(kind=r_def), intent(out)           :: x_field(1:undf_w2)
-  integer, intent(in)                     :: ndf_w3
-  integer, dimension(ndf_w3), intent(in)  :: map_w3
-  integer, intent(in)                     :: ndf_w2
-  integer, dimension(ndf_w2), intent(in)  :: map_w2
+  integer(kind=i_def), intent(in)                     :: nlayers
+  integer(kind=i_def), intent(in)                     :: undf_w3
+  integer(kind=i_def), intent(in)                     :: undf_w2
+  real(kind=r_def), intent(in)                        :: cell_orientation(1:undf_w3)
+  real(kind=r_def), intent(in)                        :: w2_field_in(1:undf_w2)
+  real(kind=r_def), intent(out)                       :: x_field(1:undf_w2)
+  integer(kind=i_def), intent(in)                     :: ndf_w3
+  integer(kind=i_def), dimension(ndf_w3), intent(in)  :: map_w3
+  integer(kind=i_def), intent(in)                     :: ndf_w2
+  integer(kind=i_def), dimension(ndf_w2), intent(in)  :: map_w2
 
-  integer :: k
-  integer :: orientation_of_cell
-  integer :: dof_vector(1:4)
+  integer(kind=i_def) :: k
+  integer(kind=i_def) :: orientation_of_cell
+  integer(kind=i_def) :: dof_vector(1:4)
 
-  orientation_of_cell = int(cell_orientation(map_w3(1)))
+  orientation_of_cell = int(cell_orientation(map_w3(1)),i_def)
 
   if (orientation_of_cell > 0_i_def .and. orientation_of_cell < 5_i_def ) then
     dof_vector = (/ w2_dof(orientation_of_cell,1),     &

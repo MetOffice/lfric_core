@@ -35,7 +35,6 @@ module runtime_constants_mod
 
   ! PsyKAl-lite kernels
   use psykal_lite_mod,                   only: invoke_mpi_calc_cell_orientation, &
-                                               invoke_raise_field,               &
                                                invoke_mpi_detj_at_w2
 
   use multiplicity_kernel_mod,           only: multiplicity_kernel_type
@@ -159,6 +158,9 @@ contains
     type(field_type) :: nodal_multiplicity_w2h
     type(field_type) :: nodal_multiplicity_w0
 
+    ! Auxiliary parameters for PSyclone builtins
+    integer(i_def), parameter :: i_minus_one = -1_i_def
+
 
     if ( subroutine_timers ) call timer('runtime_constants_alg')
     call log_event( "Gungho: creating runtime_constants", LOG_LEVEL_INFO )
@@ -270,30 +272,27 @@ contains
 
     ones           = field_type( vector_space = w1_fs )
     m1_lumped_inv  = field_type( vector_space = w1_fs )
-    call invoke( name = "Create m1_lumped_inv",      &
-                 setval_c(ones,          1.0_r_def), &
-                 setval_c(m1_lumped_inv, 0.0_r_def), &
-                 matrix_vector_kernel_type(m1_lumped_inv, ones, mm_w1) )
-    ! PSyclone does not currently support raising field to an integer power
-    call invoke_raise_field(m1_lumped_inv, -1_i_def)
+    call invoke( name = "Create m1_lumped_inv",                         &
+                 setval_c(ones,          1.0_r_def),                    &
+                 setval_c(m1_lumped_inv, 0.0_r_def),                    &
+                 matrix_vector_kernel_type(m1_lumped_inv, ones, mm_w1), &
+                 inc_X_powint_n(m1_lumped_inv, i_minus_one) )
 
     ones           = field_type( vector_space = w0_fs )
     m0_lumped_inv  = field_type( vector_space = w0_fs )
-    call invoke( name = "Create m0_lumped_inv",      &
-                 setval_c(ones,          1.0_r_def), &
-                 setval_c(m0_lumped_inv, 0.0_r_def), &
-                 matrix_vector_kernel_type(m0_lumped_inv, ones, mm_w0) )
-    ! PSyclone does not currently support raising field to an integer power
-    call invoke_raise_field( m0_lumped_inv, -1_i_def)
+    call invoke( name = "Create m0_lumped_inv",                         &
+                 setval_c(ones,          1.0_r_def),                    &
+                 setval_c(m0_lumped_inv, 0.0_r_def),                    &
+                 matrix_vector_kernel_type(m0_lumped_inv, ones, mm_w0), &
+                 inc_X_powint_n(m0_lumped_inv, i_minus_one) )
 
     ones           = field_type( vector_space = wtheta_fs )
     mt_lumped_inv  = field_type( vector_space = wtheta_fs )
-    call invoke( name = "Create mt_lumped_inv",      &
-                 setval_c(ones,          1.0_r_def), &
-                 setval_c(mt_lumped_inv, 0.0_r_def), &
-                 matrix_vector_kernel_type(mt_lumped_inv, ones, mm_wtheta) )
-    ! PSyclone does not currently support raising field to an integer power
-    call invoke_raise_field( mt_lumped_inv, -1_i_def )
+    call invoke( name = "Create mt_lumped_inv",                             &
+                 setval_c(ones,          1.0_r_def),                        &
+                 setval_c(mt_lumped_inv, 0.0_r_def),                        &
+                 matrix_vector_kernel_type(mt_lumped_inv, ones, mm_wtheta), &
+                 inc_X_powint_n(mt_lumped_inv, i_minus_one) )
 
     !================= Create a height field =====================!
     ! Note that these fields represent the height relative to 
@@ -345,10 +344,10 @@ contains
                  X_divideby_Y(nodal_rmultiplicity_w0, ones, nodal_multiplicity_w0) )
 
     w2_normalisation = field_type( vector_space = w2_fs )
-    call invoke( setval_c(w2_normalisation, 0.0_r_def),                    &
-                 w2_normalisation_kernel_type(w2_normalisation, chi),      &
-                 inc_X_divideby_Y(w2_normalisation, nodal_multiplicity_w2) )
-    call invoke_raise_field(w2_normalisation, -1_i_def)
+    call invoke( setval_c(w2_normalisation, 0.0_r_def),                     &
+                 w2_normalisation_kernel_type(w2_normalisation, chi),       &
+                 inc_X_divideby_Y(w2_normalisation, nodal_multiplicity_w2), &
+                 inc_X_powint_n(w2_normalisation, i_minus_one) )
 
     ! Compute Coriolis operator
     if ( rotating ) then

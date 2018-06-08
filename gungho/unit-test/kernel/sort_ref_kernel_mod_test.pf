@@ -58,13 +58,13 @@ contains
 
     type(field_proxy_type) :: theta_proxy
 
-    integer(i_def)                 :: ndf_wth, undf_wth, dim_wth
+    integer(i_def)         :: ndf_wth, undf_wth, dim_wth
 
-    integer(i_def)                 :: mesh_id
+    integer(i_def)         :: mesh_id
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     call feign_base_mesh_config( filename='foo', prime_mesh_name='unit_test', &
@@ -112,6 +112,7 @@ contains
   subroutine test_all( this )
 
     use sort_ref_kernel_mod, only : sort_ref_code
+
     implicit none
 
     class(sort_ref_test_type), intent(inout) :: this
@@ -120,17 +121,17 @@ contains
 
     real(r_def) :: dth ! Change in theta across a model layer
 
-    integer :: cell
+    integer(i_def) :: cell
     integer(i_def) :: err
 
-    integer                 :: nlayers
-    integer                 :: ndf_wth, undf_wth
+    integer(i_def) :: nlayers
+    integer(i_def) :: ndf_wth, undf_wth
 
-    integer, pointer        :: map_wth(:) => null()
+    integer(i_def), pointer :: map_wth(:) => null()
 
-    type(field_proxy_type)        :: theta_proxy
+    type(field_proxy_type) :: theta_proxy
 
-    integer(i_def)                 :: k
+    integer(i_def) :: k
 
     ! Test kernel
     theta_proxy  = this%theta_ref%get_proxy()

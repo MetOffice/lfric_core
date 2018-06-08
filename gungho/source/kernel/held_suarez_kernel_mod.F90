@@ -15,11 +15,12 @@
 module held_suarez_kernel_mod
   
 use argument_mod,             only: arg_type, func_type,                 &
-                                    GH_FIELD, GH_WRITE, GH_READ, GH_INC, &
+                                    GH_FIELD, GH_WRITE, GH_READ,         &
+                                    GH_INC, GH_READWRITE,                &
                                     ANY_SPACE_9,                         &
                                     GH_BASIS, GH_DIFF_BASIS,             &
                                     CELLS, GH_QUADRATURE_XYoZ
-use constants_mod,            only: r_def
+use constants_mod,            only: r_def, i_def
 use fs_continuity_mod,        only: W2, W3, Wtheta
 use kernel_mod,               only: kernel_type
 use coord_transform_mod,      only: xyz2llr
@@ -33,17 +34,17 @@ implicit none
 type, public, extends(kernel_type) :: held_suarez_kernel_type
   private
   type(arg_type) :: meta_args(6) = (/                                  &
-       arg_type(GH_FIELD,   GH_INC,   W2),                             &
-       arg_type(GH_FIELD,   GH_INC,   Wtheta),                         &
-       arg_type(GH_FIELD,   GH_READ,  W2),                             &
-       arg_type(GH_FIELD,   GH_READ,  Wtheta),                         &
-       arg_type(GH_FIELD,   GH_READ,  W3),                             &
-       arg_type(GH_FIELD*3, GH_READ,  ANY_SPACE_9)                     &
+       arg_type(GH_FIELD,   GH_INC,       W2),                         &
+       arg_type(GH_FIELD,   GH_READWRITE, Wtheta),                     &
+       arg_type(GH_FIELD,   GH_READ,      W2),                         &
+       arg_type(GH_FIELD,   GH_READ,      Wtheta),                     &
+       arg_type(GH_FIELD,   GH_READ,      W3),                         &
+       arg_type(GH_FIELD*3, GH_READ,      ANY_SPACE_9)                 &
        /)
   type(func_type) :: meta_funcs(4) = (/                                &
-       func_type(W2, GH_BASIS),                                        &
-       func_type(Wtheta, GH_BASIS),                                    &
-       func_type(W3, GH_BASIS),                                        &
+       func_type(W2,          GH_BASIS),                               &
+       func_type(Wtheta,      GH_BASIS),                               &
+       func_type(W3,          GH_BASIS),                               &
        func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                 &
        /)
   integer :: iterates_over = CELLS
@@ -80,9 +81,11 @@ real(kind=r_def), parameter :: STATIC_STABILITY = 10.0_r_def  ! Static Stability
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 public held_suarez_code
+
 contains
 
 type(held_suarez_kernel_type) function held_suarez_kernel_constructor() result(self)
+  implicit none
   return
 end function held_suarez_kernel_constructor
 
@@ -123,8 +126,8 @@ subroutine held_suarez_code(nlayers,                                           &
                             ndf_w2, undf_w2, map_w2, basis_w2,                 &
                             ndf_w0, undf_w0, map_w0, basis_w0,                 &
                             ndf_w3, undf_w3, map_w3, basis_w3,                 &
-                            ndf_chi, undf_chi, map_chi, basis_chi, &
-                            diff_basis_chi, nqp_h, nqp_v, wqp_h, wqp_v      &
+                            ndf_chi, undf_chi, map_chi, basis_chi,             &
+                            diff_basis_chi, nqp_h, nqp_v, wqp_h, wqp_v         &
                             )
   
   use coordinate_jacobian_mod,  only: coordinate_jacobian
@@ -132,13 +135,13 @@ subroutine held_suarez_code(nlayers,                                           &
   implicit none
 
   ! Arguments
-  integer, intent(in) :: nlayers
+  integer(kind=i_def), intent(in) :: nlayers
 
-  integer, intent(in) :: ndf_w0, undf_w0  
-  integer, intent(in) :: ndf_w2, undf_w2
-  integer, intent(in) :: ndf_w3, undf_w3
-  integer, intent(in) :: ndf_chi, undf_chi
-  integer, intent(in) :: nqp_h, nqp_v
+  integer(kind=i_def), intent(in) :: ndf_w0, undf_w0  
+  integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
+  integer(kind=i_def), intent(in) :: ndf_w3, undf_w3
+  integer(kind=i_def), intent(in) :: ndf_chi, undf_chi
+  integer(kind=i_def), intent(in) :: nqp_h, nqp_v
   real(kind=r_def), dimension(undf_w0), intent(inout) :: dtheta
   real(kind=r_def), dimension(undf_w2), intent(inout) :: du
   real(kind=r_def), dimension(undf_w0), intent(in)    :: theta
@@ -146,16 +149,16 @@ subroutine held_suarez_code(nlayers,                                           &
   real(kind=r_def), dimension(undf_w3), intent(in)    :: exner
   real(kind=r_def), dimension(undf_chi), intent(in)   :: chi_1, chi_2, chi_3
 
-  integer, dimension(ndf_w0),  intent(in)                          :: map_w0
+  integer(kind=i_def), dimension(ndf_w0),  intent(in)              :: map_w0
   real(kind=r_def), dimension(1, ndf_w0, nqp_h, nqp_v), intent(in) :: basis_w0
 
-  integer, dimension(ndf_w2),  intent(in)                          :: map_w2
+  integer(kind=i_def), dimension(ndf_w2),  intent(in)              :: map_w2
   real(kind=r_def), dimension(3, ndf_w2, nqp_h, nqp_v), intent(in) :: basis_w2 
 
-  integer, dimension(ndf_w3),  intent(in)                          :: map_w3
+  integer(kind=i_def), dimension(ndf_w3),  intent(in)              :: map_w3
   real(kind=r_def), dimension(1, ndf_w3, nqp_h, nqp_v), intent(in) :: basis_w3 
 
-  integer, dimension(ndf_chi),  intent(in)                          :: map_chi
+  integer(kind=i_def), dimension(ndf_chi),  intent(in)              :: map_chi
   real(kind=r_def), dimension(1, ndf_chi, nqp_h, nqp_v), intent(in) :: basis_chi
   real(kind=r_def), dimension(3, ndf_chi, nqp_h, nqp_v), intent(in) :: diff_basis_chi
 
@@ -163,11 +166,11 @@ subroutine held_suarez_code(nlayers,                                           &
   real(kind=r_def), dimension(nqp_v), intent(in) :: wqp_v
 
   ! Internal variables
-  integer               :: df, k, loc
+  integer(kind=i_def)         :: df, k, loc
 
   real(kind=r_def)            :: theta_eq
   real(kind=r_def)            :: lon, r
-  integer                     :: qp1, qp2
+  integer(kind=i_def)         :: qp1, qp2
   
   real(kind=r_def), dimension(ndf_chi)         :: chi_1_at_dof, chi_2_at_dof, chi_3_at_dof
   real(kind=r_def), dimension(ndf_w3)          :: exner_at_dof

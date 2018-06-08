@@ -11,7 +11,7 @@ use argument_mod,            only : arg_type,                               &
                                     GH_FIELD, GH_OPERATOR, GH_READ, GH_INC, &
                                     ANY_SPACE_1, ANY_SPACE_2,               &
                                     CELLS 
-use constants_mod,           only : r_def
+use constants_mod,           only : r_def, i_def
 use kernel_mod,              only : kernel_type
 
 implicit none
@@ -36,7 +36,7 @@ end type
 ! Constructors
 !-------------------------------------------------------------------------------
 
-! overload the default structure constructor for function space
+! Overload the default structure constructor for function space
 interface transpose_matrix_vector_kernel_type
    module procedure transpose_matrix_vector_kernel_constructor
 end interface
@@ -45,45 +45,49 @@ end interface
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 public transpose_matrix_vector_code
+
 contains
 
-  type(transpose_matrix_vector_kernel_type) function transpose_matrix_vector_kernel_constructor() result(self)
+type(transpose_matrix_vector_kernel_type) function transpose_matrix_vector_kernel_constructor() result(self)
+  implicit none
   return
 end function transpose_matrix_vector_kernel_constructor
 
 !> @brief Computes lhs = matrix^T*x where matrix^T is the transpose of the matrix
-!> @param[in] cell Horizontal cell index
+!! @param[in] cell Horizontal cell index
 !! @param[in] nlayers Number of layers
+!! @param[inout] lhs Output lhs (A^T*x)
+!! @param[in] x Input data
 !! @param[in] ncell_3d Total number of cells
+!! @param[in] matrix Matrix values
 !! @param[in] ndf1 Number of degrees of freedom per cell for the output field
 !! @param[in] undf1 Unique number of degrees of freedom  for the output field
 !! @param[in] map1 Dofmap for the cell at the base of the column for the output field
-!! @param[in] map2 Dofmap for the cell at the base of the column for the input field
 !! @param[in] ndf2 Number of degrees of freedom per cell for the input field
 !! @param[in] undf2 Unique number of degrees of freedom for the input field 
-!! @param[in] x Input data
-!> @param[inout] lhs Output lhs (A^T*x)
-!! @param[in] matrix Matrix values
-subroutine transpose_matrix_vector_code(cell,        &
-                                        nlayers,     &
-                                        lhs, x,      & 
-                                        ncell_3d,    &
-                                        matrix,      &
+!! @param[in] map2 Dofmap for the cell at the base of the column for the input field
+subroutine transpose_matrix_vector_code(cell,              &
+                                        nlayers,           &
+                                        lhs, x,            & 
+                                        ncell_3d,          &
+                                        matrix,            &
                                         ndf1, undf1, map1, &
                                         ndf2, undf2, map2)
  
-  !Arguments
-  integer,                   intent(in)    :: cell, nlayers, ncell_3d
-  integer,                   intent(in)    :: undf1, ndf1
-  integer,                   intent(in)    :: undf2, ndf2
-  integer, dimension(ndf1),  intent(in)    :: map1
-  integer, dimension(ndf2),  intent(in)    :: map2
-  real(kind=r_def), dimension(undf2),              intent(in)    :: x
-  real(kind=r_def), dimension(undf1),              intent(inout) :: lhs
-  real(kind=r_def), dimension(ndf2,ndf1,ncell_3d), intent(in)    :: matrix
+  implicit none
 
-  !Internal variables
-  integer                           :: df, k, ik 
+  ! Arguments
+  integer(kind=i_def),                  intent(in)    :: cell, nlayers, ncell_3d
+  integer(kind=i_def),                  intent(in)    :: undf1, ndf1
+  integer(kind=i_def),                  intent(in)    :: undf2, ndf2
+  integer(kind=i_def), dimension(ndf1), intent(in)    :: map1
+  integer(kind=i_def), dimension(ndf2), intent(in)    :: map2
+  real(kind=r_def),    dimension(undf2),              intent(in)    :: x
+  real(kind=r_def),    dimension(undf1),              intent(inout) :: lhs
+  real(kind=r_def),    dimension(ndf2,ndf1,ncell_3d), intent(in)    :: matrix
+
+  ! Internal variables
+  integer(kind=i_def)               :: df, k, ik 
   real(kind=r_def), dimension(ndf2) :: x_e
   real(kind=r_def), dimension(ndf1) :: lhs_e
   

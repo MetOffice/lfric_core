@@ -148,8 +148,7 @@ contains
     use psykal_lite_mod,                 only: invoke_weighted_div_bd_kernel_type,         &
                                                invoke_weighted_div_bd_kernel_type,         &
                                                invoke_weighted_proj_2theta_bd_kernel_type, &
-                                               invoke_weighted_proj_theta2_bd_kernel_type, &
-                                               invoke_raise_field
+                                               invoke_weighted_proj_theta2_bd_kernel_type
     use finite_element_config_mod,       only: element_order
     use function_space_mod,              only: function_space_type
     use runtime_constants_mod,           only: get_coordinates, &
@@ -177,6 +176,7 @@ contains
     type(field_type), pointer            :: w2_rmultiplicity => null()
     type(function_space_type),   pointer :: u_fs => null()
     real(r_def)                          :: const1, const2
+    integer(i_def), parameter            :: imone = -1_i_def
 
     if ( subroutine_timers ) call timer('si_operators_alg:compute')
     call log_event( "Gungho: computing si_operators", LOG_LEVEL_INFO )
@@ -236,8 +236,8 @@ contains
       if ( preconditioner == helmholtz_solver_preconditioner_tridiagonal) then
         Helm_diag = tri_precon(1)
         ! PSyclone does not currently support raising field to an integer power
-        call invoke_raise_field(Helm_diag, -1_i_def)
         call invoke( name = "Normalise tridiagonal preconditioner", &
+                     inc_X_powint_n(Helm_diag, imone),              &
                      inc_X_times_Y(tri_precon(1), Helm_diag),       &
                      inc_X_times_Y(tri_precon(2), Helm_diag),       &
                      inc_X_times_Y(tri_precon(3), Helm_diag) )

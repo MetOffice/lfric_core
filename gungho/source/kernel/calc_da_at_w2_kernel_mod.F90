@@ -7,14 +7,14 @@
 !>
 module calc_dA_at_w2_kernel_mod
 
-  use argument_mod,          only : arg_type, func_type,         &
-                                    GH_FIELD, GH_READ, GH_WRITE, &
-                                    ANY_SPACE_1, GH_DIFF_BASIS,  &
+  use argument_mod,          only : arg_type, func_type,        &
+                                    GH_FIELD, GH_READ, GH_INC,  &
+                                    ANY_SPACE_1, GH_DIFF_BASIS, &
                                     CELLS, GH_EVALUATOR
   use constants_mod,         only : r_def, i_def
   use fs_continuity_mod,     only : W2
   use kernel_mod,            only : kernel_type
-  use reference_element_mod, only : N,S,E,W,T,B
+  use reference_element_mod, only : N, S, E, W, T, B
 
   implicit none
 
@@ -27,7 +27,7 @@ module calc_dA_at_w2_kernel_mod
   type, public, extends(kernel_type) :: calc_dA_at_w2_kernel_type
     private
     type(arg_type) :: meta_args(2) = (/              &
-        arg_type(GH_FIELD,    GH_WRITE, W2),         &
+        arg_type(GH_FIELD,    GH_INC,   W2),         &
         arg_type(GH_FIELD*3,  GH_READ,  ANY_SPACE_1) &
         /)
     type(func_type) :: meta_funcs(1) = (/     &
@@ -43,7 +43,7 @@ module calc_dA_at_w2_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor for function space
+  ! Overload the default structure constructor for function space
   interface calc_dA_at_w2_kernel_type
     module procedure calc_dA_at_w2_kernel_constructor
   end interface
@@ -56,6 +56,7 @@ module calc_dA_at_w2_kernel_mod
 contains
 
 type(calc_dA_at_w2_kernel_type) function calc_dA_at_w2_kernel_constructor() result(self)
+  implicit none
   return
 end function calc_dA_at_w2_kernel_constructor
 
@@ -81,7 +82,8 @@ subroutine calc_dA_at_w2_code( nlayers,                                  &
   use coordinate_jacobian_mod, only: coordinate_jacobian, coordinate_jacobian_inverse
 
   implicit none
-  !Arguments
+
+  ! Arguments
   integer(kind=i_def), intent(in)    :: nlayers
   integer(kind=i_def), intent(in)    :: ndf_w2
   integer(kind=i_def), intent(in)    :: undf_w2
@@ -93,7 +95,7 @@ subroutine calc_dA_at_w2_code( nlayers,                                  &
   integer(kind=i_def), dimension(ndf_chi), intent(in)       :: map_chi
   real(kind=r_def), dimension(3,ndf_chi,ndf_w2), intent(in) :: diff_basis_chi
 
-  !Internal variables
+  ! Internal variables
   integer(kind=i_def) :: df, k
   real(kind=r_def), dimension(ndf_chi)    :: chi1_e, chi2_e, chi3_e
 

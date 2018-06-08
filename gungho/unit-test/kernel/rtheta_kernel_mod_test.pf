@@ -71,7 +71,7 @@ contains
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     this%qr = quadrature_xyoz_type(3, quadrature_rule)
@@ -146,20 +146,20 @@ contains
     real(r_def), parameter :: tol    = 1.0e-6_r_def
     real(r_def), parameter :: answer = 1.0_r_def
 
-    integer        :: cell, k
+    integer(i_def) :: cell, k
 
     ! Required for calling kernel 
     type(field_type)  :: theta
 
-    integer                 :: nlayers, nqp_h, nqp_v
-    integer                 :: ndf_wtheta, undf_wtheta
-    integer                 :: ndf_w2, undf_w2
+    integer(i_def)          :: nlayers, nqp_h, nqp_v
+    integer(i_def)          :: ndf_wtheta, undf_wtheta
+    integer(i_def)          :: ndf_w2, undf_w2
 
-    integer, pointer        :: map_wtheta(:) => null()
-    integer, pointer        :: map_w2(:) => null()
+    integer(i_def), pointer :: map_wtheta(:) => null()
+    integer(i_def), pointer :: map_w2(:) => null()
 
-    type(field_proxy_type)        :: r_theta_proxy, theta_proxy, &
-                                     u_proxy
+    type(field_proxy_type)  :: r_theta_proxy, theta_proxy, &
+                               u_proxy
 
     real(kind=r_def), pointer :: xp(:,:) => null()
     real(kind=r_def), pointer :: zp(:)   => null()

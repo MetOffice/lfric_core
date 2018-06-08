@@ -15,8 +15,8 @@ module weighted_proj_2theta_bd_kernel_mod
 
   use argument_mod,      only: arg_type, func_type, mesh_data_type, &
                                GH_OPERATOR, GH_FIELD, GH_REAL,      &
-                               GH_READ, GH_INC,                     &
-                               GH_BASIS,GH_DIFF_BASIS,              &
+                               GH_READ, GH_READWRITE,               &
+                               GH_BASIS, GH_DIFF_BASIS,             &
                                CELLS, GH_QUADRATURE_XYoZ,           &
                                adjacent_face,                       &
                                reference_element_out_face_normal
@@ -32,15 +32,15 @@ module weighted_proj_2theta_bd_kernel_mod
 
   type, public, extends(kernel_type) :: weighted_proj_2theta_bd_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/            &
-        arg_type(GH_OPERATOR, GH_INC, W2, Wtheta), &
-        arg_type(GH_FIELD,    GH_READ,  W3),       &
-        arg_type(GH_REAL,     GH_READ)             &
+    type(arg_type) :: meta_args(3) = (/                  &
+        arg_type(GH_OPERATOR, GH_READWRITE, W2, Wtheta), &
+        arg_type(GH_FIELD,    GH_READ,      W3),         &
+        arg_type(GH_REAL,     GH_READ)                   &
         /)
     type(func_type) :: meta_funcs(3) = (/ &
-        func_type(W2, GH_BASIS),          &
+        func_type(W2,     GH_BASIS),      &
         func_type(Wtheta, GH_BASIS),      &
-        func_type(W3, GH_BASIS)           &
+        func_type(W3,     GH_BASIS)       &
         /)
     integer :: iterates_over = CELLS
     integer :: gh_shape = GH_QUADRATURE_XYoZ
@@ -104,23 +104,24 @@ contains
   !! @param[in] out_face_normal  Vectors on "out faces" of reference element.
   !!
   subroutine weighted_proj_2theta_bd_code( cell, nlayers, ncell_3d, &
-                                          projection,              &
-                                          exner,                   &
-                                          scalar,                  &
-                                          ndf_w2,                  &
-                                          ndf_wtheta,              &
-                                          ndf_w3, undf_w3,         &
-                                          stencil_w3_map,          &
-                                          stencil_w3_size,         &
-                                          nqp_h_1d, nqp_v, wqp_v,  &
-                                          w2_basis_face,           &
-                                          w3_basis_face,           &
-                                          wtheta_basis_face,       &
-                                          adjacent_face, out_face_normal )
+                                           projection,              &
+                                           exner,                   &
+                                           scalar,                  &
+                                           ndf_w2,                  &
+                                           ndf_wtheta,              &
+                                           ndf_w3, undf_w3,         &
+                                           stencil_w3_map,          &
+                                           stencil_w3_size,         &
+                                           nqp_h_1d, nqp_v, wqp_v,  &
+                                           w2_basis_face,           &
+                                           w3_basis_face,           &
+                                           wtheta_basis_face,       &
+                                           adjacent_face, out_face_normal )
 
     use calc_exner_pointwise_mod, only: calc_exner_pointwise
 
     implicit none
+
     ! Arguments
     integer(kind=i_def),                     intent(in) :: cell, nqp_h_1d, nqp_v
     integer(kind=i_def),                     intent(in) :: nlayers
@@ -139,8 +140,8 @@ contains
     real(kind=r_def),                                        intent(in)    :: scalar
     real(kind=r_def), dimension(nqp_v),                      intent(in)    :: wqp_v
 
-    integer(i_def), intent(in) :: adjacent_face(:)
-    real(r_def),    intent(in) :: out_face_normal(:,:)
+    integer(kind=i_def), intent(in) :: adjacent_face(:)
+    real(kind=r_def),    intent(in) :: out_face_normal(:,:)
 
     ! Internal variables
     integer(kind=i_def)                      :: df, df0, df2, k, ik, face, face_next

@@ -15,7 +15,7 @@
 module rtheta_kernel_mod
 
 use argument_mod,            only : arg_type, func_type,              &
-                                    GH_FIELD, GH_READ, GH_INC,        &
+                                    GH_FIELD, GH_READ, GH_READWRITE,  &
                                     GH_BASIS, GH_DIFF_BASIS,          &
                                     CELLS, GH_QUADRATURE_XYoZ
 use constants_mod,           only : r_def, i_def
@@ -32,13 +32,13 @@ implicit none
 type, public, extends(kernel_type) :: rtheta_kernel_type
   private
   type(arg_type) :: meta_args(3) = (/                                  &
-       arg_type(GH_FIELD,   GH_INC,  Wtheta),                          &
-       arg_type(GH_FIELD,   GH_READ, Wtheta),                          &
-       arg_type(GH_FIELD,   GH_READ, W2)                               &
+       arg_type(GH_FIELD,   GH_READWRITE,  Wtheta),                    &
+       arg_type(GH_FIELD,   GH_READ,       Wtheta),                    &
+       arg_type(GH_FIELD,   GH_READ,       W2)                         &
        /)
   type(func_type) :: meta_funcs(2) = (/                                &
        func_type(Wtheta, GH_BASIS, GH_DIFF_BASIS),                     &
-       func_type(W2, GH_BASIS, GH_DIFF_BASIS)                          &
+       func_type(W2,     GH_BASIS, GH_DIFF_BASIS)                      &
        /)
   integer :: iterates_over = CELLS
   integer :: gh_shape = GH_QUADRATURE_XYoZ
@@ -50,7 +50,7 @@ end type
 ! Constructors
 !-------------------------------------------------------------------------------
 
-! overload the default structure constructor for function space
+! Overload the default structure constructor for function space
 interface rtheta_kernel_type
    module procedure rtheta_kernel_constructor
 end interface
@@ -59,9 +59,11 @@ end interface
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 public rtheta_code
+
 contains
 
 type(rtheta_kernel_type) function rtheta_kernel_constructor() result(self)
+  implicit none
   return
 end function rtheta_kernel_constructor
 
@@ -89,6 +91,7 @@ subroutine rtheta_code(nlayers,                                                 
                        ndf_wtheta, undf_wtheta, map_wtheta, wtheta_basis, wtheta_diff_basis,  &
                        ndf_w2, undf_w2, map_w2, w2_basis, w2_diff_basis,                      &
                        nqp_h, nqp_v, wqp_h, wqp_v)
+
   implicit none
 
   ! Arguments

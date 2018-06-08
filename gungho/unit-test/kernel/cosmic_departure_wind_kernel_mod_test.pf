@@ -62,13 +62,13 @@ contains
 
     type(function_space_type), pointer :: w2_fs => null()
 
-    integer(i_def) :: ndf
-    integer(i_def) :: dim_u
-    integer(i_def) :: mesh_id
+    integer(kind=i_def) :: ndf
+    integer(kind=i_def) :: dim_u
+    integer(kind=i_def) :: mesh_id
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     ! Create top level mesh collection
@@ -123,18 +123,18 @@ contains
     type(field_proxy_type)    :: u_piola, u_departure_wind
     type(field_proxy_type)    :: detj_at_w2
 
-    real(kind=r_def)          :: answer, physical_wind_value
-    real(r_def), parameter    :: tol = 1.0e-12_r_def
+    real(kind=r_def)             :: answer, physical_wind_value
+    real(kind=r_def), parameter  :: tol = 1.0e-12_r_def
 
-    integer                   :: i, j, k, cell, df
-    integer                   :: nlayers
-    integer                   :: ndf_u, ndf_udep
-    integer                   :: df_u, df_udep
-    integer                   :: undf_u
-    integer                   :: dim_u
-    integer                   :: element_order
-    integer, pointer          :: map(:) => null()
-    real(kind=r_def), pointer :: nodes_udep(:,:) => null()
+    integer(kind=i_def)          :: i, j, k, cell, df
+    integer(kind=i_def)          :: nlayers
+    integer(kind=i_def)          :: ndf_u, ndf_udep
+    integer(kind=i_def)          :: df_u, df_udep
+    integer(kind=i_def)          :: undf_u
+    integer(kind=i_def)          :: dim_u
+    integer(kind=i_def)          :: element_order
+    integer(kind=i_def), pointer :: map(:) => null()
+    real(kind=r_def), pointer    :: nodes_udep(:,:) => null()
 
 
     u_piola = this%piola_field%get_proxy()
@@ -197,7 +197,6 @@ contains
     @assertEqual(answer, u_departure_wind%data(map(2)), tol)
     @assertEqual(-answer, u_departure_wind%data(map(3)), tol)
     @assertEqual(answer, u_departure_wind%data(map(4)), tol)
-
 
   end subroutine test_all
 

@@ -7,14 +7,14 @@
 !-------------------------------------------------------------------------------
 
 !> @brief Kernel which calculates the product of two columnwise operators
-!> @detail calculates op_C = op_C + op_A * op_B
+!> @details Calculates op_C = op_C + op_A * op_B
 
 module columnwise_op_mul_kernel_mod
 
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type,                               &
                                     GH_COLUMNWISE_OPERATOR,                 &
-                                    GH_READ, GH_WRITE, GH_INC,              &
+                                    GH_READ, GH_WRITE, GH_READWRITE,        &
                                     ANY_SPACE_1, ANY_SPACE_2, ANY_SPACE_3,  &
                                     CELLS 
 
@@ -27,11 +27,11 @@ implicit none
 !-------------------------------------------------------------------------------
 
 type, public, extends(kernel_type) :: columnwise_op_mul_kernel_type
-   private
-  type(arg_type) :: meta_args(3) = (/                                        &
-       arg_type(GH_COLUMNWISE_OPERATOR, GH_READ, ANY_SPACE_1, ANY_SPACE_2),  &
-       arg_type(GH_COLUMNWISE_OPERATOR, GH_READ, ANY_SPACE_2, ANY_SPACE_3),  &
-       arg_type(GH_COLUMNWISE_OPERATOR, GH_INC, ANY_SPACE_1, ANY_SPACE_3)    &
+  private
+  type(arg_type) :: meta_args(3) = (/                                           &
+       arg_type(GH_COLUMNWISE_OPERATOR, GH_READ, ANY_SPACE_1, ANY_SPACE_2),     &
+       arg_type(GH_COLUMNWISE_OPERATOR, GH_READ, ANY_SPACE_2, ANY_SPACE_3),     &
+       arg_type(GH_COLUMNWISE_OPERATOR, GH_READWRITE, ANY_SPACE_1, ANY_SPACE_3) &
        /)
   integer :: iterates_over = CELLS
 contains
@@ -42,7 +42,7 @@ end type columnwise_op_mul_kernel_type
 ! Constructors
 !-------------------------------------------------------------------------------
 
-! overload the default structure constructor for function space
+! Overload the default structure constructor for function space
 interface columnwise_op_mul_kernel_type
    module procedure columnwise_op_mul_kernel_constructor
 end interface
@@ -51,6 +51,7 @@ end interface
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 public columnwise_op_mul_kernel_code
+
 contains
   
   type(columnwise_op_mul_kernel_type) function columnwise_op_mul_kernel_constructor() result(self)
@@ -127,7 +128,7 @@ contains
     integer(kind=i_def), intent(in) :: alpha_C, beta_C, gamma_m_C, gamma_p_C
 
     ! Internal parameters
-    integer(kind=i_def) :: i,j,ell ! Row and column index index
+    integer(kind=i_def) :: i, j, ell ! Row and column index
     ! Smallest index in a particular row
     integer(kind=i_def) :: j_minus_A, j_minus_B, j_minus_C
     integer(kind=i_def) :: j_plus_A, j_plus_B, j_plus_C
@@ -144,7 +145,7 @@ contains
              j_minus_B = ceiling((alpha_B*ell-gamma_p_B)/(1.0_r_def*beta_B),i_def)
              j_plus_B = floor((alpha_B*ell+gamma_m_B)/(1.0_r_def*beta_B),i_def)
              if ( (j_minus_B <= j) .and. (j <= j_plus_B) ) then
-                matrixentry = matrixentry                               &
+                matrixentry = matrixentry                                 &
                             + columnwise_matrix_A(ell-j_minus_A+1,i,cell) &
                             * columnwise_matrix_B(j-j_minus_B+1,ell,cell)
              end if

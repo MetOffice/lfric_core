@@ -58,7 +58,7 @@ contains
 
     class(conservative_flux_test_type), intent(inout) :: this
 
-    integer :: ii
+    integer(i_def) :: ii
 
     this%map_w2 = (/ 1,2,3,4 /)
 
@@ -122,7 +122,7 @@ contains
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer  :: map_w3(1)
+    integer(i_def) :: map_w3(1)
 
     map_w3(1) = 1
 
@@ -169,7 +169,7 @@ end subroutine test_positive_flux_large_cfl
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer, pointer :: map_w3(:) => null()
+    integer(i_def), pointer :: map_w3(:) => null()
 
     this%dep_pts(:) = 1.0_r_def
     this%u_piola(:) = 1.0_r_def
@@ -208,7 +208,7 @@ end subroutine test_positive_flux_large_cfl
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer :: map_w3(1)
+    integer(i_def) :: map_w3(1)
 
     map_w3(1) = 1
 
@@ -249,7 +249,7 @@ end subroutine test_positive_flux_large_cfl
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer :: map_w3(1)
+    integer(i_def) :: map_w3(1)
 
 
     map_w3(1) = 1
@@ -291,7 +291,7 @@ end subroutine test_positive_flux_large_cfl
 
     real(r_def), parameter :: tol    = 1.0e-6_r_def
 
-    integer :: map_w3(1)
+    integer(i_def) :: map_w3(1)
 
     map_w3(1) = 1
 

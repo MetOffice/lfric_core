@@ -16,11 +16,11 @@
 !>
 module held_suarez_fv_kernel_mod
 
-  use argument_mod,             only: arg_type, func_type,                 &
-                                      GH_FIELD, GH_WRITE, GH_READ, GH_INC, &
-                                      ANY_SPACE_9,                         &
-                                      GH_BASIS, CELLS
-  use constants_mod,            only: r_def
+  use argument_mod,             only: arg_type, func_type,             &
+                                      GH_FIELD, GH_READ, GH_READWRITE, &
+                                      ANY_SPACE_9,                     &
+                                      CELLS
+  use constants_mod,            only: r_def, i_def
   use coord_transform_mod,      only: xyz2ll
   use calc_exner_pointwise_mod, only: calc_exner_pointwise
   use fs_continuity_mod,        only: Wtheta
@@ -41,11 +41,11 @@ module held_suarez_fv_kernel_mod
   !>
   type, public, extends(kernel_type) :: held_suarez_fv_kernel_type
     private
-    type(arg_type) :: meta_args(4) = (/             &
-        arg_type(GH_FIELD,   GH_INC,   WTHETA),     &
-        arg_type(GH_FIELD,   GH_READ,  WTHETA),     &
-        arg_type(GH_FIELD,   GH_READ,  WTHETA),     &
-        arg_type(GH_FIELD*3, GH_READ,  ANY_SPACE_9) &
+    type(arg_type) :: meta_args(4) = (/                 &
+        arg_type(GH_FIELD,   GH_READWRITE, WTHETA),     &
+        arg_type(GH_FIELD,   GH_READ,      WTHETA),     &
+        arg_type(GH_FIELD,   GH_READ,      WTHETA),     &
+        arg_type(GH_FIELD*3, GH_READ,      ANY_SPACE_9) &
         /)
     integer :: iterates_over = CELLS
   contains
@@ -56,7 +56,7 @@ module held_suarez_fv_kernel_mod
   ! Constructors
   !---------------------------------------------------------------------------
 
-  ! overload the default structure constructor
+  ! Overload the default structure constructor
   interface held_suarez_fv_kernel_type
     module procedure held_suarez_fv_kernel_constructor
   end interface
@@ -70,6 +70,7 @@ contains
 
 type(held_suarez_fv_kernel_type) &
 function held_suarez_fv_kernel_constructor() result(self)
+  implicit none
   return
 end function held_suarez_fv_kernel_constructor
 
@@ -100,21 +101,22 @@ subroutine held_suarez_fv_code(nlayers,                     &
 
   implicit none
 
-  !Arguments
-  integer, intent(in) :: nlayers
+  ! Arguments
+  integer(kind=i_def), intent(in) :: nlayers
 
-  integer, intent(in) :: ndf_wth, undf_wth  
-  integer, intent(in) :: ndf_chi, undf_chi
+  integer(kind=i_def), intent(in) :: ndf_wth, undf_wth  
+  integer(kind=i_def), intent(in) :: ndf_chi, undf_chi
 
   real(kind=r_def), dimension(undf_wth), intent(inout) :: dtheta
   real(kind=r_def), dimension(undf_wth), intent(in)    :: theta
   real(kind=r_def), dimension(undf_wth), intent(in)    :: exner_in_wth
   real(kind=r_def), dimension(undf_chi), intent(in)    :: chi_1, chi_2, chi_3
 
-  integer, dimension(ndf_wth),  intent(in)         :: map_wth
-  integer, dimension(ndf_chi),  intent(in)         :: map_chi
-  !Internal variables
-  integer               :: k, df, loc
+  integer(kind=i_def), dimension(ndf_wth),  intent(in) :: map_wth
+  integer(kind=i_def), dimension(ndf_chi),  intent(in) :: map_chi
+
+  ! Internal variables
+  integer(kind=i_def)         :: k, df, loc
 
   real(kind=r_def)            :: theta_eq, exner
   real(kind=r_def)            :: lat, lon

@@ -248,7 +248,6 @@ contains
     use operator_mod,                 only: operator_type
     use enforce_bc_kernel_mod,        only: enforce_bc_kernel_type
     use finite_element_config_mod,    only: element_order
-    use psykal_lite_mod,              only: invoke_raise_field
 
     implicit none
     type(field_type),                intent(inout) :: helmholtz_rhs
@@ -320,7 +319,6 @@ contains
 !=============================================================================!
   !>@brief Compute the lumped inverse H_B operator
   subroutine compute_inv_hb()
-    use psykal_lite_mod,          only: invoke_raise_field
     use matrix_vector_kernel_mod, only: matrix_vector_kernel_type
     use operator_mod,             only: operator_type
 
@@ -331,7 +329,9 @@ contains
     type(field_type),    pointer :: u_normalisation => null(), &
                                     t_normalisation => null() 
     real(kind=r_def)             :: timestep_term
-    type(field_type)             :: ones    
+    type(field_type)             :: ones   
+    integer(kind=i_def), parameter  :: imone = -1_i_def
+ 
     if ( subroutine_timers ) call timer('helmholtz HB')
 
 
@@ -355,9 +355,8 @@ contains
                  inc_X_times_Y(theta_adv_term, t_normalisation),             &
                  matrix_vector_kernel_type(hb_inv, theta_adv_term, p2theta), & 
                  inc_aX_plus_Y(timestep_term, hb_inv, m2_u),                 &
-                 inc_X_times_Y(hb_inv, u_normalisation) )
-    ! PSyclone does not currently support raising field to an integer power
-    call invoke_raise_field(hb_inv, -1_i_def)
+                 inc_X_times_Y(hb_inv, u_normalisation),                     &
+                 inc_X_powint_n(hb_inv, imone) )
 
     nullify( m2, p2theta, ptheta2, u_normalisation, t_normalisation )
 

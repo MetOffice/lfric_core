@@ -63,15 +63,15 @@ contains
     type(field_proxy_type)    :: detj_w2_p
     type( quadrature_rule_gaussian_type ) :: quadrature_rule
 
-    integer :: nlayers, dim, diff_dim
-    integer :: ndf_chi, ndf_w0
-    integer :: nqp_h, nqp_v
+    integer(kind=i_def) :: nlayers, diff_dim
+    integer(kind=i_def) :: ndf_chi, ndf_w0
+    integer(kind=i_def) :: nqp_h, nqp_v
 
-    integer :: i
+    integer(kind=i_def) :: i
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     ! Create top level mesh collection
@@ -149,20 +149,21 @@ contains
                                    dy = 17.0_r_def, &
                                    dz = 23.0_r_def
 
-    type(mesh_type),pointer   :: mesh => null()
+    type(mesh_type), pointer    :: mesh => null()
 
-    integer :: i, j, k, cell
+    integer(kind=i_def) :: i, j, k, cell
 
-    integer :: nlayers
-    integer :: ndf_chi, undf_chi, ndf_w0, ndf_w2, undf_w2
-    integer :: nqp_h, nqp_v
+    integer(kind=i_def) :: nlayers
+    integer(kind=i_def) :: ndf_chi, undf_chi, ndf_w0, ndf_w2, undf_w2
+    integer(kind=i_def) :: nqp_h, nqp_v
 
-    integer, pointer                 :: map_chi(:)  => null()
-    integer, pointer                 :: map_w2(:)  => null()
+    integer(kind=i_def), pointer :: map_chi(:)  => null()
+    integer(kind=i_def), pointer :: map_w2(:)  => null()
 
-    real(kind=r_def), pointer :: wh(:), wv(:) => null()
-    real(kind=r_def), pointer :: xp(:,:)      => null()
-    real(kind=r_def), pointer :: zp(:)        => null()
+    real(kind=r_def), pointer :: wh(:) => null(), &
+                                 wv(:) => null()
+    real(kind=r_def), pointer :: xp(:,:) => null()
+    real(kind=r_def), pointer :: zp(:)   => null()
 
     mesh => mesh_collection%get_mesh( this%mesh_id )
 
@@ -176,9 +177,9 @@ contains
       do i = 1,3
         map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
         do k = 0,3
-          chi_p(1)%data(map_chi(1) + k) = real(i-1)*dx
-          chi_p(2)%data(map_chi(1) + k) = real(j-1)*dy
-          chi_p(3)%data(map_chi(1) + k) = real(k)  *dz
+          chi_p(1)%data(map_chi(1) + k) = real(i-1,r_def)*dx
+          chi_p(2)%data(map_chi(1) + k) = real(j-1,r_def)*dy
+          chi_p(3)%data(map_chi(1) + k) = real(k,r_def)  *dz
         end do
         cell = cell + 1
       end do

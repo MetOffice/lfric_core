@@ -17,13 +17,13 @@ module weighted_proj_theta2_bd_kernel_mod
 
   use argument_mod,      only : arg_type, func_type, mesh_data_type, &
                                 GH_OPERATOR, GH_FIELD, GH_REAL,      &
-                                GH_READ, GH_INC,                     &
+                                GH_READ, GH_READWRITE,               &
                                 GH_BASIS,                            &
                                 CELLS, GH_QUADRATURE_XYoZ,           &
                                 adjacent_face,                       &
                                 reference_element_normal_to_face,    &
                                 reference_element_out_face_normal
-  use constants_mod,     only : r_def, i_def
+  use constants_mod,     only : r_def, i_def, l_def
   use cross_product_mod, only : cross_product
   use fs_continuity_mod, only : W2, Wtheta
   use kernel_mod,        only : kernel_type
@@ -40,13 +40,13 @@ module weighted_proj_theta2_bd_kernel_mod
   type, public, extends(kernel_type) :: weighted_proj_theta2_bd_kernel_type
     private
     type(arg_type) :: meta_args(3) = (/                            &
-      arg_type(GH_OPERATOR, GH_INC, Wtheta, W2),                   &
-      arg_type(GH_FIELD,   GH_READ, Wtheta),                       &
-      arg_type(GH_REAL,    GH_READ)                                &
+      arg_type(GH_OPERATOR, GH_READWRITE, Wtheta, W2),             &
+      arg_type(GH_FIELD,    GH_READ,      Wtheta),                 &
+      arg_type(GH_REAL,     GH_READ)                               &
         /)
     type(func_type) :: meta_funcs(2) = (/                          &
       func_type(Wtheta, GH_BASIS),                                 &
-      func_type(W2, GH_BASIS)                                      &
+      func_type(W2,     GH_BASIS)                                  &
         /)
     integer :: iterates_over = CELLS
     integer :: gh_shape = GH_QUADRATURE_XYoZ
@@ -72,10 +72,12 @@ module weighted_proj_theta2_bd_kernel_mod
   ! Contained functions/subroutines
   !---------------------------------------------------------------------------
   public weighted_proj_theta2_bd_code
+
 contains
 
   type(weighted_proj_theta2_bd_kernel_type) &
   function weighted_proj_theta2_bd_kernel_constructor() result(self)
+    implicit none
     return
   end function weighted_proj_theta2_bd_kernel_constructor
 
@@ -121,6 +123,7 @@ contains
                                            normal_to_face, out_face_normal )
 
     implicit none
+
     ! Arguments
     integer(kind=i_def), intent(in) :: cell, nlayers, ncell_3d, nqp_h_1d, nqp_v
     integer(kind=i_def), intent(in) :: ndf_wtheta, undf_wtheta, ndf_w2
@@ -135,9 +138,9 @@ contains
     real(kind=r_def), dimension(1,ndf_wtheta,nqp_h_1d,nqp_v,4), intent(in)    :: wtheta_basis_face
     real(kind=r_def), dimension(nqp_v),                         intent(in)    :: wqp_v
 
-    integer(i_def), intent(in) :: adjacent_face(:)
-    real(r_def),    intent(in) :: normal_to_face(:,:)
-    real(r_def),    intent(in) :: out_face_normal(:,:)
+    integer(kind=i_def), intent(in) :: adjacent_face(:)
+    real(kind=r_def),    intent(in) :: normal_to_face(:,:)
+    real(kind=r_def),    intent(in) :: out_face_normal(:,:)
 
     ! Internal variables
     integer(kind=i_def) :: df, k, ik, face, face_next, dft, df2
@@ -147,7 +150,7 @@ contains
     real(kind=r_def) :: theta_at_fquad, theta_next_at_fquad, v_dot_n
     real(kind=r_def) :: flux_term, theta_av
 
-    logical, parameter :: upwind = .false.
+    logical(kind=l_def), parameter :: upwind = .false.
 
     ! Assumes same number of horizontal qp in x and y
     do k = 0, nlayers-1

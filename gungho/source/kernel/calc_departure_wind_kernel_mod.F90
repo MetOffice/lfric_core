@@ -16,12 +16,12 @@
 !>
 module calc_departure_wind_kernel_mod
 
-  use argument_mod,      only : arg_type, func_type,         &
-                                GH_FIELD, GH_READ, GH_WRITE, &
-                                ANY_SPACE_9,                 &
-                                GH_DIFF_BASIS, GH_BASIS,     &
+  use argument_mod,      only : arg_type, func_type,       &
+                                GH_FIELD, GH_READ, GH_INC, &
+                                ANY_SPACE_9,               &
+                                GH_DIFF_BASIS, GH_BASIS,   &
                                 CELLS, GH_EVALUATOR
-  use constants_mod,     only : r_def
+  use constants_mod,     only : r_def, i_def
   use fs_continuity_mod, only : W2
   use kernel_mod,        only : kernel_type
 
@@ -36,12 +36,12 @@ module calc_departure_wind_kernel_mod
   type, public, extends(kernel_type) :: calc_departure_wind_kernel_type
     private
     type(arg_type) :: meta_args(3) = (/              &
-        arg_type(GH_FIELD,    GH_WRITE, W2),         &
+        arg_type(GH_FIELD,    GH_INC,   W2),         &
         arg_type(GH_FIELD,    GH_READ,  W2),         &
         arg_type(GH_FIELD*3,  GH_READ,  ANY_SPACE_9) &
         /)
     type(func_type) :: meta_funcs(2) = (/     &
-        func_type(W2, GH_BASIS),              &
+        func_type(W2,          GH_BASIS),     &
         func_type(ANY_SPACE_9, GH_DIFF_BASIS) &
         /)
     integer :: iterates_over = CELLS
@@ -67,19 +67,20 @@ module calc_departure_wind_kernel_mod
 contains
 
 type(calc_departure_wind_kernel_type) function calc_departure_wind_kernel_constructor() result(self)
+  implicit none
   return
 end function calc_departure_wind_kernel_constructor
 
 !> @param[in] nlayers Number of layers
-!> @param[in] ndf Number of degrees of freedom per cell for the output field
-!> @param[in] undf Number of unique degrees of freedom for the output field
-!> @param[in] map Dofmap for the cell at the base of the column for the output field
-!> @param[in] nodal_basis_u Basis functions evaluated at the nodal points for the W2 field
 !> @param[inout] u_departure_wind Output field containing the departure wind used to calculate departure points
 !> @param[in] u_piola Field for the Piola wind
 !> @param[in] chi1 Coordinates in the first direction
 !> @param[in] chi2 Coordinates in the second direction
 !> @param[in] chi3 Coordinates in the third direction
+!> @param[in] ndf Number of degrees of freedom per cell for the output field
+!> @param[in] undf Number of unique degrees of freedom for the output field
+!> @param[in] map Dofmap for the cell at the base of the column for the output field
+!> @param[in] nodal_basis_u Basis functions evaluated at the nodal points for the W2 field
 !> @param[in] ndf_chi Number of degrees of freedom per cell for the coordinate field
 !> @param[in] undf_chi Number of unique degrees of freedom for the coordinate field
 !> @param[in] map_chi Dofmap for the cell at the base of the column for the coordinate field
@@ -92,22 +93,25 @@ subroutine calc_departure_wind_code(nlayers,                                  &
                                     ndf_chi, undf_chi, map_chi,               &
                                     diff_basis_chi                            &
                                     )
+
   use coordinate_jacobian_mod, only: coordinate_jacobian
+
   implicit none
-  !Arguments
-  integer,                                    intent(in)    :: nlayers
-  integer,                                    intent(in)    :: ndf, undf, &
+
+  ! Arguments
+  integer(kind=i_def),                        intent(in)    :: nlayers
+  integer(kind=i_def),                        intent(in)    :: ndf, undf, &
                                                                ndf_chi, undf_chi
-  integer,          dimension(ndf),           intent(in)    :: map
+  integer(kind=i_def), dimension(ndf),        intent(in)    :: map
   real(kind=r_def), dimension(3,ndf,ndf),     intent(in)    :: nodal_basis_u
-  integer,          dimension(ndf_chi),       intent(in)    :: map_chi
+  integer(kind=i_def), dimension(ndf_chi),    intent(in)    :: map_chi
   real(kind=r_def), dimension(undf),          intent(in)    :: u_piola
   real(kind=r_def), dimension(undf_chi),      intent(in)    :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf),          intent(inout) :: u_departure_wind
   real(kind=r_def), dimension(3,ndf_chi,ndf), intent(in)    :: diff_basis_chi
 
-  !Internal variables
-  integer          :: df, k
+  ! Internal variables
+  integer(kind=i_def) :: df, k
   real(kind=r_def) :: jacobian(3,3,ndf,1), dj(ndf,1)
   real(kind=r_def), dimension(ndf_chi) :: chi1_e, chi2_e, chi3_e
 

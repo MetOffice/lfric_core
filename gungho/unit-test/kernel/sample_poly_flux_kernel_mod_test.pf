@@ -62,7 +62,7 @@ contains
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
-    !Store the MPI communicator for later use
+    ! Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
     ! Create top level mesh collection
@@ -136,13 +136,13 @@ contains
     class(mesh_type),              pointer :: mesh              => null()
     class(reference_element_type), pointer :: reference_element => null()
     real(kind=r_def),              pointer :: nodes_u(:,:)      => null()
-    integer, pointer :: stencil_map(:,:,:) => null()
-    integer, pointer :: map_u(:,:) => null() 
-    integer, pointer :: map_rho(:,:) => null()
+    integer(i_def), pointer :: stencil_map(:,:,:) => null()
+    integer(i_def), pointer :: map_u(:,:) => null() 
+    integer(i_def), pointer :: map_rho(:,:) => null()
 
-    integer          :: ndf_rho, undf_rho, dim_u, &
-                        ndf_u, undf_u
-    integer          :: df_u1, df_u2
+    integer(i_def) :: ndf_rho, undf_rho, dim_u, &
+                      ndf_u, undf_u
+    integer(i_def) :: df_u1, df_u2
 
     real(r_def), allocatable :: out_face_normal(:,:)
 
@@ -180,7 +180,7 @@ contains
     rho_p%data(stencil_map(1,2,cell)) = 1.0_r_def
     rho_p%data(stencil_map(1,4,cell)) = 5.0_r_def
 
-    ! Intitialise kernel
+    ! Initialise kernel
     call sample_poly_flux_init(2, flux_p%vspace%get_nlayers())
     flux_p%data(:) = 0.0_r_def
 

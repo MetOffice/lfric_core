@@ -70,11 +70,13 @@ contains
 
   type(scaled_matrix_vector_kernel_type) &
   function scaled_matrix_vector_kernel_constructor() result(self)
+    implicit none
     return
   end function scaled_matrix_vector_kernel_constructor
 
   type(opt_scaled_matrix_vector_kernel_type) &
   function opt_scaled_matrix_vector_kernel_constructor() result(self)
+    implicit none
     return
   end function opt_scaled_matrix_vector_kernel_constructor
 
@@ -94,17 +96,18 @@ contains
 !! @param[in] ndf2 Number of degrees of freedom per cell for the input field
 !! @param[in] undf2 Unique number of degrees of freedom for the input field 
 !! @param[in] map2 Dofmap for the cell at the base of the column for the input field
-subroutine scaled_matrix_vector_code(cell,        &
-                                     nlayers,     &
-                                     lhs, x,      & 
-                                     ncell_3d,    &
-                                     matrix,      &
-                                     y,           &
-                                     z,           &
+subroutine scaled_matrix_vector_code(cell,              &
+                                     nlayers,           &
+                                     lhs, x,            & 
+                                     ncell_3d,          &
+                                     matrix,            &
+                                     y,                 &
+                                     z,                 &
                                      ndf1, undf1, map1, &
                                      ndf2, undf2, map2)
 
   implicit none 
+
   ! Arguments
   integer(kind=i_def),                   intent(in) :: cell, nlayers, ncell_3d
   integer(kind=i_def),                   intent(in) :: undf1, ndf1
@@ -154,23 +157,24 @@ end subroutine scaled_matrix_vector_code
 !! @param[in] ndf2 Number of degrees of freedom per cell for the input field
 !! @param[in] undf2 Unique number of degrees of freedom for the input field 
 !! @param[in] map2 Dofmap for the cell at the base of the column for the input field
-subroutine opt_scaled_matrix_vector_code(cell,        &
-                                         nlayers,     &
-                                         lhs, x,      & 
-                                         ncell_3d,    &
-                                         matrix,      &
-                                         y,           &
-                                         z,           &
+subroutine opt_scaled_matrix_vector_code(cell,              &
+                                         nlayers,           &
+                                         lhs, x,            & 
+                                         ncell_3d,          &
+                                         matrix,            &
+                                         y,                 &
+                                         z,                 &
                                          ndf1, undf1, map1, &
                                          ndf2, undf2, map2)
 
   implicit none 
+
   ! Arguments
-  integer,                   intent(in) :: cell, nlayers, ncell_3d
-  integer,                   intent(in) :: undf1, ndf1
-  integer,                   intent(in) :: undf2, ndf2
-  integer, dimension(ndf1),  intent(in) :: map1
-  integer, dimension(ndf2),  intent(in) :: map2
+  integer(kind=i_def),                   intent(in) :: cell, nlayers, ncell_3d
+  integer(kind=i_def),                   intent(in) :: undf1, ndf1
+  integer(kind=i_def),                   intent(in) :: undf2, ndf2
+  integer(kind=i_def), dimension(ndf1),  intent(in) :: map1
+  integer(kind=i_def), dimension(ndf2),  intent(in) :: map2
   real(kind=r_def), dimension(undf2),        intent(in)    :: x
   real(kind=r_def), dimension(undf1),        intent(inout) :: lhs
   real(kind=r_def), dimension(6,1,ncell_3d), intent(in)    :: matrix
@@ -178,7 +182,7 @@ subroutine opt_scaled_matrix_vector_code(cell,        &
   real(kind=r_def), dimension(undf1),        intent(in)    :: z
 
   ! Internal variables
-  integer :: k, ik, df
+  integer(kind=i_def) :: k, ik, df
 
   ! Hard wired optimisation for desired configuration
   do df = 1,6
