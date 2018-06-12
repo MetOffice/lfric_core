@@ -7,5 +7,5 @@
 ##############################################################################
 
 from exception  import TestFailed
-from test       import Test, MpiTest, EsmfTest
+from test       import Test, MpiTest, LFRicLoggingTest
 from testengine import TestEngine

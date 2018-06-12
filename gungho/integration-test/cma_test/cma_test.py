@@ -13,9 +13,9 @@ import os
 import re
 import sys
 
-from testframework import EsmfTest, TestEngine, TestFailed
+from testframework import LFRicLoggingTest, TestEngine, TestFailed
 
-class CMATest(EsmfTest):
+class CMATest(LFRicLoggingTest):
   __metaclass__ = ABCMeta
 
   def __init__(self,flag):
@@ -34,13 +34,13 @@ class CMATest(EsmfTest):
       message = 'Test program failed with exit code: {code}'
       raise TestFailed( message.format( code=return_code ),
                         stdout=out, stderr=err,
-                        log=self.getEsmfLog() )
+                        log=self.getLFRicLoggingLog() )
 
-    if not self.test_passed( out ): # "out" becomes self.getEsmfLog() when PE>1
+    if not self.test_passed( out ): # "out" becomes self.getLFRicLoggingLog() when PE>1
       message = 'Test {} failed'
       raise TestFailed( message.format( self._flag ),
                         stdout=out, stderr=err,
-                        log=self.getEsmfLog() )
+                        log=self.getLFRicLoggingLog() )
 
     return 'CMA test : '+self._flag
 

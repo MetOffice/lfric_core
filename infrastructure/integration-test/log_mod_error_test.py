@@ -15,7 +15,7 @@ from __future__ import print_function
 import datetime
 import re
 
-from testframework import EsmfTest, MpiTest, TestEngine, TestFailed
+from testframework import LFRicLoggingTest, MpiTest, TestEngine, TestFailed
 
 ##############################################################################
 class log_mod_error_serial_test( MpiTest ):
@@ -69,7 +69,7 @@ class log_mod_error_serial_test( MpiTest ):
     return message.format( code=returncode )
 
 ##############################################################################
-class log_mod_error_parallel_test( EsmfTest ):
+class log_mod_error_parallel_test( LFRicLoggingTest ):
   '''
   Tests that logging an error terminates execution when run in parallel.
   '''
@@ -92,7 +92,7 @@ class log_mod_error_parallel_test( EsmfTest ):
       raise TestFailed( message.format( out=out, err=err ) )
 
     # We remove the first line as it will be a spin-up message.
-    petLog = self.getEsmfLog()
+    petLog = self.getLFRicLoggingLog()
     petLog = '\n'.join( petLog.splitlines()[1:] )
 
     match = self._linePattern.match( petLog )

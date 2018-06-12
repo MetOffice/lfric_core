@@ -21,10 +21,12 @@ program summarise_ugrid
   use ncdf_quad_mod,   only : ncdf_quad_type
   use ugrid_2d_mod,    only : ugrid_2d_type
   use ugrid_file_mod,  only : ugrid_file_type
-  use log_mod,         only : log_event, log_scratch_space, &
+  use log_mod,         only : initialise_logging, finalise_logging, &
+                              log_event, log_scratch_space,&
                               LOG_LEVEL_ERROR, LOG_LEVEL_INFO
+  use mpi_mod,         only : initialise_comm, store_comm, finalise_comm, &
+                              get_comm_size, get_comm_rank
 
-  use ESMF
 
   implicit none
 
@@ -48,15 +50,14 @@ program summarise_ugrid
   integer(i_def) :: nodes_per_face, edges_per_face
   integer(i_def) :: nodes_per_edge, max_faces_per_node
 
-  type(ESMF_VM)  :: vm
-  integer        :: rc
+  integer(i_def) :: comm, total_ranks, local_rank
 
-  ! Start up ESMF
-  CALL ESMF_Initialize( vm=vm, defaultlogfilename="summarise.Log", &
-                        logkindflag=ESMF_LOGKIND_MULTI, rc=rc )
-  if (rc /= ESMF_SUCCESS) call log_event( 'Failed to initialise ESMF.', &
-                                          LOG_LEVEL_ERROR )
-
+  ! Start up
+  call initialise_comm(comm)
+  call store_comm(comm)
+  total_ranks = get_comm_size()
+  local_rank  = get_comm_rank()
+  call initialise_logging(local_rank, total_ranks, "summarise")
 
   ! Get filename from command line
   call get_initial_filename( filename, 'UGRID mesh file' )
@@ -164,5 +165,8 @@ program summarise_ugrid
       LOG_LEVEL_INFO )
 
   deallocate( mesh_names )
+
+  ! Finalise the logging system
+  call finalise_logging()
 
 end program summarise_ugrid

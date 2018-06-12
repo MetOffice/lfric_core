@@ -8,38 +8,31 @@
 !
 program log_mod_error_test
 
-  use ESMF,            only : ESMF_Initialize, ESMF_Finalize
   use iso_fortran_env, only : error_unit
-  use mpi_mod,         only : store_comm, get_comm_size
-  use log_mod,         only : log_event, log_set_parallel_logging, &
+  use log_mod,         only : initialise_logging, finalise_logging, log_event, &
                               LOG_LEVEL_ERROR
-  use mpi,             only : MPI_COMM_WORLD
+  use mpi_mod,         only : initialise_comm, store_comm, &
+                              finalise_comm, &
+                              get_comm_size, get_comm_rank
 
-  integer :: condition
+  integer :: total_ranks, local_rank, comm
 
-  ! ESMF is needed even for a serial run as it is used to determine that it
-  ! *is* a serial run.
-  !
-  ! Since the logging module is being tested it is important not to use it to
-  ! handle a failure in ESMF. Instead we do it the old fashioned way.
-  call ESMF_Initialize( rc=condition )
-  if (condition /=0 )then
-    write( error_unit, '("Failed to initialise ESMF: ", I0)') condition
-    stop 1
-  end if
-  call store_comm(MPI_COMM_WORLD)
-  if(get_comm_size() > 1) call log_set_parallel_logging(.true.)
+  ! Initialse mpi and create the default communicator: mpi_comm_world
+  call initialise_comm(comm)
+  ! Store the communicator for later use
+  call store_comm(comm)
+  total_ranks = get_comm_size()
+  local_rank  = get_comm_rank()
+  call initialise_logging(local_rank, total_ranks, 'log_mod_error_test')
 
   ! Everything else is here purely to support the testing of this line:
   !
   call log_event( 'An error was logged.', LOG_LEVEL_ERROR )
 
-  ! Since the logging module is being tested it is important not to use it to
-  ! handle a failure in ESMF. Instead we do it the old fashioned way.
-  call ESMF_Finalize( rc=condition )
-  if (condition /=0 )then
-    write( error_unit, '("Failed to finalise ESMF: ", I0)') condition
-    stop 2
-  end if
+  ! Finalise mpi and release the communicator
+  call finalise_comm()
+
+  ! Finalise the logging system
+  call finalise_logging()
 
 end program log_mod_error_test

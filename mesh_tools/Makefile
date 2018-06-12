@@ -32,8 +32,8 @@ PROJECT_NAME = mesh_tools
 
 PROFILE ?= fast-debug
 
-export IGNORE_DEPENDENCIES = netcdf MPI ESMF yaxt pfunit_mod planet_constants_mod xios mod_wait
-export EXTERNAL_DYNAMIC_LIBRARIES = esmf netcdff netcdf hdf5 yaxt yaxt_c
+export IGNORE_DEPENDENCIES = netcdf MPI yaxt pfunit_mod planet_constants_mod xios mod_wait
+export EXTERNAL_DYNAMIC_LIBRARIES = netcdff netcdf hdf5 yaxt yaxt_c
 
 PROJECT_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 ROOT_DIR    ?= ../
@@ -104,10 +104,6 @@ unit-tests: export BIN_DIR     ?= $(PROJECT_DIR)/test
 unit-tests: export PROGRAMS     = mesh_tools_unit_tests
 unit-tests: export EXTERNAL_STATIC_LIBRARIES += pfunit
 unit-tests: export FFLAGS      += $(FFLAGS_DEBUG) $(FFLAGS_NO_OPTIMISATION) $(FFLAGS_INIT)
-unit-tests: export PRE_PROCESS_MACROS = \
-                                PFUNIT_EXTRA_USAGE=mesh_tools_suite_fixture_mod \
-                                PFUNIT_EXTRA_INITIALIZE=set_up_suite \
-                                PFUNIT_EXTRA_FINALIZE=tear_down_suite
 unit-tests: run-unit-tests
 	$(Q)echo > /dev/null
 

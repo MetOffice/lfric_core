@@ -296,15 +296,15 @@ doesn't work. It is preferred as it is the standard but if you are unable to
 use it simple set the ``MPIEXEC_BROKEN`` environment variable and ``mpirun``
 will be used instead.
 
-EsmfTest
+LFRicLoggingTest
 --------
 
-This class offers further support for tests linked to the ESMF library. When
-run in parallel such tests will tend to send their output to an ESMF log file
+This class offers further support for tests linked to LFRic Logging. When
+run in parallel such tests will tend to send their output to a PET log file
 rather than standard out/error. The constructor of this class takes the base
 name for these log files and makes their contents available after execution.
 
-Just call ``getEsmfLog()`` to retrieve the log for a particular process. Be
+Just call ``getLFRicLoggingLog()`` to retrieve the log for a particular process. Be
 aware that this class stores the log files in memory so don't let them get
 too big. This should not be a problem as tests should not be generating that
 much output.

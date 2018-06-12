@@ -23,11 +23,13 @@ program biperiodic_mesh_generator
 
   use cli_mod,           only: get_initial_filename
   use constants_mod,     only: i_def, str_def, str_long, l_def, imdi
-  use ESMF
-  use mpi_mod,           only: initialise_comm, store_comm, finalise_comm
+  use mpi_mod,           only: initialise_comm, store_comm, finalise_comm, &
+                               get_comm_size, get_comm_rank
   use genbiperiodic_mod, only: genbiperiodic_type
   use io_utility_mod,    only: open_file, close_file
-  use log_mod,           only: log_scratch_space, log_event, log_set_level, &
+  use log_mod,           only: initialise_logging, finalise_logging, &
+                               log_event, log_set_level, &
+                               log_scratch_space, &
                                LOG_LEVEL_INFO, LOG_LEVEL_ERROR
   use ncdf_quad_mod,     only: ncdf_quad_type
   use remove_duplicates_mod, &
@@ -37,8 +39,7 @@ program biperiodic_mesh_generator
 
   implicit none
 
-  type(ESMF_VM)  :: vm
-  integer(i_def) :: comm, rc
+  integer(i_def) :: comm, total_ranks, local_rank
 
   character(:), allocatable :: filename
   integer(i_def)            :: namelist_unit
@@ -82,16 +83,13 @@ program biperiodic_mesh_generator
   call log_set_level(LOG_LEVEL_INFO)
 
   !===================================================================
-  ! 2.0 Start up ESMF
+  ! 2.0 Start up
   !===================================================================
   call initialise_comm(comm)
   call store_comm(comm)
-  call ESMF_Initialize( vm=vm, rc=rc,                    &
-                        logkindflag=ESMF_LOGKIND_SINGLE, &
-                        defaultlogfilename="biperiodic.log", &
-                        mpiCommunicator=comm )
-  if (rc /= ESMF_SUCCESS) call log_event( 'Failed to initialise ESMF.', &
-                                          LOG_LEVEL_ERROR )
+  total_ranks = get_comm_size()
+  local_rank  = get_comm_rank()
+  call initialise_logging(local_rank, total_ranks, "biperiodic")
 
   !===================================================================
   ! 3.0 Read in the control namelists from file
@@ -327,9 +325,11 @@ program biperiodic_mesh_generator
 
   end do
 
-  call ESMF_Finalize(endflag=ESMF_END_KEEPMPI,rc=rc)
   call finalise_comm()
 
   if ( allocated( bpgen ) ) deallocate (bpgen)
+
+  ! Finalise the logging system
+  call finalise_logging()
 
 end program biperiodic_mesh_generator

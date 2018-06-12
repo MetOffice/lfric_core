@@ -6,29 +6,24 @@
 !> @brief A simple logging facility.
 !>
 !> If the code is being run serially, the logging information will be written
-!> to the terminal. For parallel execution, the ESMF logging functionality will
-!> be used as this can cope with parallel logging.
+!> to the terminal. For parallel execution, the logging information will
+!> be sent to files - one for each MPI task.
 !>
-!> @todo  At some point the serial version of Dynamo should also log using the
-!>        ESMF logging functionality, but for now it is easier for developers
-!>        if the code logs to stdout.
+!> @todo  At some point the serial version of Dynamo should also log to a file,
+!>        but for now it is easier for developers if the code logs to stdout.
 
-! All calls to the ESMF logging routines are encapsulated in here in case we ever
-! wish to change the logging method
 
 module log_mod
 
   use constants_mod, only : str_long, str_max_filename
-  use ESMF
   use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
 
   implicit none
 
   private
-  public log_set_parallel_logging, &
+  public initialise_logging, finalise_logging, &
          log_set_info_stream, log_set_alert_stream, &
          log_set_level, log_level, log_event
-         
 
   !> Named logging level.
   !>
@@ -58,22 +53,11 @@ module log_mod
   integer, private :: info_unit     = output_unit
   integer, private :: alert_unit    = error_unit
 
-  logical, private :: is_parallel     = .false.
+  integer, private :: log_unit_number = 10
+  logical, private :: is_parallel = .false.
+  character(len=:), allocatable :: petno
 
 contains
-
-  !> Switches the logger between parallel and serial mode
-  !> @param is_parallel_logging Whether the logger should be
-  !>                            parallel (.true.) or serial (.false.)
-  subroutine log_set_parallel_logging(is_parallel_logging)
-
-    implicit none
-
-    logical, intent(in) :: is_parallel_logging
-
-    is_parallel = is_parallel_logging
-
-  end subroutine log_set_parallel_logging
 
   !> Set where information goes.
   !>
@@ -142,10 +126,55 @@ contains
 
   end function
 
+
+  !> Initialise logging functionality by opening the log files
+  !> @param this_rank The number of the local rank
+  !> @param total_ranks The total number pf ranks in the job
+  !> @param app_name The name of the application. This will form part of the
+  !>                 log file name(s)
+  subroutine initialise_logging(this_rank, total_ranks, app_name)
+    implicit none
+    integer, intent(in) :: this_rank, total_ranks
+    character(len=*), intent(in) :: app_name
+    integer :: ios
+    integer :: ilen
+    character(len=:), allocatable :: logfilename
+    character(len=12) :: fmt
+
+    if (total_ranks > 1 ) then
+      is_parallel = .true.
+      ilen=int(log10(real(total_ranks-1)))+1
+      write(fmt,'("(i",i0,".",i0,")")')ilen, ilen
+      allocate(character(len=ilen) :: petno)
+      write(petno,fmt)this_rank
+      allocate(character(len=ilen+len_trim(app_name)+8) :: logfilename)
+      write(logfilename,"(a,a,a,a,a)")"PET",petno,".",trim(app_name),".Log"
+      open(unit=log_unit_number, file=logfilename, status='unknown', iostat=ios)
+      if ( ios /= 0 )then
+        write(error_unit,"('Cannot open logging file. iostat = ',i0)")ios
+        stop EXIT_CODE_ON_ERROR
+      end if
+      call log_event('LFRic Logging System Version 1.0',LOG_LEVEL_INFO)
+    else
+      is_parallel = .false.
+    end if
+
+  end subroutine initialise_logging
+
+  !> Finalise logging functionality by closing the log files
+  subroutine finalise_logging()
+    integer :: ios
+    close(unit=log_unit_number,iostat=ios)
+    if ( ios /= 0 )then
+      write(error_unit,"('Cannot close logging file. iostat = ',i0)")ios
+      stop EXIT_CODE_ON_ERROR
+    end if
+  end subroutine finalise_logging
+
   !> Log an event
   !>
   !> If the code is running on multiple MPI ranks, the event description will
-  !> be sent to the ESMF log. For serial exucutions, the event description is
+  !> be sent to a log file. For serial executions, the event description is
   !> sent to the terminal along with timestamp and level information. 
   !> For the most serious events (a severity level equal to
   !> or greater than LOG_LEVEL_ERROR), execution of the code will be aborted.
@@ -162,10 +191,6 @@ contains
     character (*), intent( in ) :: message
     integer,       intent( in ) :: level
 
-    type(ESMF_LogMsg_Flag) :: log_flag
-    integer :: rc
-    integer :: total_ranks
-
     integer        :: unit
     character (5)  :: tag
     character (8)  :: date_string
@@ -178,41 +203,30 @@ contains
         case ( : LOG_LEVEL_DEBUG - 1)
           unit = info_unit
           tag  = 'TRACE'
-          log_flag=ESMF_LOGMSG_TRACE
         case (LOG_LEVEL_DEBUG : LOG_LEVEL_INFO - 1 )
           unit = info_unit
           tag  = 'DEBUG'
-          log_flag=ESMF_LOGMSG_TRACE
         case ( LOG_LEVEL_INFO : LOG_LEVEL_WARNING - 1 )
           unit = info_unit
           tag  = 'INFO '
-          log_flag=ESMF_LOGMSG_INFO
         case ( LOG_LEVEL_WARNING : LOG_LEVEL_ERROR - 1)
           unit = alert_unit
           tag  = 'WARN '
-          log_flag=ESMF_LOGMSG_WARNING
         case ( LOG_LEVEL_ERROR : )
           unit = alert_unit
           tag  = 'ERROR'
-          log_flag=ESMF_LOGMSG_ERROR
       end select
 
+      call date_and_time( date=date_string, time=time_string, zone=zone_string)
 
       if(is_parallel)then
-        call ESMF_LogWrite(trim( message ), log_flag, rc=rc)
+        unit = log_unit_number
+        write (unit, '(A," ",A," ",A,"            PET",A," ",A)') &
+                   date_string, time_string, tag, petno, trim( message )
       else
-        call date_and_time( date=date_string, time=time_string, zone=zone_string)
-
-        write (unit, '(A,A,A,A,A,A,A)') date_string, time_string, zone_string, &
-                                      ':', tag, ': ', trim( message )
+        write (unit, '(A,A,A,":",A,": ",A)') &
+                   date_string, time_string, zone_string, tag, trim( message )
       end if
-
-!> @todo  The ESMF logging functionality should automatically stop the code
-!>        if the log level is beyond the set threshold, so this code should
-!>        be superfluous. However, that functionality in ESMF is not working
-!>        correctly. The bug has been reported to the ESMF developers and 
-!>        fixed, but we are waiting for it to make its way through to the
-!>        released version - so this code will have to remain for now.
 
       ! If the severity level of the event is serious enough, stop the code.
       if ( level >= LOG_LEVEL_ERROR )then

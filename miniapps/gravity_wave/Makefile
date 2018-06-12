@@ -9,8 +9,8 @@ export PROJECT_DIR_NAME = gravity_wave
 
 PROFILE ?= fast-debug
 
-export IGNORE_DEPENDENCIES = netcdf MPI ESMF yaxt pfunit_mod xios mod_wait
-export EXTERNAL_DYNAMIC_LIBRARIES = esmf yaxt yaxt_c netcdff netcdf hdf5 \
+export IGNORE_DEPENDENCIES = netcdf MPI yaxt pfunit_mod xios mod_wait
+export EXTERNAL_DYNAMIC_LIBRARIES = yaxt yaxt_c netcdff netcdf hdf5 \
                                     $(CXX_RUNTIME_LIBRARY)
 export EXTERNAL_STATIC_LIBRARIES = xios
 
@@ -199,10 +199,6 @@ unit-tests: export PROGRAMS     = $(PROJECT_NAME)_unit_tests
 unit-tests: export IGNORE_DEPENDENCIES       += pfunit_mod
 unit-tests: export EXTERNAL_STATIC_LIBRARIES += pfunit
 unit-tests: export FFLAGS      += $(FFLAGS_DEBUG) $(FFLAGS_NO_OPTIMISATION) $(FFLAGS_INIT)
-unit-tests: export PRE_PROCESS_MACROS = \
-                                  PFUNIT_EXTRA_USAGE=project_suite_fixture_mod \
-                                  PFUNIT_EXTRA_INITIALIZE=set_up_suite \
-                                  PFUNIT_EXTRA_FINALIZE=tear_down_suite
 unit-tests:run-unit-tests
 	$(Q)echo > /dev/null
 

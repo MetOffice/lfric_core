@@ -104,8 +104,8 @@ contains
 
     !> @todo When we can run unit tests in more than one parallel configuration
     !>       (we only run on one process at the moment), we need to add tests
-    !>       for logging using ESMF (which will only happen if we are running
-    !>       more than 1 process)
+    !>       for logging in parallel as it is slightly different to the serial
+    !>       logger
 
     open( INFO_UNIT, status='scratch', action='readwrite', &
           iostat=condition )

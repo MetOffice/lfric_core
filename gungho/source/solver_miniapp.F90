@@ -17,7 +17,6 @@ program solver_miniapp
   use init_mesh_mod,                  only : init_mesh
   use init_fem_mod,                   only : init_fem  
   use init_solver_miniapp_mod,        only : init_solver_miniapp
-  use ESMF
   use yaxt,                           only : xt_initialize, xt_finalize
   use mpi_mod,                        only : initialise_comm, store_comm, &
                                              finalise_comm, &
@@ -30,7 +29,8 @@ program solver_miniapp
   use log_mod,                        only : log_event,         &
                                              log_set_level,     &
                                              log_scratch_space, &
-                                             log_set_parallel_logging, &
+                                             initialise_logging, &
+                                             finalise_logging, &
                                              LOG_LEVEL_ERROR,   &
                                              LOG_LEVEL_INFO
   use output_config_mod,              only : write_nodal_output
@@ -41,8 +41,6 @@ program solver_miniapp
 
   character(:), allocatable :: filename
 
-  type(ESMF_VM)      :: vm
-  integer(i_def)     :: rc
   integer(i_def)     :: total_ranks, local_rank
   integer(i_def)     :: comm = -999
 
@@ -65,20 +63,12 @@ program solver_miniapp
   ! Initialise YAXT
   call xt_initialize(comm)
 
-  ! Initialise ESMF 
-  ! and get the rank information from the virtual machine
-  call ESMF_Initialize(vm=vm, &
-                       defaultlogfilename="solver_miniapp.Log", &
-                       logkindflag=ESMF_LOGKIND_MULTI, &
-                       rc=rc)
-  if(get_comm_size() > 1) call log_set_parallel_logging(.true.)
-
-
-  if (rc /= ESMF_SUCCESS) call log_event( 'Failed to initialise ESMF.', LOG_LEVEL_ERROR )
-
   total_ranks = get_comm_size()
   local_rank  = get_comm_rank()
 
+  call initialise_logging(local_rank, total_ranks, 'solver_miniapp')
+
+    ! First call to log event must occur after the call to initialise_logging
   call log_event( 'solver miniapp running...', LOG_LEVEL_INFO )
 
   call get_initial_filename( filename )
@@ -134,14 +124,14 @@ program solver_miniapp
   ! Driver layer finalise
   !-----------------------------------------------------------------------------
 
-  ! Finalise ESMF
-  call ESMF_Finalize(endflag=ESMF_END_KEEPMPI,rc=rc)
-
   ! Finalise YAXT
   call xt_finalize()
 
   ! Finalise MPI communications
   call finalise_comm()
+
+  ! Finalise the logging system
+  call finalise_logging()
 
 end program solver_miniapp
 

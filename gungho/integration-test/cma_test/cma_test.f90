@@ -30,12 +30,6 @@ program cma_test
                                              test_cma_diag_DhMDhT
   use constants_mod,                  only : i_def, r_def, str_max_filename, pi
   use derived_config_mod,             only : set_derived_config
-  use ESMF,                           only : ESMF_Initialize,    &
-                                             ESMF_Finalize,      &
-                                             ESMF_LOGKIND_MULTI, &
-                                             ESMF_SUCCESS,       &
-                                             ESMF_VM,            &
-                                             ESMF_END_KEEPMPI
   use yaxt,                           only : xt_initialize, xt_finalize
   use mpi_mod,                        only : initialise_comm, store_comm, &
                                              finalise_comm, &
@@ -51,7 +45,8 @@ program cma_test
   use init_mesh_mod,                  only : init_mesh
   use log_mod,                        only : log_event,         &
                                              log_scratch_space, &
-                                             log_set_parallel_logging, &
+                                             initialise_logging, &
+                                             finalise_logging, &
                                              LOG_LEVEL_ERROR,   &
                                              LOG_LEVEL_INFO
   use mesh_mod,                       only : mesh_type
@@ -62,12 +57,6 @@ program cma_test
 
   implicit none
 
-  ! ESMF virtual machine
-  type(ESMF_VM)       :: vm
-  ! Error code
-  integer(kind=i_def) :: rc
-  ! Number of processes and local rank
-  integer(kind=i_def) :: petCount, localPET
   ! MPI communicator
   integer(kind=i_def) :: comm
   ! Mesg index
@@ -130,21 +119,10 @@ program cma_test
   ! Initialise YAXT
   call xt_initialize(comm)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Initialise ESMF and get the rank information from the virtual machine
-  !
-  CALL ESMF_Initialize(vm=vm, defaultlogfilename="cma_test.Log", &
-                       logkindflag=ESMF_LOGKIND_MULTI, &
-                       mpiCommunicator=comm, &
-                       rc=rc)
-  if(get_comm_size() > 1) call log_set_parallel_logging(.true.)
-  if (rc /= ESMF_SUCCESS) then
-    call log_event( 'Failed to initialise ESMF.', &
-                    LOG_LEVEL_ERROR )
-  end if
-
   total_ranks = get_comm_size()
   local_rank  = get_comm_rank()
+
+  call initialise_logging(local_rank, total_ranks, 'cma_test')
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
@@ -313,12 +291,14 @@ program cma_test
   ! Finalise and close down
   !
   call log_event( ' CMA functional testing completed ...', LOG_LEVEL_INFO )
-  call ESMF_Finalize(endflag=ESMF_END_KEEPMPI,rc=rc)
 
   ! Finalise YAXT
   call xt_finalize()
 
   ! Finalise MPI communications
   call finalise_comm()
+
+  ! Finalise the logging system
+  call finalise_logging()
 
 end program cma_test

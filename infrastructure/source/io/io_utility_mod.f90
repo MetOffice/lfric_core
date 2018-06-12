@@ -16,7 +16,8 @@ module io_utility_mod
   private
   public :: claim_io_unit, release_io_unit, open_file, close_file, read_line
 
-  integer(i_native), save :: next_unit = 10
+  ! Unit 10 is used for logging - so start giving out unit numbers from 11
+  integer(i_native), save :: next_unit = 11
 
 contains
 

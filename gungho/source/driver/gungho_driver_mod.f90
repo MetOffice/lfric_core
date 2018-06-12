@@ -20,7 +20,6 @@ module gungho_driver_mod
   use diagnostic_alg_mod,         only : divergence_diagnostic_alg, &
                                          density_diagnostic_alg,    &
                                          hydbal_diagnostic_alg
-  use ESMF
   use yaxt,                       only : xt_initialize, xt_finalize
   use field_mod,                  only : field_type
   use formulation_config_mod,     only : transport_only, &
@@ -44,7 +43,8 @@ module gungho_driver_mod
   use log_mod,                    only : log_event,         &
                                          log_set_level,     &
                                          log_scratch_space, &
-                                         log_set_parallel_logging, &
+                                         initialise_logging, &
+                                         finalise_logging, &
                                          LOG_LEVEL_ERROR,   &
                                          LOG_LEVEL_INFO,    &
                                          LOG_LEVEL_DEBUG,   &
@@ -133,9 +133,6 @@ contains
     character(len=*), parameter :: xios_id   = "lfric_client"
     character(len=*), parameter :: xios_ctx  = "gungho_atm"
 
-    type(ESMF_VM) :: vm
-
-    integer(i_def) :: rc
     integer(i_def) :: total_ranks, local_rank
     integer(i_def) :: comm = -999
     integer(i_def) :: timestep, ts_init, dtime
@@ -153,23 +150,12 @@ contains
     ! Initialise YAXT
     call xt_initialize(comm)
 
-    ! Initialise ESMF using mpi communicator initialised by XIOS
-    ! and get the rank information from the virtual machine
-    call ESMF_Initialize(vm=vm, &
-                        defaultlogfilename="gungho.Log", &
-                        logkindflag=ESMF_LOGKIND_MULTI, &
-                        mpiCommunicator=comm, &
-                        rc=rc)
-    if(get_comm_size() > 1) call log_set_parallel_logging(.true.)
-
-    if (rc /= ESMF_SUCCESS) call log_event( 'Failed to initialise ESMF.', &
-                                            LOG_LEVEL_ERROR )
-
     total_ranks = get_comm_size()
     local_rank  = get_comm_rank()
 
-    ! Currently log_event can only use ESMF so it cannot be used before ESMF
-    ! is initialised.
+    call initialise_logging(local_rank, total_ranks, 'gungho')
+
+    ! First call to log event must occur after the call to initialise_logging
     call log_event( 'gungho running...', LOG_LEVEL_INFO )
 
     call load_configuration( filename )
@@ -573,14 +559,14 @@ contains
     ! Finalise XIOS
     call xios_finalize()
 
-    ! Finalise ESMF
-    call ESMF_Finalize(endflag=ESMF_END_KEEPMPI,rc=rc)
-
     ! Finalise YAXT
     call xt_finalize()
 
     ! Finalise mpi and release the communicator
     call finalise_comm()
+
+    ! Finalise the logging system
+    call finalise_logging()
 
   end subroutine finalise
 

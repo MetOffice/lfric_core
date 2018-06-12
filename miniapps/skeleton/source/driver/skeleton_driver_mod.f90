@@ -15,7 +15,6 @@ module skeleton_driver_mod
   use init_mesh_mod,                  only : init_mesh
   use init_fem_mod,                   only : init_fem
   use init_skeleton_mod,              only : init_skeleton
-  use ESMF
   use yaxt,                           only : xt_initialize, xt_finalize
   use global_mesh_collection_mod,     only : global_mesh_collection, &
                                              global_mesh_collection_type
@@ -25,7 +24,8 @@ module skeleton_driver_mod
   use log_mod,                        only : log_event,         &
                                              log_set_level,     &
                                              log_scratch_space, &
-                                             log_set_parallel_logging, &
+                                             initialise_logging, &
+                                             finalise_logging, &
                                              LOG_LEVEL_ERROR,   &
                                              LOG_LEVEL_INFO
   use output_config_mod,              only : write_nodal_output, &
@@ -72,11 +72,7 @@ contains
     character(len=*), parameter   :: xios_id   = "lfric_client"
     character(len=*), parameter   :: xios_ctx  = "skeleton"
 
-    type(ESMF_VM) :: vm
-
-    integer(i_def) :: rc
     integer(i_def) :: total_ranks, local_rank
-    integer(i_def) :: petCount, localPET, ierr
     integer(i_def) :: comm = -999
     integer(i_def) :: dtime
 
@@ -93,17 +89,6 @@ contains
     ! Initialise YAXT
     call xt_initialize(comm)
 
-    ! Initialise ESMF using mpi communicator initialised by XIOS
-    call ESMF_Initialize(vm=vm, &
-                        defaultlogfilename="skeleton.Log", &
-                        logkindflag=ESMF_LOGKIND_MULTI, &
-                        mpiCommunicator=comm, &
-                        rc=rc)
-    if(get_comm_size() > 1) call log_set_parallel_logging(.true.)
-
-    if (rc /= ESMF_SUCCESS) call log_event( 'Failed to initialise ESMF.', &
-                                            LOG_LEVEL_ERROR )
-
     !Store the MPI communicator for later use
     call store_comm(comm)
 
@@ -111,9 +96,8 @@ contains
     total_ranks = get_comm_size()
     local_rank  = get_comm_rank()
 
+    call initialise_logging(local_rank, total_ranks, "skeleton")
 
-    ! Currently log_event can only use ESMF so it cannot be used before ESMF
-    ! is initialised.
     call log_event( 'skeleton: Running miniapp ...', LOG_LEVEL_INFO )
 
     call load_configuration( filename )
@@ -228,14 +212,14 @@ contains
     ! Finalise XIOS
     call xios_finalize()
 
-    ! Finalise ESMF
-    call ESMF_Finalize(endflag=ESMF_END_KEEPMPI,rc=rc)
-
     ! Finalise YAXT
     call xt_finalize()
 
     ! Finalise mpi and release the communicator
     call finalise_comm()
+
+    ! Finalise the logging system
+    call finalise_logging()
 
   end subroutine finalise
 

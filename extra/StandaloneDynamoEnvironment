@@ -239,58 +239,6 @@ fi
   $(compile_install $build_dir) || exit 1
 fi
 
-# Compile and install the ESMF library
-#
-if [ ! -e $INSTALLDIR/lib/libO/Linux.gfortran.$BITNESS.mpiuni.default/libesmf.so ] ; then
-  echo Installing ESMF
-  mkdir -p $WORKDIR
-  if [ ! -r $WORKDIR/esmf_6_3_0rp1_src.tar.gz ] ; then
-    echo Getting tarball
-    wget -P $WORKDIR http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_7_0_0/esmf_7_0_0_src.tar.gz
-  fi
-
-  if [ ! -d $WORKDIR/esmf ] ; then
-    echo Extracting tarball
-    tar -C $WORKDIR -xf $WORKDIR/esmf_6_3_0rp1_src.tar.gz
-    echo Patching sources
-    patch -d $WORKDIR/esmf/build_config/Linux.gfortran.default <<EOP
---- build_rules.mk.orig	2015-03-05 19:39:54.816919176 +0000
-+++ build_rules.mk	2015-03-05 19:40:15.559276033 +0000
-@@ -6,8 +6,9 @@
- ############################################################
- # Default compiler setting.
- #
--ESMF_F90DEFAULT         = gfortran
--ESMF_CXXDEFAULT         = g++
-+ESMF_F90DEFAULT         = gfortran-4.9
-+ESMF_CXXDEFAULT         = g++-4.9
-+ESMF_CPPDEFAULT         = gcc-4.9 -E -P -x c
- 
- ############################################################
- # Default MPI setting.
-EOP
-  fi
-
-  echo Building ESMF | tee -a $LOGFILE
-  env ESMF_DIR=$WORKDIR/esmf \
-      ESMF_INSTALL_PREFIX=$INSTALLDIR \
-      ESMF_COMPILER=gfortran \
-      ESMF_COMMS=mpich2 \
-      ESMF_NETCDF=split \
-      ESMF_NETCDF_INCLUDE_DIR=$INSTALLDIR/include \
-      ESMF_NETCDF_LIBPATH=$INSTALLDIR/lib \
-      make -C $WORKDIR/esmf 2>>$LOGFILE 1>>$LOGFILE || exit 1
-  echo Testing ESMF | tee -a $LOGFILE
-  env ESMF_DIR=$WORKDIR/esmf \
-      ESMF_INSTALL_PREFIX=$INSTALLDIR \
-      ESMF_COMPILER=gfortran \
-      ESMF_COMMS=mpich2 \
-      ESMF_NETCDF=split \
-      ESMF_NETCDF_INCLUDE_DIR=$INSTALLDIR/include \
-      ESMF_NETCDF_LIBPATH=$INSTALLDIR/lib \
-      make -C $WORKDIR/esmf check install 2>>$LOGFILE 1>>$LOGFILE || exit 1
-fi
-
 echo Done
 
 # Release exit trap to avoid reporting error on a normal exit.

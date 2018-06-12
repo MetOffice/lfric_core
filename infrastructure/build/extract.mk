@@ -14,11 +14,11 @@ NLD_FILES = $(shell find $(SOURCE_DIR) -path "$(SOURCE_DIR)/*/*" -name '*.nld' -
 ifdef WITHOUT_PROGRAMS
 MODULE_FILES = $(shell find $(SOURCE_DIR) -path "$(SOURCE_DIR)/*/*" -name '*.[Ff]90' -printf '%P\n')
 files-to-extract: $(addprefix $(WORKING_DIR)/,$(MODULE_FILES)) \
-                  $(addprefix $(WORKING_DIR)/,$(NLD_FILES))
+                  $(addprefix $(WORKING_DIR)/,$(NLD_FILES)) | $(WORKING_DIR)
 	$(Q)echo >/dev/null
 else
 files-to-extract: $(addprefix $(WORKING_DIR)/,$(shell find $(SOURCE_DIR) -name '*.[Ff]90' -printf '%P\n')) \
-                  $(addprefix $(WORKING_DIR)/,$(NLD_FILES))
+                  $(addprefix $(WORKING_DIR)/,$(NLD_FILES)) | $(WORKING_DIR)
 	$(Q)echo >/dev/null
 endif
 
