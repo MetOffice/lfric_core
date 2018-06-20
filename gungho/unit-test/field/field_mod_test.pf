@@ -9,7 +9,7 @@
 !-------------------------------------------------------------------------------
 module field_mod_test
 
-  use constants_mod,                  only : i_def, r_def
+  use constants_mod,                  only : i_def, r_def, str_def
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use mesh_collection_mod,            only : mesh_collection_type, &
@@ -94,6 +94,8 @@ contains
     type(field_proxy_type)    :: f1_p
     type(field_proxy_type)    :: f2_p
 
+    character(str_def) :: name
+
     integer(i_def)            :: mesh_id
 
     type(function_space_type), pointer :: w2_fs    => null(), fs => null()
@@ -108,7 +110,11 @@ contains
 
     ! Make a field with a function space
     w2_fs => function_space_collection%get_fs( mesh_id, element_order, W2 )
-    f1 = field_type( vector_space = w2_fs )
+    f1 = field_type( vector_space = w2_fs, name='f1' )
+
+    ! Get  and check the the name of the field
+    name = f1%get_name()
+    @assertEqual( 'f1', trim(name) )
 
     ! get the proxy
     f1_p = f1%get_proxy()

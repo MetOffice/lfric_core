@@ -1,0 +1,123 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2018 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the field collection object
+!>
+module field_collection_mod_test
+
+    use constants_mod,                 only : i_def, r_def
+    use function_space_mod,            only : function_space_type
+    use function_space_collection_mod, only : function_space_collection_type, &
+                                              function_space_collection
+    use mesh_collection_mod,           only : mesh_collection_type, &
+                                              mesh_collection
+    use field_mod,                     only : field_type,field_proxy_type
+    use field_collection_mod,          only : field_collection_type
+    use fs_continuity_mod,             only : W0
+    use yaxt,                          only : xt_initialize, xt_finalize
+    use mpi_mod,                       only : store_comm, clear_comm
+    use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(MPITestCase), public :: field_collection_test_type
+    private
+    type(function_space_type), pointer :: w0_fs => null()
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type field_collection_test_type
+
+  integer(i_def), parameter :: element_order = 0
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
+    use gungho_feign_config_mod,   only : feign_finite_element_config
+    use mesh_mod,                  only : PLANE_BI_PERIODIC
+
+    implicit none
+
+    class(field_collection_test_type), intent(inout) :: this
+    integer(i_def) :: mesh_id
+
+    ! Initialise YAXT
+    call xt_initialize(this%getMpiCommunicator())
+    !Store the MPI communicator for later use
+    call store_comm(this%getMpiCommunicator())
+
+    ! Create top level mesh collection
+    mesh_collection = mesh_collection_type()
+    ! Create top level function space collection
+    function_space_collection = function_space_collection_type()
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
+
+
+    this%w0_fs => function_space_collection%get_fs( mesh_id, &
+                                                    element_order, &
+                                                    W0 )
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(field_collection_test_type), intent(inout) :: this
+
+    call function_space_collection%clear()
+    call mesh_collection%clear()
+
+    ! Finalise YAXT
+    call xt_finalize()
+    ! Clear the stored MPI communicator
+    call clear_comm()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_all( this )
+
+    implicit none
+
+    class(field_collection_test_type), intent(inout) :: this
+    type(field_type) :: test_field1, test_field2
+    type(field_proxy_type) :: test_field1_p, test_field2_p
+    type(field_collection_type) :: test_field_collection
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+
+    ! Create field with the name 'test_field' into test_field1
+    ! and put 99.0 in the first dof
+    test_field1 = field_type( this%w0_fs, name='test_field' )
+    test_field1_p = test_field1%get_proxy()
+    test_field1_p%data(1)=99.0
+
+    ! Create a field_collection and put test_field1 in it
+    test_field_collection = field_collection_type()
+    call test_field_collection%add_field(test_field1)
+
+    ! Extract the field called 'test_field' into test_field2
+    test_field2 = test_field_collection%get_field('test_field')
+    test_field2_p = test_field2%get_proxy()
+    
+    ! Check that test_field2 has 99.0 in the first dof
+    @assertEqual(99.0, test_field2_p%data(1), tol)
+    
+  end subroutine test_all
+
+end module field_collection_mod_test

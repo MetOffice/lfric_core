@@ -2,6 +2,10 @@
 ' For further details please refer to the file LICENCE.original which you
 ' should have received as part of this distribution.
 
+abstract class field_mod::field_parent_type {
+  {abstract} get_proxy() : field_proxy_type
+}
+
 class field_mod::field_type {
   -data : real[] <<allocatable>>
   -halo_dirty : integer[]<<allocatable>>
@@ -11,7 +15,7 @@ class field_mod::field_type {
   -write_field_method : procedure <<pointer>>
   -checkpoint_method : procedure <<pointer>>
   -restart_method : procedure <<pointer>>
-  <<create>>+field_constructor( <<in>>vector_space : function_space_type ) : field_type
+  <<create>>+field_constructor( <<in>>vector_space : function_space_type, <<in optional>> output_space : integer, <<in optional>> name : string ) : field_type
   <<destroy>>+field_destructor_scalar()
   <<destroy>>+field_destructor_array1d()
   <<destroy>>+field_destructor_array2d()
@@ -25,6 +29,7 @@ class field_mod::field_type {
   +log_minmax( <<in>>log_level: integer, <<in>>label: string )
   +which_function_space() : integer
   +which_output_function_space() : integer
+  +get_name() : string
   +get_mesh() : mesh_type <<pointer>>
   +get_mesh_id() : integer
   +write_field( <<in>> character: field_name)
@@ -57,3 +62,5 @@ class field_mod::field_proxy_type {
 }
 
 field_mod::field_proxy_type -> field_mod::field_type : field accessor
+
+

@@ -1,0 +1,13 @@
+' (c) Crown copyright 2018 Met Office. All rights reserved.
+' The file LICENCE, distributed with this code, contains details of the terms
+' under which the code may be used.
+
+class field_collection_mod::field_collection_type {
+  -field_list: linked_list_type
+
+  <<create>>+field_collection_constructor() : field_collection_type
+  <<destroy>>+field_collection_destructor()
+  +add_field( <<in>>field: field_type ) : 
+  +get_field( <<in>>field_name: string ) : <<pointer>> field_type
+  +clear()
+}

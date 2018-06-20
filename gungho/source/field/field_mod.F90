@@ -13,13 +13,15 @@
 
 module field_mod
 
-  use constants_mod,      only: r_def, r_double, i_def, i_halo_index, l_def
+  use constants_mod,      only: r_def, r_double, i_def, i_halo_index, l_def, &
+                                str_def
   use function_space_mod, only: function_space_type
   use mesh_mod,           only: mesh_type
 
   use yaxt,               only: xt_redist,  xt_request, &
                                 xt_redist_s_exchange, &
                                 xt_redist_a_exchange, xt_request_wait
+  use linked_list_data_mod, only: linked_list_data_type
 
   implicit none
 
@@ -29,13 +31,22 @@ module field_mod
   ! Public types
   !---------------------------------------------------------------------------
 
+
+   !> Abstract field type that is the parent of any field type in the field
+   !> object hierarchy
+   type, extends(linked_list_data_type), public, abstract :: field_parent_type
+   contains
+    procedure(get_proxy_interface), deferred :: get_proxy
+   end type field_parent_type
+
+
   !> Algorithm layer representation of a field.
   !>
   !> Objects of this type hold all the data of the field privately.
   !> Unpacking the data is done via the proxy type accessed by the Psy layer
   !> alone.
   !>
-  type, public :: field_type
+  type, extends(field_parent_type), public :: field_type
     private
 
     !> Each field has a pointer to the function space on which it lives
@@ -50,6 +61,8 @@ module field_mod
     !> Flag that determines whether the copy constructor should copy the data.
     !! false to start with, true thereafter.
     logical(kind=l_def) :: data_extant = .false.
+    !> Name of the field
+    character(str_def) :: name
 
     ! IO interface procedure pointers
 
@@ -102,6 +115,9 @@ module field_mod
 
     !> Routine to write a checkpoint netCDF file
     procedure         :: write_checkpoint
+
+    !> Returns the name of the field
+    procedure         :: get_name
 
     !> Routine to return the mesh used by this field
     procedure         :: get_mesh
@@ -210,6 +226,15 @@ module field_mod
 
   end type field_proxy_type
 
+  !----- Interface for the deferred function in the field_parent_type -----
+  interface
+   type(field_proxy_type)function get_proxy_interface(self)
+     import field_parent_type
+     import field_proxy_type
+     class(field_parent_type), target, intent(in) :: self
+   end function
+  end interface
+
   ! Define the IO interfaces
 
   abstract interface
@@ -261,9 +286,10 @@ contains
   !>
   !> @param [in] vector_space the function space that the field lives on
   !> @param [in] output_space the function space used for field output
+  !> @param [in] name The name of the field
   !> @return self the field
   !>
-  function field_constructor(vector_space, output_space) result(self)
+  function field_constructor(vector_space, output_space, name) result(self)
 
     use log_mod,         only : log_event, &
                                 LOG_LEVEL_ERROR
@@ -271,6 +297,7 @@ contains
 
     type(function_space_type), target, intent(in) :: vector_space
     integer(i_def), optional, intent(in)               :: output_space
+    character(*), optional, intent(in)            :: name
 
     type(field_type), target :: self
     ! only associate the vspace pointer, copy constructor does the rest.
@@ -283,6 +310,13 @@ contains
       self%ospace = output_space
     else
       self%ospace = self%vspace%which()
+    end if 
+
+    ! Set the name of the field if given, otherwise default to 'none'
+    if (present(name)) then
+      self%name = name
+    else
+      self%name = 'none'
     end if 
 
   end function field_constructor
@@ -376,6 +410,7 @@ contains
     dest%write_field_method => self%write_field_method
     dest%checkpoint_method => self%checkpoint_method
     dest%restart_method => self%restart_method
+    dest%name = self%name
 
     allocate( dest%data(self%vspace%get_last_dof_halo()) )
 
@@ -459,6 +494,20 @@ contains
   !---------------------------------------------------------------------------
   ! Contained functions/subroutines
   !---------------------------------------------------------------------------
+
+  !> Gets the name of the field.
+  !>
+  !> @return field name
+  function get_name(self) result(name)
+
+    implicit none
+
+    class(field_type), intent(in) :: self
+    character(str_def) :: name
+
+    name = self%name
+
+  end function get_name
 
   !> Function to get mesh information from the field.
   !>
