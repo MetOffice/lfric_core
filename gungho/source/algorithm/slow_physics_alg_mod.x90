@@ -20,6 +20,10 @@ module slow_physics_alg_mod
   
   ! Derived Types
   use field_mod,                 only: field_type
+  use field_collection_mod,      only: field_collection_type
+
+  ! Moisture species
+  use mr_indices_mod,            only: nummr, imr_v, imr_c
 
   use fs_continuity_mod,         only: W2
 
@@ -31,30 +35,51 @@ contains
 
   !> @details Collection of procedures for subgrid physics that act
   !>          before the outer loop of the solver
-  !
-  !>@param[in] chi Coordinate array
-  !>@param[inout] du increment to wind field 
-  !>@param[in] u  wind field 
-  !>@param[inout] dtheta increment to theta field 
-  !>@param[in] theta theta field 
-  !>@param[in] exner_in_wth Exner pressure on wth points
-  subroutine slow_physics(chi, du, u, dtheta, theta, exner_in_wth)
+  !> @param[inout] du increment to wind field 
+  !> @param[inout] dtheta increment to theta field 
+  !> @param[in]    theta theta field 
+  !> @param[in]    rho        Rho on w3 space
+  !> @param[in]    exner      Exner pressure on w3 space
+  !> @param[inout] mr Mixing ratios
+  !> @param[in]    derived_fields Group of derived fields
+  !> @param[inout] cloud_fields Group of cloud fields
+  !> @param[inout] twod_fields Group of 2D fields
+  !> @param[in]    height_w3  Height in w3
+  !> @param[in]    height_wth Height in wth
+  !> @param[in]    chi coordinate array
+  subroutine slow_physics(du, dtheta, theta, rho, exner, mr, &
+                          derived_fields, cloud_fields, twod_fields, &
+                          height_w3, height_wth,  chi)
 
     implicit none
 
-    ! Prognostic fields    
-    type( field_type ), intent( in )    :: chi(3)
-    type( field_type ), intent( in )    :: u, theta, exner_in_wth
-    type( field_type ), intent( inout ) :: dtheta
-    type( field_type ), intent( inout ) :: du
+    ! Fields    
+    type( field_type ), intent( inout ) :: du, dtheta
+    type( field_type ), intent( in )    :: theta, rho, exner
+
+    ! Field bundles
+    type( field_type ), intent( in )    :: mr(nummr)
+
+    ! Field groups
+    type( field_collection_type ), intent(inout) :: derived_fields
+    type( field_collection_type ), intent(inout) :: cloud_fields
+    type( field_collection_type ), intent(inout) :: twod_fields
     
+    ! Coordinate fields
+    type( field_type ), intent( in )    :: height_w3, height_wth
+    type( field_type ), intent( in )    :: chi(3)
 
     ! Local fields (should be created at initialization, but done here for the time being)
     type( field_type ) :: dtheta_hs
     type( field_type ) :: du_hs
 
     type(field_type),   pointer  :: w2_rmultiplicity => null() ! 1/multiplicity of w2
-    
+
+    ! Temporary field to unpack from field collection
+    type( field_type ), pointer :: u_physics => null()
+    type( field_type ), pointer :: exner_in_wth => null()
+
+    !Flags to indicate completed actions
     logical :: held_suarez_thermo_done ! Flag to indicate that held_suarez has been calculated
     logical :: held_suarez_wind_done ! Flag to indicate that held_suarez has been calculated
 
@@ -62,6 +87,11 @@ contains
 
     held_suarez_thermo_done=.false.
     held_suarez_wind_done=.false.
+
+    ! Some unpacking
+    u_physics => derived_fields%get_field('u_physics')
+    exner_in_wth => derived_fields%get_field('exner_in_wth')
+
 
     if (heldsuarez_thermo_placement < 0)then
       dtheta_hs = field_type( vector_space = theta%get_function_space() )
@@ -74,12 +104,12 @@ contains
     end if
 
     if (heldsuarez_wind_placement < 0)then
-      du_hs = field_type( vector_space = u%get_function_space() )
+      du_hs = field_type( vector_space = u_physics%get_function_space() )
       call invoke( setval_c(du_hs, 0.0_r_def) )
       call log_event( &
          'slow_physics: Running Held-Suarez wind forcing', &
          LOG_LEVEL_INFO )
-      call invoke(held_suarez_fv_wind_kernel_type(du_hs, u, w2_rmultiplicity, &
+      call invoke(held_suarez_fv_wind_kernel_type(du_hs, u_physics, w2_rmultiplicity, &
          exner_in_wth, chi))
       held_suarez_wind_done=.true. ! We've done it, so need to collect this term later on
     end if

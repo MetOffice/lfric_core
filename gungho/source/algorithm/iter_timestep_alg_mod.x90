@@ -60,6 +60,7 @@ module iter_timestep_alg_mod
 
   ! Derived Types
   use field_mod,                 only: field_type
+  use field_collection_mod,      only: field_collection_type
   use quadrature_xyoz_mod,       only: quadrature_xyoz_type
   use operator_mod,              only: operator_type
 
@@ -117,8 +118,6 @@ module iter_timestep_alg_mod
   type( field_type ), allocatable :: rhs_n(:), rhs_np1(:), rhs_adv(:)
   type( field_type ), allocatable :: rhs_phys(:), inc(:)
   type( field_type ) :: u_adv   ! Advective wind (centered in time)
-  type( field_type ) :: u_physics ! winds for physics
-  type( field_type ) :: w_physics ! copy of vertical winds for physics
   type( field_type ) :: dtheta ! increment to theta
   type( field_type ) :: du ! increment to u
   logical            :: helmholtz_solve
@@ -136,11 +135,10 @@ contains
   !> @param[inout] rho Density
   !> @param[inout] theta Potential temperature
   !> @param[inout] exner Exner pressure
-  !> @param[inout] tstar_2d   Surface tempature
-  !> @param[inout] zh_2d      Boundary layer depth
-  !> @param[inout] z0msea_2d  Roughness length
+  !> @param[inout] mr Mixing ratios
+  !> @param[inout] twodfields 2D field collection for UM physics
   subroutine iter_alg_init( mesh_id, u, rho, theta, exner, mr, &
-                            tstar_2d, zh_2d, z0msea_2d )
+                            twod_fields )
 
     implicit none
 
@@ -148,8 +146,8 @@ contains
     integer(i_def), intent(in) :: mesh_id
 
     ! Prognostic fields
-    type( field_type ), intent( inout ) :: u, rho, theta, exner, &
-                                           tstar_2d, zh_2d, z0msea_2d
+    type( field_type ), intent( inout ) :: u, rho, theta, exner
+    type( field_collection_type ), intent(inout)  :: twod_fields
     type( field_type ), intent( inout ) :: mr(nummr)
 
     !--------------------------------------------------------------------
@@ -188,8 +186,6 @@ contains
 
     call theta%copy_field_properties(dtheta)
     call u%copy_field_properties(du)
-    call u%copy_field_properties(u_physics)
-    call theta%copy_field_properties(w_physics)
 
     if (use_moisture)then
       call clone_bundle(mr, mr_n, nummr)
@@ -234,7 +230,7 @@ contains
 #ifdef UM_PHYSICS
     if ( use_physics ) then
       ! Initialization for the UM boundary layer
-      call bl_init(theta, tstar_2d, zh_2d, z0msea_2d)
+      call bl_init(theta, twod_fields)
     end if
 #endif
 
@@ -261,32 +257,23 @@ contains
   !> @param[inout] exner Exner pressure
   !> @param[inout] mr Mixing ratios
   !> @param[inout] xi Vorticity field
-  !> @param[inout] u1_in_w3 Component of wind on w3 space
-  !> @param[inout] u2_in_w3 Component of wind on w3 space
-  !> @param[inout] u3_in_w3 Component of wind on w3 space
-  !> @param[inout] rho_in_wth Rho on wth space
-  !> @param[inout] theta_in_w3 Theta on w3 space
-  !> @param[inout] exner_in_wth Pressure on wth space
-  !> @param[inout] tstar_2d   Surface tempature
-  !> @param[inout] zh_2d      Boundary layer depth
-  !> @param[inout] z0msea_2d  Roughness length
+  !> @param[inout] derived_fields Group of derived fields
+  !> @param[inout] cloud_fields Group of cloud fields
+  !> @param[inout] twod_fields  2D fields for UM physics
   !> @param[in]    timestep model timestep number
   subroutine iter_alg_step(u, rho, theta, exner, mr, xi, &
-                           u1_in_w3, u2_in_w3, u3_in_w3, &
-                           rho_in_wth, theta_in_w3,      &
-                           exner_in_wth, tstar_2d,       &
-                           zh_2d, z0msea_2d, timestep)
+                           derived_fields, cloud_fields, twod_fields,    &
+                           timestep)
 
     implicit none
 
     ! Prognostic fields
     type( field_type ), intent( inout ) :: u, rho, theta, exner, xi
-    type( field_type ), intent( inout ) :: u1_in_w3, u2_in_w3, u3_in_w3
-    type( field_type ), intent( inout ) :: rho_in_wth, theta_in_w3
-    type( field_type ), intent( inout ) :: exner_in_wth
     type( field_type ), intent( inout ) :: mr(nummr)
-    ! UM 2d fields
-    type( field_type ), intent( inout ) :: tstar_2d, zh_2d, z0msea_2d
+    ! field groups
+    type( field_collection_type ), intent( inout ) :: derived_fields
+    type( field_collection_type ), intent( inout ) :: cloud_fields
+    type( field_collection_type ), intent( inout ) :: twod_fields
     ! Timestep value
     integer, intent(in) :: timestep  
 
@@ -304,6 +291,10 @@ contains
     type( field_type ), pointer  :: dA => null() ! Areas of faces
     type( field_type ), pointer  :: delta => null() ! Horizontal edge length
 
+    ! Temporary field to unpack from field collection
+    type( field_type ), pointer :: u_physics => null()
+    type( field_type ), pointer :: w_physics  => null()
+    
     integer(kind=i_def):: outer, inner, iter, imr
     real(kind=r_def)   :: varalpha, varbeta ! alpha, beta weight to use
                                             ! these may differ from input values
@@ -348,21 +339,24 @@ contains
     if (use_physics)then
       call map_physics_fields_alg(state(igh_u), state(igh_p),                  & 
                                   state(igh_d), state(igh_t),                  &
-                                  u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3,   &
-                                  exner_in_wth, rho_in_wth, timestep)
+                                  derived_fields, timestep)
       !--------------------------------------------------------------------
       ! Call the slow physics terms
       !--------------------------------------------------------------------
       call invoke( setval_c(dtheta, 0.0_r_def) )
       call invoke( setval_c(du, 0.0_r_def) )
+      u_physics => derived_fields%get_field('u_physics')
+      w_physics => derived_fields%get_field('w_physics')
       call invoke( X_divideby_Y(u_physics, u, dA) )
       call invoke( extract_w_kernel_type(w_physics, u_physics) )
       call u_physics%log_minmax(LOG_LEVEL_INFO, 'u_physics')
       call w_physics%log_minmax(LOG_LEVEL_INFO, 'w_physics')
       if (write_xios_output) then
-        call output_xios_nodal("w_physics", w_physics, w_physics%get_mesh_id())
+        call output_xios_nodal("w_physics", w_physics, w_physics%get_mesh_id() )
       end if
-      call slow_physics(chi, du, u_physics, dtheta, theta, exner_in_wth)
+      call slow_physics(du, dtheta, theta, rho, exner, mr, &
+                        derived_fields, cloud_fields, twod_fields, &
+                        height_w3, height_wth,  chi)
       call invoke(inc_X_times_Y(du,dA)) ! This is the map back
       call invoke(name="update from slow physics", &
                   inc_X_plus_Y(state(igh_t), dtheta), &
@@ -389,9 +383,8 @@ contains
         if ( outer > 1 ) then
           call map_physics_fields_alg(state(igh_u), state(igh_p),              &
                                       state(igh_d), state(igh_t),              &
-                                      u1_in_w3, u2_in_w3, u3_in_w3,            &
-                                      theta_in_w3, exner_in_wth, rho_in_wth,   &
-                                      timestep)
+                                      derived_fields, timestep)
+          u_physics => derived_fields%get_field('u_physics')
           call invoke( X_divideby_Y(u_physics, state(igh_u), dA) )
         end if
         !--------------------------------------------------------------------
@@ -399,10 +392,9 @@ contains
         !--------------------------------------------------------------------
         call invoke( setval_c(dtheta, 0.0_r_def) )
         call invoke( setval_c(du, 0.0_r_def) )
-        call fast_physics(chi, du, u_physics, dtheta, state(igh_t),            &
-                          state(igh_d), state(igh_p), rho_in_wth, exner_in_wth,&
-                          u1_in_w3, u2_in_w3, height_w3, height_wth,           &
-                          tstar_2d, zh_2d, z0msea_2d, mr)
+        call fast_physics(du, dtheta, theta, rho, exner, mr, &
+                          derived_fields, cloud_fields, twod_fields, &
+                          height_w3, height_wth,  chi)
         ! populate rhs_phys, including convert to weak form theta
         ! NB there is no update to pressure or density
         call invoke(name="update rhs_phys from fast physics", &
@@ -593,8 +585,6 @@ contains
     if (allocated(inc))             deallocate(inc)
 
     call u_adv%field_final()
-    call u_physics%field_final()
-    call w_physics%field_final()
     call dtheta%field_final()
     call du%field_final()
 

@@ -7,10 +7,12 @@
 !>@brief Map fields to spaces required by the FD physics routines
 module map_physics_fields_alg_mod
 
-  use constants_mod,                         only: r_def, i_def
-  use field_mod,                             only: field_type
-  use physics_mappings_mod,                  only: map_physics_winds, map_physics_scalars
-  use formulation_config_mod,                only: use_wavedynamics
+  use constants_mod,          only: r_def, i_def
+  use field_mod,              only: field_type
+  use field_collection_mod,   only: field_collection_type
+  use physics_mappings_mod,   only: map_physics_winds, map_physics_scalars
+  use formulation_config_mod, only: use_wavedynamics
+
   implicit none
 
   private
@@ -25,33 +27,36 @@ contains
   !> @param[inout] exner Pressure
   !> @param[inout] rho Density
   !> @param[inout] theta Potential temperature
-  !> @param[inout] u1_in_w3 component of wind on w3 space
-  !> @param[inout] u2_in_w3 component of wind on w3 space
-  !> @param[inout] u3_in_w3 component of wind on w3 space
-  !> @param[inout] theta_in_w3 theta on w3 space
-  !> @param[inout] exner_in_wth pressure on wth space
-  !> @param[inout] rho_in_wth rho on wth space
+  !> @param[inout] derived_fields Group of derived fields
   !> @param[in]    timestep Current timestep
   subroutine map_physics_fields_alg(u, exner, rho, theta,                         &
-                                    u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3,    &
-                                    exner_in_wth, rho_in_wth, timestep)
-    
+                                    derived_fields, timestep)
     ! Prognostic fields
-    type( field_type ), intent(inout)        :: u, rho, theta, exner
-    type( field_type ), intent(inout)        :: u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3
-    type( field_type ), intent(inout)        :: rho_in_wth, exner_in_wth
+    type( field_type ), intent(inout)          :: u, rho, theta, exner
+    type( field_collection_type ), intent(inout) :: derived_fields
     ! Timestep value
     integer, intent(in) :: timestep
+    type( field_type ), pointer :: theta_in_w3 => null()
+    type( field_type ), pointer :: rho_in_wth => null() 
+    type( field_type ), pointer :: exner_in_wth => null()
+    type( field_type ), pointer :: u1_in_w3 => null() 
+    type( field_type ), pointer :: u2_in_w3 => null()
+    type( field_type ), pointer :: u3_in_w3 => null()
 
-    call map_physics_scalars(theta_in_w3,  theta)
+    theta_in_w3 => derived_fields%get_field('theta_in_w3')
+    call map_physics_scalars(theta_in_w3, theta)
 
     if (timestep == 0 .or. use_wavedynamics) then
+      rho_in_wth => derived_fields%get_field('rho_in_wth')
+      exner_in_wth => derived_fields%get_field('exner_in_wth')
       call map_physics_scalars(rho_in_wth,   rho)
       call map_physics_scalars(exner_in_wth, exner)
     end if
-
     ! Now the winds (this currently doesn't currently re-orientate the winds
     ! so they are not necessarily perpendicular or aligned lat-lon)
+    u1_in_w3 => derived_fields%get_field('u1_in_w3')
+    u2_in_w3 => derived_fields%get_field('u2_in_w3')
+    u3_in_w3 => derived_fields%get_field('u3_in_w3')
     call map_physics_winds(u1_in_w3, u2_in_w3, u3_in_w3, u)
 
   end subroutine map_physics_fields_alg

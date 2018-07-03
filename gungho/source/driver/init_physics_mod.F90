@@ -8,10 +8,13 @@
 module init_physics_mod
 
   use constants_mod,                  only : i_def
-  use field_mod,                      only : field_type
+  use field_mod,                      only : field_type, &
+                                             write_interface
   use finite_element_config_mod,      only : element_order
   use function_space_collection_mod,  only : function_space_collection
+  use field_collection_mod,           only : field_collection_type
   use fs_continuity_mod,              only : W0, W1, W2, W3, Wtheta
+  use function_space_mod,             only : function_space_type
   use init_prognostic_fields_alg_mod, only : init_prognostic_fields_alg
   use log_mod,                        only : log_event,         &
                                              LOG_LEVEL_INFO,         &
@@ -36,32 +39,28 @@ contains
   !> @param[inout] exner Exner pressure field
   !> @param[inout] rho Density field
   !> @param[inout] theta Potential temperature field
-  !> @param[inout] rho_in_wth Density in the temperature space
-  !> @param[inout] u1_in_w3 First component of the wind field in W3 space
-  !> @param[inout] u2_in_w3 Second component of the wind field in W3 space
-  !> @param[inout] u3_in_w3 Third component of the wind field in W3 space
-  !> @param[inout] theta_in_w3 Potential temperature field in W3 space
-  !> @param[inout] exner_in_wth Pressure in the temperature space
-  !> @param[inout] tstar_2d Surface temperature
-  !> @param[inout] zh_2d Boundary layer depth
-  !> @param[inout] z0msea_2d Surface rougthness length
-  subroutine init_physics(mesh_id, twod_mesh_id, &
-                          u, exner, rho, theta, &
-                          rho_in_wth,  &
-                          u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3,  &
-                          exner_in_wth, tstar_2d, zh_2d, z0msea_2d)
+  !> @param[out]   derived_fields Collection of FD fields derived from FE fields 
+  !> @param[out]   cloud_fields Collection of FD cloud fields
+  !> @param[out]   twod_fields Collection of two fields
+  subroutine init_physics(mesh_id, twod_mesh_id,                      &
+                          u, exner, rho, theta,                       &
+                          derived_fields, cloud_fields, twod_fields)
 
     integer(i_def), intent(in)               :: mesh_id
     integer(i_def), intent(in)               :: twod_mesh_id
     ! Prognostic fields
     type( field_type ), intent(inout)        :: u, exner, rho, theta
-    ! Diagnostic fields
-    type( field_type ), intent(inout)        :: u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3
-    type( field_type ), intent(inout)        :: exner_in_wth, rho_in_wth
-    ! UM 2d fields
-    type( field_type ), intent(inout)        :: tstar_2d, zh_2d, z0msea_2d
+
+    ! Collections of fields
+    type(field_collection_type), intent(out) :: cloud_fields
+    type(field_collection_type), intent(out) :: twod_fields
+    type(field_collection_type), intent(out) :: derived_fields
+
+    ! pointers to vector spaces
+    type(function_space_type), pointer  :: vector_space => null()
 
     integer(i_def) :: theta_space
+
     call log_event( 'Physics: initialisation...', LOG_LEVEL_INFO )
     
     theta_space=theta%which_function_space()
@@ -74,41 +73,96 @@ contains
       call log_event( 'Physics: requires lowest order elements', LOG_LEVEL_ERROR )
     end if
 
-    ! Note that the fields generated here should realy be finite volume 
-    ! or finite difference fields, but we exploit the lowest order W3/Wtheta finite
-    ! element construction.  This may break without rehabilitation, so this 
-    ! need doing properly.  Ticket #1044 is opened to address this.
-    u1_in_w3 = field_type( vector_space = & 
-       function_space_collection%get_fs(mesh_id, element_order, W3))
+    !========================================================================
+    ! Here we create some field collections
+    !========================================================================
+    derived_fields  =  field_collection_type()
+   
+    ! Wtheta fields
+    vector_space=>function_space_collection%get_fs(mesh_id, 0, Wtheta)
 
-    u2_in_w3 = field_type( vector_space = & 
-       function_space_collection%get_fs(mesh_id, element_order, W3))
+    call add_physics_field(derived_fields, 'w_physics', vector_space)
+    call add_physics_field(derived_fields, 'rho_in_wth', vector_space)
+    call add_physics_field(derived_fields, 'exner_in_wth', vector_space)
+    call add_physics_field(derived_fields, 'w_physics_star', vector_space)
 
-    u3_in_w3 = field_type( vector_space = & 
-       function_space_collection%get_fs(mesh_id, element_order, W3))
+    ! W3 fields
+    vector_space=> function_space_collection%get_fs(mesh_id, 0, W3) 
 
-    theta_in_w3 = field_type( vector_space = & 
-       function_space_collection%get_fs(mesh_id, element_order, W3))
+    call add_physics_field(derived_fields, 'u1_in_w3', vector_space)
+    call add_physics_field(derived_fields, 'u2_in_w3', vector_space)
+    call add_physics_field(derived_fields, 'u3_in_w3', vector_space)
+    call add_physics_field(derived_fields, 'theta_in_w3', vector_space)
+    call add_physics_field(derived_fields, 'u1_in_w3_star', vector_space)
+    call add_physics_field(derived_fields, 'u2_in_w3_star', vector_space)
+    call add_physics_field(derived_fields, 'u3_in_w3_star', vector_space)
 
-    exner_in_wth = field_type( vector_space = & 
-       function_space_collection%get_fs(mesh_id, element_order, theta_space))
+    ! W2 fields
+    vector_space=>function_space_collection%get_fs(mesh_id, 0, W2)
 
-    call map_physics_fields_alg( u, exner, rho, theta,                         &
-                                 u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3,    &
-                                 exner_in_wth, rho_in_wth, 0)
+    call add_physics_field(derived_fields, 'u_physics', vector_space)
+    call add_physics_field(derived_fields, 'u_physics_star', vector_space)
+
 
     !========================================================================
     ! Here we create some 2d fields for the UM physics
     !========================================================================
-    tstar_2d = field_type( vector_space = &
-       function_space_collection%get_fs(twod_mesh_id, element_order, W3))
-    zh_2d = field_type( vector_space = &
-       function_space_collection%get_fs(twod_mesh_id, element_order, W3))
-    z0msea_2d = field_type( vector_space = &
-       function_space_collection%get_fs(twod_mesh_id, element_order, W3))
+    twod_fields = field_collection_type()
+    vector_space=> function_space_collection%get_fs(twod_mesh_id, 0, W3) 
+
+    call add_physics_field(twod_fields, 'tstar', vector_space)
+    call add_physics_field(twod_fields, 'zh', vector_space)
+    call add_physics_field(twod_fields, 'z0msea', vector_space)
+
+
+    !========================================================================
+    ! ...and some fields for use with clouds
+    !========================================================================
+    cloud_fields = field_collection_type()
+    vector_space=>function_space_collection%get_fs(mesh_id, 0, Wtheta)
+
+    call add_physics_field(cloud_fields, 'area_fraction', vector_space)
+    call add_physics_field(cloud_fields, 'ice_fraction', vector_space)
+    call add_physics_field(cloud_fields, 'liquid_fraction', vector_space)
+    call add_physics_field(cloud_fields, 'bulk_fraction', vector_space)
+
+    !========================================================================
+    ! Now map from FE to FD fields
+    !========================================================================
+    call map_physics_fields_alg(u, exner, rho, theta, derived_fields, 0)
 
     call log_event( 'Physics initialised', LOG_LEVEL_INFO )
 
   end subroutine init_physics
+
+  subroutine add_physics_field(field_collection, name, vector_space)
+
+    use output_config_mod,  only : write_xios_output
+    use io_mod,             only : xios_write_field_face
+
+    implicit none
+    
+    type(field_collection_type), intent(inout) :: field_collection
+    character(*), intent(in) :: name
+    type(function_space_type), intent(in)  :: vector_space
+
+    !Local variables
+    type(field_type) :: new_field
+
+    ! pointers for xios write interface
+    procedure(write_interface), pointer :: write_behaviour => null()
+
+    ! All physics fields currently require output on faces...
+    write_behaviour => xios_write_field_face
+
+    new_field = field_type( vector_space, name=trim(name) )
+
+    if (write_xios_output) then
+      call new_field%set_write_field_behaviour(write_behaviour)
+    end if
+
+    call field_collection%add_field(new_field)
+
+  end subroutine add_physics_field
 
 end module init_physics_mod

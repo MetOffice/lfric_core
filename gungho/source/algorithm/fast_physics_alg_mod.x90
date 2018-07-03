@@ -20,6 +20,7 @@ module fast_physics_alg_mod
   
   ! Derived Types
   use field_mod,                    only: field_type
+  use field_collection_mod,         only: field_collection_type
 
   ! Field indices
   use field_indices_mod,         only: igh_u, igh_t, igh_d, igh_p
@@ -38,40 +39,39 @@ contains
 
   !> @details Collection of procedures for subgrid physics that act
   !>          within the outer loop of the solver
-  !> @param[in]    chi coordinate array
   !> @param[inout] du increment to wind field 
-  !> @param[in]    u_physics wind field 
   !> @param[inout] dtheta increment to theta field 
   !> @param[in]    theta theta field 
-  !> @param[in]    rho        Rho on w3 space
-  !> @param[in]    exner      Exner pressure on w3 space
-  !> @param[in]    rho_in_wth Rho on wth space
-  !> @param[in]    exner_in_wth Exner pressure on wth space
-  !> @param[in]    u1_in_w3   Component of wind on w3 space
-  !> @param[in]    u2_in_w3   Component of wind on w3 space
+  !> @param[in]    rho    Rho on w3 space
+  !> @param[in]    exner  Exner pressure on w3 space
+  !> @param[in]    mr     Mixing ratios
+  !> @param[in]    derived_fields Group of derived fields
+  !> @param[inout] cloud_fields Group of cloud fields
+  !> @param[inout] twod_fields Group of 2D fields
   !> @param[in]    height_w3  Height in w3
   !> @param[in]    height_wth Height in wth
-  !> @param[inout] tstar_2d   Surface tempature
-  !> @param[inout] zh_2d      Boundary layer depth
-  !> @param[inout] z0msea_2d  Roughness length
-  !> @param[inout] mr Mixing ratios
-  subroutine fast_physics(chi, du, u_physics, dtheta, theta,          &
-                          rho, exner, rho_in_wth, exner_in_wth,       &
-                          u1_in_w3, u2_in_w3, height_w3, height_wth,  &
-                          tstar_2d, zh_2d, z0msea_2d, mr)
+  !> @param[in]    chi coordinate array
+  subroutine fast_physics(du, dtheta, theta, rho, exner, mr, &
+                          derived_fields, cloud_fields, twod_fields, &
+                          height_w3, height_wth,  chi)
 
     implicit none
 
-    ! Coordinate fields
-    type( field_type ), intent( in ) :: chi(3)
+    ! Fields    
+    type( field_type ), intent( inout ) :: du, dtheta
+    type( field_type ), intent( in )    :: theta, rho, exner
 
-    ! Prognostic fields    
-    type( field_type ), intent( in )    :: u_physics, theta, exner, rho
-    type( field_type ), intent( in )    :: rho_in_wth, exner_in_wth, &
-                                           u1_in_w3, u2_in_w3, height_w3, &
-                                           height_wth
-    type( field_type ), intent( inout ) :: du, dtheta,    &
-                                           tstar_2d, zh_2d, z0msea_2d, mr(nummr)
+    ! Field bundles
+    type( field_type ), intent( inout )    :: mr(nummr)
+
+    ! Field groups
+    type( field_collection_type ), intent(inout) :: derived_fields
+    type( field_collection_type ), intent(inout) :: cloud_fields
+    type( field_collection_type ), intent(inout) :: twod_fields
+
+    ! Coordinate fields
+    type( field_type ), intent( in )    :: height_w3, height_wth
+    type( field_type ), intent( in )    :: chi(3)
 
     ! Local fields (should be created at initialization, but done here for the time being)
     type( field_type ) :: dtheta_bl
@@ -98,10 +98,9 @@ contains
       call log_event( 'fast_physics: Running Boundary layer', LOG_LEVEL_INFO )
       call dtheta%copy_field_properties(dtheta_bl)
       call invoke( setval_c(dtheta_bl, 0.0_r_def) )
-      call bl_alg_step(theta, rho, rho_in_wth, exner, exner_in_wth,          &
-                       u1_in_w3, u2_in_w3, height_w3, height_wth,            &
-                       tstar_2d, zh_2d, z0msea_2d, dtheta_bl,                &
-                       mr(imr_v), mr(imr_c))
+      call bl_alg_step(dtheta_bl, theta, rho, mr, exner, &
+                       height_w3, height_wth,            &
+                       derived_fields, twod_fields)
       boundary_layer_done=.true. ! We've done it, so need to collect this term later on
     end if
 #endif

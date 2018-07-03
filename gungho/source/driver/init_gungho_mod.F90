@@ -45,11 +45,10 @@ contains
   !> @param[inout] rho Density field
   !> @param[inout] theta Potential temperature field
   !> @param[inout] exner Exner pressure field
-  !> @param[inout] rho_in_wth Density in the temperature space
   !> @param[inout] mr Moisture mixing ratios
   !> @param[inout] xi Vorticity
   !> @param[in] restart Restart dump to read prognostic fields from
-  subroutine init_gungho( mesh_id, chi, u, rho, theta, exner, rho_in_wth, mr, xi, restart )
+  subroutine init_gungho( mesh_id, chi, u, rho, theta, exner, mr, xi, restart )
 
     implicit none
 
@@ -58,7 +57,7 @@ contains
     type( field_type ), intent(inout)        :: u, rho, theta, exner
     type( field_type ), intent(inout)        :: mr(nummr)
     ! Diagnostic fields
-    type( field_type ), intent(inout)        :: xi, rho_in_wth
+    type( field_type ), intent(inout)        :: xi
     ! Coordinate fields
     type( field_type ), intent(in)           :: chi(:)
 
@@ -92,9 +91,6 @@ contains
     exner = field_type( vector_space = &
                         function_space_collection%get_fs(mesh_id, element_order, W3), &
                         output_space = W3)
-
-    rho_in_wth = field_type( vector_space = & 
-        function_space_collection%get_fs(mesh_id, element_order, theta%which_function_space()) )
 
     do imr = 1,nummr
       mr(imr) = field_type( vector_space = &
@@ -185,13 +181,11 @@ contains
     call create_runtime_constants(mesh_id, chi)
 
     ! Initialise prognostic fields
-    call init_prognostic_fields_alg( u, rho, theta, exner, &
-                                     rho_in_wth, mr, xi, restart )
+    call init_prognostic_fields_alg( u, rho, theta, exner, mr, xi, restart )
 
     nullify( tmp_write_ptr, tmp_checkpoint_ptr, tmp_restart_ptr )
 
     call log_event( 'Gungho initialised', LOG_LEVEL_INFO )
 
   end subroutine init_gungho
-
 end module init_gungho_mod

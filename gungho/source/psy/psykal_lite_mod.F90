@@ -128,7 +128,7 @@ contains
 
   !------------------------------------------------------------------------------
   !> invoke_initial_mr_kernel: invoke the moisture initialization
-  subroutine invoke_initial_mr_kernel( theta, rho_in_wth, mr, chi )
+  subroutine invoke_initial_mr_kernel( theta, rho, mr, chi )
 
     use initial_mr_kernel_mod, only : initial_mr_code
     use mr_indices_mod,        only : imr_v, imr_c, imr_r, imr_nc, imr_nr, nummr
@@ -136,13 +136,15 @@ contains
     implicit none
 
     type( field_type ), intent( inout ) :: mr(nummr)
-    type( field_type ), intent( in ) :: theta, rho_in_wth
+    type( field_type ), intent( in ) :: theta, rho
     type( field_type ), intent( in ) :: chi(3)
 
     integer          :: cell
     integer          :: ndf_wtheta, undf_wtheta, &
+                        ndf_w3, undf_w3, &
                         ndf_chi, undf_chi
     integer, pointer :: map_wtheta(:) => null()
+    integer, pointer :: map_w3(:)    => null()
     integer, pointer :: map_chi(:)    => null()
 
     type( field_proxy_type ) :: mr_proxy(nummr)
@@ -161,7 +163,10 @@ contains
     chi_proxy(3) = chi(3)%get_proxy()
 
     theta_proxy = theta%get_proxy()
-    rho_proxy = rho_in_wth%get_proxy()
+    rho_proxy = rho%get_proxy()
+
+    ndf_w3  = rho_proxy%vspace%get_ndf( )
+    undf_w3 = rho_proxy%vspace%get_undf( )
 
     ndf_wtheta  = theta_proxy%vspace%get_ndf( )
     undf_wtheta = theta_proxy%vspace%get_undf( )
@@ -180,6 +185,7 @@ contains
     do cell = 1, mesh%get_last_halo_cell(1)
 
       map_wtheta => theta_proxy%vspace%get_cell_dofmap( cell )
+      map_w3     => rho_proxy%vspace%get_cell_dofmap( cell )
       map_chi    => chi_proxy(1)%vspace%get_cell_dofmap( cell )
 
       !!todo: nummr must be 5 for this to work, since we currently cant
@@ -191,6 +197,9 @@ contains
         map_wtheta,                         &
         theta_proxy%data,                   &
         rho_proxy%data,                     &
+        ndf_w3,                             &
+        undf_w3,                            &
+        map_w3,                             &
         mr_proxy(imr_v)%data,               &
         mr_proxy(imr_c)%data,               &
         mr_proxy(imr_r)%data,               &
@@ -207,7 +216,6 @@ contains
     do imr = 1,nummr
        call mr_proxy(imr)%set_dirty()
     end do
-
   end subroutine invoke_initial_mr_kernel
 
   !-------------------------------------------------------------------------------

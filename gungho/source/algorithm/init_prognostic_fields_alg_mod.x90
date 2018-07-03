@@ -65,16 +65,15 @@ contains
   !> @param[inout] rho Density
   !> @param[inout] theta Potential temperature
   !> @param[inout] exner Exner pressure
-  !> @param[inout] rho_in_wth Density field stored in the theta function space
   !> @param[inout] mr Field bundle containing the moisture mixring ratios
   !> @param[inout] xi The vorticity field 
   !> @param[in] restart Checkpoint/restart type with timestepping information
-  subroutine init_prognostic_fields_alg(u, rho, theta, exner, rho_in_wth, mr, xi, restart)
+  subroutine init_prognostic_fields_alg(u, rho, theta, exner, mr, xi, restart)
 
     implicit none
 
     ! Prognostic fields
-    type( field_type ), intent( inout ) :: u, rho, theta, exner, xi, mr(nummr), rho_in_wth
+    type( field_type ), intent( inout ) :: u, rho, theta, exner, xi, mr(nummr)
     ! Control
     type( restart_type ), intent(in)      :: restart
 
@@ -150,9 +149,7 @@ contains
         end if
       end if
 
-      call log_event( "Gungho: Mapping rho->rho_in_wth in same space as theta..", LOG_LEVEL_INFO )
-      call map_physics_scalars(rho_in_wth, rho) 
-      if (use_moisture) call invoke_initial_mr_kernel( theta, rho_in_wth, mr(:), chi )
+      if (use_moisture) call invoke_initial_mr_kernel( theta, rho, mr(:), chi )
 
       call log_event( "Gungho: Initialised prognostic fields", LOG_LEVEL_INFO )
 
@@ -181,9 +178,6 @@ contains
         end do
       end if
 
-
-      call log_event( "Gungho: Mapping rho->rho_in_wth in same space as theta..", LOG_LEVEL_INFO )
-      call map_physics_scalars(rho_in_wth, rho) 
 
       call log_event( "Gungho: Read prognostic fields from files", LOG_LEVEL_INFO )
     end if

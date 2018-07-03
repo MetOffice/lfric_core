@@ -28,6 +28,7 @@ module gungho_driver_mod
                                          use_physics
   use function_space_collection_mod, &
                                   only : function_space_collection
+  use field_collection_mod,       only : field_collection_type
   use global_mesh_collection_mod, only : global_mesh_collection, &
                                          global_mesh_collection_type
   use gungho_mod,                 only : load_configuration, final_configuration
@@ -102,18 +103,12 @@ module gungho_driver_mod
                         theta,     &
                         exner,     &
                         xi,        &
-                        mr(nummr), &
-                        rho_in_wth
+                        mr(nummr)
 
-  ! Prognostic fields in non-native spaces (e.g. for physics)
-  type( field_type ) :: u1_in_w3,    &
-                        u2_in_w3,    &
-                        u3_in_w3,    &
-                        theta_in_w3, &
-                        exner_in_wth
-
-  ! UM 2d fields
-  type( field_type ) :: tstar_2d, zh_2d, z0msea_2d
+  ! Field collections
+  type( field_collection_type ) :: derived_fields
+  type( field_collection_type ) :: cloud_fields
+  type( field_collection_type ) :: twod_fields
 
   ! Coordinate field
   type(field_type), target :: chi(3)
@@ -216,13 +211,12 @@ contains
 
     ! Create and initialise prognostic fields
     timestep = 0
-    call init_gungho(mesh_id, chi, u, rho, theta, exner, rho_in_wth, mr, xi, restart)
+    call init_gungho( mesh_id, chi, u, rho, theta, exner, mr, xi, restart )
 
     if (use_physics)then
       call init_physics(mesh_id, twod_mesh_id,                      &
-                        u, exner, rho, theta, rho_in_wth,           &
-                        u1_in_w3, u2_in_w3, u3_in_w3, theta_in_w3,  &
-                        exner_in_wth, tstar_2d, zh_2d, z0msea_2d)
+                        u, exner, rho, theta,                       &
+                        derived_fields, cloud_fields, twod_fields)
 
     end if
 
@@ -345,14 +339,12 @@ contains
             if (timestep == restart%ts_start()) then
               call runge_kutta_init()
               call iter_alg_init(mesh_id, u, rho, theta, exner, mr, &
-                                 tstar_2d, zh_2d, z0msea_2d)
+                                 twod_fields)
               call conservation_algorithm(timestep, rho, u, theta, exner, xi)
             end if
-            call iter_alg_step(u, rho, theta, exner, mr, xi,  &
-                                u1_in_w3, u2_in_w3, u3_in_w3, &
-                                rho_in_wth, theta_in_w3,      &
-                                exner_in_wth, tstar_2d,       &
-                                zh_2d, z0msea_2d, timestep)
+            call iter_alg_step(u, rho, theta, exner, mr, xi, &
+                               derived_fields, cloud_fields, twod_fields,    &
+                               timestep)
 
           case( timestepping_method_rk )             ! RK
             ! Initialise and output initial conditions on first timestep
@@ -450,16 +442,6 @@ contains
     integer(i_def) :: i 
 
     character(5) :: name
-
-    call rho_in_wth%field_final()
-    call u1_in_w3%field_final()
-    call u2_in_w3%field_final()
-    call u3_in_w3%field_final()
-    call theta_in_w3%field_final()
-    call exner_in_wth%field_final()
-    call tstar_2d%field_final()
-    call zh_2d%field_final()
-    call z0msea_2d%field_final()
 
     ! Log fields
     call rho%log_field(   LOG_LEVEL_DEBUG, 'rho' )
