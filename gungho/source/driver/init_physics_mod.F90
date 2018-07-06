@@ -26,7 +26,6 @@ module init_physics_mod
                                              transport_operators_fv
   use mr_indices_mod,                 only : nummr
   use runtime_constants_mod,          only : create_runtime_constants
-  use map_physics_fields_alg_mod,     only : map_physics_fields_alg
 
   implicit none
 
@@ -85,6 +84,7 @@ contains
     call add_physics_field(derived_fields, 'rho_in_wth', vector_space)
     call add_physics_field(derived_fields, 'exner_in_wth', vector_space)
     call add_physics_field(derived_fields, 'w_physics_star', vector_space)
+    call add_physics_field(derived_fields, 'theta_star', vector_space)
 
     ! W3 fields
     vector_space=> function_space_collection%get_fs(mesh_id, 0, W3) 
@@ -102,6 +102,7 @@ contains
 
     call add_physics_field(derived_fields, 'u_physics', vector_space)
     call add_physics_field(derived_fields, 'u_physics_star', vector_space)
+    call add_physics_field(derived_fields, 'u_star', vector_space)
 
 
     !========================================================================
@@ -125,11 +126,6 @@ contains
     call add_physics_field(cloud_fields, 'ice_fraction', vector_space)
     call add_physics_field(cloud_fields, 'liquid_fraction', vector_space)
     call add_physics_field(cloud_fields, 'bulk_fraction', vector_space)
-
-    !========================================================================
-    ! Now map from FE to FD fields
-    !========================================================================
-    call map_physics_fields_alg(u, exner, rho, theta, derived_fields, 0)
 
     call log_event( 'Physics initialised', LOG_LEVEL_INFO )
 

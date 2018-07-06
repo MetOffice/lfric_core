@@ -9,12 +9,13 @@ module bl_kernel_mod
 
   use argument_mod,           only : arg_type,                     &
                                      GH_FIELD, GH_READ, GH_WRITE,  &
-                                     CELLS
+                                     CELLS, GH_INTEGER
   use constants_mod,          only : i_def, i_um, r_def, r_double, r_um
   use formulation_config_mod, only : use_moisture
   use fs_continuity_mod,      only : W3, Wtheta
   use kernel_mod,             only : kernel_type
   use physics_config_mod,     only : l_flux_bc, fixed_flux_e, fixed_flux_h
+  use timestepping_config_mod, only: outer_iterations
 
   implicit none
 
@@ -25,7 +26,8 @@ module bl_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_kernel_type
     private
-    type(arg_type) :: meta_args(15) = (/         &
+    type(arg_type) :: meta_args(23) = (/         &
+        arg_type(GH_INTEGER,  GH_READ),          &
         arg_type(GH_FIELD,   GH_READ,   WTHETA), &
         arg_type(GH_FIELD,   GH_READ,   W3),     &
         arg_type(GH_FIELD,   GH_READ,   WTHETA), &
@@ -33,6 +35,13 @@ module bl_kernel_mod
         arg_type(GH_FIELD,   GH_READ,   WTHETA), &
         arg_type(GH_FIELD,   GH_READ,   W3),     &
         arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   W3),     &
+        arg_type(GH_FIELD,   GH_READ,   WTHETA), &
         arg_type(GH_FIELD,   GH_READ,   W3),     &
         arg_type(GH_FIELD,   GH_READ,   WTHETA), &
         arg_type(GH_FIELD,   GH_WRITE,  W3),     &
@@ -67,6 +76,7 @@ contains
   !> @brief Interface to the BL scheme
   !! @param[in] nlayers Number of layers
   !! @param[in] nlayers_2d Number of layers for 2d field (i.e. 1)
+  !! @param[in] outer Outer loop counter
   !! @param[in] theta_in_wth Potential temperature field
   !! @param[in] rho_in_w3 density field in potential density space
   !! @param[in] rho_in_wth density field in potential temperature space
@@ -74,14 +84,21 @@ contains
   !! @param[in] exner_in_wth Exner pressure field in potential temperature space
   !! @param[in] u1_in_w3 'zonal' wind in density space
   !! @param[in] u2_in_w3 'meridional' wind in density space
+  !! @param[in] u3_in_wth 'vertical' wind in theta space
+  !! @param[in] m_v_n    Vapour mixing ratio at time level n
+  !! @param[in] m_cl_n   Cloud liquid mixing ratio at time level n
+  !! @param[in] theta_star Potential temperature predictor after advection
+  !! @param[in] u1_star 'zonal' wind predictor after advection
+  !! @param[in] u2_star 'meridional' wind predictor after advection
+  !! @param[in] u3_star 'vertical' wind predictor after advection
   !! @param[in] heigh_w3 Height of density space levels above surface
   !! @param[in] heigh_wth Height of temperature space levels above surface
   !! @param[inout] tstar_2d   Surface tempature
   !! @param[inout] zh_2d      Boundary layer depth
   !! @param[inout] z0msea_2d  Roughness length
   !! @param[inout] theta_inc  BL theta increment
-  !! @param[inout] m_v        Vapour mixing ration
-  !! @param[inout] m_cl       Cloud liquid mixing ratio
+  !! @param[inout] m_v        Vapour mixing ration after advection
+  !! @param[inout] m_cl       Cloud liquid mixing ratio after advection
   !! @param[in] ndf_wth Number of degrees of freedom per cell for potential temperature space
   !! @param[in] undf_wth Number unique of degrees of freedom  for potential temperature space
   !! @param[in] map_wth Dofmap for the cell at the base of the column for potential temperature space
@@ -93,6 +110,7 @@ contains
   !! @param[in] map_2d Dofmap for the cell at the base of the column for 2D fields
   subroutine bl_code(nlayers,      &
                      nlayers_2d,   &
+                     outer,        &
                      theta_in_wth, &
                      rho_in_w3,    &
                      rho_in_wth,   &
@@ -100,6 +118,13 @@ contains
                      exner_in_wth, &
                      u1_in_w3,     &
                      u2_in_w3,     &
+                     u3_in_wth,    &
+                     m_v_n,        &
+                     m_cl_n,       &
+                     theta_star,   &
+                     u1_star,      &
+                     u2_star,      &
+                     u3_star,      &
                      height_w3,    &
                      height_wth,   &
                      tstar_2d,     &
@@ -144,6 +169,7 @@ contains
 
     ! Arguments
     integer(kind=i_def), intent(in) :: nlayers, nlayers_2d
+    integer(kind=i_def), intent(in) :: outer
     integer(kind=i_def), intent(in) :: ndf_wth, ndf_w3
     integer(kind=i_def), intent(in) :: ndf_2d, undf_2d
     integer(kind=i_def), intent(in) :: undf_wth, undf_w3
@@ -156,11 +182,16 @@ contains
     real(kind=r_def), dimension(undf_w3),  intent(in)   :: rho_in_w3,          &
                                                            exner_in_w3,        &
                                                            u1_in_w3, u2_in_w3, &
+                                                           u1_star, u2_star,   &
                                                            height_w3
-    real(kind=r_def), dimension(undf_wth), intent(in)   :: rho_in_wth,         &
+    real(kind=r_def), dimension(undf_wth), intent(in)   :: theta_in_wth,       &
+                                                           rho_in_wth,         &
                                                            exner_in_wth,       &
-                                                           height_wth,         &
-                                                           theta_in_wth
+                                                           u3_in_wth,          &
+                                                           m_v_n, m_cl_n,      &
+                                                           theta_star,         &
+                                                           u3_star,            &
+                                                           height_wth
     real(kind=r_def), dimension(undf_2d), intent(inout) :: tstar_2d, zh_2d,    &
                                                            z0msea_2d
 
@@ -349,6 +380,8 @@ contains
       u_p(1,1,k) = u1_in_w3(map_w3(1) + k-1)
       ! v wind on rho levels
       v_p(1,1,k) = u2_in_w3(map_w3(1) + k-1)
+      ! w wind on theta levels
+      w(1,1,k) = u3_in_wth(map_wth(1) + k)
       ! height of rho levels from centre of planet
       r_rho_levels(1,1,k) = height_w3(map_w3(1) + k-1)                  &
                           + planet_radius
@@ -384,12 +417,12 @@ contains
     if (use_moisture) then
       do k = 1, model_levels
         ! water vapour mixing ratio
-        q(1,1,k) = m_v(map_wth(1) + k)
+        q(1,1,k) = m_v_n(map_wth(1) + k)
         ! cloud liquid mixing ratio
-        qcl(1,1,k) = m_cl(map_wth(1) + k)
+        qcl(1,1,k) = m_cl_n(map_wth(1) + k)
       end do
-      q(1,1,0) = m_v(map_wth(1) + 0)
-      qcl(1,1,0) = m_cl(map_wth(1) + 0)
+      q(1,1,0) = m_v_n(map_wth(1) + 0)
+      qcl(1,1,0) = m_cl_n(map_wth(1) + 0)
     else
       q = 0.0
       qcl = 0.0
@@ -404,8 +437,8 @@ contains
     ! height of levels above surface
     z_rho = r_rho_levels-r_theta_levels(1,1,0)
     z_theta(1,1,:) = r_theta_levels(1,1,1:model_levels)-r_theta_levels(1,1,0)
-    ! vertical velocity - needs setting------------------------------
-    w = 0.0
+    ! vertical velocity
+    w(1,1,0) = u3_in_wth(map_wth(1) + 0)
     w_copy = w
     etadot_copy = w_copy / r_theta_levels(1,1,model_levels)
 
@@ -599,19 +632,32 @@ contains
 
     !-----------------------------------------------------------------------
     ! increments / fields with increments added
-    ! Currently we're only modifying temperature.
     !-----------------------------------------------------------------------
-    t_latest(1,1,:) = theta(1,1,1:model_levels)                         &
-                    * exner_theta_levels(1,1,1:model_levels)
-    q_latest(1,1,:)   = q(1,1,1:model_levels)
-    qcl_latest(1,1,:) = qcl(1,1,1:model_levels)
-    qcf_latest = 0.0
-    cf_latest = 0.0
-    cfl_latest = 0.0
-    cff_latest = 0.0
-    r_u = 0.0
-    r_v = 0.0
-    r_w = 0.0
+    do k = 1, model_levels
+      t_latest(1,1,k) = theta_star(map_wth(1) + k)                     &
+                      * exner_theta_levels(1,1,k)
+      r_u(1,1,k) = u1_star(map_w3(1) + k-1) - u1_in_w3(map_w3(1) + k-1)
+      r_v(1,1,k) = u2_star(map_w3(1) + k-1) - u2_in_w3(map_w3(1) + k-1)
+      r_w(1,1,k) = u3_star(map_wth(1) + k) - u3_in_wth(map_wth(1) + k)
+    end do
+    r_w(1,1,0) = u3_star(map_wth(1) + 0) - u3_in_wth(map_wth(1) + 0)
+    if (use_moisture) then
+      do k = 1, model_levels
+        q_latest(1,1,k)   = m_v(map_wth(1) + k)
+        qcl_latest(1,1,k) = m_cl(map_wth(1) + k)
+        qcf_latest(1,1,k) = 0.0
+        cf_latest(1,1,k)  = 0.0
+        cfl_latest(1,1,k) = 0.0
+        cff_latest(1,1,k) = 0.0
+      end do
+    else
+      q_latest   = 0.0
+      qcl_latest = 0.0
+      qcf_latest = 0.0
+      cf_latest  = 0.0
+      cfl_latest = 0.0
+      cff_latest = 0.0
+    end if
 
     CALL NI_imp_ctl (                                                   &
     ! IN model dimensions.
@@ -714,7 +760,7 @@ contains
       ! potential temperature increment on theta levels
       theta_inc(map_wth(1) + k) = t_latest(1,1,k)                       &
                                    / exner_theta_levels(1,1,k)          &
-                                - theta_in_wth(map_wth(1)+k)
+                                - theta_star(map_wth(1)+k)
       ! water vapour on theta levels
       m_v(map_wth(1) + k)  = q_latest(1,1,k)
       ! cloud liquid water on theta levels
@@ -728,9 +774,11 @@ contains
     ! update BL prognostics
     ! There is no need to loop over nlayers_2d, since here
     ! nlayers_2d=1
-    tstar_2d(map_2d(1))=tstar(1,1)
-    zh_2d(map_2d(1))=zh(1,1)
-    z0msea_2d(map_2d(1))=z0msea(1,1)
+    if (outer == outer_iterations) then
+      tstar_2d(map_2d(1))=tstar(1,1)
+      zh_2d(map_2d(1))=zh(1,1)
+      z0msea_2d(map_2d(1))=z0msea(1,1)
+    end if
 
   end subroutine bl_code
 

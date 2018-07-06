@@ -13,6 +13,7 @@
 
 module psykal_lite_phys_mod
 
+  use constants_mod,         only : i_def
   use field_mod,             only : field_type, field_proxy_type 
   use mesh_mod,              only : mesh_type
 
@@ -26,17 +27,22 @@ contains
   !> into the halos.  As a result we can't use psyclone for this kernel as it will
   !> loop into the halos with the automatic openmp transformations
   !> This will be investigated in ticket #<open up a ticket for this>
-  subroutine invoke_bl_kernel(theta_in_wth, rho_in_w3, rho_in_wth,           &
+  subroutine invoke_bl_kernel(outer, theta_in_wth, rho_in_w3, rho_in_wth,    &
                               exner_in_w3, exner_in_wth, u1_in_w3, u2_in_w3, &
+                              u3_in_wth, m_v_n, m_cl_n, theta_star,          &
+                              u1_star, u2_star, u3_star,                     &
                               height_w3, height_wth, tstar_2d, zh_2d,        &
                               z0msea_2d, theta_inc, m_v, m_cl )
 
       use bl_kernel_mod, only: bl_code
       use mesh_mod, only: mesh_type
-      type(field_type), intent(inout) :: theta_inc, tstar_2d, zh_2d,    &
-           z0msea_2d, m_v, m_cl
+      type(field_type), intent(inout) :: tstar_2d, zh_2d, z0msea_2d,   &
+           theta_inc, m_v, m_cl
       type(field_type), intent(in) :: theta_in_wth, rho_in_w3, rho_in_wth, &
-           exner_in_w3, exner_in_wth, u1_in_w3, u2_in_w3, height_w3, height_wth
+           exner_in_w3, exner_in_wth, u1_in_w3, u2_in_w3, u3_in_wth,       &
+           m_v_n, m_cl_n, theta_star, u1_star, u2_star, u3_star, height_w3,&
+           height_wth
+      integer(kind=i_def), intent(in) :: outer
       integer :: cell
       integer :: ndf_wtheta, undf_wtheta, ndf_w3, undf_w3
       integer :: ndf_2d, undf_2d
@@ -44,8 +50,10 @@ contains
       integer :: nlayers, nlayers_2d
       type(field_proxy_type) theta_in_wth_proxy, rho_in_w3_proxy,       &
            rho_in_wth_proxy, exner_in_w3_proxy, exner_in_wth_proxy,     &
-           u1_in_w3_proxy, u2_in_w3_proxy, height_w3_proxy,             &
-           height_wth_proxy, tstar_2d_proxy, zh_2d_proxy, z0msea_2d_proxy, &
+           u1_in_w3_proxy, u2_in_w3_proxy, u3_in_wth_proxy, m_v_n_proxy,&
+           m_cl_n_proxy, theta_star_proxy, u1_star_proxy, u2_star_proxy,&
+           u3_star_proxy, height_w3_proxy, height_wth_proxy,            &
+           tstar_2d_proxy, zh_2d_proxy, z0msea_2d_proxy,                &
            theta_inc_proxy, m_v_proxy, m_cl_proxy
       integer, pointer :: map_w3(:,:) => null()
       integer, pointer :: map_wtheta(:,:) => null()
@@ -60,6 +68,13 @@ contains
       exner_in_wth_proxy = exner_in_wth%get_proxy()
       u1_in_w3_proxy = u1_in_w3%get_proxy()
       u2_in_w3_proxy = u2_in_w3%get_proxy()
+      u3_in_wth_proxy = u3_in_wth%get_proxy()
+      m_v_n_proxy = m_v_n%get_proxy()
+      m_cl_n_proxy = m_cl_n%get_proxy()
+      theta_star_proxy = theta_star%get_proxy()
+      u1_star_proxy = u1_star%get_proxy()
+      u2_star_proxy = u2_star%get_proxy()
+      u3_star_proxy = u3_star%get_proxy()
       height_w3_proxy = height_w3%get_proxy()
       height_wth_proxy = height_wth%get_proxy()
       tstar_2d_proxy = tstar_2d%get_proxy()
@@ -104,10 +119,14 @@ contains
 
       do cell=1,mesh%get_last_edge_cell()
 
-        call bl_code(nlayers, nlayers_2d, theta_in_wth_proxy%data,      &
-                     rho_in_w3_proxy%data, rho_in_wth_proxy%data,       &
-                     exner_in_w3_proxy%data, exner_in_wth_proxy%data,   &
-                     u1_in_w3_proxy%data, u2_in_w3_proxy%data,          &
+        call bl_code(nlayers, nlayers_2d, outer,                        &
+                     theta_in_wth_proxy%data, rho_in_w3_proxy%data,     &
+                     rho_in_wth_proxy%data, exner_in_w3_proxy%data,     &
+                     exner_in_wth_proxy%data, u1_in_w3_proxy%data,      &
+                     u2_in_w3_proxy%data, u3_in_wth_proxy%data,         &
+                     m_v_n_proxy%data, m_cl_n_proxy%data,               &
+                     theta_star_proxy%data, u1_star_proxy%data,         &
+                     u2_star_proxy%data, u3_star_proxy%data,            &
                      height_w3_proxy%data, height_wth_proxy%data,       &
                      tstar_2d_proxy%data, zh_2d_proxy%data,             &
                      z0msea_2d_proxy%data, theta_inc_proxy%data,        &

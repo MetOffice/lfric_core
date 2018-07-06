@@ -18,7 +18,6 @@ module init_prognostic_fields_alg_mod
                                              get_mass_matrix, &
                                              w3inv_id,        &
                                              get_height
-  use physics_mappings_mod,            only: map_physics_scalars
 
   ! Configuration and restart/checkpoint options
   use finite_element_config_mod,       only: element_order

@@ -28,14 +28,12 @@ contains
   !> @param[inout] rho Density
   !> @param[inout] theta Potential temperature
   !> @param[inout] derived_fields Group of derived fields
-  !> @param[in]    timestep Current timestep
-  subroutine map_physics_fields_alg(u, exner, rho, theta,                         &
-                                    derived_fields, timestep)
+  subroutine map_physics_fields_alg(u, exner, rho, theta, &
+                                    derived_fields)
     ! Prognostic fields
     type( field_type ), intent(inout)          :: u, rho, theta, exner
     type( field_collection_type ), intent(inout) :: derived_fields
-    ! Timestep value
-    integer, intent(in) :: timestep
+
     type( field_type ), pointer :: theta_in_w3 => null()
     type( field_type ), pointer :: rho_in_wth => null() 
     type( field_type ), pointer :: exner_in_wth => null()
@@ -46,12 +44,11 @@ contains
     theta_in_w3 => derived_fields%get_field('theta_in_w3')
     call map_physics_scalars(theta_in_w3, theta)
 
-    if (timestep == 0 .or. use_wavedynamics) then
-      rho_in_wth => derived_fields%get_field('rho_in_wth')
-      exner_in_wth => derived_fields%get_field('exner_in_wth')
-      call map_physics_scalars(rho_in_wth,   rho)
-      call map_physics_scalars(exner_in_wth, exner)
-    end if
+    rho_in_wth => derived_fields%get_field('rho_in_wth')
+    exner_in_wth => derived_fields%get_field('exner_in_wth')
+    call map_physics_scalars(rho_in_wth,   rho)
+    call map_physics_scalars(exner_in_wth, exner)
+
     ! Now the winds (this currently doesn't currently re-orientate the winds
     ! so they are not necessarily perpendicular or aligned lat-lon)
     u1_in_w3 => derived_fields%get_field('u1_in_w3')

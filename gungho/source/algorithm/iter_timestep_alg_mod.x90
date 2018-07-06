@@ -90,6 +90,7 @@ module iter_timestep_alg_mod
  
   ! Field mappings
   use map_physics_fields_alg_mod, only: map_physics_fields_alg
+  use physics_mappings_mod,       only: map_physics_winds
 
   ! Moisture species
   use mr_indices_mod,             only: nummr
@@ -113,8 +114,15 @@ module iter_timestep_alg_mod
 
   ! 'State' items private to the algorithm that need to be 
   !  created once but used every step
-  type( field_type ), allocatable :: state(:), state_n(:), reference_state(:)
-  type( field_type ), allocatable :: mr_n(:), mr_inc(:)
+
+  ! latest estimate of the prognostic fields throughout the timestep
+  type( field_type ), allocatable :: state(:)
+  ! prognostic fields at time level n, i.e. start of timestep
+  type( field_type ), allocatable :: state_n(:)
+  ! prognostic fields after slow physics, i.e. state_n + slow incs
+  type( field_type ), allocatable :: state_after_slow(:) 
+  type( field_type ), allocatable :: reference_state(:)
+  type( field_type ), allocatable :: mr_n(:), mr_inc(:), mr_after_slow(:)
   type( field_type ), allocatable :: rhs_n(:), rhs_np1(:), rhs_adv(:)
   type( field_type ), allocatable :: rhs_phys(:), inc(:)
   type( field_type ) :: u_adv   ! Advective wind (centered in time)
@@ -156,14 +164,16 @@ contains
 
     allocate(state(bundle_size))
     allocate(state_n(bundle_size))
+    allocate(state_after_slow(bundle_size))
     allocate(reference_state(bundle_size))
     allocate(rhs_n(bundle_size))
     allocate(rhs_np1(bundle_size))
     allocate(rhs_adv(bundle_size))
     allocate(rhs_phys(bundle_size))
     allocate(inc(bundle_size))
+    allocate(mr_n(nummr)) ! always needed otherwise subroutine calls fail
     if (use_moisture)then
-      allocate(mr_n(nummr))
+      allocate(mr_after_slow(nummr))
       allocate(mr_inc(nummr))
     end if
 
@@ -177,6 +187,7 @@ contains
     call exner%copy_field_properties( state(igh_p) )
 
     call clone_bundle(state, state_n,   bundle_size)
+    call clone_bundle(state, state_after_slow,   bundle_size)
     call clone_bundle(state, rhs_n,     bundle_size)
     call clone_bundle(state, rhs_np1,   bundle_size)
     call clone_bundle(state, rhs_adv,   bundle_size)
@@ -187,14 +198,14 @@ contains
     call theta%copy_field_properties(dtheta)
     call u%copy_field_properties(du)
 
+    call clone_bundle(mr, mr_n, nummr)
     if (use_moisture)then
-      call clone_bundle(mr, mr_n, nummr)
+      call clone_bundle(mr, mr_after_slow, nummr)
       call clone_bundle(mr, mr_inc, nummr)
     end if
 
     !--------------------------------------------------------------------
-    ! If held-suarez forcing is not used, then we want the following to be 
-    ! initialized to zero
+    ! Initialise the physics increments to 0
     !--------------------------------------------------------------------
     call set_bundle_scalar(0.0_r_def, rhs_phys, bundle_size)
 
@@ -294,7 +305,14 @@ contains
     ! Temporary field to unpack from field collection
     type( field_type ), pointer :: u_physics => null()
     type( field_type ), pointer :: w_physics  => null()
-    
+    type( field_type ), pointer :: theta_star => null()
+    type( field_type ), pointer :: u_star => null()
+    type( field_type ), pointer :: u_physics_star => null()
+    type( field_type ), pointer :: w_physics_star  => null()
+    type( field_type ), pointer :: u1_in_w3_star  => null()
+    type( field_type ), pointer :: u2_in_w3_star  => null()
+    type( field_type ), pointer :: u3_in_w3_star  => null()
+
     integer(kind=i_def):: outer, inner, iter, imr
     real(kind=r_def)   :: varalpha, varbeta ! alpha, beta weight to use
                                             ! these may differ from input values
@@ -333,89 +351,133 @@ contains
     ! Perform some checking on the fields.
     call check_fields(state)
 
-    !============================================================================
+    ! Update state_n and mr_n with start of timestep values
+    call copy_bundle(state, state_n, bundle_size)
+    if (use_moisture)call copy_bundle(mr, mr_n, nummr)
+
+    !==========================================================================
     ! Fields for physics
-    !============================================================================
+    !==========================================================================
     if (use_physics)then
-      call map_physics_fields_alg(state(igh_u), state(igh_p),                  & 
-                                  state(igh_d), state(igh_t),                  &
-                                  derived_fields, timestep)
-      !--------------------------------------------------------------------
-      ! Call the slow physics terms
-      !--------------------------------------------------------------------
-      call invoke( setval_c(dtheta, 0.0_r_def) )
-      call invoke( setval_c(du, 0.0_r_def) )
+      call map_physics_fields_alg(state_n(igh_u), state_n(igh_p),       &
+                                  state_n(igh_d), state_n(igh_t),       &
+                                  derived_fields)
       u_physics => derived_fields%get_field('u_physics')
       w_physics => derived_fields%get_field('w_physics')
-      call invoke( X_divideby_Y(u_physics, u, dA) )
-      call invoke( extract_w_kernel_type(w_physics, u_physics) )
+      ! map dynamics winds into physics space
+      call invoke(         X_divideby_Y(u_physics, state_n(igh_u), dA), &
+                  extract_w_kernel_type(w_physics, u_physics) )
       call u_physics%log_minmax(LOG_LEVEL_INFO, 'u_physics')
       call w_physics%log_minmax(LOG_LEVEL_INFO, 'w_physics')
       if (write_xios_output) then
         call output_xios_nodal("w_physics", w_physics, w_physics%get_mesh_id() )
       end if
-      call slow_physics(du, dtheta, theta, rho, exner, mr, &
-                        derived_fields, cloud_fields, twod_fields, &
+
+      !--------------------------------------------------------------------
+      ! Call the slow physics terms
+      !--------------------------------------------------------------------
+      call invoke( setval_c(dtheta, 0.0_r_def), &
+                   setval_c(du, 0.0_r_def) )
+      call slow_physics(du, dtheta, state_n(igh_t), state_n(igh_d),     &
+                        state_n(igh_p), mr,                             &
+                        derived_fields, cloud_fields, twod_fields,      &
                         height_w3, height_wth,  chi)
-      call invoke(inc_X_times_Y(du,dA)) ! This is the map back
-      call invoke(name="update from slow physics", &
-                  inc_X_plus_Y(state(igh_t), dtheta), &
-                  inc_X_plus_Y(state(igh_u), du)  &
+      ! update state prognostics including map back of winds
+      call invoke(name="update_from_slow_physics",                      &
+                  inc_X_plus_Y(state(igh_t), dtheta),                   &
+                  inc_X_times_Y(du,dA),                                 &
+                  inc_X_plus_Y(state(igh_u), du)                        &
                   )
       call log_event( "slow physics: completed slow physics.", LOG_LEVEL_INFO )
-    end if
+    end if !use_physics
 
 
-    ! Update state_n and mr_n with start of timestep + slow physics values
-    call copy_bundle(state, state_n, bundle_size)
-    if (use_moisture)call copy_bundle(mr, mr_n, nummr)
+    ! Update state_after_slow and mr_after_slow with 
+    ! start of timestep + slow physics values
+    call copy_bundle(state, state_after_slow, bundle_size)
+    if (use_moisture)call copy_bundle(mr, mr_after_slow, nummr)
 
-    call rhs_alg(rhs_n, varbeta*dt, state_n, .false., .false.)
+    call rhs_alg(rhs_n, varbeta*dt, state_after_slow, .false., .false.)
 
-    !============================================================================
+    !==========================================================================
     ! Start the Outer (advection) loop
-    !============================================================================
+    !==========================================================================
     outer_dynamics_loop: do outer = 1,outer_iterations
-
-      if (use_physics) then
-        ! If outer == 1 then the n+1 fields are the same as the n fields and
-        ! so the remapping does not need to be done again 
-        if ( outer > 1 ) then
-          call map_physics_fields_alg(state(igh_u), state(igh_p),              &
-                                      state(igh_d), state(igh_t),              &
-                                      derived_fields, timestep)
-          u_physics => derived_fields%get_field('u_physics')
-          call invoke( X_divideby_Y(u_physics, state(igh_u), dA) )
-        end if
-        !--------------------------------------------------------------------
-        ! Call the fast physics terms
-        !--------------------------------------------------------------------
-        call invoke( setval_c(dtheta, 0.0_r_def) )
-        call invoke( setval_c(du, 0.0_r_def) )
-        call fast_physics(du, dtheta, theta, rho, exner, mr, &
-                          derived_fields, cloud_fields, twod_fields, &
-                          height_w3, height_wth,  chi)
-        ! populate rhs_phys, including convert to weak form theta
-        ! NB there is no update to pressure or density
-        call invoke(name="update rhs_phys from fast physics", &
-                    matrix_vector_kernel_type(rhs_phys(igh_t), dtheta, mm_wt), &
-                    X_times_Y(rhs_phys(igh_u), du, dA) &
-                    )
-        call log_event( "iter_timestep: completed fast physics.", LOG_LEVEL_INFO )
-      end if
 
       if (use_wavedynamics) then
 
         ! Set advecting velocity & terms
-        call invoke( aX_plus_bY(u_adv, varbeta, state_n(igh_u), varalpha, state(igh_u)) )
-        call advection_alg(rhs_adv, state_n, xi, u_adv)
+        call invoke( aX_plus_bY(u_adv, varbeta, state_after_slow(igh_u), varalpha, state(igh_u)) )
+        call advection_alg(rhs_adv, state_after_slow, xi, u_adv)
         if ( use_moisture )then
-          ! Advect mr_n values with latest advecting velocity 
-          call advection_mr_alg(mr_inc, mr_n, u_adv)
+          ! Advect mr_after_slow values with latest advecting velocity 
+          call advection_mr_alg(mr_inc, mr_after_slow, u_adv)
           ! Update latest value for mr
-          call add_bundle(mr_inc, mr_n, mr, nummr)
+          call add_bundle(mr_inc, mr_after_slow, mr, nummr)
         end if
         call bundle_ax(dt, rhs_adv, rhs_adv, bundle_size) 
+
+      end if !use_wavedynamics
+
+      if (use_physics) then
+        ! setting predictors for fast physics
+        theta_star  => derived_fields%get_field('theta_star')
+        u_star  => derived_fields%get_field('u_star')
+        
+        if (use_wavedynamics) then
+          ! theta_star can be directly guessed from advection terms
+          call invoke( X_plus_Y(inc(igh_t), rhs_adv(igh_t), rhs_n(igh_t)) )
+          call solver_algorithm(theta_star, inc(igh_t))
+
+          ! Compute u_star = u_np1 + M^-1(-rhs_np1 + rhs_n + rhs_a)
+          call rhs_alg(rhs_np1, -varalpha*dt, state, .false., dlayer_on)      
+          call invoke( inc_aX_plus_Y(-1.0_r_def, rhs_np1(igh_u), rhs_n(igh_u)),&
+                       inc_X_plus_Y(rhs_np1(igh_u), rhs_adv(igh_u)) )
+          call solver_algorithm(inc(igh_u), rhs_np1(igh_u) )
+          call invoke( X_plus_Y(u_star, inc(igh_u), state(igh_u)) )
+        else
+          ! predictors are just the current state
+          call invoke( setval_X(theta_star, state(igh_t)), &
+                       setval_X(u_star, state(igh_u)) )
+        end if !use_wavedynamics
+
+        ! map physics predictors into required spaces
+        u_physics_star  => derived_fields%get_field('u_physics_star')
+        w_physics_star  => derived_fields%get_field('w_physics_star')
+        call invoke(         X_divideby_Y(u_physics_star, u_star, dA),     &
+                    extract_w_kernel_type(w_physics_star, u_physics_star) )
+        u1_in_w3_star => derived_fields%get_field('u1_in_w3_star')
+        u2_in_w3_star => derived_fields%get_field('u2_in_w3_star')
+        u3_in_w3_star => derived_fields%get_field('u3_in_w3_star')
+        call map_physics_winds(u1_in_w3_star, u2_in_w3_star, u3_in_w3_star, &
+                               u_star)
+
+        !--------------------------------------------------------------------
+        ! Call the fast physics terms
+        !--------------------------------------------------------------------
+        call invoke( setval_c(dtheta, 0.0_r_def), &
+                     setval_c(du, 0.0_r_def) )
+        call fast_physics(du, dtheta, mr, outer, state_n(igh_t),        &
+                          state_n(igh_d), state_n(igh_p), mr_n,         &
+                          derived_fields, cloud_fields, twod_fields,    &
+                          height_w3, height_wth,  chi)
+
+        if (use_wavedynamics) then
+          ! copy increments into rhs_phys, including convert to weak form theta
+          ! NB there is no update to pressure or density, currently awaiting
+          ! winds to be added here
+          ! need to reset rhs_phys to 0 because matrix_vector_kernel_type
+          ! increments the field rather than over-writing it
+          call set_bundle_scalar(0.0_r_def, rhs_phys, bundle_size)
+          call invoke(name="update_rhs_phys_from_fast_physics",               &
+                    matrix_vector_kernel_type(rhs_phys(igh_t), dtheta, mm_wt) &
+                    )
+        end if
+
+        call log_event( "iter_timestep: completed fast physics.", LOG_LEVEL_INFO )
+      end if !use_physics
+
+      if (use_wavedynamics) then
 
         !============================================================================
         ! Start the Inner (nonlinear, coriolis) loop
@@ -532,27 +594,19 @@ contains
                    inc_X_plus_bY( state(igh_u), dt, inc(igh_u) ) )
     end if    
     
-    if (use_wavedynamics) then
-      if (.not. (spinup_winds .and. timestep*dt <= spinup_period)) then
+    if (.not. (spinup_winds .and. timestep*dt <= spinup_period)) then
 
-        !--------------------------------------------------------------------
-        ! Return field in u array
-        !--------------------------------------------------------------------
-        call invoke( setval_X(u, state(igh_u)) )
-      end if
       !--------------------------------------------------------------------
-      ! Return fields in theta, rho, exner arrays
+      ! Return field in u array
       !--------------------------------------------------------------------
-      call invoke( setval_X(theta, state(igh_t)), &
-                   setval_X(rho,   state(igh_d)), &
-                   setval_X(exner, state(igh_p)) )
-
-    else
-      !--------------------------------------------------------------------
-      ! Return field in theta array only
-      !--------------------------------------------------------------------
-      call invoke( setval_X(theta, state(igh_t)) )
+      call invoke( setval_X(u, state(igh_u)) )
     end if
+    !--------------------------------------------------------------------
+    ! Return fields in theta, rho, exner arrays
+    !--------------------------------------------------------------------
+    call invoke( setval_X(theta, state(igh_t)), &
+                 setval_X(rho,   state(igh_d)), &
+                 setval_X(exner, state(igh_p)) )
 
     nullify( m3_inv, chi, height_w3, height_wth, &
              t_normalisation, u_normalisation, dA, delta )
@@ -577,6 +631,7 @@ contains
 
     if (allocated(state))           deallocate(state)
     if (allocated(state_n))         deallocate(state_n)
+    if (allocated(state_after_slow))         deallocate(state_after_slow)
     if (allocated(reference_state)) deallocate(reference_state)
     if (allocated(rhs_n))           deallocate(rhs_n)
     if (allocated(rhs_np1))         deallocate(rhs_np1)
