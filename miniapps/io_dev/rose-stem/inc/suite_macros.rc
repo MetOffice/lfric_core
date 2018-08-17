@@ -27,7 +27,7 @@
 {%-     do appConfigsCompilerRuns.update({appLabel : run_with_compilers})%}
 {%-   endif%}
 
-{%-   for compiler in appConfigsCompilerRuns[appLabel] %}
+{%-   for compiler in run_with_compilers %}
 {%-     set label = compiler|lower + '_fast-debug' %}
 {%-     for resolution in resolutions %}
 {%-       set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}

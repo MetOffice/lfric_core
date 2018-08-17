@@ -685,13 +685,7 @@
 {%-               set configuration_label_res = appLabel|lower ~ res_label ~ dt_labels[i] ~ '_' ~ label %}
 
 {%-               if 'run_' + configuration_label_res in scheduledTasks %}
-{%-                 if configuration_label in scheduledTasksDict.keys() and
-                       'directives' in scheduledTasksDict[configuration_label].keys() %}
-{%-                   set command_key = TARGET_NORMAL_RUN_METHOD %}
-{%-                 else  %}
-{%-                   set command_key = TARGET_RUN_METHOD %}
-{%-                 endif %}
-
+{%-                 set command_key = TARGET_RUN_METHOD %}
 {%-                 set mpi_parts = '' %}
 {%-                 set mpiopt = '' %}
 {%-                 set run_batcher = TARGET_RUN_BATCHER_DIRECTIVES %}

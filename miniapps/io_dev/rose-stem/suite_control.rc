@@ -7,11 +7,19 @@
 
 {%- set canned_configurations  = [''] %}
 
+{#- "check_compilers" must appear first so it doesn't override the       -#}
+{#- environment set up by "run_application". This is due to shortcomings -#}
+{#- in the test suite                                                    -#}
 {%- set groups = {
 'developer': [
+    'check_compilers( io_dev, default, fast-debug,
+                      resolutions=[("C12",)], checkkgo=False )',
     'run_application( io_dev, default, resolutions=[("C12",)],
+                      env={"directives":{"default":{"mpi_parts":6,
+                                                    "threads":1,
+                                                    "xios_nodes":1,
+                                                    "wallclock":"00:05:00"}}},
                       checkkgo=False, publish=True )',
-    'check_compilers( io_dev, default, fast-debug, resolutions=[("C12",)], checkkgo=False )',
     'godliness',
     'cleanliness'],
 'nightly': [
