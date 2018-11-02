@@ -36,17 +36,22 @@ module init_transport_mod
 
   contains
 
-  !> @param[in] mesh_id     Mesh-id
-  !> @param[inout] chi      Coorindate field
-  !> @param[inout] wind     Wind field
-  !> @param[inout] density  Density field
-  !> @param[in] restart     Checkpoint/restart type with timestepping information
-  subroutine init_transport( mesh_id, chi, wind, density )
+  !> @param[in] mesh_id        Mesh-id
+  !> @param[in,out] chi        Coordinate field
+  !> @param[in,out] wind       Wind field
+  !> @param[in,out] density    Density field
+  !> @param[in,out] dep_pts_x  Departure points in the x-direction
+  !> @param[in,out] dep_pts_y  Departure points in the y-direction
+  !> @param[in,out] dep_pts_z  Departure points in the z-direction
+  subroutine init_transport( mesh_id, chi, wind, density, dep_pts_x, dep_pts_y, dep_pts_z )
 
     integer(i_def), intent(in)        :: mesh_id
     type(field_type), intent(inout)   :: chi(:)
     type(field_type), intent(inout)   :: wind
     type(field_type), intent(inout)   :: density
+    type(field_type), intent(inout)   :: dep_pts_x
+    type(field_type), intent(inout)   :: dep_pts_y
+    type(field_type), intent(inout)   :: dep_pts_z
 
     type(function_space_type), pointer       :: function_space => null()
     procedure(write_interface), pointer      :: tmp_write_ptr => null()
@@ -57,6 +62,17 @@ module init_transport_mod
                           output_space = W3 )
     density = field_type( vector_space = &
                           function_space_collection%get_fs( mesh_id, element_order, W3 ) )
+
+    dep_pts_x  = field_type( vector_space = &
+                          function_space_collection%get_fs( mesh_id, element_order, W2 ), &
+                          output_space = W3 )
+    dep_pts_y  = field_type( vector_space = &
+                          function_space_collection%get_fs( mesh_id, element_order, W2 ), &
+                          output_space = W3 )
+    dep_pts_z  = field_type( vector_space = &
+                          function_space_collection%get_fs( mesh_id, element_order, W2 ), &
+                          output_space = W3 )
+
 
     ! Create runtime_constants object.
     call create_runtime_constants( mesh_id, chi )
@@ -77,7 +93,6 @@ module init_transport_mod
     call wind%set_restart_behaviour( tmp_restart_ptr )
 
     nullify( function_space, tmp_write_ptr, tmp_restart_ptr )
-
 
   end subroutine init_transport
 

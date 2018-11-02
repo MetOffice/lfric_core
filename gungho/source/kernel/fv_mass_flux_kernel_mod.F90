@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------------------
 !> @brief Computes the fluxes for the split transport scheme.
 !>
-!> This kernel computes the mass fluxes used within the Cosmic scheme. It
+!> @details This kernel computes the mass fluxes used within the Cosmic scheme. It
 !> calculates the mass fluxes in using finite volume values rather than using
 !> finite-element coefficients and evaluating the mass fluxes by multiplying
 !> by the basis functions. The mass fluxes are calculated using the PPM +
@@ -24,6 +24,8 @@ module fv_mass_flux_kernel_mod
 
   implicit none
 
+  private
+
   !---------------------------------------------------------------------------
   ! Public types
   !---------------------------------------------------------------------------
@@ -39,7 +41,7 @@ module fv_mass_flux_kernel_mod
         /)
     integer :: iterates_over = CELLS
   contains
-    procedure, nopass ::fv_mass_flux_code
+    procedure, nopass :: fv_mass_flux_code
   end type
 
   !---------------------------------------------------------------------------
@@ -75,9 +77,8 @@ end function fv_mass_flux_kernel_constructor
 !! @param[in] undf_w2 Number of unique degrees of freedom
 !! @param[in] ndf_w2 Number of degrees of freedom per cell
 !! @param[in] map_w2 Dofmap for the cell at the base of the column
-!! @param[inout] flux Flux values which are calculated
+!! @param[in,out] flux Flux values which are calculated
 !! @param[in] dep_pts Departure points
-!! @param[in] u_piola Piola winds
 !! @param[in] stencil_length Length of the 1D stencil
 !! @param[in] stencil_map Dofmaps for the stencil
 !! @param[in] direction Direction in which to calculate the fluxes
@@ -96,7 +97,6 @@ subroutine fv_mass_flux_code( nlayers,              &
                               map_w2,               &
                               flux,                 &
                               dep_pts,              &
-                              u_piola,              &
                               stencil_length,       &
                               stencil_map,          &
                               direction,            &
@@ -126,7 +126,6 @@ subroutine fv_mass_flux_code( nlayers,              &
   integer(kind=i_def), dimension(ndf_w2), intent(in)    :: map_w2
   real(kind=r_def), dimension(undf_w2), intent(inout)   :: flux
   real(kind=r_def), dimension(undf_w2), intent(in)      :: dep_pts
-  real(kind=r_def), dimension(undf_w2), intent(in)      :: u_piola
   integer(kind=i_def), intent(in)                       :: stencil_length
   integer(kind=i_def), intent(in)                       :: stencil_map(1:stencil_length)
   integer(kind=i_def), intent(in)                       :: direction

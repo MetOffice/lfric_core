@@ -13,7 +13,7 @@ number_of_layers=10,
 /
 &finite_element
 cellshape='quadrilateral',
-coordinate_order=0,
+coordinate_order=2,
 element_order=0,
 rehabilitate=.true.,
 supg=.false.,

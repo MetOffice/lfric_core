@@ -2080,131 +2080,8 @@ subroutine invoke_subgrid_coeffs(a0,a1,a2,rho,cell_orientation,direction,rho_app
 
 
 !------------------------------------------------------------------------------- 
-subroutine invoke_conservative_fluxes(    rho,          &
-                                          dep_pts,      &
-                                          u_piola,      &
-                                          mass_flux,    &
-                                          a0_coeffs,    &
-                                          a1_coeffs,    &
-                                          a2_coeffs,    &
-                                          direction,    &
-                                          stencil_extent )
-
-  use conservative_flux_kernel_mod, only: conservative_flux_code
-  use flux_direction_mod,           only: x_direction, y_direction
-  use stencil_dofmap_mod,           only: stencil_dofmap_type, &
-                                          STENCIL_1DX, STENCIL_1DY
-  use timestepping_config_mod,      only: dt
-  use mesh_mod,                     only: mesh_type
-  implicit none
-
-  type(field_type), intent(in)      :: rho
-  type(field_type), intent(in)      :: dep_pts
-  type(field_type), intent(in)      :: u_piola
-  type(field_type), intent(inout)   :: mass_flux
-  type(field_type), intent(in)      :: a0_coeffs
-  type(field_type), intent(in)      :: a1_coeffs
-  type(field_type), intent(in)      :: a2_coeffs
-  integer, intent(in)               :: direction
-  integer, intent(in)               :: stencil_extent
-
-  type( field_proxy_type )  :: mass_flux_proxy, dep_pts_proxy, rho_proxy,     &
-                               u_piola_proxy
-  type( field_proxy_type )  :: a0_coeffs_proxy, a1_coeffs_proxy, a2_coeffs_proxy
-
-  type(stencil_dofmap_type), pointer  :: map => null()
-
-  integer, pointer :: map_rho(:) => null()
-  integer, pointer :: map_w2(:) => null()
-  integer, pointer :: stencil_map(:,:) => null()
-  integer          :: stencil_size
-
-  integer :: undf_w3, ndf_w3
-  integer :: undf_w2, ndf_w2
-  integer :: cell
-  integer :: nlayers
-  type(mesh_type), pointer :: mesh => null()
-  integer                  :: d
-  logical                  :: swap
-
-  rho_proxy     = rho%get_proxy()
-  dep_pts_proxy = dep_pts%get_proxy()
-  u_piola_proxy = u_piola%get_proxy()
-
-  ndf_w3  = rho_proxy%vspace%get_ndf()
-  undf_w3 = rho_proxy%vspace%get_undf()
-
-  ndf_w2  = dep_pts_proxy%vspace%get_ndf()
-  undf_w2 = dep_pts_proxy%vspace%get_undf()
-
-  a0_coeffs_proxy = a0_coeffs%get_proxy()
-  a1_coeffs_proxy = a1_coeffs%get_proxy()
-  a2_coeffs_proxy = a2_coeffs%get_proxy()
-  mass_flux_proxy = mass_flux%get_proxy()
-
-  nlayers = rho_proxy%vspace%get_nlayers()
-
-  ! Note stencil grid types are of the form:
-  !                                   |5|
-  !                                   |3|
-  ! 1DX --> |4|2|1|3|5|  OR  1DY -->  |1|
-  !                                   |2|
-  !                                   |4|
-  if (direction == x_direction) then
-    map => rho_proxy%vspace%get_stencil_dofmap(STENCIL_1DX,stencil_extent)
-  elseif (direction == y_direction) then
-    map => rho_proxy%vspace%get_stencil_dofmap(STENCIL_1DY,stencil_extent)
-  end if
-  stencil_size = map%get_size()
-
-  swap = .false.
-  do d = 1,stencil_extent
-    if (rho_proxy%is_dirty(depth=d)) swap = .true.
-  end do
-  if ( swap ) call rho_proxy%halo_exchange(depth=stencil_extent)
-
-  mesh => rho%get_mesh()
-  !NOTE: The default looping limits for this type of field would be 
-  ! mesh%get_last_halo_cell(1) but this kernel requires a modified loop limit
-  ! in order to function correctly. See ticket #1058.
-  ! The kernel loops over all core cells only.
-  do cell = 1, mesh%get_last_edge_cell() 
-      map_rho => rho_proxy%vspace%get_cell_dofmap( cell )
-      map_w2 => dep_pts_proxy%vspace%get_cell_dofmap( cell )
-
-      stencil_map => map%get_dofmap(cell)
-
-      call conservative_flux_code( nlayers,                     &
-                                   undf_w3,                     &
-                                   ndf_w3,                      &
-                                   map_rho,                     &
-                                   rho_proxy%data,              &
-                                   a0_coeffs_proxy%data,        &
-                                   a1_coeffs_proxy%data,        &
-                                   a2_coeffs_proxy%data,        &
-                                   undf_w2,                     &
-                                   ndf_w2,                      &
-                                   map_w2,                      &
-                                   mass_flux_proxy%data,        &
-                                   dep_pts_proxy%data,          &
-                                   u_piola_proxy%data,          &
-                                   stencil_size,                &
-                                   stencil_map,                 &
-                                   direction,                   &
-                                   dt )
-
-  end do
-  call a0_coeffs_proxy%set_dirty()
-  call a1_coeffs_proxy%set_dirty()
-  call a2_coeffs_proxy%set_dirty()
-
-
-end subroutine invoke_conservative_fluxes
-
-!------------------------------------------------------------------------------- 
 subroutine invoke_fv_mass_fluxes( rho,            &
                                   dep_pts,        &
-                                  u_piola,        &
                                   mass_flux,      &
                                   a0_coeffs,      &
                                   a1_coeffs,      &
@@ -2222,7 +2099,6 @@ subroutine invoke_fv_mass_fluxes( rho,            &
 
   type(field_type), intent(in)      :: rho
   type(field_type), intent(in)      :: dep_pts
-  type(field_type), intent(in)      :: u_piola
   type(field_type), intent(inout)   :: mass_flux
   type(field_type), intent(in)      :: a0_coeffs
   type(field_type), intent(in)      :: a1_coeffs
@@ -2230,8 +2106,7 @@ subroutine invoke_fv_mass_fluxes( rho,            &
   integer, intent(in)               :: direction
   integer, intent(in)               :: stencil_extent
 
-  type( field_proxy_type )  :: mass_flux_proxy, dep_pts_proxy, rho_proxy,     &
-                               u_piola_proxy
+  type( field_proxy_type )  :: mass_flux_proxy, dep_pts_proxy, rho_proxy
   type( field_proxy_type )  :: a0_coeffs_proxy, a1_coeffs_proxy, a2_coeffs_proxy
 
   type(stencil_dofmap_type), pointer  :: map => null()
@@ -2251,7 +2126,6 @@ subroutine invoke_fv_mass_fluxes( rho,            &
 
   rho_proxy     = rho%get_proxy()
   dep_pts_proxy = dep_pts%get_proxy()
-  u_piola_proxy = u_piola%get_proxy()
 
   ndf_w3  = rho_proxy%vspace%get_ndf()
   undf_w3 = rho_proxy%vspace%get_undf()
@@ -2309,7 +2183,6 @@ subroutine invoke_fv_mass_fluxes( rho,            &
                                map_w2,                      &
                                mass_flux_proxy%data,        &
                                dep_pts_proxy%data,          &
-                               u_piola_proxy%data,          &
                                stencil_size,                &
                                stencil_map,                 &
                                direction,                   &

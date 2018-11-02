@@ -18,7 +18,6 @@ module oned_density_update_alg_mod
   use runtime_constants_mod,             only: get_mass_matrix, w3_id
 
   use psykal_lite_mod,                   only: invoke_subgrid_coeffs,      &
-                                               invoke_conservative_fluxes, &
                                                invoke_fv_mass_fluxes
   use transport_config_mod,              only: scheme, &
                                                transport_scheme_horz_cosmic
@@ -46,7 +45,6 @@ contains
 !> @param[in]    rho_in           Density at time n
 !> @param[inout] rho_out          Density after advective update
   subroutine oned_density_update_alg(   direction,            &
-                                        u,                    &
                                         dep_pts,              &
                                         cell_orientation,     &
                                         detj_at_w2,           &
@@ -56,7 +54,6 @@ contains
     implicit none
 
     integer(i_def), intent(in)          :: direction
-    type(field_type),    intent(in)     :: u
     type(field_type),    intent(in)     :: dep_pts
     type(field_type),    intent(in)     :: cell_orientation
     type(field_type),    intent(in)     :: detj_at_w2
@@ -75,7 +72,7 @@ contains
     type(operator_type), pointer :: mm_w3 => null()
 
     rho_fs => rho_in%get_function_space()
-    u_fs   => u%get_function_space() 
+    u_fs   => dep_pts%get_function_space() 
 
     a0 = field_type( vector_space = rho_fs )
     a1 = field_type( vector_space = rho_fs )
@@ -99,7 +96,7 @@ contains
     call invoke( dg_matrix_vector_kernel_type(mass, rho_in, mm_w3) )
     call invoke_subgrid_coeffs(a0, a1, a2, mass, cell_orientation, direction, &
                                rho_approximation_stencil_extent, dep_pt_stencil_extent)
-    call invoke_fv_mass_fluxes(mass, dep_pts, u, mass_flux, &
+    call invoke_fv_mass_fluxes(mass, dep_pts, mass_flux, &
                                a0, a1, a2, direction, dep_pt_stencil_extent)
 
     call cusph_density_update_alg(rho_in, mass_flux, rho_adv_np1, &
@@ -117,7 +114,7 @@ contains
     call invoke_subgrid_coeffs(a0, a1, a2, mass, cell_orientation, direction, &
                                rho_approximation_stencil_extent, dep_pt_stencil_extent)
 
-    call invoke_fv_mass_fluxes(mass, dep_pts, u, mass_flux, &
+    call invoke_fv_mass_fluxes(mass, dep_pts, mass_flux, &
                                a0, a1, a2, direction, dep_pt_stencil_extent)
 
     call cusph_density_update_alg(rho_constant_1, mass_flux, rho_constant_np1, &

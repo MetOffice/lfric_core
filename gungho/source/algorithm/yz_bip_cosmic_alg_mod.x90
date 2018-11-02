@@ -21,26 +21,17 @@ module yz_bip_cosmic_alg_mod
   use runtime_constants_mod,             only: get_coordinates
   use io_mod,                            only: output_nodal
   use runtime_constants_mod,             only: get_detJ_at_w2
-  use fv_divergence_kernel_mod,          only: fv_divergence_kernel_type
-  use vertical_trapezoidal_kernel_mod,   only: vertical_trapezoidal_kernel_type
-  use calc_departure_wind_kernel_mod,    only: calc_departure_wind_kernel_type
   use vert_advective_cosmic_alg_mod,     only: vert_advective_cosmic_alg
   use vert_conservative_cosmic_alg_mod,  only: vert_conservative_cosmic_alg
   use oned_conservative_flux_alg_mod,    only: oned_conservative_flux_alg
   use oned_density_update_alg_mod,       only: oned_density_update_alg
   use cosmic_density_update_alg_mod,     only: cosmic_density_update_alg
-  use psykal_lite_mod,                   only: invoke_calc_deppts
   use timestepping_config_mod,           only: dt
-  use biperiodic_deppt_config_mod,       only: method
-  use subgrid_config_mod,                only: dep_pt_stencil_extent
   use flux_direction_mod,                only: x_direction, y_direction, z_direction
 
   implicit none
 
   private
-
-  ! 'State' items that need to be created once but used every step
-  type( field_type ) :: u_n, u_np1, r_u
 
   public :: yz_bip_cosmic_step
 
@@ -52,22 +43,19 @@ contains
   !>          has currently been tested in the biperiodic planar domain and in
   !>          the horizontal direction only. The wind profile is defined
   !>          analytically.
-  !> @param[inout] rho      Density field
-  !> @param[in]    u        Wind field
-  !> @param[in]    mesh_id  Mesh_id
-  subroutine yz_bip_cosmic_step( rho, u, mesh_id)
+  !> @param[in,out] rho        Density field
+  !> @param[in]     dep_pts_y  Departure points in the y-direction
+  !> @param[in]     dep_pts_z  Departure points in the z-direction
+  subroutine yz_bip_cosmic_step( rho, dep_pts_y, dep_pts_z )
 
     implicit none
 
     type(field_type), intent(inout) :: rho
-    type(field_type), intent(in)    :: u
-    integer(i_def),   intent(in)    :: mesh_id
+    type(field_type), intent(in)    :: dep_pts_y
+    type(field_type), intent(in)    :: dep_pts_z
 
     type(field_type) :: rho_n
-    type(field_type) :: u_n, u_np1
     type(field_type) :: cell_orientation
-    type(field_type) :: departure_wind_n, departure_wind_np1
-    type(field_type) :: dep_pts_y, dep_pts_z
     type(field_type) :: mass_flux_y, mass_flux_z
     type(field_type) :: rho_adv_z, rho_hat_adv_z
     type(field_type) :: rho_adv_y, rho_hat_adv_y
@@ -77,22 +65,14 @@ contains
     type(function_space_type), pointer :: w3_fs     => null()
 
     type(field_type), pointer :: detj_at_w2 => null()
-    type(field_type), pointer :: chi(:) => null()
 
     detj_at_w2 => get_detj_at_w2()
-    chi        => get_coordinates()
 
-    w2_fs      => function_space_collection%get_fs( mesh_id, element_order, W2 )
-    w3_fs      => function_space_collection%get_fs( mesh_id, element_order, W3 )
+    w2_fs      => dep_pts_y%get_function_space()
+    w3_fs      => rho%get_function_space()
 
-    u_n                = field_type( vector_space = w2_fs )
-    u_np1              = field_type( vector_space = w2_fs )
     mass_flux_y        = field_type( vector_space = w2_fs )
     mass_flux_z        = field_type( vector_space = w2_fs )
-    departure_wind_n   = field_type( vector_space = w2_fs )
-    departure_wind_np1 = field_type( vector_space = w2_fs )
-    dep_pts_y          = field_type( vector_space = w2_fs )
-    dep_pts_z          = field_type( vector_space = w2_fs )
 
     rho_n              = field_type( vector_space = w3_fs )
     cell_orientation   = field_type( vector_space = w3_fs )
@@ -103,30 +83,11 @@ contains
     rho_temp           = field_type( vector_space = w3_fs )
 
     ! Calculate the departure points for W2 nodal points at lowest order
-    call invoke( name = "initialise_departure_points",    &
-                 setval_c(dep_pts_y,        LARGE_REAL_NEGATIVE), &
-                 setval_c(cell_orientation, 1.0_r_def) )
-
-    call invoke( setval_X(rho_n, rho),  &
-                 setval_X(u_n, u),      &
-                 setval_X(u_np1, u) )
-
-    ! Routine which converts coefficients of the finite element representation of the winds
-    ! into a finite volume form where departure wind values align with the x-y directions
-    ! of the mesh and have the same sign.
-    call invoke( calc_departure_wind_kernel_type(departure_wind_n,u_n,chi) )
-    call invoke( calc_departure_wind_kernel_type(departure_wind_np1,u_np1,chi) )
-
-    ! Calculate the departure points in the y-direction.
-    call invoke_calc_deppts(departure_wind_n,departure_wind_np1,dep_pts_y,cell_orientation,  &
-                                          y_direction,method,dep_pt_stencil_extent)
-
-    ! Calculate the departure points in the z-direction.
-    call invoke( setval_c(dep_pts_z,LARGE_REAL_NEGATIVE),  &
-                 vertical_trapezoidal_kernel_type(dep_pts_z,departure_wind_n,departure_wind_np1) )
+    call invoke( setval_c(cell_orientation, 1.0_r_def), &
+                 setval_X(rho_n, rho) )
 
     ! Perform advective update in the Y direction.
-    call oned_density_update_alg(y_direction,u_n,dep_pts_y,cell_orientation,detj_at_w2,rho_n,rho_adv_y)
+    call oned_density_update_alg(y_direction,dep_pts_y,cell_orientation,detj_at_w2,rho_n,rho_adv_y)
 
     ! Perform advective update in the Z direction.
     call vert_advective_cosmic_alg(rho_adv_z,rho_n,dep_pts_z,cell_orientation,dt)
@@ -138,7 +99,7 @@ contains
                  aX_plus_bY(rho_hat_adv_z, 0.5_r_def, rho_n, 0.5_r_def, rho_adv_z) )
 
     ! Calculate the mass flux in the Y direction.
-    call oned_conservative_flux_alg(y_direction, departure_wind_n, dep_pts_y, cell_orientation,  &
+    call oned_conservative_flux_alg(y_direction, dep_pts_y, cell_orientation,  &
                                                     rho_hat_adv_z, rho_hat_adv_z, mass_flux_y)
 
     ! Calculate the divergence in the Y direction and update density.
@@ -150,7 +111,7 @@ contains
     ! Calculate the divergence in the Z direction and update density.
     call cosmic_density_update_alg(rho, rho_temp, mass_flux_z, detj_at_w2, cell_orientation, z_direction)
 
-    nullify( w2_fs, w3_fs, chi, detj_at_w2 )
+    nullify( w2_fs, w3_fs, detj_at_w2 )
 
   end subroutine yz_bip_cosmic_step
 

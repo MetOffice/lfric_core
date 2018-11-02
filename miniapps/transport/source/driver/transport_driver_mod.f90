@@ -16,7 +16,6 @@ module transport_driver_mod
   use global_mesh_collection_mod,     only: global_mesh_collection,           &
                                             global_mesh_collection_type
   use transport_configuration_mod,    only: final_configuration
-  use transport_alg_mod,              only: transport_alg_step
   use transport_mod,                  only: transport_load_configuration
   use init_fem_mod,                   only: init_fem
   use init_transport_mod,             only: init_transport
@@ -50,9 +49,10 @@ module transport_driver_mod
   use diagnostic_alg_mod,             only: density_diagnostic_alg
   use mass_conservation_alg_mod,      only: mass_conservation
   use yz_bip_cosmic_alg_mod,          only: yz_bip_cosmic_step
-  use cusph_cosmic_transport_alg_mod, only: cusph_cosmic_transport_init,      &
+  use cusph_cosmic_transport_alg_mod, only: set_winds,      &
                                             cusph_cosmic_transport_step
   use cosmic_threed_alg_mod,          only: cosmic_threed_transport_step
+  use calc_dep_pts_alg_mod,           only: calc_dep_pts
   use xios
 
   implicit none
@@ -68,6 +68,9 @@ module transport_driver_mod
   ! Prognostic fields
   type(field_type) :: wind
   type(field_type) :: density
+  type(field_type) :: dep_pts_x
+  type(field_type) :: dep_pts_y
+  type(field_type) :: dep_pts_z
 
   ! Coordinate field
   type(field_type), target, dimension(3) :: chi
@@ -78,8 +81,8 @@ module transport_driver_mod
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Sets up required state in preparation for run.
-  !>
+  !> @brief Sets up required state in preparation for run.
+  !! @param[in] filename Configuration namelist file
   subroutine initialise_transport( filename )
 
     implicit none
@@ -135,7 +138,7 @@ contains
     call init_fem( mesh_id, chi )
 
     ! Transport initialisation
-    call init_transport( mesh_id, chi, wind, density )
+    call init_transport( mesh_id, chi, wind, density, dep_pts_x, dep_pts_y, dep_pts_z )
 
     if ( (write_xios_output) ) then
       dtime = int(dt)
@@ -169,7 +172,7 @@ contains
   end subroutine initialise_transport
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Performs time stepping.
+  !> @brief Performs time stepping.
   !>
   subroutine run_transport()
 
@@ -195,15 +198,17 @@ contains
       end if
 
       ! Update the wind each timestep.
-      call cusph_cosmic_transport_init( mesh_id, wind, timestep )
+      call set_winds( wind, mesh_id, timestep )
+      ! Calculate departure points.
+      call calc_dep_pts( dep_pts_x, dep_pts_y, dep_pts_z, wind, chi )
 
       select case( scheme )
         case ( transport_scheme_yz_bip_cosmic )
-          call yz_bip_cosmic_step( density, wind, mesh_id )
+          call yz_bip_cosmic_step( density, dep_pts_y, dep_pts_z )
         case ( transport_scheme_horz_cosmic )
-          call cusph_cosmic_transport_step( mesh_id, density )
+          call cusph_cosmic_transport_step( density, dep_pts_x, dep_pts_y )
         case ( transport_scheme_cosmic_3D )
-          call cosmic_threed_transport_step( density, wind, mesh_id, timestep )
+          call cosmic_threed_transport_step( density, dep_pts_x, dep_pts_y, dep_pts_z )
         case default
           call log_event( "Transport mini-app: incorrect transport option chosen, "// &
                           "stopping program! ",LOG_LEVEL_ERROR )
@@ -238,7 +243,7 @@ contains
   end subroutine run_transport
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Tidies up after a run.
+  !> @brief Tidies up after a run.
   !>
   subroutine finalise_transport()
 

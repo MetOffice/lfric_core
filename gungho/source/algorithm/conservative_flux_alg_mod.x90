@@ -29,7 +29,6 @@ module conservative_flux_alg_mod
                                                rho_approximation_stencil_extent
   use psykal_lite_mod,                   only: invoke_subgrid_coeffs,               &
                                                invoke_subgrid_coeffs_conservative,  &
-                                               invoke_conservative_fluxes,          &
                                                invoke_fv_mass_fluxes
   use flux_direction_mod,                only: x_direction, y_direction
   use psykal_lite_mod,                   only: invoke_set_field_scalar
@@ -50,16 +49,14 @@ contains
   !>          calculated for each W2 nodal point at lowest order. The departure
   !>          points is an input variable as well as the density. Output variable
   !>          is the mass flux in one direction.
-  !> @param[in] u                   Wind values
-  !> @param[in] dep_pts_x           Departure points for the x-direction
-  !> @param[in] dep_pts_y           Departure points for the y-direction
-  !> @param[in] cell_orientation    Orientation of cells, in particular halo cells
-  !> @param[in] rho_x               Density calculated from advective Cosmic step in x-direction
-  !> @param[in] rho_y               Density calculated from advective Cosmic step in y-direction
-  !> @param[inout] mass_flux_x      1D conservative mass flux values in the x-direction
-  !> @param[inout] mass_flux_y      1D conservative mass flux values in the y-direction
-  subroutine conservative_flux_alg( u,                   &
-                                    dep_pts_x,           &
+  !> @param[in] dep_pts_x            Departure points for the x-direction
+  !> @param[in] dep_pts_y            Departure points for the y-direction
+  !> @param[in] cell_orientation     Orientation of cells, in particular halo cells
+  !> @param[in] rho_x                Density calculated from advective Cosmic step in x-direction
+  !> @param[in] rho_y                Density calculated from advective Cosmic step in y-direction
+  !> @param[in,out] mass_flux_x      1D conservative mass flux values in the x-direction
+  !> @param[in,out] mass_flux_y      1D conservative mass flux values in the y-direction
+  subroutine conservative_flux_alg( dep_pts_x,           &
                                     dep_pts_y,           &
                                     cell_orientation,    &
                                     rho_x,               &
@@ -69,7 +66,6 @@ contains
 
     implicit none
 
-    type(field_type),    intent(in)     :: u
     type(field_type),    intent(in)     :: dep_pts_x
     type(field_type),    intent(in)     :: dep_pts_y
     type(field_type),    intent(in)     :: cell_orientation
@@ -119,10 +115,10 @@ contains
                                               rho_approximation_stencil_extent, &
                                               dep_pt_stencil_extent  )
 
-    call invoke_fv_mass_fluxes(  rho_y, dep_pts_x, u, mass_flux_x,  &
+    call invoke_fv_mass_fluxes(  rho_y, dep_pts_x, mass_flux_x,  &
                                  a0_y, a1_y, a2_y, x_direction, dep_pt_stencil_extent )
 
-    call invoke_fv_mass_fluxes(  rho_x, dep_pts_y, u, mass_flux_y,  &
+    call invoke_fv_mass_fluxes(  rho_x, dep_pts_y, mass_flux_y,  &
                                  a0_x, a1_x, a2_x, y_direction, dep_pt_stencil_extent )
 
   end subroutine conservative_flux_alg

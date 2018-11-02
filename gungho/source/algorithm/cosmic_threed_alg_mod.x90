@@ -25,10 +25,11 @@ module cosmic_threed_alg_mod
   use cusph_fv_density_update_alg_mod,   only: cusph_fv_density_update_alg
   use flux_direction_mod,                only: x_direction, y_direction,      &
                                                z_direction
-  use vertical_fluxes_alg_mod,           only: vertical_fluxes_alg
+  use vert_conservative_cosmic_alg_mod,  only: vert_conservative_cosmic_alg
   use cosmic_density_update_alg_mod,     only: cosmic_density_update_alg
   use output_config_mod,                 only: subroutine_timers
   use timer_mod,                         only: timer
+  use timestepping_config_mod,           only: dt
 
   implicit none
 
@@ -43,27 +44,26 @@ contains
   !>          and then does a single Cosmic update in the vertical. The algorithm
   !>          may be defined as rho_np1 = Z(rho_xy) with rho_xy the horizontal
   !>          transport of rho.
-  !> @param[inout] rho      Density field
-  !> @param[in]    u        Wind field
-  !> @param[in]    mesh_id  Mesh_id
-  !> @param[in]    timestep Timestep
-  subroutine cosmic_threed_transport_step( rho,     &
-                                           u,       &
-                                           mesh_id, &
-                                           timestep )
+  !> @param[in,out] rho          Density field
+  !> @param[in]     dep_pts_x    Departure points in x direction
+  !> @param[in]     dep_pts_y    Departure points in y direction
+  !> @param[in]     dep_pts_z    Departure points in z direction
+  subroutine cosmic_threed_transport_step( rho,           &
+                                           dep_pts_x,     &
+                                           dep_pts_y,     &
+                                           dep_pts_z )
 
     implicit none
 
     type(field_type), intent(inout) :: rho
-    type(field_type), intent(in)    :: u
-    integer(i_def),   intent(in)    :: mesh_id
-    integer(i_def),   intent(in)    :: timestep
+    type(field_type), intent(in)    :: dep_pts_x
+    type(field_type), intent(in)    :: dep_pts_y
+    type(field_type), intent(in)    :: dep_pts_z
 
     type(field_type), pointer :: chi(:) => null()
     type(field_type), pointer :: cell_orientation => null()
     type(field_type), pointer :: detj_at_w2 => null()
 
-    type(field_type) :: u_n, u_np1
     type(field_type) :: mass_flux_x, mass_flux_y, mass_flux_z
     type(field_type) :: rho_n, rho_x, rho_xy
 
@@ -74,8 +74,8 @@ contains
     cell_orientation => get_cell_orientation()
     detj_at_w2       => get_detj_at_w2()
 
-    w2_fs => function_space_collection%get_fs( mesh_id, element_order, W2 )
-    w3_fs => function_space_collection%get_fs( mesh_id, element_order, W3 )
+    w2_fs => dep_pts_x%get_function_space()
+    w3_fs => rho%get_function_space()
 
     rho_n  = field_type( vector_space = w3_fs )
     rho_x  = field_type( vector_space = w3_fs )
@@ -84,18 +84,15 @@ contains
     mass_flux_x = field_type( vector_space = w2_fs )
     mass_flux_y = field_type( vector_space = w2_fs )
     mass_flux_z = field_type( vector_space = w2_fs )
-    u_n         = field_type( vector_space = w2_fs )
-    u_np1       = field_type( vector_space = w2_fs )
 
-    call invoke( setval_X( rho_n, rho ),  &
-                 setval_X( u_n, u ),      &
-                 setval_X( u_np1, u ) )
+    call invoke( setval_X( rho_n, rho ) )
 
     if ( subroutine_timers ) call timer('3D Cosmic update')
 
     ! Calculate mass fluxes in horizontal direction using Cosmic.
-    call cusph_split_transport_alg( u_n, u_np1, rho_n, chi, cell_orientation,   &
-                                    mesh_id, mass_flux_x, mass_flux_y, detj_at_w2 )
+    call cusph_split_transport_alg( rho_n, cell_orientation,         &
+                                    mass_flux_x, mass_flux_y,        &
+                                    dep_pts_x, dep_pts_y, detj_at_w2 )
 
     ! Update the density field given horizontal mass fluxes.
     call cusph_fv_density_update_alg( rho_n, mass_flux_x, mass_flux_y, rho_x,   &
@@ -104,7 +101,8 @@ contains
                                       cell_orientation, y_direction, detj_at_w2 )
 
     ! Update density in the vertical given the horizontally transported density.
-    call vertical_fluxes_alg( mass_flux_z, rho_xy, u_n, u_np1, chi )
+    call vert_conservative_cosmic_alg( mass_flux_z, rho_xy, dep_pts_z, dt )
+
     call cosmic_density_update_alg( rho, rho_xy, mass_flux_z, detj_at_w2,       &
                                     cell_orientation, z_direction )
 

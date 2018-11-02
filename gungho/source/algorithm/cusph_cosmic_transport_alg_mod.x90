@@ -5,9 +5,8 @@
 !-----------------------------------------------------------------------------
 !> @brief An algorithm for COSMIC transport scheme on the cubed-sphere.
 !> @details The algorithm iterates forwards in time and transports the density
-!>          field using the COSMIC advection scheme. This implementation
-!>          has been tested on the cubed-sphere domain and in
-!>          the horizontal direction only.
+!>          field using the COSMIC advection scheme. This routine updates density
+!>          for horizontal transport only.
 module cusph_cosmic_transport_alg_mod
 
   use constants_mod,                     only: r_def, i_def, LARGE_REAL_NEGATIVE
@@ -41,26 +40,24 @@ module cusph_cosmic_transport_alg_mod
   type( field_type ) :: u_n, u_np1, rho_n, rho_np1, mass_flux_x, mass_flux_y
   type( field_type ) :: rho_temp, r_u
 
-  public :: cusph_cosmic_transport_init
+  public :: set_winds
   public :: cusph_cosmic_transport_step
 
 contains
 
-  !> @brief Init routine for cosmic transport timestepping algorithm.
-  !> @details Rho and u fields are initialised before
-  !>          this algorithm is called. State items are created.
-  !> @param[in]      mesh_id   Mesh id of mesh on which the model runs
-  !> @param[inout]   u         3D wind field
-  !> @param[in]      timestep  Timestep
-  subroutine cusph_cosmic_transport_init(mesh_id, u, timestep)
+  !> @brief Routine which analytically defines the winds each timestep.
+  !> @details Wind field is defined each timestep for the transport only test
+  !>          cases which are run within the transport mini-app.
+  !> @param[in,out]   u         3D wind field
+  !> @param[in]       mesh_id   Mesh id of mesh on which the model runs
+  !> @param[in]       timestep  Timestep
+  subroutine set_winds(u, mesh_id, timestep)
 
     implicit none
 
-    integer(i_def),      intent(in)    :: mesh_id
-    integer(i_def),      intent(in)    :: timestep
-
-    ! Prognostic wind field
-    type( field_type ), intent( inout ) :: u
+    integer(i_def),   intent(in)    :: mesh_id
+    type(field_type), intent(inout) :: u
+    integer(i_def),   intent(in)    :: timestep
 
     type(function_space_type), pointer    :: w2_fs   => null()
     type(function_space_type), pointer    :: w3_fs   => null()
@@ -100,23 +97,24 @@ contains
 
     nullify(w2_fs, w3_fs, chi)
 
-  end subroutine cusph_cosmic_transport_init
+  end subroutine set_winds
 
   !> @brief An algorithm for testing the COSMIC transport scheme.
   !> @details The algorithm iterates forwards in time and transports the density
-  !>          field using the COSMIC advection scheme. This implementation
-  !>          has currently been tested in the biperiodic planar domain and in
-  !>          the horizontal direction only. The wind profile is defined
-  !>          analytically.
-  !> @param[in]    mesh_id          Mesh id of the mesh all fields are on
+  !>          field using the COSMIC advection scheme. This routine advects in
+  !>          horizontal direction only. The wind profile is defined analytically.
   !> @param[inout] rho              Density field
-  subroutine cusph_cosmic_transport_step( mesh_id,            &
-                                          rho )
+  !> @param[in]    dep_pts_x        Departure points in the x direction
+  !> @param[in]    dep_pts_y        Departure points in the y direction
+  subroutine cusph_cosmic_transport_step( rho,                &
+                                          dep_pts_x,          &
+                                          dep_pts_y )
 
     implicit none
 
-    integer(i_def),      intent(in)    :: mesh_id
     type(field_type),    intent(inout) :: rho
+    type(field_type),    intent(in)    :: dep_pts_x
+    type(field_type),    intent(in)    :: dep_pts_y
 
     type(field_type), pointer :: chi(:) => null()
     ! Array to hold cell orientation values in W3 field
@@ -133,8 +131,9 @@ contains
                  )
 
     ! Call algorithm to calculate mass fluxes using COSMIC scheme
-    call cusph_split_transport_alg( u_n, u_np1, rho_n, chi, cell_orientation,  &
-                                 mesh_id, mass_flux_x, mass_flux_y, detj_at_w2 )
+    call cusph_split_transport_alg( rho_n, cell_orientation,  &
+                                 mass_flux_x, mass_flux_y, dep_pts_x, &
+                                 dep_pts_y, detj_at_w2 )
 
     call cusph_fv_density_update_alg(rho_n, mass_flux_x, mass_flux_y, rho_temp,     &
                                       cell_orientation, x_direction, detj_at_w2)
