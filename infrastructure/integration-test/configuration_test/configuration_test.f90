@@ -6,7 +6,7 @@
 
 program configuration_test
 
-  use iso_fortran_env,             only : error_unit, output_unit
+  use iso_fortran_env,             only : error_unit
   use mpi_mod,                     only : initialise_comm, store_comm,       &
                                           finalise_comm,                     &
                                           get_comm_rank
@@ -39,7 +39,8 @@ program configuration_test
   integer       :: comm
   integer       :: rank
   integer       :: condition
-  character(30) :: format_string
+  character(20) :: result_filename
+  character(40) :: format_string
 
   ! Initialse mpi and create the default communicator: mpi_comm_world
   call initialise_comm(comm)
@@ -50,7 +51,6 @@ program configuration_test
   rank = get_comm_rank()
 
   open( file_unit, file=filename, iostat=condition )
-
   if (condition /= 0) then
     write( error_unit, '("Failed to open file: ",A)' ) filename
     stop 3
@@ -69,29 +69,43 @@ program configuration_test
   call postprocess_another_list_namelist
   call postprocess_one_of_each_test_namelist
 
+  write( result_filename, '("result.", I0, ".txt")' ) rank
+  open( file_unit, file=result_filename, iostat=condition )
+  if (condition /= 0) then
+    write( error_unit, '("Failed to open file: ",A)' ) result_filename
+    stop 5
+  end if
+
+  write( file_unit, '(I0, A, I0)' ) rank, ' a_dim: ', a_dim
+  write( file_unit, '(I0, " angle_deg: ", E14.7)' ) rank, angle_deg
+  write( file_unit, '(I0, " angle_rad: ", E14.7)' ) rank, angle_rad
+  write( file_unit, '(I0, " an_enum: ", A)' ) rank, &
+                                              trim(key_from_an_enum( an_enum ))
+
+  write( format_string, '(A,I0,A)') '(I0, A, ', max_array_size,  'E14.7)'
+  write( file_unit, format_string ) &
+    rank, ' bounded_array_local_dim:', bounded_array_local_dim
+  write( file_unit, format_string ) &
+    rank, ' bounded_array1_namelist_dim:', bounded_array1_namelist_dim
+  write( file_unit, format_string ) &
+    rank, ' bounded_array2_namelist_dim:', bounded_array2_namelist_dim
+  write( file_unit, format_string ) &
+    rank, ' bounded_array_source_dim:', bounded_array_source_dim
+  write( file_unit, format_string ) rank, ' closed_array: ', closed_array
+
+  write( format_string, &
+         '("(I0, "" open_array: "", ", I0, "I3)")' ) max_array_size
+  write( file_unit, format_string ) rank, open_array
+  write( file_unit, '(I0, " some_string: ''", A, "''")' ) rank, &
+                                                           trim(some_string)
+  write( file_unit, '(I0, " whole_number: ", I0)' ) rank, whole_number
+
+  close( file_unit, iostat=condition )
+  if (condition /= 0) then
+    write( error_unit, '("Failed to close file: ", A)' ) result_filename
+    stop 6
+  end if
+
   call finalise_comm()
-
-  write( output_unit, '(A, I0)'    ) 'a_dim: ',     a_dim
-  write( output_unit, '(A, E14.7)' ) 'angle_deg: ', angle_deg
-  write( output_unit, '(A, E14.7)' ) 'angle_rad: ', angle_rad
-  write( output_unit, '(A, A)'     ) 'an_enum: ',   key_from_an_enum( an_enum )
-
-  write( format_string, '(A,I0,A)') '(A, ', max_array_size,  'E14.7)' 
-  write( output_unit, format_string ) &
-    'bounded_array_local_dim:', bounded_array_local_dim
-  write( output_unit, format_string ) &
-    'bounded_array1_namelist_dim:', bounded_array1_namelist_dim
-  write( output_unit, format_string ) &
-    'bounded_array2_namelist_dim:', bounded_array2_namelist_dim
-  write( output_unit, format_string ) &
-    'bounded_array_source_dim:', bounded_array_source_dim
-
-  write( output_unit, format_string ) 'closed_array: ', closed_array
-
-  write( format_string, '(A,I0,A)') '(A, ', max_array_size,  'I3)' 
-  write( output_unit, format_string ) 'open_array: ', open_array
-
-  write( output_unit, '(A)'     ) 'some_string: "'//trim(some_string)//'"'
-  write( output_unit, '(A, I0)' ) 'whole_number: ', whole_number
 
 end program configuration_test

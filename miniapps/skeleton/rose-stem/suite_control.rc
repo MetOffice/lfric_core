@@ -9,9 +9,9 @@
 
 {%- set groups = {
 'developer': [
-    'canned_test(skeleton)',
-    'run_application( skeleton, default, resolutions=[("C24",)] )',
-    'check_compilers( skeleton, default, fast-debug, resolutions=[("C12",)])',
+    'run_application("skeleton", "default", resolutions=[("C24",)])',
+    'check_compilers("skeleton", "default", "fast-debug", resolution=("C24",))',
+    'canned_test("skeleton")',
     'godliness',
     'cleanliness'],
 'nightly': [

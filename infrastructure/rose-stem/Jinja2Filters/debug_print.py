@@ -6,13 +6,17 @@
 # under which the code may be used.
 ##############################################################################
 '''
-Filter for Jinja2 which prints to standard error. This is for debug purposes
-only.
+Implements a Jinja2 filter which prints to standard error.
+This is for debug purposes only.
 '''
 
 from __future__ import print_function
 
 import sys
 
-def debug_print( value ):
-  print( value, file=sys.stderr )
+
+def debug_print(value):
+    '''
+    Sends the argument string to standard out for debug.
+    '''
+    print(value, file=sys.stderr)

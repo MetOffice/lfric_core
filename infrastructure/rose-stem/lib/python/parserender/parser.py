@@ -15,55 +15,51 @@ import copy
 import hashlib
 import re
 
+
 ##############################################################################
 class Event(object):
     '''
     An "event" gleened from parsing the output of various processes.
     '''
+    # pylint: disable=too-many-instance-attributes
 
-    filenamePattern = re.compile( r'/.+?/dynamo/(.+)' )
-
-    def __init__( self ):
+    def __init__(self):
         self.occurrences = 1
-        self.filename   = None
-        self.lineNumber = None
-        self.level      = None
-        self.eventCode  = None
-        self.message    = None
-        self.source     = None
-        self.highlightStart = None
-        self.highlightEnd   = None
-        self.highlightRange = ':'
+        self.filename = None
+        self.line_number = None
+        self.level = None
+        self.event_code = None
+        self.message = None
+        self.source = None
+        self.highlight_start = None
+        self.highlight_end = None
+        self.highlight_range = ':'
 
-    def setFilename( self, filename ):
+    def set_filename(self, filename):
         '''
         The file in which the event occurred.
         '''
-        match = Event.filenamePattern.match( filename )
-        if match:
-            self.filename = match.group(1)
-        else:
-            self.filename = filename
+        self.filename = filename
 
-    def setLineNumber( self, lineNumber ):
+    def set_line_number(self, line_number):
         '''
         The line of the file in which the event occurred.
         '''
-        self.lineNumber = lineNumber
+        self.line_number = line_number
 
-    def setLevel( self, level ):
+    def set_level(self, level):
         '''
         Severity of the event.
         '''
-        self.level   = level
+        self.level = level
 
-    def setEventCode( self, code ):
+    def set_event_code(self, code):
         '''
         A code for the event.
         '''
-        self.eventCode = code
+        self.event_code = code
 
-    def setMessage( self, message ):
+    def set_message(self, message):
         '''
         The description of the event.
         '''
@@ -72,45 +68,53 @@ class Event(object):
         message = message.replace(u'\u2019', "'")
         self.message = message
 
-    def extendMessage( self, extension ):
+    def extend_message(self, extension):
         '''
         Append additional text to the message.
         '''
-        self.setMessage( self.message + ' ' + extension )
+        self.set_message(self.message + ' ' + extension)
 
-    def setSource( self, source ):
+    def set_source(self, source):
         '''
         The line of source the event refers to.
         '''
         self.source = source
 
-    def setHighlight( self, start, end ):
+    def set_highlight(self, start, end):
         '''
         The first and last characters within the source line to highlight.
         '''
-        self.highlightStart = start
-        self.highlightEnd   = end
-        self.highlightRange = str(start) + ':' + str(end)
+        self.highlight_start = start
+        self.highlight_end = end
+        self.highlight_range = str(start) + ':' + str(end)
 
-    def getHash( self ):
+    def get_hash(self):
         '''
         Calculates a hash for the event.
         '''
         hasher = hashlib.sha1()
-        if self.filename:       hasher.update( self.filename )
-        if self.lineNumber:     hasher.update( str(self.lineNumber) )
-        if self.highlightStart: hasher.update( str(self.highlightStart) )
-        if self.highlightEnd:   hasher.update( str(self.highlightEnd) )
-        if self.level:          hasher.update( self.level )
-        if self.eventCode:      hasher.update( self.eventCode )
-        if self.message:        hasher.update( self.message )
+        if self.filename:
+            hasher.update(self.filename)
+        if self.line_number:
+            hasher.update(str(self.line_number))
+        if self.highlight_start:
+            hasher.update(str(self.highlight_start))
+        if self.highlight_end:
+            hasher.update(str(self.highlight_end))
+        if self.level:
+            hasher.update(self.level)
+        if self.event_code:
+            hasher.update(self.event_code)
+        if self.message:
+            hasher.update(self.message)
         return hasher.digest()
 
-    def bump( self ):
+    def bump(self):
         '''
         Increments the occurence counter for this event.
         '''
         self.occurrences = self.occurrences + 1
+
 
 ##############################################################################
 class Parser(object):
@@ -119,26 +123,28 @@ class Parser(object):
     '''
     __MetaClass__ = ABCMeta
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         '''
-        Initialises a Parser object from the filename of a Cylc error log file.
+        Initialises a Parser object a log file's contents.
 
         In their initialiser children should set up any state their parser
-        needs, the call "super(<ChildClass>, self).__init__( errfile )". They
-        will then have their "acceptLine" method called for each line in the
+        needs, the call "super(<ChildClass>, self).__init__(errfile)". They
+        will then have their "accept_line" method called for each line in the
         log file.
+
+        errfile (str) Text sent to standard out by the process of interest.
         '''
         self._events = {}
 
         for line in errfile:
-            if not line.strip(): # Ignore blank lines
+            if not line.strip():  # Ignore blank lines
                 continue
 
             line = line.decode('utf-8')
             while line:
-                line, event = self.acceptLine( line )
+                line, event = self.accept_line(line)
                 if event:
-                    signature = event.getHash()
+                    signature = event.get_hash()
                     if signature in self._events:
                         self._events[signature].bump()
                     else:
@@ -147,16 +153,16 @@ class Parser(object):
         # but people are waiting.
         line = 'EOF'
         while line:
-            line, event = self.acceptLine( line )
+            line, event = self.accept_line(line)
             if event:
-                signature = event.getHash()
+                signature = event.get_hash()
                 if signature in self._events:
                     self._events[signature].bump()
                 else:
                     self._events[signature] = event
 
     @abstractmethod
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         '''
         Examine one line of the input file.
 
@@ -166,49 +172,57 @@ class Parser(object):
         It should return any of the input line not yet parsed (or None if it
         is all parsed) and any event which may have become available through
         the processing of the line.
+
+        line (str) Next line in the log file.
         '''
         pass
 
-    def processEvents( self, processor ):
+    def process_events(self, processor):
         '''
         Passes each event, in turn, to the processor for potential
         modification.
 
-        The processor is a function which accepts an event and returns an
-        event.
+        processor (function) Accepts an event and returns an event.
         '''
-        newEvents = {}
+        new_events = {}
         for event in self._events.itervalues():
-            newEvent = processor( event )
-            newEvents[newEvent.getHash()] = newEvent
-        self._events = newEvents
+            new_event = processor(event)
+            new_events[new_event.get_hash()] = new_event
+        self._events = new_events
 
-    def getEvents( self, ignoreCodes=[], groupBy=None ):
+    def get_events(self, ignore_codes=None, group_by=None):
         '''
         Gets the events collected by parsing the file.
 
-        Returns a dictionary keyed on the attribute specified in groupBy.
+        ignore_codes (list) Events with codes appearing in this list will be
+                            ommitted from the results.
+        group_by (str) Name of event property to use when grouping the results.
 
-        If groupBy is not specigied then returns the events as a list.
+        Returns a dictionary keyed on the attribute specified in group_by. If
+        group_by is not specigied then returns the events as a list.
         '''
-        if groupBy:
+        if not ignore_codes:
+            ignore_codes = []
+
+        if group_by:
             groups = {}
             for event in self._events.itervalues():
-                if event.eventCode in ignoreCodes:
+                if event.event_code in ignore_codes:
                     continue
 
-                groupingValue = getattr(event, groupBy)
+                grouping_value = getattr(event, group_by)
 
-                if groupingValue not in groups:
-                    groups[groupingValue] = []
+                if grouping_value not in groups:
+                    groups[grouping_value] = []
 
-                groups[groupingValue].append( copy.deepcopy( event ) )
+                groups[grouping_value].append(copy.deepcopy(event))
 
             return groups
         else:
-            return [copy.deepcopy(event) \
-                    for event in self._events.itervalues() \
-                    if event.eventCode not in ignoreCodes]
+            return [copy.deepcopy(event)
+                    for event in self._events.itervalues()
+                    if event.event_code not in ignore_codes]
+
 
 ##############################################################################
 class CylcParser(Parser):
@@ -217,27 +231,28 @@ class CylcParser(Parser):
 
     This picks up the start and completion timestamps.
     '''
-    startTimePattern = re.compile( r'CYLC_JOB_INIT_TIME=(\S+)' )
-    endTimePattern = re.compile( r'CYLC_JOB_EXIT_TIME=(\S+)' )
+    startTimePattern = re.compile(r'CYLC_JOB_INIT_TIME=(\S+)')
+    endTimePattern = re.compile(r'CYLC_JOB_EXIT_TIME=(\S+)')
 
-    def __init__( self, statusfile, compiler=None ):
-        self.started   = None
+    def __init__(self, statusfile, compiler=None):
+        self.started = None
         self.completed = None
-        self.compiler  = compiler
-        super(CylcParser, self).__init__( statusfile )
+        self.compiler = compiler
+        super(CylcParser, self).__init__(statusfile)
 
-    def acceptLine( self, line ):
-            match = BuildParser.startTimePattern.match( line )
-            if match:
-              self.started = match.group( 1 )
-              return None, None
-
-            match = BuildParser.endTimePattern.match( line )
-            if match:
-              self.completed = match.group( 1 )
-              return None, None
-
+    def accept_line(self, line):
+        match = BuildParser.startTimePattern.match(line)
+        if match:
+            self.started = match.group(1)
             return None, None
+
+        match = BuildParser.endTimePattern.match(line)
+        if match:
+            self.completed = match.group(1)
+            return None, None
+
+        return None, None
+
 
 ##############################################################################
 class BuildParser(CylcParser):
@@ -246,57 +261,59 @@ class BuildParser(CylcParser):
 
     This is done in order to determine which compiler was in use.
     '''
-    fortranPattern = re.compile( r'\*\* Chosen (\S+) Fortran compiler' )
+    fortranPattern = re.compile(r'\*\* Chosen (\S+) Fortran compiler')
 
-    def __init__(self, outfile ):
+    def __init__(self, outfile):
         self.compiler = None
-        super(BuildParser, self).__init__( outfile )
+        super(BuildParser, self).__init__(outfile)
 
-    def acceptLine( self, line ):
-        super(BuildParser, self).acceptLine( line )
+    def accept_line(self, line):
+        super(BuildParser, self).accept_line(line)
 
-        match = BuildParser.fortranPattern.match( line )
+        match = BuildParser.fortranPattern.match(line)
         if match:
-            self.compiler = match.group( 1 )
+            self.compiler = match.group(1)
 
         return None, None
+
 
 ##############################################################################
 class DoxygenParser(Parser):
     '''
     Parse the error stream from the Doxygen tasks.
     '''
-    eventPattern        = re.compile( r'([^:]+):(\d+): ([^:]+): (.+)' )
-    continuationPattern = re.compile( r'  (.+)' )
+    eventPattern = re.compile(r'([^:]+):(\d+): ([^:]+): (.+)')
+    continuationPattern = re.compile(r'  (.+)')
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         self._state = 'lookingForEvent'
-        self._currentEvent = None
-        super(DoxygenParser, self).__init__( errfile )
+        self._current_event = None
+        super(DoxygenParser, self).__init__(errfile)
 
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         if self._state == 'lookingForEvent':
-            match = DoxygenParser.eventPattern.match( line )
+            match = DoxygenParser.eventPattern.match(line)
             if match:
-                self._currentEvent = Event( )
-                self._currentEvent.setFilename( match.group( 1 ) )
-                self._currentEvent.setLineNumber( int(match.group( 2 )) )
-                self._currentEvent.setLevel( match.group( 3 ) )
-                self._currentEvent.setMessage( match.group( 4 ).strip() )
+                self._current_event = Event()
+                self._current_event.set_filename(match.group(1))
+                self._current_event.set_line_number(int(match.group(2)))
+                self._current_event.set_level(match.group(3))
+                self._current_event.set_message(match.group(4).strip())
 
                 self._state = 'lookingForContinuation'
                 return None, None
 
         if self._state == 'lookingForContinuation':
-            match = DoxygenParser.continuationPattern.match( line )
+            match = DoxygenParser.continuationPattern.match(line)
             if match:
-                self._currentEvent.extendMessage( match.group( 1 ).strip() )
+                self._current_event.extend_message(match.group(1).strip())
                 return None, None
             else:
                 self._state = 'lookingForEvent'
-                return line, self._currentEvent
+                return line, self._current_event
 
         return None, None
+
 
 ##############################################################################
 class CompileParser(Parser):
@@ -305,205 +322,213 @@ class CompileParser(Parser):
     '''
     __MetaClass__ = ABCMeta
 
-    def __init__( self, compiler, errfile ):
-        super(CompileParser, self).__init__( errfile )
+    def __init__(self, compiler, errfile):
+        super(CompileParser, self).__init__(errfile)
         self.compiler = compiler
 
     @abstractmethod
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         pass
+
 
 ##############################################################################
 class CrayCompileParser(CompileParser):
     '''
     Parse the error stream from the Cray compiler.
     '''
-    eventPattern = re.compile( r'ftn-(\d+) crayftn: (\S+) (\S+), File = ([^,]+), Line = (\d+)(?:, Column = (\d+))?' )
-    junkPattern  = re.compile( r'Cray Fortran : .+' )
+    pattern_string = r'ftn-(\d+) crayftn: (\S+) (\S+), File = ([^,]+), ' \
+                     r'Line = (\d+)(?:, Column = (\d+))?'
+    eventPattern = re.compile(pattern_string)
+    junkPattern = re.compile(r'Cray Fortran : .+')
 
-    _levelMap = {'comment': 'comment', \
-                 'note'   : 'comment', \
-                 'caution': 'beware',  \
-                 'ansi'   : 'warning', \
-                 'warning': 'warning', \
-                 'error':   'error'}
+    _LEVEL_MAP = {'comment': 'comment',
+                  'note': 'comment',
+                  'caution': 'beware',
+                  'ansi': 'warning',
+                  'warning': 'warning',
+                  'error':   'error'}
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         self._state = 'lookingForEvent'
-        self._currentEvent = None
+        self._current_event = None
         self._backlog = []
-        super(CrayCompileParser, self).__init__( "Cray Fortran", errfile )
+        super(CrayCompileParser, self).__init__("Cray Fortran", errfile)
 
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         if self._state == 'lookingForEvent':
-            match = CrayCompileParser.junkPattern.match( line )
+            match = CrayCompileParser.junkPattern.match(line)
             if match:
                 return None, None
 
-            match = CrayCompileParser.eventPattern.match( line )
+            match = CrayCompileParser.eventPattern.match(line)
             if match:
-                self._currentEvent = Event()
-                self._currentEvent.setEventCode( match.group(1) )
-                self._currentEvent.setLevel( CrayCompileParser._levelMap[match.group(2).lower()] )
-                self._currentEvent.setFilename( match.group(4) )
-                self._currentEvent.setLineNumber( int(match.group( 5 )) )
+                self._current_event = Event()
+                self._current_event.set_event_code(match.group(1))
+                self._current_event.set_level(
+                    CrayCompileParser._LEVEL_MAP[match.group(2).lower()])
+                self._current_event.set_filename(match.group(4))
+                self._current_event.set_line_number(int(match.group(5)))
                 if match.group(6) is not None:
-                    self._currentEvent.setHighlight( int(match.group( 6 )), \
-                                                     None )
+                    self._current_event.set_highlight(int(match.group(6)),
+                                                      None)
                     if len(self._backlog) > 0 \
                        and self._backlog[-1].strip() == '^':
                         self._backlog.pop()
 
                 if len(self._backlog) > 0:
-                    self._currentEvent.setSource( self._backlog.pop().rstrip() )
+                    source = self._backlog.pop().rstrip()
+                    self._current_event.set_source(source)
                     self._backlog = []
 
                 self._state = 'lookingForMessage'
                 return None, None
 
-            self._backlog.append( line )
+            self._backlog.append(line)
             return None, None
 
         if self._state == 'lookingForMessage':
-            self._currentEvent.setMessage( line.strip() )
+            self._current_event.set_message(line.strip())
             self._state = 'lookingForEvent'
-            return None, self._currentEvent
+            return None, self._current_event
 
-        raise Exception( 'Unknown state: {}'.format( self._state ) )
+        raise Exception('Unknown state: {}'.format(self._state))
+
 
 ##############################################################################
 class GnuCompileParser(CompileParser):
     '''
     Parse the error stream from the GNU compiler.
     '''
-    eventPattern   = re.compile( r'([^:]+):(\d+):(\d+):' )
-    messagePattern = re.compile( r'([^:]+): (.+)\[-W(.+)\]' )
+    eventPattern = re.compile(r'([^:]+):(\d+):(\d+):')
+    messagePattern = re.compile(r'([^:]+): (.+)\[-W(.+)\]')
 
-    _levelMap = {'warning': 'warning', \
-                 'error':   'error'}
+    _LEVEL_MAP = {'warning': 'warning',
+                  'error':   'error'}
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         self._state = 'lookingForEvent'
-        self._currentEvent = None
-        super(GnuCompileParser, self).__init__( "GNU Fortran", errfile )
+        self._current_event = None
+        super(GnuCompileParser, self).__init__("GNU Fortran", errfile)
 
-    def levelMap( self, level ):
-        return self._levelMap[level]
-
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         if self._state == 'lookingForEvent':
-            match = GnuCompileParser.eventPattern.match( line )
+            match = GnuCompileParser.eventPattern.match(line)
             if match:
-                self._currentEvent = Event()
-                self._currentEvent.setFilename( match.group(1) )
-                self._currentEvent.setLineNumber( int(match.group( 2 )) )
-                self._currentEvent.setHighlight( None, \
-                                                 int(match.group( 3 )) + 1 )
+                self._current_event = Event()
+                self._current_event.set_filename(match.group(1))
+                self._current_event.set_line_number(int(match.group(2)))
+                self._current_event.set_highlight(None,
+                                                  int(match.group(3)) + 1)
 
                 self._state = 'lookingForSource'
 
             return None, None
 
         if self._state == 'lookingForSource':
-            self._currentEvent.setSource( line.rstrip() )
+            self._current_event.set_source(line.rstrip())
             self._state = 'lookingForMessage'
             return None, None
 
         if self._state == 'lookingForMessage':
-            match = GnuCompileParser.messagePattern.match( line.strip() )
+            match = GnuCompileParser.messagePattern.match(line.strip())
             if match:
-                level    = match.group( 1 ).lower()
-                message  = match.group( 2 ).rstrip()
-                category = match.group( 3 )
+                level = match.group(1).lower()
+                message = match.group(2).rstrip()
+                category = match.group(3)
 
-                self._currentEvent.setLevel( GnuCompileParser._levelMap[level] )
-                self._currentEvent.setMessage( message )
-                self._currentEvent.setEventCode( category.lower() )
+                self._current_event.set_level(self._LEVEL_MAP[level])
+                self._current_event.set_message(message)
+                self._current_event.set_event_code(category.lower())
 
                 self._state = 'lookingForEvent'
-                return None, self._currentEvent
+                return None, self._current_event
 
             return None, None
 
-        raise Exception( 'Unknown state: {}'.format( self._state ) )
+        raise Exception('Unknown state: {}'.format(self._state))
+
 
 ##############################################################################
 class IntelCompileParser(CompileParser):
     '''
     Parse the error stream from the Intel compiler.
     '''
-    compileMessagePattern = re.compile( r'([^(]+)\((\d+)\): (\S+) #(\d+): (.+)' )
-    runMessagePattern     = re.compile ( r'forrtl: (\S+) \((\d+)\): ([^:]+): \((\d+)\): (.+)' )
+    pattern_string = r'([^(]+)\((\d+)\): (\S+) #(\d+): (.+)'
+    compileMessagePattern = re.compile(pattern_string)
+    pattern_string = r'forrtl: (\S+) \((\d+)\): ([^:]+): \((\d+)\): (.+)'
+    runMessagePattern = re.compile(pattern_string)
 
-    _levelMap = {'remark':  'comment', \
-                 'warning': 'warning', \
-                 'error':   'error'}
+    _LEVEL_MAP = {'remark':  'comment',
+                  'warning': 'warning',
+                  'error':   'error'}
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         self._state = 'lookingForEvent'
-        self._currentEvent = None
-        super(IntelCompileParser, self).__init__( "Intel Fortran", errfile )
+        self._current_event = None
+        super(IntelCompileParser, self).__init__("Intel Fortran", errfile)
 
-    def levelMap( self, level ):
-        return self._levelMap[level]
-
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         if self._state == 'lookingForEvent':
-            match = IntelCompileParser.compileMessagePattern.match( line )
+            match = IntelCompileParser.compileMessagePattern.match(line)
             if match:
-                self._currentEvent = Event()
-                self._currentEvent.setFilename( match.group( 1 ) )
-                self._currentEvent.setLineNumber( match.group( 2 ) )
-                self._currentEvent.setLevel( IntelCompileParser._levelMap[match.group(3).lower()] )
-                self._currentEvent.setEventCode( match.group( 4 ) )
-                self._currentEvent.setMessage( match.group( 5 ).strip() )
+                self._current_event = Event()
+                self._current_event.set_filename(match.group(1))
+                self._current_event.set_line_number(match.group(2))
+                self._current_event.set_level(
+                    IntelCompileParser._LEVEL_MAP[match.group(3).lower()])
+                self._current_event.set_event_code(match.group(4))
+                self._current_event.set_message(match.group(5).strip())
 
                 self._state = 'lookingForSource'
 
             return None, None
 
         if self._state == 'lookingForSource':
-            self._currentEvent.setSource( line.rstrip() )
+            self._current_event.set_source(line.rstrip())
             self._state = 'lookingForStart'
             return None, None
 
         if self._state == 'lookingForStart':
-            self._currentEvent.setHighlight( line.count( '-' ), None )
+            self._current_event.set_highlight(line.count('-'), None)
             self._state = 'lookingForEvent'
-            return None, self._currentEvent
+            return None, self._current_event
 
-        raise Exception( 'Unrecognised state: {}'.format( self._state ) )
+        raise Exception('Unrecognised state: {}'.format(self._state))
+
 
 ##############################################################################
 class PortlandCompileParser(CompileParser):
     '''
     Parse the error stream from the Portland compiler.
     '''
-    compileMessagePattern = re.compile( r'PGF90-([^-]+)-(\d+)-([^(]+) \(([^:)]+)(?:: (\d+))?\)' )
+    pattern_string = r'PGF90-([^-]+)-(\d+)-([^(]+) \(([^:)]+)(?:: (\d+))?\)'
+    compileMessagePattern = re.compile(pattern_string)
 
-    _levelMap = {'W': 'warning'}
+    _LEVEL_MAP = {'W': 'warning'}
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         self._state = 'lookingForEvent'
-        super(PortlandCompileParser, self).__init__( "Portland Fortran", \
-                                                     errfile )
+        super(PortlandCompileParser, self).__init__("Portland Fortran",
+                                                    errfile)
 
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         if self._state == 'lookingForEvent':
-            match = PortlandCompileParser.compileMessagePattern.match( line )
+            match = PortlandCompileParser.compileMessagePattern.match(line)
             if match:
                 event = Event()
-                event.setLevel( PortlandCompileParser._levelMap[match.group(1)] )
-                event.setEventCode( match.group( 2 ) )
-                event.setMessage( match.group( 3 ) )
-                event.setFilename( match.group( 4 ) )
-                if match.group( 5 ) : event.setLineNumber( match.group( 5 ) )
+                event.set_level(self._LEVEL_MAP[match.group(1)])
+                event.set_event_code(match.group(2))
+                event.set_message(match.group(3))
+                event.set_filename(match.group(4))
+                if match.group(5):
+                    event.set_line_number(match.group(5))
 
                 return None, event
 
             return None, None
 
-        raise Exception( 'Unrecognised state: {}'.format( self._state ) )
+        raise Exception('Unrecognised state: {}'.format(self._state))
+
 
 ##############################################################################
 class RuntimeParser(Parser):
@@ -512,85 +537,134 @@ class RuntimeParser(Parser):
     '''
     __MetaClass__ = ABCMeta
 
-    def __init__( self, compiler, errfile ):
-        super(RuntimeParser, self).__init__( errfile )
+    def __init__(self, compiler, errfile):
+        super(RuntimeParser, self).__init__(errfile)
         self.compiler = compiler
 
     @abstractmethod
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         pass
+
+
+##############################################################################
+class CrayRunParser(RuntimeParser):
+    '''
+    Parse the error stream from the Cray run-time.
+    '''
+    _EVENT_PATTERN = re.compile(r'(\w+-\d+)\s*:\s*(\S+)')
+    _DESCRIPTION_PATTERN = re.compile(r'\s*(?:(.+)\s+at|(.+))')
+    _LOCATION_PATTERN = re.compile(r"\s*at line (\d+) in file '([^']+)'")
+
+    def __init__(self, errfile):
+        self._state = 'lookingForEvent'
+        self._current_event = None
+        super(CrayRunParser, self).__init__('Cray Fortran', errfile)
+
+    def accept_line(self, line):
+        if self._state == 'lookingForEvent':
+            match = self._EVENT_PATTERN.match(line)
+            if match:
+                self._current_event = Event()
+                self._current_event.set_event_code(match.group(1))
+                self._current_event.set_level(match.group(2).lower())
+                self._state = 'lookingForMessage'
+            return None, None
+
+        if self._state == 'lookingForMessage':
+            match = self._DESCRIPTION_PATTERN.match(line)
+            if match:
+                if match.group(1):
+                    self._current_event.set_message(match.group(1))
+                else:
+                    self._current_event.set_message(match.group(2))
+                self._state = 'lookingForSource'
+            return None, None
+
+        if self._state == 'lookingForSource':
+            match = self._LOCATION_PATTERN.match(line)
+            if match:
+                self._current_event.set_line_number(match.group(1))
+                self._current_event.set_filename(match.group(2))
+                self._state = 'lookingForEvent'
+                return None, self._current_event
+            return None, None
+        raise Exception('Unknown state: ' + self._state)
+
 
 ##############################################################################
 class GnuRunParser(RuntimeParser):
     '''
     Parse the error stream from the GNU run-time.
     '''
-    runContextPattern = re.compile( r'At line (\d+) of file (.+)' )
-    runMessagePattern = re.compile( r'Fortran runtime ([^:]+): (.+)' )
+    runContextPattern = re.compile(r'At line (\d+) of file (.+)')
+    runMessagePattern = re.compile(r'Fortran runtime ([^:]+): (.+)')
 
-    def __init__( self, errfile ):
+    def __init__(self, errfile):
         self._state = 'lookingForEvent'
-        self._currentEvent = None
-        super(GnuRunParser, self).__init__( 'GNU Fortran', errfile )
+        self._current_event = None
+        super(GnuRunParser, self).__init__('GNU Fortran', errfile)
 
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         if self._state == 'lookingForEvent':
-            match = GnuRunParser.runContextPattern.match( line )
+            match = GnuRunParser.runContextPattern.match(line)
             if match:
-                self._currentEvent = Event()
-                self._currentEvent.setLineNumber( match.group( 1 ) )
-                self._currentEvent.setFilename( match.group( 2 ) )
+                self._current_event = Event()
+                self._current_event.set_line_number(match.group(1))
+                self._current_event.set_filename(match.group(2))
 
                 self._state = 'lookingForMessage'
 
             return None, None
 
         if self._state == 'lookingForMessage':
-            match = GnuRunParser.runMessagePattern.match( line )
+            match = GnuRunParser.runMessagePattern.match(line)
             if match:
-                self._currentEvent.setLevel( match.group( 1 ) )
-                self._currentEvent.setMessage( match.group( 2 ) )
+                self._current_event.set_level(match.group(1))
+                self._current_event.set_message(match.group(2))
 
                 self._state = 'lookingForEvent'
-                return None, self._currentEvent
+                return None, self._current_event
 
             return None, None
 
-        raise Exception( 'Unknown state: {}'.format( self._state ) )
+        raise Exception('Unknown state: {}'.format(self._state))
+
 
 ##############################################################################
 class IntelRunParser(RuntimeParser):
     '''
     Parse the error stream from the Intel run-time.
     '''
-    runMessagePattern = re.compile( r'forrtl: (\S+) \((\d+)\): ([^:]+): \((\d+)\): (.+)' )
+    pattern_string = r'forrtl: (\S+) \((\d+)\): ([^:]+): \((\d+)\): (.+)'
+    runMessagePattern = re.compile(pattern_string)
 
-    def __init__( self, errfile ):
-        super(IntelRunParser, self).__init__( 'Intel Fortran', errfile )
+    def __init__(self, errfile):
+        super(IntelRunParser, self).__init__('Intel Fortran', errfile)
 
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         print(line)
-        match = IntelRunParser.runMessagePattern.match( line )
+        match = IntelRunParser.runMessagePattern.match(line)
         if match:
-            level      = match.group( 1 )
-            message    = match.group( 5 )
+            level = match.group(1)
+            message = match.group(5)
 
             event = Event()
-            event.setLevel( level )
-            event.setEventCode( match.group(2) )
-            event.setMessage( message )
+            event.set_level(level)
+            event.set_event_code(match.group(2))
+            event.set_message(message)
 
             return None, event
 
         return None, None
+
 
 ##############################################################################
 class PortlandRunParser(RuntimeParser):
     '''
     Parse the error stream from the Portland run-time.
     '''
-    def __init__( self, errfile ):
-        super(PortlandRunParser, self).__init__( 'Portland Fortran', errfile )
+    def __init__(self, errfile):
+        super(PortlandRunParser, self).__init__('Portland Fortran', errfile)
 
-    def acceptLine( self, line ):
+    def accept_line(self, line):
         raise NotImplementedError()

@@ -8,21 +8,15 @@
 '''
 Implements a Jinja2 filter to run a macro specified by a string.
 '''
-from jinja2 import contextfilter
 import re
+from jinja2 import contextfilter
 
-def checkBoolean(string):
-    ''' If string is a boolean or None, i.e. "False", "True" or "None", then
-    return the appropriate boolean value or None rather than the string '''
-    if string=="True": string=True
-    if string=="False": string=False
-    if string=="None": string=None
-    return string
 
 @contextfilter
-def executeMacro(context, call):
+def execute_macro_crun(context, call):
     '''
-    Takes a string and executes it as though it were a Jinja2 macro call
+    Takes a string and executes it as though it were a Jinja2 macro call, but
+    overrides keyword do_crun to be True
 
     The call string has the syntax <macro name>([<argument>]...).
 
@@ -33,27 +27,28 @@ def executeMacro(context, call):
     @return String resulting from calling the macro.
     '''
     if call.find('(') == -1:
-        macroName = call
+        macro_name = call
         arguments = []
     else:
-        macroName = call[:call.index('(')]
+        macro_name = call[:call.index('(')]
         arguments = re.split(', *', call[call.index('(')+1:call.rindex(')')])
 
-    normalArguments  = [argument for argument in arguments \
+    normal_arguments = [argument for argument in arguments
                         if argument.find('=') == -1]
-    keywordArguments = [argument for argument in arguments \
-                        if argument.find('=') != -1]
+    keyword_arguments = [argument for argument in arguments
+                         if argument.find('=') != -1]
 
-    argumentList = []
-    for argument in normalArguments:
+    argument_list = []
+    for argument in normal_arguments:
         if argument[0] == '"':
-            argumentList.append( checkBoolean(argument[1:-2]) )
+            argument_list.append(argument[1:-2])
         else:
-            argumentList.append( checkBoolean(argument) )
+            argument_list.append(argument)
 
-    argumentDictionary = {}
-    for argument in keywordArguments:
+    argument_dictionary = {}
+    for argument in keyword_arguments:
         key, value = re.split(' *= *', argument)
-        argumentDictionary[key] = checkBoolean(value)
+        argument_dictionary[key] = value
 
-    return context.vars[macroName]( *argumentList, **argumentDictionary )
+    argument_dictionary['do_crun'] = True
+    return context.vars[macro_name](*argument_list, **argument_dictionary)

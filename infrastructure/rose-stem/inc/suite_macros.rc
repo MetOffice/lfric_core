@@ -19,17 +19,17 @@
 
 
 {#- #########################################################################}
-{%- macro documentation( publish=False ) %}
-{%-   set label =  TARGET_TECHNICAL_COMPILER | lower + '_fast-debug' %}
+{%- macro documentation(publish=False) %}
+{%-   set label = TARGET_TECHNICAL_COMPILER | lower ~ '_fast-debug' %}
 {%-   if 'documentation' in TECHNICAL_DEVELOPER_TESTS %}
-            purge_local   => purge_target
-            purge_target  => export_source
-            export_source => api_documentation
-            export_source => uml_documentation
+  purge_local   => purge_target
+  purge_target  => export_source
+  export_source => api_documentation
+  export_source => uml_documentation
 {%-     if publish %}
-            uml_documentation => publish_uml_documentation
-            api_documentation => publish_api_documentation
-            api_documentation => publish_api_log
+  uml_documentation => publish_uml_documentation
+  api_documentation => publish_api_documentation
+  api_documentation => publish_api_log
 {%-     endif %}
 {%-   endif %}
 {%- endmacro %}

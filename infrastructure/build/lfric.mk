@@ -86,11 +86,6 @@ ifdef PE_ENV
   endif
 endif
 
-# Set flag to perform a fresh rose stem suite
-ifdef PURGE_SUITES
-  CLEAN_OPT :='--new'
-endif
-
 include $(LFRIC_BUILD)/fortran/$(FORTRAN_COMPILER).mk
 export F_MOD_DESTINATION_ARG OPENMP_ARG
 
@@ -148,8 +143,12 @@ else
   VERBOSE_REDIRECT = >/dev/null
 endif
 
-export Q
-export QUIET_ARG
+export Q QUIET_ARG VERBOSE_REDIRECT
+
+# Set flag to perform a fresh rose stem suite
+ifdef PURGE_SUITES
+  CLEAN_OPT :='--new'
+endif
 
 # We only want to send terminal control characters if there is a terminal to
 # interpret them...
@@ -189,7 +188,9 @@ uml-documentation:
 	$(Q)$(MAKE) $(QUIET_ARG) uml-pdfs DOCUMENT_DIR=$(DOCUMENT_DIR) SOURCE_DIR=$(SOURCE_DIR) WORKING_DIR=$(WORKING_DIR)
 
 .PHONY: uml-pdfs
-uml-pdfs: $$(patsubst $$(SOURCE_DIR)/$$(PERCENT).puml,$$(DOCUMENT_DIR)/$$(PERCENT).pdf,$$(wildcard $$(SOURCE_DIR)/*.puml))
+uml-pdfs: $$(patsubst $$(SOURCE_DIR)/$$(PERCENT).puml, \
+                      $$(DOCUMENT_DIR)/$$(PERCENT).pdf, \
+                      $$(wildcard $$(SOURCE_DIR)/*.puml))
 	$(Q)echo >/dev/null
 
 .PRECIOUS: $(DOCUMENT_DIR)/%.pdf
@@ -199,7 +200,8 @@ $(DOCUMENT_DIR)/%.pdf: $(DOCUMENT_DIR)/%.svg
 
 .PRECIOUS: $(DOCUMENT_DIR)/%.svg
 $(DOCUMENT_DIR)/%.svg: $(SOURCE_DIR)/%.puml \
-                      $$(addprefix $$(SOURCE_DIR)/,$$(shell sed -n -e 's/!include[ ]*\([^ \n]*\)/\1/p' $$(SOURCE_DIR)/$$*.puml))
+                       $$(addprefix $$(SOURCE_DIR)/, \
+                                    $$(shell sed -n -e 's/!include[ ]*\([^ \n]*\)/\1/p' $$(SOURCE_DIR)/$$*.puml))
 	$(call MESSAGE,Generating,$(notdir $@))
 	$(Q)mkdir -p $(DOCUMENT_DIR)
 	$(Q)plantuml $(SHORT_VERBOSE_ARG) -tsvg -o $(abspath $(dir $@)) $(abspath $<)

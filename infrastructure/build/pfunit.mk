@@ -32,8 +32,4 @@ $(WORKING_DIR)/testSuites.inc:
 $(WORKING_DIR)/%.F90: $(SOURCE_DIR)/%.pf
 	$(call MESSAGE,Generating unit test,$@)
 	$(Q)mkdir -p $(dir $@)
-ifdef VERBOSE
-	$(Q)$(PFUNIT)/bin/pFUnitParser.py $< $@
-else
-	$(Q)$(PFUNIT)/bin/pFUnitParser.py $< $@ >/dev/null
-endif
+	$(Q)$(PFUNIT)/bin/pFUnitParser.py $< $@ $(VERBOSE_REDIRECT)

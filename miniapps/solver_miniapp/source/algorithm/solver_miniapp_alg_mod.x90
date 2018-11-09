@@ -59,7 +59,6 @@ contains
     ! quadrature object
     type(quadrature_xyoz_type)       :: qr
     ! Coordinate fields
-    type( field_type ), pointer :: chi(:) => null()
     type( field_vector_type)    :: diag
 
     write(log_scratch_space,'(A)') "solver_miniapp_alg:Initialising solver ..."
@@ -69,15 +68,14 @@ contains
     case ( solver_preconditioner_diagonal )
        allocate( diagonal_preconditioner_type :: prec)
        allocate( dense_operator_type :: op )
-       
+
        call log_event("preconditioner set to diagonal, computing the dense operator", LOG_LEVEL_INFO)
        ! make the operator first, there is only one ...
-       chi => get_coordinates()
        qr = get_qr()
        ! need to select type because the compiler doesn't know we have just assigned its type.
        select type( op )
        type is ( dense_operator_type)
-          op = dense_operator_type( fv_1, chi, qr )
+          op = dense_operator_type( fv_1, qr )
           ! don't forget to call the (copy) constructor on diag
           diag=fv_1
           call op%extract_diagonal(diag)
@@ -85,8 +83,7 @@ contains
           ! catch the type error
           call log_event("solver_miniapp_alg: linear_op type failure: shoud be dense operator ",LOG_LEVEL_ERROR)
        end select
-       
-       
+
        ! make the preconditioner
        ! need to select type because the compiler doesn't know we have just assigned its type.
        select type( prec )
@@ -96,21 +93,21 @@ contains
           ! catch the type error
           call log_event("solver_miniapp_alg: preconditioner type failure: shoud be diagonal preconditioner ",LOG_LEVEL_ERROR)
        end select
-       
+
     case default
        write(log_scratch_space,'(A, I0)') "solver_miniapp_alg: preconditioner choice not supported, exiting, ", preconditioner
        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end select
-    
+
     select case ( method )
     case( solver_method_cg )
-       
+
        call log_event("setting solver to CG", LOG_LEVEL_INFO)
        allocate( conjugate_gradient_type :: solver )
        select type( solver )
        type is ( conjugate_gradient_type )        
           solver = conjugate_gradient_type( op, prec, tolerance, tolerance, maximum_iterations )
-          
+
        class default
          ! Catch type error
           call log_event("solver_miniapp_alg: solver type failure: Should be Conjugate Gradient",LOG_LEVEL_ERROR)
@@ -146,21 +143,19 @@ contains
 
   !> @details An algorithm for developing miniapps
   !> @param[inout] fv_1  A prognostic field vector object
-  !> @param[in] chi A size 3 array of fields holding the mesh coordinates
-  subroutine solver_miniapp_alg(fv_1, chi)
+  subroutine solver_miniapp_alg(fv_1)
 
     implicit none
 
     ! Prognostic fields    
     type( field_vector_type ), intent( inout ) :: fv_1
-    type( field_type ), dimension(3), intent( in ) :: chi
-    
+
     type( field_vector_type )   :: rhs, ans
 
     class( abstract_preconditioner_type ),  allocatable :: prec
     class( abstract_linear_operator_type ), allocatable :: op
     class( abstract_iterative_solver_type), allocatable :: solver
-        
+
     call log_event( "solver miniapp: running algorithm", LOG_LEVEL_INFO )
     call init_solver( prec, op, solver, fv_1 )
 
@@ -168,9 +163,9 @@ contains
     rhs = fv_1
     write(log_scratch_space, '(A,E16.8)') "apply the operator: ",rhs%norm()
     call log_event( log_scratch_space, LOG_LEVEL_INFO)
-    
+
     call op%apply(fv_1, rhs)
-    
+
     ans = fv_1 ! copy constructor
     call ans%set_scalar(0.0_r_def)
     call solver%apply(ans,rhs)

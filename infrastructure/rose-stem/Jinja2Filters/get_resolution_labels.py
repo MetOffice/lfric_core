@@ -8,10 +8,9 @@
 '''
 Implements a Jinja2 filter to generate strings for resolution labels/options.
 '''
-from jinja2 import contextfilter
 
-@contextfilter
-def getResolutionLabels(contextfilter, resolution):
+
+def get_resolution_labels(resolution):
     '''
     Returns labels used by Jinja2 to generate app information for
     mesh resolution and timestep options
@@ -26,31 +25,31 @@ def getResolutionLabels(contextfilter, resolution):
             Time resolution labels,
             Rose mesh resolution option string
     '''
-    
-    mesh_resolution_label  = ''
+    mesh_resolution_label = ''
     time_resolution_labels = []
-    mesh_resolution_option = ''
     rose_resolution_option_str = ''
 
-    # Set mesh values/labels
-    if resolution[0] != 'default':
-        mesh_resolution_option = resolution[0]
+    resolution_list = list(resolution)
+    if len(resolution_list) == 0:
+        return '', [''], '', [''], ''
 
-    if mesh_resolution_option != '':
+    # Set mesh values/labels
+    mesh_resolution_option = resolution_list.pop(0).strip()
+    if mesh_resolution_option == 'default':
+        mesh_resolution_option = ''
+    else:
         mesh_resolution_label = "_" + mesh_resolution_option
         rose_resolution_option_str = '--opt-conf-key=' + mesh_resolution_option
 
+    time_resolution_values = list(resolution_list)
+    if len(time_resolution_values) == 0:
+        time_resolution_values.append('')
+
     # Set timestep values/labels
-    if len(resolution) > 1:
-      time_resolution_values = resolution[1:]
-    else:
-      time_resolution_values = ['']
+    for timestep in resolution_list:
+        time_resolution_labels.append('_dt-' + str(timestep).replace('.', 'p'))
+    time_resolution_labels.append('')
 
-    for timestep in time_resolution_values:
-        if timestep != '':
-            time_resolution_labels.append('_dt-' + str(timestep).replace('.','p'))
-        else:
-            time_resolution_labels.append('')
-
-    return mesh_resolution_option, time_resolution_values, mesh_resolution_label, \
-           time_resolution_labels, rose_resolution_option_str
+    return mesh_resolution_option, time_resolution_values, \
+        mesh_resolution_label, time_resolution_labels, \
+        rose_resolution_option_str

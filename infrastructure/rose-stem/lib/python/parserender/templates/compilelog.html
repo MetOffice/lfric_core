@@ -2,7 +2,7 @@
                       "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
 <html>
   <head>
-    <title>Dynamo compiler output from {{compiler}} {{'(' + context + ')' if context}} at {{timestamp}}</title>
+    <title>LFRic compiler output from {{compiler}} {{'(' + context + ')' if context}} at {{timestamp}}</title>
     <style type="text/css">
       h1 { text-align: center; }
       .filename { padding: 0.5ex; }
@@ -24,21 +24,21 @@
   </head>
   <body>
     <h1>
-      Dynamo compiler output from <span id='compiler'>{{compiler}}</span>
+      LFRic compiler output from <span id='compiler'>{{compiler}}</span>
       {% if context %}(<span id='context'>{{context}}</span>){% endif %}
       at <span id='timestamp'>{{timestamp}}</span>
     </h1>
     <div id='events'>
-{%- for filename, events in eventBuckets|dictsort %}
+{%- for filename, events in event_buckets|dictsort %}
 {%-   if events|length > 0 %}
       <div class='sourcefile'>
         <div class='filename'>{{filename}}</div>
 {%-     set rowStyle = cycler( 'odd', 'even' ) %}
-{%-     for lineNumber, eventList in events|sort(attribute='lineNumber')|groupby('lineNumber') %}
-{%-       for event in eventList|sort(attribute='highlightRange') %}
+{%-     for line_number, event_list in events|sort(attribute='line_number')|groupby('line_number') %}
+{%-       for event in event_list|sort(attribute='highlight_range') %}
         <div class='event {{rowStyle.next()}}'>
           <div class='nature'>
-            <span class='line'>{{event.lineNumber}}</span>
+            <span class='line'>{{event.line_number}}</span>
             <span class='level {{event.level}}'>{{event.level}}</span>
 {%-         if event.eventCode %}
             <span class='code'>{{event.eventCode}}</span>
@@ -49,21 +49,21 @@
           </div>
 {%-         if event.source %}
           <div class='context'>
-{%-           if event.highlightStart %}
-{%-               set hotStart = event.highlightStart %}
+{%-           if event.highlight_start %}
+{%-               set hot_start = event.highlight_start %}
 {%-           else %}
-{%-           set hotStart = 0 %}
+{%-           set hot_start = 0 %}
 {%-           endif %}
-{%-           if event.highlightEnd %}
-{%-               set hotEnd = event.highlightEnd %}
+{%-           if event.highlight_end %}
+{%-               set hot_end = event.highlight_end %}
 {%-           else %}
-{%-               set hotEnd = event.source|length %}
+{%-               set hot_end = event.source|length %}
 {%-           endif %}
-            <span class='lead-in'>{{event.source[:hotStart]|escape}}</span>
-{%-           if hotStart != hotEnd %}
-            <span class='hot'>{{event.source[hotStart:hotEnd]|escape}}</span>
+            <span class='lead-in'>{{event.source[:hot_start]|escape}}</span>
+{%-           if hot_start != hot_end %}
+            <span class='hot'>{{event.source[hot_start:hot_end]|escape}}</span>
 {%-           endif %}
-            <span class='lead-out'>{{event.source[hotEnd:]|escape}}</span>
+            <span class='lead-out'>{{event.source[hot_end:]|escape}}</span>
           </div>
 {%-         endif %}
         </div>

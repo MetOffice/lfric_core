@@ -8,16 +8,11 @@
 '''
 Implements a Jinja2 filter to run a macro specified by a string.
 '''
-from jinja2 import contextfilter
+import ast
 import re
+from jinja2 import contextfilter
+import utilities
 
-def checkBoolean(string):
-    ''' If string is a boolean or None, i.e. "False", "True" or "None", then
-    return the appropriate boolean value or None rather than the string '''
-    if string=="True": string=True
-    if string=="False": string=False
-    if string=="None": string=None
-    return string
 
 @contextfilter
 def executeMacro(context, call):
@@ -33,27 +28,25 @@ def executeMacro(context, call):
     @return String resulting from calling the macro.
     '''
     if call.find('(') == -1:
-        macroName = call
+        macro_name = call
         arguments = []
     else:
-        macroName = call[:call.index('(')]
-        arguments = re.split(', *', call[call.index('(')+1:call.rindex(')')])
+        macro_name = call[:call.index('(')]
+        macro_arguments = call[call.index('(')+1:call.rindex(')')]
+        arguments = utilities.dictionary_from_arguments(macro_arguments)
 
-    normalArguments  = [argument for argument in arguments \
+    normal_arguments = [argument for argument in arguments
                         if argument.find('=') == -1]
-    keywordArguments = [argument for argument in arguments \
-                        if argument.find('=') != -1]
+    keyword_arguments = [argument for argument in arguments
+                         if argument.find('=') != -1]
 
-    argumentList = []
-    for argument in normalArguments:
-        if argument[0] == '"':
-            argumentList.append( checkBoolean(argument[1:-2]) )
-        else:
-            argumentList.append( checkBoolean(argument) )
+    argument_list = []
+    for argument in normal_arguments:
+        argument_list.append(ast.literal_eval(argument.strip()))
 
-    argumentDictionary = {}
-    for argument in keywordArguments:
+    argument_dictionary = {}
+    for argument in keyword_arguments:
         key, value = re.split(' *= *', argument)
-        argumentDictionary[key] = checkBoolean(value)
+        argument_dictionary[key.strip()] = ast.literal_eval(value.strip())
 
-    return context.vars[macroName]( *argumentList, **argumentDictionary )
+    return context.vars[macro_name](*argument_list, **argument_dictionary)

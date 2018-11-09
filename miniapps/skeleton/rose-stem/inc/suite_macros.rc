@@ -25,12 +25,14 @@
 
 {%-   if appLabel not in appConfigsCompilerRuns.keys() %}
 {%-     do appConfigsCompilerRuns.update({appLabel : run_with_compilers})%}
+{%-   else %}
+{%-     do appConfigsCompilerRuns[appLabel].extend( run_with_compilers ) %}
 {%-   endif%}
 
 {%-   for compiler in appConfigsCompilerRuns[appLabel] %}
 {%-     set label = compiler|lower + '_fast-debug' %}
 {%-     for resolution in resolutions %}
-{%-       set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
+{%-       set res_value, dt_values, res_label, dt_labels, res_opt = resolution | get_resolution_labels() %}
 {%-       for i in range(0,dt_values|length) %}
 {%-         set appName_res_label = appLabel ~ res_label ~ dt_labels[i] %}
 
@@ -181,11 +183,11 @@
 {%-   for group in groupsToRun %}
 {%-     if group in groups.keys() %}
 {%-       for mission in groups[group] %}
-{%-         set appName, key, envDict = mission | getEnvMacro() %}
-{%-         if appName and appName not in appsToRun %}
-{%-           do appsToRun.append(appName) %}
-{%-         endif %}
-{%-         if key %}
+{%-         set appName, key, envDict, macro_name = mission | getEnvMacro() %}
+{%-         if macro_name == 'run_application' %}
+{%-           if appName not in appsToRun %}
+{%-             do appsToRun.append(appName) %}
+{%-           endif %}
 {%            set appKey = key + '_' + science_label %}
 {%-           do scheduledTasksDict.update({appKey: envDict}) %}
 {%-         endif %}
@@ -211,7 +213,7 @@
 {%-     if group in groups.keys() %}
 {%-       for mission in groups[group] %}
 
-{%-         set appKey, resList, resDict, resSupportMeshes = mission | getResolutionMacro() %}
+{%-         set appKey, resList, resDict, resSupportMeshes = mission | get_resolution_macro() %}
 
 {%-         if appKey %}
 
@@ -259,12 +261,19 @@ test -w "{{directory}}" -o ! -e "{{directory}}" && rm -rf {{directory}} || ( ech
 {%- endmacro %}
 
 {#- #########################################################################}
-{%- macro check_compilers( appName, configuration, build, resolutions=[('')],
+{%- macro check_compilers( appName, configuration, build, resolution=(''),
                            publish=False, checkkgo=True ) %}
       [[[R1]]]
 
 {%-   set perform_run = [] %}
 {%-   set appLabel = appName + '_' + configuration %}
+
+{%-   set science_key = appName + '_' + configuration + '_' + science_label %}
+{%-   set environment = scheduledTasksDict[science_key] %}
+{%-   for compiler in compiler_setup.keys() %}
+{%-     set application_key = appName + '_' + configuration + '_' + compiler + '_' + build %}
+{%-     do scheduledTasksDict.update({application_key: environment}) %}
+{%-   endfor %}
 
 {%-   if build == 'fast-debug' %}
 {%-     do perform_run.extend( TARGET_PERFORM_RUN ) %}
@@ -272,7 +281,13 @@ test -w "{{directory}}" -o ! -e "{{directory}}" && rm -rf {{directory}} || ( ech
 {%-     do perform_run.extend( TARGET_PERFORM_DEBUG_RUN ) %}
 {%-   endif %}
 
-{%-   do appConfigsCompilerRuns.update({appLabel : compiler_setup.keys() }) %}
+{%-   set run_with_compilers = perform_run | reject("==", "none") %}
+{%-   if appLabel not in appConfigsCompilerRuns.keys() %}
+{%-     do appConfigsCompilerRuns.update({appLabel : run_with_compilers})%}
+{%-   else %}
+{%-     set difference = run_with_compilers | reject("in", appConfigsCompilerRuns[appLabel]) %}
+{%-     do appConfigsCompilerRuns[appLabel].extend(difference) %}
+{%-   endif%}
 
 {%-   for compiler in compiler_setup.keys() %}
 {%-     set label = compiler | lower + '_' + build | lower%}
@@ -291,23 +306,21 @@ test -w "{{directory}}" -o ! -e "{{directory}}" && rm -rf {{directory}} || ( ech
 {%-     endif %}
 
 {%-     if compiler in perform_run %}
-{%-       for resolution in resolutions %}
-{%-         set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
+{%-         set res_value, dt_values, res_label, dt_labels, res_opt = resolution | get_resolution_labels() %}
 {%-         for i in range(0,dt_values|length) %}
-{%-           set appLabel_res = appLabel ~ res_label ~ dt_labels[i] %}
+{%-         set appLabel_res = appLabel ~ res_label ~ dt_labels[i] %}
             compile_mesh_tools_with_{{label}} => generate_mesh{{res_label}}_{{label}}
             generate_mesh{{res_label}}_{{label}} => run_{{appLabel_res}}_{{label}}
             compile_{{projectName}}_with_{{label}} => run_{{appLabel_res}}_{{label}}
-{%-           if publish %}
+{%-         if publish %}
             run_{{appLabel_res}}_{{label}}:finish => publish_{{appLabel_res}}_{{label}}
-{%-           endif %}
-{%-           if compiler in TARGET_PERFORM_KGO_TESTS %}
-{%-             if checkkgo %}
+{%-         endif %}
+{%-         if compiler in TARGET_PERFORM_KGO_TESTS %}
+{%-           if checkkgo %}
             run_{{appLabel_res}}_{{label}} => check_{{appLabel_res}}_{{label}}
-{%-             endif %}
 {%-           endif %}
-{%-         endfor %} {# i #}
-{%-       endfor %} {# resolution #}
+{%-         endif %}
+{%-       endfor %} {# i #}
 {%-     endif %}
 {%-   endfor %} {# compiler #}
 {%- endmacro %}

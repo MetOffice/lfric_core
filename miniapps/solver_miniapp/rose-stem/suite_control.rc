@@ -9,12 +9,13 @@
 
 {%- set groups = {
 'developer': [
-    'run_application( solver_miniapp, cg,       resolutions=[["C24", 600.0 ]],
-                      run_with_compilers='~TARGET_SOLVER_COMPILER~' )',
-    'run_application( solver_miniapp, bicgstab, resolutions=[["C24", 600.0 ]],
-                      run_with_compilers='~TARGET_SOLVER_COMPILER~' )',
-    'run_application( solver_miniapp, gmres,    resolutions=[["C24", 600.0 ]],
-                      run_with_compilers='~TARGET_GMRES_COMPILER~' )',
+    'run_application("solver_miniapp", "cg", resolutions=[["C24", 600.0]],
+                     run_with_compilers='~TARGET_SOLVER_COMPILER~')',
+    'run_application("solver_miniapp", "bicgstab",
+                     resolutions=[["C24", 600.0]],
+                     run_with_compilers='~TARGET_SOLVER_COMPILER~')',
+    'run_application("solver_miniapp", "gmres", resolutions=[["C24", 600.0]],
+                     run_with_compilers='~TARGET_GMRES_COMPILER~')',
     'godliness',
     'cleanliness'],
 'nightly': [

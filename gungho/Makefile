@@ -10,7 +10,7 @@ PROFILE ?= fast-debug
 export IGNORE_DEPENDENCIES = netcdf MPI yaxt pfunit_mod xios mod_wait
 export EXTERNAL_DYNAMIC_LIBRARIES = yaxt yaxt_c netcdff netcdf hdf5 \
                                     $(CXX_RUNTIME_LIBRARY)
-export EXTERNAL_STATIC_LIBRARIES = xios 
+export EXTERNAL_STATIC_LIBRARIES = xios
 
 LFRIC_TARGET_PLATFORM ?= generic-x86
 export OPTIMISATION_PATH ?= $(wildcard optimisation/$(LFRIC_TARGET_PLATFORM))

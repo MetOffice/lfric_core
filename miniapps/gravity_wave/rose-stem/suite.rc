@@ -94,7 +94,7 @@
             limit   = {{ TARGET_THROTTLE }}
             members = root
     [[dependencies]]
-{%- set scheduledTasks = schedule() | deduplicateSchedule()%}
+{%- set scheduledTasks = schedule() | deduplicate_schedule()%}
 {{scheduledTasks}}
 
 [runtime]
@@ -251,7 +251,7 @@
         inherit = None, LOCAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP )}}
                      """
@@ -268,7 +268,7 @@
     # PUBLISH family.
     [[mirror_results_local]]
         inherit = None, LOCAL
-        script = rose task-run --app-key=publish --command-key=mirror
+        script = rose task-run --app-key=publish_mirror
         [[[environment]]]
             SOURCE  = $CYLC_SUITE_SHARE_DIR/publish-{{TARGET_OPT}}
             TARGET  = file:///$HOME/public_html/lfric-gungho-{{TARGET_OPT}}
@@ -279,7 +279,7 @@
 ##############################################################################
     [[TECHNICAL]]
         [[[environment]]]
-            SOURCE_DIRECTORY      = $SOURCE_ROOT/gungho
+            SOURCE_DIRECTORY      = $SOURCE_ROOT/miniapps/gravity_wave
             DESTINATION_DIRECTORY = $OUTPUT_ROOT/{{TARGET_TECHNICAL_COMPILER}}_fast-debug
             WORKING_DIR           = {{LOCAL_BUILD_ROOT}}/{{TARGET_TECHNICAL_COMPILER}}_fast-debug
 
@@ -288,7 +288,7 @@
         inherit = None, TARGET, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP,
                                     'mkdir -p $WORKING_DIR',
@@ -308,7 +308,7 @@
         inherit = DOCUMENTATION, LOCAL, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP,
                                     'mkdir -p $DESTINATION_DIRECTORY' )}}
@@ -359,12 +359,12 @@
         inherit = DOCUMENTATION, LOCAL, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP,
-                                    'mkdir -p $DESTINATION_DIRECTORY' )}}
+                                    'mkdir -p $DESTINATION_DIRECTORY/documents/uml' )}}
                      """
-        script = make -C $SOURCE_DIRECTORY document-uml
+        script = make -C $SOURCE_DIRECTORY document-uml VERBOSE=1
         [[[environment]]]
             DOCUMENT_DIR = $DESTINATION_DIRECTORY/documents/uml
 {%- endif %}
@@ -387,7 +387,7 @@
         inherit = DOCUMENTATION, LOCAL, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP )}}
                      """
@@ -399,11 +399,13 @@
         inherit = PUBLISH, LOCAL, TECHNICAL
         pre-script = """
                      {{ensureDestination()}}
+                     mkdir -p {{publish_destination}}/documentation/design
                      """
         script = rose task-run --app-key=publish --command-key=directory
         [[[environment]]]
-            DIRECTORY = $SOURCE_DIRECTORY/documents/*.pdf
-            DESTINATION = {{publish_destination}}/documentation/design
+            DIRECTORY = $SOURCE_DIRECTORY/documents/
+            DESTINATION = {{publish_destination}}/documentation/design/
+            FILTERS = --exclude '*' --include '*.pdf'
 {%- endif %}
 
 ##############################################################################
@@ -431,7 +433,7 @@
         inherit = {{family}}, TARGET
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_BUILD_SETUP,
                                     TARGET_REVEAL_SETUP,
@@ -464,7 +466,7 @@
         inherit = {{family}}, TARGET
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_BUILD_SETUP,
                                     TARGET_REVEAL_SETUP,
@@ -520,7 +522,7 @@
         inherit = {{family}}, TARGET
         pre-script  = """
                       {{'\n                     '|
-                        commandList( TARGET_BASE_SETUP,
+                        command_list( TARGET_BASE_SETUP,
                                      compiler_setup[compiler],
                                      TARGET_BUILD_SETUP,
                                      TARGET_REVEAL_SETUP,
@@ -559,7 +561,7 @@
         inherit = {{family}}, TARGET
         pre-script  = """
                       {{'\n                     '|
-                        commandList( TARGET_BASE_SETUP,
+                        command_list( TARGET_BASE_SETUP,
                                      compiler_setup[compiler],
                                      TARGET_BUILD_SETUP,
                                      TARGET_REVEAL_SETUP )}}
@@ -602,7 +604,7 @@
         inherit = CANNED_TASKS_{{label|upper}}
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_RUN_SETUP,
                                     TARGET_REVEAL_SETUP )}}
@@ -644,7 +646,7 @@
 {%-             set resolution_options=[('')] %}
 {%-           endif %}
 {%-           for resolution in resolution_options %}
-{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
+{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | get_resolution_labels() %}
 {%-             for i in range(0,dt_values|length) %}
 {%-               set configuration_label_res = appLabel|lower ~ res_label ~ dt_labels[i] ~ '_' ~ label %}
 {%-               if 'run_' + configuration_label_res in scheduledTasks %}
@@ -691,7 +693,7 @@
 {%-           endif %}
 
 {%-           for resolution in resolution_options %} {# science resolutions #}
-{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
+{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | get_resolution_labels() %}
 {%-             for i in range(0,dt_values|length) %}
 
 {%-               set configuration_res = res_value ~ dt_labels[i] %}
@@ -719,7 +721,7 @@
 {%-                     set wallclock   = directiveDict['wallclock']  %}
 {%-                     set threads     = directiveDict['threads']    %}
 {%-                     set xios_nodes  = directiveDict['xios_nodes'] if 'xios_nodes' in directiveDict.keys() else 0 %}
-{%-                     set run_batcher = TARGET_PARAM_RUN_BATCHER_DIRECTIVES| directiveModifier(mpi_parts*threads, wallclock, xios_nodes) %}
+{%-                     set run_batcher = TARGET_PARAM_RUN_BATCHER_DIRECTIVES| directive_modifier(mpi_parts*threads, wallclock, xios_nodes) %}
 
 {#                      If the mpi is configured by the suite, then we will use       #}
 {#                      the setcores optional configuration, so let's check that here #}
@@ -742,7 +744,7 @@
         inherit = {{appLabel|upper}}_{{label|upper}}, TARGET
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_RUN_SETUP,
                                     TARGET_REVEAL_SETUP )}}
@@ -774,14 +776,14 @@
 {%-                 if configuration_label in scheduledTasksDict.keys() %}
 {%-                   set configTaskDict = scheduledTasksDict[configuration_label] %}
 
-            {{ configTaskDict | dictToAssign('            ') }}
+            {{ configTaskDict | dict_to_assign('            ') }}
 
 {#                    If the directives are configured by the suite, then we will #}
 {#                    expand those in the environment                             #}
 {%-                   if 'directives' in configTaskDict.keys() %}
 {%-                     set directiveKey  = res_value if res_value in configTaskDict['directives'].keys() else 'default'%}
 {%-                     set directiveDict = configTaskDict['directives'][directiveKey] %}
-            {{ directiveDict | dictToAssign('            ') }}
+            {{ directiveDict | dict_to_assign('            ') }}
 {%-                   endif %}
 
 {#                    If we have nrun dependent on resolution / timestep then we  #}
@@ -954,7 +956,7 @@
         pre-script = """
                      mkdir -p $DESTINATION_DIRECTORY/meshes
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_BUILD_SETUP,
                                     TARGET_REVEAL_SETUP )}}

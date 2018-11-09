@@ -6,63 +6,57 @@
 # should have received as part of this distribution.
 ##############################################################################
 '''
-Implements a Jinja2 filter to run a macro specified by a string.
+Implements a Jinja2 filter to break appart a macro call and extract the
+environment arguments.
 '''
-from jinja2 import contextfilter
-import re
 import ast
+import re
+from jinja2 import contextfilter
+import utilities
+
 
 @contextfilter
 def getEnvMacro(context, call):
     '''
     Takes a string and parses any instances of an env dictionary.
     @param [inout] context Jinja2 instance to run macro against.
-    @param [in]    call    Invokation string.
-    @return String resulting from setting the environment.
+    @param [in]    call    Invocation string.
+    @return Tuple of application name, Configuration name,
+            Dictionary of environment arguments and Macro name.
     '''
     if call.find('(') == -1:
-        macroName = call
+        macro_name = call
         arguments = []
     else:
-        macroName = call[:call.index('(')]
-        arguments = re.split(', *', call[call.index('(')+1:call.rindex(')')])
+        macro_name = call[:call.index('(')]
+        macro_arguments = call[call.index('(')+1:call.rindex(')')]
+        arguments = utilities.dictionary_from_arguments(macro_arguments)
 
-    normalArguments  = [argument for argument in arguments \
+    normal_arguments = [argument for argument in arguments
                         if argument.find('=') == -1]
-    keywordArguments = [argument for argument in arguments \
-                        if argument.find('=') != -1]
+    keyword_arguments = [argument for argument in arguments
+                         if argument.find('=') != -1]
 
-    argumentList = []
-    for argument in normalArguments:
-        # Remove quote marks (if present) from the
-        # argument string
-        if argument[0] == '"':
-            argumentList.append( argument[1:-1] )
-        else:
-            argumentList.append( argument )
+    argument_list = []
+    for argument in normal_arguments:
+        argument_list.append(ast.literal_eval(argument.strip()))
 
-    argumentDictionary = {}
-    for argument in keywordArguments:
+    argument_dictionary = {}
+    for argument in keyword_arguments:
         key, value = re.split(' *= *', argument)
-        argumentDictionary[key] = value
+        argument_dictionary[key.strip()] = ast.literal_eval(value.strip())
 
     # We only do work on the 'env' dictionary
-    if 'env' in argumentDictionary.keys():
-        envDict=ast.literal_eval(argumentDictionary['env'])
+    if 'env' in argument_dictionary.keys():
+        environment_dictionary = argument_dictionary['env']
     else:
-        envDict={}
+        environment_dictionary = {}
 
-    envVariables=[]
-    for key, value in envDict.items():
-        envVariables.append('%s = %s' % (key, value) )
-
-    values='\n'.join(envVariables)
-
-    if len(normalArguments) >= 2:
-        app_name = normalArguments[0]
-        key = app_name + '_' + normalArguments[1]
-        return_value =  app_name, key, values
+    if len(normal_arguments) >= 2:
+        app_name = argument_list[0]
+        key = app_name + '_' + argument_list[1]
+        return_value = app_name, key, environment_dictionary, macro_name
     else:
-        return_value =  None, None, None
+        return_value = None, None, None, None
 
     return return_value

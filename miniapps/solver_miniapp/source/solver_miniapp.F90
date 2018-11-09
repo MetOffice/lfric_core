@@ -98,7 +98,7 @@ program solver_miniapp
   call init_solver_miniapp(mesh_id, chi, fv_1)
 
   ! Call an algorithm
-  call solver_miniapp_alg(fv_1, chi)
+  call solver_miniapp_alg(fv_1)
 
   ! Write out output file
   call log_event("solver miniapp: writing diagnostic output", LOG_LEVEL_INFO)

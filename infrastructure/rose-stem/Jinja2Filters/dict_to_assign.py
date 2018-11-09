@@ -6,20 +6,21 @@
 # should have received as part of this distribution.
 ##############################################################################
 '''
-Implements a Jinja2 filter to run a macro specified by a string.
+Implements a Jinja2 filter to convert a dictionary into assignment strings.
 '''
-from jinja2 import contextfilter
 
-def dictToAssign(inDict, indent):
+
+def dict_to_assign(context, indent):
     '''
-    Takes a dictionary and returns a string of assigments k=v 
-    @param [in]    inDict    Dictionary
+    Takes a dictionary and returns a string of assigments "key = value".
+
+    @param [in] context Dictionary
     @return String resulting from setting the environment.
     '''
-    envVariables=[]
-    for key, value in inDict.items():
+    env_variables = []
+    for key, value in context.items():
         if not isinstance(value, dict):
-            envVariables.append('%s = %s' % (key, value) )
+            env_variables.append('%s = %s' % (key, value))
 
     joining_str = '\n' + indent
-    return joining_str.join(envVariables)
+    return joining_str.join(env_variables)

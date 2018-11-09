@@ -1,11 +1,7 @@
 #!jinja2
 
-{# Include suite control #}
-%include suite_control.rc
-
-{# Include suite macros #}
 %include inc/suite_macros.rc
-
+%include suite_control.rc
 
 {# SETUP SOME JINJA2 VARIABLES #}
 {%- set plot_config = {} %}
@@ -104,7 +100,7 @@
             limit   = {{ TARGET_THROTTLE }}
             members = root
     [[dependencies]]
-{%- set scheduledTasks = schedule() | deduplicateSchedule() %}
+{%- set scheduledTasks = schedule() | deduplicate_schedule() %}
 {{scheduledTasks}}
 
 [runtime]
@@ -244,7 +240,7 @@
         inherit = None, LOCAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP )}}
                      """
@@ -261,7 +257,7 @@
     # PUBLISH family.
     [[mirror_results_local]]
         inherit = None, LOCAL
-        script = rose task-run --app-key=publish --command-key=mirror
+        script = rose task-run --app-key=publish_mirror
         [[[environment]]]
             SOURCE  = {{publish_destination}}
             TARGET  = file:///$HOME/public_html/lfric-gungho-{{TARGET_OPT}}-{{publishGroup}}
@@ -272,7 +268,7 @@
     # PUBLISH family.
     [[mirror_results_remote]]
         inherit = None, LOCAL
-        script = rose task-run --app-key=publish --command-key=mirror
+        script = rose task-run --app-key=publish_mirror
         [[[environment]]]
             REWRITE = {{MIRROR_REWRITE}}
             SOURCE  = {{publish_destination}}
@@ -291,7 +287,7 @@
         inherit = None, TARGET, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP,
                                     'mkdir -p $WORKING_DIR',
@@ -311,7 +307,7 @@
         inherit = DOCUMENTATION, LOCAL, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP,
                                     'mkdir -p $DESTINATION_DIRECTORY' )}}
@@ -362,7 +358,7 @@
         inherit = DOCUMENTATION, LOCAL, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP,
                                     'mkdir -p $DESTINATION_DIRECTORY' )}}
@@ -391,7 +387,7 @@
         inherit = DOCUMENTATION, LOCAL, TECHNICAL
         pre-script = """
                      {{'\n                     '|
-                       commandList( LOCAL_BASE_SETUP,
+                       command_list( LOCAL_BASE_SETUP,
                                     LOCAL_TECHNICAL_SETUP,
                                     LOCAL_REVEAL_SETUP )}}
                      """
@@ -408,8 +404,9 @@
                      """
         script = rose task-run --app-key=publish --command-key=directory
         [[[environment]]]
-            DIRECTORY = $SOURCE_DIRECTORY/documents/*.pdf
-            DESTINATION = {{publish_destination}}/documentation/design
+            DIRECTORY = $DESTINATION_DIRECTORY/documents/
+            DESTINATION = {{publish_destination}}/documentation/design/
+            FILTERS = --exclude='*' --include='*.pdf'
 {%- endif %}
 
 ##############################################################################
@@ -440,7 +437,7 @@
         inherit = {{family}}, TARGET
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_BUILD_SETUP,
                                     TARGET_REVEAL_SETUP,
@@ -486,7 +483,7 @@
         inherit = {{family}}, TARGET
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_BUILD_SETUP,
                                     TARGET_REVEAL_SETUP,
@@ -524,7 +521,7 @@
         inherit = {{family}}, TARGET
         pre-script  = """
                       {{'\n                     '|
-                        commandList( TARGET_BASE_SETUP,
+                        command_list( TARGET_BASE_SETUP,
                                      compiler_setup[compiler],
                                      TARGET_BUILD_SETUP,
                                      TARGET_REVEAL_SETUP,
@@ -564,7 +561,7 @@
         inherit = {{family}}, TARGET
         pre-script  = """
                       {{'\n                     '|
-                        commandList( TARGET_BASE_SETUP,
+                        command_list( TARGET_BASE_SETUP,
                                      compiler_setup[compiler],
                                      TARGET_BUILD_SETUP,
                                      TARGET_REVEAL_SETUP )}}
@@ -609,7 +606,7 @@
         inherit = CANNED_TASKS_{{label|upper}}
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_RUN_SETUP,
                                     TARGET_REVEAL_SETUP )}}
@@ -650,7 +647,7 @@
 {%-             set resolution_options=[('')] %}
 {%-           endif %}
 {%-           for resolution in resolution_options %}
-{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
+{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | get_resolution_labels() %}
 {%-             for i in range(0,dt_values|length) %}
 {%-               set configuration_label_res = appLabel|lower ~ res_label ~ dt_labels[i] ~ '_' ~ label %}
 {%-               if 'run_' + configuration_label_res in scheduledTasks %}
@@ -697,7 +694,7 @@
 {%-           endif %}
 
 {%-           for resolution in resolution_options %} {# science resolutions #}
-{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | getResolutionLabels() %}
+{%-             set res_value, dt_values, res_label, dt_labels, res_opt = resolution | get_resolution_labels() %}
 {%-             for i in range(0,dt_values|length) %}
 
 {%-               set configuration_res = res_value ~ dt_labels[i] %}
@@ -725,7 +722,7 @@
 {%-                     set wallclock   = directiveDict['wallclock']  %}
 {%-                     set threads     = directiveDict['threads']    %}
 {%-                     set xios_nodes  = directiveDict['xios_nodes'] if 'xios_nodes' in directiveDict.keys() else 0 %}
-{%-                     set run_batcher = TARGET_PARAM_RUN_BATCHER_DIRECTIVES| directiveModifier(mpi_parts*threads, wallclock, xios_nodes) %}
+{%-                     set run_batcher = TARGET_PARAM_RUN_BATCHER_DIRECTIVES| directive_modifier(mpi_parts*threads, wallclock, xios_nodes) %}
 
 {#                      If the mpi is configured by the suite, then we will use       #}
 {#                      the setcores optional configuration, so let's check that here #}
@@ -749,18 +746,33 @@
         inherit = {{appLabel|upper}}_{{label|upper}}, TARGET
         pre-script = """
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
-                                    compiler_setup[compiler],
-                                    TARGET_RUN_SETUP,
-                                    TARGET_REVEAL_SETUP )}}
+                       command_list( TARGET_BASE_SETUP,
+                                     compiler_setup[compiler],
+                                     TARGET_RUN_SETUP,
+                                     TARGET_REVEAL_SETUP )}}
                      """
 
         script = rose task-run --app-key={{appName}} --command-key={{command_key}} {{config_opt}} {{res_opt}} {{mpiopt}}
 
+        err-script = """
+                     # Copied from the post-script. This has to happen
+                     # regardless of error so that the publish task can work.
+                     mkdir -p $DESTINATION_DIRECTORY/{{pathFragment}}
+
+                     # Future publisher stages need this information
+                     RELATIVE_LOG_ROOT=$(echo $CYLC_TASK_LOG_ROOT | sed "s|$HOME/||")
+                     echo $RELATIVE_LOG_ROOT > $DESTINATION_DIRECTORY/{{pathFragment}}/run.log.path
+                     """
+
         post-script = """
+                      mkdir -p $DESTINATION_DIRECTORY/{{pathFragment}}
+
+                      # Future publisher stages need this information
+                      RELATIVE_LOG_ROOT=$(echo $CYLC_TASK_LOG_ROOT | sed "s|$HOME/||")
+                      echo $RELATIVE_LOG_ROOT > $DESTINATION_DIRECTORY/{{pathFragment}}/run.log.path
+
                       find . -regex '.*PET0+\..+\.Log' -exec cp {} $ROSE_TASK_LOG_DIR \;
                       find . -regex '.*PET0+\..+\.Log' -exec cat {} \;
-                      mkdir -p $DESTINATION_DIRECTORY/{{pathFragment}}
                       mkdir -p $DESTINATION_DIRECTORY/{{pathFragment}}/results
                       test -f {{appName}}-checksums.txt && cp {{appName}}-checksums.txt $DESTINATION_DIRECTORY/{{pathFragment}}/{{compiler}}.checksums
 
@@ -768,28 +780,39 @@
                       touch $CYLC_TASK_WORK_DIR/tmp.m
                       mv $CYLC_TASK_WORK_DIR/*.m $DESTINATION_DIRECTORY/{{pathFragment}}/results/
 
-                      # Move XIOS netCDF (if it exists)
-                      test -f $CYLC_TASK_WORK_DIR/lfric_diag.nc && mv $CYLC_TASK_WORK_DIR/lfric_diag.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/
-                      test -f $CYLC_TASK_WORK_DIR/lfric_initial.nc && mv $CYLC_TASK_WORK_DIR/lfric_initial.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/
-                      test -f $CYLC_TASK_WORK_DIR/lfric_averages.nc && mv $CYLC_TASK_WORK_DIR/lfric_averages.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/
-
-                      # Future publisher stages need this information
-                      RELATIVE_LOG_ROOT=$(echo $CYLC_TASK_LOG_ROOT | sed "s|$HOME/||")
-                      echo $RELATIVE_LOG_ROOT > $DESTINATION_DIRECTORY/{{pathFragment}}/run.log.path
+                      # Move XIOS netCDF files if they exist.
+                      #
+                      # In the case where the file does not exist the return
+                      # code of a line of the form "test ... && mv" will be
+                      # "failure", which is what the test returned. The move
+                      # was not executed so it does not affect the return code.
+                      #
+                      # If the last test failes this return code becomes the
+                      # value of this whole script and as such causes Cylc to
+                      # believe the script has failed.
+                      #
+                      # By executing "true" if the file does not exist then
+                      # the return code is "success" even if the file was not
+                      # present. This should ensure the suite behaves the way
+                      # we would expect.
+                      #
+                      test -f $CYLC_TASK_WORK_DIR/lfric_diag.nc && mv $CYLC_TASK_WORK_DIR/lfric_diag.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/ || true
+                      test -f $CYLC_TASK_WORK_DIR/lfric_initial.nc && mv $CYLC_TASK_WORK_DIR/lfric_initial.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/ || true
+                      test -f $CYLC_TASK_WORK_DIR/lfric_averages.nc && mv $CYLC_TASK_WORK_DIR/lfric_averages.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/ || true
                       """
 
         [[[environment]]]
 {%-                 if configuration_label in scheduledTasksDict.keys() %}
 {%-                   set configTaskDict = scheduledTasksDict[configuration_label] %}
 
-            {{ configTaskDict | dictToAssign('            ') }}
+            {{ configTaskDict | dict_to_assign('            ') }}
 
 {#                    If the directives are configured by the suite, then we will #}
 {#                    expand those in the environment                             #}
 {%-                   if 'directives' in configTaskDict.keys() %}
 {%-                     set directiveKey  = res_value if res_value in configTaskDict['directives'].keys() else 'default'%}
 {%-                     set directiveDict = configTaskDict['directives'][directiveKey] %}
-            {{ directiveDict | dictToAssign('            ') }}
+            {{ directiveDict | dict_to_assign('            ') }}
 {%-                   endif %}
 
 {#                    If we have nrun dependent on resolution / timestep then we  #}
@@ -960,7 +983,7 @@
         pre-script = """
                      mkdir -p $DESTINATION_DIRECTORY/meshes
                      {{'\n                     '|
-                       commandList( TARGET_BASE_SETUP,
+                       command_list( TARGET_BASE_SETUP,
                                     compiler_setup[compiler],
                                     TARGET_BUILD_SETUP,
                                     TARGET_REVEAL_SETUP )}}

@@ -25,12 +25,13 @@ module dense_operator_alg_mod
   use function_space_mod,  only : function_space_type
   use function_space_collection_mod,     only: function_space_collection
   use fs_continuity_mod
-  
-  use quadrature_xyoz_mod,               only : quadrature_xyoz_type  
+
+  use quadrature_xyoz_mod,               only : quadrature_xyoz_type
   use compute_mass_matrix_kernel_w0_mod, only : compute_mass_matrix_kernel_w0_type
   use compute_mass_matrix_kernel_w3_mod, only : compute_mass_matrix_kernel_w3_type
   use matrix_vector_kernel_mod,          only : matrix_vector_kernel_type
   use mm_diagonal_kernel_mod,            only : mm_diagonal_kernel_type
+  use runtime_constants_mod,             only : get_coordinates
 
   implicit none
   private
@@ -66,13 +67,11 @@ contains
   !> Construct a <code>dense_operator</code> object.
   !>
   !> @param [in] fv a field_vector of size 2
-  !> @param [in] chi the coordinate fields
   !> @param [in] qr the quadrature object
   !> @return self the constructed dense operator
-  function dense_operator_constructor( fv , chi, qr) result(self)
+  function dense_operator_constructor( fv, qr) result(self)
     implicit none
     class(abstract_vector_type), intent(in)    :: fv
-    type(field_type), intent(in) :: chi(3)
     type(quadrature_xyoz_type), intent(in) :: qr
     type(dense_operator_type) :: self
 
@@ -80,6 +79,7 @@ contains
     type(function_space_type), pointer :: fs_wb => null()
     integer(kind=i_def) :: mesh_id
     integer(kind=i_def) :: elem, fs_label
+    type(field_type), pointer :: chi(:) => null()
 
     select type (fv)
     type is (field_vector_type)
@@ -99,7 +99,8 @@ contains
        ! make the operators
        self%mass_w0 = operator_type(fs_wa, fs_wa)
        self%mass_w3 = operator_type(fs_wb, fs_wb)
-       
+
+       chi => get_coordinates()
        call invoke(compute_mass_matrix_kernel_w0_type(self%mass_w0, chi, qr), &
             compute_mass_matrix_kernel_w3_type(self%mass_w3, chi, qr) )
 
@@ -107,8 +108,8 @@ contains
        write(log_scratch_space, '(A)') "dense_operator_alg_mod: incorrect vector_type as argument fv"
        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
    end select
-   
-    
+
+
   end function dense_operator_constructor
 
   !> Applies the LMA mass matrices to the vector, y = M x
@@ -116,7 +117,7 @@ contains
   !> @param [in] x field vector to be read, size 2
   !> @param [inout] field vector to be written, size 2
   subroutine apply_dense_op(self, x, y)
-    implicit none    
+    implicit none
     class(dense_operator_type), intent(inout)    :: self
     class(abstract_vector_type),          intent(in)    :: x
     class(abstract_vector_type),          intent(inout) :: y
@@ -126,7 +127,7 @@ contains
        select type (y)
        type is (field_vector_type)
           call y%set_scalar(0.0_r_def)
-          call invoke(   & 
+          call invoke(   &
                matrix_vector_kernel_type(y%vector(1),x%vector(1),self%mass_w0), &
                matrix_vector_kernel_type(y%vector(2),x%vector(2),self%mass_w3)  &
                )
@@ -145,10 +146,10 @@ contains
   !> @param [in] self the dense operator
   !> @param [inout] diag the field vector to contain the diagonal field values
   subroutine extract_diagonal(self, diag)
-    implicit none    
+    implicit none
     class(dense_operator_type), intent(in)    :: self
     type(field_vector_type),    intent(inout) :: diag
-    
+
     call invoke(     &
          mm_diagonal_kernel_type(diag%vector(1), self%mass_w0), &
          mm_diagonal_kernel_type(diag%vector(2), self%mass_w3)  &
@@ -160,6 +161,6 @@ contains
   !> @param [inout] self the dense operator
   subroutine destroy_dense_op(self)
     type(dense_operator_type), intent(inout) :: self
-    
+
   end subroutine destroy_dense_op
 end module dense_operator_alg_mod

@@ -2,7 +2,7 @@
                       "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
 <html>
   <head>
-    <title>Dynamo runtime output from {{compiler}} {{'(' + context + ')' if context}} at {{timestamp}}</title>
+    <title>LFRic runtime output from {{compiler}} {{'(' + context + ')' if context}} at {{timestamp}}</title>
     <style type="text/css">
       h1 { text-align: center; }
       .event { margin-left: 5em; padding: 0.5ex;}
@@ -10,6 +10,9 @@
       .even { background-color: #eee; }
       .occurrences:before { content: "occurred "; font-size: small; }
       .level { margin-left: 1em; }
+      .code:before { content: "code "; font-size: small; }
+      .line:before { content: "line "; font-size: small; }
+      .filename { padding: 0.5ex; }
       .remark { color: #333; }
       .warning { color: #aa2; }
       .message { margin-left: 1em; }
@@ -17,18 +20,28 @@
   </head>
   <body>
     <h1>
-      Dynamo runtime output from <span id='compiler'>{{compiler}}</span>
+      LFRic runtime output from <span id='compiler'>{{compiler}}</span>
       {% if context %}(<span id='context'>{{context}}</span>){% endif %}
       at <span id='timestamp'>{{timestamp}}</span>
     </h1>
-    <div id='events'>
-{%- for event in events %}
-      <div class='event {{loop.cycle('odd', 'even')}}'>
-        <div class='particulars'>
+      <div id='events'>
+{%- set rowStyle = cycler( 'odd', 'even' ) %}
+{%- for event in events|sort(attribute='highlight_range') %}
+        <div class='event {{rowStyle.next()}}'>
+          <div class='particulars'>
 {%-   if event.occurrences > 1 %}
-          <span class='occurrences'>{{event.occurrences}}</span>
+            <span class='occurrences'>{{event.occurrences}}</span>
 {%-   endif %}
-          <span class='level {{event.level}}'>{{event.level}}</span>
+            <span class='level {{event.level}}'>{{event.level}}</span>
+{%-   if event.event_code %}
+            <span class='code'>{{event.event_code}}</span>
+{%-   endif %}
+{%-   if event.line_number %}
+            <span class='line'>{{event.line_number}}</span>
+{%-   endif %}
+{%-   if event.filename %}
+            <span class='filename'>{{event.filename}}</span>
+{%-   endif %}
         </div>
         <div class='message'>
           {{event.message}}

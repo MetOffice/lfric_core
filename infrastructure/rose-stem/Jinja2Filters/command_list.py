@@ -11,10 +11,12 @@ the filter text.
 
 e.g.
 
-' foo ' | commandList( 'comm1', ['comm2, 'comm3'] )
+' foo ' | command_list('comm1', ['comm2, 'comm3'])
 => comm1 foo comm2 foo comm3
 '''
-def commandList( separator, *fragments ):
+
+
+def command_list(separator, *fragments):
     '''
     Takes an arbitrary collection of strings and joins them with the filter
     text into a single string.
@@ -25,7 +27,7 @@ def commandList( separator, *fragments ):
     commands = []
     for fragment in fragments:
         if hasattr(fragment, '__iter__'):
-            commands.extend( fragment )
+            commands.extend(fragment)
         else:
-            commands.append( fragment )
-    return separator.join( commands )
+            commands.append(fragment)
+    return separator.join(commands)
