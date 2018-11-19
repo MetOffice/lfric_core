@@ -35,9 +35,9 @@
     'run_application("lfric_atm", "dry_conv_bl_scm",
                      resolutions=[("BiP4x4-10000x10000",600.0)],
                      plotstr="plot_scm.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR")',
-    'check_compiler("lfric_atm", "dry_conv_bl_scm", "full-debug",
-                      resolution=("BiP4x4-10000x10000",600.0),
-                      publish=True)',
+    'check_compilers("lfric_atm", "dry_conv_bl_scm", "full-debug",
+                     resolution=("BiP4x4-10000x10000",600.0),
+                     publish=True)',
     'publish_commit'
   ]
 } %}
