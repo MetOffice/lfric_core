@@ -20,6 +20,7 @@ module transport_driver_mod
   use init_fem_mod,                   only: init_fem
   use init_transport_mod,             only: init_transport
   use init_mesh_mod,                  only: init_mesh
+  use init_shifted_fields_mod,        only: init_shifted_fields
   use io_mod,                         only: xios_domain_init
   use diagnostics_io_mod,             only: write_scalar_diagnostic,          &
                                             write_vector_diagnostic      
@@ -72,13 +73,19 @@ module transport_driver_mod
   type(field_type) :: dep_pts_x
   type(field_type) :: dep_pts_y
   type(field_type) :: dep_pts_z
+
+  ! Shifted Prognostic fields
+  type(field_type) :: wind_shifted
+  type(field_type) :: density_shifted
   type(field_type) :: increment
 
   ! Coordinate field
   type(field_type), target, dimension(3) :: chi
+  type(field_type), target, dimension(3) :: shifted_chi
 
   integer(i_def) :: mesh_id
   integer(i_def) :: twod_mesh_id
+  integer(i_def) :: shifted_mesh_id
 
 contains
 
@@ -134,14 +141,15 @@ contains
               source = global_mesh_collection_type() )
 
     ! Create the mesh
-    call init_mesh( local_rank, total_ranks, mesh_id, twod_mesh_id )
+    call init_mesh( local_rank, total_ranks, mesh_id, twod_mesh_id, shifted_mesh_id )
 
     ! FEM  initialisation
-    call init_fem( mesh_id, chi )
+    call init_fem( mesh_id, chi, shifted_mesh_id, shifted_chi )
 
     ! Transport initialisation
-    call init_transport( mesh_id, chi, wind, density, dep_pts_x, dep_pts_y,   &
-                         dep_pts_z, increment )
+    call init_transport( mesh_id, chi, wind, density, dep_pts_x, dep_pts_y, dep_pts_z, increment )
+    call init_shifted_fields( shifted_mesh_id, wind_shifted, density_shifted )
+
 
     if ( (write_xios_output) ) then
       dtime = int(dt)

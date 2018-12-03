@@ -28,15 +28,24 @@ module init_fem_mod
 
   contains
 
-  subroutine init_fem( mesh_id, chi )
+  !>@brief Initialises the coordinate field (chi) and (optionally) the vertically
+  !>        shifted coordinate field.
+  !> @param[in] mesh_id         Identifier of the mesh
+  !> @param[in,out] chi         Coordinate field
+  !> @param[in] shifted_mesh_id Identifier of vertically shifted mesh with an extra level
+  !> @param[in,out] shifted_chi Spatial coordinates of vertically shifted mesh
+  subroutine init_fem( mesh_id, chi, shifted_mesh_id, shifted_chi )
 
-    integer(i_def), intent(in)        :: mesh_id
+    integer(i_def), intent(in)                  :: mesh_id
     ! Coordinate field
-    type( field_type ), intent(inout) :: chi(:)
+    type( field_type ), intent(inout)           :: chi(:)
+    integer(i_def), intent(in), optional        :: shifted_mesh_id
+    type( field_type ), intent(inout), optional :: shifted_chi(:)
 
     integer(i_native), parameter :: fs_list(5) = [W0, W1, W2, W3, Wtheta]
 
     type(function_space_type), pointer :: fs => null()
+    type(function_space_type), pointer :: shifted_fs => null()
     integer(i_native)                  :: fs_index
     integer(i_def)                     :: chi_space
     integer(i_def)                     :: coord
@@ -72,6 +81,21 @@ module init_fem_mod
 
     call assign_coordinate_field(chi, mesh_id)
     call assign_orography_field(chi, mesh_id)
+
+
+    ! Create shifted vertical mesh extrusion.
+    if (present(shifted_mesh_id)) then
+      shifted_fs => function_space_collection%get_fs(shifted_mesh_id, coordinate_order, chi_space)
+
+      do coord = 1, size(chi)
+        shifted_chi(coord) = field_type(vector_space = shifted_fs)
+      end do
+
+      call assign_coordinate_field(shifted_chi, shifted_mesh_id)
+      call assign_orography_field(shifted_chi, shifted_mesh_id)
+
+      nullify( shifted_fs )
+    end if
 
     nullify( fs )
     call log_event( 'FEM specifics created', LOG_LEVEL_INFO )

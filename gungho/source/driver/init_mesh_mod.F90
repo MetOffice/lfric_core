@@ -19,7 +19,7 @@ module init_mesh_mod
                                         finite_element_cellshape_quadrilateral
   use global_mesh_mod,            only: global_mesh_type
   use global_mesh_collection_mod, only: global_mesh_collection
-  use gungho_extrusion_mod,       only: create_extrusion
+  use gungho_extrusion_mod,       only: create_extrusion, create_shifted_extrusion
   use init_multigrid_mesh_mod,    only: init_multigrid_mesh
   use log_mod,                    only: log_event,         &
                                         log_scratch_space, &
@@ -53,10 +53,12 @@ contains
 
 !> @brief Generates a mesh and determines the basis functions and dofmaps
 !> @details This will be replaced with code that reads the information in
-!> @param[in] local_rank Number of the MPI rank of this process
-!> @param[in] total_ranks Total number of MPI ranks in this job
-!> @param[out] prime_mesh_id id of partitioned prime mesh
-subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
+!> @param[in] local_rank        Number of the MPI rank of this process
+!> @param[in] total_ranks       Total number of MPI ranks in this job
+!> @param[out] prime_mesh_id    Mesh id of partitioned prime mesh
+!> @param[out] twod_mesh_id     Mesh id of the 2D (surface) mesh
+!> @param[out] shifted_mesh_id  Mesh id of vertically shifted mesh with an extra level
+subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id, shifted_mesh_id )
 
   implicit none
 
@@ -64,6 +66,7 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
   integer(i_def), intent(in)  :: total_ranks
   integer(i_def), intent(out) :: prime_mesh_id
   integer(i_def), intent(out) :: twod_mesh_id
+  integer(i_def), intent(out), optional :: shifted_mesh_id
 
   ! Parameters
   integer(i_def), parameter :: max_factor_iters = 10000
@@ -74,6 +77,7 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
   procedure (partitioner_interface), pointer :: partitioner_ptr => null()
   type(global_mesh_type),            pointer :: global_mesh_ptr => null()
   class(extrusion_type),         allocatable :: extrusion
+  class(extrusion_type),         allocatable :: shifted_extrusion
   type(partition_type)                       :: partition
   type(uniform_extrusion_type)               :: extrusion_2d
 
@@ -296,6 +300,18 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id )
                                                extrusion_2d )
 
   deallocate(extrusion)
+
+  if (present(shifted_mesh_id)) then
+    allocate(shifted_extrusion, source=create_shifted_extrusion() )
+
+    call log_event( "Creating shifting mesh", LOG_LEVEL_INFO )
+
+    shifted_mesh_id = mesh_collection%add_new_mesh( global_mesh_ptr,  &
+                                                    partition,        &
+                                                    shifted_extrusion )
+
+    deallocate(shifted_extrusion)
+  end if
 
   return
 end subroutine init_mesh

@@ -74,6 +74,23 @@ module extrusion_mod
     module procedure uniform_extrusion_constructor
   end interface uniform_extrusion_type
 
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Similar to shifted_uniform_extrusion except that the top and
+  !>        bottom layers are half the normal height and the remaining layers
+  !>        have effectively been shifted by half a cell.
+  type, public, extends(extrusion_type) :: shifted_uniform_extrusion_type
+    private
+  contains
+    private
+    procedure, public :: extrude => shifted_uniform_extrude
+  end type shifted_uniform_extrusion_type
+
+  interface shifted_uniform_extrusion_type
+    module procedure shifted_uniform_extrusion_constructor
+  end interface shifted_uniform_extrusion_type
+
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Extrudes with a @f$\left(\frac{layer}{n_{layers}}\right)^2@f$
   !>        distribution of layers.
@@ -90,6 +107,21 @@ module extrusion_mod
   end interface quadratic_extrusion_type
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Similar to the quadratic_extrusion_type except that the top and
+  !>        bottom layers are half the normal height and the remaining layers
+  !>        have effectively been shifted by half a cell.
+  type, public, extends(extrusion_type) :: shifted_quadratic_extrusion_type
+    private
+  contains
+    private
+    procedure, public :: extrude => shifted_quadratic_extrude
+  end type shifted_quadratic_extrusion_type
+
+  interface shifted_quadratic_extrusion_type
+    module procedure shifted_quadratic_extrusion_constructor
+  end interface shifted_quadratic_extrusion_type
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Extrudes with "geometric" layers.
   !>
   type, public, extends(extrusion_type) :: geometric_extrusion_type
@@ -102,6 +134,22 @@ module extrusion_mod
   interface geometric_extrusion_type
     module procedure geometric_extrusion_constructor
   end interface geometric_extrusion_type
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Similar to the geometric_extrusion_type except that the top and
+  !>        bottom levels have half the height than geometric_extrusion_type
+  !>        with the remaining layers effectively being shifted by half a cell.
+  type, public, extends(extrusion_type) :: shifted_geometric_extrusion_type
+    private
+  contains
+    private
+    procedure, public :: extrude => shifted_geometric_extrude
+  end type shifted_geometric_extrusion_type
+
+  interface shifted_geometric_extrusion_type
+    module procedure shifted_geometric_extrusion_constructor
+  end interface shifted_geometric_extrusion_type
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Extrudes using DCMIP scheme.
@@ -116,6 +164,21 @@ module extrusion_mod
   interface dcmip_extrusion_type
     module procedure dcmip_extrusion_constructor
   end interface dcmip_extrusion_type
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Similar to dcmip_extrusion_type except that the top and
+  !>        bottom levels have half the height than dcmip_extrusion_type
+  !>        with the remaining layers effectively being shifted by half a cell.
+  type, public, extends(extrusion_type) :: shifted_dcmip_extrusion_type
+    private
+  contains
+    private
+    procedure, public :: extrude => shifted_dcmip_extrude
+  end type shifted_dcmip_extrusion_type
+
+  interface shifted_dcmip_extrusion_type
+    module procedure shifted_dcmip_extrusion_constructor
+  end interface shifted_dcmip_extrusion_type
 
 contains
 
@@ -166,6 +229,59 @@ contains
   end subroutine uniform_extrude
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Creates a shifted_uniform_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New shifted_uniform_extrusion_type object.
+  !>
+  function shifted_uniform_extrusion_constructor( atmosphere_bottom, &
+                                                  atmosphere_top,    &
+                                                  number_of_layers ) result(new)
+
+    implicit none
+
+    real(r_def),    intent(in) :: atmosphere_bottom
+    real(r_def),    intent(in) :: atmosphere_top
+    integer(i_def), intent(in) :: number_of_layers
+
+    type(shifted_uniform_extrusion_type) :: new
+
+    call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
+                                    number_of_layers )
+
+  end function shifted_uniform_extrusion_constructor
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Extrudes the mesh to give constant delta between layers except for
+  !>        the top and bottom levels which are half the height of the other
+  !>        layers.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
+  !>
+  subroutine shifted_uniform_extrude( this, eta )
+
+    implicit none
+
+    class(shifted_uniform_extrusion_type), intent(in)  :: this
+    real(r_def), intent(out) :: eta(0:this%number_of_layers)
+
+    integer(i_def) :: k
+
+    eta(0) = 0.0_r_def
+    do k = 1, this%number_of_layers-1
+      eta(k) = (real(k,r_def)-0.5_r_def)/real(this%number_of_layers-1,r_def)
+    end do
+
+    eta(this%number_of_layers) = 1.0_r_def
+
+  end subroutine shifted_uniform_extrude
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Creates a quadratic_extrusion_type object.
   !>
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
@@ -212,6 +328,58 @@ contains
 
   end subroutine quadratic_extrude
 
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Creates a shifted_quadratic_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New shifted_quadratic_extrusion_type object.
+  !>
+  function shifted_quadratic_extrusion_constructor( atmosphere_bottom, &
+                                                    atmosphere_top,    &
+                                                    number_of_layers ) result(new)
+
+    implicit none
+
+    real(r_def),    intent(in) :: atmosphere_bottom
+    real(r_def),    intent(in) :: atmosphere_top
+    integer(i_def), intent(in) :: number_of_layers
+
+    type(shifted_quadratic_extrusion_type) :: new
+
+    call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
+                                    number_of_layers )
+
+  end function shifted_quadratic_extrusion_constructor
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Extrudes the mesh to give a quadratic extrusion of layers but with
+  !>        a half level at the top and bottom of the vertical extrusion.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
+  !>
+  subroutine shifted_quadratic_extrude( this, eta )
+
+    implicit none
+
+    class(shifted_quadratic_extrusion_type), intent(in)  :: this
+    real(r_def),                     intent(out) :: eta(0:this%number_of_layers)
+
+    integer(i_def) :: k
+
+    eta(0) = 0.0_r_def
+
+    do k = 1, this%number_of_layers-1
+      eta(k) = ((real(k,r_def)-0.5_r_def)/real(this%number_of_layers-1,r_def))**2
+    end do
+    eta(this%number_of_layers) = 1.0_r_def
+
+  end subroutine shifted_quadratic_extrude
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Creates a geometric_extrusion_type object.
   !>
@@ -250,21 +418,80 @@ contains
     class(geometric_extrusion_type), intent(in)  :: this
     real(r_def),                     intent(out) :: eta(0:this%number_of_layers)
 
-    real(r_def), parameter :: stretching_factor = 1.03_r_def
-
-    integer(i_def) :: k
-    real(r_def)    :: delta_eta
+    integer(i_def)          :: k
+    real(r_def), parameter  :: stretching_factor = 1.03_r_def
+    real(r_def)             :: delta_eta
 
     delta_eta = (stretching_factor - 1.0_r_def) &
                 / (stretching_factor**(this%number_of_layers) - 1.0_r_def)
 
     eta(0) = 0.0_r_def
     do k = 1, this%number_of_layers
-      eta(k) = eta(k-1) + delta_eta
-      delta_eta = delta_eta*stretching_factor
+      eta(k) = geometric_func( stretching_factor, real(k,r_def), delta_eta )
     end do
 
   end subroutine geometric_extrude
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Creates a shifted geometric_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New geometric_extrusion_type object.
+  !>
+  function shifted_geometric_extrusion_constructor( atmosphere_bottom, &
+                                                    atmosphere_top,    &
+                                                    number_of_layers ) &
+                                                    result(new)
+
+    implicit none
+
+    real(r_def),    intent(in) :: atmosphere_bottom
+    real(r_def),    intent(in) :: atmosphere_top
+    integer(i_def), intent(in) :: number_of_layers
+
+    type(shifted_geometric_extrusion_type) :: new
+
+    call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
+                                    number_of_layers )
+
+  end function shifted_geometric_extrusion_constructor
+
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Extrudes the mesh to give a John Thuburn ENDGame non-staggered grid.
+  !>        The mesh is shifted vertically so that a half level exists at the
+  !>        top and bottom level
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
+  !>
+  subroutine shifted_geometric_extrude( this, eta )
+
+    implicit none
+
+    class(shifted_geometric_extrusion_type), intent(in)  :: this
+    real(r_def),                     intent(out) :: eta(0:this%number_of_layers)
+
+    integer(i_def)          :: k
+    real(r_def), parameter  :: stretching_factor = 1.03_r_def
+    real(r_def)             :: delta_eta
+
+    eta(0) = 0.0_r_def
+    eta(this%number_of_layers) = 1.0_r_def
+
+    delta_eta = (stretching_factor - 1.0_r_def) &
+                / (stretching_factor**(this%number_of_layers-1_i_def) - 1.0_r_def)
+
+    do k = 1, this%number_of_layers-1
+      eta(k) = geometric_func( stretching_factor, real(k,r_def)-0.5_r_def, delta_eta )
+    end do
+
+
+  end subroutine shifted_geometric_extrude
+
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Creates a dcmip_extrusion_type object.
@@ -310,16 +537,66 @@ contains
     real(r_def), parameter :: phi_flatten = 15.0_r_def
 
     integer(i_def) :: k
-    real(r_def)    :: eta_uni
 
     do k = 0, this%number_of_layers
-      eta_uni = real(k,r_def)/real(this%number_of_layers,r_def)
-      eta(k) = ( sqrt(phi_flatten*(eta_uni**2_i_def) + 1.0_r_def) &
-                      - 1.0_r_def ) / &
-                    ( sqrt(phi_flatten + 1.0_r_def) - 1.0_r_def )
+      eta(k) = dcmip_func(real(k,r_def)/real(this%number_of_layers,r_def))
     end do
 
   end subroutine dcmip_extrude
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Creates a vertically shifted dcmip_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New dcmip_extrusion_type object.
+  !>
+  function shifted_dcmip_extrusion_constructor( atmosphere_bottom, &
+                                        atmosphere_top,    &
+                                        number_of_layers ) result(new)
+
+    implicit none
+
+    real(r_def),    intent(in) :: atmosphere_bottom
+    real(r_def),    intent(in) :: atmosphere_top
+    integer(i_def), intent(in) :: number_of_layers
+
+    type(shifted_dcmip_extrusion_type) :: new
+
+    call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
+                                    number_of_layers )
+
+  end function shifted_dcmip_extrusion_constructor
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Extrudes the mesh using the DCMIP scheme and shifts the mesh
+  !>        vertically by half a layer.
+  !>
+  !> For more information see DCMIP-TestCaseDocument_v1.7.pdf,
+  !> Appendix F.2. - Eq. 229.
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
+  !>
+  subroutine shifted_dcmip_extrude( this, eta )
+
+    implicit none
+
+    class(shifted_dcmip_extrusion_type), intent(in)  :: this
+    real(r_def),                         intent(out) :: eta(0:this%number_of_layers)
+
+    integer(i_def) :: k
+
+    eta(0) = 0.0_r_def
+    do k = 1,this%number_of_layers-1
+      eta(k) = dcmip_func((real(k,r_def)-0.5_r_def)/real(this%number_of_layers-1,r_def))
+    end do
+    eta(this%number_of_layers) = 1.0_r_def
+
+  end subroutine shifted_dcmip_extrude
+
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Initialises the extrusion base class.
@@ -432,5 +709,46 @@ contains
     layers = this%number_of_layers
 
   end function get_number_of_layers
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Helper function for generating geometric extrusion
+  !>
+  !> @param[in] stretching_factor Scaling factor for geometric extrusion
+  !> @param[in] vert_position     Vertical position
+  !> @param[in] delta_eta         Constant eta factor
+  !> @return    eta               Vertical eta coordinate
+  !>
+  function geometric_func( stretching_factor, vert_position, delta_eta ) result(eta)
+    implicit none
+
+    real(r_def), intent(in) :: stretching_factor
+    real(r_def), intent(in) :: vert_position
+    real(r_def), intent(in) :: delta_eta
+    real(r_def) :: eta
+
+    eta = delta_eta*(stretching_factor**vert_position-1.0_r_def) &
+                    / (stretching_factor-1.0_r_def)
+
+  end function geometric_func
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Helper function for generating DCMIP extrusion
+  !>
+  !> @param[in] eta_uni   Input value which increases incrementally with level number
+  !> @return    eta       Vertical eta coordinate
+  !>
+  function dcmip_func(eta_uni) result(eta)
+    implicit none
+
+    real(r_def), intent(in) :: eta_uni
+    real(r_def) :: eta
+
+    real(r_def), parameter :: phi_flatten = 15.0_r_def
+
+    eta = ( sqrt(phi_flatten*(eta_uni**2_i_def) + 1.0_r_def) &
+                    - 1.0_r_def ) / &
+                  ( sqrt(phi_flatten + 1.0_r_def) - 1.0_r_def )
+
+  end function dcmip_func
 
 end module extrusion_mod
