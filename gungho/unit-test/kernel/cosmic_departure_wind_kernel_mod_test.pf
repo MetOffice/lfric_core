@@ -10,18 +10,10 @@
 
 module cosmic_departure_wind_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
-  use function_space_collection_mod, only : function_space_collection_type, &
-                                            function_space_collection
-  use mesh_collection_mod,           only : mesh_collection_type, &
-                                            mesh_collection
-  use field_mod,                     only : field_type,      &
-                                            field_proxy_type
-  use fs_continuity_mod,             only : W2
-  use function_space_mod,            only : function_space_type
-  use flux_direction_mod,            only : x_direction, y_direction
-  use yaxt,                          only : xt_initialize, xt_finalize
-  use mpi_mod,                       only : store_comm, clear_comm
+  use constants_mod,                       only : i_def, r_def
+  use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w2_m3x3_q3x3x3_size
+  use get_unit_test_m3x3_dofmap_mod,       only : get_w2_m3x3_dofmap
+  use flux_direction_mod,                  only : x_direction, y_direction
   use pFUnit_Mod
 
   implicit none
@@ -30,63 +22,22 @@ module cosmic_departure_wind_kernel_mod_test
   public :: test_all
 
   @TestCase
-  type, extends(MPITestCase), public :: cosmic_departure_wind_test_type
+  type, extends(TestCase), public :: cosmic_departure_wind_test_type
     private
-    type(field_type)         :: piola_field
-    type(field_type)         :: departure_field
-    type(field_type)         :: detj_field
-    real(r_def), allocatable :: nodal_basis_u(:,:,:)
   contains
     procedure setUp
     procedure tearDown
     procedure test_all
   end type cosmic_departure_wind_test_type
 
-  integer(i_def), parameter :: element_order = 0
-
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
-
     implicit none
 
     class(cosmic_departure_wind_test_type), intent(inout) :: this
-
-    type(function_space_type) :: fs
-    type(field_proxy_type)    :: u_piola
-    type(field_proxy_type)    :: detj_at_w2
-
-    type(function_space_type), pointer :: w2_fs => null()
-
-    integer(kind=i_def) :: ndf
-    integer(kind=i_def) :: dim_u
-    integer(kind=i_def) :: mesh_id
-
-    ! Initialise YAXT
-    call xt_initialize(this%getMpiCommunicator())
-    ! Store the MPI communicator for later use
-    call store_comm(this%getMpiCommunicator())
-
-    ! Create top level mesh collection
-    mesh_collection = mesh_collection_type()
-    ! Create top level function space collection
-    function_space_collection = function_space_collection_type()
-
-    mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
-
-    w2_fs => function_space_collection%get_fs( mesh_id, element_order, W2 )
-    this%piola_field =  field_type( vector_space = w2_fs )
-    this%departure_field =  field_type( vector_space = w2_fs )
-    this%detj_field =  field_type( vector_space = w2_fs )
-    u_piola = this%piola_field%get_proxy()
-    ndf  = u_piola%vspace%get_ndf()
-
-    dim_u  = u_piola%vspace%get_dim_space( )
-    allocate( this%nodal_basis_u(dim_u, ndf, ndf) )
 
   end subroutine setUp
 
@@ -97,106 +48,92 @@ contains
 
     class(cosmic_departure_wind_test_type), intent(inout) :: this
 
-    deallocate( this%nodal_basis_u )
-
-    call function_space_collection%clear()
-    call mesh_collection%clear()
-
-    ! Finalise YAXT
-    call xt_finalize()
-    ! Clear the stored MPI communicator
-    call clear_comm()
-
   end subroutine tearDown
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @Test( npes=[1] )
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
   subroutine test_all( this )
 
     use cosmic_departure_wind_kernel_mod, only: cosmic_departure_wind_code
-    use function_space_mod,             only: BASIS, DIFF_BASIS
 
     implicit none
 
     class(cosmic_departure_wind_test_type), intent(inout) :: this
 
-    type(field_proxy_type)    :: u_piola, u_departure_wind
-    type(field_proxy_type)    :: detj_at_w2
-
     real(kind=r_def)             :: answer, physical_wind_value
     real(kind=r_def), parameter  :: tol = 1.0e-12_r_def
 
-    integer(kind=i_def)          :: i, j, k, cell, df
-    integer(kind=i_def)          :: nlayers
-    integer(kind=i_def)          :: ndf_u, ndf_udep
-    integer(kind=i_def)          :: df_u, df_udep
-    integer(kind=i_def)          :: undf_u
-    integer(kind=i_def)          :: dim_u
-    integer(kind=i_def)          :: element_order
-    integer(kind=i_def), pointer :: map(:) => null()
-    real(kind=r_def), pointer    :: nodes_udep(:,:) => null()
+    integer(i_def) :: nlayers, ncells, ncell_3d, cell, icell
+    integer(i_def) :: ndf_w2, undf_w2
+    integer(i_def) :: dim_space, dim_space_diff
+    integer(i_def) :: nqp_h, nqp_v
 
+    integer(i_def) :: i, j, k
 
-    u_piola = this%piola_field%get_proxy()
-    u_departure_wind = this%departure_field%get_proxy()
-    detj_at_w2 = this%detj_field%get_proxy()
+    integer(i_def), allocatable :: map_w2(:,:)
+    real(kind=r_def), allocatable :: u_departure_wind(:)
+    real(kind=r_def), allocatable :: u_piola(:)
+    real(kind=r_def), allocatable :: detj_at_w2(:)
 
-    nlayers = u_piola%vspace%get_nlayers()
+    nlayers = 3
+    call get_w2_m3x3_q3x3x3_size( ndf_w2, undf_w2, ncells, &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v, &
+                                  nlayers )
+    call get_w2_m3x3_dofmap(map_w2)
 
-    ndf_u  = u_piola%vspace%get_ndf()
-    undf_u = u_piola%vspace%get_undf()
-    dim_u  = u_piola%vspace%get_dim_space( )
+    allocate(u_departure_wind(undf_w2))
+    allocate(u_piola(undf_w2))
+    allocate(detj_at_w2(undf_w2))
 
-    ndf_udep   =  u_departure_wind%vspace%get_ndf()
-    nodes_udep => u_departure_wind%vspace%get_nodes()
+    u_departure_wind(:) = 0.0_r_def
 
+    u_piola(:)  =  0.0_r_def
+    u_piola( 1) =  3.0_r_def
+    u_piola( 4) = -3.0_r_def
+    u_piola( 7) =  3.0_r_def
+    u_piola(10) = -3.0_r_def
+    u_piola(13) =  3.0_r_def
+    u_piola(14) =  3.0_r_def
 
-    ! Evaluate the basis function
-    do df_udep = 1, ndf_udep
-      do df_u = 1, ndf_u
-        this%nodal_basis_u(:,df_u,df_udep) = u_piola%vspace%call_function(BASIS,df_u,nodes_udep(:,df_udep))
-      end do
-    end do
-
-    cell = 1
-    map     => u_piola%vspace%get_cell_dofmap( cell )
+    detj_at_w2(:) = 12.0_r_def
 
     physical_wind_value = 3.0_r_def
-    detj_at_w2%data(:) = 12.0_r_def
 
-    do df =  1,ndf_u
-      u_piola%data(map(df)) = physical_wind_value*dot_product(this%nodal_basis_u(:,df,df),abs(this%nodal_basis_u(:,df,df)))
-    end do
-    u_departure_wind%data(:) = 0.0_r_def
+    cell = 1
 
-
-    call cosmic_departure_wind_code(nlayers,                                  &
-                                    u_departure_wind%data,                    &
-                                    u_piola%data,                             &
-                                    detj_at_w2%data,                          &
-                                    ndf_u, undf_u, map,                       &
-                                    x_direction                               &
-                                     )
+    call cosmic_departure_wind_code(nlayers,                           &
+                                    u_departure_wind,                  &
+                                    u_piola,                           &
+                                    detj_at_w2,                        &
+                                    ndf_w2, undf_w2, map_w2(:, cell),  &
+                                    x_direction                        &
+                                   )
 
     answer = physical_wind_value/(12.0_r_def)
 
-    @assertEqual(answer, u_departure_wind%data(map(1)), tol)
-    @assertEqual(-answer, u_departure_wind%data(map(2)), tol)
-    @assertEqual(answer, u_departure_wind%data(map(3)), tol)
-    @assertEqual(-answer, u_departure_wind%data(map(4)), tol)
+    @assertEqual(answer, u_departure_wind(map_w2(1, cell)), tol)
+    @assertEqual(-answer, u_departure_wind(map_w2(2, cell)), tol)
+    @assertEqual(answer, u_departure_wind(map_w2(3, cell)), tol)
+    @assertEqual(-answer, u_departure_wind(map_w2(4, cell)), tol)
 
-    call cosmic_departure_wind_code(nlayers,                                  &
-                                    u_departure_wind%data,                    &
-                                    u_piola%data,                             &
-                                    detj_at_w2%data,                          &
-                                    ndf_u, undf_u, map,                       &
-                                    y_direction                               &
-                                     )
+    call cosmic_departure_wind_code(nlayers,                           &
+                                    u_departure_wind,                  &
+                                    u_piola,                           &
+                                    detj_at_w2,                        &
+                                    ndf_w2, undf_w2, map_w2(:, cell),  &
+                                    y_direction                        &
+                                   )
 
-    @assertEqual(-answer, u_departure_wind%data(map(1)), tol)
-    @assertEqual(answer, u_departure_wind%data(map(2)), tol)
-    @assertEqual(-answer, u_departure_wind%data(map(3)), tol)
-    @assertEqual(answer, u_departure_wind%data(map(4)), tol)
+    @assertEqual(-answer, u_departure_wind(map_w2(1, cell)), tol)
+    @assertEqual(answer, u_departure_wind(map_w2(2, cell)), tol)
+    @assertEqual(-answer, u_departure_wind(map_w2(3, cell)), tol)
+    @assertEqual(answer, u_departure_wind(map_w2(4, cell)), tol)
+
+    deallocate(map_w2)
+    deallocate(u_departure_wind)
+    deallocate(u_piola)
+    deallocate(detj_at_w2)
 
   end subroutine test_all
 

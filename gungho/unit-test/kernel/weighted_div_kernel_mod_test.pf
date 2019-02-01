@@ -100,7 +100,7 @@ contains
     integer(i_def) :: dim_space, dim_space_diff
     integer(i_def) :: nqp_h, nqp_v
 
-    integer(i_def), allocatable     :: map_w0(:,:)
+    integer(i_def), allocatable :: map_w0(:,:)
     real(r_def), allocatable :: basis_w0(:,:,:,:), diff_basis_w0(:,:,:,:), &
                                 basis_w2(:,:,:,:), diff_basis_w2(:,:,:,:), &
                                 basis_w3(:,:,:,:)
@@ -108,7 +108,7 @@ contains
     real(r_def), allocatable :: local_stencil(:,:,: )
     real(r_def), allocatable :: theta_p_data(:)
 
-    nlayers=3
+    nlayers = 3
     call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
                                   dim_space, dim_space_diff, &
                                   nqp_h, nqp_v, &
@@ -153,7 +153,7 @@ contains
                             basis_w3,                          &
                             ndf_w0,                            &
                             undf_w0,                           &
-                            map_w0,                            &
+                            map_w0(:,cell),                    &
                             basis_w0,                          &
                             diff_basis_w0,                     &
                             nqp_h,                             &

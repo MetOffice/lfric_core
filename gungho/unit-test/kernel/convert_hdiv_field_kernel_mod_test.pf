@@ -6,103 +6,73 @@
 
 module convert_hdiv_field_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
-  use function_space_collection_mod, only : function_space_collection_type, &
-                                            function_space_collection
-  use mesh_collection_mod,           only : mesh_collection_type, &
-                                            mesh_collection
-  use field_mod,                     only : field_type,      &
-                                            field_proxy_type
-  use fs_continuity_mod,             only : W0, W2
-  use function_space_mod,            only : function_space_type
-  use yaxt,                          only : xt_initialize, xt_finalize
-  use mpi_mod,                       only : store_comm, clear_comm
+  use constants_mod,                       only : i_def, r_def
+  use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
+                                                  get_w2_m3x3_q3x3x3_size
+  use get_unit_test_m3x3_dofmap_mod,       only : get_w0_m3x3_dofmap, &
+                                                  get_w2_m3x3_dofmap
+  use get_unit_test_w2nodal_basis_mod,     only : get_w2_w2nodal_basis, &
+                                                  get_w0_w2nodal_diff_basis
   use pFUnit_Mod
+  use yaxt,                                only : xt_initialize, xt_finalize
+  use mpi_mod,                             only : store_comm, clear_comm
 
   implicit none
 
   private
-  public :: test_all
+  public :: convert_hdiv_field_kernel_test_type, test_all
 
   @TestCase
-  type, extends(MPITestCase), public :: convert_hdiv_field_test_type
+  type, extends(MPITestCase) :: convert_hdiv_field_kernel_test_type
     private
-    type(function_space_type), pointer :: w0_fs => null()
-    type(function_space_type), pointer :: w2_fs => null()
-    type(field_type)                   :: comp_field
-    type(field_type)                   :: chi(3)
-    real(r_def), allocatable           :: diff_basis_chi(:,:,:), basis(:,:,:)
   contains
     procedure setUp
     procedure tearDown
     procedure test_all
-  end type convert_hdiv_field_test_type
-
-  integer(i_def), parameter :: element_order = 0
+  end type convert_hdiv_field_kernel_test_type
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : finite_element_cellshape_quadrilateral
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
+    use gungho_feign_config_mod, only : feign_formulation_config
 
     implicit none
 
-    class(convert_hdiv_field_test_type), intent(inout) :: this
+    class(convert_hdiv_field_kernel_test_type), intent(inout) :: this
 
-    type(field_proxy_type)    :: chi_p(3)
-    type(field_proxy_type)    :: comp_p
-
-    integer(i_def) :: ndf_chi, ndf
-    integer(i_def) :: diff_dim_chi, dim_comp
-    integer(i_def) :: mesh_id
-
-    integer :: i
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
     !Store the MPI communicator for later use
     call store_comm(this%getMpiCommunicator())
 
-    ! Create top level mesh collection
-    mesh_collection = mesh_collection_type()
-    ! Create top level function space collection
-    function_space_collection = function_space_collection_type()
-
-    mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
-
-    this%w2_fs => function_space_collection%get_fs( mesh_id, element_order, W2 )
-
-    this%comp_field =  field_type( vector_space = this%w2_fs )
-    comp_p = this%comp_field%get_proxy()
-    ndf  = comp_p%vspace%get_ndf( )
-    dim_comp  = comp_p%vspace%get_dim_space( )
-    allocate( this%basis(dim_comp, ndf, ndf) )
-
-    this%w0_fs => function_space_collection%get_fs( mesh_id, element_order, W0 )
-
-    do i = 1,3
-      this%chi(i) = field_type( vector_space = this%w0_fs )
-      chi_p(i)    = this%chi(i)%get_proxy()
-    end do
-    ndf_chi  = chi_p(1)%vspace%get_ndf( )
-    diff_dim_chi = chi_p(1)%vspace%get_dim_space_diff( )
-    allocate( this%diff_basis_chi(diff_dim_chi, ndf_chi, ndf) )
+    call feign_formulation_config( transport_only       = .false.,         &
+                                   rotating             = .true.,          &
+                                   use_moisture         = .false.,         &
+                                   use_physics          = .false.,         &
+                                   shallow              = .false.,         &
+                                   use_wavedynamics     = .true.,          &
+                                   dry_static_adjust    = .false.,         &
+                                   exner_from_eos       = .false.,         &
+                                   set_hydrostatic_init = .false.,         &
+                                   init_exner_bt        = .true.,          &
+                                   dlayer_on            = .false.,         &
+                                   hard_wired_j         = .false.,         &
+                                   hard_wired_detj      = .false. )
 
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
+    use gungho_configuration_mod, only: final_configuration
+
     implicit none
 
-    class(convert_hdiv_field_test_type), intent(inout) :: this
+    class(convert_hdiv_field_kernel_test_type), intent(inout) :: this
 
-    deallocate( this%diff_basis_chi, this%basis )
-
-    call function_space_collection%clear()
-    call mesh_collection%clear()
+    call final_configuration()
 
     ! Finalise YAXT
     call xt_finalize()
@@ -116,125 +86,116 @@ contains
   subroutine test_all( this )
 
     use convert_hdiv_field_kernel_mod, only: convert_hdiv_field_code
-    use function_space_mod,            only: BASIS, DIFF_BASIS
 
     implicit none
 
-    class(convert_hdiv_field_test_type), intent(inout) :: this
+    class(convert_hdiv_field_kernel_test_type), intent(inout) :: this
 
     real(r_def), parameter :: tol = 1.0e-10_r_def
     real(r_def), parameter :: dx = 6000.0_r_def, &
                               dy = 1000.0_r_def, &
                               dz = 2000.0_r_def
 
-
     real(kind=r_def) :: answer
 
-    integer :: i, j, k, cell
+    integer(i_def) :: nlayers, ncells, ncell_3d, cell, icell
+    integer(i_def) :: ndf_w0, undf_w0, ndf_w2, undf_w2
+    integer(i_def) :: dim_space, dim_space_diff
+    integer(i_def) :: nqp_h, nqp_v
 
-    ! Variables for testing kernel
-    type(field_proxy_type)    :: chi_p(3)
+    integer(i_def) :: i, j, k
 
-    type(field_type)          :: phys_field(3)
+    integer(i_def), allocatable :: map_w0(:,:)
+    integer(i_def), allocatable :: map_w2(:,:)
+    real(r_def), allocatable :: diff_basis_w0(:,:,:)
+    real(r_def), allocatable :: basis_w2(:,:,:)
 
-    type(field_proxy_type)    :: phys_p(3), comp_p
+    real(r_def), allocatable :: chi1(:), chi2(:), chi3(:)
+    real(r_def), allocatable :: phys1(:), phys2(:), phys3(:)
+    real(r_def), allocatable :: comp(:)   
 
-    integer                   :: nlayers
-    integer                   :: ndf_chi, ndf_comp
-    integer                   :: df_comp1, df_comp2, df_chi
-    integer                   :: undf_chi, undf_comp
-    integer                   :: diff_dim_chi, dim_comp
-    integer                   :: element_order
-    integer, pointer          :: map_chi(:), map(:) => null()
-    real(kind=r_def), pointer :: nodes_phys(:,:) => null()
-
-    ! Insert Psykal_lite unpacking code here
-    do i = 1,3
-      chi_p(i) = this%chi(i)%get_proxy()
-    end do
+    nlayers = 3
+    call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v, &
+                                  nlayers )
+    call get_w2_m3x3_q3x3x3_size( ndf_w2, undf_w2, ncells, &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v, &
+                                  nlayers )
+    call get_w0_m3x3_dofmap(map_w0)
+    call get_w2_m3x3_dofmap(map_w2)
+    call get_w0_w2nodal_diff_basis(diff_basis_w0)
+    call get_w2_w2nodal_basis(basis_w2)
 
     ! Compute coordinates
-    cell = 1
+    allocate(chi1(undf_w0))
+    allocate(chi2(undf_w0))
+    allocate(chi3(undf_w0))
+    icell = 1
     do j = 1,3
       do i = 1,3
-        map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
         do k = 0,3
-          chi_p(1)%data(map_chi(1) + k) = real(i-1)*dx
-          chi_p(2)%data(map_chi(1) + k) = real(j-1)*dy
-          chi_p(3)%data(map_chi(1) + k) = real(k)  *dz
+          chi1(map_w0(1,icell)+k) = real(i-1)*dx
+          chi2(map_w0(1,icell)+k) = real(j-1)*dy
+          chi3(map_w0(1,icell)+k) = real(k)*dz
         end do
-        cell = cell + 1
+        icell = icell + 1
       end do
     end do
 
-    do i = 1,3
-      phys_field(i) = field_type( vector_space = this%w2_fs)
-      phys_p(i) = phys_field(i)%get_proxy()
-    end do
-    comp_p = this%comp_field%get_proxy()
-
-    nlayers = comp_p%vspace%get_nlayers()
-
-    ndf_comp  = comp_p%vspace%get_ndf( )
-    undf_comp = comp_p%vspace%get_undf()
-    dim_comp  = comp_p%vspace%get_dim_space( )
-
-    ndf_chi  = chi_p(1)%vspace%get_ndf( )
-    undf_chi = chi_p(1)%vspace%get_undf()
-    diff_dim_chi = chi_p(1)%vspace%get_dim_space_diff( )
-
-    nodes_phys => phys_p(1)%vspace%get_nodes()
-
-    ! Evaluate the diff basis function
-    do df_comp2 = 1, ndf_comp
-      do df_chi = 1, ndf_chi
-        this%diff_basis_chi(:,df_chi,df_comp2) = chi_p(1)%vspace%call_function(DIFF_BASIS,df_chi,nodes_phys(:,df_comp2))
-      end do
-    end do
-
-    ! Evaluate the diff basis function
-    do df_comp2 = 1, ndf_comp
-      do df_comp1 = 1, ndf_comp
-        this%basis(:,df_comp1,df_comp2) = comp_p%vspace%call_function(BASIS,df_comp1,nodes_phys(:,df_comp2))
-      end do
-    end do
-
+    ! Create the data
     cell = 5
-    map     => comp_p%vspace%get_cell_dofmap( cell )
-    map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
-    phys_p(1)%data(:) = 0.0_r_def
-    phys_p(2)%data(:) = 0.0_r_def
-    phys_p(3)%data(:) = 0.0_r_def
-    comp_p%data(:) = 0.0_r_def
-    comp_p%data(map(1)) = 1.0*dy*dz
-    comp_p%data(map(2)) = 3.0*dx*dz
-    comp_p%data(map(6)) = -6.0*dx*dy
+    allocate(phys1(undf_w2))
+    allocate(phys2(undf_w2))
+    allocate(phys3(undf_w2))
+    allocate(comp(undf_w2))
+    phys1(:) = 0.0_r_def
+    phys2(:) = 0.0_r_def
+    phys3(:) = 0.0_r_def
+    comp(:) = 0.0_r_def
+    comp(map_w2(1, cell)) = 1.0_r_def*dy*dz
+    comp(map_w2(2, cell)) = 3.0_r_def*dx*dz
+    comp(map_w2(6, cell)) = -6.0_r_def*dx*dy
 
-    call convert_hdiv_field_code(nlayers, &
-                                 phys_p(1)%data, &
-                                 phys_p(2)%data, &
-                                 phys_p(3)%data, &
-                                 comp_p%data, &
-                                 chi_p(1)%data, &
-                                 chi_p(2)%data, &
-                                 chi_p(3)%data, &
-                                 ndf_comp, undf_comp, map, &
-                                 this%basis, &
-                                 ndf_chi, undf_chi, map_chi, &
-                                 this%diff_basis_chi &
-                                 )
+    call convert_hdiv_field_code(nlayers,                         &
+                                 phys1,                           &
+                                 phys2,                           &
+                                 phys3,                           &
+                                 comp,                            &
+                                 chi1,                            &
+                                 chi2,                            &
+                                 chi3,                            &
+                                 ndf_w2, undf_w2, map_w2(:,cell), &
+                                 basis_w2,                        &
+                                 ndf_w0, undf_w0, map_w0(:,cell), &
+                                 diff_basis_w0                    &
+                                )
 
     answer = 1.0_r_def 
-    @assertEqual(answer, phys_p(1)%data(map(1)), tol)
+    @assertEqual(answer, phys1(map_w2(1, cell)), tol)
     answer = -3.0_r_def
-    @assertEqual(answer, phys_p(2)%data(map(2)), tol)
+    @assertEqual(answer, phys2(map_w2(2, cell)), tol)
     answer = 0.0_r_def 
-    @assertEqual(answer, phys_p(1)%data(map(3)), tol)
-    @assertEqual(answer, phys_p(2)%data(map(4)), tol)
-    @assertEqual(answer, phys_p(3)%data(map(5)), tol)
+    @assertEqual(answer, phys1(map_w2(3, cell)), tol)
+    @assertEqual(answer, phys2(map_w2(4, cell)), tol)
+    @assertEqual(answer, phys3(map_w2(5, cell)), tol)
     ! *2 as values is computed for cells both above and below the dof
     answer = -6.0_r_def * 2.0_r_def
-    @assertEqual(answer, phys_p(3)%data(map(6)), tol)
+    @assertEqual(answer, phys3(map_w2(6, cell)), tol)
+
+    deallocate(map_w0)
+    deallocate(map_w2)
+    deallocate(diff_basis_w0)
+    deallocate(basis_w2)
+
+    deallocate(chi1)
+    deallocate(chi2)
+    deallocate(chi3)
+    deallocate(phys1)
+    deallocate(phys2)
+    deallocate(phys3)
+    deallocate(comp)
 
   end subroutine test_all
 

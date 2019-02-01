@@ -8,21 +8,19 @@
 !>
 module set_rho_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
-  use function_space_collection_mod, only : function_space_collection_type, &
-                                            function_space_collection
-  use mesh_collection_mod,           only : mesh_collection_type, &
-                                            mesh_collection
-  use field_mod,                     only : field_type,      &
-                                            field_proxy_type
-  use function_space_mod,            only : function_space_type, W0, W3
-  use fs_continuity_mod,             only : W0, W3
+  use constants_mod,                       only : i_def, r_def
+  use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
+                                                  get_w3_m3x3_q3x3x3_size
+  use get_unit_test_m3x3_dofmap_mod,       only : get_w0_m3x3_dofmap, &
+                                                  get_w3_m3x3_dofmap
+  use get_unit_test_q3x3x3_basis_mod,      only : get_w0_q3x3x3_diff_basis, &
+                                                  get_w0_q3x3x3_basis, &
+                                                  get_w3_q3x3x3_basis
+  use get_unit_test_q3x3x3_quadrature_mod, only : get_gaussian_q3x3x3_quadrature_weights_xy, &
+                                                  get_gaussian_q3x3x3_quadrature_weights_z
   use pFUnit_Mod
-  use quadrature_xyoz_mod,           only: quadrature_xyoz_type, &
-                                           quadrature_xyoz_proxy_type
-  use quadrature_rule_gaussian_mod,  only: quadrature_rule_gaussian_type
-  use yaxt,                          only : xt_initialize, xt_finalize
-  use mpi_mod,                       only : store_comm, clear_comm
+  use yaxt,                                only : xt_initialize, xt_finalize
+  use mpi_mod,                             only : store_comm, clear_comm
 
   implicit none 
 
@@ -32,17 +30,6 @@ module set_rho_kernel_mod_test
   @TestCase
   type, extends(MPITestCase) :: set_rho_kernel_test_type
     private
-    type( quadrature_xyoz_type )          :: qr
-    type(quadrature_xyoz_proxy_type) :: qr_proxy
-    type(function_space_type), pointer :: w0_fs => null()
-    type(function_space_type), pointer :: w3_fs => null()
-    type(field_type)                   :: chi(3)
-    type(field_type)                   :: rho
-    real(r_def)                        :: time
-    real(r_def), allocatable           :: basis_rho(:,:,:,:), &
-                                          basis_chi(:,:,:,:), &
-                                          diff_basis_chi(:,:,:,:)
-    integer(i_def)                     :: mesh_id
   contains
     procedure setUp
     procedure tearDown
@@ -84,21 +71,10 @@ contains
                                           feign_initial_temperature_config, &
                                           feign_planet_config
     use idealised_config_mod,      only : idealised_test_gravity_wave
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
 
     implicit none
 
     class(set_rho_kernel_test_type), intent(inout) :: this
-
-    type(field_proxy_type)    :: rho_p
-    type(field_proxy_type)    :: chi_p(3)
-    type( quadrature_rule_gaussian_type ) :: quadrature_rule
-
-    integer(i_def) :: ndf_rho, undf_rho, dim_rho, &
-                      ndf_chi, undf_chi, dim_chi, dim_diff_chi, &
-                      nqp_h, nqp_v
-
-    integer :: i
 
     ! Initialise YAXT
     call xt_initialize(this%getMpiCommunicator())
@@ -125,48 +101,6 @@ contains
                               rd=rd, cp=cp, p_zero=p_zero,                 &
                               scaling_factor=scaling, epsilon=epsilon )
 
-    ! Create top level mesh collection
-    mesh_collection = mesh_collection_type()
-    ! Create top level function space collection
-    function_space_collection = function_space_collection_type()
-
-    this%qr = quadrature_xyoz_type(3, quadrature_rule)
-
-    this%qr_proxy = this%qr%get_quadrature_proxy()
-    nqp_h=this%qr_proxy%np_xy
-    nqp_v=this%qr_proxy%np_z
-
-    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
-    this%mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
-
-    this%w0_fs => function_space_collection%get_fs( this%mesh_id, &
-                                                    element_order, &
-                                                    W0 )
-    this%w3_fs => function_space_collection%get_fs( this%mesh_id, &
-                                                    element_order, &
-                                                    W3 )
-
-    this%rho = field_type( vector_space = this%w3_fs )
-    rho_p    = this%rho%get_proxy()
-
-    ndf_rho  = rho_p%vspace%get_ndf( )
-    undf_rho = rho_p%vspace%get_undf( )
-    dim_rho  = rho_p%vspace%get_dim_space( )
-
-    do i = 1,3
-      this%chi(i) = field_type( vector_space = this%w0_fs )
-      chi_p(i)    = this%chi(i)%get_proxy()
-    end do
-
-    ndf_chi  = chi_p(1)%vspace%get_ndf( )
-    undf_chi = chi_p(1)%vspace%get_undf( )
-    dim_chi  = chi_p(1)%vspace%get_dim_space( )
-    dim_diff_chi  = chi_p(1)%vspace%get_dim_space_diff( )
-
-    allocate( this%basis_rho(dim_rho, ndf_rho, nqp_h, nqp_v), &
-              this%basis_chi(dim_chi, ndf_chi, nqp_h, nqp_v), &
-              this%diff_basis_chi(dim_diff_chi, ndf_chi, nqp_h, nqp_v) )
-
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -178,10 +112,6 @@ contains
 
     class(set_rho_kernel_test_type), intent(inout) :: this
 
-    deallocate( this%basis_rho, this%basis_chi )
-
-    call function_space_collection%clear()
-    call mesh_collection%clear()
     call final_configuration()
 
     ! Finalise YAXT
@@ -196,7 +126,6 @@ contains
   subroutine test_all( this )
 
     use set_rho_kernel_mod,     only : set_rho_code
-    use mesh_mod,                   only : mesh_type
 
     implicit none
 
@@ -204,111 +133,107 @@ contains
 
     real(r_def), parameter :: tol = 1.0e-6_r_def
     real(r_def), parameter :: dx = 6000.0_r_def, &
-                              dy = 2000.0_r_def
-
-    ! Information for testing initial rho
-    type(field_proxy_type)    :: rho_p
-    type(field_proxy_type )   :: chi_p(3)
-    real(kind=r_def)          :: time
-
-    type(mesh_type),pointer   :: mesh => null()
-
-    integer          :: ndf_rho, undf_rho, &
-                        ndf_chi, undf_chi, &
-                        nqp_h, nqp_v
-
-
-    integer, pointer :: map_rho(:) => null(), &
-                        map_chi(:) => null()
-
-    real(kind=r_def), pointer :: xp(:,:) => null()
-    real(kind=r_def), pointer :: zp(:)   => null()
-    real(kind=r_def), pointer :: wh(:), wv(:) => null()
-
+                              dy = 2000.0_r_def, &
+                              dz = 2000.0_r_def
     real(r_def) :: answer(3)
 
-    integer :: i, j, k, cell
-    integer(i_def) :: err
+    integer(i_def) :: nlayers, ncells, cell, icell
+    integer(i_def) :: ndf_w0, undf_w0, ndf_w3, undf_w3
+    integer(i_def) :: dim_space, dim_space_diff
+    integer(i_def) :: nqp_h, nqp_v
 
-    real(r_def) :: dz, dz_test(3)
+    integer(i_def) :: i, j, k
+    real(kind=r_def) :: time
 
-    mesh => mesh_collection%get_mesh( this%mesh_id )
-    call mesh%get_dz(dz_test)
-    dz = dz_test(1)
+    integer(i_def), allocatable :: map_w0(:,:)
+    integer(i_def), allocatable :: map_w3(:,:)
+    real(r_def), allocatable :: diff_basis_w0(:,:,:,:)
+    real(r_def), allocatable :: basis_w0(:,:,:,:)
+    real(r_def), allocatable :: basis_w3(:,:,:,:)
+    real(r_def), allocatable :: wh(:), wv(:)
 
-    do i = 1,3
-      chi_p(i) = this%chi(i)%get_proxy()
-    end do
+    real(r_def), allocatable :: chi1(:), chi2(:), chi3(:)
+    real(r_def), allocatable :: rho(:)
+
+    nlayers = 3
+    call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v, &
+                                  nlayers )
+    call get_w3_m3x3_q3x3x3_size( ndf_w3, undf_w3, ncells, &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v, &
+                                  nlayers )
+    call get_w0_m3x3_dofmap(map_w0)
+    call get_w3_m3x3_dofmap(map_w3)
+    call get_w0_q3x3x3_diff_basis(diff_basis_w0)
+    call get_w0_q3x3x3_basis(basis_w0)
+    call get_w3_q3x3x3_basis(basis_w3)
+    call get_gaussian_q3x3x3_quadrature_weights_xy(wh)
+    call get_gaussian_q3x3x3_quadrature_weights_z(wv)
 
     ! Compute coordinates
-    cell = 1
+    allocate(chi1(undf_w0))
+    allocate(chi2(undf_w0))
+    allocate(chi3(undf_w0))
+    icell = 1
     do j = 1,3
       do i = 1,3
-        map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
         do k = 0,3
-          chi_p(1)%data(map_chi(1) + k) = real(i-1)*dx
-          chi_p(2)%data(map_chi(1) + k) = real(j-1)*dy
-          chi_p(3)%data(map_chi(1) + k) = real(k)  *dz
+          chi1(map_w0(1,icell)+k) = real(i-1)*dx
+          chi2(map_w0(1,icell)+k) = real(j-1)*dy
+          chi3(map_w0(1,icell)+k) = real(k)*dz
         end do
-        cell = cell + 1
+        icell = icell + 1
       end do
     end do
 
-    ! Test initial rho
-    rho_p = this%rho%get_proxy()
-
-    ndf_rho  = rho_p%vspace%get_ndf( )
-    undf_rho = rho_p%vspace%get_undf( )
-
-    ndf_chi  = chi_p(1)%vspace%get_ndf( )
-    undf_chi = chi_p(1)%vspace%get_undf( )
-
-    nqp_h=this%qr_proxy%np_xy
-    nqp_v=this%qr_proxy%np_z
-    xp=>this%qr_proxy%points_xy
-    zp=>this%qr_proxy%points_z
-    wh=>this%qr_proxy%weights_xy
-    wv=>this%qr_proxy%weights_z
-
-    call rho_p%vspace%compute_basis_function( &
-         this%basis_rho, ndf_rho, nqp_h, nqp_v, xp, zp)
-
-    call chi_p(1)%vspace%compute_basis_function( &
-         this%basis_chi, ndf_chi, nqp_h, nqp_v, xp, zp)
-
-    call chi_p(1)%vspace%compute_diff_basis_function( &
-         this%diff_basis_chi, ndf_chi, nqp_h, nqp_v, xp, zp)
+    ! Create the data
+    allocate(rho(undf_w3))
+    rho(:) = 0.0_r_def
 
     time = 0.0_r_def
     cell = 1
-    map_rho => rho_p%vspace%get_cell_dofmap( cell )
-    map_chi => chi_p(1)%vspace%get_cell_dofmap( cell )
-    call set_rho_code( rho_p%vspace%get_nlayers(), &
-                       rho_p%data,                 &
-                       chi_p(1)%data,              &
-                       chi_p(2)%data,              &
-                       chi_p(3)%data,              &
-                       time,                       &
-                       ndf_rho,                    &
-                       undf_rho,                   &
-                       map_rho,                    &
-                       this%basis_rho,             &
-                       ndf_chi,                    &
-                       undf_chi,                   &
-                       map_chi,                    &
-                       this%basis_chi,             &
-                       this%diff_basis_chi,        &
-                       nqp_h,                      &
-                       nqp_v,                      &
-                       wh,                         &
+
+    call set_rho_code( nlayers,           &
+                       rho,               &
+                       chi1,              &
+                       chi2,              &
+                       chi3,              &
+                       time,              &
+                       ndf_w3,            &
+                       undf_w3,           &
+                       map_w3(:,cell),    &
+                       basis_w3,          &
+                       ndf_w0,            &
+                       undf_w0,           &
+                       map_w0,            &
+                       basis_w0,          &
+                       diff_basis_w0,     &
+                       nqp_h,             &
+                       nqp_v,             &
+                       wh,                &
                        wv )
 
     answer(1) = 1.059869_r_def
     answer(2) = 0.8758241_r_def
     answer(3) = 0.7175226_r_def
     do i = 1,3
-      @assertEqual(answer(i), rho_p%data(i), tol)
+      @assertEqual(answer(i), rho(map_w3(1,cell)+i-1), tol)
     end do
+
+    deallocate(map_w0)
+    deallocate(map_w3)
+    deallocate(diff_basis_w0)
+    deallocate(basis_w0)
+    deallocate(basis_w3)
+    deallocate(wh)
+    deallocate(wv)
+
+    deallocate(chi1)
+    deallocate(chi2)
+    deallocate(chi3)
+    deallocate(rho)
 
   end subroutine test_all
 
