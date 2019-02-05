@@ -29,7 +29,7 @@ module limit_wind_kernel_mod
     private
     type(arg_type) :: meta_args(2) = (/    &
         arg_type(GH_FIELD,   GH_INC,  W2), &
-        arg_type(GH_FIELD,   GH_INC,  W2)  &
+        arg_type(GH_FIELD,   GH_READ,  W2)  &
         /)
     integer :: iterates_over = CELLS
   contains
