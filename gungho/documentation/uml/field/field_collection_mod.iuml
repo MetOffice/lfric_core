@@ -8,8 +8,14 @@ class field_collection_mod::field_collection_type {
 
   <<create>>+field_collection_constructor(<<in optional>> name : string ) : field_collection_type
   <<destroy>>+field_collection_destructor()
+
+  <<assignment(=)>>+copy_collection( <<out>>dest : field_collection_type, <<in>>source : field_collection_type )
+
   +add_field( <<in>>field: field_type ) : 
+  +add_reference_to_field( <<in>>field: field_type <<pointer>> ) : 
+  +clear() :
   +get_field( <<in>>field_name: string ) : <<pointer>> field_type
   +get_iterator() : field_collection_iterator_type
-  +clear()
+  +get_length() : integer
+  +get_name() : string
 }

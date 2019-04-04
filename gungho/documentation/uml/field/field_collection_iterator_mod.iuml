@@ -7,5 +7,6 @@ class field_collection_iterator_mod::field_collection_iterator_type {
 
   <<create>>+field_collection_iterator_constructor(<<in>> collection : field_collection_type ) : field_collection_iterator_type
   +next() : <<pointer>> field_type
+  +next_list_item() : <<pointer>> linked_list_data_type
   +has_next() : logical 
 }

@@ -29,7 +29,6 @@ module linked_list_mod_test
     type(linked_list_type)               :: test_list
     type(linked_list_item_type), pointer :: test_item => null()
     integer(i_def) :: test_value1, test_value2, test_value3
-    integer(i_def) :: num_in_list
     logical :: is_associated
     logical :: item_exists
   contains
@@ -49,7 +48,6 @@ contains
     this%test_list = linked_list_type()
     this%is_associated = .false.
     this%item_exists = .false.
-    this%num_in_list = 0
 
   end subroutine setUp
 
@@ -103,9 +101,7 @@ contains
 
   call this%test_list%insert_item(linked_list_int_type(this%test_value2))
  
-  this%num_in_list = this%test_list%get_length()
-
-  @assertEqual( 2, this%num_in_list )
+  @assertEqual( 2, this%test_list%get_length() )
 
   ! Add a third value to the list inserting before the head of the list
 
@@ -128,10 +124,15 @@ contains
   this%is_associated=associated(this%test_item)
   @assertFalse( this%is_associated )
 
-  this%num_in_list = this%test_list%get_length()
+  @assertEqual( 0, this%test_list%get_length() )
 
-  @assertEqual( 0, this%num_in_list )
-
+  ! Now insert something into the cleared list and check that it
+  ! continues to function as expected.
+  call this%test_list%insert_item(linked_list_int_type(this%test_value2))
+  @assertEqual( 1, this%test_list%get_length() )
+  @assertTrue( associated(this%test_list%get_head()) )
+  @assertTrue( associated(this%test_list%get_current()) )
+  @assertTrue( associated(this%test_list%get_tail()) )
  
   end subroutine test_linked_list
 

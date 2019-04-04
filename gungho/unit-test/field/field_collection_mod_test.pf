@@ -16,7 +16,7 @@ module field_collection_mod_test
                                               mesh_collection
     use field_mod,                     only : field_type,field_proxy_type
     use field_collection_mod,          only : field_collection_type
-    use fs_continuity_mod,             only : W0
+    use fs_continuity_mod,             only : W0, W2
     use yaxt,                          only : xt_initialize, xt_finalize
     use mpi_mod,                       only : store_comm, clear_comm
     use pFUnit_Mod
@@ -25,15 +25,18 @@ module field_collection_mod_test
 
   private
   public :: test_all
+  public :: test_assignment
 
   @TestCase
   type, extends(MPITestCase), public :: field_collection_test_type
     private
     type(function_space_type), pointer :: w0_fs => null()
+    type(function_space_type), pointer :: w2_fs => null()
   contains
     procedure setUp
     procedure tearDown
     procedure test_all
+    procedure test_assignment
   end type field_collection_test_type
 
   integer(i_def), parameter :: element_order = 0
@@ -67,6 +70,10 @@ contains
     this%w0_fs => function_space_collection%get_fs( mesh_id, &
                                                     element_order, &
                                                     W0 )
+
+    this%w2_fs => function_space_collection%get_fs( mesh_id, &
+                                                    element_order, &
+                                                    W2 )
 
   end subroutine setUp
 
@@ -135,5 +142,76 @@ contains
     @assertEqual(999.0, returned_field2_p%data(1), tol)
 
   end subroutine test_all
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_assignment( self )
+
+    implicit none
+
+    class(field_collection_test_type), intent(inout) :: self
+    type(field_type)                                 :: test_field1
+    type(field_type), target                         :: test_field2
+    type(field_type), pointer                        :: test_field2_ptr
+    type(field_type), pointer                        :: returned_field
+    type(field_proxy_type)                           :: proxy
+    type(field_collection_type)                      :: f_collection
+    type(field_collection_type)                      :: f_collection_copy
+
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+    
+    f_collection = field_collection_type("test_field_collection1")
+
+    ! Assert the copy has preserved the name.
+    f_collection_copy = f_collection
+    @assertEqual(f_collection_copy % get_name(), "test_field_collection1")
+
+    ! Create field with the name 'test_field1' and put 42.0 in the first dof.
+    test_field1 = field_type( self % w0_fs, name='test_field1' )
+    proxy = test_field1%get_proxy()
+    proxy%data(1) = 42.0
+
+    ! Check that adding a field added to one collection doesn't get result
+    ! in it being added to the copy.
+    call f_collection % add_field( test_field1 )
+    @assertEqual(f_collection_copy % get_length(), 0)
+
+    ! Copy the collection, and get hold of the copied field.
+    f_collection_copy = f_collection
+    returned_field => f_collection_copy % get_field( 'test_field1' )
+    
+    ! Check the name is the same, but that changing the data on one field
+    ! doesn't change the data in the copy.
+    @assertEqual(test_field1 % get_name(), returned_field % get_name())
+    proxy = test_field1 % get_proxy()
+    proxy%data(1) = 112.0
+    proxy = returned_field % get_proxy()
+    @assertEqual(42.0, proxy%data(1), tol)
+
+    ! Make a pointer to another field, and add that as a reference to the collection.
+    test_field2 = field_type( self % w2_fs, name='test_field2' )
+    test_field2_ptr => test_field2
+    call f_collection % add_reference_to_field( test_field2_ptr )
+
+    ! Test that the copied collection didn't grow when the original grew.
+    @assertEqual(f_collection % get_length(), 2)
+    @assertEqual(f_collection_copy % get_length(), 1)
+
+    returned_field => f_collection % get_field('test_field2')
+    ! Check that the field pointer has the same target after copy, but that
+    ! the pointer object itself is different.
+    f_collection_copy = f_collection
+    returned_field => f_collection_copy % get_field('test_field2')
+    @assertTrue(associated(test_field2_ptr, returned_field))
+    
+    ! Now if we nullify the original field pointer, we should still be able to use the
+    ! pointer from the copied collection, and we should be pointing at the same data.
+    nullify(test_field2_ptr)
+    proxy = test_field2 % get_proxy()
+    proxy%data(1) = 112.0
+    proxy = returned_field % get_proxy()
+    @assertEqual(112.0, proxy%data(1), tol)
+
+  end subroutine test_assignment
 
 end module field_collection_mod_test

@@ -294,6 +294,7 @@ subroutine insert_item(self, new_data, insert_point, placement)
         if ( associated(self%current,self%tail)) then
           self%tail => new_item
         end if
+
         ! point current at new element
         self%current => new_item
         self%length = self%length + 1
@@ -324,6 +325,9 @@ subroutine clear(self)
     deallocate(tmp%payload)
     deallocate(tmp)
   end do
+
+  nullify(self%current)
+  nullify(self%tail)
 
   ! reset number of elements in container
   self%length = 0
