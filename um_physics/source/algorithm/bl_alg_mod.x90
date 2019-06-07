@@ -155,6 +155,9 @@ contains
     if (write_diag .and. use_xios_io) then
       call dt_bl%write_field('dt_bl')
       call dmv_bl%write_field('dmv_bl')
+      call tstar_2d%write_field('tstar_2d')
+      call z0msea_2d%write_field('z0msea')
+      call zh_2d%write_field('zh')
     end if
 
   end subroutine bl_alg_step

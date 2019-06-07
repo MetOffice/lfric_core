@@ -72,7 +72,8 @@ module io_mod
             nodal_write_field,       &
             xios_write_field_node,   &
             xios_write_field_face,   &
-            xios_write_field_edge
+            xios_write_field_edge,   &
+            xios_write_field_single_face
 
 contains
 
@@ -1534,6 +1535,41 @@ subroutine xios_write_field_node(xios_field_name, field_proxy)
   deallocate(send_field)
 
 end subroutine xios_write_field_node
+
+!> @brief   Output a single level field in UGRID format on the face domain via XIOS
+!> @details Output a single level field in UGRID format on the face domain via XIOS
+!>@param[in] xios_field_name XIOS identifier for the field
+!>@param[in] field_proxy a field proxy containing the data to output
+!-------------------------------------------------------------------------------
+subroutine xios_write_field_single_face(xios_field_name, field_proxy)
+
+  implicit none
+
+  character(len=*), intent(in) :: xios_field_name
+  type(field_proxy_type), intent(in) :: field_proxy
+
+  integer(i_def) :: undf
+  integer(i_def) :: domain_size
+  real(dp_xios), allocatable :: send_field(:)
+
+  undf = field_proxy%vspace%get_last_dof_owned()
+
+  ! Get the expected horizontal size
+  ! all 2D fields are nominally in W3, hence half levels
+  call xios_get_domain_attr('face_half_levels', ni=domain_size)
+
+  ! Size the arrays to be what is expected
+  allocate(send_field(domain_size))
+
+  ! All data are scalar fields
+
+  send_field(1:domain_size) = field_proxy%data(1:undf)
+
+  call xios_send_field(xios_field_name, send_field)
+
+  deallocate(send_field)
+
+end subroutine xios_write_field_single_face
 
 !> @brief   Output a field in UGRID format on the face domain via XIOS
 !> @details Output a field in UGRID format on the face domain via XIOS

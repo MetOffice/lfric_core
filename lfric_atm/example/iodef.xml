@@ -104,6 +104,9 @@
        <field id="du_spectral_gwd" name="du_spectral_gwd" long_name="Spectral gravity wave drag U wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
        <field id="dv_spectral_gwd" name="dv_spectral_gwd" long_name="Spectral gravity wave drag V wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
        <field id="dtemp_spectral_gwd" name="dtemp_spectral_gwd" long_name="Spectral gravity wave drag T increment" unit="K" grid_ref="full_level_face_grid" />
+       <field id="tstar_2d" name="tstar" long_name="Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="z0msea" name="z0msea" long_name="Momentum roughness length" unit="m" domain_ref="face_half_levels" />
+       <field id="zh" name="zh" long_name="Boundary layer depth" unit="m" domain_ref="face_half_levels" />
      </field_group>
 
       <!-- Initial conditions group -->
@@ -231,6 +234,9 @@
         <field field_ref="du_spectral_gwd"/>
         <field field_ref="dv_spectral_gwd"/>
         <field field_ref="dtemp_spectral_gwd"/>
+        <field field_ref="tstar_2d"/>
+        <field field_ref="z0msea"/>
+        <field field_ref="zh"/>
       </file>
 
       <file id="lfric_averages" name="lfric_averages" output_freq="10ts" convention="UGRID" enabled=".TRUE.">
@@ -296,7 +302,6 @@
        <field id="read_mcf_in_wtheta" name="fd_mcf" long_name="cloud_ice_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta"  operation="instant" /> 
        <field id="read_tstar_2d" name="fd_tstar_2d" long_name="surface_temperature" unit="K" domain_ref="checkpoint_W3_2D"  operation="instant" />
       </file>
-      
 
     </file_definition>
 

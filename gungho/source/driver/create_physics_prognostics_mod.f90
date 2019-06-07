@@ -118,19 +118,19 @@ contains
     vector_space=> function_space_collection%get_fs(twod_mesh_id, 0, W3)
     checkpoint_restart_flag = .true.
 
-    call add_physics_field(twod_fields, 'tstar',   vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'zh',      vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'z0msea',  vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'conv_rain',  vector_space, checkpoint_restart_flag)
+    call add_physics_field(twod_fields, 'tstar',   vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'zh',      vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'z0msea',  vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'conv_rain',  vector_space, checkpoint_restart_flag, twod=.true.)
 
     checkpoint_restart_flag = .false.
-    call add_physics_field(twod_fields, 'ntml',    vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'cumulus', vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'cos_zenith_angle',   vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'lit_fraction',       vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'stellar_irradiance', vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'ls_rain',  vector_space, checkpoint_restart_flag)
-    call add_physics_field(twod_fields, 'ls_snow',  vector_space, checkpoint_restart_flag)
+    call add_physics_field(twod_fields, 'ntml',    vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'cumulus', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'cos_zenith_angle',   vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'lit_fraction',       vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'stellar_irradiance', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'ls_rain',  vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(twod_fields, 'ls_snow',  vector_space, checkpoint_restart_flag, twod=.true.)
 
     !========================================================================
     ! Here we create some cloud fields
@@ -185,15 +185,18 @@ contains
   !> @param[in]     vector_space     Function space of field to set behaviour for
   !> @param[in]     checkpoint_restart_flag  Flag to allow checkpoint and
   !>                                        restart behaviour of field to be set
+  !> @param[in]     twod             Optional flag to determine if this is a
+  !>                                        2D field for diagnostic output
   subroutine add_physics_field(field_collection, name, vector_space, &
-                               checkpoint_restart_flag)
+                               checkpoint_restart_flag, twod)
 
     use io_config_mod,      only : use_xios_io, &
                                    write_diag
-    use io_mod,             only : xios_write_field_face,   &
-                                   checkpoint_write_xios,   &
-                                   checkpoint_write_netcdf, &
-                                   checkpoint_read_netcdf,  &
+    use io_mod,             only : xios_write_field_face,        &
+                                   xios_write_field_single_face, &
+                                   checkpoint_write_xios,        &
+                                   checkpoint_write_netcdf,      &
+                                   checkpoint_read_netcdf,       &
                                    checkpoint_read_xios
 
     implicit none
@@ -202,6 +205,7 @@ contains
     type(field_collection_type), intent(inout) :: field_collection
     type(function_space_type), intent(in)      :: vector_space
     logical(l_def), intent(in)                 :: checkpoint_restart_flag
+    logical, optional, intent(in)              :: twod
 
     !Local variables
     type(field_type)                           :: new_field
@@ -224,6 +228,9 @@ contains
     if (use_xios_io .and. write_diag) then
       ! All physics fields currently require output on faces...
       write_diag_behaviour => xios_write_field_face
+      if (present(twod)) then
+        if (twod) write_diag_behaviour => xios_write_field_single_face
+      end if
       call new_field%set_write_behaviour(write_diag_behaviour)
     end if
     if (checkpoint_restart_flag) then

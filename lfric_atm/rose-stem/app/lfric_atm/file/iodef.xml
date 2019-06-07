@@ -100,10 +100,13 @@
        <field id="u3" name="u3" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" grid_ref="full_level_face_grid" />
        <field id="divergence" name="divergence" long_name="divergence_of_wind" standard_name="divergence_of_wind" unit="s-1" grid_ref="half_level_face_grid" />
        <field id="exner" name="exner" long_name="exner_pressure" unit="1" grid_ref="half_level_face_grid" />
-       <field id="dtheta_spectral_gwd" name="dtheta_spectral_gwd" long_name="Spectal gravity wave drag theta increment" unit="K" grid_ref="full_level_face_grid" />
-       <field id="du_spectral_gwd" name="du_spectral_gwd" long_name="Spectal gravity wave drag U wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
-       <field id="dv_spectral_gwd" name="dv_spectral_gwd" long_name="Spectal gravity wave drag V wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
-       <field id="dtemp_spectral_gwd" name="dtemp_spectral_gwd" long_name="Spectal gravity wave drag T increment" unit="K" grid_ref="full_level_face_grid" />
+       <field id="dtheta_spectral_gwd" name="dtheta_spectral_gwd" long_name="Spectral gravity wave drag theta increment" unit="K" grid_ref="full_level_face_grid" />
+       <field id="du_spectral_gwd" name="du_spectral_gwd" long_name="Spectral gravity wave drag U wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
+       <field id="dv_spectral_gwd" name="dv_spectral_gwd" long_name="Spectral gravity wave drag V wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
+       <field id="dtemp_spectral_gwd" name="dtemp_spectral_gwd" long_name="Spectral gravity wave drag T increment" unit="K" grid_ref="full_level_face_grid" />
+       <field id="tstar_2d" name="tstar" long_name="Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="z0msea" name="z0msea" long_name="Momentum roughness length" unit="m" domain_ref="face_half_levels" />
+       <field id="zh" name="zh" long_name="Boundary layer depth" unit="m" domain_ref="face_half_levels" />
      </field_group>
 
       <!-- Initial conditions group -->
@@ -144,7 +147,7 @@
        <field id="mcf_in_wtheta" name="mcf_in_wtheta" long_name="cloud_ice_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta" /> 
        <field id="tstar" name="tstar" long_name="surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="checkpoint_W3_2D" />
      </field_group>
-     
+
    </field_definition>
 
    <file_definition
@@ -231,6 +234,9 @@
         <field field_ref="du_spectral_gwd"/>
         <field field_ref="dv_spectral_gwd"/>
         <field field_ref="dtemp_spectral_gwd"/>
+        <field field_ref="tstar_2d"/>
+        <field field_ref="z0msea"/>
+        <field field_ref="zh"/>
       </file>
 
       <file id="lfric_averages" name="lfric_averages" output_freq="10ts" convention="UGRID" enabled=".TRUE.">
