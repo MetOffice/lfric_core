@@ -167,6 +167,7 @@ contains
                                  chi2,                            &
                                  chi3,                            &
                                  ndf_w2, undf_w2, map_w2(:,cell), &
+                                 ndf_w2, undf_w2, map_w2(:,cell), &
                                  basis_w2,                        &
                                  ndf_w0, undf_w0, map_w0(:,cell), &
                                  diff_basis_w0                    &

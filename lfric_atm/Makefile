@@ -150,8 +150,8 @@ clean: partial-clean
 
 .PHONY: partial-clean pclean
 partial-clean pclean: ALWAYS
-	$(call MESSAGE,Removing,"gungho workspace")
-	$(Q)-rm -r $(WORKING_DIR)/gungho
-	$(call MESSAGE,Removing,"gungho binaries")
+	$(call MESSAGE,Removing,"lfric_atm workspace")
+	$(Q)-rm -r $(WORKING_DIR)/lfric-atm
+	$(call MESSAGE,Removing,"lfric_atm binaries")
 	$(Q)-if [ -d bin ] ; then rm -r bin ; fi
 

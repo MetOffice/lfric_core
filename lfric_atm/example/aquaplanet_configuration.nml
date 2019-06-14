@@ -1,0 +1,348 @@
+&base_mesh
+  filename        = 'mesh_C12.nc'
+  prime_mesh_name = 'dynamics'
+  geometry        = 'spherical'
+  partitioner     = 'cubedsphere'
+  fplane          = .false.
+  f_lat_deg       = 45.0
+/
+
+&extrusion
+  method           = 'um_L38_29t_9s_40km'
+  domain_top       = 39254.833575999997
+  number_of_layers = 38
+/
+
+&finite_element
+  cellshape        = 'quadrilateral'
+  element_order    = 0
+  coordinate_order = 2
+  rehabilitate     = .true.
+  supg             = .false.
+  vorticity_in_w1  = .true.
+/
+
+&formulation
+  transport_only       = .false.
+  rotating             = .true.
+  use_moisture         = .true.
+  shallow              = .true.
+  use_physics          = .true.
+  use_wavedynamics     = .true. 
+  dlayer_on            = .true.
+  dry_static_adjust    = .true.
+  exner_from_eos       = .true.
+  set_hydrostatic_init = .true.
+  init_exner_bt        = .true.
+  hard_wired_j         = .false.
+  hard_wired_detj      = .false.
+/
+
+&idealised
+  test = 'deep_baroclinic_wave'
+/
+
+&initial_density
+  sample_init_rho = .false.
+  tracer_max = 2.0
+  tracer_background = 0.1
+  r1 = 0.4
+  x1 = 0.4
+  y1 = 0.0
+  r2 = 0.4
+  x2 = -0.4
+  y2 = 0.0
+/
+
+&initial_temperature
+  bvf_square = 0.0001
+/
+
+&initial_wind
+  profile        = 'deep_baroclinic_perturbed'
+  u0             = 0.0
+  v0             = 0.0
+  sbr_angle_lat  = 0.0
+  sbr_angle_lon  = 0.0
+  smp_init_wind=.false.
+/
+
+&initialization
+ init_option = 'fd_start_dump'
+ ancil_option = 'aquaplanet'
+/
+
+&files
+  diag_stem_name            = 'diagGungho'
+  checkpoint_stem_name      = 'restartGungho'
+  start_dump_filename       = 'aquaplanet_N48L38_C12L38'
+  start_dump_directory      = './'
+/
+
+&io
+  use_xios_io               = .true.
+  write_diag                = .true.
+  write_dump                = .false.
+  diagnostic_frequency      = 1
+  nodal_output_on_w3        = .false.
+  subroutine_timers         = .true.
+  subroutine_counters       = .true.
+  write_minmax_tseries      = .false.
+  checkpoint_read           = .false.
+  checkpoint_write          = .false.
+/
+
+&time
+ timestep_start             = 1
+ timestep_end               = 2
+/
+
+&physics
+  heldsuarez_thermo_placement = 0
+  heldsuarez_wind_placement   = 0
+  hs_random = .false.
+  blayer_placement = 'fast'
+  convection_placement = 'fast'
+  microphysics_placement = 'slow'
+  radiation_placement = 'slow'
+/
+
+&blayer
+    flux_bc_opt=0,
+    fixed_flux_e=0.0,
+    fixed_flux_h=300.0,
+/
+
+&cloud
+    scheme='smith',
+    rh_crit=38*0.99,
+/
+
+&planet
+  gravity        = 9.80665
+  radius         = 6371229.0
+  omega          = 7.292116E-5
+  rd             = 287.05
+  cp             = 1005.0
+  p_zero         = 100000.0
+  scaling_factor = 1.0
+/
+
+&orbit
+    elements='earth_fixed',
+    spin='earth_day',
+/
+
+&star
+    stellar_constant=1361.0,
+/
+
+&radiation
+    spectral_file_sw='ga7/sp_sw_ga7',
+    spectral_file_lw='ga7/sp_lw_ga7',
+    l_rayleigh_sw=.true.,
+    l_continuum_sw=.true.,
+    l_h2o_sw=.true.,
+    l_co2_sw=.true.,
+    l_o3_sw=.true.,
+    l_n2o_sw=.true.,
+    l_ch4_sw=.true.,
+    l_o2_sw=.true.,
+    l_continuum_lw=.true.,
+    l_h2o_lw=.true.,
+    l_co2_lw=.true.,
+    l_o3_lw=.true.,
+    l_n2o_lw=.true.,
+    l_ch4_lw=.true.,
+    l_planet_grey_surface=.true.,
+    planet_albedo=0.06,
+    planet_emissivity=0.985,
+    cloud_representation='no_cloud',
+    cloud_overlap='maximum_random',
+    cloud_inhomogeneity='homogeneous',
+    i_cloud_liq_type_sw=5,
+    i_cloud_ice_type_sw=11,
+    i_cloud_liq_type_lw=5,
+    i_cloud_ice_type_lw=11,
+/
+
+&well_mixed_gases
+    co2_mix_ratio = 6.002e-04,
+    n2o_mix_ratio = 4.945e-07,
+    ch4_mix_ratio = 1.006e-06,
+    o2_mix_ratio = 0.2314,
+    n2_mix_ratio = 0.7553,
+    so2_mix_ratio = 0.0,
+    cfc11_mix_ratio = 1.110e-09,
+    cfc12_mix_ratio = 2.187e-09,
+    cfc113_mix_ratio = 4.826e-10,
+    hcfc22_mix_ratio = 6.866e-10,
+    hfc134a_mix_ratio = 2.536e-10,
+/
+
+&solver
+  method                         = 'bicgstab'
+  preconditioner                 = 'diagonal'
+  maximum_iterations             = 399
+  tolerance                      = 1.0e-12
+  gcrk                           = 18
+/
+
+&mixed_solver
+  si_method                      = 'gcr'
+  si_preconditioner              = 'pressure'
+  si_maximum_iterations          = 10
+  gcrk                           = 18
+  si_tolerance                   = 1.0e-6
+  guess_np1                      = .F
+  reference_reset_freq           = 4
+  normalise                      = .T
+/
+
+&helmholtz_solver
+  gcrk                           = 18
+  method                         = 'bicgstab'
+  preconditioner                 = 'tridiagonal'
+  si_pressure_tolerance          = 1.0e-6
+  si_pressure_maximum_iterations = 400
+  normalise                      = .T
+/
+
+&subgrid
+  rho_approximation = 'ppm_no_limiter'
+  dep_pt_stencil_extent = 3
+  rho_approximation_stencil_extent = 2
+/
+
+&timestepping
+  method             = 'semi_implicit'
+  dt                 = 300.0
+  alpha              = 0.55
+  tau_u              = 0.55
+  tau_t              = 0.55
+  tau_r              = 0.55
+  outer_iterations   = 4
+  inner_iterations   = 1
+  runge_kutta_method = 'ssp3'
+  spinup_period      = 1
+  spinup_alpha       = .false.
+  spinup_winds       = .false.
+/
+
+&biperiodic_deppt
+  method             = 'euler'
+  n_dep_pt_iterations     = 1
+/
+
+&transport
+  scheme = 'method_of_lines'
+  operators = 'fv'
+  fv_flux_order = 2
+  fv_advective_order = 3
+  consistent_metric  = .false.
+  enforce_monotonicity = .false.
+/
+
+&partitioning
+  auto        = .true.
+/
+
+&multigrid
+  l_multigrid = .false.
+  multigrid_chain_nitems = 4
+  ugrid      = 'prime', 'mesh_C12.nc', 'mesh_C6.nc', 'mesh_C3.nc'
+  smooth_relaxation = 0.8
+  n_presmooth = 2
+  n_postsmooth = 2
+  n_coarsesmooth = 4
+/
+/
+
+&domain_size
+  planar_domain_min_x = -1.0
+  planar_domain_max_x =  1.0
+  planar_domain_min_y = -1.0
+  planar_domain_max_y =  1.0
+/
+
+&mixing
+  viscosity = .false.
+  viscosity_mu = 0.0
+  smagorinsky = .false.
+  mix_factor = 0.0
+/
+
+&orography
+  profile   = 'none'
+/
+
+&orography_agnesi_cartesian
+  mountain_height = 100.0
+  half_width_x    = 10.0
+  half_width_y    = 10.0
+  x_centre        = 0.0
+  y_centre        = 0.0
+  direction       = 'x'
+/
+
+&orography_agnesi_spherical
+  mountain_height   = 100.0
+  half_width        = 2500.0
+  lambda_centre_dec = 1.5
+  phi_centre_dec    = 0.0
+  lambda_focus_dec  = 1.5
+  phi_focus_dec     = 0.3333
+/
+
+&orography_schar_cartesian
+  mountain_height = 250.0
+  half_width_x    = 20.0
+  half_width_y    = 20.0
+  wavelength      = 20.0
+  x_centre        = 0.0
+  y_centre        = 0.0
+  direction       = 'x'
+/
+
+&orography_schar_spherical
+  mountain_height   = 250.0
+  half_width        = 5000.0
+  wavelength        = 4000.0
+  lambda_centre_dec = 0.25
+  phi_centre_dec    = 0.0
+/
+
+&orography_bell_cartesian
+mountain_height = 400.0
+half_width_x    = 1000.0
+half_width_y    = 1000.0
+x_centre        = 0.0
+y_centre        = 0.0
+direction       = 'xy'
+/
+
+&orography_dcmip200_spherical
+mountain_height     = 2000.0
+radius_dec          = 0.75
+osc_half_width_dec  = 0.0625
+lambda_centre_dec   = 1.5
+phi_centre_dec      = 0.0
+/
+
+&damping_layer
+  dl_base = 18000.0
+  dl_str  = 0.01
+/
+
+&checks
+  limit_cfl = .false.
+  max_cfl   = 0.75
+/
+
+&section_choice
+radiation='socrates'
+boundary_layer='um'
+convection='none'
+microphysics='um'
+cloud='um'
+/

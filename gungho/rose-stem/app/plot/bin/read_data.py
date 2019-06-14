@@ -21,6 +21,12 @@ import sys
 import iris
 iris.FUTURE.netcdf_promote = True
 
+
+def load_cube_by_varname(filename, var):
+   variable_constraint = iris.Constraint(cube_func=(lambda c: c.var_name == var))
+   return iris.load_cube(filename, constraint=variable_constraint)
+
+
 '''
 Read from per-processor nodal text files
 # filestem - path to files
@@ -72,6 +78,6 @@ Read from UGRID NetCDF file
 def read_ugrid_data(filestem, field):
 
   # Read the file and extract field of interest
-  cube = iris.load_cube(filestem, field)
+  cube = load_cube_by_varname(filestem, field)
 
   return cube

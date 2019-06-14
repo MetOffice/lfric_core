@@ -27,8 +27,7 @@ module iter_timestep_alg_mod
                                        use_wavedynamics,          &
                                        dry_static_adjust,         &
                                        exner_from_eos
-  use io_config_mod,             only: diagnostic_frequency, subroutine_timers, &
-                                       use_xios_io, write_diag
+  use io_config_mod,             only: subroutine_timers
   use mixed_solver_config_mod,   only: guess_np1,                                &
                                        reference_reset_freq
   use timestepping_config_mod,   only: dt, alpha, &
@@ -68,9 +67,6 @@ module iter_timestep_alg_mod
   use field_collection_mod,      only: field_collection_type
   use quadrature_xyoz_mod,       only: quadrature_xyoz_type
   use operator_mod,              only: operator_type
-
-  ! Diagnostic output
-  use diagnostics_io_mod,          only: write_scalar_diagnostic
 
   ! Algorithms
   use mass_matrix_solver_alg_mod,  only: mass_matrix_solver_alg
@@ -355,6 +351,8 @@ contains
     type( field_type ), pointer :: u3_in_w3_star  => null()
     type( field_type ), pointer :: exner_theta  => null()
 
+    type( field_type ), pointer :: tstar_ptr  => null()
+
     integer(kind=i_def):: outer, inner, iter
     real(kind=r_def)   :: varalpha, varbeta ! alpha, beta weight to use
                                             ! these may differ from input values
@@ -415,10 +413,6 @@ contains
                   extract_w_kernel_type(w_physics, u_physics) )
       call u_physics%log_minmax(LOG_LEVEL_INFO, 'u_physics')
       call w_physics%log_minmax(LOG_LEVEL_INFO, 'w_physics')
-      if (use_xios_io .and. write_diag) then
-        call write_scalar_diagnostic("w_physics", w_physics, timestep,  &
-                                      w_physics%get_mesh_id(), .false.)
-      end if
 
       if ( smagorinsky ) then
         call log_event( 'Calculate 3D shear', LOG_LEVEL_INFO )
@@ -523,6 +517,8 @@ contains
                           visc_m, visc_h,                               &
                           physics_incs, height_w3, height_wth)
 
+        tstar_ptr => twod_fields%get_field('tstar')
+        call tstar_ptr%log_minmax(LOG_LEVEL_INFO, 'tstar after read')
         if (use_wavedynamics) then
           ! copy increments into rhs_phys, including convert to weak form theta
           ! NB there is no update to pressure or density, currently awaiting

@@ -74,6 +74,19 @@ module extrusion_mod
     module procedure uniform_extrusion_constructor
   end interface uniform_extrusion_type
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Extrudes with specific UM configuration L38_29t_9s_40km
+  !>
+  type, public, extends(extrusion_type) :: um_L38_29t_9s_40km_extrusion_type
+    private
+  contains
+    private
+    procedure, public :: extrude => um_L38_29t_9s_40km_extrude
+  end type um_L38_29t_9s_40km_extrusion_type
+
+  interface um_L38_29t_9s_40km_extrusion_type
+    module procedure um_L38_29t_9s_40km_extrusion_constructor
+  end interface um_L38_29t_9s_40km_extrusion_type
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Similar to shifted_uniform_extrusion except that the top and
@@ -227,6 +240,63 @@ contains
     end do
 
   end subroutine uniform_extrude
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Creates a um_L38_29t_9s_40km_extrusion_type object.
+  !>
+  !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
+  !> @param[in] atmosphere_top Top of the atmosphere in meters.
+  !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !>
+  !> @return New uniform_extrusion_type object.
+  !>
+  function um_L38_29t_9s_40km_extrusion_constructor( atmosphere_bottom, &
+                                                     atmosphere_top,    &
+                                                     number_of_layers ) result(new)
+
+    implicit none
+
+    real(r_def),    intent(in) :: atmosphere_bottom
+    real(r_def),    intent(in) :: atmosphere_top
+    integer(i_def), intent(in) :: number_of_layers
+
+    type(um_L38_29t_9s_40km_extrusion_type) :: new
+
+    call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
+                                    number_of_layers )
+
+  end function um_L38_29t_9s_40km_extrusion_constructor
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Extrudes the mesh with specific UM configuration L38_29t_9s_40km
+  !>
+  !> @param[out] eta Nondimensional vertical coordinate.
+  !>
+  subroutine um_L38_29t_9s_40km_extrude( this, eta )
+
+    implicit none
+
+    class(um_L38_29t_9s_40km_extrusion_type), intent(in)  :: this
+    real(r_def),                   intent(out) :: eta(0:this%number_of_layers)
+
+    integer(i_def) :: k
+
+    if (this%number_of_layers /= 38)then
+      call log_event( "Extrusion L38_29t_9s_40km reqires 38 levels", log_level_error )
+    end if
+
+    eta(0:this%number_of_layers) = (/ 0.0, &
+                                      .0005095,  .0020380,  .0045854,  .0081519,  .0127373, &
+                                      .0183417,  .0249651,  .0326074,  .0412688,  .0509491, &
+                                      .0616485,  .0733668,  .0861040,  .0998603,  .1146356, &
+                                      .1304298,  .1472430,  .1650752,  .1839264,  .2037966, &
+                                      .2246857,  .2465938,  .2695209,  .2934670,  .3184321, &
+                                      .3444162,  .3714396,  .3998142,  .4298913,  .4620737, &
+                                      .4968308,  .5347160,  .5763897,  .6230643,  .6772068, &
+                                      .7443435,  .8383348, 1.0000000 &
+                                   /)
+
+  end subroutine um_L38_29t_9s_40km_extrude
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Creates a shifted_uniform_extrusion_type object.

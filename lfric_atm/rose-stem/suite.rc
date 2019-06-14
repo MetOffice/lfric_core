@@ -733,7 +733,7 @@
 {%-                   for mesh_name in extra_meshes %}
 {%-                     if mesh_name != '' %}
                        if [ ! -e $CYLC_TASK_WORK_DIR/mesh_{{mesh_name}}.nc ] ; then
-                         ln -s $DESTINATION_DIRECTORY/meshes/mesh_{{mesh_name}}.nc $CYLC_TASK_WORK_DIR/
+                         ln -fs $DESTINATION_DIRECTORY/meshes/mesh_{{mesh_name}}.nc $CYLC_TASK_WORK_DIR/
                        fi
 {%-                     endif %}
 {%-                   endfor %}
@@ -754,7 +754,7 @@
                       mv $CYLC_TASK_WORK_DIR/*.m $DESTINATION_DIRECTORY/{{pathFragment}}/results/
 
                       # Move XIOS netCDF (if it exists)
-                      test -f $CYLC_TASK_WORK_DIR/lfric_diag.nc && mv $CYLC_TASK_WORK_DIR/lfric_diag.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/
+                      test -f $CYLC_TASK_WORK_DIR/lfric_diag.nc && cp $CYLC_TASK_WORK_DIR/lfric_diag.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/
                       test -f $CYLC_TASK_WORK_DIR/lfric_initial.nc && mv $CYLC_TASK_WORK_DIR/lfric_initial.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/
 
                       # Future publisher stages need this information
@@ -799,6 +799,7 @@
             RESTART_STOP    = $(echo $[$RESTART_NO*$RESTART_NTS + $RESTART_NTS])
             RESTART_READ    = $(if [[ $RESTART ]]; then echo ".true."; else echo ".false."; fi)
             RESTART_WRITE   = $(if [ $CRUN_LENGTH -gt $CYLC_TASK_CYCLE_POINT ]; then echo ".true."; else echo ".false."; fi)
+	    RESOLUTION      = {{res_value}}
 
         [[[directives]]]
 {%-                 for DIRECTIVE in run_batcher %}

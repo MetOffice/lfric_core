@@ -744,7 +744,7 @@
 {%-                   for mesh_name in extra_meshes %}
 {%-                     if mesh_name != '' %}
                        if [ ! -e $CYLC_TASK_WORK_DIR/mesh_{{mesh_name}}.nc ] ; then
-                         ln -s $DESTINATION_DIRECTORY/meshes/mesh_{{mesh_name}}.nc $CYLC_TASK_WORK_DIR/
+                         ln -fs $DESTINATION_DIRECTORY/meshes/mesh_{{mesh_name}}.nc $CYLC_TASK_WORK_DIR/
                        fi
 {%-                     endif %}
 {%-                   endfor %}

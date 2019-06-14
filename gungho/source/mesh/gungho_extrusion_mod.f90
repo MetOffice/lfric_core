@@ -33,14 +33,16 @@ module gungho_extrusion_mod
                                    shifted_uniform_extrusion_type,             &
                                    shifted_quadratic_extrusion_type,           &
                                    shifted_geometric_extrusion_type,           &
-                                   shifted_dcmip_extrusion_type
-  use extrusion_config_mod, only : method,           &
-                                   key_from_method,  &
-                                   method_uniform,   &
-                                   method_quadratic, &
-                                   method_geometric, &
-                                   method_dcmip,     &
-                                   domain_top,       &
+                                   shifted_dcmip_extrusion_type,               &
+                                   um_L38_29t_9s_40km_extrusion_type
+  use extrusion_config_mod, only : method,                    &
+                                   key_from_method,           &
+                                   method_uniform,            &
+                                   method_quadratic,          &
+                                   method_geometric,          &
+                                   method_dcmip,              &
+                                   method_um_L38_29t_9s_40km, &
+                                   domain_top,                &
                                    number_of_layers
   use log_mod,              only : log_event,       &
                                    log_level_error, &
@@ -86,6 +88,10 @@ contains
         allocate( new, source=uniform_extrusion_type( atmosphere_bottom, &
                                                       domain_top,        &
                                                       number_of_layers ) )
+      case (method_um_L38_29t_9s_40km)
+        allocate( new, source=um_L38_29t_9s_40km_extrusion_type( atmosphere_bottom, &
+                                                                 domain_top,        & 
+                                                                 number_of_layers ) )
       case (method_quadratic)
         allocate( new, source=quadratic_extrusion_type( atmosphere_bottom, &
                                                         domain_top,        &

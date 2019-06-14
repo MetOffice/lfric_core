@@ -14,6 +14,7 @@ module physics_mappings_alg_mod
   use quadrature_xyoz_mod,                   only: quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,          only: quadrature_rule_gaussian_type
   use finite_element_config_mod,             only: nqp_exact
+  use physics_config_mod,                    only: sample_physics_winds
   use galerkin_projection_algorithm_mod,     only: galerkin_projection_algorithm
 
   implicit none
@@ -58,29 +59,69 @@ contains
   !> @param[in]    source_field Wind field in the source (native) space
   subroutine map_physics_winds(u1_field, u2_field, u3_field, source_field)
     
+    use base_mesh_config_mod,          only: geometry, &
+                                             geometry_spherical
+    use convert_hdiv_field_kernel_mod, only: convert_hdiv_field_kernel_type 
+    use nodal_coordinates_kernel_mod,  only: nodal_coordinates_kernel_type  
+    use psykal_lite_mod,               only: invoke_convert_cart2sphere_vector
+    use runtime_constants_mod,         only: get_coordinates
     implicit none
 
     ! Prognostic fields
     type( field_type ), intent( inout ) :: u1_field, u2_field, u3_field
     type( field_type ), intent( in )    :: source_field
+    type( field_type )                  :: wind_map(3), physical_chi(3)
+    type( field_type ), pointer         :: chi(:) => null()
     ! quatrature rule
     type( quadrature_xyoz_type )          :: qr
     type( quadrature_rule_gaussian_type ) :: quadrature_rule
     type( field_type )                    :: projected_field(3)
-    integer(i_def)                        :: mesh_id
+    integer( i_def )                      :: mesh_id
 
+    ! get chi field
+    chi => get_coordinates()
+    
+    if (sample_physics_winds)then
+
+      call u1_field%copy_field_properties(wind_map(1))
+      call u1_field%copy_field_properties(wind_map(2))
+      call u1_field%copy_field_properties(wind_map(3))
+      call invoke( setval_c(wind_map(1), 0.0_r_def), &
+                   setval_c(wind_map(2), 0.0_r_def), &
+                   setval_c(wind_map(3), 0.0_r_def)  &
+                   )
+                
+      call invoke( convert_hdiv_field_kernel_type(wind_map, source_field, chi) )
+
+      if ( geometry == geometry_spherical ) then
+        call u1_field%copy_field_properties(physical_chi(1))
+        call u1_field%copy_field_properties(physical_chi(2))
+        call u1_field%copy_field_properties(physical_chi(3))
+        call invoke( nodal_coordinates_kernel_type(physical_chi, chi) )
+        call invoke_convert_cart2sphere_vector( wind_map, physical_chi )       
+      end if
+      
+      call invoke( name = "Copy wind fields",       &
+                   setval_X(u1_field, wind_map(1)), &
+                   setval_X(u2_field, wind_map(2)), &
+                   setval_X(u3_field, wind_map(3)) )
+      
+    else
+    
+      ! This method remains for posterity, but should be used with caution.
     qr = quadrature_xyoz_type(nqp_exact, quadrature_rule)
 
-    mesh_id =  source_field%get_mesh_id() ! Currently only coded for fields on the same mesh
-    projected_field(1) = field_type( vector_space = u1_field%get_function_space() )
-    projected_field(2) = field_type( vector_space = u2_field%get_function_space() )
-    projected_field(3) = field_type( vector_space = u3_field%get_function_space() )
-    call galerkin_projection_algorithm(projected_field, source_field, mesh_id, &
-       3, qr) 
-    call invoke( name = "Copy wind fields",              &
-                 setval_X(u1_field, projected_field(1)), &
-                 setval_X(u2_field, projected_field(2)), &
-                 setval_X(u3_field, projected_field(3)) )
+      mesh_id =  source_field%get_mesh_id()
+      projected_field(1) = field_type( vector_space = u1_field%get_function_space() )
+      projected_field(2) = field_type( vector_space = u2_field%get_function_space() )
+      projected_field(3) = field_type( vector_space = u3_field%get_function_space() )
+      call galerkin_projection_algorithm(projected_field, source_field, mesh_id, &
+                                         3, qr) 
+      call invoke( name = "Copy wind fields2",             &
+                   setval_X(u1_field, projected_field(1)), &
+                   setval_X(u2_field, projected_field(2)), &
+                   setval_X(u3_field, projected_field(3)) )
+    end if
 
   end subroutine map_physics_winds
 

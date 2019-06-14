@@ -75,8 +75,8 @@
 &files
   diag_stem_name            = 'diagGungho'
   checkpoint_stem_name      = 'restartGungho'
-  start_dump_filename       = ''
-  start_dump_directory      = ''
+  start_dump_filename       = 'UM2LFRic_dump'
+  start_dump_directory      = './'
 /
 
 &io

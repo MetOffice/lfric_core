@@ -8,13 +8,13 @@
 
 !> @brief Kernel to compute the apply the div conforming Piola transform to a
 !! computational vector field and return the 3 components of the physical field as
-!! separate fields
+!! separate fields in the target space
 
 module convert_hdiv_field_kernel_mod
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,                     &
                                     GH_FIELD, GH_READ, GH_INC,               &
-                                    ANY_SPACE_9, ANY_SPACE_1,                &
+                                    ANY_SPACE_9, ANY_SPACE_2, ANY_SPACE_1,   &
                                     GH_DIFF_BASIS, GH_BASIS,                 &
                                     CELLS, GH_EVALUATOR
 use constants_mod,           only : r_def
@@ -29,11 +29,11 @@ type, public, extends(kernel_type) :: convert_hdiv_field_kernel_type
   private
   type(arg_type) :: meta_args(3) = (/                                  &
        arg_type(GH_FIELD*3,  GH_INC,  ANY_SPACE_1),                    &
-       arg_type(GH_FIELD,    GH_READ, ANY_SPACE_1),                    &
+       arg_type(GH_FIELD,    GH_READ, ANY_SPACE_2),                    &
        arg_type(GH_FIELD*3,  GH_READ, ANY_SPACE_9)                     &
        /)
   type(func_type) :: meta_funcs(2) = (/                                &
-       func_type(ANY_SPACE_1, GH_BASIS),                               &
+       func_type(ANY_SPACE_2, GH_BASIS),                               &
        func_type(ANY_SPACE_9, GH_DIFF_BASIS)                           &
        /)
   integer :: iterates_over = CELLS
@@ -84,8 +84,9 @@ subroutine convert_hdiv_field_code(nlayers,                                  &
                                    physical_field3,                          &
                                    computational_field,                      &
                                    chi1, chi2, chi3,                         &
-                                   ndf, undf, map,                           &
-                                   basis,                                    &
+                                   ndf1, undf1, map1,                        &
+                                   ndf2, undf2, map2,                        &
+                                   basis2,                                   &
                                    ndf_chi, undf_chi, map_chi,               &
                                    diff_basis_chi                            &
                                  )
@@ -93,22 +94,24 @@ subroutine convert_hdiv_field_code(nlayers,                                  &
   implicit none                     
   !Arguments
   integer,                                    intent(in)    :: nlayers
-  integer,                                    intent(in)    :: ndf, undf, &
+  integer,                                    intent(in)    :: ndf1, undf1, &
+                                                               ndf2, undf2, &
                                                                ndf_chi, &
                                                                undf_chi
-  integer,          dimension(ndf),           intent(in)    :: map
+  integer,          dimension(ndf1),          intent(in)    :: map1
+  integer,          dimension(ndf2),          intent(in)    :: map2
   integer,          dimension(ndf_chi),       intent(in)    :: map_chi
-  real(kind=r_def), dimension(undf),          intent(in)    :: computational_field
+  real(kind=r_def), dimension(undf2),         intent(in)    :: computational_field
   real(kind=r_def), dimension(undf_chi),      intent(in)    :: chi1, chi2, chi3
-  real(kind=r_def), dimension(undf),          intent(inout) :: physical_field1,&
+  real(kind=r_def), dimension(undf1),         intent(inout) :: physical_field1,&
                                                                physical_field2,&
                                                                physical_field3
-  real(kind=r_def), dimension(3,ndf_chi,ndf), intent(in)    :: diff_basis_chi
-  real(kind=r_def), dimension(3,ndf,ndf),     intent(in)    :: basis
+  real(kind=r_def), dimension(3,ndf_chi,ndf1), intent(in)    :: diff_basis_chi
+  real(kind=r_def), dimension(3,ndf2,ndf1),    intent(in)    :: basis2
 
   !Internal variables
   integer          :: df, df2, k
-  real(kind=r_def) :: jacobian(3,3,ndf,1), dj(ndf,1)
+  real(kind=r_def) :: jacobian(3,3,ndf1,1), dj(ndf1,1)
   real(kind=r_def) :: vector_in(3), vector_out(3)
   real(kind=r_def), dimension(ndf_chi) :: chi1_e, chi2_e, chi3_e 
 
@@ -118,17 +121,17 @@ subroutine convert_hdiv_field_code(nlayers,                                  &
       chi2_e(df) = chi2(map_chi(df) + k)
       chi3_e(df) = chi3(map_chi(df) + k)
     end do
-    call coordinate_jacobian(ndf_chi, ndf, 1, chi1_e, chi2_e, chi3_e,  &
+    call coordinate_jacobian(ndf_chi, ndf1, 1, chi1_e, chi2_e, chi3_e,  &
                              diff_basis_chi, jacobian, dj)
-    do df = 1,ndf
+    do df = 1,ndf1
       vector_in(:) = 0.0_r_def
-      do df2 = 1,ndf
-        vector_in(:) = vector_in(:) + computational_field(map(df2)+k)*basis(:,df2,df)
+      do df2 = 1,ndf2
+        vector_in(:) = vector_in(:) + computational_field(map2(df2)+k)*basis2(:,df2,df)
       end do
       vector_out(:) = matmul(jacobian(:,:,df,1),vector_in)/dj(df,1)
-      physical_field1(map(df)+k) = physical_field1(map(df)+k) + vector_out(1)
-      physical_field2(map(df)+k) = physical_field2(map(df)+k) + vector_out(2)
-      physical_field3(map(df)+k) = physical_field3(map(df)+k) + vector_out(3)
+      physical_field1(map1(df)+k) = physical_field1(map1(df)+k) + vector_out(1)
+      physical_field2(map1(df)+k) = physical_field2(map1(df)+k) + vector_out(2)
+      physical_field3(map1(df)+k) = physical_field3(map1(df)+k) + vector_out(3)
     end do
   end do
 

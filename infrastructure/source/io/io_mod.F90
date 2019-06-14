@@ -36,7 +36,8 @@ module io_mod
                                            ancil_option_aquaplanet
 
   use files_config_mod,              only: checkpoint_stem_name, &
-                                           start_dump_filename
+                                           start_dump_filename, &
+                                           start_dump_directory
   use time_config_mod,               only: timestep_start, &
                                            timestep_end
   use runtime_constants_mod,         only: get_coordinates
@@ -192,7 +193,7 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
 
     ! Create dump filename from base name and end timestep
     write(dump_fname,'(A,A,I6.6)') &
-                              trim(start_dump_filename),"_", timestep_end
+       trim(start_dump_directory)//'/'//trim(start_dump_filename),"_", timestep_end
 
 
     ! Set dump frequency (end timestep) in seconds
@@ -214,7 +215,7 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
     call xios_set_attr(fdfieldgroup_hdl, enabled=.true.)
 
     ! Create dump filename from stem
-    write(dump_fname,'(A)') trim(start_dump_filename)
+    write(dump_fname,'(A)') trim(start_dump_directory)//'/'//trim(start_dump_filename)
 
     ! Set dump frequency (end timestep) in seconds
     ! Note although this file is going to be read XIOS needs this

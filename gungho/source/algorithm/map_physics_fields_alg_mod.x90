@@ -64,8 +64,9 @@ contains
     wetrho_in_w3 => derived_fields%get_field('wetrho_in_w3')
     call map_physics_scalars(wetrho_in_w3, wetrho_in_wth)
 
-    ! Now the winds (this currently doesn't currently re-orientate the winds
-    ! so they are not necessarily perpendicular or aligned lat-lon)
+    ! Now the winds (NB if sample_physics_winds=.false. then the winds are
+    ! not re-oriented and so they are not necessarily perpendicular or 
+    ! aligned lat-lon)
     u1_in_w3 => derived_fields%get_field('u1_in_w3')
     u2_in_w3 => derived_fields%get_field('u2_in_w3')
     u3_in_w3 => derived_fields%get_field('u3_in_w3')

@@ -82,7 +82,7 @@
                                                    "xios_nodes":1,
                                                    "wallclock":"00:20:00"} } },
                      checkkgo=False,
-                     plotstr="straka_plot_y_ugrid.py $NODAL_DATA_DIR/lfric_diag.nc 4 128 air_potential_temperature T90 $PLOT_DIR")',
+                     plotstr="straka_plot_y_ugrid.py $NODAL_DATA_DIR/lfric_diag.nc 4 128 theta T90 $PLOT_DIR")',
     'run_application("gungho", "straka_200m",
                      resolutions=[("BiP256x4-200x200",5.0)],
                      env={"crun":1, "nrun":180,

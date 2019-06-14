@@ -75,10 +75,47 @@
        <field id="checkpoint_conv_snow" name="conv_snow" long_name="conv_snow"  unit="kg m-2 s-1" domain_ref="checkpoint_W3_2D" />
      </field_group>
 
+     <!-- derived fields group -->
+     <field_group id="derived_fields" freq_op="1ts" operation="instant" enabled=".TRUE." >
+       <field id="w_physics" name="w_physics" long_name="vertical wind on physics points" standard_name="vertical_velocity" unit="ms-1" grid_ref="full_level_face_grid" />
+       <field id="w_physics_star" name="w_physics_star" long_name="vertical wind on physics points: physics predictor" standard_name="vertical_velocity" unit="ms-1" grid_ref="full_level_face_grid" />
+       <field id="rho_in_wth" name="rho_in_wth" long_name="dry air density on wtheta points" standard_name="air_density" unit="kg m-3" grid_ref="full_level_face_grid" />
+       <field id="wetrho_in_wth" name="wetrho_in_wth" long_name="wet air density on wtheta points" standard_name="air_density" unit="kg m-3" grid_ref="full_level_face_grid" />
+       <field id="exner_in_wth" name="exner_in_wth" long_name="Exner pressure on wtheta points" standard_name="air_pressure" unit="1" grid_ref="full_level_face_grid" />
+       <field id="theta_star" name="theta_star" long_name="air potential temperature: physics predictor" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
+
+       <field id="u1_in_w3" name="u1_in_w3" long_name="physics U wind on W3 points" standard_name="eastward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="u2_in_w3" name="u2_in_w3" long_name="physics V wind on W3 points" standard_name="northward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="u3_in_w3" name="u3_in_w3" long_name="physics W wind on W3 points" standard_name="upward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="u1_in_w3_star" name="u1_in_w3_star" long_name="physics U wind on W3 points: physics predictor" standard_name="eastward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="u2_in_w3_star" name="u2_in_w3_star" long_name="physics V wind on W3 points: physics predictor" standard_name="northward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="u3_in_w3_star" name="u3_in_w3_star" long_name="physics W wind on W3 points: physics predictor" standard_name="upward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="theta_in_w3" name="theta_in_w3" long_name="air potential temperature on W3 points" standard_name="air_potential_temperature" unit="K" grid_ref="half_level_face_grid" />
+       <field id="wetrho_in_w3" name="wetrho_in_w3" long_name="wet air density on w3 points" standard_name="air_density" unit="kg m-3" grid_ref="half_level_face_grid" />
+     </field_group>
+
+     <!-- derived fields group -->
+     <field_group id="init_derived_fields" freq_op="1ts" operation="instant" enabled=".TRUE." >
+       <field id="init_w_physics" name="w_physics" long_name="vertical wind on physics points" standard_name="vertical_velocity" unit="ms-1" grid_ref="full_level_face_grid" />
+       <field id="init_w_physics_star" name="w_physics_star" long_name="vertical wind on physics points: physics predictor" standard_name="vertical_velocity" unit="ms-1" grid_ref="full_level_face_grid" />
+       <field id="init_rho_in_wth" name="rho_in_wth" long_name="dry air density on wtheta points" standard_name="air_density" unit="kg m-3" grid_ref="full_level_face_grid" />
+       <field id="init_wetrho_in_wth" name="wetrho_in_wth" long_name="wet air density on wtheta points" standard_name="air_density" unit="kg m-3" grid_ref="full_level_face_grid" />
+       <field id="init_exner_in_wth" name="exner_in_wth" long_name="Exner pressure on wtheta points" standard_name="air_pressure" unit="1" grid_ref="full_level_face_grid" />
+       <field id="init_theta_star" name="theta_star" long_name="air potential temperature: physics predictor" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
+
+       <field id="init_u1_in_w3" name="u1_in_w3" long_name="physics U wind on W3 points" standard_name="eastward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="init_u2_in_w3" name="u2_in_w3" long_name="physics V wind on W3 points" standard_name="northward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="init_u3_in_w3" name="u3_in_w3" long_name="physics W wind on W3 points" standard_name="upward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="init_u1_in_w3_star" name="u1_in_w3_star" long_name="physics U wind on W3 points: physics predictor" standard_name="eastward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="init_u2_in_w3_star" name="u2_in_w3_star" long_name="physics V wind on W3 points: physics predictor" standard_name="northward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="init_u3_in_w3_star" name="u3_in_w3_star" long_name="physics W wind on W3 points: physics predictor" standard_name="upward_wind" unit="ms-1" grid_ref="half_level_face_grid" />
+       <field id="init_theta_in_w3" name="theta_in_w3" long_name="air potential temperature on W3 points" standard_name="air_potential_temperature" unit="K" grid_ref="half_level_face_grid" />
+       <field id="init_wetrho_in_w3" name="wetrho_in_w3" long_name="wet air density on w3 points" standard_name="air_density" unit="kg m-3" grid_ref="half_level_face_grid" />
+     </field_group>
+
      <!-- Main diagnostic group -->
      <field_group id="diagnostic_fields" freq_op="1ts" operation="instant" enabled=".TRUE." >
        <field id="theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
-       <field id="w_physics" name="w_physics" long_name="vertical_wind_on_physics_points" standard_name="vertical_velocity" unit="ms-1" grid_ref="full_level_face_grid" />
        <field id="dt_bl" name="dt_bl" long_name="BL temperature increment" unit="K" grid_ref="full_level_face_grid" />  
        <field id="dmv_bl" name="dmv_bl" long_name="BL vapour increment" unit="kg/kg" grid_ref="full_level_face_grid" />  
        <field id="dt_conv" name="dt_conv" long_name="Convection temperature increment" unit="K" grid_ref="full_level_face_grid" />  
@@ -254,8 +291,8 @@
       </file>
 
       <file id="lfric_diag" name="lfric_diag" output_freq="10ts" convention="UGRID" enabled=".TRUE.">
+	<field_group group_ref="derived_fields" />
         <field field_ref="theta"/>
-        <field field_ref="w_physics"/>
         <field field_ref="dt_bl"/>
         <field field_ref="dmv_bl"/>
         <field field_ref="dt_conv"/>

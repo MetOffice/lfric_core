@@ -29,6 +29,7 @@ module gungho_driver_mod
                                          use_physics
   use function_space_collection_mod, &
                                   only : function_space_collection
+  use fs_continuity_mod,          only : W3, Wtheta
   use field_collection_mod,       only : field_collection_type, &
                                          field_collection_iterator_type
   use global_mesh_collection_mod, only : global_mesh_collection, &
@@ -47,6 +48,7 @@ module gungho_driver_mod
   use init_physics_incs_alg_mod,  only : init_physics_incs_alg
   use init_physics_prognostics_alg_mod, &
                                   only : init_physics_prognostics_alg
+  use init_physics_incs_alg_mod,  only : init_physics_incs_alg
   use init_mesh_mod,              only : init_mesh
   use runtime_constants_mod,      only : create_runtime_constants
   use io_mod,                     only : xios_domain_init, &
@@ -81,6 +83,8 @@ module gungho_driver_mod
                                   only : init_fd_prognostics_dump
   use init_ancils_mod,            only : init_analytic_ancils, &
                                          init_aquaplanet_ancils
+  use map_fd_to_prognostics_mod,  only : map_fd_to_prognostics, &
+                                         hydrostatic_balance
   use iter_timestep_alg_mod,      only : iter_alg_init, &
                                          iter_alg_step, &
                                          iter_alg_final
@@ -172,7 +176,7 @@ module gungho_driver_mod
 
   character(str_def) :: name
 
-  integer(i_def) :: i 
+  integer(i_def) :: i, fs
 
   integer(i_def) :: prognostic_init_choice, ancil_choice
 
@@ -272,8 +276,7 @@ contains
     call create_runtime_constants(mesh_id, twod_mesh_id, chi)
 
     ! Create gungho prognostics and auxilliary (diagnostic) fields
-    call create_gungho_prognostics( mesh_id, prognostic_fields, &
-                                    mr, moist_dyn, xi )
+    call create_gungho_prognostics( mesh_id, prognostic_fields, mr, moist_dyn, xi )
 
     ! Create prognostics used by physics
     if (use_physics) then
@@ -348,6 +351,16 @@ contains
 
           ! Read in from a UM2LFRic dump file
           call init_fd_prognostics_dump(fd_fields)
+
+          ! Set physics increments to 0
+          call init_physics_incs_alg(physics_incs)
+
+          ! Populate prognostics from input finite difference fields
+          call map_fd_to_prognostics(prognostic_fields, xi, &
+                                     mr, moist_dyn,         &
+                                     cloud_fields,          &
+                                     twod_fields,           &
+                                     fd_fields)
 
         else
           call log_event("Gungho: Prognostic initialisation from an FD dump not valid "// &
@@ -581,6 +594,24 @@ contains
 
         end if
 
+        ! Derived physics fields (only those on W3 or Wtheta)
+        if (use_physics) then
+
+          iterator = derived_fields%get_iterator()
+          do
+            if ( .not.iterator%has_next() ) exit
+            field_ptr => iterator%next()
+            fs = field_ptr%which_function_space()
+            if ( fs == W3 .or. fs == Wtheta ) then
+              name = trim(adjustl( field_ptr%get_name() ))
+              call write_scalar_diagnostic( trim(name), field_ptr, &
+                                            timestep, mesh_id, nodal_output_on_w3 )
+            end if
+          end do
+          field_ptr => null()
+
+        end if
+
         ! Other derived diagnostics with special pre-processing
         call write_divergence_diagnostic(u, timestep, mesh_id)
         call write_hydbal_diagnostic(theta, moist_dyn, exner, mesh_id)
@@ -690,7 +721,7 @@ contains
     endif
 
     ! Finalise the fd fields if we used them
-    if ( prognostic_init_choice  == init_option_fd_start_dump) then
+    if ( prognostic_init_choice == init_option_fd_start_dump) then
 
       iterator = fd_fields%get_iterator()
       do

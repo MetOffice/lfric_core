@@ -248,7 +248,8 @@ contains
         spectral_gwd_placement = spectral_gwd_placement_slow, &
         heldsuarez_thermo_placement = -1,                     &
         heldsuarez_wind_placement   = -1,                     &
-        hs_random                   = .false. )
+        hs_random                   = .false.,                &
+        sample_physics_winds   = .true.                       )
 
 
 

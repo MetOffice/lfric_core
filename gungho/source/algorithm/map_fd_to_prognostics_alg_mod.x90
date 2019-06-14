@@ -1,0 +1,214 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2019 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!>@brief Set prognostic fields from FD start dump
+module map_fd_to_prognostics_mod
+  use constants_mod,                   only: r_def
+  use log_mod,                         only: log_event,         &
+                                             log_scratch_space, &
+                                             LOG_LEVEL_INFO,    &
+                                             LOG_LEVEL_TRACE
+  ! Derived Types
+  use field_mod,                       only: field_type
+  use field_collection_mod,            only: field_collection_type
+    
+  use quadrature_xyoz_mod,             only: quadrature_xyoz_type
+  use quadrature_rule_gaussian_mod,    only: quadrature_rule_gaussian_type
+  use runtime_constants_mod,           only: get_coordinates, &
+                                             get_height
+  use fs_continuity_mod,               only: W3
+
+  use initial_cloud_kernel_mod,        only: initial_cloud_kernel_type
+
+  implicit none
+
+  private
+  public :: map_fd_to_prognostics, hydrostatic_balance, set_wind
+
+contains
+
+  !> @details Setting FE prognostic fields from FD fields
+  !> @param[in,out] prognostic_fields Collection of prognostic fields
+  !> @param[in,out] mr Array of moisture mixing ratios
+  !> @param[in,out] xi Vorticity
+  !> @param[in,out] cloud_fields Collection of cloud fields
+  !> @param[in,out] twod_fields Collection of 2D fields
+  !> @param[in]     fd_fields Collection of input Finite Difference fields
+  subroutine map_fd_to_prognostics(prognostic_fields, xi, &
+                                   mr, moist_dyn,         &
+                                   cloud_fields,          &
+                                   twod_fields,           &
+                                   fd_fields)
+
+
+    use mr_indices_mod,             only : imr_v, imr_cl, imr_ci, imr_r, imr_s, imr_g
+    use moist_dyn_mod,              only : num_moist_factors
+    use moist_dyn_factors_alg_mod,  only : moist_dyn_factors_alg
+
+    implicit none
+
+    ! FE Prognostic fields 
+    type( field_collection_type), intent( inout ) :: prognostic_fields
+    type( field_type ),           intent( inout ) :: mr(:), xi
+    type( field_type ),           intent( inout ) :: moist_dyn(num_moist_factors)
+
+    type( field_collection_type), intent( inout ) :: cloud_fields
+    type( field_collection_type), intent( inout ) :: twod_fields
+    type( field_collection_type), intent( inout ) :: fd_fields
+
+    !Local dereferenced fields
+    type( field_type ), pointer :: theta                  => null()
+    type( field_type ), pointer :: rho                    => null()
+    type( field_type ), pointer :: u                      => null()
+    type( field_type ), pointer :: exner                  => null()
+    type( field_type ), pointer :: cf_area                => null()
+    type( field_type ), pointer :: cf_ice                 => null()
+    type( field_type ), pointer :: cf_liq                 => null()
+    type( field_type ), pointer :: cf_bulk                => null()
+    type( field_type ), pointer :: rhcrit_in_wth          => null()
+    type( field_type ), pointer :: cca                    => null()
+    type( field_type ), pointer :: ccw                    => null()
+    type( field_type ), pointer :: zh_twod                => null()
+    type( field_type ), pointer :: z0msea_twod            => null()
+
+    ! FD  fields 
+    type( field_type ), pointer :: ew_wind_in_w3          => null()   
+    type( field_type ), pointer :: ns_wind_in_w3          => null()
+    type( field_type ), pointer :: dry_rho_in_w3          => null()
+    type( field_type ), pointer :: upward_wind_in_wtheta  => null()
+    type( field_type ), pointer :: theta_in_wtheta        => null()
+    type( field_type ), pointer :: ozone_in_wtheta        => null()
+    type( field_type ), pointer :: mv_in_wtheta           => null()
+    type( field_type ), pointer :: mcl_in_wtheta          => null()
+    type( field_type ), pointer :: mcf_in_wtheta          => null()
+
+
+    !FD (source) fields
+    ew_wind_in_w3         => fd_fields%get_field('ew_wind_in_w3')   
+    ns_wind_in_w3         => fd_fields%get_field('ns_wind_in_w3')
+    dry_rho_in_w3         => fd_fields%get_field('dry_rho_in_w3')
+    upward_wind_in_wtheta => fd_fields%get_field('upward_wind_in_wtheta')
+    theta_in_wtheta       => fd_fields%get_field('theta_in_wtheta')
+    ozone_in_wtheta       => fd_fields%get_field('ozone_in_wtheta')
+    mv_in_wtheta          => fd_fields%get_field('mv_in_wtheta')
+    mcl_in_wtheta         => fd_fields%get_field('mcl_in_wtheta')
+    mcf_in_wtheta         => fd_fields%get_field('mcf_in_wtheta')
+
+
+    !Prognostic (target) fields
+    u                     => prognostic_fields%get_field('u')
+    theta                 => prognostic_fields%get_field('theta')
+    exner                 => prognostic_fields%get_field('exner')
+    rho                   => prognostic_fields%get_field('rho')
+
+    !Cloud (target) fields
+    cf_area               => cloud_fields%get_field('area_fraction')
+    cf_ice                => cloud_fields%get_field('ice_fraction')
+    cf_liq                => cloud_fields%get_field('liquid_fraction')
+    cf_bulk               => cloud_fields%get_field('bulk_fraction')
+    rhcrit_in_wth         => cloud_fields%get_field('rh_crit_wth')
+    cca                   => cloud_fields%get_field('cca')
+    ccw                   => cloud_fields%get_field('ccw')
+
+    !2d (target) fields
+    zh_twod               => twod_fields%get_field('zh')
+    z0msea_twod           => twod_fields%get_field('z0msea')
+
+    ! Some variables should coming in from the restart file, but currently
+    ! they are not output by UM2LFRIC and are set to zero or a default value
+    ! This will need to be reviewed if this becomes a checkpoint-restart
+    ! routine and/or um2lfric is updated for GA/GL physics
+
+    call invoke( setval_x(theta, theta_in_wtheta),    &
+                 setval_x(rho, dry_rho_in_w3),        &
+                 setval_x(mr(imr_v), mv_in_wtheta),   &
+                 setval_x(mr(imr_cl), mcl_in_wtheta), &
+                 setval_x(mr(imr_ci), mcf_in_wtheta), &
+                 setval_c(mr(imr_r), 0.0_r_def),      &
+                 setval_c(mr(imr_s), 0.0_r_def),      &
+                 setval_c(mr(imr_g), 0.0_r_def),      &
+                 setval_c(exner, 0.0_r_def),          &
+                 setval_c(xi, 0.0_r_def),             &
+                 setval_c(zh_twod, 1000.0_r_def),     &
+                 setval_c(z0msea_twod, 1.5e-4_r_def), & 
+                 setval_c(upward_wind_in_wtheta, 0.0_r_def))
+
+    call set_wind( u, ew_wind_in_w3, ns_wind_in_w3, upward_wind_in_wtheta )
+
+    ! Cloud variables are currently set to zero when
+    ! reading in a start file, but as above, this should be reviewed 
+    ! with updates to um2lfric and/or checkpoint-restart use
+    call invoke( initial_cloud_kernel_type( cf_area, cf_ice, cf_liq, &
+                                            cf_bulk, rhcrit_in_wth,  &
+                                            cca, ccw) )
+
+    ! Update factors for moist dynamics
+    call moist_dyn_factors_alg( moist_dyn, mr )
+        
+    ! Initialize hydrostatically balanced exner field
+    call hydrostatic_balance( exner, rho, theta, moist_dyn )
+
+    call log_event( "Gungho: Set prognostic fields from FD fields", LOG_LEVEL_INFO )
+
+  end subroutine map_fd_to_prognostics
+
+  !> @param[in,out] u Wind (FE)
+  !> @param[in] u_lon Zonal Wind (FD)
+  !> @param[in] u_lat Meridional Wind (FD)
+  !> @param[in] u_up Upward Wind (FD)
+  subroutine set_wind(u, u_lon, u_lat, u_up)
+
+    use map_u_kernel_mod,            only: map_u_kernel_type
+    use enforce_bc_kernel_mod,       only: enforce_bc_kernel_type
+    use mass_matrix_solver_alg_mod,  only: mass_matrix_solver_alg
+    use runtime_constants_mod,       only: get_coordinates
+    implicit none
+    
+    type( field_type ), intent( inout ) :: u
+    type( field_type ), intent( in ) :: u_lat, u_lon, u_up
+    
+    type( quadrature_xyoz_type )          :: qr
+    type( quadrature_rule_gaussian_type ) :: quadrature_rule
+    type( field_type )                    :: r_u
+    type( field_type ), pointer           :: chi(:) => null()
+
+    call u%copy_field_properties(r_u)
+    qr = quadrature_xyoz_type(3, quadrature_rule)
+    chi => get_coordinates()
+    call invoke( setval_c( u,   0.0_r_def ),      &
+                 setval_c( r_u, 0.0_r_def ),      &
+                 map_u_kernel_type( r_u, u_lon, u_lat, u_up, chi, qr ), &
+                 enforce_bc_kernel_type( r_u ) )
+    call mass_matrix_solver_alg(u, r_u)
+
+  end subroutine set_wind
+
+  !> @param[in,out] exner Exner pressure 
+  !> @param[in] theta     Theta
+  !> @param[in] rho       Dry density
+  !> @param[in] moist_dyn Moisture arrays for dynamics
+  subroutine hydrostatic_balance(exner, rho, theta, moist_dyn)
+
+    use hydrostatic_eos_exner_kernel_mod,  only : hydrostatic_eos_exner_kernel_type
+    use moist_dyn_mod,                     only : num_moist_factors
+    
+    implicit none
+
+    type( field_type ), intent( inout ) :: exner
+    type( field_type ), intent( in )    :: theta, rho
+    type( field_type ), intent( in )    :: moist_dyn(num_moist_factors)
+    
+    type( field_type ), pointer         :: height_w3 => null()
+
+    height_w3 => get_height(W3)
+      
+    ! Initialize working up from theta distro and hydrostatic balance
+    call invoke( hydrostatic_eos_exner_kernel_type( exner, rho, theta, &
+                                                    moist_dyn, height_w3 ) )
+
+  end subroutine hydrostatic_balance
+
+end module map_fd_to_prognostics_mod

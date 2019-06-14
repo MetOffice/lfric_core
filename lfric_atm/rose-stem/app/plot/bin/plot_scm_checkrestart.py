@@ -12,12 +12,16 @@ matplotlib.use('Agg')
 import iris
 import matplotlib.pyplot as plt
 
+def load_cube_by_varname(filename, var):
+   variable_constraint = iris.Constraint(cube_func=(lambda c: c.var_name == var))
+   return iris.load_cube(filename, constraint=variable_constraint)
 
 def do_plot(datapath, plotpath='.'):
     ''' Do the plotting using data from datapath. Send output to plotpath '''
 
-    lfric = iris.load_cube(datapath,
-                           iris.Constraint(name='air_potential_temperature'))
+
+
+    lfric = load_cube_by_varname(datapath, 'theta')
     lfric = lfric[:, :, 0]
 
     plt.figure(figsize=(15, 10))
