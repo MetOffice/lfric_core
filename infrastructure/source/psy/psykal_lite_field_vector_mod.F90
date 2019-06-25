@@ -11,8 +11,8 @@
     CONTAINS
       subroutine invoke_0(field_norm, self_vector)
       USE scalar_mod, ONLY: scalar_type
-      USE omp_lib, ONLY: omp_get_thread_num
-      USE omp_lib, ONLY: omp_get_max_threads
+      !$ USE omp_lib, ONLY: omp_get_thread_num
+      !$ USE omp_lib, ONLY: omp_get_max_threads
       use mesh_mod, only: mesh_type
       implicit none
       REAL(KIND=r_def), intent(out) :: field_norm
@@ -41,7 +41,8 @@
       !
       ! Determine the number of OpenMP threads
       !
-      nthreads = omp_get_max_threads()
+      nthreads = 1
+      !$ nthreads = omp_get_max_threads()
       !
       ! Initialise number of DoFs for any_space_1_self_vector
       !
@@ -57,8 +58,9 @@
       ALLOCATE (l_field_norm(8,nthreads))
       l_field_norm = 0.0_r_def
       !
+      th_idx = 1
       !$omp parallel default(shared), private(df,th_idx)
-      th_idx = omp_get_thread_num()+1
+      !$ th_idx = omp_get_thread_num()+1
       !$omp do schedule(static)
       DO df=1,self_vector_proxy%vspace%get_last_dof_owned()
         l_field_norm(1,th_idx) = l_field_norm(1,th_idx)+self_vector_proxy%data(df)*self_vector_proxy%data(df)
@@ -78,8 +80,8 @@
     END SUBROUTINE invoke_0
     subroutine invoke_1(inner_prod_field, self_vector, x_vector)
       USE scalar_mod, ONLY: scalar_type
-      USE omp_lib, ONLY: omp_get_thread_num
-      USE omp_lib, ONLY: omp_get_max_threads
+      !$ USE omp_lib, ONLY: omp_get_thread_num
+      !$ USE omp_lib, ONLY: omp_get_max_threads
       use mesh_mod, only: mesh_type
       implicit none      
       
@@ -110,7 +112,8 @@
       !
       ! Determine the number of OpenMP threads
       !
-      nthreads = omp_get_max_threads()
+      nthreads = 1
+      !$ nthreads = omp_get_max_threads()
       !
       ! Initialise number of DoFs for any_space_1_self_vector
       !
@@ -127,8 +130,9 @@
       l_inner_prod_field = 0.0_r_def
 
       !
+      th_idx = 1
       !$omp parallel default(shared), private(df,th_idx)
-      th_idx = omp_get_thread_num()+1
+      !$ th_idx = omp_get_thread_num()+1
       !$omp do schedule(static)
       DO df=1,self_vector_proxy%vspace%get_last_dof_owned()
         l_inner_prod_field(1,th_idx) = l_inner_prod_field(1,th_idx)+self_vector_proxy%data(df)*x_vector_proxy%data(df)

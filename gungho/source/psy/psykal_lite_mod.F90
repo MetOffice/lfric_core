@@ -883,7 +883,7 @@ contains
 
 !-------------------------------------------------------------------------------    
   subroutine invoke_inner_prod(x,y,inner_prod)
-    use omp_lib
+    !$ use omp_lib
     USE log_mod, ONLY : log_event, LOG_LEVEL_ERROR
     implicit none
     type( field_type ),  intent(in ) :: x,y
@@ -908,7 +908,8 @@ contains
     endif
 
     ! get the number of threads
-    num_threads = omp_get_max_threads()
+    num_threads = 1
+    !$ num_threads = omp_get_max_threads()
     pad_size = cache_block / storage_size(x_p%data(1))
     ! allocate the array, pad to avoid false sharing
     allocate( lsum( 0 : (num_threads - 1)*pad_size ) )
@@ -918,7 +919,8 @@ contains
     !$omp& shared(lsum, x_p, y_p, undf, num_threads, pad_size) & 
     !$omp& private(i, thread_id)
     ! which thread am i?
-    thread_id = omp_get_thread_num()*pad_size
+    thread_id = 0
+    !$ thread_id = omp_get_thread_num()*pad_size
 
     !$omp do schedule(static) 
     do i = 1,undf
@@ -944,7 +946,7 @@ contains
 !-------------------------------------------------------------------------------   
 !> invoke_X_innerproduct_X:  Calculates inner product of a vector by itself  
   subroutine invoke_X_innerproduct_X(inner_prod, x)
-    use omp_lib
+    !$ use omp_lib
     USE log_mod, ONLY : log_event, LOG_LEVEL_ERROR
     implicit none
     real(kind=r_def),    intent(out) :: inner_prod
@@ -961,7 +963,8 @@ contains
     undf = x_p%vspace%get_last_dof_owned()
 
     ! get the number of threads
-    num_threads = omp_get_max_threads()
+    num_threads = 1
+    !$ num_threads = omp_get_max_threads()
     pad_size = cache_block / storage_size(x_p%data(1))
     ! allocate the array, pad to avoid false sharing
     allocate( lsum( 0 : (num_threads - 1)*pad_size ) )
@@ -971,7 +974,8 @@ contains
     !$omp& shared(lsum, x_p, undf, num_threads, pad_size) & 
     !$omp& private(i, thread_id)
     ! which thread am i?
-    thread_id = omp_get_thread_num()*pad_size
+    thread_id = 0
+    !$ thread_id = omp_get_thread_num()*pad_size
 
     !$omp do schedule(static) 
     do i = 1,undf
@@ -1341,7 +1345,7 @@ contains
 !-------------------------------------------------------------------------------   
 !> invoke_sum_field: Sum all values of a field x
   subroutine invoke_sum_field( x, field_sum )
-    use omp_lib
+    !$ use omp_lib
     use log_mod, only : log_event, LOG_LEVEL_ERROR
     implicit none
     type( field_type ),  intent(in ) :: x
@@ -1359,16 +1363,18 @@ contains
     
     ! Calculate the local sum on this partition
     ! get the number of threads
-    num_threads = omp_get_max_threads()
+    num_threads = 1
+    !$ num_threads = omp_get_max_threads()
     pad_size = cache_block / storage_size(x_p%data(1))
     ! allocate the array, pad to avoid false sharing
     allocate( lsum( 0 : (num_threads - 1)*pad_size ) )
     lsum = 0.0_r_def
 
+    thread_id = 0
     !$omp parallel default(none) &
     !$omp& shared(x_p, lsum, undf, num_threads, pad_size) &
     !$omp& private(thread_id, df)
-    thread_id = omp_get_thread_num()*pad_size
+    !$ thread_id = omp_get_thread_num()*pad_size
 
     !$omp do schedule(static) 
     do df = 1,undf
