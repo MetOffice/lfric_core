@@ -6,45 +6,57 @@
 #-----------------------------------------------------------------------------
 #
 # Script to run through the projects/apps to check/validate
-# rose metadata and rose app configurations
+# rose metadata and rose app configurations for the LFRic repository
 #
-# Usage: validate_rose_meta [-? | app_name ... ]
+# Usage: validate_rose_meta [-? | project_name[:app_name] ... ]
 #
-#   -?        Gives user a list of available keyword arguments
+#   -?            Gives user a list of available keyword arguments
 #
-#   app_name  Keyword argument for each app to check
+#   project_name  Keyword argument for each project metadata to check
+#
+#   app_name      The name of the app in the given project name. If
+#                 absent, it is assumed that the app name is the same as
+#                 the project_name.
 #
 # Script will validate all default apps if no arguments provided
 #
+# Note: Apps within a project which have names which are not the same as the
+#       main project app can be specified with a colon separator,
+#       i.e. gungho:mesh means check the mesh app in the gungho
+#       rose-stem suite.
+#
+# NOTE: This script is not intended to be a generic tool. Its purpose is to
+#       simplify test-suite validation steps for LFRic developers on the 
+#       LFRic respository. As such it will need some maintenance to be kept up
+#       to date with the HEAD of trunk as required. It is not expected to work
+#       as is with any other repository.
 #-----------------------------------------------------------------------------
 
-project_names=( gungho lfric_atm mesh_tools \
-                skeleton                    \
-                gravity_wave                \
-                io_dev                      \
-                solver_miniapp              \
-                transport )
+default_project_names=( gungho          \
+                        lfric_atm       \
+                        mesh_tools      \
+                        skeleton        \
+                        gravity_wave    \
+                        io_dev          \
+                        solver_miniapp  \
+                        transport )
 
-project_folders=( gungho lfric_atm mesh_tools \
-                  miniapps/skeleton           \
-                  miniapps/gravity_wave       \
-                  miniapps/io_dev             \
-                  miniapps/solver_miniapp     \
-                  miniapps/transport )
-
-app_names=( gungho lfric_atm mesh \
-            skeleton              \
-            gravity_wave          \
-            io_dev                \
-            solver_miniapp        \
-            transport )
+default_app_names=( gungho:gungho                  \
+                    gungho:mesh                    \
+                    lfric_atm:lfric_atm            \
+                    mesh_tools:mesh                \
+                    skeleton:skeleton              \
+                    gravity_wave:gravity_wave      \
+                    io_dev:io_dev                  \
+                    solver_miniapp:solver_miniapp  \
+                    transport:transport )
 
 while getopts "?" OPTION; do
   case $OPTION in
   ?)
     echo
     echo Available project keywords:
-    printf '  %s\n' "${project_names[@]}"
+    printf '  %s\n' "${default_project_names[@]}"
     echo
     exit 0
     ;;
@@ -59,93 +71,212 @@ if [ ${current_dir} != ${root_dir} ] ; then
   cd ${root_dir}
 fi
 
+declare -A project_folder_location
+error_code=$?
+if [ $error_code != 0 ] ; then
+  echo 'This shell does not appear to support associative arrays.'
+  echo 'Please refer to the LFRic wiki for details on validating'
+  echo 'metadata/rose apps manually.'
+  exit 1
+fi
+
+project_folder_location=(                  \
+  [gungho]=gungho                          \
+  [lfric_atm]=lfric_atm                    \
+  [mesh_tools]=mesh_tools                  \
+  [skeleton]=miniapps/skeleton             \
+  [gravity_wave]=miniapps/gravity_wave     \
+  [io_dev]=miniapps/io_dev                 \
+  [solver_miniapp]=miniapps/solver_miniapp \
+  [transport]=miniapps/transport )
 
 
+declare -A project_primary_app
+project_primary_app=(             \
+  [gungho]=gungho                 \
+  [lfric_atm]=lfric_atm           \
+  [mesh_tools]=mesh               \
+  [skeleton]=skeleton             \
+  [gravity_wave]=gravity_wave     \
+  [io_dev]=io_dev                 \
+  [solver_miniapp]=solver_miniapp \
+  [transport]=transport )
+
+##########################################################################
+# Process the inputs, checking for duplicates.
 if [ "$#" == 0 ] ; then
-  projects_to_check=${project_names[@]}
+  projects_to_check=( ${default_project_names[@]} )
+  apps_to_check=${default_app_names[@]}
 else
   projects_to_check="$@"
+  new_list=''
+  i=0
+  for project in "$@" ; do
+    IFS=: read a b <<< $project
+    new_list[$i]=${a}
+    i=`expr $i + 1`
+  done
+  projects_to_check=( `echo ${new_list[@]} | tr ' ' '\012' | sort | uniq` )
+
+  # Check the specified projects are valid
+  for requested_project in ${projects_to_check[@]} ; do
+    valid_key=false
+    for valid_project in ${default_project_names[@]} ; do
+      if [ "${requested_project}" == "${valid_project}" ] ; then
+        valid_key=true
+      fi
+    done
+    if [ ${valid_key} == 'false' ] ; then
+      echo ERROR: Invalid project keyword: ${requested_project}
+      echo
+      echo Available project keywords:
+      printf '  %s\n' "${default_project_names[@]}"
+      echo
+      exit 2
+    fi
+  done
+
+  new_list=''
+  i=0
+  for app in "$@" ; do
+    IFS=: read a b <<< ${app}
+    if [ "$b" == '' ] ; then
+      new_list[$i]=${a}':'${project_primary_app[${a}]}
+    else
+      new_list[$i]=${a}':'${b}
+    fi
+    i=`expr $i + 1`
+  done
+  apps_to_check=( `echo ${new_list[@]} | tr ' ' '\012' | sort | uniq` )
+
+  # Check the specified apps exist
+  for requested_app in ${apps_to_check[@]} ; do
+    IFS=: read project app <<< ${requested_app}
+    app_conf_file=${root_dir}/${project_folder_location[${project}]}/rose-stem/app/${app}
+    if [ ! -d "${app_conf_file}" ] ; then
+      echo ERROR: Unknown rose stem app in ${project} project: ${app}
+      echo
+      exit 3
+    fi
+  done
 fi
 
 declare -A project_app_validation_results
 declare -A project_check_metadata_results
 declare -A project_app_location
 
-
+##########################################################################
+echo ''
 err=0
-for project in ${projects_to_check}
-  do
-  valid_key='false'
-  i=0
-  while [ $i -lt ${#project_names[@]} ]
-    do
-    if  [ ${project} == ${project_names[$i]} ] ; then
-      valid_key='true'
-      echo =============================================================
-      echo Project ${project_names[$i]}
-      echo =============================================================
 
-      echo [INFO] Checking project metadata ...
-      MetaDir=${project_folders[$i]}/rose-meta/lfric-${project_names[$i]}/HEAD
-      rose metadata-check --verbose -C ${MetaDir}
-      if [ $? == 0 ] ; then
-        project_check_metadata_results[${project}]='[INFO]    PASS, ['${project}]
+
+# Check metadata for related projects
+#===========================================
+echo ' Checking project metadata'
+echo '==================================='
+for project in ${projects_to_check[@]} ; do
+
+  location=${project_folder_location[$project]}
+  meta_folders=( `ls ${location}/rose-meta` )
+  for meta_folder in ${meta_folders[@]} ; do
+    MetaDir=${project_folder_location[${project}]}/rose-meta/${meta_folder}/HEAD
+    if [ -d "${MetaDir}" ] ; then
+      echo -n '[INFO] '${project}':'${meta_folder} ...
+      rose metadata-check --verbose -C ${MetaDir} 1>stdout.txt 2>stderr.txt
+      error_code=$?
+      if [ ${error_code} == 0 ] ; then
+        project_check_metadata_results[${meta_folder}]='[INFO]    PASS, ['${meta_folder}]
+        echo ' PASS'
       else
-        project_check_metadata_results[${project}]='[INFO]    FAIL, ['${project}]:${MetaDir}/rose-meta.conf
-        err=1
+        project_check_metadata_results[${meta_folder}]='[INFO]    FAIL, ['${meta_folder}]:${MetaDir}/rose-meta.conf
+        echo ' FAIL'
+        echo "$(<stderr.txt )"
+        echo ''
+        err=4
       fi
-
-      echo [INFO] Validating ${app_names[$i]} app configurations ...
-      rose macro --validate -M ./ -C ${project_folders[$i]}/rose-stem/app/${app_names[$i]}
-      if [ $? == 0 ] ; then
-        project_app_validation_results[${project}]='[INFO]    PASS, ['${project}]
-      else
-        project_app_validation_results[${project}]='[INFO]    FAIL, ['${project}]:${project_folders[$i]}/rose-stem/app/${app_names[$i]}
-        err=2
-      fi
-      project_app_location[${project}]=${project_folders[$i]}/rose-stem/app/${app_names[$i]}
-      echo
-
     fi
-    # Increment the i = i + 1 
-    i=`expr $i + 1` 
   done
-  if [ ${valid_key} == 'false' ] ; then
-    echo
-    echo ERROR: Invalid project keyword: ${project}
-    echo
-    echo Available project keywords:
-    printf '  %s\n' "${project_names[@]}"
-    echo
-    exit 2
-  fi
 done
 
+
+# Validate the requested apps
+#===========================================
+echo ''
+echo ' Validating app configurations'
+echo '==================================='
+for app_to_check in ${apps_to_check[@]} ; do
+
+  IFS=: read project app <<< ${app_to_check}
+
+  echo -n [INFO] ${app_to_check} ...
+
+  rose macro --validate -M ./ -C ${project_folder_location[${project}]}/rose-stem/app/${app} 1>stdout.txt 2>stderr.txt
+  error_code=$?
+  if [ ${error_code} == 0 ] ; then
+    project_app_validation_results[${app_to_check}]='[INFO]    PASS, ['${app_to_check}]
+    echo ' PASS'
+  else
+    project_app_validation_results[${app_to_check}]='[INFO]    FAIL, ['${app_to_check}]
+    echo ' FAIL'
+    echo "$(<stderr.txt )"
+    echo ''
+    err=5
+  fi
+
+  project_app_location[${app_to_check}]=${project_folder_location[${project}]}/rose-stem/app/${app}
+
+done
+
+
+# Clean up tmp txt files
+#===========================================
+if [ -f stdout.txt ] ; then
+  rm stdout.txt
+fi
+
+if [ -f stderr.txt ] ; then
+ rm stderr.txt
+fi
+
+
+# Print out summary
+#===========================================
 echo
 echo =============================================================
-echo Summary
+echo ' Summary'
 echo =============================================================
-echo Rose Metadata validation
+echo ' Rose metadata validation'
 echo --------------------------
 for project in ${projects_to_check[@]} ; do
-  echo ${project_check_metadata_results[$project]}
+  location=${project_folder_location[$project]}
+  meta_folders=( `ls ${location}/rose-meta` )
+  for meta_folder in ${meta_folders[@]} ; do
+    if [ "${project_check_metadata_results[${meta_folder}]}" != "" ] ; then
+      echo ${project_check_metadata_results[$meta_folder]}
+    fi
+
+  done
 done
 echo ''
-echo Rose App validation
+
+echo ' Rose App validation'
 echo --------------------------
-for project in ${projects_to_check[@]} ; do
-  echo ${project_app_validation_results[$project]}
+for app in ${apps_to_check[@]} ; do
+  echo ${project_app_validation_results[$app]}
 done
 echo =============================================================
-echo NOTE: CHECK YOUR APPS IN THE ROSE EDITOR
-echo '(from working copy rootdir)'
+echo ' NOTE: CHECK YOUR APPS IN THE ROSE EDITOR'
+echo '       (from working copy rootdir)'
 echo
-for project in ${projects_to_check[@]} ; do
-  echo '  'rose edit -M ./ -C ${project_app_location[$project]}
+for app_to_check in ${apps_to_check[@]} ; do
+  echo '  'rose edit -M ./ -C ${project_app_location[$app_to_check]}
+
 done
 echo
 echo =============================================================
 
+# Return to original location script was called from
+#===================================================
 if [ ${current_dir} != ${root_dir} ] ; then
   echo Returning to local path.
   cd ${current_dir}
