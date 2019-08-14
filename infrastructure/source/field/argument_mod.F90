@@ -64,19 +64,19 @@ module argument_mod
   integer, public, parameter :: ANY_SPACE_8    = 74
   integer, public, parameter :: ANY_SPACE_9    = 922
   integer, public, parameter :: ANY_SPACE_10   = 790
-! IDs for any discontinuous space
-  integer, public, parameter :: ANY_D_SPACE_1  = 43
-  integer, public, parameter :: ANY_D_SPACE_2  = 711
-  integer, public, parameter :: ANY_D_SPACE_3  = 267
-  integer, public, parameter :: ANY_D_SPACE_4  = 901
-  integer, public, parameter :: ANY_D_SPACE_5  = 174
-  integer, public, parameter :: ANY_D_SPACE_6  = 683
-  integer, public, parameter :: ANY_D_SPACE_7  = 425
-  integer, public, parameter :: ANY_D_SPACE_8  = 361
-  integer, public, parameter :: ANY_D_SPACE_9  = 536
-  integer, public, parameter :: ANY_D_SPACE_10 = 882
 ! IDs for any W2-type space regardless of continuity
   integer, public, parameter :: ANY_W2         = 353
+! IDs for any discontinuous space
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_1  = 43
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_2  = 711
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_3  = 267
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_4  = 901
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_5  = 174
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_6  = 683
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_7  = 425
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_8  = 361
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_9  = 536
+  integer, public, parameter :: ANY_DISCONTINUOUS_SPACE_10 = 882
 
 ! Function space attributes
   integer, public, parameter :: GH_BASIS       = 751
