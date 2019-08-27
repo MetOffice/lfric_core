@@ -208,7 +208,8 @@ contains
     integer(i_def) :: nlayers, cell, k
     real(r_def) :: answer
 
-    call feign_formulation_config(transport_only=.false., rotating=.false., &
+    call feign_formulation_config(transport_only=.false.,                   &
+                                  rotating=.false.,                         &
                                   use_moisture=.false.,                     &
                                   shallow=.true., use_physics=.false.,      &
                                   use_wavedynamics=.true.,                  &
@@ -216,9 +217,7 @@ contains
                                   dlayer_on=.false.,                        &
                                   exner_from_eos=.true.,                    &
                                   set_hydrostatic_init = .true.,            &
-                                  init_exner_bt        = .true.,            &
-                                  hard_wired_j         = .false.,           &
-                                  hard_wired_detj      = .false.  )
+                                  init_exner_bt = .true.  )
     nlayers=3
     cell=1
     call hydrostatic_exner_code( nlayers,                             &
@@ -270,9 +269,7 @@ contains
                                   dlayer_on=.false.,                         &
                                   exner_from_eos=.true.,                     &
                                   set_hydrostatic_init = .true.,             &
-                                  init_exner_bt        = .false.,            &
-                                  hard_wired_j         = .false.,            &
-                                  hard_wired_detj      = .false.  )
+                                  init_exner_bt        = .false.  )
     nlayers=3
     cell=1
     call hydrostatic_exner_code( nlayers,                             &

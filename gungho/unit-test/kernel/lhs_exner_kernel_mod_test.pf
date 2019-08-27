@@ -78,8 +78,6 @@ contains
     call feign_formulation_config( dlayer_on=.false.,            &
                                    dry_static_adjust=.false.,    &
                                    exner_from_eos=.false.,       &
-                                   hard_wired_detj=.false.,      &
-                                   hard_wired_j=.false.,         &
                                    init_exner_bt=.false.,        &
                                    rotating=.true.,              &
                                    set_hydrostatic_init=.false., &

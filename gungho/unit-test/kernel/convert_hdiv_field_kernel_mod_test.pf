@@ -57,9 +57,7 @@ contains
                                    exner_from_eos       = .false.,         &
                                    set_hydrostatic_init = .false.,         &
                                    init_exner_bt        = .true.,          &
-                                   dlayer_on            = .false.,         &
-                                   hard_wired_j         = .false.,         &
-                                   hard_wired_detj      = .false. )
+                                   dlayer_on            = .false. )
 
   end subroutine setUp
 

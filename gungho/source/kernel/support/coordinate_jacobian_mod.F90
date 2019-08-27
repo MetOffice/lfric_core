@@ -10,7 +10,6 @@
 module coordinate_jacobian_mod
 
 use constants_mod, only: r_def, i_def
-use formulation_config_mod, only: hard_wired_j, hard_wired_detj
 
 implicit none
 
@@ -59,13 +58,6 @@ contains
 
     integer(kind=i_def) :: i, j, df, dir
 
-    if(hard_wired_j) then
-      ! Hardwired values for cartesian domain and static tests
-      dx = chi_1(2)-chi_1(1)
-      dy = chi_2(3)-chi_2(1)
-      dz = chi_3(5)-chi_3(1)
-    end if
-
     jac(:,:,:,:) = 0.0_r_def
     do j = 1,ngp_v
       do i = 1,ngp_h
@@ -76,11 +68,6 @@ contains
             jac(3,dir,i,j) = jac(3,dir,i,j) + chi_3(df)*diff_basis(dir,df,i,j)
           end do
         end do
-        if (hard_wired_j) then
-          jac(1:2,1:3,i,j) = 0.0_r_def
-          jac(1,1,i,j) = dx
-          jac(2,2,i,j) = dy
-        end if
 
         dj(i,j) = jac(1,1,i,j)*(jac(2,2,i,j)*jac(3,3,i,j)        &
                               - jac(2,3,i,j)*jac(3,2,i,j))       &
@@ -88,8 +75,6 @@ contains
                               - jac(2,3,i,j)*jac(3,1,i,j))       &
                 + jac(1,3,i,j)*(jac(2,1,i,j)*jac(3,2,i,j)        &
                               - jac(2,2,i,j)*jac(3,1,i,j))
-
-        if(hard_wired_detj) dj = dx*dy*dz
 
       end do
     end do
@@ -162,13 +147,6 @@ contains
 
     real(kind=r_def) :: dx, dy, dz
 
-    if(hard_wired_j) then
-      ! Hardwired values for cartesian domain and static tests, coordinate_order=1
-      dx = chi_1(2)-chi_1(1)
-      dy = chi_2(3)-chi_2(1)
-      dz = chi_3(5)-chi_3(1)
-    end if
-
     jac(:,:) = 0.0_r_def
     do df = 1,ndf
       do dir = 1,3
@@ -177,11 +155,6 @@ contains
         jac(3,dir) = jac(3,dir) + chi_3(df)*diff_basis(dir,df)
       end do
     end do
-    if (hard_wired_j) then
-      jac(1:2,1:3) = 0.0_r_def
-      jac(1,1) = dx
-      jac(2,2) = dy
-    end if
 
     dj = jac(1,1)*(jac(2,2)*jac(3,3)        &
                  - jac(2,3)*jac(3,2))       &
@@ -189,8 +162,6 @@ contains
                  - jac(2,3)*jac(3,1))       &
        + jac(1,3)*(jac(2,1)*jac(3,2)        &
                  - jac(2,2)*jac(3,1))
-
-    if(hard_wired_detj) dj = dx*dy*dz
 
   end subroutine pointwise_coordinate_jacobian
 
