@@ -160,9 +160,43 @@
        <field id="du_spectral_gwd" name="du_spectral_gwd" long_name="Spectral gravity wave drag U wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
        <field id="dv_spectral_gwd" name="dv_spectral_gwd" long_name="Spectral gravity wave drag V wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
        <field id="dtemp_spectral_gwd" name="dtemp_spectral_gwd" long_name="Spectral gravity wave drag T increment" unit="K" grid_ref="full_level_face_grid" />
-       <field id="tstar_2d" name="tstar" long_name="Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_brd_leaf" name="tstar_brd_leaf" long_name="Broad leaf tree Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_ndl_leaf" name="tstar_ndl_leaf" long_name="Needle leaf tree Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_c3_grass" name="tstar_c3_grass" long_name="C3 grass Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_c4_grass" name="tstar_c4_grass" long_name="C4 grass Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_shrub" name="tstar_shrub" long_name="Shrub Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_urban" name="tstar_urban" long_name="Urban Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_lake" name="tstar_lake" long_name="Lake Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_soil" name="tstar_soil" long_name="Soil Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_ice" name="tstar_ice" long_name="Ice Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_sea" name="tstar_sea" long_name="Sea Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="tstar_sea_ice" name="tstar_sea_ice" long_name="Sea-ice Surface temperature" unit="K" domain_ref="face_half_levels" />
+       <field id="ftl_brd_leaf" name="ftl_brd_leaf" long_name="Broad leaf tree sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_ndl_leaf" name="ftl_ndl_leaf" long_name="Needle leaf tree sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_c3_grass" name="ftl_c3_grass" long_name="C3 grass sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_c4_grass" name="ftl_c4_grass" long_name="C4 grass sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_shrub" name="ftl_shrub" long_name="Shrub sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_urban" name="ftl_urban" long_name="Urban sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_lake" name="ftl_lake" long_name="Lake sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_soil" name="ftl_soil" long_name="Soil sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_ice" name="ftl_ice" long_name="Ice sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_sea" name="ftl_sea" long_name="Sea sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="ftl_sea_ice" name="ftl_sea_ice" long_name="Sea-ice sensible heat flux" unit="W m-2" domain_ref="face_half_levels" />
+       <field id="fqw_brd_leaf" name="fqw_brd_leaf" long_name="Broad leaf tree moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_ndl_leaf" name="fqw_ndl_leaf" long_name="Needle leaf tree moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_c3_grass" name="fqw_c3_grass" long_name="C3 grass moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_c4_grass" name="fqw_c4_grass" long_name="C4 grass moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_shrub" name="fqw_shrub" long_name="Shrub moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_urban" name="fqw_urban" long_name="Urban moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_lake" name="fqw_lake" long_name="Lake moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_soil" name="fqw_soil" long_name="Soil moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_ice" name="fqw_ice" long_name="Ice moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_sea" name="fqw_sea" long_name="Sea moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
+       <field id="fqw_sea_ice" name="fqw_sea_ice" long_name="Sea-ice moisture flux" unit="kg m-2 s-1" domain_ref="face_half_levels" />
        <field id="z0msea" name="z0msea" long_name="Momentum roughness length" unit="m" domain_ref="face_half_levels" />
        <field id="zh" name="zh" long_name="Boundary layer depth" unit="m" domain_ref="face_half_levels" />
+       <field id="gross_prim_prod" name="gross_prim_prod" long_name="Gross Primary Productivity" unit="kgC m-2 s-1" domain_ref="face_half_levels" />
+       <field id="net_prim_prod" name="net_prim_prod" long_name="Net Primary Productivity" unit="kgC m-2 s-1" domain_ref="face_half_levels" />
        <field id="massflux_up" name="massflux_up" long_name="convection_upward_massflux" unit="Pa s-1" grid_ref="full_level_face_grid" />
        <field id="massflux_down" name="massflux_down" long_name="convection_downward_massflux" unit="Pa s-1" grid_ref="full_level_face_grid" />
        <field id="entrain_up" name="entrain_up" long_name="convection_upward_entrain" unit="1" grid_ref="full_level_face_grid" />
@@ -380,9 +414,43 @@
         <field field_ref="du_spectral_gwd"/>
         <field field_ref="dv_spectral_gwd"/>
         <field field_ref="dtemp_spectral_gwd"/>
-        <field field_ref="tstar_2d"/>
+        <field field_ref="tstar_brd_leaf"/>
+        <field field_ref="tstar_ndl_leaf"/>
+        <field field_ref="tstar_c3_grass"/>
+        <field field_ref="tstar_c4_grass"/>
+        <field field_ref="tstar_shrub"/>
+        <field field_ref="tstar_urban"/>
+        <field field_ref="tstar_lake"/>
+        <field field_ref="tstar_soil"/>
+        <field field_ref="tstar_ice"/>
+        <field field_ref="tstar_sea"/>
+        <field field_ref="tstar_sea_ice"/>
+        <field field_ref="ftl_brd_leaf"/>
+        <field field_ref="ftl_ndl_leaf"/>
+        <field field_ref="ftl_c3_grass"/>
+        <field field_ref="ftl_c4_grass"/>
+        <field field_ref="ftl_shrub"/>
+        <field field_ref="ftl_urban"/>
+        <field field_ref="ftl_lake"/>
+        <field field_ref="ftl_soil"/>
+        <field field_ref="ftl_ice"/>
+        <field field_ref="ftl_sea"/>
+        <field field_ref="ftl_sea_ice"/>
+        <field field_ref="fqw_brd_leaf"/>
+        <field field_ref="fqw_ndl_leaf"/>
+        <field field_ref="fqw_c3_grass"/>
+        <field field_ref="fqw_c4_grass"/>
+        <field field_ref="fqw_shrub"/>
+        <field field_ref="fqw_urban"/>
+        <field field_ref="fqw_lake"/>
+        <field field_ref="fqw_soil"/>
+        <field field_ref="fqw_ice"/>
+        <field field_ref="fqw_sea"/>
+        <field field_ref="fqw_sea_ice"/>
         <field field_ref="z0msea"/>
         <field field_ref="zh"/>
+	<field field_ref="gross_prim_prod"/>
+	<field field_ref="net_prim_prod"/>
         <field field_ref="massflux_up"/>
         <field field_ref="massflux_down"/>
         <field field_ref="entrain_up"/>

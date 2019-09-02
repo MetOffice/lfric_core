@@ -10,7 +10,7 @@
 module gungho_driver_mod
 
   use section_choice_config_mod,  only : cloud, cloud_none
-  use constants_mod,              only : i_def, imdi, str_def, str_short
+  use constants_mod,              only : i_def, imdi, str_def, str_short, l_def
   use time_config_mod,            only : timestep_start, &
                                          timestep_end
   use field_mod,                  only : field_type
@@ -39,6 +39,7 @@ module gungho_driver_mod
   use init_physics_incs_alg_mod,  only : init_physics_incs_alg
   use init_physics_prognostics_alg_mod, &
                                   only : init_physics_prognostics_alg
+  use update_tstar_alg_mod,       only : update_tstar_alg
   use runtime_constants_mod,      only : create_runtime_constants
   use init_gungho_mod,            only : init_gungho
   use io_mod,                     only : write_checkpoint, &
@@ -131,8 +132,9 @@ module gungho_driver_mod
   integer(i_def) :: twod_mesh_id = imdi
 
   integer(i_def) :: i 
-
   integer(i_def) :: prognostic_init_choice, ancil_choice
+
+  logical(l_def) :: put_field
 
 contains
 
@@ -319,6 +321,11 @@ contains
                           "stopping program! ",LOG_LEVEL_ERROR)
       end select
 
+      ! All reading has been done, map the SST into the correct
+      ! location of the multi-dimensional field
+      put_field = .true.
+      call update_tstar_alg(twod_fields, jules_prognostics, put_field)
+
     end if
 
     ! Initial output
@@ -431,6 +438,12 @@ contains
     implicit none
 
     call log_event( 'Finalising '//program_name//' ...', LOG_LEVEL_ALWAYS )
+
+    if (use_physics) then
+      ! All running has been done, map the SST back into the dumped field
+      put_field = .false.
+      call update_tstar_alg(twod_fields, jules_prognostics, put_field)
+    end if
 
     ! Write checkpoint files if required
     if( checkpoint_write ) then

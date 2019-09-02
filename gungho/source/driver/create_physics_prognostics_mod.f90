@@ -77,6 +77,7 @@ contains
     integer(i_def) :: tile_order = 2 ! Enough space for 27 tiles
     integer(i_def) :: pft_order  = 1 ! Enough space for 8 plant functional types
     integer(i_def) :: sice_order = 1 ! Enough space for 8 sea ice categories
+    integer(i_def) :: soil_order = 1 ! Enough space for 8 soil levels
 
     integer(i_def) :: theta_space
     logical(l_def) :: checkpoint_restart_flag
@@ -320,7 +321,7 @@ contains
 
     ! Jules ancillaries
     jules_ancils = field_collection_type(name='jules_ancils')
-    checkpoint_restart_flag = .false.
+    checkpoint_restart_flag = .false. ! #1920 required for this to work
 
     vector_space => function_space_collection%get_fs(twod_mesh_id, tile_order, W3)
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
@@ -336,9 +337,17 @@ contains
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
       'sd_orog', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'peak_to_trough_orog', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'silhouette_area_orog', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
       'soil_albedo', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
       'soil_roughness', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_thermal_cond', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_carbon_content', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
       'albedo_obs_sw', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
@@ -346,9 +355,25 @@ contains
     call add_physics_field(jules_ancils, depository, prognostic_fields, &
       'albedo_obs_nir', vector_space, checkpoint_restart_flag, twod=.true.)
 
+    vector_space => function_space_collection%get_fs(twod_mesh_id, soil_order, W3)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_moist_wilt', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_moist_crit', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_moist_sat', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_cond_sat', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_thermal_cap', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'soil_suction_sat', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_ancils, depository, prognostic_fields, &
+      'clapp_horn_b', vector_space, checkpoint_restart_flag, twod=.true.)
+
     ! Jules prognostics
     jules_prognostics = field_collection_type(name='jules_prognostics')
-    checkpoint_restart_flag = .false.
+    checkpoint_restart_flag = .false. ! #1920 required for this to work
 
     vector_space => function_space_collection%get_fs(twod_mesh_id, tile_order, W3)
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &
@@ -357,6 +382,12 @@ contains
       'tile_snow_mass', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &
       'tile_snow_rgrain', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'n_snow_layers', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'snow_depth', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'canopy_water', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &
       'lw_up_tile', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &
@@ -368,7 +399,19 @@ contains
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &
       'snow_soot', vector_space, checkpoint_restart_flag, twod=.true.)
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'surface_conductance', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
       'chloro_sea', vector_space, checkpoint_restart_flag, twod=.true.)
+
+    vector_space => function_space_collection%get_fs(twod_mesh_id, soil_order, W3)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'soil_temperature', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'soil_moisture', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'unfrozen_soil_moisture', vector_space, checkpoint_restart_flag, twod=.true.)
+    call add_physics_field(jules_prognostics, depository, prognostic_fields, &
+      'frozen_soil_moisture', vector_space, checkpoint_restart_flag, twod=.true.)
 
     vector_space => function_space_collection%get_fs(twod_mesh_id, sice_order, W3)
     call add_physics_field(jules_prognostics, depository, prognostic_fields, &

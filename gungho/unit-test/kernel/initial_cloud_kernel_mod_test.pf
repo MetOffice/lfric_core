@@ -49,7 +49,7 @@ contains
                                          cloud_um,            &
                                          convection_none,     &
                                          dynamics_none,       &
-                                         land_surface_none,   &
+                                         surface_none,        &
                                          microphysics_none,   &
                                          radiation_none,      &
                                          spectral_gwd_none
@@ -78,7 +78,7 @@ contains
              dynamics = dynamics_none,             &
              microphysics = microphysics_none,     &
              spectral_gwd = spectral_gwd_none,     &
-             land_surface = land_surface_none,     &
+             surface = surface_none,               &
              radiation = radiation_none )
 
     call feign_extrusion_config( method=method_uniform,   &

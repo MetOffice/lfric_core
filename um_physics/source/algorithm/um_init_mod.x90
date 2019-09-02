@@ -62,6 +62,7 @@ contains
          non_local_bl, flux_bc_opt, i_bl_vn_9c, sharp_sea_mes_land,        &
          lem_conven, to_sharp_across_1km, off, on, DynDiag_Ribased,        &
          grey_zone_cu
+    use c_z0h_z0m, only: z0h_z0m, z0h_z0m_classic
     use cloud_inputs_mod, only: i_cld_vn, forced_cu, i_rhcpt, i_cld_area,  &
          rhcrit, ice_fraction_method,falliceshear_method, cff_spread_rate, &
          l_subgrid_qv, ice_width, smith_orig, i_eacf
@@ -91,23 +92,34 @@ contains
     use dynamics_input_mod, only: numcycles
     use fsd_parameters_mod, only: fsd_eff_lam, fsd_eff_phi
     use gen_phys_inputs_mod, only: l_mr_physics
+    use jules_hydrology_mod, only: l_hydrology
     use jules_sea_seaice_mod, only: nice_use, iseasurfalg, emis_sea,       &
          seasalinityfactor, charnock, nice, ip_ss_surf_div
-    use jules_soil_mod, only: dzsoil, dzsoil_io
+    use jules_snow_mod, only: cansnowpft, check_jules_snow
+    use jules_soil_mod, only: dzsoil, dzsoil_io, l_dpsids_dsdz,            &
+        l_soil_sat_down, l_vg_soil, soilhc_method
+    use jules_soil_biogeochem_mod, only: const_ch4_cs
     use jules_surface_mod, only: l_epot_corr, cor_mo_iter, iscrntdiag,     &
-         isrfexcnvgust, Limit_ObukhovL, ip_scrndecpl2, IP_SrfExWithCnv
+         isrfexcnvgust, Limit_ObukhovL, ip_scrndecpl2, IP_SrfExWithCnv,    &
+         diff_frac
     use jules_surface_types_mod, only: nnpft, npft, nnvg, ntype, brd_leaf, &
         ndl_leaf, c3_grass, c4_grass, shrub, urban, lake, soil, ice
-    use jules_radiation_mod, only: i_sea_alb_method, l_albedo_obs,         &
+    use jules_radiation_mod, only: i_sea_alb_method,                       &
         l_dolr_land_black, l_embedded_snow, l_mask_snow_orog,              &
-        l_sea_alb_var_chl, l_snow_albedo, l_spec_alb_bs, l_spec_albedo,    &
-        l_spec_sea_alb
-    use init_jules_alg_mod, only: n_land_tile, n_sea_ice_tile
+        l_spec_alb_bs, l_spec_albedo, l_spec_sea_alb, fixed_sea_albedo
     use nvegparm, only:                                                    &
-        albsnc_nvg, albsnf_nvgu, albsnf_nvg, albsnf_nvgl, emis_nvg, vf_nvg
+        albsnc_nvg, albsnf_nvgu, albsnf_nvg, albsnf_nvgl, catch_nvg,       &
+        ch_nvg, emis_nvg, gs_nvg, infil_nvg, vf_nvg, z0_nvg
     use pftparm, only:                                                     &
-        albsnc_max, albsnc_min, albsnf_maxu, albsnf_maxl,                  &
-        alniru, alnir, alnirl, alparu, alpar, alparl, emis_pft
+        a_wl, a_ws, albsnc_max, albsnc_min, albsnf_maxu, albsnf_maxl,      &
+        alniru, alnir, alnirl, alparu, alpar, alparl, alpha, b_wl, c3,     &
+        can_struct_a, catch0, dcatch_dlai, dgl_dm, dgl_dt, dqcrit,         &
+        dust_veg_scj, dz0v_dh, emis_pft, eta_sl, f0, fd, fsmc_of, fsmc_p0, &
+        g_leaf_0, glmin, hw_sw, infil_f, kext, kn, knl, kpar, lai_alb_lim, &
+        lma, neff, nl0, nmass, nr, nr_nl, ns_nl, nsw, omega, omegal,       &
+        omegau, omnir, omnirl, omniru, orient, q10_leaf, r_grow, rootd_ft, &
+        sigl, tleaf_of, tlow, tupp, vint, vsl
+    use jules_vegetation_mod, only: can_rad_mod, ilayers, l_vegcan_soilfx
     use g_wave_input_mod, only: ussp_launch_factor,                        &
     	                          wavelstar, l_add_cgw, cgw_scale_factor
 
@@ -124,7 +136,7 @@ contains
          n_cca_lev
     use pc2_constants_mod, only: i_cld_smith, i_cld_off, rhcpt_off, acf_off, &
          real_shear
-    use rad_input_mod, only: two_d_fsd_factor
+    use rad_input_mod, only: two_d_fsd_factor, co2_mmr
     use timestep_mod, only: timestep
     use trignometric_mod, only: cos_theta_latitude
     use tuning_segments_mod, only: bl_segment_size, precip_segment_size, &
@@ -136,7 +148,9 @@ contains
     ! LFRic modules with information we need
     use conversions_mod, only: pi_over_180
     use field_mod, only : field_type, field_proxy_type
+    use init_jules_alg_mod, only: n_land_tile, n_sea_ice_tile, n_soil_levs
     use timestepping_config_mod, only: dt, outer_iterations
+    use well_mixed_gases_config_mod, only: co2_mix_ratio
 
     implicit none
 
@@ -161,7 +175,7 @@ contains
     rows         = 1
     land_field   = 1
     ntiles       = n_land_tile
-    sm_levels    = 4
+    sm_levels    = n_soil_levs
     nice         = n_sea_ice_tile
     nice_use     = n_sea_ice_tile
     tr_vars      = 0
@@ -194,29 +208,54 @@ contains
     ice   = 9
     call init_lsm_um()
     call allocate_jules_arrays(land_field,ntiles,sm_levels,nice_use,nice_use)
+
+    ! Set up JULES soil values (GL7 config)
+    dzsoil_io(1) = 0.1_r_um
+    dzsoil_io(2) = 0.25_r_um
+    dzsoil_io(3) = 0.65_r_um
+    dzsoil_io(4) = 2.0_r_um
     dzsoil => dzsoil_io(1:sm_levels)
+    l_dpsids_dsdz   = .true.
+    l_soil_sat_down = .true.
+    l_vg_soil       = .true.
+    soilhc_method   = 2
+
+    ! Set up JULES soil biogeochemical parameters (GL7 config)
+    const_ch4_cs     = 5.41e-12_r_um
 
     ! Set up JULES radiation values (GL7 config: jules_radiation)
-    i_sea_alb_method=3
-    l_albedo_obs=.false.
+    i_sea_alb_method=4
+    fixed_sea_albedo=0.06_r_um
     l_dolr_land_black=.false.
     l_embedded_snow=.true.
     l_mask_snow_orog=.true.
-    l_sea_alb_var_chl=.false.
-    l_snow_albedo=.false.
     l_spec_alb_bs=.true.
     l_spec_albedo=.true.
     l_spec_sea_alb=.true.
+
+    ! JULES snow options (GL7 config) Temp: only cansnowpft
+    cansnowpft(1:5)=(/ .false.,.true.,.false.,.false.,.false. /)
+    call check_jules_snow()
+
+    ! Set up JULES hydrology values (will be GL7 with hydrology kernel present)
+    l_hydrology    = .false.
 
     ! Set up JULES nvegparm values (GL7 config: jules_nvegparm)
     albsnc_nvg=(/ 0.4,0.8,0.8,0.8 /)
     albsnf_nvg=(/ 0.18,0.12,-1.00,0.75 /)
     albsnf_nvgl=(/ 0.05,0.06,0.03,0.75 /)
     albsnf_nvgu=(/ 0.20,0.15,0.80,0.75 /)
+    catch_nvg=(/ 0.5,0.0,0.0,0.0 /)
+    ch_nvg=(/ 2.80e+5,2.11e+7,0.00,0.00 /)
     emis_nvg=(/ 0.970,0.985,0.900,0.990 /)
+    gs_nvg=(/ 0.00,0.00,1.00e-2,1.00e+6 /)
+    infil_nvg=(/ 0.1,0.0,0.5,0.0 /)
     vf_nvg=(/ 1.0,1.0,0.0,0.0 /)
+    z0_nvg=(/ 1.00,1.00e-4,1.00e-3,5.00e-4 /)
 
     ! Set up JULES pftparm values (GL7 config: jules_pftparm) 
+    a_wl=(/ 0.65,0.65,0.005,0.005,0.10 /)
+    a_ws=(/ 10.00,10.00,1.00,1.00,10.00 /)
     albsnc_max=(/ 2.50000e-1,2.50000e-1,6.00000e-1,6.00000e-1,4.00000e-1 /)
     albsnc_min=(/ 3.00000e-1,3.00000e-1,8.00000e-1,8.00000e-1,8.00000e-1 /)
     albsnf_maxl=(/ 0.095,0.059,0.128,0.106,0.077 /)
@@ -227,7 +266,68 @@ contains
     alpar=(/ 0.10,0.07,0.10,0.10,0.10 /)
     alparl=(/ 0.06,0.04,0.06,0.06,0.06 /)
     alparu=(/ 0.15,0.11,0.25,0.25,0.25 /)
+    alpha=(/ 0.08,0.08,0.08,0.040,0.08 /)
+    b_wl=(/ 1.667,1.667,1.667,1.667,1.667 /)
+    c3=(/ 1,1,1,0,1 /)
+    can_struct_a=(/ 1.0,1.0,1.0,1.0,1.0 /)
+    catch0=(/ 0.5,0.5,0.5,0.5,0.5 /)
+    dcatch_dlai=(/ 0.05,0.05,0.05,0.05,0.05 /)
+    dgl_dm=(/ 0.0,0.0,0.0,0.0,0.0 /)
+    dgl_dt=(/ 9.0,9.0,0.0,0.0,9.0 /)
+    dqcrit=(/ 0.090,0.060,0.100,0.075,0.100 /)
+    dust_veg_scj=(/ 0.0,0.0,1.0,1.0,0.5 /)
+    dz0v_dh=(/ 5.00e-2,5.00e-2,1.00e-1,1.00e-1,1.00e-1 /)
     emis_pft=(/ 0.98,0.99,0.98,0.98,0.98 /)
+    eta_sl=(/ 0.01,0.01,0.01,0.01,0.01 /)
+    f0=(/ 0.875,0.875,0.900,0.800,0.900 /)
+    fd=(/ 0.015,0.015,0.015,0.025,0.015 /)
+    fsmc_of=(/ 0.0,0.0,0.0,0.0,0.0 /)
+    fsmc_p0=(/ 0.0,0.0,0.0,0.0,0.0 /)
+    g_leaf_0=(/ 0.25,0.25,0.25,0.25,0.25 /)
+    glmin=(/ 1.0e-6,1.0e-6,1.0e-6,1.0e-6,1.0e-6 /)
+    hw_sw=(/ 0.5,0.5,0.5,0.5,0.5 /)
+    infil_f=(/ 4.0,4.0,2.0,2.0,2.0 /)
+    kext=(/ 0.5,0.5,0.5,0.5,0.5 /)
+    kn=(/ 0.78,0.78,0.78,0.78,0.78 /)
+    knl=(/ 0.20,0.20,0.20,0.20,0.20 /)
+    kpar=(/ 0.5,0.5,0.5,0.5,0.5 /)
+    lai_alb_lim=(/ 0.005,0.005,0.005,0.005,0.005 /)
+    lma=(/ 0.0824,0.2263,0.0498,0.1370,0.0695 /)
+    neff=(/ 0.8e-3,0.8e-3,0.8e-3,0.4e-3,0.8e-3 /)
+    nl0=(/ 0.040,0.030,0.060,0.030,0.030 /)
+    nmass=(/ 0.0210,0.0115,0.0219,0.0131,0.0219 /)
+    nr=(/ 0.01726,0.00784,0.0162,0.0084,0.01726 /)
+    nr_nl=(/ 1.0,1.0,1.0,1.0,1.0 /)
+    ns_nl=(/ 0.10,0.10,1.00,1.00,0.10 /)
+    nsw=(/ 0.0072,0.0083,0.01604,0.0202,0.0072 /)
+    omega=(/ 0.15,0.15,0.15,0.17,0.15 /)
+    omegal=(/ 0.10,0.10,0.10,0.12,0.10 /)
+    omegau=(/ 0.23,0.23,0.35,0.35,0.35 /)
+    omnir=(/ 0.70,0.45,0.83,0.83,0.83 /)
+    omnirl=(/ 0.50,0.30,0.53,0.53,0.53 /)
+    omniru=(/ 0.90,0.65,0.98,0.98,0.98 /)
+    orient=(/ 0,0,0,0,0 /)
+    q10_leaf=(/ 2.0,2.0,2.0,2.0,2.0 /)
+    r_grow=(/ 0.25,0.25,0.25,0.25,0.25 /)
+    rootd_ft=(/ 3.0,1.0,0.5,0.5,0.5 /)
+    sigl=(/ 0.0375,0.1000,0.0250,0.0500,0.0500 /)
+    tleaf_of=(/ 273.15,243.15,258.15,258.15,243.15 /)
+    tlow=(/ 0.0,-5.0,0.0,13.0,0.0 /)
+    tupp=(/ 36.0,31.0,36.0,45.0,36.0 /)
+    vint=(/ 5.73,6.32,6.42,0.00,14.71 /)
+    vsl=(/ 29.81,18.15,40.96,10.24,23.15 /)
+    z0h_z0m=(/ 1.65,1.65,0.1,0.1,0.1,1.0e-7,2.5e-1,2.0e-2,2.0e-1/)
+    z0h_z0m_classic=(/ 0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1 /)
+
+    ! Set up JULES vegetation values
+    l_vegcan_soilfx   = .true.
+
+    ! Set up additional JULES values (GL7 config)
+    if (can_rad_mod == 6) then
+      diff_frac = 0.4_r_um
+    else
+      diff_frac = 0.0_r_um
+    end if
 
     ! Set physics timestep from Gungho timestep
     timestep=dt
@@ -423,6 +523,8 @@ contains
 
     ! Radiation option needed by microphysics
     two_d_fsd_factor = 1.414_r_um
+    ! Radiation option needed by Jules
+    co2_mmr = real(co2_mix_ratio, r_um)
 
     ! Things required by mphys.
     ! These should all be reviewed and removed or
@@ -460,50 +562,6 @@ contains
     l_add_cgw = add_cgw_in
     cgw_scale_factor = real(cgw_scale_factor_in, r_um)
 
-    !-----------------------------------------------------------------------
-    ! Set up index for sea and sea-ice
-    !
-    ! This code is copied from atmos_physics1 and has been adapted
-    ! for a sea-point only - no land or sea-ice
-    !
-    ! It will need re-writing!
-    !-----------------------------------------------------------------------
-    ssi_pts = 0
-    ssi_index(:)=0
-    DO j=1,rows
-      DO i=1,row_length
-        ssi_pts=ssi_pts + 1
-        ssi_index(ssi_pts) = (j-1)*row_length + i
-        fssi_ij(i,j)=1.0_r_um
-      END DO
-    END DO
-
-    !-----------------------------------------------------------------------
-    ! Allocate space for and initialise sea and sea-ice indices.
-    !-----------------------------------------------------------------------
-    sea_pts = 0
-    sice_pts = 0
-    sea_index(:)=0
-    sice_index(:)=0
-    sice_frac(:)=0.0_r_um
-    sea_frac(:)=0.0_r_um
-    DO l=1,ssi_pts
-      j=(ssi_index(l)-1)/row_length + 1
-      i = ssi_index(l) - (j-1)*row_length
-      IF (ssi_index(l) > 0) THEN
-        sea_pts=sea_pts+1
-        sea_index(sea_pts)=l
-        sea_frac(l)=1.0_r_um - sice_frac(l)
-      END IF
-    END DO
-
-    ! NOTE these settings use NICE_USE not NICE so are suitable for use here and
-    ! in the explicit part of the surface exchange code.  They are then updated
-    ! using NICE before the call to the implicit part of the surface exchange
-    ! code
-    sice_pts_ncat(:)=0
-    sice_index_ncat(:,:)=0
-    sice_frac_ncat(:,:)=0.0_r_um
     !-----------------------------------------------------------------------
     ! Code to prepare for Smagorinsky turbulence scheme
     !-----------------------------------------------------------------------

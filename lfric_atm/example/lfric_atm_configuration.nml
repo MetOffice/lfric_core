@@ -8,7 +8,7 @@
 /
 
 &extrusion
-    domain_top=30000.0,
+    domain_top=6000.0,
     method='uniform',
     number_of_layers=98,
 /
@@ -36,7 +36,7 @@
 /
 
 &idealised
-    test = 'shallow_conv',
+    test = 'dry_cbl',
 /
 
 &initial_density
@@ -115,6 +115,10 @@
 
 &star
     stellar_constant=1361.0,
+/
+
+&surface
+    surf_tile_fracs=0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,
 /
 
 &radiation
@@ -263,7 +267,7 @@
 /
 
 &blayer
-    flux_bc_opt=1,
+    flux_bc_opt=0,
     fixed_flux_e=130.052,
     fixed_flux_h=8.04,
 /
@@ -330,8 +334,9 @@
 &section_choice
     radiation='none',
     boundary_layer='um',
-    convection='um',
-    microphysics='um',
-    cloud='um'
-    spectral_gwd='um'
+    convection='none',
+    microphysics='none',
+    cloud='none'
+    spectral_gwd='none'
+    surface='jules'
 /

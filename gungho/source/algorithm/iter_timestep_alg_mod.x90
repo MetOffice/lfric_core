@@ -362,8 +362,6 @@ contains
     type( field_type ), pointer :: u3_in_w3_star  => null()
     type( field_type ), pointer :: exner_theta  => null()
 
-    type( field_type ), pointer :: tstar_ptr  => null()
-
     integer(kind=i_def):: outer, inner, iter
     real(kind=r_def)   :: varalpha, varbeta ! alpha, beta weight to use
                                             ! these may differ from input values
@@ -529,10 +527,9 @@ contains
                           shear, delta, max_diff_smag,                  &
                           derived_fields, cloud_fields, twod_fields,    &
                           visc_m, visc_h,                               &
-                          physics_incs, height_w3, height_wth)
+                          physics_incs, height_w3, height_wth,          &
+                          jules_ancils, jules_prognostics)
 
-        tstar_ptr => twod_fields%get_field('tstar')
-        call tstar_ptr%log_minmax(LOG_LEVEL_INFO, 'tstar after read')
         if (use_wavedynamics) then
           ! copy increments into rhs_phys, including convert to weak form theta
           ! NB there is no update to pressure or density, currently awaiting

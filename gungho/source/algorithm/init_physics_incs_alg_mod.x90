@@ -44,6 +44,9 @@ contains
     type( field_type ), pointer :: dmt_mphys => null()
     type( field_type ), pointer :: sw_heating_rate => null()
     type( field_type ), pointer :: lw_heating_rate => null()
+    type( field_type ), pointer :: lw_down_surf => null()
+    type( field_type ), pointer :: sw_down_surf => null()
+    type( field_type ), pointer :: sw_down_blue_surf => null()
 
     ! unpack the local fields
     dt_conv => physics_incs%get_field('dt_conv')
@@ -56,6 +59,9 @@ contains
     dmt_mphys => physics_incs%get_field('dmt_mphys')
     sw_heating_rate => physics_incs%get_field('sw_heating_rate')
     lw_heating_rate => physics_incs%get_field('lw_heating_rate')
+    lw_down_surf => physics_incs%get_field('lw_down_surf')
+    sw_down_surf => physics_incs%get_field('sw_down_surf')
+    sw_down_blue_surf => physics_incs%get_field('sw_down_blue_surf')
 
     ! initialise increments to 0
     call invoke( setval_c(dt_conv, 0.0_r_def),         &
@@ -67,7 +73,12 @@ contains
                  setval_c(dtl_mphys, 0.0_r_def),       &
                  setval_c(dmt_mphys, 0.0_r_def),       &
                  setval_c(sw_heating_rate, 0.0_r_def), &
-                 setval_c(lw_heating_rate, 0.0_r_def) )
+                 setval_c(lw_heating_rate, 0.0_r_def), &
+                 ! these value are Cardington-like values for testing without
+                 ! radiation switched on
+                 setval_c(lw_down_surf, 380.0_r_def),  &
+                 setval_c(sw_down_surf, 640.0_r_def),  &
+                 setval_c(sw_down_blue_surf, 400.0_r_def) )
 
   end subroutine init_physics_incs_alg
 

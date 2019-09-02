@@ -8,11 +8,12 @@
 
 module bl_alg_mod
 
-  use constants_mod,        only: i_def
+  use constants_mod,        only: i_def, str_short
   use field_mod,            only: field_type
   use field_collection_mod, only: field_collection_type
   use mr_indices_mod,       only: nummr, imr_v, imr_cl, imr_ci, imr_r, imr_g
   use convection_config_mod,only: cv_scheme, cv_scheme_gregory_rowntree
+  use timestepping_config_mod, only: outer_iterations
 
   ! xios output
   use io_config_mod,      only: write_diag, use_xios_io
@@ -31,31 +32,36 @@ contains
   !>             as documented in UMDP24
   !>         NB This version uses winds in w3 space (i.e. A-grid)
   !>            and doesn't currently feed-back wind increments
-  !>@param[in,out] dtheta_bl       Theta increment
-  !>@param[in,out] mr              Mixing ratios
-  !>@param[in]     outer           Outer loop counter
-  !>@param[in]     theta           Theta in its native (wth) space
-  !>@param[in]     rho             Dry density in its native (w3) space
-  !>@param[in]     mr_n            Mixing ratios at time level n
-  !>@param[in]     exner           Exner Pressure in the w3 space
-  !>@param[in]     shear           3D wind shear on wtheta points
-  !>@param[in]     delta           Edge length on wtheta points
-  !>@param[in]     max_diff_smag   Maximum diffusion coefficient allowed in this run
-  !>@param[in]     height_w3       Height in w3
-  !>@param[in]     height_wth      Height in wth
-  !>@param[in,out] derived_fields  Group of derived fields
-  !>@param[in,out] cloud_fields    Group of cloud fields
-  !>@param[in,out] twod_fields     Group of 2D fields
-  !>@param[in,out] physics_incs    Group of physics increments
-  !>@param[in,out] visc_m_blend    Blended BL-Smag diffusion coefficient for momentum
-  !>@param[in,out] visc_h_blend    Blended BL-Smag diffusion coefficient for scalars
+  !>@param[in,out] dtheta_bl         Theta increment
+  !>@param[in,out] mr                Mixing ratios
+  !>@param[in]     outer             Outer loop counter
+  !>@param[in]     theta             Theta in its native (wth) space
+  !>@param[in]     rho               Dry density in its native (w3) space
+  !>@param[in]     mr_n              Mixing ratios at time level n
+  !>@param[in]     exner             Exner Pressure in the w3 space
+  !>@param[in]     shear             3D wind shear on wtheta points
+  !>@param[in]     delta             Edge length on wtheta points
+  !>@param[in]     max_diff_smag     Maximum diffusion coefficient allowed in this run
+  !>@param[in]     height_w3         Height in w3
+  !>@param[in]     height_wth        Height in wth
+  !>@param[in,out] derived_fields    Group of derived fields
+  !>@param[in,out] cloud_fields      Group of cloud fields
+  !>@param[in,out] twod_fields       Group of 2D fields
+  !>@param[in,out] physics_incs      Group of physics increments
+  !>@param[in,out] visc_m_blend      Blended BL-Smag diffusion coefficient for momentum
+  !>@param[in,out] visc_h_blend      Blended BL-Smag diffusion coefficient for scalars
+  !>@param[in,out] jules_ancils      Ancillary fields for Jules
+  !>@param[in,out] jules_prognostics Prognostic fields for Jules
   subroutine bl_alg_step(dtheta_bl, mr, outer, theta, rho, mr_n, exner,   &
                          shear, delta, max_diff_smag,                     &
                          height_w3, height_wth,                           & 
                          derived_fields, cloud_fields, twod_fields,       &
-                         physics_incs, visc_m_blend, visc_h_blend)
+                         physics_incs, visc_m_blend, visc_h_blend,        &
+                         jules_ancils, jules_prognostics)
 
     use bl_kernel_mod, only: bl_kernel_type
+    use multi_to_single_kernel_mod, only: multi_to_single_kernel_type
+    use init_jules_alg_mod, only: n_surf_tile
 
     implicit none
 
@@ -70,6 +76,10 @@ contains
     type( field_type ), intent( inout )     :: visc_m_blend, visc_h_blend
     integer(kind=i_def), intent(in)         :: outer
 
+    ! Surface fields
+    type( field_collection_type ), intent(inout) :: jules_ancils
+    type( field_collection_type ), intent(inout) :: jules_prognostics
+
     ! Temporary fields unpacked fields from collections
     type( field_type ), pointer :: exner_in_wth  => null()
     type( field_type ), pointer :: wetrho_in_wth => null()
@@ -81,11 +91,11 @@ contains
     type( field_type ), pointer :: u1_in_w3_star => null()
     type( field_type ), pointer :: u2_in_w3_star => null()
     type( field_type ), pointer :: w_physics_star => null()
-    type( field_type ), pointer :: tstar_2d  => null()
     type( field_type ), pointer :: zh_2d => null()
     type( field_type ), pointer :: z0msea_2d => null()
     type( field_type ), pointer :: ntml_2d => null()
     type( field_type ), pointer :: cumulus_2d => null()
+    type( field_type ), pointer :: cos_zenith_angle  => null()
     type( field_type ), pointer :: cf_area  => null()
     type( field_type ), pointer :: cf_ice  => null()
     type( field_type ), pointer :: cf_liq  => null()
@@ -103,12 +113,45 @@ contains
     type( field_type ), pointer :: dmt_mphys => null()
     type( field_type ), pointer :: sw_heating_rate => null()
     type( field_type ), pointer :: lw_heating_rate => null()
+    type( field_type ), pointer :: lw_down_surf => null()
+    type( field_type ), pointer :: sw_down_surf => null()
+    type( field_type ), pointer :: sw_down_blue_surf => null()
 
     type( field_type ), pointer :: cca => null()
     type( field_type ), pointer :: ccw => null()
 
     type( field_type ), pointer :: conv_rain => null()
     type( field_type ), pointer :: conv_snow => null()
+
+    type( field_type ), pointer :: tile_fraction      => null()
+    type( field_type ), pointer :: leaf_area_index    => null()
+    type( field_type ), pointer :: canopy_height      => null()
+    type( field_type ), pointer :: sd_orog            => null()
+    type( field_type ), pointer :: peak_to_trough_orog => null()
+    type( field_type ), pointer :: silhouette_area_orog => null()
+    type( field_type ), pointer :: soil_albedo        => null()
+    type( field_type ), pointer :: soil_roughness     => null()
+    type( field_type ), pointer :: soil_moist_wilt    => null()
+    type( field_type ), pointer :: soil_moist_crit    => null()
+    type( field_type ), pointer :: soil_moist_sat     => null()
+    type( field_type ), pointer :: soil_cond_sat      => null()
+    type( field_type ), pointer :: soil_thermal_cap   => null()
+    type( field_type ), pointer :: soil_thermal_cond  => null()
+    type( field_type ), pointer :: soil_suction_sat   => null()
+    type( field_type ), pointer :: clapp_horn_b       => null()
+    type( field_type ), pointer :: soil_carbon_content => null()
+
+    type( field_type ), pointer :: tile_temperature   => null()
+    type( field_type ), pointer :: tile_snow_mass     => null()
+    type( field_type ), pointer :: n_snow_layers      => null()
+    type( field_type ), pointer :: snow_depth         => null()
+    type( field_type ), pointer :: surface_conductance => null()
+    type( field_type ), pointer :: canopy_water       => null() 
+    type( field_type ), pointer :: sw_up_tile         => null() 
+    type( field_type ), pointer :: soil_temperature   => null()
+    type( field_type ), pointer :: soil_moisture      => null()
+    type( field_type ), pointer :: unfrozen_soil_moisture => null()
+    type( field_type ), pointer :: frozen_soil_moisture => null()
 
     type( field_type ) :: deep_in_col,shallow_in_col,mid_in_col,deep_term
     type( field_type ) :: deep_prec,shallow_prec,mid_prec,cv_base,cv_top
@@ -118,6 +161,17 @@ contains
     type( field_type ) :: deep_dt,deep_dq,deep_massflux
     type( field_type ) :: shallow_dt,shallow_dq,shallow_massflux
     type( field_type ) :: mid_dt,mid_dq,mid_massflux
+    type( field_type ) :: tmp_diag, tile_heat_flux, tile_moisture_flux
+    type( field_type ) :: gross_prim_prod, net_prim_prod
+
+    ! Local scalars
+    integer(i_def) :: i_tile
+
+    ! Surface tile names
+    character(str_short) :: tile_names(11) = &
+         [character(len=8):: 'brd_leaf', 'ndl_leaf', 'c3_grass', 'c4_grass', &
+                             'shrub', 'urban', 'lake', 'soil', 'ice',        &
+                             'sea', 'sea_ice']
 
     ! Unpack derived fields
     exner_in_wth => derived_fields%get_field('exner_in_wth')
@@ -132,11 +186,11 @@ contains
     w_physics_star => derived_fields%get_field('w_physics_star')
 
     ! Unpack twod fields
-    tstar_2d => twod_fields%get_field('tstar')
     zh_2d => twod_fields%get_field('zh')
     z0msea_2d => twod_fields%get_field('z0msea')
     ntml_2d => twod_fields%get_field('ntml')
     cumulus_2d => twod_fields%get_field('cumulus')
+    cos_zenith_angle => twod_fields%get_field('cos_zenith_angle')
 
     ! Unpack cloud fields
     cf_area => cloud_fields%get_field('area_fraction')
@@ -155,7 +209,10 @@ contains
     dtl_mphys => physics_incs%get_field('dtl_mphys')
     dmt_mphys => physics_incs%get_field('dmt_mphys')
     sw_heating_rate => physics_incs%get_field('sw_heating_rate')
-    lw_heating_rate => physics_incs%get_field('lw_heating_rate')  
+    lw_heating_rate => physics_incs%get_field('lw_heating_rate')
+    lw_down_surf => physics_incs%get_field('lw_down_surf')
+    sw_down_surf => physics_incs%get_field('sw_down_surf')
+    sw_down_blue_surf => physics_incs%get_field('sw_down_blue_surf')
     du_conv => physics_incs%get_field('du_conv')
     dv_conv => physics_incs%get_field('dv_conv')
 
@@ -166,6 +223,43 @@ contains
     ! Surface convective precipitation prognostics
     conv_rain => twod_fields%get_field('conv_rain')
     conv_snow => twod_fields%get_field('conv_snow')
+
+    ! Surface fields
+    tile_fraction   => jules_ancils%get_field('tile_fraction')
+    leaf_area_index => jules_ancils%get_field('leaf_area_index')
+    canopy_height   => jules_ancils%get_field('canopy_height')
+    sd_orog         => jules_ancils%get_field('sd_orog')
+    peak_to_trough_orog => jules_ancils%get_field('peak_to_trough_orog')
+    silhouette_area_orog => jules_ancils%get_field('silhouette_area_orog')
+    soil_albedo     => jules_ancils%get_field('soil_albedo')
+    soil_roughness  => jules_ancils%get_field('soil_roughness')
+    soil_moist_wilt => jules_ancils%get_field('soil_moist_wilt')
+    soil_moist_crit => jules_ancils%get_field('soil_moist_crit')
+    soil_moist_sat  => jules_ancils%get_field('soil_moist_sat')
+    soil_cond_sat   => jules_ancils%get_field('soil_cond_sat')
+    soil_thermal_cap => jules_ancils%get_field('soil_thermal_cap')
+    soil_thermal_cond => jules_ancils%get_field('soil_thermal_cond')
+    soil_suction_sat => jules_ancils%get_field('soil_suction_sat')
+    clapp_horn_b    => jules_ancils%get_field('clapp_horn_b')
+    soil_carbon_content => jules_ancils%get_field('soil_carbon_content')
+
+    tile_temperature   => jules_prognostics%get_field('tile_temperature')
+    tile_snow_mass     => jules_prognostics%get_field('tile_snow_mass')
+    n_snow_layers      => jules_prognostics%get_field('n_snow_layers')
+    snow_depth         => jules_prognostics%get_field('snow_depth')
+    surface_conductance => jules_prognostics%get_field('surface_conductance')
+    canopy_water       => jules_prognostics%get_field('canopy_water')
+    sw_up_tile         => jules_prognostics%get_field('sw_up_tile')
+    soil_temperature   => jules_prognostics%get_field('soil_temperature')
+    soil_moisture      => jules_prognostics%get_field('soil_moisture')
+    unfrozen_soil_moisture => jules_prognostics%get_field('unfrozen_soil_moisture')
+    frozen_soil_moisture => jules_prognostics%get_field('frozen_soil_moisture')
+
+    ! BL diagnostics
+    call tile_temperature%copy_field_properties(tile_heat_flux)
+    call tile_temperature%copy_field_properties(tile_moisture_flux)
+    call zh_2d%copy_field_properties(gross_prim_prod)
+    call zh_2d%copy_field_properties(net_prim_prod)
 
     ! Convective diagnostics - 2d
 
@@ -255,10 +349,25 @@ contains
                            mr_n(imr_v), mr_n(imr_cl), mr_n(imr_ci),            &
                            theta_star,                                         &
                            u1_in_w3_star, u2_in_w3_star, w_physics_star,       &
-                           height_w3, height_wth,                              & 
+                           height_w3, height_wth,                              &
                            shear, delta, max_diff_smag,                        &
-                           tstar_2d, zh_2d,                                    &
-                           z0msea_2d, ntml_2d, cumulus_2d, dtheta_bl,          &
+                           zh_2d,                                              &
+                           z0msea_2d, ntml_2d, cumulus_2d,                     &
+                           tile_fraction, leaf_area_index, canopy_height,      &
+                           sd_orog, peak_to_trough_orog, silhouette_area_orog, &
+                           soil_albedo, soil_roughness,                        &
+                           soil_moist_wilt, soil_moist_crit, soil_moist_sat,   &
+                           soil_cond_sat, soil_thermal_cap, soil_thermal_cond, &
+                           soil_suction_sat, clapp_horn_b, soil_carbon_content,&
+                           tile_temperature, tile_snow_mass,                   &
+                           n_snow_layers, snow_depth, surface_conductance,     &
+                           canopy_water, soil_temperature, soil_moisture,      &
+                           unfrozen_soil_moisture, frozen_soil_moisture,       &
+                           tile_heat_flux, tile_moisture_flux,                 &
+                           gross_prim_prod, net_prim_prod,                     &
+                           cos_zenith_angle, sw_up_tile, sw_down_surf,         &
+                           lw_down_surf, sw_down_blue_surf,                    &
+                           dtheta_bl,                                          &
                            dt_bl, dmv_bl, dt_conv, dmv_conv, dmcl_conv,        &
                            dmcf_conv,  du_conv, dv_conv,                       &
                            dtl_mphys, dmt_mphys,                               &
@@ -278,12 +387,26 @@ contains
                            shallow_dt, shallow_dq, shallow_massflux,           &
                            mid_dt, mid_dq, mid_massflux ))
 
-    if (write_diag .and. use_xios_io) then
+    if (write_diag .and. use_xios_io .and. outer == outer_iterations) then
       call dt_bl%write_field('dt_bl')
       call dmv_bl%write_field('dmv_bl')
-      call tstar_2d%write_field('tstar_2d')
       call z0msea_2d%write_field('z0msea')
       call zh_2d%write_field('zh')
+      call gross_prim_prod%write_field('gross_prim_prod')
+      call net_prim_prod%write_field('net_prim_prod')
+
+      call zh_2d%copy_field_properties(tmp_diag)
+      do i_tile = 1, n_surf_tile
+        call invoke(multi_to_single_kernel_type(tmp_diag, tile_temperature, &
+                                                i_tile) )
+        call tmp_diag%write_field('tstar_'//trim(tile_names(i_tile)) )
+        call invoke(multi_to_single_kernel_type(tmp_diag, tile_heat_flux, &
+                                                i_tile) )
+        call tmp_diag%write_field('ftl_'//trim(tile_names(i_tile)) )
+        call invoke(multi_to_single_kernel_type(tmp_diag, tile_moisture_flux, &
+                                                i_tile) )
+        call tmp_diag%write_field('fqw_'//trim(tile_names(i_tile)) )
+      end do
 
       if (cv_scheme == cv_scheme_gregory_rowntree) then
         ! output the convection increments

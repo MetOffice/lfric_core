@@ -83,7 +83,6 @@ subroutine radiation_alg_step(dtheta_rad, theta, exner, mr,                  &
   type( field_type ), pointer :: liquid_fraction     => null()
   type( field_type ), pointer :: ice_fraction        => null()
 
-  type( field_type ), pointer :: tstar               => null()
   type( field_type ), pointer :: cos_zenith_angle    => null()
   type( field_type ), pointer :: lit_fraction        => null()
 
@@ -127,7 +126,6 @@ subroutine radiation_alg_step(dtheta_rad, theta, exner, mr,                  &
   liquid_fraction     =>   cloud_fields%get_field('liquid_fraction')
   ice_fraction        =>   cloud_fields%get_field('ice_fraction')
 
-  tstar               =>    twod_fields%get_field('tstar')
   cos_zenith_angle    =>    twod_fields%get_field('cos_zenith_angle')
   lit_fraction        =>    twod_fields%get_field('lit_fraction')
 
@@ -176,7 +174,7 @@ subroutine radiation_alg_step(dtheta_rad, theta, exner, mr,                  &
                  lw_heating_rate, lw_down_surf, lw_up_tile,                 &
                  lw_heating_rate_rts, lw_down_surf_rts, lw_up_tile_rts,     &
                  theta, theta_in_w3, exner, exner_in_wth, rho_in_wth,       &
-                 height_w3, height_wth, tstar,                              &
+                 height_w3, height_wth,                                     &
                  mr(imr_v), mr(imr_cl), mr(imr_ci),                         &
                  area_fraction, liquid_fraction, ice_fraction,              &
                  tile_fraction, tile_temperature,                           &

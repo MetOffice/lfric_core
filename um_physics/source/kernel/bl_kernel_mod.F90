@@ -10,7 +10,9 @@ module bl_kernel_mod
   use argument_mod,           only : arg_type,                     &
                                      GH_FIELD, GH_READ, GH_WRITE,  &
                                      GH_READWRITE, CELLS, GH_INC,  &
-                                     GH_INTEGER, ANY_SPACE_1
+                                     GH_INTEGER, ANY_SPACE_1,      &
+                                     ANY_SPACE_2, ANY_SPACE_3,     &
+                                     ANY_SPACE_4
   use section_choice_config_mod, only : cloud, &
                                         cloud_um
   use constants_mod,          only : i_def, i_um, r_def, r_um
@@ -31,7 +33,7 @@ module bl_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_kernel_type
     private
-    type(arg_type) :: meta_args(87) = (/             &
+    type(arg_type) :: meta_args(122) = (/            &
         arg_type(GH_INTEGER,  GH_READ),              &! outer
         arg_type(GH_FIELD,   GH_READ,   WTHETA),     &! theta_in_wth
         arg_type(GH_FIELD,   GH_READ,   W3),         &! rho_in_w3
@@ -54,11 +56,46 @@ module bl_kernel_mod
         arg_type(GH_FIELD,   GH_READ,   WTHETA),     &! shear
         arg_type(GH_FIELD,   GH_READ,   WTHETA),     &! delta
         arg_type(GH_FIELD,   GH_READ,   WTHETA),     &! max_diff_smag
-        arg_type(GH_FIELD,   GH_INC,  ANY_SPACE_1),  &! tstar_2d
         arg_type(GH_FIELD,   GH_INC,  ANY_SPACE_1),  &! zh_2d
         arg_type(GH_FIELD,   GH_INC,  ANY_SPACE_1),  &! z0msea_2d
         arg_type(GH_FIELD,   GH_INC,  ANY_SPACE_1),  &! ntml_2d
         arg_type(GH_FIELD,   GH_INC,  ANY_SPACE_1),  &! cumulus_2d
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_2), & ! tile_fraction
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_3), & ! leaf_area_index
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_3), & ! canopy_height
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! sd_orog_2d
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! peak_to_trough_orog
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! silhouette_area_orog
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! soil_albedo
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! soil_roughness
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! soil_moist_wilt
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! soil_moist_crit
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! soil_moist_sat
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! soil_cond_sat
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! soil_thermal_cap
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! soil_thermal_cond
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! soil_suction_sat
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_4), & ! clapp_horn_b
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! soil_carbon_content
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_2), & ! tile_temperature
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_2), & ! tile_snow_mass
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_2), & ! n_snow_layers
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_2), & ! snow_depth
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_1), & ! surface_conductance
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_2), & ! canopy_water
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_4), & ! soil_temperature
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_4), & ! soil_moisture
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_4), & ! unfrozen_soil_moisture
+        arg_type(GH_FIELD,   GH_INC,   ANY_SPACE_4), & ! frozen_soil_moisture
+        arg_type(GH_FIELD,   GH_WRITE, ANY_SPACE_2), & ! tile_heat_flux
+        arg_type(GH_FIELD,   GH_WRITE, ANY_SPACE_2), & ! tile_moisture_flux
+        arg_type(GH_FIELD,   GH_WRITE, ANY_SPACE_1), & ! gross_prim_prod
+        arg_type(GH_FIELD,   GH_WRITE, ANY_SPACE_1), & ! net_prim_prod
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! cos_zen_angle
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_2), & ! sw_up_tile
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! sw_down_surf
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! lw_down_surf
+        arg_type(GH_FIELD,   GH_READ,  ANY_SPACE_1), & ! sw_down_surf_blue
         arg_type(GH_FIELD,   GH_WRITE,  WTHETA),     &! dtheta_bl
         arg_type(GH_FIELD,   GH_WRITE,  WTHETA),     &! dt_bl
         arg_type(GH_FIELD,   GH_WRITE,  WTHETA),     &! dmv_bl
@@ -149,103 +186,147 @@ contains
   !>             as documented in UMDP24
   !>          NB This version uses winds in w3 space (i.e. A-grid)
   !>            and doesn't currently feed-back wind increments
-  !! @param[in]     nlayers       Number of layers
-  !! @param[in]     outer         Outer loop counter
-  !! @param[in]     theta_in_wth  Potential temperature field
-  !! @param[in]     rho_in_w3     Density field in density space
-  !! @param[in]     wetrho_in_w3  Wet density field in density space
-  !! @param[in]     wetrho_in_wth Wet density field in wth space
-  !! @param[in]     exner_in_w3   Exner pressure field in density space
-  !! @param[in]     exner_in_wth  Exner pressure field in wth space
-  !! @param[in]     u1_in_w3      'Zonal' wind in density space
-  !! @param[in]     u2_in_w3      'Meridional' wind in density space
-  !! @param[in]     u3_in_wth     'Vertical' wind in theta space
-  !! @param[in]     m_v_n         Vapour mixing ratio at time level n
-  !! @param[in]     m_cl_n        Cloud liquid mixing ratio at time level n
-  !! @param[in]     m_ci_n        Cloud ice mixing ratio at time level n
-  !! @param[in]     theta_star    Potential temperature predictor after advection
-  !! @param[in]     u1_star       'Zonal' wind predictor after advection
-  !! @param[in]     u2_star       'Meridional' wind predictor after advection
-  !! @param[in]     u3_star       'Vertical' wind predictor after advection
-  !! @param[in]     height_w3     Height of density space levels above surface
-  !! @param[in]     height_wth    Height of theta space levels above surface
-  !! @param[in]     shear         3D wind shear on wtheta points
-  !! @param[in]     delta         Edge length on wtheta points
-  !! @param[in]     max_diff_smag maximum diffusion coefficient allowed in this run
-  !! @param[in,out] tstar_2d      Surface temperature
-  !! @param[in,out] zh_2d         Boundary layer depth
-  !! @param[in,out] z0msea_2d     Roughness length
-  !! @param[in,out] ntml_2d       Number of turbulently mixed levels
-  !! @param[in,out] cumulus_2d    Cumulus flag (true/false)
-  !! @param[out]    dtheta_bl     BL theta increment
-  !! @param[out]    dt_bl         BL temperature increment
-  !! @param[out]    dmv_bl        BL vapour increment
-  !! @param[in,out] dt_conv       Convection temperature increment
-  !! @param[in,out] dmv_conv      Convection vapour increment
-  !! @param[in,out] dmcl_conv     Convection cloud liquid increment
-  !! @param[in,out] dmcf_conv     Convection cloud ice increment
-  !! @param[in,out] du_conv       Convection du increment
-  !! @param[in,out] dv_conv       Convection dv increment
-  !! @param[in]     dtl_mphys       Microphysics liquid temperature increment
-  !! @param[in]     dmt_mphys       Microphysics total water increment
-  !! @param[in]     sw_heating_rate Shortwave radiation heating rate
-  !! @param[in]     lw_heating_rate Longwave radiation heating rate
-  !! @param[in,out] m_v             Vapour mixing ration after advection
-  !! @param[in,out] m_cl            Cloud liquid mixing ratio after advection
-  !! @param[in,out] m_ci            Cloud ice mixing ratio after advection
-  !! @param[in,out] m_r             Rain mixing ratio after advection
-  !! @param[in,out] m_g             Graupel mixing ratio after advection
-  !! @param[in,out] cf_area         Area cloud fraction
-  !! @param[in,out] cf_ice          Ice cloud fraction
-  !! @param[in,out] cf_liq          Liquid cloud fraction
-  !! @param[in,out] cf_bulk         Bulk cloud fraction
-  !! @param[in,out] rh_crit_wth   Critical rel humidity in pot temperature space
-  !! @param[in,out] visc_m_blend  Blended BL-Smag diffusion coefficient for momentum
-  !! @param[in,out] visc_h_blend  Blended BL-Smag diffusion coefficient for scalars
-  !! @param[out]    cca           convective cloud amount (fraction)
-  !! @param[out]    ccw           convective cloud water (kg/kg) (can be ice or liquid)
-  !! @param[out]    deep_in_col   indicator of deep in column
-  !! @param[out]    shallow_in_col indicator of shallow in column
-  !! @param[out]    mid_in_col    indicator of mid in column
-  !! @param[out]    freeze_level  level number of freezing level
-  !! @param[out]    deep_prec     precipitation rate from deep convection(kg/m2/s)
-  !! @param[out]    shallow_prec  precipitation rate from shallow convection(kg/m2/s)
-  !! @param[out]    mid_prec      precipitation rate from mid convection(kg/m2/s)
-  !! @param[out]    deep_term     termination level number of deep convection
-  !! @param[out]    cape_timescale cape timescale (s)
-  !! @param[out]    conv_rain     surface rainfall rate from convection (kg/m2/s)
-  !! @param[out]    conv_snow     surface snowfall rate from convection (kg/m2/s)
-  !! @param[out]    lowest_cv_base level number for start of convection in column
-  !! @param[out]    lowest_cv_top level number for end of lowest convection in column
-  !! @param[out]    cv_base       level number of base of highest convection in column
-  !! @param[out]    cv_top        level number for end of highest convection in column
-  !! @param[out]    massflux_up   convective upwards mass flux (Pa/s)
-  !! @param[out]    massflux_down convective downwards mass flux (Pa/s)
-  !! @param[out]    entrain_up    convective upwards entrainment
-  !! @param[out]    entrain_down  convective downwards entrainment
-  !! @param[out]    detrain_up    convective upwards detrainment
-  !! @param[out]    detrain_down  convective downwards detrainment
-  !! @param[out]    dd_dt         temperature increment from downdraughts per timestep
-  !! @param[out]    dd_dq         vapour increment from downdraughts per timestep
-  !! @param[out]    deep_dt       temperature increment from deep convection per timestep
-  !! @param[out]    deep_dq       vapour increment from deep convection per timestep
-  !! @param[out]    deep_massflux upward mass flux from deep convection
-  !! @param[out]    deep_tops     set to 1.0 if deep stops at this model level
-  !! @param[out]    shallow_dt    temperature increment from shallow convection per timestep
-  !! @param[out]    shallow_dq    vapour increment from shallow convection per timestep
-  !! @param[out]    shallow_massflux  upward mass flux from shallow convection
-  !! @param[out]    mid_dt        temperature increment from mid convection per timestep
-  !! @param[out]    mid_dq        vapour increment from mid convection per timestep
-  !! @param[out]    mid_massflux  upward mass flux from mid convection
-  !! @param[in]     ndf_wth       Number of degrees of freedom per cell for potential temperature space
-  !! @param[in]     undf_wth      Number unique of degrees of freedom  for potential temperature space
-  !! @param[in]     map_wth       dofmap for the cell at the base of the column for potential temperature space
-  !! @param[in]     ndf_w3        Number of degrees of freedom per cell for density space
-  !! @param[in]     undf_w3       Number unique of degrees of freedom  for density space
-  !! @param[in]     map_w3        dofmap for the cell at the base of the column for density space
-  !! @param[in]     ndf_2d        Number of degrees of freedom per cell for 2D fields
-  !! @param[in]     undf_2d       Number unique of degrees of freedom  for 2D fields
-  !! @param[in]     map_2d        dofmap for the cell at the base of the column for 2D fields
+  !> @param[in]     nlayers       Number of layers
+  !> @param[in]     outer         Outer loop counter
+  !> @param[in]     theta_in_wth  Potential temperature field
+  !> @param[in]     rho_in_w3     Density field in density space
+  !> @param[in]     wetrho_in_w3  Wet density field in density space
+  !> @param[in]     wetrho_in_wth Wet density field in wth space
+  !> @param[in]     exner_in_w3   Exner pressure field in density space
+  !> @param[in]     exner_in_wth  Exner pressure field in wth space
+  !> @param[in]     u1_in_w3      'Zonal' wind in density space
+  !> @param[in]     u2_in_w3      'Meridional' wind in density space
+  !> @param[in]     u3_in_wth     'Vertical' wind in theta space
+  !> @param[in]     m_v_n         Vapour mixing ratio at time level n
+  !> @param[in]     m_cl_n        Cloud liquid mixing ratio at time level n
+  !> @param[in]     m_ci_n        Cloud ice mixing ratio at time level n
+  !> @param[in]     theta_star    Potential temperature predictor after advection
+  !> @param[in]     u1_star       'Zonal' wind predictor after advection
+  !> @param[in]     u2_star       'Meridional' wind predictor after advection
+  !> @param[in]     u3_star       'Vertical' wind predictor after advection
+  !> @param[in]     height_w3     Height of density space levels above surface
+  !> @param[in]     height_wth    Height of theta space levels above surface
+  !> @param[in]     shear         3D wind shear on wtheta points
+  !> @param[in]     delta         Edge length on wtheta points
+  !> @param[in]     max_diff_smag maximum diffusion coefficient allowed in this run
+  !> @param[in,out] zh_2d         Boundary layer depth
+  !> @param[in,out] z0msea_2d     Roughness length
+  !> @param[in,out] ntml_2d       Number of turbulently mixed levels
+  !> @param[in,out] cumulus_2d    Cumulus flag (true/false)
+  !> @param[in] tile_fraction      Surface tile fractions
+  !> @param[in] leaf_area_index    Leaf Area Index
+  !> @param[in] canopy_height      Canopy height
+  !> @param[in] sd_orog_2d         Standard deviation of orography
+  !> @param[in] peak_to_trough_orog  Half of peak-to-trough height over root(2) of orography
+  !> @param[in] silhouette_area_orog Silhouette area of orography
+  !> @param[in] soil_albedo        Snow-free soil albedo
+  !> @param[in] soil_roughness     Bare soil surface roughness length
+  !> @param[in] soil_moist_wilt    Volumetric soil moisture at wilting point
+  !> @param[in] soil_moist_crit    Volumetric soil moisture at critical point
+  !> @param[in] soil_moist_sat     Volumetric soil moisture at saturation
+  !> @param[in] soil_cond_sat      Saturated soil conductivity
+  !> @param[in] soil_thermal_cap   Soil thermal capacity
+  !> @param[in] soil_thermal_cond  Soil thermal conductivity
+  !> @param[in] soil_suction_sat   Saturated soil water suction
+  !> @param[in] clapp_horn_b       Clapp and Hornberger b coefficient
+  !> @param[in] soil_carbon_content Soil carbon content
+  !> @param[in,out] tile_temperature   Surface tile temperatures
+  !> @param[in,out] tile_snow_mass     Snow mass on tiles (kg/m2)
+  !> @param[in,out] n_snow_layers      Number of snow layers on tiles
+  !> @param[in,out] snow_depth         Snow depth on tiles
+  !> @param[in,out] surface_conductance Surface conductance
+  !> @param[in,out] canopy_water       Canopy water on each tile
+  !> @param[in,out] soil_temperature   Soil temperature
+  !> @param[in,out] soil_moisture      Soil moisture content (kg m-2)
+  !> @param[in,out] unfrozen_soil_moisture Unfrozen soil moisture proportion
+  !> @param[in,out] frozen_soil_moisture Frozen soil moisture proportion
+  !> @param[out]    tile_heat_flux      Surface heat flux
+  !> @param[out]    tile_moisture_flux  Surface moisture flux
+  !> @param[out]    gross_prim_prod     Gross Primary Productivity
+  !> @param[out]    net_prim_prod       Net Primary Productivity
+  !> @param[in]     cos_zen_angle       Cosing of solar zenith angle
+  !> @param[in]     sw_up_tile          Upwelling SW radiation on surface tiles
+  !> @param[in]     sw_down_surf        Downwelling SW radiation at surface
+  !> @param[in]     lw_down_surf        Downwelling LW radiation at surface
+  !> @param[in]     sw_down_surf_blue   Photosynthetically active SW down
+  !> @param[out]    dtheta_bl     BL theta increment
+  !> @param[out]    dt_bl         BL temperature increment
+  !> @param[out]    dmv_bl        BL vapour increment
+  !> @param[in,out] dt_conv       Convection temperature increment
+  !> @param[in,out] dmv_conv      Convection vapour increment
+  !> @param[in,out] dmcl_conv     Convection cloud liquid increment
+  !> @param[in,out] dmcf_conv     Convection cloud ice increment
+  !> @param[in,out] du_conv       Convection du increment
+  !> @param[in,out] dv_conv       Convection dv increment
+  !> @param[in]     dtl_mphys       Microphysics liquid temperature increment
+  !> @param[in]     dmt_mphys       Microphysics total water increment
+  !> @param[in]     sw_heating_rate Shortwave radiation heating rate
+  !> @param[in]     lw_heating_rate Longwave radiation heating rate
+  !> @param[in,out] m_v             Vapour mixing ration after advection
+  !> @param[in,out] m_cl            Cloud liquid mixing ratio after advection
+  !> @param[in,out] m_ci            Cloud ice mixing ratio after advection
+  !> @param[in,out] m_r             Rain mixing ratio after advection
+  !> @param[in,out] m_g             Graupel mixing ratio after advection
+  !> @param[in,out] cf_area         Area cloud fraction
+  !> @param[in,out] cf_ice          Ice cloud fraction
+  !> @param[in,out] cf_liq          Liquid cloud fraction
+  !> @param[in,out] cf_bulk         Bulk cloud fraction
+  !> @param[in,out] rh_crit_wth   Critical rel humidity in pot temperature space
+  !> @param[in,out] visc_m_blend  Blended BL-Smag diffusion coefficient for momentum
+  !> @param[in,out] visc_h_blend  Blended BL-Smag diffusion coefficient for scalars
+  !> @param[out]    cca           convective cloud amount (fraction)
+  !> @param[out]    ccw           convective cloud water (kg/kg) (can be ice or liquid)
+  !> @param[out]    deep_in_col   indicator of deep in column
+  !> @param[out]    shallow_in_col indicator of shallow in column
+  !> @param[out]    mid_in_col    indicator of mid in column
+  !> @param[out]    freeze_level  level number of freezing level
+  !> @param[out]    deep_prec     precipitation rate from deep convection(kg/m2/s)
+  !> @param[out]    shallow_prec  precipitation rate from shallow convection(kg/m2/s)
+  !> @param[out]    mid_prec      precipitation rate from mid convection(kg/m2/s)
+  !> @param[out]    deep_term     termination level number of deep convection
+  !> @param[out]    cape_timescale cape timescale (s)
+  !> @param[out]    conv_rain     surface rainfall rate from convection (kg/m2/s)
+  !> @param[out]    conv_snow     surface snowfall rate from convection (kg/m2/s)
+  !> @param[out]    lowest_cv_base level number for start of convection in column
+  !> @param[out]    lowest_cv_top level number for end of lowest convection in column
+  !> @param[out]    cv_base       level number of base of highest convection in column
+  !> @param[out]    cv_top        level number for end of highest convection in column
+  !> @param[out]    massflux_up   convective upwards mass flux (Pa/s)
+  !> @param[out]    massflux_down convective downwards mass flux (Pa/s)
+  !> @param[out]    entrain_up    convective upwards entrainment
+  !> @param[out]    entrain_down  convective downwards entrainment
+  !> @param[out]    detrain_up    convective upwards detrainment
+  !> @param[out]    detrain_down  convective downwards detrainment
+  !> @param[out]    dd_dt         temperature increment from downdraughts per timestep
+  !> @param[out]    dd_dq         vapour increment from downdraughts per timestep
+  !> @param[out]    deep_dt       temperature increment from deep convection per timestep
+  !> @param[out]    deep_dq       vapour increment from deep convection per timestep
+  !> @param[out]    deep_massflux upward mass flux from deep convection
+  !> @param[out]    deep_tops     set to 1.0 if deep stops at this model level
+  !> @param[out]    shallow_dt    temperature increment from shallow convection per timestep
+  !> @param[out]    shallow_dq    vapour increment from shallow convection per timestep
+  !> @param[out]    shallow_massflux  upward mass flux from shallow convection
+  !> @param[out]    mid_dt        temperature increment from mid convection per timestep
+  !> @param[out]    mid_dq        vapour increment from mid convection per timestep
+  !> @param[out]    mid_massflux  upward mass flux from mid convection
+  !> @param[in]     ndf_wth       Number of degrees of freedom per cell for potential temperature space
+  !> @param[in]     undf_wth      Number unique of degrees of freedom  for potential temperature space
+  !> @param[in]     map_wth       dofmap for the cell at the base of the column for potential temperature space
+  !> @param[in]     ndf_w3        Number of degrees of freedom per cell for density space
+  !> @param[in]     undf_w3       Number unique of degrees of freedom  for density space
+  !> @param[in]     map_w3        dofmap for the cell at the base of the column for density space
+  !> @param[in]     ndf_2d        Number of degrees of freedom per cell for 2D fields
+  !> @param[in]     undf_2d       Number unique of degrees of freedom  for 2D fields
+  !> @param[in]     map_2d        dofmap for the cell at the base of the column for 2D fields
+  !> @param[in]     ndf_tile      Number of DOFs per cell for tiles
+  !> @param[in]     undf_tile     Number of total DOFs for tiles
+  !> @param[in]     map_tile      Dofmap for cell for surface tiles
+  !> @param[in]     ndf_pft       Number of DOFs per cell for PFTs
+  !> @param[in]     undf_pft      Number of total DOFs for PFTs
+  !> @param[in]     map_pft       Dofmap for cell for PFTs
+  !> @param[in]     ndf_soil      Number of DOFs per cell for soil levels
+  !> @param[in]     undf_soil     Number of total DOFs for soil levels
+  !> @param[in]     map_soil      Dofmap for cell for soil levels
   subroutine bl_code(nlayers,                               &
                      outer,                                 &
                      theta_in_wth,                          &
@@ -269,11 +350,46 @@ contains
                      shear,                                 &
                      delta,                                 &
                      max_diff_smag,                         &
-                     tstar_2d,                              &
                      zh_2d,                                 &
                      z0msea_2d,                             &
                      ntml_2d,                               &
                      cumulus_2d,                            &
+                     tile_fraction,                         &
+                     leaf_area_index,                       &
+                     canopy_height,                         &
+                     sd_orog_2d,                            &
+                     peak_to_trough_orog,                   &
+                     silhouette_area_orog,                  &
+                     soil_albedo,                           &
+                     soil_roughness,                        &
+                     soil_moist_wilt,                       &
+                     soil_moist_crit,                       &
+                     soil_moist_sat,                        &
+                     soil_cond_sat,                         &
+                     soil_thermal_cap,                      &
+                     soil_thermal_cond,                     &
+                     soil_suction_sat,                      &
+                     clapp_horn_b,                          &
+                     soil_carbon_content,                   &
+                     tile_temperature,                      &
+                     tile_snow_mass,                        &
+                     n_snow_layers,                         &
+                     snow_depth,                            &
+                     surface_conductance,                   &
+                     canopy_water,                          &
+                     soil_temperature,                      &
+                     soil_moisture,                         &
+                     unfrozen_soil_moisture,                &
+                     frozen_soil_moisture,                  &
+                     tile_heat_flux,                        &
+                     tile_moisture_flux,                    &
+                     gross_prim_prod,                       &
+                     net_prim_prod,                         &
+                     cos_zen_angle,                         &
+                     sw_up_tile,                            &
+                     sw_down_surf,                          &
+                     lw_down_surf,                          &
+                     sw_down_surf_blue,                     &
                      dtheta_bl,                             &
                      dt_bl,                                 &
                      dmv_bl,                                &
@@ -342,7 +458,18 @@ contains
                      map_w3,                                &
                      ndf_2d,                                &
                      undf_2d,                               &
-                     map_2d)
+                     map_2d,                                &
+                     ndf_tile, undf_tile, map_tile,         &
+                     ndf_pft, undf_pft, map_pft,            &
+                     ndf_soil, undf_soil, map_soil)
+
+    !---------------------------------------
+    ! LFRic modules
+    !---------------------------------------
+    use init_jules_alg_mod, only: &
+         n_surf_tile, n_land_tile, n_sea_tile, n_sea_ice_tile, &
+         first_land_tile, first_sea_tile, first_sea_ice_tile,  &
+         n_soil_levs
 
     !---------------------------------------
     ! UM modules
@@ -351,8 +478,12 @@ contains
     use bl_diags_mod, only: BL_diag, dealloc_bl_imp
     use sf_diags_mod, only: sf_diag, dealloc_sf_expl, dealloc_sf_imp
     ! other modules containing stuff passed to BL
+    use ancil_info, only: l_soil_point, ssi_pts,                            &
+         sea_pts, sice_pts, ssi_index, sea_index, sice_index, fssi_ij,      &
+         sea_frac, sice_frac, sice_pts_ncat, sice_index_ncat, sice_frac_ncat
     use atm_fields_bounds_mod, only: tdims, udims, vdims, udims_s, vdims_s, &
          pdims
+    use atm_step_local, only: dim_cs1, dim_cs2
     use atmos_physics2_alloc_mod !everything
     use bdy_expl3_mod, only: bdy_expl3
     use bl_option_mod, only: flux_bc_opt, specified_fluxes_only
@@ -365,9 +496,17 @@ contains
     use ni_imp_ctl_mod, only: ni_imp_ctl
     use nlsizes_namelist_mod, only: row_length, rows, land_field,&
          sm_levels, ntiles, model_levels, bl_levels, tr_vars, n_cca_lev
+    use ozone_vars, only: o3_gb
     use planet_constants_mod, only: p_zero, kappa, planet_radius
+    use prognostics, only: snowdepth_surft, nsnow_surft
+    use p_s_parms, only: bexp_soilt, sathh_soilt, hcap_soilt, satcon_soilt
+    use rad_input_mod, only: co2_mmr
     use timestep_mod, only: timestep
     use turb_diff_ctl_mod, only: visc_m, visc_h, max_diff, delta_smag
+
+    ! Jules related subroutines
+    use sparm_mod, only: sparm
+    use tilepts_mod, only: tilepts
 
     ! Flags controlling the saving of fields
     use jules_surface_mod, ONLY: ISrfExCnvGust, IP_SrfExWithCnv
@@ -394,6 +533,13 @@ contains
     integer(kind=i_def), intent(in) :: ndf_wth, ndf_w3
     integer(kind=i_def), intent(in) :: ndf_2d, undf_2d
     integer(kind=i_def), intent(in) :: undf_wth, undf_w3
+
+    integer(kind=i_def), intent(in) :: ndf_tile, undf_tile
+    integer(kind=i_def), intent(in) :: map_tile(ndf_tile)
+    integer(kind=i_def), intent(in) :: ndf_pft, undf_pft
+    integer(kind=i_def), intent(in) :: map_pft(ndf_pft)
+    integer(kind=i_def), intent(in) :: ndf_soil, undf_soil
+    integer(kind=i_def), intent(in) :: map_soil(ndf_soil)
 
     integer(kind=i_def), dimension(ndf_wth), intent(in) :: map_wth
     integer(kind=i_def), dimension(ndf_w3),  intent(in) :: map_w3
@@ -440,7 +586,7 @@ contains
 
     real(kind=r_def), dimension(undf_w3),  intent(inout) :: du_conv, dv_conv
 
-    real(kind=r_def), dimension(undf_2d), intent(inout) :: tstar_2d, zh_2d,    &
+    real(kind=r_def), dimension(undf_2d), intent(inout) :: zh_2d,              &
                                                            z0msea_2d, ntml_2d, &
                                                            cumulus_2d
 
@@ -450,12 +596,53 @@ contains
                            deep_term, cape_timescale, conv_rain, conv_snow,    &
                            lowest_cv_base, lowest_cv_top, cv_base, cv_top
 
+    real(kind=r_def), intent(in) :: tile_fraction(undf_tile)
+    real(kind=r_def), intent(inout) :: tile_temperature(undf_tile)
+    real(kind=r_def), intent(inout) :: tile_snow_mass(undf_tile)
+    real(kind=r_def), intent(inout) :: n_snow_layers(undf_tile)
+    real(kind=r_def), intent(inout) :: snow_depth(undf_tile)
+    real(kind=r_def), intent(inout) :: canopy_water(undf_tile)
+    real(kind=r_def), intent(out) :: tile_heat_flux(undf_tile)
+    real(kind=r_def), intent(out) :: tile_moisture_flux(undf_tile)
+    real(kind=r_def), intent(in) :: sw_up_tile(undf_tile)
+
+    real(kind=r_def), intent(in) :: leaf_area_index(undf_pft)
+    real(kind=r_def), intent(in) :: canopy_height(undf_pft)
+
+    real(kind=r_def), intent(in) :: sd_orog_2d(undf_2d)
+    real(kind=r_def), intent(in) :: peak_to_trough_orog(undf_2d)
+    real(kind=r_def), intent(in) :: silhouette_area_orog(undf_2d)
+    real(kind=r_def), intent(in) :: soil_albedo(undf_2d)
+    real(kind=r_def), intent(in) :: soil_roughness(undf_2d)
+    real(kind=r_def), intent(in) :: soil_thermal_cond(undf_2d)
+    real(kind=r_def), intent(in) :: soil_carbon_content(undf_2d)
+    real(kind=r_def), intent(inout) :: surface_conductance(undf_2d)
+    real(kind=r_def), intent(in) :: cos_zen_angle(undf_2d)
+    real(kind=r_def), intent(in) :: sw_down_surf(undf_2d)
+    real(kind=r_def), intent(in) :: lw_down_surf(undf_2d)
+    real(kind=r_def), intent(in) :: sw_down_surf_blue(undf_2d)
+    real(kind=r_def), intent(out) :: gross_prim_prod(undf_2d)
+    real(kind=r_def), intent(out) :: net_prim_prod(undf_2d)
+
+    real(kind=r_def), intent(in) :: soil_moist_wilt(undf_soil)
+    real(kind=r_def), intent(in) :: soil_moist_crit(undf_soil)
+    real(kind=r_def), intent(in) :: soil_moist_sat(undf_soil)
+    real(kind=r_def), intent(in) :: soil_cond_sat(undf_soil)
+    real(kind=r_def), intent(in) :: soil_thermal_cap(undf_soil)
+    real(kind=r_def), intent(in) :: soil_suction_sat(undf_soil)
+    real(kind=r_def), intent(in) :: clapp_horn_b(undf_soil)
+    real(kind=r_def), intent(inout) :: soil_temperature(undf_soil)
+    real(kind=r_def), intent(inout) :: soil_moisture(undf_soil)
+    real(kind=r_def), intent(inout) :: unfrozen_soil_moisture(undf_soil)
+    real(kind=r_def), intent(inout) :: frozen_soil_moisture(undf_soil)
+
     ! Local variables for the kernel
-    integer :: k
+    integer(i_def) :: k, i, i_tile, i_sice, i_pft, n
 
     ! switches and model parameters/dimensions/time etc
     integer(i_um) :: cycleno, error_code
-    integer(i_um) :: val_year, val_day_number, val_hour, val_minute, val_second
+    integer(i_um) :: curr_year, curr_day_number, curr_hour, curr_minute, &
+                     curr_second
     integer(i_um) :: co2_dim_len, co2_dim_row
     integer(i_um) :: asteps_since_triffid
     integer(i_um), parameter :: nscmdpkgs=15
@@ -501,7 +688,7 @@ contains
     real(r_um), dimension(row_length,rows,2,bl_levels) :: rad_hr, micro_tends
     ! single level fields
     real(r_um), dimension(row_length,rows) ::                                &
-         p_star, lw_down, cos_zenith_angle, ti_gb, tstar, zh_prev, ddmfx,    &
+         p_star, lw_down, cos_zenith_angle, ti_sicat, tstar, zh_prev, ddmfx, &
          zlcl, zhpar, z0h_scm, z0m_scm, flux_e, flux_h, z0msea,              &
          photosynth_act_rad, soil_clay, soil_sand, dust_mrel1, dust_mrel2,   &
          dust_mrel3, dust_mrel4, dust_mrel5, dust_mrel6, tstar_sea, zh, dzh, &
@@ -530,22 +717,28 @@ contains
                                            l_congestus2
     ! fields on ice categories
     real(r_um), dimension(row_length,rows,nice_use) ::                    &
-         ice_fract_cat_use, k_sice, co2, ti, tstar_sice_cat, radnet_sice, &
-         fqw_ice, ftl_ice, di_ncat, ice_fract_ncat
+         ice_fract_ncat_sicat, k_sice_sicat, co2, ti_cat_sicat,           &
+         tstar_sice_sicat, radnet_sice, fqw_ice, ftl_ice, di_ncat_sicat,  &
+         ice_fract_ncat
     ! field on land points and soil levels
     real(r_um), dimension(land_field,sm_levels) :: soil_layer_moisture, &
-         smvccl_levs, smvcwt_levs, smvcst_levs, sthf, sthu, ext
+         smvccl_soilt, smvcwt_soilt, smvcst_soilt, sthf_soilt,          &
+         sthu_soilt, ext, t_soil_soilt
     ! fields on land points
-    real(r_um), dimension(land_field) :: hcon, sil_orog_land, ho2r2_orog, &
-                                         sd_orog, z0m_soil, albsoil, gs
+    real(r_um), dimension(land_field) :: hcon_soilt, sil_orog_land_gb,   &
+         ho2r2_orog_gb, sd_orog, z0m_soil_gb, albsoil_soilt, gs_gb
     integer, dimension(land_field) :: land_index
+    real(r_um), dimension(land_field,dim_cs1) :: cs_pool_gb_um
+    real(r_um), dimension(land_field,dim_cs2) :: resp_s_acc_gb_um
     ! fields on land points and tiles
-    real(r_um), dimension(land_field,ntiles) :: canopy, catch,               &
-         catch_snow, snow_tile, z0_tile, z0h_tile_bare, sw_tile, tstar_tile, &
-         cs, frac, canht_ft, lai_ft, t_soil, g_leaf_acc, npp_ft_acc,         &
-         resp_w_ft_acc, resp_s_acc, ftl_tile, fqw_tile, epot_tile,           &
-         dtstar_tile, tsurf_elev_surft, tscrndcl_tile, ei_tile, ecan_tile,   &
-         melt_tile, surf_htf_tile
+    real(r_um), dimension(land_field,ntiles) :: canopy_surft, catch_surft, &
+         catch_snow_surft, snow_surft, z0_surft, z0h_bare_surft, sw_surft, &
+         tstar_surft, frac_surft, ftl_surft, fqw_surft, epot_surft,        &
+         dtstar_surft, tsurf_elev_surft, tscrndcl_surft, ei_surft,         &
+         ecan_surft, melt_surft, surf_htf_surft
+    ! fields on land points and pfts
+    real(r_um), dimension(land_field,npft) :: canht_pft, lai_pft,          &
+         g_leaf_acc_pft, npp_acc_pft, resp_w_acc_pft
     ! stashwork arrays
     real(r_um) :: stashwork3(1), stashwork9(1)
 
@@ -623,13 +816,6 @@ contains
     ! model dimensions
     co2_dim_len=1
     co2_dim_row=1
-    ! surface ancils
-    land_sea_mask=.false.
-    frac=0.0
-    land_index=1
-    ice_fract=0.0
-    ice_fract_cat_use=0.0
-    ice_fract_ncat=0.0
     ! diagnostic flags
     error_code=0
     ! other logicals
@@ -657,11 +843,230 @@ contains
                                  nice_use )
     end if
 
-    ! This has to be assigned after it has been allocated by
-    ! atmos_physics2_alloc.
-    !
-    flandg=0.0_r_um
-    fland = 0.0_r_um
+    !----------------------------------------------------------------------
+    ! Surface fields as needed by Jules
+    !----------------------------------------------------------------------
+    ! Land tile fractions
+    i_tile = 0
+    flandg = 0.0_r_um
+    do i = first_land_tile, first_land_tile + n_land_tile - 1
+      i_tile = i_tile + 1
+      flandg = flandg + real(tile_fraction(map_tile(i)), r_um)
+      frac_surft(1, i_tile) = real(tile_fraction(map_tile(i)), r_um)
+    end do
+    fland(1) = flandg(1,1)
+
+    ! Jules requires fractions with respect to the land area
+    if (flandg(1, 1) > 0.0_r_um) then
+      land_field = 1
+      land_index = 1
+      frac_surft(1, 1:n_land_tile) = frac_surft(1, 1:n_land_tile) / flandg(1, 1)
+      land_sea_mask = .true.
+    else
+      land_field = 0
+      land_index = 0
+      land_sea_mask = .false.
+    end if
+
+    ! Set type_pts and type_index
+    call tilepts(land_field, frac_surft, surft_pts, surft_index)
+
+    ! Sea-ice fraction
+    i_sice = 0
+    ice_fract = 0.0_r_um
+    do i = first_sea_ice_tile, first_sea_ice_tile + n_sea_ice_tile - 1
+      i_sice = i_sice + 1
+      ice_fract = ice_fract + real(tile_fraction(map_tile(i)), r_um)
+      ice_fract_ncat(1, 1, i_sice) = real(tile_fraction(map_tile(i)), r_um)
+    end do
+
+    ! Jules requires sea-ice fractions with respect to the sea area
+    if (ice_fract(1, 1) > 0.0_r_um) then
+      ice_fract(1, 1) = ice_fract(1, 1) / (1.0_r_um - flandg(1, 1))
+      ice_fract_ncat(1, 1, 1:n_sea_ice_tile) &
+           = ice_fract_ncat(1, 1, 1:n_sea_ice_tile) / (1.0_r_um - flandg(1, 1))
+    end if
+    ice_fract_ncat_sicat = ice_fract_ncat
+
+    ! combined sea and sea-ice index
+    ssi_pts = 1
+    if (flandg(1, 1) < 1.0_r_um) then
+      ssi_index = 1
+    else
+      ssi_index = 0
+    end if
+    fssi_ij = 1.0_r_um - flandg(1, 1)
+
+    ! individual sea and sea-ice indices
+    if (ssi_index(1) > 0) then
+      if (ice_fract(1, 1) > 0.0_r_um) then
+        sice_pts = 1
+        sice_index = 1
+        sice_frac = ice_fract(1, 1)
+      else
+        sice_pts = 0
+        sice_index = 0
+        sice_frac = 0.0_r_um
+      end if
+      if (ice_fract(1, 1) < 1.0_r_um) then
+        sea_pts = 1
+        sea_index = 1
+        sea_frac = 1.0_r_um - sice_frac
+      else
+        sea_pts = 0
+        sea_index = 0
+        sea_frac = 0.0_r_um
+      end if
+    end if
+
+    ! multi-category sea-ice index
+    do n = 1, nice_use
+      if (ssi_index(1) > 0 .and. ice_fract_ncat(1, 1, n) > 0.0_r_um) then
+        sice_pts_ncat(n) = 1
+        sice_index_ncat(1, n) = 1
+        sice_frac_ncat(1, n) = ice_fract_ncat(1, 1, n)
+      else
+        sice_pts_ncat(n) = 0
+        sice_index_ncat(1, n) = 0
+        sice_frac_ncat(1, n) = 0.0_r_um
+      end if
+    end do
+
+    ! Land tile temperatures
+    i_tile = 0
+    tstar_land = 0.0_r_um
+    do i = first_land_tile, first_land_tile + n_land_tile - 1
+      i_tile = i_tile + 1
+      tstar_surft(1, i_tile) = real(tile_temperature(map_tile(i)), r_um)
+      tstar_land = tstar_land + frac_surft(1, i_tile) * tstar_surft(1, i_tile)
+    end do
+
+    ! Sea temperature
+    tstar_sea = real(tile_temperature(map_tile(first_sea_tile)), r_um)
+
+    ! Sea-ice temperatures
+    i_sice = 0
+    tstar_sice = 0.0_r_um
+    do i = first_sea_ice_tile, first_sea_ice_tile + n_sea_ice_tile - 1
+      i_sice = i_sice + 1
+      tstar_sice_sicat(1, 1, i_sice) = real(tile_temperature(map_tile(i)), r_um)
+      tstar_sice = tstar_sice &
+                 + ice_fract_ncat(1,1,i_sice) * tstar_sice_sicat(1,1,i_sice)
+    end do
+
+    ! Sea & Sea-ice temperature
+    tstar_ssi = (1.0_r_um - ice_fract) * tstar_sea + ice_fract * tstar_sice
+
+    ! Grid-box mean surface temperature
+    tstar = flandg * tstar_land + (1.0_r_um - flandg) * tstar_ssi
+
+    do i_pft = 1, npft
+      ! Leaf area index
+      lai_pft(1, i_pft) = real(leaf_area_index(map_pft(i_pft)), r_um)
+      ! Canopy height
+      canht_pft(1, i_pft) = real(canopy_height(map_pft(i_pft)), r_um)
+    end do
+
+    ! Roughness length (z0_tile)
+    z0m_soil_gb = real(soil_roughness(map_2d(1)), r_um)
+    call sparm(land_field, n_land_tile, surft_pts, surft_index,         &
+               frac_surft, canht_pft, lai_pft, z0m_soil_gb,             &
+               catch_snow_surft, catch_surft, z0_surft, z0h_bare_surft)
+
+    ! Snow-free soil albedo
+    albsoil_soilt = real(soil_albedo(map_2d(1)), r_um)
+
+    do i = 1, n_soil_levs
+      ! Volumetric soil moisture at wilting point (smvcwt_soilt)
+      smvcwt_soilt(1, i) = real(soil_moist_wilt(map_soil(i)), r_um)
+      ! Volumetric soil moisture at critical point (smvccl_soilt)
+      smvccl_soilt(1, i) = real(soil_moist_crit(map_soil(i)), r_um)
+      ! Volumetric soil moisture at saturation (smvcst_soilt)
+      smvcst_soilt(1, i) = real(soil_moist_sat(map_soil(i)), r_um)
+      ! Saturated soil conductivity (satcon_soilt)
+      satcon_soilt(1, 1, i) = real(soil_cond_sat(map_soil(i)), r_um)
+      ! Soil thermal capacity (hcap_soilt)
+      hcap_soilt(1, 1, i) = real(soil_thermal_cap(map_soil(i)), r_um)
+      ! Saturated soil water suction (sathh_soilt)
+      sathh_soilt(1, 1, i) = real(soil_suction_sat(map_soil(i)), r_um)
+      ! Clapp and Hornberger b coefficient (bexp_soilt)
+      bexp_soilt(1, 1, i) = real(clapp_horn_b(map_soil(i)), r_um)
+      ! Soil temperature (t_soil_soilt)
+      t_soil_soilt(1, i) = real(soil_temperature(map_soil(i)), r_um)
+      ! Soil moisture content (kg m-2, soil_layer_moisture)
+      soil_layer_moisture(1, i) = real(soil_moisture(map_soil(i)), r_um)
+      ! Unfrozen soil moisture proportion (sthu_soilt)
+      sthu_soilt(1, i) = real(unfrozen_soil_moisture(map_soil(i)), r_um)
+      ! Frozen soil moisture proportion (sthf_soilt)
+      sthf_soilt(1, i) = real(frozen_soil_moisture(map_soil(i)), r_um)
+    end do
+    ! this needs level 0, but set equal to level 1 in all applications anyway
+    satcon_soilt(1, 1, 0) = satcon_soilt(1, 1, 1)
+
+    ! Soil thermal conductivity (hcon_soilt)
+    hcon_soilt = real(soil_thermal_cond(map_2d(1)), r_um)
+
+    ! Soil carbon content (cs_pool_gb_um)
+    cs_pool_gb_um = real(soil_carbon_content(map_2d(1)), r_um)
+
+    ! Soil ancils dependant on smvcst_soilt (soil moisture saturation limit)
+    if( smvcst_soilt(1,1) > 0.0_r_um )then
+      l_soil_point = .true.
+    else
+      l_soil_point = .false.
+    end if
+
+    ! Cosine of the solar zenith angle
+    cos_zenith_angle = real(cos_zen_angle(map_2d(1)), r_um)
+
+    ! Downwelling LW radiation at surface
+    lw_down = real(lw_down_surf(map_2d(1)), r_um)
+
+    ! Net SW radiation on tiles
+    i_tile = 0
+    do i = first_land_tile, first_land_tile + n_land_tile - 1
+      i_tile = i_tile + 1
+      sw_surft(1, i_tile) = real(sw_down_surf(map_2d(1)) - &
+                                 sw_up_tile(map_tile(i)), r_um)
+    end do
+
+    ! photosynthetically active downwelling SW radiation
+    photosynth_act_rad = real(sw_down_surf_blue(map_2d(1)), r_um)
+
+    ! Ozone
+    o3_gb = 0.0_r_um
+
+    ! Carbon dioxide
+    co2 = co2_mmr
+
+    ! Standard deviation of orography
+    sd_orog = real(sd_orog_2d(map_2d(1)), r_um)
+
+    ! Half of peak-to-trough height over root(2) of orography (ho2r2_orog_gb)
+    ho2r2_orog_gb = real(peak_to_trough_orog(map_2d(1)), r_um)
+
+    sil_orog_land_gb = real(silhouette_area_orog(map_2d(1)), r_um)
+
+    ! Surface conductance (gs_gb)
+    gs_gb = real(surface_conductance(map_2d(1)), r_um)
+
+    ! Canopy water on each tile (canopy_surft)
+    i_tile = 0
+    do i = first_land_tile, first_land_tile + n_land_tile - 1
+      i_tile = i_tile + 1
+      canopy_surft(1, i_tile) = real(canopy_water(map_tile(i)), r_um)
+    end do
+
+    i_tile = 0
+    do i = first_land_tile, first_land_tile + n_land_tile - 1
+      i_tile = i_tile + 1
+      ! Lying snow mass on land tiles
+      snow_surft(1, i_tile) = real(tile_snow_mass(map_tile(i)), r_um)
+      ! Number of snow layers on tiles (nsnow_surft)
+      nsnow_surft(1, i_tile) = int(n_snow_layers(map_tile(i)), i_um)
+      ! Snow depth on tiles (snowdepth_surft)
+      snowdepth_surft(1, i_tile) = real(snow_depth(map_tile(i)), r_um)
+    end do
 
     !-----------------------------------------------------------------------
     ! Main model prognostics - passed in from Gungho
@@ -779,15 +1184,6 @@ contains
     !-----------------------------------------------------------------------
     ! Things saved from one timestep to the next
     !-----------------------------------------------------------------------
-    ! sea surface temperature
-    tstar(1,1) = tstar_2d(map_2d(1))
-    tstar_sea = tstar
-    tstar_ssi = tstar
-    ! not needed but given values to avoid qsat crash in Jules
-    tstar_land = tstar(1,1)
-    tstar_tile = tstar(1,1)
-    tstar_sice = tstar(1,1)
-    tstar_sice_cat = tstar(1,1)
     ! previous BL height
     zh(1,1) = zh_2d(map_2d(1))
     zh_prev = zh
@@ -877,7 +1273,7 @@ contains
     !     IN parameters for SISL scheme
          CycleNo, l_jules_call,                                         &
     !     IN time stepping information
-         val_year, val_day_number, val_hour, val_minute, val_second,    &
+         curr_year, curr_day_number, curr_hour, curr_minute, curr_second,&
     !     IN switches
          L_aero_classic,                                                &
     !     IN data fields.
@@ -886,32 +1282,35 @@ contains
          land_sea_mask, q, qcl, qcf, p_star, theta, exner_theta_levels, rad_hr,&
          micro_tends, soil_layer_moisture, rho_wet_tq, z_rho, z_theta,  &
     !     IN ancillary fields and fields needed to be kept from tstep to tstep
-         hcon,smvccl_levs, smvcwt_levs, smvcst_levs, sthf,sthu,sil_orog_land,&
+         hcon_soilt, smvccl_soilt, smvcwt_soilt, smvcst_soilt,          &
+         sthf_soilt, sthu_soilt, sil_orog_land_gb,                      &
     !-------------------------------------------------------------------------
-         ho2r2_orog, sd_orog, ice_fract_cat_use, k_sice(:,:,1:nice_use),&
+         ho2r2_orog_gb, sd_orog, ice_fract_ncat_sicat, k_sice_sicat,    &
          land_index, photosynth_act_rad,                                &
          soil_clay,soil_sand,dust_mrel1,dust_mrel2,                     &
          dust_mrel3,dust_mrel4,dust_mrel5,dust_mrel6,                   &
     !     IN additional variables for JULES
-         canopy, catch, catch_snow, snow_tile, z0_tile, z0h_tile_bare,  &
-         z0m_soil, lw_down, sw_tile, tstar_tile, tsurf_elev_surft,      &
+         canopy_surft, catch_surft, catch_snow_surft, snow_surft,       &
+         z0_surft, z0h_bare_surft,                                      &
+         z0m_soil_gb, lw_down, sw_surft, tstar_surft, tsurf_elev_surft, &
          co2(1:co2_dim_len,1:co2_dim_row,1),                            &
          asteps_since_triffid,                                          &
-         cs,frac,canht_ft,lai_ft,fland,flandg,albsoil,cos_zenith_angle, &
+         cs_pool_gb_um,frac_surft,canht_pft,lai_pft,fland,flandg,       &
+         albsoil_soilt, cos_zenith_angle,                               &
     !     IN: input from the wave model
          charnock_w,                                                    &
     !     IN everything not covered so far
-             t_soil,ti_gb,                                              &
-             ti,tstar,zh_prev,ddmfx,bulk_cloud_fraction,zhpar,zlcl,     &
+         t_soil_soilt, ti_sicat,                                        &
+         ti_cat_sicat,tstar,zh_prev,ddmfx,bulk_cloud_fraction,zhpar,zlcl, &
     !     IN SCM namelist data
          L_spec_z0, z0m_scm, z0h_scm, flux_e, flux_h, ustar_in,         &
     !     SCM diagnostics and STASH
          nSCMDpkgs, L_SCMDiags, BL_diag, sf_diag,                       &
     !     INOUT data
-         gs,z0msea,w_copy,etadot_copy,tstar_sea,tstar_sice_cat,zh,dzh,  &
+         gs_gb,z0msea,w_copy,etadot_copy,tstar_sea,tstar_sice_sicat,zh,dzh,&
          cumulus, ntml,ntpar,l_shallow,                                 &
     !     INOUT additional variables for JULES
-         g_leaf_acc,npp_ft_acc,resp_w_ft_acc,resp_s_acc,                &
+         g_leaf_acc_pft,npp_acc_pft,resp_w_acc_pft,resp_s_acc_gb_um,    &
     !     INOUT variables for TKE based turbulence schemes
          e_trb, tsq_trb, qsq_trb, cov_trb, zhpar_shcu,                  &
       ! INOUT variables from bdy_expl1 needed elsewhere
@@ -924,15 +1323,15 @@ contains
       ! INOUT variables required in IMP_SOLVER
         alpha1_sea, alpha1_sice, ashtf_prime_sea, ashtf_prime, u_s,     &
       ! INOUT additional variables for JULES
-        ftl_tile,radnet_sice,rho_aresist_surft,                         &
+        ftl_surft,radnet_sice,rho_aresist_surft,                        &
         aresist_surft, resist_b_surft, alpha1, ashtf_prime_surft,       &
-        fqw_tile,epot_tile,                                             &
+        fqw_surft, epot_surft,                                          &
         fqw_ice,ftl_ice,fraca,resfs,resft,rhokh_surft,rhokh_sice,rhokh_sea, &
         z0hssi,z0h_surft,z0mssi,z0m_surft,chr1p5m,chr1p5m_sice,smc_soilt, &
         npp_gb, resp_s_gb_um, resp_s_tot_soilt,                         &
         resp_w_pft, gc_surft, canhc_surft, wt_ext_surft, flake,         &
         surft_index, surft_pts,                                         &
-        tile_frac, tstar_land, tstar_ssi, dtstar_tile,                  &
+        tile_frac, tstar_land, tstar_ssi, dtstar_surft,                 &
         dtstar_sea, dtstar_sice, hcons_soilt, emis_surft, emis_soil,    &
         t1_sd, q1_sd, fb_surf,                                          &
       ! OUT variables for message passing
@@ -1469,9 +1868,9 @@ contains
           , u, v, w                                                     &
           , land_sea_mask, q, qcl, qcf, p_star, theta, exner_theta_levels&
     ! IN ancillary fields and fields needed to be kept from tstep to tstep
-          , sil_orog_land, ho2r2_orog                                   &
-          , ice_fract, di_ncat, ice_fract_ncat, k_sice, u_0, v_0, land_index&
-          , cca, lcbase, ccb0, cct0                                     &
+          , sil_orog_land_gb, ho2r2_orog_gb                             &
+          , ice_fract, di_ncat_sicat, ice_fract_ncat, k_sice_sicat      &
+          , u_0, v_0, land_index, cca, lcbase, ccb0, cct0               &
           , ls_rain, ls_snow, conv_rain_copy, conv_snow_copy            &
     ! IN variables required from BDY_LAYR
           , alpha1_sea, alpha1_sice, ashtf_prime_sea, ashtf_prime, bq_gb, bt_gb&
@@ -1488,28 +1887,28 @@ contains
           , kent_dsc, we_lim_dsc, t_frac_dsc, zrzi_dsc                  &
           , zhsc,z_rho,dust_flux,dust_emiss_frac                        &
           , u_s_t_tile,u_s_t_dry_tile,u_s_std_surft                     &
-     ! IN additional variables for JULES. Now includes lai_ft, canht_ft.
-          , surft_pts,surft_index,tile_frac,canopy                      &
+     ! IN additional variables for JULES. Now includes lai_pft, canht_pft.
+          , surft_pts,surft_index,tile_frac,canopy_surft                &
           , alpha1,fraca,rhokh_surft,smc_soilt,chr1p5m,resfs,z0hssi,z0mssi &
-          , canhc_surft,flake,wt_ext_surft,lw_down,lai_ft,canht_ft      &
-          , sw_tile,ashtf_prime_surft,gc_surft,aresist_surft            &
+          , canhc_surft,flake,wt_ext_surft,lw_down,lai_pft,canht_pft    &
+          , sw_surft,ashtf_prime_surft,gc_surft,aresist_surft           &
           , resft,rhokh_sice,rhokh_sea,z0h_surft,z0m_surft              &
           , chr1p5m_sice                                                &
           , fland, flandg, flandg_u,flandg_v                            &
-          , emis_surft, t_soil, snow_tile, sstfrz                       &
+          , emis_surft, t_soil_soilt, snow_surft, sstfrz                &
     ! IN JULES variables for STASH
-          , gs, npp_gb, resp_s_gb_um                                    &
-          , resp_s_tot_soilt,cs                                         &
-          , catch                                                       &
+          , gs_gb, npp_gb, resp_s_gb_um                                 &
+          , resp_s_tot_soilt,cs_pool_gb_um                              &
+          , catch_surft                                                 &
           , co2_emits, co2flux                                          &
     ! INOUT diagnostic info
           , STASHwork3, STASHwork9                                      &
     ! SCM Diagnostics (dummy in full UM) & bl diags
           , nSCMDpkgs, L_SCMDiags, bl_diag, sf_diag                     &
-    ! INOUT (Note ti and ti_gb are IN only if l_sice_multilayers=T)
-          , TScrnDcl_SSI, TScrnDcl_TILE, tStbTrans                      &
+    ! INOUT (Note ti_cat_sicat and ti_sicat are IN only if l_sice_multilayers=T)
+          , TScrnDcl_SSI, TScrnDcl_surft, tStbTrans                     &
           , cca0, fqw, ftl, taux, tauy, rhokh                           &
-          , fqw_ice,ftl_ice,dtstar_tile,dtstar_sea,dtstar_sice,ti       &
+          , fqw_ice,ftl_ice,dtstar_surft,dtstar_sea,dtstar_sice,ti_cat_sicat &
           , area_cloud_fraction, bulk_cloud_fraction                    &
           , t_latest, q_latest, qcl_latest, qcf_latest                  &
           , cf_latest, cfl_latest, cff_latest                           &
@@ -1523,23 +1922,18 @@ contains
           , bmass_cld, ocff_new, ocff_aged, ocff_cld, nitr_acc, nitr_diss &
           , co2, ozone_tracer                                           &
     ! INOUT additional variables for JULES
-          , tstar_tile,fqw_tile,epot_tile,ftl_tile                      &
-          , radnet_sice,olr,tstar_sice_cat,tstar_ssi                    &
+          , tstar_surft, fqw_surft, epot_surft, ftl_surft               &
+          , radnet_sice,olr,tstar_sice_sicat,tstar_ssi                  &
           , tstar_sea,taux_land,taux_ssi,tauy_land,tauy_ssi,Error_code  &
     ! OUT fields
           , surf_ht_flux_land, zlcl_mixed                               &
           , theta_star_surf, qv_star_surf                               &
     ! OUT additional variables for JULES
-          , tstar, ti_gb, ext, snowmelt,tstar_land,tstar_sice, ei_tile  &
-          , ecan_tile,melt_tile, surf_htf_tile                          &
+          , tstar, ti_sicat, ext, snowmelt,tstar_land,tstar_sice, ei_surft &
+          , ecan_surft, melt_surft, surf_htf_surft                      &
     ! OUT fields for coupling to the wave model
           , uwind_wav, vwind_wav                                        &
             )
-
-    ! deallocate diagnostics deallocated in atmos_physics2
-    CALL dealloc_bl_imp(bl_diag)
-    CALL dealloc_sf_imp(sf_diag)
-    CALL dealloc_sf_expl(sf_diag)
 
     !-----------------------------------------------------------------------
     ! update main model prognostics
@@ -1596,7 +1990,46 @@ contains
     ! There is no need to loop over nlayers_2d, since here
     ! nlayers_2d=1
     if (outer == outer_iterations) then
-      tstar_2d(map_2d(1))  = tstar(1,1)
+
+      i_tile = 0
+      do i = first_land_tile, first_land_tile + n_land_tile - 1
+        i_tile = i_tile + 1
+        ! Land tile temperatures
+        tile_temperature(map_tile(i)) = real(tstar_surft(1, i_tile), r_def)
+         ! sensible heat flux
+        tile_heat_flux(map_tile(i)) = real(ftl_surft(1, i_tile), r_def)
+        ! moisture flux
+        tile_moisture_flux(map_tile(i)) = real(fqw_surft(1, i_tile), r_def)
+      end do
+
+      ! Surface conductance (gs_gb)
+      surface_conductance(map_2d(1)) = real(gs_gb(1), r_def)
+
+      ! Sea temperature
+      tile_temperature(map_tile(first_sea_tile)) = real(tstar_sea(1,1), r_def)
+      ! heat flux - NB actually grid box mean but okay for aquaplanet
+      tile_heat_flux(map_tile(first_sea_tile)) = real(ftl(1,1,1), r_def)
+      ! moisture flux - NB actually grid box mean but okay for aquaplanet
+      tile_moisture_flux(map_tile(first_sea_tile)) = real(fqw(1,1,1), r_def)
+
+      i_sice = 0
+      do i = first_sea_ice_tile, first_sea_ice_tile + n_sea_ice_tile - 1
+        i_sice = i_sice + 1
+        ! sea-ice temperature
+        tile_temperature(map_tile(i)) = real(tstar_sice_sicat(1,1,i_sice), r_def)
+        ! sea-ice heat flux
+        tile_heat_flux(map_tile(i)) = real(ftl_ice(1,1,i_sice), r_def)
+        ! sea-ice moisture flux
+        tile_moisture_flux(map_tile(i)) = real(fqw_ice(1,1,i_sice), r_def)
+      end do
+
+      if (flandg(1, 1) > 0.0_r_um) then
+        ! Gross primary productivity diagnostic
+        gross_prim_prod(map_2d(1)) = real(sf_diag%gpp(1), r_def)
+        ! Net primary productivity diagnostic
+        net_prim_prod(map_2d(1)) = real(npp_gb(1), r_def)
+      end if
+
       zh_2d(map_2d(1))     = zh(1,1)
       z0msea_2d(map_2d(1)) = z0msea(1,1)
       ntml_2d(map_2d(1))   = real(ntml(1,1))
@@ -1609,6 +2042,13 @@ contains
       lowest_cv_base(map_2d(1)) = lcbase(1,1)
     endif
 
+    ! deallocate diagnostics deallocated in atmos_physics2
+    CALL dealloc_bl_imp(bl_diag)
+    CALL dealloc_sf_imp(sf_diag)
+    CALL dealloc_sf_expl(sf_diag)
+
+    ! set this back to 1 before exit
+    land_field = 1
 
   end subroutine bl_code
 

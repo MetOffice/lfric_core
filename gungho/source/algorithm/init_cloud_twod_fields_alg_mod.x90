@@ -51,6 +51,7 @@ contains
     type( field_type ), pointer :: conv_snow_twod  => null()
     type( field_type ), pointer :: ls_rain_twod  => null()
     type( field_type ), pointer :: ls_snow_twod  => null()
+    type( field_type ), pointer :: cos_zenith_angle  => null()
     !=== Initialise twod fields ==================================!
 
     tstar_twod => twod_fields%get_field('tstar')
@@ -60,6 +61,7 @@ contains
     conv_snow_twod => twod_fields%get_field('conv_snow')
     ls_rain_twod => twod_fields%get_field('ls_rain')
     ls_snow_twod => twod_fields%get_field('ls_snow')
+    cos_zenith_angle => twod_fields%get_field('cos_zenith_angle')
 
     call log_event( "Gungho: Initialising cloud fields", LOG_LEVEL_INFO )
 
@@ -73,9 +75,10 @@ contains
                  setval_c(zh_twod, 1000.0_r_def),    &
                  setval_c(z0msea_twod, 1.5e-4_r_def),&
                  setval_c(conv_rain_twod, 0.0_r_def),&
-                 setval_c(conv_snow_twod, 0.0_r_def) )
-    call invoke( setval_c(ls_rain_twod, 0.0_r_def))
-    call invoke( setval_c(ls_snow_twod, 0.0_r_def))
+                 setval_c(conv_snow_twod, 0.0_r_def),&
+                 setval_c(ls_rain_twod, 0.0_r_def),  &
+                 setval_c(ls_snow_twod, 0.0_r_def),  &
+                 setval_c(cos_zenith_angle, 1.0_r_def) )
 
     call log_event( "Gungho: Initialised twod fields", LOG_LEVEL_INFO )
 

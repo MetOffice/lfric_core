@@ -3,6 +3,7 @@ import rose.upgrade
 import re
 import sys
 
+
 class UpgradeError(Exception):
 
     """Exception created when an upgrade fails."""

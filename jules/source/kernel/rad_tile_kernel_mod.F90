@@ -164,6 +164,8 @@ subroutine rad_tile_code(nlayers,                          &
   use nvegparm, only: emis_nvg
   use pftparm, only: emis_pft
   use jules_sea_seaice_mod, only: nice, nice_use, emis_sea, emis_sice
+  use ancil_info, only: sea_pts, sea_index, ssi_index, sice_pts_ncat,       &
+                        sice_index_ncat, sice_frac_ncat
 
   use tilepts_mod, only: tilepts
   use sparm_mod, only: sparm
@@ -219,7 +221,7 @@ subroutine rad_tile_code(nlayers,                          &
 
 
   ! Local variables for the kernel
-  integer(i_def) :: i, i_tile, i_pft, i_sice, i_band, i_basis
+  integer(i_def) :: i, i_tile, i_pft, i_sice, i_band, i_basis, n
   integer(i_def) :: df_rtile
 
   ! Inputs to surf_couple_radiation
@@ -313,6 +315,37 @@ subroutine rad_tile_code(nlayers,                          &
     ice_fract_cat(1, 1, 1:n_sea_ice_tile) &
       = ice_fract_cat(1, 1, 1:n_sea_ice_tile) / (1.0_r_um - flandg(1, 1))
   end if
+
+  ! Combined sea and sea-ice index
+  if (flandg(1, 1) < 1.0_r_um) then
+    ssi_index = 1
+  else
+    ssi_index = 0
+  end if
+
+  ! Individual sea and sea-ice indices
+  if (ssi_index(1) > 0) then
+    if (ice_fract(1, 1) < 1.0_r_um) then
+      sea_pts = 1
+      sea_index = 1
+    else
+      sea_pts = 0
+      sea_index = 0
+    end if
+  end if
+
+  ! Multi-category sea-ice index
+  do n = 1, nice_use
+    if (ssi_index(1) > 0 .and. ice_fract_cat(1, 1, n) > 0.0_r_um) then
+      sice_pts_ncat(n) = 1
+      sice_index_ncat(1, n) = 1
+      sice_frac_ncat(1, n) = ice_fract_cat(1, 1, n)
+    else
+      sice_pts_ncat(n) = 0
+      sice_index_ncat(1, n) = 0
+      sice_frac_ncat(1, n) = 0.0_r_um
+    end if
+  end do
 
   do i_sice = 1, n_sea_ice_tile
     ! Sea-ice thickness

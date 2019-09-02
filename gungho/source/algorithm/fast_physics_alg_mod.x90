@@ -46,30 +46,33 @@ contains
 
   !> @details Collection of procedures for subgrid physics that act
   !>          within the outer loop of the solver
-  !> @param[in,out] du             Increment to wind field
-  !> @param[in,out] dtheta         Increment to theta field
-  !> @param[in,out] mr             Mixing ratios
-  !> @param[in]     outer          Outer loop counter
-  !> @param[in]     theta          Theta field
-  !> @param[in]     rho            Rho on w3 space
-  !> @param[in]     exner          Exner pressure on w3 space
-  !> @param[in]     mr_n           Mixing ratios at time level n
-  !> @param[in]     shear          3D wind shear on wtheta points
-  !> @param[in]     delta          Edge length on wtheta points
-  !> @param[in]     max_diff_smag  Maximum diffusion coefficient allowed in this run
-  !> @param[in,out] derived_fields Group of derived fields
-  !> @param[in,out] cloud_fields   Group of cloud fields
-  !> @param[in,out] twod_fields    Group of 2D fields
-  !> @param[in,out] visc_m_blend   Blended BL-Smag diffusion coefficient for momentum
-  !> @param[in,out] visc_h_blend   Blended BL-Smag diffusion coefficient for scalars
-  !> @param[in,out] physics_incs   Group of physics increments
-  !> @param[in]     height_w3      Height in w3
-  !> @param[in]     height_wth     Height in wth
+  !> @param[in,out] du                Increment to wind field
+  !> @param[in,out] dtheta            Increment to theta field
+  !> @param[in,out] mr                Mixing ratios
+  !> @param[in]     outer             Outer loop counter
+  !> @param[in]     theta             Theta field
+  !> @param[in]     rho               Rho on w3 space
+  !> @param[in]     exner             Exner pressure on w3 space
+  !> @param[in]     mr_n              Mixing ratios at time level n
+  !> @param[in]     shear             3D wind shear on wtheta points
+  !> @param[in]     delta             Edge length on wtheta points
+  !> @param[in]     max_diff_smag     Maximum diffusion coefficient allowed in this run
+  !> @param[in,out] derived_fields    Group of derived fields
+  !> @param[in,out] cloud_fields      Group of cloud fields
+  !> @param[in,out] twod_fields       Group of 2D fields
+  !> @param[in,out] visc_m_blend      Blended BL-Smag diffusion coefficient for momentum
+  !> @param[in,out] visc_h_blend      Blended BL-Smag diffusion coefficient for scalars
+  !> @param[in,out] physics_incs      Group of physics increments
+  !> @param[in]     height_w3         Height in w3
+  !> @param[in]     height_wth        Height in wth
+  !> @param[in,out] jules_ancils      Ancillary fields for Jules
+  !> @param[in,out] jules_prognostics Prognostic fields for Jules
   subroutine fast_physics(du, dtheta, mr, outer, theta, rho, exner, mr_n, &
                           shear, delta, max_diff_smag,                    &
                           derived_fields, cloud_fields, twod_fields,      &
                           visc_m_blend, visc_h_blend,                     &
-                          physics_incs, height_w3, height_wth)
+                          physics_incs, height_w3, height_wth,            &
+                          jules_ancils, jules_prognostics)
 
     implicit none
 
@@ -88,6 +91,10 @@ contains
     type( field_collection_type ), intent(inout) :: cloud_fields
     type( field_collection_type ), intent(inout) :: twod_fields
     type( field_collection_type ), intent(inout) :: physics_incs
+
+    ! Surface fields
+    type( field_collection_type ), intent(inout) :: jules_ancils
+    type( field_collection_type ), intent(inout) :: jules_prognostics
 
     ! Coordinate fields
     type( field_type ), intent( in )    :: height_w3, height_wth
@@ -135,10 +142,11 @@ contains
       call log_event( 'fast_physics: Running Boundary layer', LOG_LEVEL_INFO )
       call dtheta%copy_field_properties(dtheta_bl)
       call invoke( setval_c(dtheta_bl, 0.0_r_def) )
-      call bl_alg_step(dtheta_bl, mr, outer, theta, rho, mr_n, exner,       &
-                       shear, delta, max_diff_smag,                         &
-                       height_w3, height_wth, derived_fields, cloud_fields, &
-                       twod_fields, physics_incs, visc_m_blend, visc_h_blend)
+      call bl_alg_step(dtheta_bl, mr, outer, theta, rho, mr_n, exner,         &
+                       shear, delta, max_diff_smag,                           &
+                       height_w3, height_wth, derived_fields, cloud_fields,   &
+                       twod_fields, physics_incs, visc_m_blend, visc_h_blend, &
+                       jules_ancils, jules_prognostics)
       boundary_layer_done=.true. ! We've done it, so need to collect this term later on
     end if
 #endif

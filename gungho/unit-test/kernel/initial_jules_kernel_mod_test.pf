@@ -10,6 +10,8 @@ module initial_jules_kernel_mod_test
 
   use constants_mod, only : r_def, i_def
   use pFUnit_Mod
+  use yaxt,                          only : xt_initialize, xt_finalize
+  use mpi_mod,                       only : store_comm, clear_comm
 
   implicit none
 
@@ -36,7 +38,28 @@ module initial_jules_kernel_mod_test
       chloro_sea(:),         answer_chloro_sea(:),         &
       sea_ice_thickness(:),  answer_sea_ice_thickness(:),  &
       sea_ice_pond_frac(:),  answer_sea_ice_pond_frac(:),  &
-      sea_ice_pond_depth(:), answer_sea_ice_pond_depth(:)
+      sea_ice_pond_depth(:), answer_sea_ice_pond_depth(:), &
+      peak_to_trough_orog(:),answer_peak_to_trough_orog(:),&
+      silhouette_area_orog(:), answer_silhouette_area_orog(:), &
+      soil_moist_wilt(:),    answer_soil_moist_wilt(:),    &
+      soil_moist_crit(:),    answer_soil_moist_crit(:),    &
+      soil_moist_sat(:),     answer_soil_moist_sat(:),     &
+      soil_cond_sat(:),      answer_soil_cond_sat(:),      &
+      soil_thermal_cap(:),   answer_soil_thermal_cap(:),   &
+      soil_thermal_cond(:),  answer_soil_thermal_cond(:),  &
+      soil_suction_sat(:),   answer_soil_suction_sat(:),   &
+      clapp_horn_b(:),       answer_clapp_horn_b(:),       &
+      soil_carbon_content(:),answer_soil_carbon_content(:),&
+      n_snow_layers(:),      answer_n_snow_layers(:),      &
+      snow_depth(:),         answer_snow_depth(:),         &
+      surface_conductance(:),answer_surface_conductance(:),&
+      canopy_water(:),       answer_canopy_water(:),       &
+      sw_up_tile(:),         answer_sw_up_tile(:),         &
+      soil_temperature(:),   answer_soil_temperature(:),   &
+      soil_moisture(:),      answer_soil_moisture(:),      &
+      unfrozen_soil_moisture(:), answer_unfrozen_soil_moisture(:), &
+      frozen_soil_moisture(:), answer_frozen_soil_moisture(:)
+
   contains
     procedure setUp
     procedure tearDown
@@ -48,19 +71,33 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
+    use feign_config_mod, only: feign_surface_config
+
     implicit none
 
     class(jules_test_type), intent(inout) :: this
 
-    integer :: undf_tile
-    integer :: undf_pft
-    integer :: undf_2d
-    integer :: undf_sice
+    integer(kind=i_def) :: undf_tile
+    integer(kind=i_def) :: undf_pft
+    integer(kind=i_def) :: undf_2d
+    integer(kind=i_def) :: undf_sice
+    integer(kind=i_def) :: undf_soil
 
     undf_tile = 11_i_def
     undf_pft  = 5_i_def
     undf_2d   = 1_i_def
     undf_sice = 1_i_def
+    undf_soil = 4_i_def
+
+    ! Initialise YAXT
+    call xt_initialize(this%getMpiCommunicator())
+    ! Store the MPI communicator for later use
+    call store_comm(this%getMpiCommunicator())
+
+    call feign_surface_config( surf_tile_fracs=[0.0_r_def, 0.0_r_def, &
+                                     0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                                     0.0_r_def, 0.0_r_def, 1.0_r_def, &
+                                     0.0_r_def, 0.0_r_def, 0.0_r_def] )
 
     allocate( this%tile_fraction(undf_tile)      )
     allocate( this%leaf_area_index(undf_pft)     )
@@ -79,6 +116,26 @@ contains
     allocate( this%sea_ice_thickness(undf_sice)  )
     allocate( this%sea_ice_pond_frac(undf_sice)  )
     allocate( this%sea_ice_pond_depth(undf_sice) )
+    allocate( this%peak_to_trough_orog(undf_2d)  )
+    allocate( this%silhouette_area_orog(undf_2d)  )
+    allocate( this%soil_moist_wilt(undf_soil) )
+    allocate( this%soil_moist_crit(undf_soil) )
+    allocate( this%soil_moist_sat(undf_soil) )
+    allocate( this%soil_cond_sat(undf_soil) )
+    allocate( this%soil_thermal_cap(undf_soil) )
+    allocate( this%soil_thermal_cond(undf_2d)  )
+    allocate( this%soil_suction_sat(undf_soil) )
+    allocate( this%clapp_horn_b(undf_soil) )
+    allocate( this%soil_carbon_content(undf_2d)  )
+    allocate( this%n_snow_layers(undf_tile)   )
+    allocate( this%snow_depth(undf_tile)   )
+    allocate( this%surface_conductance(undf_2d)  )
+    allocate( this%canopy_water(undf_tile)   )
+    allocate( this%sw_up_tile(undf_tile)   )
+    allocate( this%soil_temperature(undf_soil) )
+    allocate( this%soil_moisture(undf_soil) )
+    allocate( this%unfrozen_soil_moisture(undf_soil) )
+    allocate( this%frozen_soil_moisture(undf_soil) )
 
     allocate( this%answer_tile_fraction(undf_tile)      )
     allocate( this%answer_leaf_area_index(undf_pft)     )
@@ -97,11 +154,33 @@ contains
     allocate( this%answer_sea_ice_thickness(undf_sice)  )
     allocate( this%answer_sea_ice_pond_frac(undf_sice)  )
     allocate( this%answer_sea_ice_pond_depth(undf_sice) )
+    allocate( this%answer_peak_to_trough_orog(undf_2d)  )
+    allocate( this%answer_silhouette_area_orog(undf_2d)  )
+    allocate( this%answer_soil_moist_wilt(undf_soil) )
+    allocate( this%answer_soil_moist_crit(undf_soil) )
+    allocate( this%answer_soil_moist_sat(undf_soil) )
+    allocate( this%answer_soil_cond_sat(undf_soil) )
+    allocate( this%answer_soil_thermal_cap(undf_soil) )
+    allocate( this%answer_soil_thermal_cond(undf_2d)  )
+    allocate( this%answer_soil_suction_sat(undf_soil) )
+    allocate( this%answer_clapp_horn_b(undf_soil) )
+    allocate( this%answer_soil_carbon_content(undf_2d)  )
+    allocate( this%answer_n_snow_layers(undf_tile)   )
+    allocate( this%answer_snow_depth(undf_tile)   )
+    allocate( this%answer_surface_conductance(undf_2d)  )
+    allocate( this%answer_canopy_water(undf_tile)   )
+    allocate( this%answer_sw_up_tile(undf_tile)   )
+    allocate( this%answer_soil_temperature(undf_soil) )
+    allocate( this%answer_soil_moisture(undf_soil) )
+    allocate( this%answer_unfrozen_soil_moisture(undf_soil) )
+    allocate( this%answer_frozen_soil_moisture(undf_soil) )
 
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
+
+    use configuration_mod,        only: final_configuration
 
     implicit none
 
@@ -123,7 +202,35 @@ contains
                 this%answer_chloro_sea,         this%chloro_sea,        &
                 this%answer_sea_ice_thickness,  this%sea_ice_thickness, &
                 this%answer_sea_ice_pond_frac,  this%sea_ice_pond_frac, &
-                this%answer_sea_ice_pond_depth, this%sea_ice_pond_depth )
+                this%answer_sea_ice_pond_depth, this%sea_ice_pond_depth,&
+                this%answer_peak_to_trough_orog,this%peak_to_trough_orog,&
+                this%answer_silhouette_area_orog,this%silhouette_area_orog,&
+                this%answer_soil_moist_wilt,    this%soil_moist_wilt,   &
+                this%answer_soil_moist_crit,    this%soil_moist_crit,   &
+                this%answer_soil_moist_sat,     this%soil_moist_sat,    &
+                this%answer_soil_cond_sat,      this%soil_cond_sat,     &
+                this%answer_soil_thermal_cap,   this%soil_thermal_cap,  &
+                this%answer_soil_thermal_cond,  this%soil_thermal_cond, &
+                this%answer_soil_suction_sat,   this%soil_suction_sat,  &
+                this%answer_clapp_horn_b,       this%clapp_horn_b,      &
+                this%answer_soil_carbon_content,this%soil_carbon_content,&
+                this%answer_n_snow_layers,      this%n_snow_layers,     &
+                this%answer_snow_depth,         this%snow_depth,        &
+                this%answer_surface_conductance,this%surface_conductance,&
+                this%answer_canopy_water,       this%canopy_water,      &
+                this%answer_sw_up_tile,         this%sw_up_tile,        &
+                this%answer_soil_temperature,   this%soil_temperature,  &
+                this%answer_soil_moisture,      this%soil_moisture,     &
+                this%answer_unfrozen_soil_moisture,this%unfrozen_soil_moisture,&
+                this%answer_frozen_soil_moisture,this%frozen_soil_moisture)
+
+    ! Finalise YAXT
+    call xt_finalize()
+    ! Clear the stored MPI communicator
+    call clear_comm()
+
+    ! Finalise namelists
+    call final_configuration()
 
   end subroutine tearDown
 
@@ -139,21 +246,25 @@ contains
 
     real(kind=r_def), parameter :: tol = 1.0e-14_r_def
 
-    integer :: i, nlayers
-    integer :: n_surf_tile
-    integer :: n_sea_ice_tile
+    integer(kind=i_def) :: i, nlayers
+    integer(kind=i_def) :: n_surf_tile
+    integer(kind=i_def) :: n_sea_ice_tile
+    integer(kind=i_def) :: n_soil_levs
 
-    integer              :: ndf_tile, undf_tile
-    integer, allocatable :: map_tile(:)
-    integer              :: ndf_pft, undf_pft
-    integer, allocatable :: map_pft(:)
-    integer              :: ndf_2d, undf_2d
-    integer, allocatable :: map_2d(:)
-    integer              :: ndf_sice, undf_sice
-    integer, allocatable :: map_sice(:)
+    integer(kind=i_def)              :: ndf_tile, undf_tile
+    integer(kind=i_def), allocatable :: map_tile(:)
+    integer(kind=i_def)              :: ndf_pft, undf_pft
+    integer(kind=i_def), allocatable :: map_pft(:)
+    integer(kind=i_def)              :: ndf_2d, undf_2d
+    integer(kind=i_def), allocatable :: map_2d(:)
+    integer(kind=i_def)              :: ndf_sice, undf_sice
+    integer(kind=i_def), allocatable :: map_sice(:)
+    integer(kind=i_def)              :: ndf_soil, undf_soil
+    integer(kind=i_def), allocatable :: map_soil(:)
 
     n_surf_tile = 11_i_def
     n_sea_ice_tile = 1_i_def
+    n_soil_levs = 4_i_def
 
     ndf_tile  = n_surf_tile
     undf_tile = n_surf_tile
@@ -183,6 +294,13 @@ contains
       map_sice(i) = i
     end do
 
+    ndf_soil  = n_soil_levs
+    undf_soil = n_soil_levs
+    allocate(map_soil(ndf_soil))
+    do i=1_i_def, ndf_soil
+      map_soil(i) = i
+    end do
+
     ! Set correct answers
     this%answer_tile_fraction(:)           = 0.0_r_def
     this%answer_tile_fraction(map_tile(8)) = 1.0_r_def
@@ -200,62 +318,140 @@ contains
     this%answer_canopy_height(map_pft(5)) =  1.59_r_def
 
     this%answer_sd_orog(:)            = 0.0_r_def
+    this%answer_peak_to_trough_orog(:)= 0.0_r_def
+    this%answer_silhouette_area_orog(:)=0.0_r_def
     this%answer_soil_albedo(:)        = 0.1065_r_def
     this%answer_soil_roughness(:)     = 0.0_r_def
     this%answer_albedo_obs_sw(:)      = 0.0_r_def
     this%answer_albedo_obs_vis(:)     = 0.0_r_def
     this%answer_albedo_obs_nir(:)     = 0.0_r_def
+    this%answer_soil_moist_wilt(:)    = 0.226216_r_def
+    this%answer_soil_moist_crit(:)    = 0.340808_r_def
+    this%answer_soil_moist_sat(:)     = 0.4489_r_def
+    this%answer_soil_cond_sat(:)      = 0.00286_r_def
+    this%answer_soil_thermal_cap(:)   = 1228100.0_r_def
+    this%answer_soil_thermal_cond(:)  = 0.230211_r_def
+    this%answer_soil_suction_sat(:)   = 0.31282_r_def
+    this%answer_clapp_horn_b(:)       = 9.3080_r_def
+    this%answer_soil_carbon_content(:)= 12.1_r_def
     this%answer_tile_temperature(:)   = 295.0_r_def
     this%answer_tile_snow_mass(:)     = 0.0_r_def
     this%answer_tile_snow_rgrain(:)   = 300.0_r_def
+    this%answer_n_snow_layers(:)      = 0.0_r_def
+    this%answer_snow_depth(:)         = 0.0_r_def
     this%answer_snow_soot(:)          = 0.0_r_def
     this%answer_chloro_sea(:)         = 5.0e-7_r_def
     this%answer_sea_ice_thickness(:)  = 0.0_r_def
     this%answer_sea_ice_pond_frac(:)  = 0.0_r_def
     this%answer_sea_ice_pond_depth(:) = 0.0_r_def
+    this%answer_surface_conductance(:) = 1.0_r_def
+    this%answer_canopy_water(:)       = 0.0_r_def
+    this%answer_sw_up_tile(:)         = 0.0_r_def
+
+    this%answer_soil_temperature(map_soil(1)) = 285.0_r_def
+    this%answer_soil_temperature(map_soil(2)) = 280.0_r_def
+    this%answer_soil_temperature(map_soil(3)) = 275.0_r_def
+    this%answer_soil_temperature(map_soil(4)) = 275.0_r_def
+
+    this%answer_soil_moisture(map_soil(1)) = 40.0_r_def
+    this%answer_soil_moisture(map_soil(2)) = 90.0_r_def
+    this%answer_soil_moisture(map_soil(3)) = 150.0_r_def
+    this%answer_soil_moisture(map_soil(4)) = 460.0_r_def
+
+    this%answer_unfrozen_soil_moisture(map_soil(1)) = 0.89107_r_def
+    this%answer_unfrozen_soil_moisture(map_soil(2)) = 0.80196_r_def
+    this%answer_unfrozen_soil_moisture(map_soil(3)) = 0.51408_r_def
+    this%answer_unfrozen_soil_moisture(map_soil(4)) = 0.51236_r_def
+
+    this%answer_frozen_soil_moisture(map_soil(1)) = 0.0_r_def
+    this%answer_frozen_soil_moisture(map_soil(2)) = 0.0_r_def
+    this%answer_frozen_soil_moisture(map_soil(3)) = 0.0_r_def
+    this%answer_frozen_soil_moisture(map_soil(4)) = 0.0_r_def
 
     ! Make up initial wrong fields
     this%tile_fraction(:)      = -9.0_r_def
     this%leaf_area_index(:)    = -9.0_r_def
     this%canopy_height(:)      = -9.0_r_def
     this%sd_orog(:)            = -9.0_r_def
+    this%peak_to_trough_orog(:)= -9.0_r_def
+    this%silhouette_area_orog(:)= -9.0_r_def
     this%soil_albedo(:)        = -9.0_r_def
     this%soil_roughness(:)     = -9.0_r_def
     this%albedo_obs_sw(:)      = -9.0_r_def
     this%albedo_obs_vis(:)     = -9.0_r_def
     this%albedo_obs_nir(:)     = -9.0_r_def
+    this%soil_moist_wilt(:)    = -9.0_r_def
+    this%soil_moist_crit(:)    = -9.0_r_def
+    this%soil_moist_sat(:)     = -9.0_r_def
+    this%soil_cond_sat(:)      = -9.0_r_def
+    this%soil_thermal_cap(:)   = -9.0_r_def
+    this%soil_thermal_cond(:)  = -9.0_r_def
+    this%soil_suction_sat(:)   = -9.0_r_def
+    this%clapp_horn_b(:)       = -9.0_r_def
+    this%soil_carbon_content(:)= -9.0_r_def
     this%tile_temperature(:)   = -9.0_r_def
     this%tile_snow_mass(:)     = -9.0_r_def
     this%tile_snow_rgrain(:)   = -9.0_r_def
+    this%n_snow_layers(:)      = -9.0_r_def
+    this%snow_depth(:)         = -9.0_r_def
     this%snow_soot(:)          = -9.0_r_def
     this%chloro_sea(:)         = -9.0_r_def
     this%sea_ice_thickness(:)  = -9.0_r_def
     this%sea_ice_pond_frac(:)  = -9.0_r_def
     this%sea_ice_pond_depth(:) = -9.0_r_def
+    this%soil_temperature(:)   = -9.0_r_def
+    this%soil_moisture(:)      = -9.0_r_def
+    this%unfrozen_soil_moisture(:) = -9.0_r_def
+    this%frozen_soil_moisture(:) = -9.0_r_def
+    this%surface_conductance(:) = -9.0_r_def
+    this%canopy_water(:)       = -9.0_r_def
+    this%sw_up_tile(:)         = -9.0_r_def
 
     call initial_jules_code(nlayers,                       &
                             this%tile_fraction(:),         &
                             this%leaf_area_index(:),       &
                             this%canopy_height(:),         &
                             this%sd_orog(:),               &
+                            this%peak_to_trough_orog(:),   &
+                            this%silhouette_area_orog(:),  &
                             this%soil_albedo(:),           &
                             this%soil_roughness(:),        &
                             this%albedo_obs_sw(:),         &
                             this%albedo_obs_vis(:),        &
                             this%albedo_obs_nir(:),        &
+                            this%soil_moist_wilt(:),       &
+                            this%soil_moist_crit(:),       &
+                            this%soil_moist_sat(:),        &
+                            this%soil_cond_sat(:),         &
+                            this%soil_thermal_cap(:),      &
+                            this%soil_thermal_cond(:),     &
+                            this%soil_suction_sat(:),      &
+                            this%clapp_horn_b(:),          &
+                            this%soil_carbon_content(:),   &
                             this%tile_temperature(:),      &
                             this%tile_snow_mass(:),        &
                             this%tile_snow_rgrain(:),      &
+                            this%n_snow_layers(:),         &
+                            this%snow_depth(:),            &
                             this%snow_soot(:),             &
+                            this%surface_conductance(:),   &
+                            this%canopy_water(:),          &
+                            this%sw_up_tile(:),            &
+                            this%soil_temperature(:),      &
+                            this%soil_moisture(:),         &
+                            this%unfrozen_soil_moisture(:),&
+                            this%frozen_soil_moisture(:),  &
                             this%chloro_sea(:),            &
                             this%sea_ice_thickness(:),     &
                             this%sea_ice_pond_frac(:),     &
                             this%sea_ice_pond_depth(:),    &
                             n_surf_tile,                   &
                             n_sea_ice_tile,                &
+                            n_soil_levs,                   &
                             ndf_tile, undf_tile, map_tile, &
                             ndf_pft, undf_pft, map_pft,    &
                             ndf_2d, undf_2d, map_2d,       &
+                            ndf_soil, undf_soil, map_soil, &
                             ndf_sice, undf_sice, map_sice)
 
     @assertEqual( this%answer_tile_fraction(:),      this%tile_fraction(:),      tol )
@@ -275,6 +471,26 @@ contains
     @assertEqual( this%answer_sea_ice_thickness(:),  this%sea_ice_thickness(:),  tol )
     @assertEqual( this%answer_sea_ice_pond_frac(:),  this%sea_ice_pond_frac(:),  tol )
     @assertEqual( this%answer_sea_ice_pond_depth(:), this%sea_ice_pond_depth(:), tol )
+    @assertEqual( this%answer_peak_to_trough_orog(:), this%peak_to_trough_orog(:), tol )
+    @assertEqual( this%answer_silhouette_area_orog(:), this%silhouette_area_orog(:), tol )
+    @assertEqual( this%answer_soil_moist_wilt(:), this%soil_moist_wilt(:), tol )
+    @assertEqual( this%answer_soil_moist_crit(:), this%soil_moist_crit(:), tol )
+    @assertEqual( this%answer_soil_moist_sat(:), this%soil_moist_sat(:), tol )
+    @assertEqual( this%answer_soil_cond_sat(:), this%soil_cond_sat(:), tol )
+    @assertEqual( this%answer_soil_thermal_cap(:), this%soil_thermal_cap(:), tol )
+    @assertEqual( this%answer_soil_thermal_cond(:), this%soil_thermal_cond(:), tol )
+    @assertEqual( this%answer_soil_suction_sat(:), this%soil_suction_sat(:), tol )
+    @assertEqual( this%answer_clapp_horn_b(:), this%clapp_horn_b(:), tol )
+    @assertEqual( this%answer_soil_carbon_content(:), this%soil_carbon_content(:), tol )
+    @assertEqual( this%answer_n_snow_layers(:), this%n_snow_layers(:), tol )
+    @assertEqual( this%answer_snow_depth(:), this%snow_depth(:), tol )
+    @assertEqual( this%answer_surface_conductance(:), this%surface_conductance(:), tol )
+    @assertEqual( this%answer_canopy_water(:), this%canopy_water(:), tol )
+    @assertEqual( this%answer_sw_up_tile(:), this%sw_up_tile(:), tol )
+    @assertEqual( this%answer_soil_temperature(:), this%soil_temperature(:), tol )
+    @assertEqual( this%answer_soil_moisture(:), this%soil_moisture(:), tol )
+    @assertEqual( this%answer_unfrozen_soil_moisture(:), this%unfrozen_soil_moisture(:), tol )
+    @assertEqual( this%answer_frozen_soil_moisture(:), this%frozen_soil_moisture(:), tol )
 
   end subroutine test_of_initial_jules
 

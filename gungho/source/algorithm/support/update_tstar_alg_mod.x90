@@ -1,0 +1,66 @@
+!-------------------------------------------------------------------------------
+! (c) Crown copyright 2019 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-------------------------------------------------------------------------------
+!> @brief Temporary infrastructure to put/get the IO tstar field into/from
+!>        the multi-dimensional tile_temperature field
+
+module update_tstar_alg_mod
+
+  ! Derived Types
+  use field_mod,            only: field_type
+  use field_collection_mod, only: field_collection_type
+  use constants_mod,        only: l_def
+
+  implicit none
+
+contains
+
+  !> @brief Put/get the IO tstar field into/from the multi-dimensional
+  !>        tile_temperature field
+  !> @details Temporary infrastructure required to either use or update the
+  !>          single level tstar field required for IO (checkpoint-restarting)
+  !>          with or from the correct data in the tile_temperature array
+  !>          that is used in the science code
+  !> @param[in,out] twod_fields       Collection of 2D fields
+  !> @param[in,out] jules_prognostics Prognostic fields for Jules
+  !> @param[in]     put_field         Logical controlling whether field is
+  !>                                  being put or got from jules_prognostics
+  subroutine update_tstar_alg(twod_fields, jules_prognostics, put_field)
+
+    use init_jules_alg_mod, only: first_sea_tile
+
+    use single_to_multi_kernel_mod, only: single_to_multi_kernel_type
+    use multi_to_single_kernel_mod, only: multi_to_single_kernel_type
+
+
+    implicit none
+
+    type(field_collection_type), intent(inout) :: twod_fields
+    type(field_collection_type), intent(inout) :: jules_prognostics
+
+    logical(kind=l_def) :: put_field
+
+    ! Unpacked fields from collections
+    type( field_type ), pointer :: tile_temperature => null()
+    type( field_type ), pointer :: tstar => null()
+
+    tile_temperature => jules_prognostics%get_field('tile_temperature')
+    tstar => twod_fields%get_field('tstar')
+
+    if ( put_field) then
+      ! Put tstar into tile_temperature
+      call invoke( single_to_multi_kernel_type(tile_temperature, tstar, &
+                                               first_sea_tile ) )
+
+    else
+      ! Get tstar from tile_temperature
+      call invoke( multi_to_single_kernel_type(tstar, tile_temperature, &
+                                               first_sea_tile ) )
+
+    end if
+
+  end subroutine update_tstar_alg
+
+end module update_tstar_alg_mod
