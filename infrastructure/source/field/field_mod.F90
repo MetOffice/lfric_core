@@ -15,6 +15,11 @@ module field_mod
 
   use constants_mod,      only: r_def, r_double, i_def, i_halo_index, l_def, &
                                 str_def
+  use halo_routing_collection_mod, &
+                          only: halo_routing_collection_type, &
+                                halo_routing_collection
+  use halo_routing_mod,   only: halo_routing_type
+  use fs_continuity_mod,  only: WCHI
   use function_space_mod, only: function_space_type
   use mesh_mod,           only: mesh_type
 
@@ -52,6 +57,8 @@ module field_mod
     !> Each field also holds an integer enaumerated value for the
     !> Allocatable array of type real which holds the values of the field
     real(kind=r_def), allocatable :: data( : )
+    !> Holds metadata information about a field - like dofmap or routing tables
+    type(halo_routing_type), pointer :: halo_routing => null()
     !> Flag that holds whether each depth of halo is clean or dirty (dirty=1)
     integer(kind=i_def), allocatable :: halo_dirty(:)
     !> Flag that determines whether the copy constructor should copy the data.
@@ -193,7 +200,9 @@ module field_mod
     !> Each field has a pointer to the function space on which it lives
     type( function_space_type ), pointer, public :: vspace => null()
     !> Allocatable array of type real which holds the values of the field
-    real(kind=r_def), public, pointer         :: data( : ) => null()
+    real(kind=r_def), public, pointer :: data( : ) => null()
+    !> Holds metadata information about a field - like dofmap or routing tables
+    type(halo_routing_type), pointer :: halo_routing => null()
     !> pointer to array that holds halo dirtiness
     integer(kind=i_def), pointer :: halo_dirty(:) => null()
     !> Unique identifier used to identify a halo exchange, so the start of an
@@ -311,6 +320,7 @@ contains
 
     get_proxy % vspace                 => self % vspace
     get_proxy % data                   => self % data
+    get_proxy % halo_routing           => self % halo_routing
     get_proxy % halo_dirty             => self % halo_dirty
 
   end function get_proxy
@@ -358,7 +368,12 @@ contains
     ! only associate the vspace pointer, copy constructor does the rest.
     self%vspace => vector_space
     self%data_extant = .false.
-
+    if ( self%vspace%which() /= WCHI ) then ! chi fields are never halo exchanged - so don't neeed a routing table
+      self%halo_routing => &
+        halo_routing_collection%get_halo_routing( self%vspace%get_mesh_id(),&
+                                              self%vspace%get_element_order(), &
+                                              self%vspace%which() )
+    end if
     ! Set the name of the field if given, otherwise default to 'none'
     if (present(name)) then
       self%name = name
@@ -455,6 +470,7 @@ contains
     dest%checkpoint_write_method => self%checkpoint_write_method
     dest%checkpoint_read_method => self%checkpoint_read_method
     dest%name = self%name
+    dest%halo_routing => self%halo_routing
 
     allocate( dest%data(self%vspace%get_last_dof_halo()) )
 
@@ -975,7 +991,7 @@ contains
                         'attempt to exchange halos with depth out of range.', &
                         LOG_LEVEL_ERROR )
         ! Start a blocking (synchronous) halo exchange
-        redist=self%vspace%get_redist(depth)
+        redist = self%halo_routing%get_redist(depth)
         call xt_redist_s_exchange(redist, self%data, self%data)
 
       ! Halo exchange is complete so set the halo dirty flag to say it
@@ -1010,7 +1026,7 @@ contains
                         'attempt to exchange halos with depth out of range.', &
                         LOG_LEVEL_ERROR )
       ! Start an asynchronous halo exchange
-      redist=self%vspace%get_redist(depth)
+      redist = self%halo_routing%get_redist(depth)
       call xt_redist_a_exchange(redist, self%data, self%data, self%halo_request)
 
       nullify( mesh )

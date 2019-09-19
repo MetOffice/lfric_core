@@ -43,6 +43,8 @@ module cma_test_algorithm_mod
   use function_space_mod,             only : function_space_type
   use function_space_collection_mod,  only : function_space_collection, &
                                              function_space_collection_type
+  use halo_routing_collection_mod,    only : halo_routing_collection_type, &
+                                             halo_routing_collection
   use field_mod,                      only : field_type
   use quadrature_xyoz_mod,            only : quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,   only : quadrature_rule_gaussian_type
@@ -162,6 +164,10 @@ contains
 
     ! Return if module has already been initialised
     if (is_initialised) return
+
+    ! Create a collection for holding FEM info that is specific to a field
+    allocate( halo_routing_collection, &
+              source = halo_routing_collection_type() )
 
     mesh_id = mesh_id_in
 

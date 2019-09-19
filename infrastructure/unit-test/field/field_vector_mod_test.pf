@@ -10,6 +10,8 @@
 module field_vector_mod_test
 
   use constants_mod,                  only : i_def, r_def
+  use halo_routing_collection_mod,    only : halo_routing_collection_type, &
+                                             halo_routing_collection
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use mesh_collection_mod,            only : mesh_collection_type, &
@@ -54,6 +56,8 @@ contains
     mesh_collection = mesh_collection_type()
     ! Create top level function space collection
     function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
 
   end subroutine setUp
 
@@ -64,7 +68,9 @@ contains
 
     class(field_vector_test_type), intent(inout) :: this
 
+    call mesh_collection%clear()
     call function_space_collection%clear()
+    call halo_routing_collection%clear()
 
     ! Finalise YAXT
     call xt_finalize()

@@ -13,6 +13,8 @@ module compute_q_operator_kernel_mod_test
                                               function_space_collection
     use mesh_collection_mod,           only : mesh_collection_type, &
                                               mesh_collection
+    use halo_routing_collection_mod,   only : halo_routing_collection_type, &
+                                              halo_routing_collection
     use field_mod,                     only : field_type,field_proxy_type
     use fs_continuity_mod,             only : W0, W2, Wtheta
     use function_space_mod,            only : function_space_type
@@ -89,6 +91,8 @@ contains
     mesh_collection = mesh_collection_type()
     ! Create top level function space collection
     function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
 
     this%qr = quadrature_xyoz_type(3, quadrature_rule)
 
@@ -136,7 +140,9 @@ contains
 
     deallocate( this%basis_wt, this%basis_w2)
 
+    call mesh_collection%clear()
     call function_space_collection%clear()
+    call halo_routing_collection%clear()
 
     ! Finalise YAXT
     call xt_finalize()

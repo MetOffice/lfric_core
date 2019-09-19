@@ -7,9 +7,9 @@ abstract class field_mod::field_parent_type {
 
 class field_mod::field_type {
   -data : real[] <<allocatable>>
+  -halo_routing : halo_routing_type <<pointer>>
   -halo_dirty : integer[]<<allocatable>>
   -vspace : function_space_type <<pointer>>
-  -ospace : integer
   -data_extant : logical
   -name : string
   -write_method : procedure <<pointer>>
@@ -51,6 +51,7 @@ class field_mod::field_type {
 
 class field_mod::field_proxy_type {
   +data: real[] <<allocatable>>
+  -halo_routing : halo_routing_type <<pointer>>
   -halo_dirty: integer[] <<pointer>>
   +vspace: function_space_type <<pointer>>
   -dummy_for_gnu: integer <<allocatable>>

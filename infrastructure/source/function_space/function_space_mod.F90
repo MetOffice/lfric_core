@@ -21,13 +21,10 @@ use mesh_mod,              only: mesh_type
 use master_dofmap_mod,     only: master_dofmap_type
 use stencil_dofmap_mod,    only: stencil_dofmap_type, STENCIL_POINT,           &
                                  generate_stencil_dofmap_id
-use yaxt,                  only: xt_redist
-use mpi_mod,               only: generate_redistribution_map, get_mpi_datatype
 use log_mod,               only: log_event, log_scratch_space                  &
                                , LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR              &
                                , LOG_LEVEL_INFO
 use reference_element_mod, only: reference_element_type
-
 use fs_continuity_mod,     only: W0, W1, W2, W3, Wtheta, &
                                  W2broken, W2trace,      &
                                  W2V, W2H, Wchi
@@ -155,10 +152,6 @@ type, extends(linked_list_data_type), public :: function_space_type
   !> Flag holds whether MPI communications have been set up for this
   !> function space
   logical(l_def) :: comms_fs
-
-  !> YAXT redistribution maps
-  type(xt_redist), allocatable :: redist(:)
-
 contains
 
   !> @brief Gets the total number of unique degrees of freedom for this space,
@@ -292,11 +285,6 @@ contains
   !> on the reference element.
   procedure, public :: get_entity_dofs
 
-  !> @brief Gets a YAXT redistribution map for halo swapping
-  !> @param[in] depth The depth of halo swap to perform  
-  !> @return redist The YAXT redistrubution map for swapping halos to the depth required
-  procedure get_redist
-
   !> Gets the array that holds the global indices of all dofs
   procedure get_global_dof_id
 
@@ -337,7 +325,6 @@ contains
 
   !> Routine to destroy function_space_type
   final              :: function_space_destructor
-
 end type function_space_type
 
 interface function_space_type
@@ -501,33 +488,12 @@ subroutine init_function_space( self )
   ! create the linked list
   self%dofmap_list = linked_list_type()
 
-  !Set up YAXT redistribution map for halo exchanges
-  allocate(self%redist(size(self%last_dof_halo)))
-
   ! Don't set up routing tables for WCHI. Fields on this function space are
   ! constant so will never need to be halo exchanged
   if( self%fs == WCHI ) then
     self%comms_fs=.false.
   else
     self%comms_fs=.true.
-
-    do idepth = 1, size(self%last_dof_halo)
-
-      halo_start  = self%last_dof_owned+1
-      halo_finish = self%last_dof_halo(idepth)
-    !If this is a serial run (no halos), halo_start is out of bounds - so fix it
-      if(halo_start > self%last_dof_halo(idepth))then
-        halo_start  = self%last_dof_halo(idepth)
-        halo_finish = self%last_dof_halo(idepth) - 1
-      end if
-
-      !Get the redistribution map objects for doing halo exchanges later
-      self%redist(idepth) = generate_redistribution_map( &
-                                 self%global_dof_id(1:self%last_dof_owned), &
-                                 self%global_dof_id( halo_start:halo_finish ), &
-                                 get_mpi_datatype( real_type, r_def ) )
-    end do
-
   end if
 
   ! Set up the fractional levels (for diagnostic output) for this fs
@@ -1025,22 +991,6 @@ function get_mesh_id(self) result (mesh_id)
 end function get_mesh_id
 
 !-----------------------------------------------------------------------------
-! Gets a YAXT redistribution map for halo swapping
-!-----------------------------------------------------------------------------
-function get_redist(self, depth) result (redist)
-
-  implicit none
-  class(function_space_type) :: self
-  integer(i_def) , intent(in) :: depth
-
-  type(xt_redist) :: redist
-
-  redist = self%redist(depth)
-
-  return
-end function get_redist
-
-!-----------------------------------------------------------------------------
 ! Gets the array that holds the global indices of all dofs
 !-----------------------------------------------------------------------------
 subroutine get_global_dof_id(self, global_dof_id)
@@ -1248,7 +1198,6 @@ subroutine clear(self)
   if (allocated(self%basis_x))           deallocate( self%basis_x )
   if (allocated(self%global_dof_id))     deallocate( self%global_dof_id )
   if (allocated(self%last_dof_halo))     deallocate( self%last_dof_halo )
-  if (allocated(self%redist))            deallocate( self%redist)
   if (allocated(self%fractional_levels)) deallocate( self%fractional_levels )
   if (allocated(self%dof_on_vert_boundary)) &
                                          deallocate( self%dof_on_vert_boundary )

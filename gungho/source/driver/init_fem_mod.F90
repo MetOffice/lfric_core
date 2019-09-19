@@ -12,11 +12,13 @@ module init_fem_mod
 
   use constants_mod,                  only : i_def, i_native
   use finite_element_config_mod,      only : element_order, coordinate_order
+  use halo_routing_collection_mod,    only : halo_routing_collection_type, &
+                                             halo_routing_collection
   use field_mod,                      only : field_type
   use fs_continuity_mod,              only : W0, W1, W2, W3, Wtheta, Wchi
   use function_space_mod,             only : function_space_type
   use function_space_collection_mod,  only : function_space_collection_type, &
-       function_space_collection
+                                             function_space_collection
   use function_space_chain_mod,       only : function_space_chain_type, &
                                              multigrid_function_space_chain, &
                                              W2_multigrid_function_space_chain, &
@@ -60,6 +62,9 @@ module init_fem_mod
     integer(i_def)                     :: coord
     integer(kind=i_def)                :: mesh_ctr
 
+    ! Create a collection for holding FEM info that is specific to a field
+    allocate( halo_routing_collection, &
+              source = halo_routing_collection_type() )
 
     call log_event( 'FEM specifics: creating function spaces...', LOG_LEVEL_INFO )
 

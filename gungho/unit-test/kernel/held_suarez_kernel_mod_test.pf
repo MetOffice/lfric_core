@@ -13,6 +13,8 @@ module held_suarez_kernel_mod_test
                                             function_space_collection
   use mesh_collection_mod,           only : mesh_collection_type, &
                                             mesh_collection
+  use halo_routing_collection_mod,   only : halo_routing_collection_type, &
+                                            halo_routing_collection
   use field_mod,                     only : field_type,      &
                                             field_proxy_type
   use fs_continuity_mod,             only : W2, W3, Wtheta
@@ -124,6 +126,8 @@ contains
     mesh_collection = mesh_collection_type()
     ! Create top level function space collection
     function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
 
     ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
     mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
@@ -176,6 +180,7 @@ contains
 
     call function_space_collection%clear()
     call mesh_collection%clear()
+    call halo_routing_collection%clear()
     call final_configuration()
 
     ! Finalise YAXT

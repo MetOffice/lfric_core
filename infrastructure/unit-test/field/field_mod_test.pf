@@ -10,6 +10,8 @@
 module field_mod_test
 
   use constants_mod,                  only : i_def, r_def, str_def
+  use halo_routing_collection_mod,    only : halo_routing_collection_type, &
+                                             halo_routing_collection
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use mesh_collection_mod,            only : mesh_collection_type, &
@@ -59,6 +61,8 @@ contains
     mesh_collection = mesh_collection_type()
     ! Create top level function space collection
     function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
 
     ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
     mesh_id = mesh_collection%add_unit_test_mesh( PLANE_BI_PERIODIC )
@@ -78,6 +82,7 @@ contains
 
     call function_space_collection%clear()
     call mesh_collection%clear()
+    call halo_routing_collection%clear()
 
     ! Finalise YAXT
     call xt_finalize()

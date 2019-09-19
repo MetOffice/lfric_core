@@ -1,0 +1,25 @@
+' (c) Crown copyright 2019 Met Office. All rights reserved.
+' The file LICENCE, distributed with this code, contains details of the terms
+' under which the code may be used.
+
+@startuml
+
+!include look.iuml
+!include field/halo_routing_collection_mod.iuml
+
+class halo_routing_mod::halo_routing_type {
+  -mesh_id: integer
+  -element_order: integer
+  -lfric_fs: integer
+  -redist: xt_redist
+
+  +<<create>>  halo_routing_constructor(<<in>>mesh_id: integer, <<in>>element_order: integer, <<in>>lfric_fs: integer) : halo_routing_type
+  +get_mesh_id() : integer
+  +get_element_order() : integer
+  +get_lfric_fs() : integer
+  +get_redist(<<in>>depth: integer) : xt_redist
+}
+
+halo_routing_collection_mod::halo_routing_collection_type o-> "*" halo_routing_mod::halo_routing_type
+
+@enduml
