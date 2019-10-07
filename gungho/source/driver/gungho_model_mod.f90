@@ -21,11 +21,10 @@ module gungho_model_mod
                                              use_moisture,   &
                                              use_physics
   use io_config_mod,                  only : write_diag, &
-                                             write_minmax_tseries, &
-                                             write_dump,           &
+                                             write_dump, &
                                              write_minmax_tseries
   use io_mod,                         only : write_state, &
-                                             dump_write_xios
+                                             xios_write_field_single_face
   use iter_timestep_alg_mod,          only : iter_alg_init, &
                                              iter_alg_final
   use log_mod,                        only : log_event, &
@@ -199,7 +198,7 @@ module gungho_model_mod
         ! For the purposes of dumping from one collection, we add a pointer
         ! to tstar to the fd_prognostics collection
 
-        tmp_write_ptr => dump_write_xios
+        tmp_write_ptr => xios_write_field_single_face
         tstar_2d => twod_fields%get_field('tstar')
         call tstar_2d%set_write_behaviour(tmp_write_ptr)
 

@@ -1409,14 +1409,16 @@ contains
   !>                                  partition.
   !> @param[out] dofmap               Array containing the dofmap indexed by
   !>                                  cells.
-  !> @param[out] global_dof_id        Global id of of dofs.
+  !> @param[out] global_dof_id        Global id of dofs.
+  !> @param[out] global_dof_id_2d     Global id of dofs on the 2D 
+  !>                                  horizontal domain 
   !>
   subroutine dofmap_setup( mesh, gungho_fs, element_order, &
                            ncells_2d_with_ghost, &
                            ndof_vert, ndof_edge, ndof_face, &
                            ndof_vol,  ndof_cell, last_dof_owned, &
                            last_dof_annexed, last_dof_halo, dofmap, &
-                           global_dof_id )
+                           global_dof_id, global_dof_id_2d )
 
     implicit none
 
@@ -1436,6 +1438,7 @@ contains
     integer(i_def), intent(out) :: dofmap(ndof_cell,0:ncells_2d_with_ghost)
 
     integer(i_halo_index), intent(out) :: global_dof_id(:)
+    integer(i_def), intent(out)        :: global_dof_id_2d(:)
 
     class(reference_element_type), pointer :: reference_element => null()
 
@@ -1971,6 +1974,23 @@ contains
         end if
       end do
     end do
+
+    ! Calculate a globally unique id for each dof on the 2D horizontal part
+    ! of the local domain. Only used for W3 and Wtheta.
+
+    global_dof_id_2d(:) = 0_i_def
+
+    if ( element_order==0 .and. (gungho_fs==W3 .or. gungho_fs==WTHETA) ) then
+      ! loop over local cells
+      do icell=1, mesh%get_last_edge_cell()
+        global_cell_id = mesh % get_gid_from_lid(icell)
+        if (icell == dof_cell_owner(1,icell)) then
+          ! The global ids must be 0 based
+          global_dof_id_2d(icell) = (global_cell_id - 1)
+        end if
+      end do
+    end if
+
 
     if (allocated(dof_column_height)) deallocate( dof_column_height )
     if (allocated(dof_cell_owner))    deallocate( dof_cell_owner )

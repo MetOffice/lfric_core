@@ -6,7 +6,9 @@
 
 !>  @brief Module for IO subroutines
 !!
-!!  @details Module for IO subroutines
+!!  @details Holds all setup routines for the I/O system as
+!!           well as the I/O handler routines for reading and
+!!           writing LFRic fields
 !-------------------------------------------------------------------------------
 module io_mod
   use constants_mod,                 only: i_def, i_native, i_halo_index, &
@@ -58,23 +60,25 @@ module io_mod
 
   implicit none
   private
-  public :: ts_fname,                &
-            checkpoint_write_netcdf, &
-            checkpoint_write_xios,   &
-            checkpoint_read_netcdf,  &
-            checkpoint_read_xios,    &
-            write_checkpoint,        &
-            read_checkpoint,         &
-            dump_write_xios,         &
-            dump_read_xios,          &
-            write_state,             &
-            read_state,              &
-            xios_domain_init,        &
-            nodal_write_field,       &
-            xios_write_field_node,   &
-            xios_write_field_face,   &
-            xios_write_field_edge,   &
-            xios_write_field_single_face
+  public :: ts_fname,                     &
+            checkpoint_write_netcdf,      &
+            checkpoint_write_xios,        &
+            checkpoint_read_netcdf,       &
+            checkpoint_read_xios,         &
+            write_checkpoint,             &
+            read_checkpoint,              &
+            dump_write_xios,              &
+            dump_read_xios,               &
+            write_state,                  &
+            read_state,                   &
+            xios_domain_init,             &
+            nodal_write_field,            &
+            xios_write_field_node,        &
+            xios_write_field_face,        &
+            xios_write_field_edge,        &
+            xios_write_field_single_face, &
+            xios_read_field_face,         &
+            xios_read_field_single_face
 
 contains
 
@@ -147,18 +151,22 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
 
     domain_fs_name = name_from_functionspace(domain_function_spaces(fs_index))
     domain_name = "checkpoint_" // trim(domain_fs_name)
+
+    ! Enable use of the XIOS i_index for W3 and Wtheta
+
+    if (domain_function_spaces(fs_index) == W3 .or. &
+        domain_function_spaces(fs_index) == Wtheta) then
+
+      call xios_checkpoint_domain_init(domain_function_spaces(fs_index), &
+                                           trim(domain_name), mesh_id, chi, .true.)
+    else 
     
-    call xios_checkpoint_domain_init(domain_function_spaces(fs_index), trim(domain_name), &
-                                     mesh_id, chi, .false.)
+      call xios_checkpoint_domain_init(domain_function_spaces(fs_index), &
+                                       trim(domain_name), mesh_id, chi, .false.)
+    end if
 
   end do
 
-  !!!!!! Setup finite difference checkpoint domains for initial conditions !!!!!!!!
-
-  domain_name = "fd_checkpoint_W3"
-  call xios_checkpoint_domain_init(W3, trim(domain_name), mesh_id, chi, .true.)
-  domain_name = "fd_checkpoint_Wtheta"
-  call xios_checkpoint_domain_init(Wtheta, trim(domain_name), mesh_id, chi, .true.)
 
   ! Set up 2D checkpoint domain - only W3 at the moment
 
@@ -216,17 +224,9 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
 
     ! Create dump filename from stem
     write(dump_fname,'(A)') trim(start_dump_directory)//'/'//trim(start_dump_filename)
-
-    ! Set dump frequency (end timestep) in seconds
-    ! Note although this file is going to be read XIOS needs this
-    ! to be set otherwise horrible things happen
-
-    dump_freq%second = dtime
-
+    ! Set dump filename
     call xios_get_handle("read_lfric_fd_dump",dumpfile_hdl)
     call xios_set_attr(dumpfile_hdl,name=dump_fname, enabled=.true.)
-    call xios_set_attr(dumpfile_hdl, output_freq=dump_freq)
-
 
 
   end if
@@ -271,15 +271,8 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
     write(checkpoint_read_fname,'(A,A,I6.6)') &
                             trim(checkpoint_stem_name),"_", (timestep_start - 1)
 
-    ! Set output frequency (end timestep) in seconds
-    ! Note although this is a restart file and is going to be read and not
-    ! written in this run, XIOS needs this to be set otherwise horrible things
-    ! happen
-    cp_freq%second = timestep_end*dtime
-
     call xios_get_handle("lfric_checkpoint_read",rsfile_hdl)
     call xios_set_attr(rsfile_hdl, name=checkpoint_read_fname, enabled=.true.)
-    call xios_set_attr(rsfile_hdl, output_freq=cp_freq)
 
 
   end if
@@ -299,8 +292,6 @@ end subroutine xios_domain_init
 
 !-------------------------------------------------------------------------------
 !>  @brief    Performs XIOS diagnostic domain initialisation
-!!
-!!  @details  Performs diagnostic domain initialisation
 !!
 !!  @param[in]      mesh_id       Mesh id
 !!  @param[in]      chi           Coordinate field
@@ -350,8 +341,12 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
   real(dp_xios),pointer      :: fractional_levels_half_edges(:) => null()
 
   ! Levels variables
-  integer(i_def)             :: nlevels
+  integer(i_def)             :: nfull_levels
   integer(i_def)             :: nhalf_levels
+
+  ! domain index to ensure processor decomposition independent
+  ! read for the face domain
+  integer(i_def),allocatable :: domain_index(:)
 
   ! Variables needed to compute output domain coordinates in lat-long
 
@@ -435,19 +430,19 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
   ! Get the unique fractional levels to set up vertical output domain
   fractional_levels_nodes => proxy_coord_output(1)%vspace%get_levels()
 
-  nlevels = size(fractional_levels_nodes)
+  nfull_levels = size(fractional_levels_nodes)
 
   ! Allocate coordinate arrays
 
   ! coord_dim_full is the size of one whole level of the full field
   ! needed to be sure we get all coords for faces on this partition
 
-  coord_dim_full = size(proxy_coord_output(1)%data) / nlevels
+  coord_dim_full = size(proxy_coord_output(1)%data) / nfull_levels
 
   ! coord_dim_owned is the size up to last owned dof for a whole level
   ! this is needed to set the node domain for this partition
 
-  coord_dim_owned = local_undf(1) / nlevels
+  coord_dim_owned = local_undf(1) / nfull_levels
 
   allocate(nodes_lon_full(coord_dim_full))
   allocate(nodes_lat_full(coord_dim_full))
@@ -473,7 +468,7 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
 
   ! Calculate the node coords arrays and also the face-node boundary arrays 
   call calc_xios_domain_coords(local_mesh, coord_output, chi,  &
-                               nlevels, num_face_local,        &
+                               nfull_levels, num_face_local,   &
                                nodes_lon_full, nodes_lat_full, &
                                bnd_faces_lon, bnd_faces_lat,   &
                                bnd_edges_lon, bnd_edges_lat)
@@ -493,7 +488,7 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
   ! Adjust size of data taking into account how many levels we have (same for each
   ! partition as we only partition horizontally)
 
-  all_undfs = all_undfs/nlevels
+  all_undfs = all_undfs/nfull_levels
 
   ! Now get the global sum of undf across all ranks to set the global domain sizes
   ! for xios node domain
@@ -514,15 +509,16 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
 
   call xios_set_domain_attr("node", ni_glo=global_undf,           &
                             ibegin=ibegin_nodes,                  &
-                            ni=local_undf(1)/nlevels,             &
+                            ni=local_undf(1)/nfull_levels,        &
                             type='unstructured')
   call xios_set_domain_attr("node", lonvalue_1d=nodes_lon,        &
                             latvalue_1d=nodes_lat)
   call xios_set_domain_attr("node", bounds_lon_1d=bnd_nodes_lon,  &
                             bounds_lat_1d=bnd_nodes_lat)
 
-  call xios_set_axis_attr("vert_axis_full_levels", n_glo=nlevels, &
-                          value=fractional_levels_nodes)
+  call xios_set_axis_attr("vert_axis_full_levels", &
+                           n_glo=nfull_levels,     &
+                           value=fractional_levels_nodes)
 
 
   ! Clean up things not needed or for reuse in face domain setup
@@ -614,6 +610,19 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
   call xios_set_domain_attr("face_half_levels", bounds_lon_1d=bnd_faces_lon, &
                             bounds_lat_1d=bnd_faces_lat)
 
+  ! Set up the domain index (this will be used for face half level and 
+  ! face full level domain setup 
+
+  ! Allocate domain_index for faces
+  allocate(domain_index(num_face_local))
+
+  ! Populate domain_index for this rank 
+  call proxy_coord_output(1)%vspace%get_global_dof_id_2d(domain_index)
+
+  ! Pass local portion of domain_index
+  call xios_set_domain_attr("face_half_levels", &
+                            i_index=int(domain_index(1:(local_undf(1)/nhalf_levels))))
+
   call xios_set_axis_attr("vert_axis_half_levels", n_glo=nhalf_levels,       &
                           value=fractional_levels_half_faces)
 
@@ -656,16 +665,20 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
   ! Get the unique fractional levels to set up full levels vertical output domain
   fractional_levels_full_faces => proxy_coord_output(1)%vspace%get_levels()
 
-  nlevels = size(fractional_levels_full_faces)
+  nfull_levels = size(fractional_levels_full_faces)
 
   call xios_set_domain_attr("face_full_levels", ni_glo=global_undf,          &
                             ibegin=ibegin_faces,                             &
-                            ni=local_undf(1)/nlevels,                        &
+                            ni=local_undf(1)/nfull_levels,                   &
                             type='unstructured')
   call xios_set_domain_attr("face_full_levels", lonvalue_1d=faces_lon,       &
                             latvalue_1d=faces_lat)
   call xios_set_domain_attr("face_full_levels", bounds_lon_1d=bnd_faces_lon, &
                             bounds_lat_1d=bnd_faces_lat)
+
+  ! Pass local portion of domain_index
+  call xios_set_domain_attr("face_full_levels", &
+                            i_index=int(domain_index(1:(local_undf(1)/nfull_levels))))
 
 
   ! Clean up things ready to reuse for edge domain setup
@@ -765,6 +778,7 @@ subroutine xios_diagnostic_domain_init(mesh_id, chi)
   deallocate(faces_lat, faces_lon, bnd_faces_lat, bnd_faces_lon)
   deallocate(bnd_edges_lat, bnd_edges_lon)
   deallocate(nodes_lat_full, nodes_lon_full)
+  deallocate(domain_index)
   fractional_levels_half_faces => null()
   fractional_levels_full_faces => null()
   fractional_levels_half_edges => null()
@@ -964,6 +978,7 @@ end subroutine xios_checkpoint_domain_init
 !> @brief   Compute the node domain coords for this partition
 !> @details Samples the chi field at nodal points, calculates cartesian coordinates.
 !>          For spherical geometry, converts to lat-lon in degrees for specified layer
+!>@param[in] local_mesh the id of the partitioned mesh 
 !>@param[in] nodal_coords input field
 !>@param[in] chi input coordinate field
 !>@param[in] nlayers the number of layers data is output on
@@ -1130,7 +1145,6 @@ subroutine calc_xios_domain_coords(local_mesh, nodal_coords, chi, &
 end subroutine calc_xios_domain_coords
 
 !> @brief   Function to determine output filename at a given timestep
-!> @details Function to determine output filename at a given timestep
 !>@param[in] stem_name string file stem
 !>@param[in] file_type string used to identify file type (e.g. 'nodal')
 !>@param[in] field_name name of the field
@@ -1164,7 +1178,6 @@ function ts_fname(stem_name, file_type, field_name, ts, ext)
 end function ts_fname
 
 !> @brief   Output a field in nodal format to text file
-!> @details Output a field in nodal format to text file
 !>@param[in] nodal_coordinates field holding coordinate information
 !>@param[in] level field holding level information
 !>@param[in] nodal_output field holding diagnostic data
@@ -1212,9 +1225,15 @@ subroutine nodal_write_field(nodal_coordinates, level, nodal_output, &
 
 end subroutine nodal_write_field
 
-! Procedure to read a checkpoint into  a field (original method)
-! Note this routine accepts a field name but doesn't use it - this
-! is to keep the interface the same for all methods 
+
+!> @brief   I/O handler for reading a netcdf checkpoint
+!> @details Legacy method for reading checkpoints
+!           Note this routine accepts a field name but
+!           doesn't use it - this is to keep the interface
+!           the same for all methods 
+!>@param[in] field_name Name of the field to read
+!>@param[in] file_name Name of the file to read from
+!>@param[in,out] field_proxy the proxy of the field to read data into
 subroutine checkpoint_read_netcdf(field_name, file_name, field_proxy)
   use field_io_ncdf_mod,    only : field_io_ncdf_type
 
@@ -1239,9 +1258,14 @@ subroutine checkpoint_read_netcdf(field_name, file_name, field_proxy)
 
 end subroutine checkpoint_read_netcdf
 
-! Procedure to write a field to a checkpoint file (original method)
-! Note this routine accepts a field name but doesn't use it - this
-! is to keep the interface the same for all methods 
+!> @brief   I/O handler for writing a netcdf checkpoint
+!> @details Legacy method for writing checkpoints
+!           Note this routine accepts a field name but
+!           doesn't use it - this is to keep the interface
+!           the same for all methods 
+!>@param[in] field_name Name of the field to write
+!>@param[in] file_name Name of the file to write to
+!>@param[in,out] field_proxy the proxy of the field to write
 subroutine checkpoint_write_netcdf(field_name, file_name, field_proxy)
   use field_io_ncdf_mod,    only : field_io_ncdf_type
 
@@ -1265,9 +1289,14 @@ subroutine checkpoint_write_netcdf(field_name, file_name, field_proxy)
 
 end subroutine checkpoint_write_netcdf
 
-! Procedure to read a checkpoint into a field via XIOS
-! Note this routine accepts a filename but doesn't use it - this
-! is to keep the interface the same for all methods 
+
+!> @brief   I/O handler for reading an XIOS netcdf checkpoint
+!> @details Note this routine accepts a filename but doesn't
+!           use it - this is to keep the interface the same
+!           for all methods
+!>@param[in] xios_field_name XIOS unique id for the field
+!>@param[in] file_name Name of the file to read
+!>@param[in,out] field_proxy the proxy of the field to read into
 subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
 
   implicit none
@@ -1288,9 +1317,13 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
 end subroutine checkpoint_read_xios
 
 
-! Procedure to checkpoint a field via XIOS
-! Note this routine accepts a filename but doesn't use it - this
-! is to keep the interface the same for all methods 
+!> @brief   I/O handler for writing an XIOS netcdf checkpoint
+!> @details Note this routine accepts a filename but doesn't
+!           use it - this is to keep the interface the same
+!           for all methods
+!>@param[in] xios_field_name XIOS identifier for the field
+!>@param[in] file_name Name of the file to write
+!>@param[in,out] field_proxy the proxy of the field to write
 subroutine checkpoint_write_xios(xios_field_name, file_name, field_proxy)
 
   implicit none
@@ -1385,13 +1418,10 @@ subroutine read_checkpoint(state, timestep)
 
 end subroutine read_checkpoint
 
-! Currently the read / write dump routines just call the XIOS checkpoint 
-! mechanisms so that fields from UM2LFRic dumps (currently using the checkpoint
-! format) can be read.
-! They will be extended to read/write dumps in UGRID format in #1372
+! The dump read and write subroutines are wrappers that call 
+! XIOS read and write I/O subroutines
 
 !> @brief   Write a field to a dump via XIOS
-!> @details Write a field to a dump via XIOS
 !>@param[in] xios_field_name XIOS identifier for the field
 !>@param[in] field_proxy a field proxy containing the data to output
 subroutine dump_write_xios(xios_field_name, field_proxy)
@@ -1401,12 +1431,11 @@ subroutine dump_write_xios(xios_field_name, field_proxy)
   character(len=*), intent(in) :: xios_field_name
   type(field_proxy_type), intent(in) :: field_proxy
 
-  call checkpoint_write_xios(xios_field_name, '', field_proxy)
+  call xios_write_field_face(xios_field_name, field_proxy)
 
 end subroutine dump_write_xios
 
 !> @brief   Read a field from a dump via XIOS
-!> @details Read a field from a dump via XIOS
 !>@param[in] xios_field_name XIOS identifier for the field
 !>@param[in,out] field_proxy a field proxy containing the data to output
 subroutine dump_read_xios(xios_field_name, field_proxy)
@@ -1416,7 +1445,7 @@ subroutine dump_read_xios(xios_field_name, field_proxy)
   character(len=*), intent(in) :: xios_field_name
   type(field_proxy_type), intent(inout) :: field_proxy
 
-  call checkpoint_read_xios("read_"//xios_field_name, '', field_proxy)
+  call xios_read_field_face("read_"//xios_field_name, field_proxy)
 
 end subroutine dump_read_xios
 
@@ -1489,7 +1518,6 @@ end subroutine read_state
 
 
 !> @brief   Output a field in UGRID format on the node domain via XIOS
-!> @details Output a field in UGRID format on the node domain via XIOS
 !>@param[in] xios_field_name XIOS identifier for the field
 !>@param[in] field_proxy a field proxy containing the data to output
 !------------------------------------------------------------------------------- 
@@ -1538,7 +1566,6 @@ subroutine xios_write_field_node(xios_field_name, field_proxy)
 end subroutine xios_write_field_node
 
 !> @brief   Output a single level field in UGRID format on the face domain via XIOS
-!> @details Output a single level field in UGRID format on the face domain via XIOS
 !>@param[in] xios_field_name XIOS identifier for the field
 !>@param[in] field_proxy a field proxy containing the data to output
 !-------------------------------------------------------------------------------
@@ -1573,7 +1600,6 @@ subroutine xios_write_field_single_face(xios_field_name, field_proxy)
 end subroutine xios_write_field_single_face
 
 !> @brief   Output a field in UGRID format on the face domain via XIOS
-!> @details Output a field in UGRID format on the face domain via XIOS
 !>@param[in] xios_field_name XIOS identifier for the field
 !>@param[in] field_proxy a field proxy containing the data to output
 !------------------------------------------------------------------------------- 
@@ -1628,8 +1654,96 @@ subroutine xios_write_field_face(xios_field_name, field_proxy)
 
 end subroutine xios_write_field_face
 
+!> @brief   Read a field in UGRID format on the face domain via XIOS
+!>@param[in] xios_field_name XIOS identifier for the field
+!>@param[in] field_proxy a field proxy to read data into
+subroutine xios_read_field_face(xios_field_name, field_proxy)
+
+  implicit none
+
+  character(len=*), intent(in) :: xios_field_name
+  type(field_proxy_type), intent(inout) :: field_proxy
+
+  integer(i_def) :: i, undf
+  integer(i_def) :: fs_id
+  integer(i_def) :: domain_size, axis_size
+  real(dp_xios), allocatable :: recv_field(:)
+
+  ! Get the size of undf as we only read in up to last owned
+  undf = field_proxy%vspace%get_last_dof_owned()
+  fs_id = field_proxy%vspace%which()
+
+  ! get the horizontal / vertical domain sizes
+
+  if (fs_id == W3) then
+    call xios_get_domain_attr('face_half_levels', ni=domain_size)
+    call xios_get_axis_attr("vert_axis_half_levels", n_glo=axis_size)
+  else
+    call xios_get_domain_attr('face_full_levels', ni=domain_size)
+    call xios_get_axis_attr("vert_axis_full_levels", n_glo=axis_size)
+  end if
+
+
+  ! Size the array to be what is expected
+  allocate(recv_field(domain_size*axis_size))
+
+  ! Read the data into a temporary array - this should be in the correct order
+  ! as long as we set up the horizontal domain using the global index
+  call xios_recv_field(xios_field_name, recv_field)
+
+  ! We need to reshape the incoming data to get the correct data layout for the LFRic
+  ! field - It is the reverse of what we did for writing
+
+  do i=0, axis_size-1
+
+    field_proxy%data(i+1:undf:axis_size) = &
+                                   recv_field(i*(domain_size)+1:(i*(domain_size)) + domain_size)   
+  end do
+
+  deallocate(recv_field)
+
+end subroutine xios_read_field_face
+
+!> @brief   Read a single level field in UGRID format on the face domain via XIOS
+!>@param[in] xios_field_name XIOS identifier for the field
+!>@param[in] field_proxy a field proxy to read data into
+subroutine xios_read_field_single_face(xios_field_name, field_proxy)
+
+  implicit none
+
+  character(len=*), intent(in) :: xios_field_name
+  type(field_proxy_type), intent(inout) :: field_proxy
+
+  integer(i_def) :: i, undf
+  integer(i_def) :: domain_size
+  real(dp_xios), allocatable :: recv_field(:)
+
+  ! Get the size of undf as we only read in up to last owned
+  undf = field_proxy%vspace%get_last_dof_owned()
+
+
+  ! Get the expected horizontal size
+  ! all 2D fields are nominally in W3, hence half levels
+  call xios_get_domain_attr('face_half_levels', ni=domain_size)
+
+
+  ! Size the array to be what is expected
+  allocate(recv_field(domain_size))
+
+  ! Read the data into a temporary array - this should be in the correct order
+  ! as long as we set up the horizontal domain using the global index
+  call xios_recv_field(xios_field_name, recv_field)
+
+  field_proxy%data(1:undf) = recv_field(1:domain_size)
+
+  deallocate(recv_field)
+
+
+end subroutine xios_read_field_single_face
+
+
+
 !> @brief   Output a field in UGRID format on the edge domain via XIOS
-!> @details Output a field in UGRID format on the edge domain via XIOS
 !>@param[in] xios_field_name XIOS identifier for the field
 !>@param[in] field_proxy a field proxy containing the data to output
 !------------------------------------------------------------------------------- 

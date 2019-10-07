@@ -16,7 +16,7 @@ module init_ancils_mod
 
   use field_mod,                       only: field_type,     &
                                              read_interface
-  use io_mod,                          only: dump_read_xios
+  use io_mod,                          only: xios_read_field_single_face
   use field_collection_mod,            only: field_collection_type
   use function_space_collection_mod,   only: function_space_collection
   use fs_continuity_mod,               only: W3
@@ -72,9 +72,9 @@ contains
     ! Need to set the I/O handler for read. Any ancils here
     ! are currently read from a UM2LFRic dump
 
-    tmp_read_ptr => dump_read_xios
+    tmp_read_ptr => xios_read_field_single_face
     call tstar_ptr%set_read_behaviour(tmp_read_ptr)
-    call tstar_ptr%read_field("tstar_2d")
+    call tstar_ptr%read_field("read_tstar")
 
     nullify( tstar_ptr, tmp_read_ptr )
 

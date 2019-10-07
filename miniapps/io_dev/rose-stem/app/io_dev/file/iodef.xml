@@ -23,8 +23,6 @@
       <domain id="checkpoint_W2" name="checkpoint_W2" nvertex="1"/>
       <domain id="checkpoint_W3" name="checkpoint_W3" nvertex="1"/>
       <domain id="checkpoint_Wtheta" name="checkpoint_Wtheta" nvertex="1"/>
-      <domain id="fd_checkpoint_W3" name="fd_checkpoint_W3" nvertex="1"/>
-      <domain id="fd_checkpoint_Wtheta" name="fd_checkpoint_Wtheta" nvertex="1"/>
       <domain id="checkpoint_W3_2D" name="checkpoint_W3_2D" nvertex="1"/>
    </domain_definition>
    

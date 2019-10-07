@@ -23,8 +23,6 @@
       <domain id="checkpoint_W2" name="checkpoint_W2" nvertex="1"/>
       <domain id="checkpoint_W3" name="checkpoint_W3" nvertex="1"/>
       <domain id="checkpoint_Wtheta" name="checkpoint_Wtheta" nvertex="1"/>
-      <domain id="fd_checkpoint_W3" name="fd_checkpoint_W3" nvertex="1"/>
-      <domain id="fd_checkpoint_Wtheta" name="fd_checkpoint_Wtheta" nvertex="1"/>
       <domain id="checkpoint_W3_2D" name="checkpoint_W3_2D" nvertex="1"/>
    </domain_definition>
 
@@ -160,6 +158,7 @@
        <field id="du_spectral_gwd" name="du_spectral_gwd" long_name="Spectral gravity wave drag U wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
        <field id="dv_spectral_gwd" name="dv_spectral_gwd" long_name="Spectral gravity wave drag V wind increment" unit="m s-1" grid_ref="half_level_face_grid" />
        <field id="dtemp_spectral_gwd" name="dtemp_spectral_gwd" long_name="Spectral gravity wave drag T increment" unit="K" grid_ref="full_level_face_grid" />
+       <field id="tstar" name="tstar" long_name="Surface temperature" unit="K" domain_ref="face_half_levels" />
        <field id="tstar_brd_leaf" name="tstar_brd_leaf" long_name="Broad leaf tree Surface temperature" unit="K" domain_ref="face_half_levels" />
        <field id="tstar_ndl_leaf" name="tstar_ndl_leaf" long_name="Needle leaf tree Surface temperature" unit="K" domain_ref="face_half_levels" />
        <field id="tstar_c3_grass" name="tstar_c3_grass" long_name="C3 grass Surface temperature" unit="K" domain_ref="face_half_levels" />
@@ -283,16 +282,15 @@
 
      <!-- FD fields group -->
      <field_group id="physics_fd_fields" freq_op="1ts" operation="once"  enabled=".FALSE." >
-       <field id="ew_wind_in_w3" name="ew_wind_in_w3" long_name="eastward_wind" standard_name="eastward_wind" unit="m s-1" domain_ref="fd_checkpoint_W3" />
-       <field id="ns_wind_in_w3" name="ns_wind_in_w3" long_name="northward_wind" standard_name="northward_wind" unit="m s-1" domain_ref="fd_checkpoint_W3" />
-       <field id="theta_in_wtheta" name="theta_in_wtheta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" domain_ref="fd_checkpoint_Wtheta" />
-       <field id="ozone_in_wtheta" name="ozone_in_wtheta" long_name="mass_fraction_of_ozone_in_air" standard_name="mass_fraction_of_ozone_in_air" unit="1" domain_ref="fd_checkpoint_Wtheta" />
-       <field id="upward_wind_in_wtheta" name="upward_wind_in_wtheta" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" domain_ref="fd_checkpoint_Wtheta" />
-       <field id="dry_rho_in_w3" name="dry_rho_in_w3" long_name="air_density" unit="1" domain_ref="fd_checkpoint_W3" />
-       <field id="mv_in_wtheta" name="mv_in_wtheta" long_name="humidity_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta" />
-       <field id="mcl_in_wtheta" name="mcl_in_wtheta" long_name="cloud_liquid_water_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta" />
-       <field id="mcf_in_wtheta" name="mcf_in_wtheta" long_name="cloud_ice_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta" /> 
-       <field id="tstar" name="tstar" long_name="surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="checkpoint_W3_2D" />
+       <field id="ew_wind_in_w3" name="ew_wind_in_w3" long_name="eastward_wind" standard_name="eastward_wind" unit="m s-1" grid_ref="half_level_face_grid" />
+       <field id="ns_wind_in_w3" name="ns_wind_in_w3" long_name="northward_wind" standard_name="northward_wind" unit="m s-1" grid_ref="half_level_face_grid" />
+       <field id="theta_in_wtheta" name="theta_in_wtheta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
+       <field id="ozone_in_wtheta" name="ozone_in_wtheta" long_name="mass_fraction_of_ozone_in_air" standard_name="mass_fraction_of_ozone_in_air" unit="1" grid_ref="full_level_face_grid" />
+       <field id="upward_wind_in_wtheta" name="upward_wind_in_wtheta" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" grid_ref="full_level_face_grid" />
+       <field id="dry_rho_in_w3" name="dry_rho_in_w3" long_name="air_density" unit="1" grid_ref="half_level_face_grid" />
+       <field id="mv_in_wtheta" name="mv_in_wtheta" long_name="humidity_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" />
+       <field id="mcl_in_wtheta" name="mcl_in_wtheta" long_name="cloud_liquid_water_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" />
+       <field id="mcf_in_wtheta" name="mcf_in_wtheta" long_name="cloud_ice_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" /> 
      </field_group>
      
    </field_definition>
@@ -555,22 +553,22 @@
        <field field_ref="mv_in_wtheta" />
        <field field_ref="mcl_in_wtheta" />
        <field field_ref="mcf_in_wtheta" />
-       <field field_ref="tstar" />
+       <field field_ref="tstar"/>
       </file>
 
-      <!-- File definition for reading in from a UM2LFRic FD restart dump -->
+      <!-- File definition for reading in from a UM2LFRic FD UGRID format dump  -->
 
-      <file id="read_lfric_fd_dump" name="lfric_fd_dump" mode="read" output_freq="1ts" convention="CF" cyclic="true" enabled=".FALSE.">
-       <field id="read_ew_wind_in_w3" name="fd_ew_wind" long_name="eastward_wind" standard_name="eastward_wind" unit="m s-1" domain_ref="fd_checkpoint_W3"  operation="instant" />
-       <field id="read_ns_wind_in_w3" name="fd_ns_wind" long_name="northward_wind" standard_name="northward_wind" unit="m s-1" domain_ref="fd_checkpoint_W3"  operation="instant" />
-       <field id="read_theta_in_wtheta" name="fd_theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" domain_ref="fd_checkpoint_Wtheta"  operation="instant" />
-       <field id="read_ozone_in_wtheta" name="fd_ozone" long_name="mass_fraction_of_ozone_in_air" standard_name="mass_fraction_of_ozone_in_air" unit="1" domain_ref="fd_checkpoint_Wtheta"  operation="instant" />
-       <field id="read_upward_wind_in_wtheta" name="fd_upward_wind" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" domain_ref="fd_checkpoint_Wtheta"  operation="instant" />
-       <field id="read_dry_rho_in_w3" name="fd_dry_rho" long_name="air_density" unit="1" domain_ref="fd_checkpoint_W3"  operation="instant" />
-       <field id="read_mv_in_wtheta" name="fd_mv" long_name="humidity_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta"  operation="instant" />
-       <field id="read_mcl_in_wtheta" name="fd_mcl" long_name="cloud_liquid_water_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta"  operation="instant" />
-       <field id="read_mcf_in_wtheta" name="fd_mcf" long_name="cloud_ice_mixing_ratio"  unit="1" domain_ref="fd_checkpoint_Wtheta"  operation="instant" /> 
-       <field id="read_tstar_2d" name="fd_tstar_2d" long_name="surface_temperature" unit="K" domain_ref="checkpoint_W3_2D"  operation="instant" />
+      <file id="read_lfric_fd_dump" name="lfric_fd_dump" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+       <field id="read_ew_wind_in_w3" name="ew_wind_in_w3" long_name="eastward_wind" standard_name="eastward_wind" unit="m s-1" grid_ref="half_level_face_grid" operation="instant" />
+       <field id="read_ns_wind_in_w3" name="ns_wind_in_w3" long_name="northward_wind" standard_name="northward_wind" unit="m s-1" grid_ref="half_level_face_grid" operation="instant" />
+       <field id="read_theta_in_wtheta" name="theta_in_wtheta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" operation="instant" />
+       <field id="read_ozone_in_wtheta" name="ozone_in_wtheta" long_name="mass_fraction_of_ozone_in_air" standard_name="mass_fraction_of_ozone_in_air" unit="1" grid_ref="full_level_face_grid" operation="instant" />
+       <field id="read_upward_wind_in_wtheta" name="upward_wind_in_wtheta" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" grid_ref="full_level_face_grid" operation="instant" />
+       <field id="read_dry_rho_in_w3" name="dry_rho_in_w3" long_name="air_density" unit="1" grid_ref="half_level_face_grid" operation="instant" />
+       <field id="read_mv_in_wtheta" name="mv_in_wtheta" long_name="humidity_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
+       <field id="read_mcl_in_wtheta" name="mcl_in_wtheta" long_name="cloud_liquid_water_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
+       <field id="read_mcf_in_wtheta" name="mcf_in_wtheta" long_name="cloud_ice_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" /> 
+       <field id="read_tstar" name="tstar" long_name="surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="face_half_levels" operation="instant" />
       </file>
 
     </file_definition>

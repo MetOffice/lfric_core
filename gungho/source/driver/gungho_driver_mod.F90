@@ -109,7 +109,6 @@ module gungho_driver_mod
   integer(i_def) :: mesh_id      = imdi
   integer(i_def) :: twod_mesh_id = imdi
 
-  integer(i_def) :: i 
   integer(i_def) :: prognostic_init_choice, ancil_choice
 
   logical(l_def) :: put_field

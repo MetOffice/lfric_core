@@ -15,6 +15,7 @@ class function_space_mod::function_space_type {
     -fs: integer
     -fs_order: integer
     -global_dof_id: integer[] <<allocatable>>
+    -global_dof_id_2d: integer[] <<allocatable>>
     -last_dof_annexed: integer
     -last_dof_halo: integer[] <<allocatable>>
     -last_dof_owned: integer
@@ -49,6 +50,7 @@ class function_space_mod::function_space_type {
     +get_element_order(): integer
     +get_fs_order() : integer
     +get_global_dof_id( <<inout>>global_dof_id: integer[] )
+    +get_global_dof_id_2d( <<inout>>global_dof_id: integer[] )
     +get_last_dof_halo() : integer
     +get_last_dof_halo( <<in>>depth: integer ) : integer
     +get_last_dof_owned() : integer
