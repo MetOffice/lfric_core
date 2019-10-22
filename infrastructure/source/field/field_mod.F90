@@ -65,7 +65,7 @@ module field_mod
     integer(kind=i_def), allocatable :: halo_dirty(:)
     !> Name of the field. Note the name is immutable once defined via
     !! the initialiser.
-    character(str_def) :: name
+    character(str_def) :: name = 'unset'
 
     ! IO interface procedure pointers
 
@@ -102,22 +102,22 @@ module field_mod
     !! the field lives
     procedure, public :: get_function_space
 
-    !> Setter for the field write method 
+    !> Setter for the field write method
     procedure, public :: set_write_behaviour
 
     !> Getter for the field write method
     procedure, public :: get_write_behaviour
 
-    !> Setter for the read method 
+    !> Setter for the read method
     procedure, public :: set_read_behaviour
 
     !> Getter for the read method
     procedure, public :: get_read_behaviour
 
-    !> Setter for the checkpoint method 
+    !> Setter for the checkpoint method
     procedure, public :: set_checkpoint_write_behaviour
 
-    !> Setter for the restart method 
+    !> Setter for the restart method
     procedure, public :: set_checkpoint_read_behaviour
 
     !> Routine to return whether field can be checkpointed
@@ -200,7 +200,7 @@ module field_mod
     !> with the Gnu Fortran compiler. Adding an allocatable forces the compiler
     !> to accept that the object has a finaliser. It gets confused without it.
     !> This is a workaround for GCC bug id 61767 - when this bug is fixed, the
-    !> integer can be removed. 
+    !> integer can be removed.
     integer(kind=i_def), allocatable :: dummy_for_gnu
     !> Each field has a pointer to the function space on which it lives
     type( function_space_type ), pointer, public :: vspace => null()
@@ -218,7 +218,7 @@ module field_mod
 
     !> Performs a blocking halo exchange operation on the field.
     !> @todo This is temporarily required by PSyclone for initial development
-    !! Eventually, the PSy layer will call the asynchronous versions of 
+    !! Eventually, the PSy layer will call the asynchronous versions of
     !! halo_exchange and this function should be removed.
     !! @param[in] depth The depth to which the halos should be exchanged
     procedure, public :: halo_exchange
@@ -370,7 +370,7 @@ contains
 
     type (mesh_type), pointer :: mesh => null()
 
-    ! If there's already data in the field, destruct it 
+    ! If there's already data in the field, destruct it
     ! ready for re-initialisation
     if(allocated(self%data))call field_destructor_scalar(self)
 
@@ -386,7 +386,7 @@ contains
       self%name = name
     else
       self%name = 'none'
-    end if 
+    end if
 
     ! Create space for holding field data
     allocate( self%data(self%vspace%get_last_dof_halo()) )
@@ -538,7 +538,7 @@ contains
   end subroutine field_destructor_array2d
 
   !> Setter for field write behaviour
-  !> @param[in,out]  self  field_type 
+  !> @param[in,out]  self  field_type
   !> @param [in] write_behaviour - pointer to procedure implementing write method
   subroutine set_write_behaviour(self, write_behaviour)
     implicit none
@@ -548,9 +548,9 @@ contains
   end subroutine set_write_behaviour
 
   !> Getter to get pointer to field write behaviour
-  !> @param[in]  self  field_type 
-  !> @param [in] write_behaviour - 
-  !>             pointer to procedure implementing write method 
+  !> @param[in]  self  field_type
+  !> @param [in] write_behaviour -
+  !>             pointer to procedure implementing write method
   !> @return pointer to procedure for field write behaviour
   subroutine get_write_behaviour(self, write_behaviour)
 
@@ -565,7 +565,7 @@ contains
   end subroutine get_write_behaviour
 
   !> Setter for read behaviour
-  !> @param[in,out]  self  field_type 
+  !> @param[in,out]  self  field_type
   !> @param [in] read_behaviour - pointer to procedure implementing read method
   subroutine set_read_behaviour(self, read_behaviour)
     implicit none
@@ -575,9 +575,9 @@ contains
   end subroutine set_read_behaviour
 
   !> Getter to get pointer to read behaviour
-  !> @param[in]  self  field_type 
-  !> @param [in] read_behaviour - 
-  !>             pointer to procedure implementing read method 
+  !> @param[in]  self  field_type
+  !> @param [in] read_behaviour -
+  !>             pointer to procedure implementing read method
   !> @return pointer to procedure for read behaviour
   subroutine get_read_behaviour(self, read_behaviour)
 
@@ -594,8 +594,8 @@ contains
 
   !> Setter for checkpoint write behaviour
   !>
-  !> @param [in] checkpoint_write_behaviour - 
-  !>             pointer to procedure implementing checkpoint write method 
+  !> @param [in] checkpoint_write_behaviour -
+  !>             pointer to procedure implementing checkpoint write method
   subroutine set_checkpoint_write_behaviour(self, checkpoint_write_behaviour)
     implicit none
     class(field_type), intent(inout)                  :: self
@@ -605,8 +605,8 @@ contains
 
   !> Setter for checkpoint read behaviour
   !>
-  !> @param [in] checkpoint_read_behaviour - 
-  !>             pointer to procedure implementing checkpoint read method 
+  !> @param [in] checkpoint_read_behaviour -
+  !>             pointer to procedure implementing checkpoint read method
   subroutine set_checkpoint_read_behaviour(self, checkpoint_read_behaviour)
     implicit none
     class(field_type), intent(inout)                  :: self
@@ -712,12 +712,12 @@ contains
   !> @return Element order of this field
   function get_element_order(self) result(elem)
     implicit none
-    
+
     class (field_type) :: self
     integer(i_def) :: elem
-    
+
     elem = self%vspace%get_element_order()
-    
+
     return
   end function get_element_order
   !> Sends field contents to the log.
@@ -813,7 +813,7 @@ contains
     undf = self%vspace%get_last_dof_owned()
     fmin = scalar_type( minval( self%data(1:undf) ) )
     fmax = scalar_type( maxval( self%data(1:undf) ) )
- 
+
     write( log_scratch_space, '( A, A, A, 2E16.8 )' ) &
          "Min/max ", trim( label ),                   &
          " = ", fmin%get_min(), fmax%get_max()
@@ -845,7 +845,7 @@ contains
 
     undf = self%vspace%get_last_dof_owned()
     fmax = scalar_type( maxval( abs(self%data(1:undf)) ) )
- 
+
     write( log_scratch_space, '( A, A, E16.8 )' ) &
          trim( label ), " = ", fmax%get_max()
     call log_event( log_scratch_space, log_level )
@@ -887,7 +887,7 @@ contains
     use log_mod,           only : log_event, &
                                   LOG_LEVEL_ERROR
 
-    implicit none 
+    implicit none
 
     class(field_type),   intent(in)     :: this
     character(len=*),    intent(in)     :: field_name
@@ -1223,7 +1223,7 @@ contains
     if( depth > mesh%get_halo_depth() ) &
       call log_event( 'Error in field: '// &
                       'call to is_dirty() with depth out of range.', &
-                      LOG_LEVEL_ERROR )    
+                      LOG_LEVEL_ERROR )
 
     dirtiness = .false.
     if(self%halo_dirty(depth) == 1)dirtiness = .true.
@@ -1257,7 +1257,7 @@ contains
     if( depth > mesh%get_halo_depth() ) &
       call log_event( 'Error in field: '// &
                       'call to set_clean() with depth out of range.', &
-                      LOG_LEVEL_ERROR )    
+                      LOG_LEVEL_ERROR )
 
     self%halo_dirty(1:depth) = 0
     nullify( mesh )

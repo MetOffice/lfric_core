@@ -33,7 +33,7 @@ module field_collection_mod
   type, public :: field_collection_type
 
     private
-    !> The name of the field collection if provided. 
+    !> The name of the field collection if provided.
     character(str_def)     :: name = 'unnamed_collection'
 
     !> A linked list of the fields contained within the collection
@@ -47,9 +47,9 @@ module field_collection_mod
     procedure, public :: get_length
     procedure, public :: get_name
     procedure, public :: clear
-    
+
     procedure, private :: copy_collection
-    
+
     generic, public   :: assignment(=) => copy_collection
     final             :: field_collection_destructor
   end type field_collection_type
@@ -66,7 +66,7 @@ module field_collection_mod
 
     private
     !> A pointer to the field within the collection that will be
-    !> the next to be returned 
+    !> the next to be returned
     type(linked_list_item_type), pointer :: current
 
   contains
@@ -117,7 +117,7 @@ function field_collection_iterator_constructor(collection) result(self)
 end function field_collection_iterator_constructor
 
 !> Adds a field to the collection. The field maintained in the collection will
-!> either be a copy of the original or a field pointer object containing a 
+!> either be a copy of the original or a field pointer object containing a
 !> pointer to a field held elsewhere..
 !> @param [in] field The field that is to be copied into the collection or a
 !>                   field pointer object that is to be stored in the collection
@@ -130,6 +130,29 @@ subroutine add_field(self, field)
 
   ! Pointer to linked list - used for looping through the list
   type(linked_list_item_type), pointer :: loop => null()
+
+  ! Check field name is valid, if not then exit with error
+  select type(infield => field)
+    type is (field_type)
+      if ( trim(infield%get_name()) == 'none' .OR. &
+                                  trim(infield%get_name()) == 'unset') then
+        write(log_scratch_space, '(3A)') &
+        'Field name [', trim(infield%get_name()), &
+        '] is an invalid field name, please choose a unique field name.'
+        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      end if
+  end select
+  select type(infield => field)
+    type is (field_pointer_type)
+      if ( trim(infield%field_ptr%get_name()) == 'none' .OR. &
+                                  trim(infield%field_ptr%get_name()) == 'unset') then
+        write(log_scratch_space, '(3A)') &
+        'Field name [', trim(infield%field_ptr%get_name()), &
+        '] is an invalid field name, please choose a unique field name.'
+        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      end if
+  end select
+
 
   ! start at the head of the mesh collection linked list
   loop => self%field_list%get_head()
@@ -224,7 +247,7 @@ function get_field(self, field_name) result(field)
     end if
     ! otherwise search list for the name of field we want
 
-    ! 'cast' to the field_type 
+    ! 'cast' to the field_type
     select type(listfield => loop%payload)
       type is (field_type)
       if ( trim(field_name) == trim(listfield%get_name()) ) then
