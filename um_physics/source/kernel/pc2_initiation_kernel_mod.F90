@@ -136,8 +136,7 @@ subroutine pc2_initiation_code( nlayers,                           &
     use nlsizes_namelist_mod,       only: row_length, rows, model_levels
     use atm_step_local,             only: rhc_row_length, rhc_rows
     use pc2_initiation_ctl_mod,     only: pc2_initiation_ctl
-    use level_heights_mod,          only: r_rho_levels, r_theta_levels
-    use planet_constants_mod,       only: p_zero, kappa, planet_radius, lcrcp
+    use planet_constants_mod,       only: p_zero, kappa, lcrcp
     use gen_phys_inputs_mod,        only: l_mr_physics
 
     ! Redirect routine names to avoid clash with existing qsat routines
@@ -192,22 +191,21 @@ subroutine pc2_initiation_code( nlayers,                           &
     real(r_um), dimension(row_length,rows,model_levels) ::   &
                   qv_work, qcl_work, qcf_work,               &
                   cfl_work, cff_work, bcf_work,              &
-                  t_work, theta_work, pressure, rhts, rhnow, &
+                  t_work, theta_work, rhts,                  &
                   t_incr, qv_incr, qcl_incr, qcf_incr,       &
                   cfl_incr, cff_incr, bcf_incr,              &
-                  dtdt, dqdt, dldt, dpdt,rhcpt, zeros, pressure_n
+                  rhcpt, zeros
 
     real(r_um), dimension(row_length,rows,model_levels) ::   &
                   tlts, qtts, ptts, qsl_tl
 
     real(r_um), dimension(row_length,rows,model_levels) :: &
-                  p_theta_levels, p_theta_levels_n
+                  p_theta_levels
 
     real(r_um), dimension(row_length,rows,model_levels+1) ::   &
                   p_rho_levels
 
-    real(r_um), dimension(row_length,rows)              ::   &
-                  tl_n, t_n, qv_n, qcl_n, p_star
+    real(r_um), dimension(row_length,rows) :: t_n, p_star
 
     integer(i_um) :: k
 
@@ -271,7 +269,7 @@ subroutine pc2_initiation_code( nlayers,                           &
       qtts(1,1,k) = mv_n_wth(map_wth(1) + k) + ml_n_wth(map_wth(1) + k)
 
       ! Liquid temperature
-      tlts(1,1,k) = t_n(1,1) - ( lcrcp * qcl_n(1,1) )
+      tlts(1,1,k) = t_n(1,1) - ( lcrcp * ml_n_wth(map_wth(1) + k) )
 
     end do     ! k
 
