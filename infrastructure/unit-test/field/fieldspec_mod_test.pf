@@ -1,0 +1,78 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2019 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the fieldspec collection object
+!>
+module fieldspec_mod_test
+
+    use fieldspec_mod,       only : fieldspec_type
+    use fs_continuity_mod,   only : W3
+
+    use pFUnit_Mod
+
+    implicit none
+
+    private
+    public :: test_assignment
+
+    @TestCase
+    type, extends(TestCase), public :: fieldspec_test_type
+        private
+    contains
+        procedure setUp
+        procedure tearDown
+        procedure test_assignment
+    end type fieldspec_test_type
+
+contains
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    subroutine setUp(this)
+
+        implicit none
+
+        class(fieldspec_test_type), intent(inout) :: this
+
+    end subroutine setUp
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    subroutine tearDown(this)
+
+        implicit none
+
+        class(fieldspec_test_type), intent(inout) :: this
+
+    end subroutine tearDown
+
+
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    @test
+    subroutine test_assignment(self)
+
+        implicit none
+
+        class(fieldspec_test_type), intent(inout) :: self
+        type(fieldspec_type) :: test_fieldspec1
+
+        test_fieldspec1 = fieldspec_type( "foo", & ! unique_id
+                                          11, & ! mesh_id
+                                          2, & ! domain
+                                          W3, & ! order
+                                          1, & ! field_kind
+                                          1 & ! field_type
+                                        )
+
+        @assertEqual("foo",test_fieldspec1%get_unique_id())
+        @assertEqual(11,test_fieldspec1%get_mesh_id())
+        @assertEqual(2,test_fieldspec1%get_domain())
+        @assertEqual(W3,test_fieldspec1%get_order())
+        @assertEqual(1,test_fieldspec1%get_kind())
+        @assertEqual(1,test_fieldspec1%get_type())
+
+    end subroutine test_assignment
+
+end module fieldspec_mod_test
