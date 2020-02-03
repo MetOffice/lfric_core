@@ -22,8 +22,10 @@ module io_mod
   use field_mod,                     only: field_type, field_proxy_type
   use field_collection_mod,          only: field_collection_type, &
                                            field_collection_iterator_type
-  use files_config_mod,              only: checkpoint_stem_name, &
-                                           start_dump_filename, &
+  use files_config_mod,              only: ancil_directory,       &
+                                           checkpoint_stem_name,  &
+                                           orography_ancil_path,  &
+                                           start_dump_filename,   &
                                            start_dump_directory
   use finite_element_config_mod,     only: element_order
   use function_space_mod,            only: function_space_type, BASIS
@@ -34,6 +36,8 @@ module io_mod
                                            init_option_fd_start_dump, &
                                            ancil_option,              &
                                            ancil_option_aquaplanet
+  use orography_config_mod,          only: orog_init_option,          &
+                                           orog_init_option_ancil
   use io_config_mod,                 only: diagnostic_frequency, &
                                            checkpoint_write,     &
                                            checkpoint_read,      &
@@ -125,13 +129,15 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
   type(xios_duration)                  :: o_freq, cp_freq, dump_freq
   type(xios_duration)                  :: av_freq
   type(xios_context)                   :: xios_ctx_hdl
-  type(xios_file)                      :: cpfile_hdl, rsfile_hdl, &
-                                          ofile_hdl, dumpfile_hdl
+  type(xios_file)                      :: cpfile_hdl, rsfile_hdl,   &
+                                          ofile_hdl, dumpfile_hdl,  &
+                                          orog_file_hdl
   type(xios_fieldgroup)                :: cpfieldgroup_hdl, &
                                           fdfieldgroup_hdl
   character(len=str_max_filename)      :: checkpoint_write_fname
   character(len=str_max_filename)      :: checkpoint_read_fname
   character(len=str_max_filename)      :: dump_fname
+  character(len=str_max_filename)      :: ancil_fname
   character(len=str_def)               :: domain_name, domain_fs_name
   integer(i_native), parameter         :: domain_function_spaces(5) &
                                                   = (/W0, W1, W2, W3, Wtheta/)
@@ -248,6 +254,15 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
     call xios_get_handle("read_lfric_fd_dump",dumpfile_hdl)
     call xios_set_attr(dumpfile_hdl,name=dump_fname, enabled=.true.)
 
+  end if
+
+  if( orog_init_option == orog_init_option_ancil ) then
+
+    ! Assign ancil filename from namelist
+    write(ancil_fname,'(A)') trim(ancil_directory)//'/'//trim(orography_ancil_path)
+    ! Set orography ancil filename
+    call xios_get_handle("orography_ancil",orog_file_hdl)
+    call xios_set_attr(orog_file_hdl,name=ancil_fname, enabled=.true.)
 
   end if
 

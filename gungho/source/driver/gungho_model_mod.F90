@@ -88,6 +88,7 @@ module gungho_model_mod
                                          runge_kutta_final
   use transport_config_mod,       only : scheme, &
                                          scheme_method_of_lines
+  use init_altitude_mod,          only : init_altitude
   implicit none
 
   private
@@ -137,6 +138,8 @@ module gungho_model_mod
     integer(i_def)    :: dtime
     integer(i_def)    :: ts_init
     integer(i_native) :: log_level
+
+    type(field_type)  :: surface_altitude
 
     !-------------------------------------------------------------------------
     ! Initialise aspects of the infrastructure
@@ -250,7 +253,12 @@ module gungho_model_mod
 
     end if
 
-    ! Set up orography after XIOS to enable read-in from ancillary file
+    ! Set up surface altitude field - this will be used to generate orography
+    ! for models with global land mass included (i.e GA/GL)
+    call init_altitude( twod_mesh_id, surface_altitude )
+
+    ! Set up orography after XIOS to enable read-in of surface altitude from
+    ! ancillary file - assignment of orography from altitude to be done by #2023
     call assign_orography_field(chi, mesh_id)
 
 

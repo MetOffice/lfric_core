@@ -80,10 +80,12 @@
   checkpoint_stem_name      = 'restartGungho'
   start_dump_filename       = 'UM2LFRic_dump'
   start_dump_directory      = './'
+  ancil_directory           = './'
+  orography_ancil_path      = 'qrparm.orog.ugrid'
 /
 
 &io
-  use_xios_io               = .false.
+  use_xios_io               = .true.
   write_diag                = .true.
   write_dump                = .false.
   diagnostic_frequency      = 10
@@ -219,7 +221,8 @@
 /
 
 &orography
-  profile   = 'none'
+  orog_init_option = 'none'
+  profile          = 'none'
 /
 
 &orography_agnesi_cartesian

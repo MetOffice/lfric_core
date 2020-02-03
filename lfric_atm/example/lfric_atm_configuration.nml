@@ -301,6 +301,7 @@
 /
 
 &orography
+    orog_init_option = 'none'
     profile = 'none',
 /
 

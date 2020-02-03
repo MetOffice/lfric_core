@@ -155,6 +155,7 @@ semimajor_axis_inc=0.0,
 spin='user',
 /
 &orography
+orog_init_option = 'none'
 profile='none',
 /
 &partitioning

@@ -188,7 +188,8 @@
 /
 
 &orography
-  profile   = 'none'
+  orog_init_option = 'none'
+  profile          = 'none'
 /
 
 &orography_agnesi_cartesian

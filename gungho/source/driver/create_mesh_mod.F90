@@ -29,7 +29,6 @@ module create_mesh_mod
   use mesh_mod,                   only: mesh_type
   use multigrid_config_mod,       only: l_multigrid
   use ncdf_quad_mod,              only: ncdf_quad_type
-  use orography_control_mod,      only: set_orography_option
   use partition_mod,              only: partition_type,                 &
                                         partitioner_interface,          &
                                         partitioner_cubedsphere_serial, &
@@ -295,9 +294,6 @@ subroutine init_mesh( local_rank, total_ranks, prime_mesh_id, twod_mesh_id, shif
                               local_rank, total_ranks, &
                               npanels )
   end if
-
-  ! Set up analytic orography parameters
-  call set_orography_option()
 
   ! Generate a '2d' mesh
   ! probably only works for cartesian domains, as atmos_bottom hard-wired
