@@ -24,7 +24,9 @@ module io_mod
                                            field_collection_iterator_type
   use files_config_mod,              only: ancil_directory,       &
                                            checkpoint_stem_name,  &
+                                           land_area_ancil_path,  &
                                            orography_ancil_path,  &
+                                           soil_ancil_path,       &
                                            start_dump_filename,   &
                                            start_dump_directory
   use finite_element_config_mod,     only: element_order
@@ -35,7 +37,8 @@ module io_mod
   use initialization_config_mod,     only: init_option,               &
                                            init_option_fd_start_dump, &
                                            ancil_option,              &
-                                           ancil_option_aquaplanet
+                                           ancil_option_aquaplanet,   &
+                                           ancil_option_basic_gagl
   use orography_config_mod,          only: orog_init_option,          &
                                            orog_init_option_ancil
   use io_config_mod,                 only: diagnostic_frequency, &
@@ -133,7 +136,7 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
   type(xios_context)                   :: xios_ctx_hdl
   type(xios_file)                      :: cpfile_hdl, rsfile_hdl,   &
                                           ofile_hdl, dumpfile_hdl,  &
-                                          orog_file_hdl
+                                          ancil_file_hdl, orog_file_hdl
   type(xios_fieldgroup)                :: cpfieldgroup_hdl, &
                                           fdfieldgroup_hdl
   character(len=str_max_filename)      :: checkpoint_write_fname
@@ -261,8 +264,20 @@ subroutine xios_domain_init(xios_ctx, mpi_comm, dtime, &
 
   end if
 
-  if( orog_init_option == orog_init_option_ancil ) then
+  if( ancil_option == ancil_option_basic_gagl ) then
+    ! Set land area ancil filename from namelist
+    write(ancil_fname,'(A)') trim(ancil_directory)//'/'//trim(land_area_ancil_path)
+    call xios_get_handle("land_area_ancil",ancil_file_hdl)
+    call xios_set_attr(ancil_file_hdl,name=ancil_fname, enabled=.true.)
 
+    ! Set soil ancil filename from namelist
+    write(ancil_fname,'(A)') trim(ancil_directory)//'/'//trim(soil_ancil_path)
+    call xios_get_handle("soil_ancil",ancil_file_hdl)
+    call xios_set_attr(ancil_file_hdl,name=ancil_fname, enabled=.true.)
+  end if
+
+  if( ( orog_init_option == orog_init_option_ancil ) .or. &
+    ( ancil_option == ancil_option_basic_gagl ) ) then
     ! Assign ancil filename from namelist
     write(ancil_fname,'(A)') trim(ancil_directory)//'/'//trim(orography_ancil_path)
     ! Set orography ancil filename

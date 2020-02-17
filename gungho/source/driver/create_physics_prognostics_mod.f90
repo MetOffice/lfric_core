@@ -545,7 +545,7 @@ contains
 
     ! This needs to be order 3 as it is land tile (9) x soil levels (4) = 36
     vector_space => function_space_collection%get_fs(twod_mesh_id, 3, W3)
-    call add_physics_field( surface_fields, depository, prognostic_fields,  &
+    call add_physics_field( surface_fields, depository, prognostic_fields,     &
       'tile_water_extract', vector_space, checkpoint_restart_flag, twod=.true. )
 
     !========================================================================
@@ -771,7 +771,7 @@ contains
     type(function_space_type), pointer, intent(in) :: vector_space
     logical(l_def), intent(in)                     :: checkpoint_restart_flag
     logical(l_def), optional, intent(in)           :: twod
-    logical(l_def), optional, intent(in)       :: advection_flag
+    logical(l_def), optional, intent(in)           :: advection_flag
     !Local variables
     type(field_type)                               :: new_field
 

@@ -30,12 +30,14 @@ module gungho_model_data_mod
                                                ancil_option,                &
                                                ancil_option_none,           &
                                                ancil_option_analytic,       &
-                                               ancil_option_aquaplanet
+                                               ancil_option_aquaplanet,     &
+                                               ancil_option_basic_gagl
   use io_config_mod,                    only : checkpoint_read,  &
                                                checkpoint_write, &
                                                write_dump
   use io_mod,                           only : read_checkpoint,  &
                                                write_checkpoint, &
+                                               read_state,       &
                                                write_state,      &
                                                xios_write_field_single_face
   use create_gungho_prognostics_mod,    only : create_gungho_prognostics
@@ -54,8 +56,9 @@ module gungho_model_data_mod
   use init_orography_fields_alg_mod,    only : init_orography_fields_alg
   use init_physics_incs_alg_mod,        only : init_physics_incs_alg
   use init_fd_prognostics_mod,          only : init_fd_prognostics_dump
-  use init_ancils_mod,                  only : init_analytic_ancils, &
-                                               init_aquaplanet_ancils
+  use init_ancils_mod,                  only : init_analytic_ancils,    &
+                                               init_aquaplanet_ancils,  &
+                                               create_fd_ancils
 
   implicit none
 
@@ -109,6 +112,9 @@ module gungho_model_data_mod
 
     !> FD fields used to read initial conditions from LFRic-Input files
     type( field_collection_type ), public   :: fd_fields
+
+    !> Fields used to store data read in from ancillary files
+    type( field_collection_type ), public   :: ancil_fields
 
   end type model_data_type
 
@@ -190,6 +196,13 @@ contains
     select case ( prognostic_init_choice )
       case ( init_option_fd_start_dump )
         if (use_physics) call create_fd_prognostics(mesh_id, model_data%fd_fields)
+    end select
+
+    select case ( ancil_choice )
+      case ( ancil_option_basic_gagl )
+        if (use_physics) call create_fd_ancils( model_data%depository,   &
+                                                model_data%ancil_fields, &
+                                                mesh_id, twod_mesh_id )
     end select
 
   end subroutine create_model_data
@@ -304,6 +317,9 @@ contains
         case ( ancil_option_analytic )
           call log_event( "Gungho: Setting ancillaries from analytic representation ", LOG_LEVEL_INFO )
           call init_analytic_ancils( model_data%surface_fields )
+        case ( ancil_option_basic_gagl )
+          call log_event( "Gungho: Reading ancillaries from disk ", LOG_LEVEL_INFO )
+          call read_state( model_data%ancil_fields )
         case default
           ! No valid ancil option selected
           call log_event("Gungho: No valid ancillary initialisation option selected, "// &
