@@ -14,6 +14,7 @@ class function_space_mod::function_space_type {
     -element_order: integer
     -fs: integer
     -fs_order: integer
+    -ndata: integer
     -global_dof_id: integer[] <<allocatable>>
     -global_dof_id_2d: integer[] <<allocatable>>
     -last_dof_annexed: integer
@@ -33,7 +34,7 @@ class function_space_mod::function_space_type {
     -fractional_levels: double precision[:] <<allocatable>>
     -comms_fs: logical
 
-    <<create>>+fs_constructor( <<in>>mesh_id: integer, <<in>>element_order: integer, <<in>>gungho_fs: integer ) : function_space_type
+    <<create>>+fs_constructor( <<in>>mesh_id: integer, <<in>>element_order: integer, <<in>>gungho_fs: integer, <<in, optional>>ndata: integer ) : function_space_type
     <<destroy>>+function_space_destructor()
 
     +clear()
@@ -49,6 +50,7 @@ class function_space_mod::function_space_type {
     +get_dim_space_diff() : integer
     +get_element_order(): integer
     +get_fs_order() : integer
+    +get_ndata() : integer
     +get_global_dof_id( <<inout>>global_dof_id: integer[] )
     +get_global_dof_id_2d( <<inout>>global_dof_id: integer[] )
     +get_last_dof_halo() : integer

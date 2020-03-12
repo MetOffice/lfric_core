@@ -15,7 +15,7 @@
 module function_space_collection_mod
 
   use constants_mod,      only: i_def, l_def
-  use function_space_mod, only: function_space_type, generate_function_space_id
+  use function_space_mod, only: function_space_type
   use fs_continuity_mod,  only: W0, W1, W2, W2V, W2H, W2broken, W2trace, W3, &
                                 Wtheta, Wchi, name_from_functionspace
   use log_mod,            only: log_event, log_scratch_space, &
@@ -42,8 +42,6 @@ module function_space_collection_mod
 
   contains
     procedure, public :: get_fs
-    procedure, public :: get_fs_by_id
-
     procedure, public :: get_fs_collection_size
     procedure, public :: clear
     final             :: function_space_collection_destructor
@@ -81,8 +79,15 @@ end function function_space_collection_constructor
 !-----------------------------------------------------------------------------
 !> Function to get an instance of a function space from the linked list
 !> or create it if it doesn't exist
-function get_fs(self, mesh_id, element_order, lfric_fs) &
-                result(fs)
+!> @param[in] mesh_id  ID of mesh object
+!> @param[in] element_order  function space order
+!> @param[in] lfric_fs       lfric id code for given supported function space
+!> @param[in] ndata   The number of data values to be held at each dof location
+function get_fs(self, &
+                mesh_id, &
+                element_order, &
+                lfric_fs, &
+                ndata)  result(fs)
 
   implicit none
 
@@ -90,12 +95,19 @@ function get_fs(self, mesh_id, element_order, lfric_fs) &
   integer(i_def), intent(in)                           :: mesh_id
   integer(i_def), intent(in)                           :: element_order
   integer(i_def), intent(in)                           :: lfric_fs
+  integer(i_def), optional, intent(in)                 :: ndata
 
   type(function_space_type),   pointer :: fs
 
-  integer(i_def) :: fs_id
+  integer(i_def) :: ndata_sz
 
   nullify(fs)
+
+  if (present(ndata)) then
+    ndata_sz = ndata
+  else
+    ndata_sz = 1
+  end if
 
   select case (lfric_fs)
 
@@ -120,82 +132,35 @@ function get_fs(self, mesh_id, element_order, lfric_fs) &
     return
   end if
 
-  ! Generate id for requested function space
-  ! can use the passed mesh_id
-  fs_id = generate_function_space_id( mesh_id, element_order, lfric_fs )
-
-  fs => self%get_fs_by_id(fs_id)
+  fs => get_existing_fs( self, &
+                         mesh_id, &
+                         element_order, &
+                         lfric_fs, &
+                         ndata_sz )
 
   if (.not. associated(fs)) then
 
     call self%fs_list%insert_item( function_space_type( mesh_id,       &
                                                         element_order, &
-                                                        lfric_fs) )
+                                                        lfric_fs,      &
+                                                        ndata_sz) )
 
-    write(log_scratch_space, '(A,2(I0,A))')          &
+    write(log_scratch_space, '(A,I0,A)')          &
       'Generated order-',element_order,              &
       ' '//trim(name_from_functionspace(lfric_fs))// &
-      '-function space singleton (id:', fs_id,')'
+      '-function space singleton'
     call log_event(log_scratch_space, LOG_LEVEL_TRACE)
 
-    fs => self%get_fs_by_id(fs_id)
+    fs => get_existing_fs( self, &
+                           mesh_id, &
+                           element_order, &
+                           lfric_fs, &
+                           ndata_sz )
 
   end if
 
   return
 end function get_fs
-
-!------------------------------------------------------------------------------
-!> Function to scan the function space collection for
-!> function space with a given id and return a pointer
-!> to it. A null pointer is returned if the requested
-!> function space does not exist.
-!>
-!> @param  [in] fs_id <integer> Id of requested function space
-!> @return <pointer> Pointer to function space object or null()
-function get_fs_by_id(self, fs_id) result(instance)
-
-  implicit none
-
-  class(function_space_collection_type) :: self
-  integer(i_def)                        :: fs_id
-  type(function_space_type),   pointer  :: instance
-
-  type(linked_list_item_type), pointer  :: loop
-
-  ! Point to head of the function space linked list
-  loop => self%fs_list%get_head()
-
-  ! Loop through the linked list
-  do
-    if ( .not. associated(loop) ) then
-      ! Have reach the end of the list so either
-      ! the list is empty or at the end of list.
-      instance => null()
-
-      loop => self%fs_list%get_tail()
-      exit
-    end if
-
-    ! Check the id of the payload in the current item
-    ! to see if its the one requested.
-    if ( fs_id == loop%payload%get_id() ) then
-      ! Need to 'cast' the payload as the specific
-      ! linked list data type, i.e. function_space_type,
-      ! before we can use it.
-      select type(v => loop%payload)
-      type is (function_space_type)
-        instance => v
-      end select
-      exit
-    end if
-
-    loop => loop%next
-  end do
-
-  nullify(loop)
-  return
-end function get_fs_by_id
 
 
 !----------------------------------------------------------------------------
@@ -252,5 +217,72 @@ subroutine function_space_collection_destructor(self)
   return
 end subroutine function_space_collection_destructor
 
+
+!------------------------------------------------------------------------------
+! Private function (not accessible through the API - and only called from within
+! this module) to scan the function space collection for function space with the
+! given propeties and return a pointer to it. A null pointer is returned if the
+! requested function space does not exist.
+!
+! param[in] mesh_id  ID of mesh object
+! param[in] element_order  function space order
+! param[in] lfric_fs       lfric id code for given supported function space
+! param[in] ndata   The number of data values to be held at each dof location
+! return <pointer> Pointer to function space object or null()
+function get_existing_fs(self, &
+                         mesh_id, &
+                         element_order, &
+                         lfric_fs, &
+                         ndata) result(instance)
+
+  implicit none
+
+  class(function_space_collection_type) :: self
+  integer(i_def), intent(in)            :: mesh_id
+  integer(i_def), intent(in)            :: element_order
+  integer(i_def), intent(in)            :: lfric_fs
+  integer(i_def), intent(in)            :: ndata
+
+
+  type(function_space_type),   pointer  :: instance
+
+  type(linked_list_item_type), pointer  :: loop
+
+  ! Point to head of the function space linked list
+  loop => self%fs_list%get_head()
+
+  ! Loop through the linked list
+  do
+    if ( .not. associated(loop) ) then
+      ! Have reach the end of the list so either
+      ! the list is empty or at the end of list.
+      instance => null()
+
+      loop => self%fs_list%get_tail()
+      exit
+    end if
+
+    ! Need to 'cast' the payload as the specific
+    ! linked list data type, i.e. function_space_type,
+    ! before we can use it.
+    select type(listfs => loop%payload)
+    type is (function_space_type)
+      ! Check the properties of the payload in the current item
+      ! to see if its the one being requested.
+      if ( mesh_id == listfs%get_mesh_id() .and. &
+           element_order == listfs%get_element_order() .and. &
+           lfric_fs == listfs%which() .and. &
+           ndata == listfs%get_ndata() ) then
+        instance => listfs
+        exit
+      end if
+    end select
+
+    loop => loop%next
+  end do
+
+  nullify(loop)
+  return
+end function get_existing_fs
 
 end module function_space_collection_mod

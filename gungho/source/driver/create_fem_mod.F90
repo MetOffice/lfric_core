@@ -129,26 +129,14 @@ module create_fem_mod
           ! Make sure this function_space is in the collection
           fs => function_space_collection%get_fs( mesh_ids(mesh_ctr), &
                0, W3 )
-          write( log_scratch_space,"(A,I0,A)")                       &
-               'Adding function_space id ', fs%get_id(), &
-               ' to multigrid function_space chain'
-          call log_event( log_scratch_space, LOG_LEVEL_INFO )
           call multigrid_function_space_chain%add( fs )
 
           fs => function_space_collection%get_fs( mesh_ids(mesh_ctr), &
                0, W2 )
-          write( log_scratch_space,"(A,I0,A)")                       &
-               'Adding function_space id ', fs%get_id(), &
-               ' to w2_multigrid function_space chain'
-          call log_event( log_scratch_space, LOG_LEVEL_INFO )
           call w2_multigrid_function_space_chain%add( fs )
 
           fs => function_space_collection%get_fs( mesh_ids(mesh_ctr), &
                0, Wtheta )
-          write( log_scratch_space,"(A,I0,A)")                       &
-               'Adding function_space id ', fs%get_id(), &
-               ' to wtheta_multigrid function_space chain'
-          call log_event( log_scratch_space, LOG_LEVEL_INFO )
           call wtheta_multigrid_function_space_chain%add( fs )
        end do
     end if

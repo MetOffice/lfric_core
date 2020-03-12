@@ -116,36 +116,21 @@ contains
                                                     W2 )
     this%w3_fs => function_space_collection%get_fs( this%mesh_id, &
                                                     element_order, &
-                                                    W3 )
+                                                    W3, &
+                                                    ndata=3 )
 
     ! Check we have 3 function spaces in the collection
 
     @assertEqual(answer, function_space_collection%get_fs_collection_size())
 
-    ! Check they have unique ids
-    fs_0 = this%w0_fs%get_id()
-    fs_2 = this%w2_fs%get_id()
-    fs_3 = this%w3_fs%get_id()
-
-    @assertFalse(fs_0 == fs_2)
-    @assertFalse(fs_2 == fs_3)
-    @assertFalse(fs_3 == fs_0)
-
-    ! try to get a function space already in the list
-    ! it should have the correct id and the number of
-    ! function spaces in the collection should not increase
+    ! Try to get a function space already in the list.
+    ! The number of function spaces in the collection should not increase
 
     this%temp_w0_fs => function_space_collection%get_fs( this%mesh_id,  &
                                                          element_order, &
                                                          W0 )
 
-    @assertEqual(fs_0, this%temp_w0_fs%get_id())
-
     @assertEqual(answer, function_space_collection%get_fs_collection_size())
-
-    ! Test you can get the same function space by it's id
-    test_fs => function_space_collection%get_fs_by_id(fs_0)
-    @assertAssociated(test_fs, this%temp_w0_fs)
 
   end subroutine test_all
 

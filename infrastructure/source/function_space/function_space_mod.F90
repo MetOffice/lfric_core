@@ -42,8 +42,7 @@ implicit none
 
 private
 
-public :: W0, W1, W2, W2broken, W2trace, W3, Wtheta, W2V, W2H, Wchi, &
-          generate_function_space_id
+public :: W0, W1, W2, W2broken, W2trace, W3, Wtheta, W2V, W2H, Wchi
 
 integer(i_def), public, parameter :: BASIS      = 100
 integer(i_def), public, parameter :: DIFF_BASIS = 101
@@ -92,6 +91,9 @@ type, extends(linked_list_data_type), public :: function_space_type
   ! with a name for this, same as element order except for W0
   ! where is it equal to element_order+1
   integer(i_def) :: fs_order
+
+  !> The number of data values to be held at each dof location
+  integer(i_def) :: ndata
 
   !> Number of dimensions in this function space
   integer(i_def) :: dim_space
@@ -284,6 +286,9 @@ contains
   !> @brief Returns the order of a function space
   procedure, public :: get_fs_order
 
+  !> @brief Returns the number of data values held at each dof
+  procedure, public :: get_ndata
+
   !> @brief Gets mapping from degree of freedom to reference element entity.
   !> @return Integer array mapping degree of freedom index to geometric entity
   !> on the reference element.
@@ -339,7 +344,6 @@ interface function_space_type
   module procedure fs_constructor
 end interface
 
-
 !-------------------------------------------------------------------------------
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
@@ -364,27 +368,35 @@ contains
 !>                           instantiated function space on. Recognised integers
 !>                           are assigned to the function spaces "handles" in the
 !>                           fs_handles_mod module.
+!> @param[in] ndata          The number of data values to be held at each dof
+!>                           location
 !> @return    A pointer to the function space held in this module
-function fs_constructor(mesh_id, element_order, lfric_fs) result(instance)
+function fs_constructor(mesh_id, &
+                        element_order, &
+                        lfric_fs, &
+                        ndata)  result(instance)
 
   implicit none
 
-  integer(i_def),    intent(in) :: mesh_id
-  integer(i_def),    intent(in) :: element_order
-  integer(i_native), intent(in) :: lfric_fs
+  integer(i_def),              intent(in) :: mesh_id
+  integer(i_def),              intent(in) :: element_order
+  integer(i_native),           intent(in) :: lfric_fs
+  integer(i_def), optional, intent(in) :: ndata
 
   type(function_space_type) :: instance
 
-  integer(i_def) :: id
+  integer(i_def) :: ndata_sz
 
-
-  ! Set the id in the base class
-  id = generate_function_space_id(mesh_id, element_order, lfric_fs)
-  call instance%set_id(id)
+    if (present(ndata)) then
+      ndata_sz = ndata
+    else
+      ndata_sz = 1
+    end if
 
   instance%mesh          => mesh_collection%get_mesh( mesh_id )
   instance%fs            =  lfric_fs
   instance%element_order =  element_order
+  instance%ndata         =  ndata_sz
 
   if (lfric_fs == W0) then
     instance%fs_order = element_order + 1
@@ -478,12 +490,12 @@ subroutine init_function_space( self )
   allocate( dofmap             ( self%ndof_cell                                &
                                , 0:ncells_2d_with_ghost ) )
 
-  allocate( self%global_dof_id ( self%ndof_glob) )
-  allocate( self%global_dof_id_2d ( self%mesh%get_last_edge_cell()) )
+  allocate( self%global_dof_id ( self%ndof_glob*self%ndata ) )
+  allocate( self%global_dof_id_2d ( self%mesh%get_last_edge_cell()*self%ndata) )
 
   allocate( self%last_dof_halo ( self%mesh % get_halo_depth()) )
 
-  call dofmap_setup ( self%mesh, self%fs, self%element_order,              &
+  call dofmap_setup ( self%mesh, self%fs, self%element_order, self%ndata,  &
                       ncells_2d_with_ghost,                                &
                       self%ndof_vert, self%ndof_edge, self%ndof_face,      &
                       self%ndof_vol,  self%ndof_cell, self%last_dof_owned, &
@@ -949,6 +961,20 @@ function get_fs_order(self) result (fs_order)
 end function get_fs_order
 
 !-----------------------------------------------------------------------------
+!> @details Gets the number of data values held at each dof
+!> @return  The number of data values held at each dof
+function get_ndata(self) result (ndata)
+
+  implicit none
+  class(function_space_type), intent(in) :: self
+  integer(i_def) :: ndata
+
+  ndata = self%ndata
+
+  return
+end function get_ndata
+
+!-----------------------------------------------------------------------------
 ! Gets the mapping from degrees of freedom to reference
 ! element entity.
 !-----------------------------------------------------------------------------
@@ -1247,27 +1273,5 @@ subroutine function_space_destructor(self)
   call self%clear()
 
 end subroutine function_space_destructor
-
-!==============================================================================
-!> Returns a function_space id using the function_space constructor arguments.
-!> @param[in] mesh_id  ID of mesh object
-!> @param[in] element_order  function space order
-!> @param[in] lfric_fs       lfric id code for given supported function space
-!> @return    id
-function generate_function_space_id(mesh_id,element_order,lfric_fs) result(id)
-
-  implicit none
-
-  integer(i_def), intent(in) :: mesh_id
-  integer(i_def), intent(in) :: element_order
-  integer(i_def), intent(in) :: lfric_fs
-
-  integer(i_def) :: id
-
-  id = (1000000*mesh_id) + (1000*element_order) + lfric_fs
-
-  return
-
-end function generate_function_space_id
 
 end module function_space_mod

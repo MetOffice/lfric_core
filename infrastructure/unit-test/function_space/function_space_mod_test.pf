@@ -256,6 +256,7 @@ contains
     integer(i_def) :: test_dim_space_diff
 
     integer :: cell
+    integer(i_def) :: fs_id
 
     qr = quadrature_xyoz_type(3, quadrature_rule)
     qr_proxy = qr%get_quadrature_proxy()
@@ -345,6 +346,16 @@ contains
                                               nqp_h, nqp_v,         &
                                               xp, zp )
     @assertEqual(basis_diff_function, this%test_diff_basis, margin)
+
+    call test_fs%clear()
+
+    ! Now test multidata function spaces
+    test_fs = function_space_type( this%mesh_id,  &
+                                   element_order, &
+                                   this%function_space, &
+                                   ndata=3 )
+
+    @assertEqual( 3, test_fs%get_ndata() )
 
     call test_fs%clear()
     nullify( xp, zp, nodal_coords, dofmap, basis_function,&

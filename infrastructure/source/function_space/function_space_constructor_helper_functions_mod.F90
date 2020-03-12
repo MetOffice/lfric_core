@@ -1395,6 +1395,9 @@ contains
   !>
   !> @param[in] mesh                  Mesh to define the function space on.
   !> @param[in] gungho_fs             Enumeration of the function space.
+  !> @param[in] element_order         Polynomial order of the function space.
+  !> @param[in] ndata                 The number of data values to be held
+  !>                                  at each dof location
   !> @param[in] ncells_2d_with_ghost  Number of 2d cells with ghost cells.
   !> @param[in] ndof_vert             Number of dofs on vertices.
   !> @param[in] ndof_edge             Number of dofs on edges.
@@ -1413,7 +1416,7 @@ contains
   !> @param[out] global_dof_id_2d     Global id of dofs on the 2D
   !>                                  horizontal domain
   !>
-  subroutine dofmap_setup( mesh, gungho_fs, element_order, &
+  subroutine dofmap_setup( mesh, gungho_fs, element_order, ndata, &
                            ncells_2d_with_ghost, &
                            ndof_vert, ndof_edge, ndof_face, &
                            ndof_vol,  ndof_cell, last_dof_owned, &
@@ -1426,6 +1429,7 @@ contains
     type(mesh_type), intent(in), pointer :: mesh
     integer(i_def),  intent(in) :: gungho_fs
     integer(i_def),  intent(in) :: element_order
+    integer(i_def),  intent(in) :: ndata
     integer(i_def),  intent(in) :: ncells_2d_with_ghost
     integer(i_def),  intent(in) :: ndof_vert
     integer(i_def),  intent(in) :: ndof_edge
@@ -1450,7 +1454,7 @@ contains
     integer(i_def) :: ncells
 
     ! Loop counters
-    integer(i_def) :: icell, iface, iedge, ivert, idof, idepth, k
+    integer(i_def) :: icell, iface, iedge, ivert, idof, idepth, k, m
 
     ! Number of layers
     integer(i_def) :: nlayers
@@ -1505,7 +1509,7 @@ contains
                                         select_entity_w2v
     type(select_entity_type), pointer :: select_entity => null()
 
-    integer(i_halo_index) :: num_layers, num_dofs
+    integer(i_halo_index) :: num_layers, num_dofs, num_ndata
 
     !=========================================================
 
@@ -1625,14 +1629,14 @@ contains
             dofmap_d3            (idof,icell) = id_owned
             dof_column_height_d3 (idof,icell) = nlayers
             dof_cell_owner_d3    (idof,icell) = icell
-            id_owned = id_owned + nlayers
+            id_owned = id_owned + (ndata * nlayers)
           end do
         else
           do idof=1, ndof_vol
             dofmap_d3             (idof,icell) = id_halo
             dof_column_height_d3  (idof,icell) = nlayers
             dof_cell_owner_d3     (idof,icell) = icell
-            id_halo = id_halo - nlayers
+            id_halo = id_halo - (ndata * nlayers)
           end do
         end if
 
@@ -1650,7 +1654,7 @@ contains
                   dof_column_height_d2(idof,face_id) = nlayers
                   dof_cell_owner_d2(idof,face_id) = &
                                       mesh%get_edge_cell_owner(iface,icell)
-                  id_owned = id_owned + nlayers
+                  id_owned = id_owned + (ndata * nlayers)
                 end do
               end if
             else
@@ -1660,7 +1664,7 @@ contains
                   dof_column_height_d2(idof,face_id) = nlayers
                   dof_cell_owner_d2(idof,face_id) = &
                                       mesh%get_edge_cell_owner(iface,icell)
-                  id_halo = id_halo - nlayers
+                  id_halo = id_halo - (ndata * nlayers)
                 end do
               end if
             end if
@@ -1682,14 +1686,14 @@ contains
                     dof_column_height_d2(idof,face_id) = 0
                   end if
                   dof_cell_owner_d2(idof,face_id) = icell
-                  id_owned = id_owned + nlayers + 1
+                  id_owned = id_owned + (ndata * ( nlayers + 1) )
                 end do
               end if
 
               if (iface == number_horizontal_faces + 1) then
-                id_owned = id0 + 1
+                id_owned = id0 + ndata
               else
-                id_owned = id_owned - 1
+                id_owned = id_owned - ndata
               end if
 
             end if ! select_entity
@@ -1708,13 +1712,13 @@ contains
                     dof_column_height_d2(idof,face_id) = 0
                   end if
                   dof_cell_owner_d2(idof,face_id) = icell
-                  id_halo = id_halo - nlayers - 1
+                  id_halo = id_halo - (ndata * ( nlayers + 1) )
                 end do
               end if
               if (iface == number_horizontal_faces + 1) then
-                id_halo = id0 - 1
+                id_halo = id0 - ndata
               else
-                id_halo = id_halo + 1
+                id_halo = id_halo + ndata
               end if
             end if ! select_entity
           end do
@@ -1730,28 +1734,28 @@ contains
             if ( dofmap_d1(1,bottom_edge_id) == 0 ) then
               do idof=1,ndof_edge
                 dofmap_d1(idof,bottom_edge_id)  = id_owned
-                dofmap_d1(idof,top_edge_id)     = id_owned + 1
+                dofmap_d1(idof,top_edge_id)     = id_owned + ndata
                 dof_column_height_d1(idof,bottom_edge_id) = nlayers + 1
                 dof_column_height_d1(idof,top_edge_id   ) = 0
                 dof_cell_owner_d1(idof,bottom_edge_id) = &
                             mesh%get_edge_cell_owner(iedge,icell)
                 dof_cell_owner_d1(idof,top_edge_id   ) = &
                             mesh%get_edge_cell_owner(iedge,icell)
-                id_owned = id_owned + nlayers + 1
+                id_owned = id_owned + (ndata * ( nlayers + 1) )
               end do
             end if
           else
             if ( dofmap_d1(1,bottom_edge_id) == 0 ) then
               do idof=1,ndof_edge
                 dofmap_d1(idof,bottom_edge_id)  = id_halo
-                dofmap_d1(idof,top_edge_id)     = id_halo - 1
+                dofmap_d1(idof,top_edge_id)     = id_halo - ndata
                 dof_column_height_d1(idof,bottom_edge_id) = nlayers + 1
                 dof_column_height_d1(idof,top_edge_id   ) = 0
                 dof_cell_owner_d1(idof,bottom_edge_id) = &
                             mesh%get_edge_cell_owner(iedge,icell)
                 dof_cell_owner_d1(idof,top_edge_id   ) = &
                             mesh%get_edge_cell_owner(iedge,icell)
-                id_halo = id_halo - nlayers - 1
+                id_halo = id_halo - (ndata * ( nlayers + 1) )
               end do
             end if
           end if
@@ -1768,7 +1772,7 @@ contains
                 dof_cell_owner_d1(idof,side_edge_id) &
               = mesh%get_vertex_cell_owner( iedge - number_horizontal_edges, &
                                             icell)
-                id_owned = id_owned + nlayers
+                id_owned = id_owned + ( nlayers * ndata )
               end do
             end if
           else
@@ -1779,7 +1783,7 @@ contains
                 dof_cell_owner_d1(idof,side_edge_id) &
             = mesh%get_vertex_cell_owner( iedge - number_horizontal_edges, &
                                           icell)
-                id_halo = id_halo - nlayers
+                id_halo = id_halo - ( nlayers * ndata )
               end do
             end if
           end if
@@ -1799,42 +1803,42 @@ contains
             if ( dofmap_d0(1,bottom_vert_id) == 0 ) then
               do idof=1, ndof_vert
                 dofmap_d0(idof,bottom_vert_id)  = id_owned
-                dofmap_d0(idof,top_vert_id)     = id_owned + 1
+                dofmap_d0(idof,top_vert_id)     = id_owned + ndata
                 dof_column_height_d0(idof,bottom_vert_id) = nlayers + 1
                 dof_column_height_d0(idof,top_vert_id   ) = 0
                 dof_cell_owner_d0(idof,bottom_vert_id) = &
                             mesh % get_vertex_cell_owner(ivert,icell)
                 dof_cell_owner_d0(idof,top_vert_id   ) = &
                             mesh % get_vertex_cell_owner(ivert,icell)
-                id_owned = id_owned + nlayers + 1
+                id_owned = id_owned + (ndata * ( nlayers + 1) )
               end do
             end if
           else
             if ( dofmap_d0(1,bottom_vert_id) == 0 ) then
               do idof=1, ndof_vert
                 dofmap_d0(idof,bottom_vert_id)  = id_halo
-                dofmap_d0(idof,top_vert_id)     = id_halo - 1
+                dofmap_d0(idof,top_vert_id)     = id_halo - ndata
                 dof_column_height_d0(idof,bottom_vert_id) = nlayers + 1
                 dof_column_height_d0(idof,top_vert_id   ) = 0
                 dof_cell_owner_d0(idof,bottom_vert_id) = &
                             mesh%get_vertex_cell_owner(ivert,icell)
                 dof_cell_owner_d0(idof,top_vert_id   ) = &
                             mesh%get_vertex_cell_owner(ivert,icell)
-                id_halo = id_halo - nlayers - 1
+                id_halo = id_halo - (ndata * ( nlayers + 1) )
               end do
             end if
           end if
         end do
 
         if(icell == tot_num_inner + mesh%get_num_cells_edge())then
-          last_dof_owned = id_owned - 1
-          last_dof_annexed = id_owned - id_halo - 2
+          last_dof_owned = id_owned - ndata
+          last_dof_annexed = id_owned - id_halo - 2*ndata
         end if
 
       end do cell_loop
 
       if (idepth <= mesh%get_halo_depth()) &
-                                last_dof_halo(idepth) = id_owned - id_halo - 2
+                            last_dof_halo(idepth) = id_owned - id_halo - 2*ndata
 
       start = finish+1
       if (idepth < mesh%get_halo_depth()) then
@@ -1954,6 +1958,7 @@ contains
     if(element_order==0.and.gungho_fs==W3)num_layers=int(nlayers,i_halo_index)
     num_dofs=int(ndof_cell,i_halo_index)
     if(element_order==0.and.gungho_fs==WTHETA)num_dofs=1_i_halo_index
+    num_ndata=int(ndata,i_halo_index)
 
     ! Calculate a globally unique id for each dof, such that each partition
     ! that needs access to that dof will calculate the same id
@@ -1963,13 +1968,20 @@ contains
       do idof=1, ndof_cell
         if (icell == dof_cell_owner(idof,icell)) then
           do k=1, dof_column_height(idof, icell)
-  ! The following line is very confused by the casting that is required,
-  !  but it is actually calculating the global id as being:
-  ! (global_cell_id-1)*num_dofs*num_layers + (idof-1)*num_layers + k - 1
-            global_dof_id( dofmap(idof,icell)+k-1 ) = &
-      (int(global_cell_id,i_halo_index)-1_i_halo_index)* num_dofs*num_layers + &
-                (int(idof,i_halo_index)-1_i_halo_index)* num_layers + &
-                int(k,i_halo_index) - 1_i_halo_index
+            do m=1, ndata
+              ! The following line is very confused by the casting that is
+              ! required, but it is actually calculating the global id as being:
+              !      (global_cell_id-1) * num_dofs*ndata*num_layers +
+              !      (idof-1) * ndata*num_layers +
+              !      (k - 1)* ndata +
+              !      (m - 1)
+              global_dof_id( dofmap(idof,icell)+(k-1)+(m-1) ) = &
+               (int(global_cell_id,i_halo_index)-1_i_halo_index)* &
+                                               num_dofs*num_ndata*num_layers + &
+               (int(idof,i_halo_index)-1_i_halo_index)* num_ndata*num_layers + &
+               (int(k,i_halo_index) - 1_i_halo_index)* num_ndata + &
+                int(m,i_halo_index) - 1_i_halo_index
+            end do
           end do
         end if
       end do
@@ -1985,8 +1997,11 @@ contains
       do icell=1, mesh%get_last_edge_cell()
         global_cell_id = mesh % get_gid_from_lid(icell)
         if (icell == dof_cell_owner(1,icell)) then
-          ! The global ids must be 0 based
-          global_dof_id_2d(icell) = (global_cell_id - 1)
+          do m=1, ndata
+            ! The global ids must be 0 based
+            global_dof_id_2d(icell*ndata + (m - 1)) = &
+                              (global_cell_id - 1)*ndata + (m - 1)
+          end do
         end if
       end do
     end if

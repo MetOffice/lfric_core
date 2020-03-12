@@ -9,8 +9,7 @@ class function_space_collection_mod::function_space_collection_type {
   <<destroy>>+function_space_collection_destructor()
 
   +clear()
-  +get_fs( <<in>>mesh_id: integer, <<in>>element_order: integer, <<in>>gungho_fs: integer) : function_space_type
-  +get_fs_by_id(<in>>fs_id: integer) : function_space_type
+  +get_fs( <<in>>mesh_id: integer, <<in>>element_order: integer, <<in>>gungho_fs: integer, <<in, optional>>ndata: integer) : function_space_type
   +get_fs_collection_size() : integer
 }
 
