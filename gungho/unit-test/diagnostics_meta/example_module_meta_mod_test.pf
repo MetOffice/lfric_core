@@ -1,0 +1,321 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright 2018 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> check the example meta_mod file are valid fortran and call meta_mod properly
+!>
+!-------------------------------------------------------------------------------
+module example_module_meta_mod_test
+
+  ! Global use statements go here
+
+  use constants_mod, only : r_def, i_def, r_single, real_type
+
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: example_module_meta_test
+
+  ! The test case type, containing procedures to setup, run
+  ! and clean up after a test.
+  ! It can also contain data.
+
+  @TestCase
+  type, extends(TestCase), public :: example_module_meta_mod_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure example_module_meta_test
+  end type example_module_meta_mod_test_type
+
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> The setUp subroutine is optional and is called prior to running the test.
+  !> It is used to create and initialise types / data that are used in
+  !> the tests
+  subroutine setUp(this)
+
+    implicit none
+
+    class(example_module_meta_mod_test_type), intent(inout) :: this
+
+    ! This section should create and initialise anything needed for the test
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> The tearDown subroutine is optional and called after the test.
+  !> It is used to destroy any types / data previously created by setUp()
+  subroutine tearDown(this)
+
+    implicit none
+
+    class(example_module_meta_mod_test_type), intent(inout) :: this
+
+    ! This section should destroy any previously created types / data
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! pfUnit will run each subroutine preceded by the @test line
+  @test
+  subroutine example_module_meta_test(this)
+
+    ! This section is where the code for a self-contained test should be put
+
+
+    use example_science_section__example_fields__meta_mod, only: example_science_section__example_fields__meta_type
+    use vertical_dimensions_mod,                           only: model_height_dimension, &
+                                                                 model_depth_dimension,  &
+                                                                 model_custom_dimension, &
+                                                                 fixed_height_dimension, &
+                                                                 fixed_depth_dimension,  &
+                                                                 fixed_custom_dimension
+    use vertical_dimension_types_mod,                      only: range_vertical_dimension_meta_data_type, &
+                                                                 list_vertical_dimension_meta_data_type
+    use levels_enum_mod,                                   only: BOTTOM_ATMOSPHERIC_LEVEL, &
+                                                                 TOP_ATMOSPHERIC_LEVEL,    &
+                                                                 TOP_WET_LEVEL,            &
+                                                                 TOP_TRACER_LEVEL,         &
+                                                                 BOTTOM_TRACER_LEVEL,      &
+                                                                 TOP_SOIL_LEVEL,           &
+                                                                 BOTTOM_SOIL_LEVEL
+    use misc_meta_data_mod,                                only: misc_meta_data_type
+    use positive_enum_mod,                                 only: POSITIVE_UP, &
+                                                                 POSITIVE_DOWN
+    use time_step_enum_mod,                                only: STANDARD_TIMESTEP
+    use interpolation_enum_mod,                            only: BILINEAR
+    use fs_continuity_mod,                                 only: W2, W3, WTheta
+
+    implicit none
+
+    class(example_module_meta_mod_test_type), intent(inout) :: this
+
+    !> Create Example Fields
+    type(example_science_section__example_fields__meta_type) :: example_science_section__example_fields__meta
+
+
+    !> Create auto generated vertical dimension objects
+    type(range_vertical_dimension_meta_data_type) :: model_height_object
+    type(list_vertical_dimension_meta_data_type) :: fixed_height_object
+
+    type(range_vertical_dimension_meta_data_type) :: model_depth_object
+    type(list_vertical_dimension_meta_data_type) :: fixed_depth_object
+
+    type(range_vertical_dimension_meta_data_type) :: model_custom_object
+    type(list_vertical_dimension_meta_data_type) :: fixed_custom_object
+
+    !> Create misc meta data objects
+    type(misc_meta_data_type) :: meta_data_test_1
+    type(misc_meta_data_type) :: meta_data_test_2
+
+
+    !> Instantiate example fields
+    example_science_section__example_fields__meta = example_science_section__example_fields__meta_type()
+
+
+    !> Instantiate auto generated vertical dimension objects
+    model_height_object = model_height_dimension()
+    fixed_height_object = fixed_height_dimension(level_definition = [1.0_r_def, 2.0_r_def, 3.0_r_def])
+    model_depth_object = model_depth_dimension()
+    fixed_depth_object = fixed_depth_dimension(level_definition = [4.0_r_def, 5.0_r_def, 6.0_r_def])
+
+    model_custom_object = model_custom_dimension(name="test_custom_model",  &
+                                                 units="inches",            &
+                                                 positive=POSITIVE_UP,      &
+                                                 bottom=BOTTOM_TRACER_LEVEL,&
+                                                 top=TOP_TRACER_LEVEL)
+
+    fixed_custom_object = fixed_custom_dimension(name="test_custom_fixed", &
+                                                 units="miles",            &
+                                                 positive=POSITIVE_DOWN,   &
+                                                 level_definition = [3.0_r_def, 2.0_r_def, 1.0_r_def])
+
+    !> Test a few meta objects
+    !> Testing the eastward wind field
+    @assertEqual('example_fields__eastward_wind', example_science_section__example_fields__meta%eastward_wind%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%eastward_wind%long_name)
+    @assertEqual('m s-1', example_science_section__example_fields__meta%eastward_wind%units)
+    @assertEqual(W2, example_science_section__example_fields__meta%eastward_wind%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%eastward_wind%order)
+    @assertEqual('', example_science_section__example_fields__meta%eastward_wind%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%eastward_wind%trigger)
+    @assertEqual('u component of wind on u pts on native c grid.', example_science_section__example_fields__meta%eastward_wind%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%eastward_wind%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%eastward_wind%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%eastward_wind%recommended_interpolation)
+    @assertEqual('eastward_wind', example_science_section__example_fields__meta%eastward_wind%standard_name)
+    @assertEqual("test_name_1", example_science_section__example_fields__meta%eastward_wind%misc_meta_data(1)%name)
+    @assertEqual("test_value_1", example_science_section__example_fields__meta%eastward_wind%misc_meta_data(1)%value)
+    @assertEqual("test_name_2", example_science_section__example_fields__meta%eastward_wind%misc_meta_data(2)%name)
+    @assertEqual("test_value_2", example_science_section__example_fields__meta%eastward_wind%misc_meta_data(2)%value)
+    @assertEqual(.true., allocated(example_science_section__example_fields__meta%eastward_wind%vertical_dimension))
+    if (allocated(example_science_section__example_fields__meta%eastward_wind%vertical_dimension)) then
+      @assertEqual('height', example_science_section__example_fields__meta%eastward_wind%vertical_dimension%standard_name)
+      @assertEqual('m', example_science_section__example_fields__meta%eastward_wind%vertical_dimension%units)
+      @assertEqual(POSITIVE_UP, example_science_section__example_fields__meta%eastward_wind%vertical_dimension%positive)
+      @assertEqual('Z', example_science_section__example_fields__meta%eastward_wind%vertical_dimension%axis)
+    end if
+
+    !> Testing the rate_of_increase_of_rain_mass_due_to_autoconversion_from_liquid_cloud field
+    @assertEqual('example_fields__rate_of_increase_of_rain_mass_due_to_autoconversion_from_liquid_cloud', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%long_name)
+    @assertEqual('kg kg-1 s-1', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%units)
+    @assertEqual(Wtheta, example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%order)
+    @assertEqual('', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%trigger)
+    @assertEqual('This is a microphysical process transfer rate. Outputting all microphysics', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%recommended_interpolation)
+    @assertEqual('height', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%vertical_dimension%standard_name)
+    @assertEqual('m', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%vertical_dimension%units)
+    @assertEqual(POSITIVE_UP, example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%vertical_dimension%positive)
+    @assertEqual('Z', example_science_section__example_fields__meta%rate_of_increase_rain_mass_due_to_autoconv_from_liquid_cloud%vertical_dimension%axis)
+
+
+    !> Testing the air_potential_temperature field
+    @assertEqual('example_fields__air_potential_temperature', example_science_section__example_fields__meta%air_potential_temperature%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%air_potential_temperature%long_name)
+    @assertEqual('K', example_science_section__example_fields__meta%air_potential_temperature%units)
+    @assertEqual(WTheta, example_science_section__example_fields__meta%air_potential_temperature%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%air_potential_temperature%order)
+    @assertEqual('', example_science_section__example_fields__meta%air_potential_temperature%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%air_potential_temperature%trigger)
+    @assertEqual('Potential temperature on p points on native c grid.', example_science_section__example_fields__meta%air_potential_temperature%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%air_potential_temperature%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%air_potential_temperature%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%air_potential_temperature%recommended_interpolation)
+    @assertEqual('air_potential_temperature', example_science_section__example_fields__meta%air_potential_temperature%standard_name)
+    @assertEqual('height', example_science_section__example_fields__meta%air_potential_temperature%vertical_dimension%standard_name)
+    @assertEqual('m', example_science_section__example_fields__meta%air_potential_temperature%vertical_dimension%units)
+    @assertEqual(POSITIVE_UP, example_science_section__example_fields__meta%air_potential_temperature%vertical_dimension%positive)
+    @assertEqual('Z', example_science_section__example_fields__meta%air_potential_temperature%vertical_dimension%axis)
+
+
+    !> Testing the we_thickness_of_moisture_content_of_soil_layer field
+    @assertEqual('example_fields__lwe_thickness_of_moisture_content_of_soil_layer', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%long_name)
+    @assertEqual('kg m-2', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%units)
+    @assertEqual(W3, example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%order)
+    @assertEqual('', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%trigger)
+    @assertEqual('Total (frozen+unfrozen) soil moisture content in a soil layer (kg/m2). This example field will be dealt with using negative height values (Phase 3)', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%recommended_interpolation)
+    @assertEqual('lwe_thickness_of_moisture_content_of_soil_layer', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%standard_name)
+    @assertEqual('depth', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%vertical_dimension%standard_name)
+    @assertEqual('m', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%vertical_dimension%units)
+    @assertEqual(POSITIVE_DOWN, example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%vertical_dimension%positive)
+    @assertEqual('Z', example_science_section__example_fields__meta%lwe_thickness_of_moisture_content_of_soil_layer%vertical_dimension%axis)
+
+
+    !> Testing the surface_altitude field
+    @assertEqual('example_fields__surface_altitude', example_science_section__example_fields__meta%surface_altitude%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%surface_altitude%long_name)
+    @assertEqual('m', example_science_section__example_fields__meta%surface_altitude%units)
+    @assertEqual(Wtheta, example_science_section__example_fields__meta%surface_altitude%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%surface_altitude%order)
+    @assertEqual('', example_science_section__example_fields__meta%surface_altitude%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%surface_altitude%trigger)
+    @assertEqual('The surface called "surface" means the lower boundary of the atmosphere. Altitude is the (geometric) height above the geoid, which is the reference geopotential surface. The geoid is similar to mean sea level.', example_science_section__example_fields__meta%surface_altitude%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%surface_altitude%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%surface_altitude%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%surface_altitude%recommended_interpolation)
+    @assertEqual('surface_altitude', example_science_section__example_fields__meta%surface_altitude%standard_name)
+    @assertEqual('height', example_science_section__example_fields__meta%surface_altitude%vertical_dimension%standard_name)
+    @assertEqual('m', example_science_section__example_fields__meta%surface_altitude%vertical_dimension%units)
+    @assertEqual(POSITIVE_UP, example_science_section__example_fields__meta%surface_altitude%vertical_dimension%positive)
+    @assertEqual('Z', example_science_section__example_fields__meta%surface_altitude%vertical_dimension%axis)
+
+
+    !> Testing the air_temperature_over_tiles field
+    @assertEqual('example_fields__air_temperature_over_tiles', example_science_section__example_fields__meta%air_temperature_over_tiles%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%air_temperature_over_tiles%long_name)
+    @assertEqual('K', example_science_section__example_fields__meta%air_temperature_over_tiles%units)
+    @assertEqual(Wtheta, example_science_section__example_fields__meta%air_temperature_over_tiles%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%air_temperature_over_tiles%order)
+    @assertEqual('', example_science_section__example_fields__meta%air_temperature_over_tiles%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%air_temperature_over_tiles%trigger)
+    @assertEqual('1.5M TEMPERATURE OVER TILES', example_science_section__example_fields__meta%air_temperature_over_tiles%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%air_temperature_over_tiles%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%air_temperature_over_tiles%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%air_temperature_over_tiles%recommended_interpolation)
+    @assertEqual('air_temperature', example_science_section__example_fields__meta%air_temperature_over_tiles%standard_name)
+    @assertEqual('height', example_science_section__example_fields__meta%air_temperature_over_tiles%vertical_dimension%standard_name)
+    @assertEqual('m', example_science_section__example_fields__meta%air_temperature_over_tiles%vertical_dimension%units)
+    @assertEqual(POSITIVE_UP, example_science_section__example_fields__meta%air_temperature_over_tiles%vertical_dimension%positive)
+    @assertEqual('Z', example_science_section__example_fields__meta%air_temperature_over_tiles%vertical_dimension%axis)
+
+
+    !> Testing the low_type_cloud_area_fraction field
+    @assertEqual('example_fields__low_type_cloud_area_fraction', example_science_section__example_fields__meta%low_type_cloud_area_fraction%unique_id)
+    @assertEqual('', example_science_section__example_fields__meta%low_type_cloud_area_fraction%long_name)
+    @assertEqual('1', example_science_section__example_fields__meta%low_type_cloud_area_fraction%units)
+    @assertEqual(W3, example_science_section__example_fields__meta%low_type_cloud_area_fraction%function_space)
+    @assertEqual(0, example_science_section__example_fields__meta%low_type_cloud_area_fraction%order)
+    @assertEqual('', example_science_section__example_fields__meta%low_type_cloud_area_fraction%io_driver)
+    @assertEqual('_checksum: true;', example_science_section__example_fields__meta%low_type_cloud_area_fraction%trigger)
+    @assertEqual('Low cloud amount. Phase 3', example_science_section__example_fields__meta%low_type_cloud_area_fraction%description)
+    @assertEqual(REAL_TYPE, example_science_section__example_fields__meta%low_type_cloud_area_fraction%data_type)
+    @assertEqual(STANDARD_TIMESTEP, example_science_section__example_fields__meta%low_type_cloud_area_fraction%time_step)
+    @assertEqual(BILINEAR, example_science_section__example_fields__meta%low_type_cloud_area_fraction%recommended_interpolation)
+    @assertEqual('low_type_cloud_area_fraction', example_science_section__example_fields__meta%low_type_cloud_area_fraction%standard_name)
+    @assertEqual('height', example_science_section__example_fields__meta%low_type_cloud_area_fraction%vertical_dimension%standard_name)
+    @assertEqual('m', example_science_section__example_fields__meta%low_type_cloud_area_fraction%vertical_dimension%units)
+    @assertEqual(POSITIVE_UP, example_science_section__example_fields__meta%low_type_cloud_area_fraction%vertical_dimension%positive)
+    @assertEqual('Z', example_science_section__example_fields__meta%low_type_cloud_area_fraction%vertical_dimension%axis)
+
+
+
+    !> Test auto generated vertical dimensions
+    !> The vertical dimensions are tested seperately to the meta objects that
+    !> hold them. This appears to be a fortran OO problem which causes
+    !> the inherited attributes (upper_level, lower_level and
+    !> level_definition) to be inaccessable.
+
+    @assertEqual("height", model_height_object%standard_name)
+    @assertEqual("m", model_height_object%units)
+    @assertEqual(POSITIVE_UP, model_height_object%positive)
+    @assertEqual(BOTTOM_ATMOSPHERIC_LEVEL, model_height_object%lower_level)
+    @assertEqual(TOP_ATMOSPHERIC_LEVEL, model_height_object%upper_level)
+
+    @assertEqual("height", fixed_height_object%standard_name)
+    @assertEqual("m", fixed_height_object%units)
+    @assertEqual(POSITIVE_UP, fixed_height_object%positive)
+    @assertEqual((/1.0_r_def, 2.0_r_def, 3.0_r_def/), fixed_height_object%level_definition)
+
+    @assertEqual("depth", model_depth_object%standard_name)
+    @assertEqual("m", model_depth_object%units)
+    @assertEqual(POSITIVE_DOWN, model_depth_object%positive)
+    @assertEqual(BOTTOM_SOIL_LEVEL, model_depth_object%lower_level)
+    @assertEqual(TOP_SOIL_LEVEL, model_depth_object%upper_level)
+
+    @assertEqual("depth", fixed_depth_object%standard_name)
+    @assertEqual("m", fixed_depth_object%units)
+    @assertEqual(POSITIVE_DOWN, fixed_depth_object%positive)
+    @assertEqual((/4.0_r_def, 5.0_r_def, 6.0_r_def/), fixed_depth_object%level_definition)
+
+    @assertEqual("test_custom_model", model_custom_object%standard_name)
+    @assertEqual("inches", model_custom_object%units)
+    @assertEqual(POSITIVE_UP, model_custom_object%positive)
+    @assertEqual(BOTTOM_TRACER_LEVEL, model_custom_object%lower_level)
+    @assertEqual(TOP_TRACER_LEVEL, model_custom_object%upper_level)
+
+    @assertEqual("test_custom_fixed", fixed_custom_object%standard_name)
+    @assertEqual("miles", fixed_custom_object%units)
+    @assertEqual(POSITIVE_DOWN, fixed_custom_object%positive)
+    @assertEqual((/3.0_r_def, 2.0_r_def, 1.0_r_def/), fixed_custom_object%level_definition)
+
+  end subroutine example_module_meta_test
+end module example_module_meta_mod_test
