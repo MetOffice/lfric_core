@@ -1,242 +1,128 @@
 !-----------------------------------------------------------------------------
-! (c) Crown copyright 2018 Met Office. All rights reserved.
+! (c) Crown copyright 2020 Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
-!> Drives the execution of the io_dev miniapp.
+
+!> @brief Drives the execution of the io_dev miniapp.
 !>
 !> This is a temporary solution until we have a proper driver layer.
 !>
 module io_dev_driver_mod
 
-use clock_mod,                  only: clock_type
-use configuration_mod,          only: final_configuration
-use constants_mod,              only: i_def, i_native, PRECISION_REAL
-use convert_to_upper_mod,       only: convert_to_upper
-use create_fem_mod,             only: init_fem
-use create_mesh_mod,            only: init_mesh
-use derived_config_mod,         only: set_derived_config
-use diagnostics_io_mod,         only: write_scalar_diagnostic, &
-                                      write_vector_diagnostic
-use field_mod,                  only: field_type
-use finite_element_config_mod,  only: element_order
-use global_mesh_collection_mod, only: global_mesh_collection, &
-                                      global_mesh_collection_type
-use init_clock_mod,             only: initialise_clock
-use init_io_dev_mod,            only: init_io_dev
-use io_dev_mod,                 only: load_configuration, program_name
-use io_mod,                     only: initialise_xios
-use log_mod,                    only: log_event,          &
-                                      log_set_level,      &
-                                      log_scratch_space,  &
-                                      initialise_logging, &
-                                      finalise_logging,   &
-                                      LOG_LEVEL_ALWAYS,   &
-                                      LOG_LEVEL_ERROR,    &
-                                      LOG_LEVEL_WARNING,  &
-                                      LOG_LEVEL_INFO,     &
-                                      LOG_LEVEL_DEBUG,    &
-                                      LOG_LEVEL_TRACE
-use mpi_mod,                    only: store_comm,    &
-                                      get_comm_size, &
-                                      get_comm_rank
-use timestepping_config_mod,    only: dt
-use xios,                       only: xios_context_finalize, &
-                                      xios_update_calendar
-use yaxt,                       only: xt_initialize, xt_finalize
-
-implicit none
-
-private
-
-public initialise, run, finalise
-
-character(*), public, parameter :: xios_ctx = 'io_dev'
-
-! Examples of fields that are output on different I/O domains
-type( field_type ) :: density ! on W3
-type( field_type ) :: theta   ! on Wtheta
-type( field_type ) :: wind    ! on W2 and output on W2H and W2V
-
-
-! Coordinate field
-type(field_type), target, dimension(3) :: chi
-
-integer(i_def) :: mesh_id
-integer(i_def) :: twod_mesh_id
-
-class(clock_type), allocatable :: clock
-
-contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Sets up required state in preparation for run.
-  !>@param[in] filename Name of the file containing the desired configuration
-  subroutine initialise( filename, model_communicator )
-
-  use logging_config_mod, only: run_log_level,          &
-                                key_from_run_log_level, &
-                                RUN_LOG_LEVEL_ERROR,    &
-                                RUN_LOG_LEVEL_INFO,     &
-                                RUN_LOG_LEVEL_DEBUG,    &
-                                RUN_LOG_LEVEL_TRACE,    &
-                                RUN_LOG_LEVEL_WARNING
+  ! Infrastructure
+  use clock_mod,                  only: clock_type
+  use constants_mod,              only: i_def, i_native, imdi, i_timestep
+  use field_mod,                  only: field_type
+  use log_mod,                    only: log_event,                 &
+                                        log_scratch_space,         &
+                                        LOG_LEVEL_ALWAYS,          &
+                                        LOG_LEVEL_INFO
+  ! Configuration
+  use io_config_mod,              only: use_xios_io
+  ! IO_Dev driver modules
+  use io_dev_mod,                 only: program_name
+  use io_dev_data_mod,            only: io_dev_data_type,          &
+                                        create_model_data,         &
+                                        initialise_model_data,     &
+                                        output_model_data,         &
+                                        finalise_model_data
+  use io_dev_model_mod,           only: initialise_infrastructure, &
+                                        finalise_infrastructure
+  ! XIOS
+  use xios,                       only: xios_update_calendar
 
   implicit none
 
-  character(*),      intent(in) :: filename
-  integer(i_native), intent(in) :: model_communicator
+  private
 
-  integer(i_def) :: total_ranks, local_rank
+  public initialise, run, finalise
 
-  integer(i_native) :: log_level
+  ! Model working data set
+  type (io_dev_data_type) :: model_data
+  ! Coordinate field
+  type(field_type), target, dimension(3) :: chi
+  ! Mesh IDs
+  integer(i_def) :: mesh_id      = imdi
+  integer(i_def) :: twod_mesh_id = imdi
+  ! Clock object
+  class(clock_type), allocatable :: clock
 
-  ! Save lfric's part of the split communicator for later use
-  call store_comm( model_communicator )
+  contains
 
-  ! Initialise YAXT
-  call xt_initialize( model_communicator )
+  !> @brief Sets up required state in preparation for run.
+  !> @param[in] filename     Name of the file containing the desired model
+  !>                         configuration
+  !> @param[in] communicator The MPI communicator for use within the model
+  subroutine initialise( filename, communicator )
 
-  total_ranks = get_comm_size()
-  local_rank  = get_comm_rank()
+    implicit none
 
-  call initialise_logging(local_rank, total_ranks, program_name)
+    character(*),      intent(in) :: filename
+    integer(i_native), intent(in) :: communicator
 
-  call load_configuration( filename )
+    ! Initialise infrastructure and setup constants
+    call initialise_infrastructure( filename,        &
+                                    program_name,    &
+                                    communicator,    &
+                                    mesh_id,         &
+                                    twod_mesh_id,    &
+                                    chi,             &
+                                    clock )
 
-  select case (run_log_level)
-  case( RUN_LOG_LEVEL_ERROR )
-    log_level = LOG_LEVEL_ERROR
-  case( RUN_LOG_LEVEL_WARNING )
-    log_level = LOG_LEVEL_WARNING
-  case( RUN_LOG_LEVEL_INFO )
-    log_level = LOG_LEVEL_INFO
-  case( RUN_LOG_LEVEL_DEBUG )
-    log_level = LOG_LEVEL_DEBUG
-  case( RUN_LOG_LEVEL_TRACE )
-    log_level = LOG_LEVEL_TRACE
-  end select
+    ! Instantiate the fields stored in model_data
+    call create_model_data( model_data,   &
+                            mesh_id,      &
+                            twod_mesh_id, &
+                            clock )
 
-  call log_set_level( log_level )
+    ! Initialise the fields stored in the model_data
+    call initialise_model_data( model_data, clock )
 
-  write(log_scratch_space,'(A)')                              &
-      'Runtime message logging severity set to log level: '// &
-      convert_to_upper(key_from_run_log_level(run_log_level))
-  call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
-
-  write(log_scratch_space,'(A)')                        &
-      'Application built with '//trim(PRECISION_REAL)// &
-      '-bit real numbers'
-  call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
-
-  call set_derived_config( .true. )
-
-  call initialise_clock( clock )
-
-  !----------------------------------------------------------------------------
-  ! Mesh init
-  !----------------------------------------------------------------------------
-  call log_event( 'Initialising '//program_name//' ...', LOG_LEVEL_ALWAYS )
-
-  allocate( global_mesh_collection, &
-            source = global_mesh_collection_type() )
-
-  ! Create the mesh
-  call init_mesh(local_rank, total_ranks, mesh_id, twod_mesh_id)
-
-  !----------------------------------------------------------------------------
-  ! FEM init
-  !----------------------------------------------------------------------------
-  ! Create FEM specifics (function spaces and chi field)
-  call init_fem(mesh_id, chi)
-
-
-  !-----------------------------------------------------------------------------
-  ! IO init
-  !-----------------------------------------------------------------------------
-
-  ! Set up XIOS domain and context
-  call initialise_xios( xios_ctx,     &
-                        model_communicator, &
-                        clock,        &
-                        mesh_id,      &
-                        twod_mesh_id, &
-                        chi )
-
-  !-----------------------------------------------------------------------------
-  ! Model init
-  !-----------------------------------------------------------------------------
-
-  ! Create and initialise fields
-  call init_io_dev(mesh_id, twod_mesh_id, chi, density, theta, wind)
-
-
-  ! Full global meshes no longer required, so reclaim
-  ! the memory from global_mesh_collection
-  write(log_scratch_space,'(A)') &
-      "Purging global mesh collection."
-  call log_event( log_scratch_space, LOG_LEVEL_INFO )
-  deallocate(global_mesh_collection)
 
   end subroutine initialise
 
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !>@brief Timesteps the model, calling the desired timestepping algorithm based
   !>upon the configuration
   subroutine run()
 
-  implicit none
+    implicit none
 
-  logical :: running
+    logical :: running
+    integer(i_timestep) :: new_step
 
-  write(log_scratch_space,'(A)') 'Running '//program_name//' ...'
-  call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
+    write(log_scratch_space,'(A)') 'Running '//program_name//' ...'
+    call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
 
-  !-----------------------------------------------------------------------------
-  ! Model step
-  !-----------------------------------------------------------------------------
+    ! Model step
+    running = clock%tick()
 
-  running = clock%tick()
+    ! Update XIOS calendar
+    if ( use_xios_io ) then
+      call log_event( program_name//': Updating XIOS timestep', LOG_LEVEL_INFO )
+      new_step = clock%get_step() - clock%get_first_step() + 1
+      call xios_update_calendar( new_step )
+    end if
 
-  ! Update XIOS calendar
-  call log_event( program_name//': Updating XIOS timestep', LOG_LEVEL_INFO )
-  call xios_update_calendar(1)
+    ! Write out the fields
+    call log_event( program_name//': Writing XIOS output', LOG_LEVEL_INFO)
 
-  ! Write out the fields
-
-  call log_event( program_name//': Writing XIOS output', LOG_LEVEL_INFO)
-  call write_scalar_diagnostic('density', density, clock, mesh_id, .false.)
-  call write_scalar_diagnostic('theta', theta, clock, mesh_id, .false.)
-  call write_vector_diagnostic('wind', wind, clock, mesh_id, .false.)
+    call output_model_data( model_data, clock )
 
   end subroutine run
 
-  !-----------------------------------------------------------------------------
-  ! Driver layer finalise
-  !-----------------------------------------------------------------------------
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !>@brief Tidies up after a run.
-
+  !> @brief Tidies up after a model run.
   subroutine finalise()
 
-  implicit none
+    implicit none
 
-  call log_event( 'Finalising '//program_name//' ...', LOG_LEVEL_ALWAYS )
+    call log_event( 'Finalising '//program_name//' ...', LOG_LEVEL_ALWAYS )
 
-  ! Finalise XIOS context
-  call xios_context_finalize()
+    ! Destroy the fields stored in model_data
+    call finalise_model_data( model_data )
 
-  ! Finalise namelist configurations
-  call final_configuration()
-
-  ! Finalise YAXT
-  call xt_finalize()
-
-  call log_event( program_name//' completed.', LOG_LEVEL_ALWAYS )
-
-  ! Finalise the logging system
-  call finalise_logging()
+    ! Finalise infrastructure and constants
+    call finalise_infrastructure( program_name )
 
   end subroutine finalise
 

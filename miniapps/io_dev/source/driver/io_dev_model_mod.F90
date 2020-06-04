@@ -1,0 +1,191 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright 2020 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> @brief Handles initialisation and finalisation of infrastructure, constants
+! and the io_dev model
+module io_dev_model_mod
+
+  ! Infrastructure
+  use clock_mod,                  only : clock_type
+  use constants_mod,              only : i_def, i_native, &
+                                         PRECISION_REAL
+  use convert_to_upper_mod,       only : convert_to_upper
+  use field_mod,                  only : field_type
+  use global_mesh_collection_mod, only : global_mesh_collection, &
+                                         global_mesh_collection_type
+  use init_clock_mod,             only : initialise_clock
+  use io_mod,                     only : initialise_xios
+  use log_mod,                    only : log_event,          &
+                                         log_set_level,      &
+                                         log_scratch_space,  &
+                                         initialise_logging, &
+                                         finalise_logging,   &
+                                         LOG_LEVEL_ALWAYS,   &
+                                         LOG_LEVEL_ERROR,    &
+                                         LOG_LEVEL_WARNING,  &
+                                         LOG_LEVEL_INFO,     &
+                                         LOG_LEVEL_DEBUG,    &
+                                         LOG_LEVEL_TRACE
+  use mpi_mod,                    only : store_comm,    &
+                                         get_comm_size, &
+                                         get_comm_rank
+  ! Configuration
+  use configuration_mod,          only : final_configuration
+  use derived_config_mod,         only : set_derived_config
+  use io_config_mod,              only : use_xios_io
+  ! IO_Dev driver modules
+  use io_dev_mod,                 only : load_configuration
+  use io_dev_data_mod,            only : io_dev_data_type
+  ! GungHo driver modules
+  use create_fem_mod,             only : init_fem, final_fem
+  use create_mesh_mod,            only : init_mesh, final_mesh
+  ! External libraries
+  use xios,                       only : xios_context_finalize
+  use yaxt,                       only : xt_initialize, xt_finalize
+
+  implicit none
+
+  private
+  public initialise_infrastructure, &
+         finalise_infrastructure
+
+  contains
+
+  !> @brief Initialises the infrastructure components of the model
+  !> @param[in]     filename     The name of the configuration namelist file
+  !> @param[in]     program_name An identifier given to the model run
+  !> @param[in,out] communicator The MPI communicator for use within the model
+  !>                              (not XIOS' communicator)
+  !> @param[in,out] mesh_id      The identifier given to the current 3d mesh
+  !> @param[in,out] twod_mesh_id The identifier given to the current 2d mesh
+  !> @param[in,out] chi          A size 3 array of fields holding the
+  !>                              coordinates of the mesh
+  !> @param[out]    clock        Model time
+  subroutine initialise_infrastructure( filename,        &
+                                        program_name,    &
+                                        communicator,    &
+                                        mesh_id,         &
+                                        twod_mesh_id,    &
+                                        chi,             &
+                                        clock )
+
+    use logging_config_mod, only: run_log_level,          &
+                                  key_from_run_log_level, &
+                                  RUN_LOG_LEVEL_ERROR,    &
+                                  RUN_LOG_LEVEL_INFO,     &
+                                  RUN_LOG_LEVEL_DEBUG,    &
+                                  RUN_LOG_LEVEL_TRACE,    &
+                                  RUN_LOG_LEVEL_WARNING
+
+    implicit none
+
+    ! Arguments
+    character(*),      intent(in)               :: filename
+    character(*),      intent(in)               :: program_name
+    integer(i_native), intent(in)               :: communicator
+    integer(i_def),    intent(inout)            :: mesh_id, twod_mesh_id
+    type(field_type),  intent(inout)            :: chi(3)
+    class(clock_type), intent(out), allocatable :: clock
+
+    ! Local variables
+    character(*), parameter :: xios_context_id = 'io_dev'
+    integer(i_def)          :: total_ranks, local_rank
+    integer(i_native)       :: log_level
+
+    ! Save the model's part of the split communicator for later use
+    call store_comm( communicator )
+
+    ! Initialise YAXT
+    call xt_initialize( communicator )
+
+    total_ranks = get_comm_size()
+    local_rank  = get_comm_rank()
+
+    call initialise_logging( local_rank, total_ranks, program_name )
+
+    call load_configuration( filename )
+
+    select case (run_log_level)
+    case( RUN_LOG_LEVEL_ERROR )
+      log_level = LOG_LEVEL_ERROR
+    case( RUN_LOG_LEVEL_WARNING )
+      log_level = LOG_LEVEL_WARNING
+    case( RUN_LOG_LEVEL_INFO )
+      log_level = LOG_LEVEL_INFO
+    case( RUN_LOG_LEVEL_DEBUG )
+      log_level = LOG_LEVEL_DEBUG
+    case( RUN_LOG_LEVEL_TRACE )
+      log_level = LOG_LEVEL_TRACE
+    end select
+
+    call log_set_level( log_level )
+
+    write(log_scratch_space,'(A)')                              &
+        'Runtime message logging severity set to log level: '// &
+        convert_to_upper(key_from_run_log_level(run_log_level))
+    call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
+
+    write(log_scratch_space,'(A)')                        &
+        'Application built with '//trim(PRECISION_REAL)// &
+        '-bit real numbers'
+    call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
+
+    call set_derived_config( .true. )
+
+    call initialise_clock( clock )
+
+    call log_event( 'Initialising '//program_name//' ...', LOG_LEVEL_ALWAYS )
+
+    ! Create the mesh
+    allocate( global_mesh_collection, &
+              source = global_mesh_collection_type() )
+    call init_mesh( local_rank, total_ranks, mesh_id, twod_mesh_id )
+
+    ! Create FEM specifics (function spaces and chi field)
+    call init_fem( mesh_id, chi )
+
+    ! Set up XIOS domain and context
+    call initialise_xios( xios_context_id, &
+                          communicator,    &
+                          clock,           &
+                          mesh_id,         &
+                          twod_mesh_id,    &
+                          chi )
+
+
+  end subroutine initialise_infrastructure
+
+  !> @brief Finalises infrastructure and constants used by the model
+  !> @param[in] program_name The model run identifier
+  subroutine finalise_infrastructure(program_name)
+
+    implicit none
+
+    character(*), intent(in) :: program_name
+
+    ! Finalise XIOS context if we used it for diagnostic output or checkpointing
+    if ( use_xios_io ) then
+      call xios_context_finalize()
+    end if
+
+    ! Finalise aspects of the grid
+    call final_mesh()
+    call final_fem()
+
+    ! Final logging before infrastructure is destroyed
+    call log_event( program_name//' completed.', LOG_LEVEL_ALWAYS )
+
+    ! Finalise namelist configurations
+    call final_configuration()
+
+    ! Finalise YAXT
+    call xt_finalize()
+
+    ! Finalise the logging system
+    call finalise_logging()
+
+  end subroutine finalise_infrastructure
+
+end module io_dev_model_mod

@@ -53,20 +53,25 @@
 
    <field_definition prec="8" >
 
-     <!-- Checkpoint group -->
-     <field_group id="checkpoint_fields" freq_op="1ts" operation="once"  enabled=".FALSE." >
-       <field id="checkpoint_density" name="density" long_name="air_density" standard_name="air_density" unit="kg m-3" domain_ref="checkpoint_W3" />
-       <field id="checkpoint_theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" domain_ref="checkpoint_Wtheta" />
-       <field id="checkpoint_wind" name="wind" long_name="wind" unit="m s-1" domain_ref="checkpoint_W2" />
+     <!-- Core field group -->
+     <field_group id="core_fields" freq_op="1ts" operation="instant" enabled=".TRUE.">
+        <field id="node_field" name="node_field" long_name="Field on W0 function space" unit="1" grid_ref="node_grid" />
+        <field id="face_field" name="face_field" long_name="Field on W3 function space" unit="1" grid_ref="half_level_face_grid" />
+        <field id="single_face_field" name="single_face_field" long_name="Two dimensional field on W3 function space" unit="1" domain_ref="face_half_levels" />
      </field_group>
 
-     <!-- Diagnostic group -->
-     <field_group id="diagnostic_fields" freq_op="1ts" enabled=".TRUE." operation="instant" >
-       <field id="density" name="density" long_name="air_density" standard_name="air_density" unit="kg m-3" grid_ref="half_level_face_grid" />
-       <field id="theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
-       <field id="wind1" name="wind1" long_name="Wind1" unit="m s-1" grid_ref="half_level_edge_grid" />
-       <field id="wind2" name="wind2" long_name="Wind2" unit="m s-1" grid_ref="half_level_edge_grid" />
-       <field id="wind3" name="wind3" long_name="Wind3" unit="m s-1" grid_ref="full_level_face_grid" />
+     <!-- Checkpoint group -->
+     <field_group id="checkpoint_fields" freq_op="1ts" operation="once"  enabled=".FALSE." >
+        <field id="checkpoint_node_field" name="checkpoint_node_field" long_name="Field on W0 function space" unit="1" domain_ref="checkpoint_W0" />
+        <field id="checkpoint_face_field" name="checkpoint_face_field" long_name="Field on W3 function space" unit="1" domain_ref="checkpoint_W3" />
+        <field id="checkpoint_single_face_field" name="checkpoint_single_face_field" long_name="Two dimensional field on W3 function space" unit="1" domain_ref="checkpoint_W3_2D" />
+     </field_group>
+
+     <!-- Restart group -->
+     <field_group id="restart_fields" freq_op="1ts" operation="once"  enabled=".FALSE." >
+        <field id="restart_node_field" name="restart_node_field" long_name="Field on W0 function space" unit="1" domain_ref="checkpoint_W0" />
+        <field id="restart_face_field" name="restart_face_field" long_name="Field on W3 function space" unit="1" domain_ref="checkpoint_W3" />
+        <field id="restart_single_face_field" name="restart_single_face_field" long_name="Two dimensional field on W3 function space" unit="1" domain_ref="checkpoint_W3_2D" />
      </field_group>
 
    </field_definition>
@@ -76,28 +81,25 @@
       par_access="collective"
       time_counter="none">
 
-      <!-- Checkpoint groups -->
+      <!-- File definition input fields -->
+      <file id="io_dev_input_C3" name="io_dev_input_C3" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+        <field id="input_face_field" name="face_field" long_name="Field on W3 function space" unit="1" operation="once" grid_ref="half_level_face_grid" />
+        <field id="input_single_face_field" name="single_face_field" long_name="Two dimensional field on W3 function space" unit="1" operation="once" domain_ref="face_half_levels" />
+       </file>
+
+      <!-- File definition for output fields -->
+      <file id="io_dev_output" name="io_dev_output" mode="write" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+        <field_group group_ref="core_fields" />
+      </file>
 
       <!-- File definition for checkpoint write -->
-      <file id="lfric_checkpoint_write" name="lfric_io_checkpoint" convention="CF" enabled=".FALSE.">
-        <field field_ref="checkpoint_density"/>
-        <field field_ref="checkpoint_theta"/>
-        <field field_ref="checkpoint_wind"/>
+      <file id="io_dev_checkpoint_write" name="io_dev_checkpoint" convention="CF" enabled=".FALSE.">
+        <field_group group_ref="checkpoint_fields" />
       </file>
 
-       <!-- file definition for checkpoint read -->
-      <file id="lfric_checkpoint_read" name="lfric_io_checkpoint" mode="read" output_freq="1ts" cyclic="true" enabled=".FALSE.">
-       <field id="restart_density" name="density" long_name="air_density" standard_name="air_density" unit="kg m-3" operation="instant" domain_ref="checkpoint_W3" />
-       <field id="restart_theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" operation="instant" domain_ref="checkpoint_Wtheta" />
-       <field id="restart_wind" name="wind" long_name="wind" unit="m s-1" operation="instant" domain_ref="checkpoint_W2" />
-      </file>
-
-      <file id="lfric_diag" name="lfric_io_diag" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
-        <field field_ref="density"/>
-        <field field_ref="theta"/>
-        <field field_ref="wind1"/>
-        <field field_ref="wind2"/>
-        <field field_ref="wind3"/>
+      <!-- File definition for checkpoint read -->
+      <file id="io_dev_checkpoint_read" name="io_dev_checkpoint" mode="read" output_freq="1ts" cyclic="true" enabled=".FALSE.">
+        <field_group group_ref="restart_fields" />
       </file>
 
     </file_definition>

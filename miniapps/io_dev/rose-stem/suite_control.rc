@@ -41,7 +41,7 @@
     'validate_rose_meta_graph("io_dev",appName="io_dev")',
     'check_style_graph()',
     'api_documentation_graph(publish=True)',
-    'run_application("io_dev", "default", resolutions=[("C12",1800)],
+    'run_application("io_dev", "default", resolutions=[("C3",1800), ("C12",1800)],
                      env={"nrun":4,
                           "directives":{"default":{"mpi_parts":6,
                                                    "threads":1,

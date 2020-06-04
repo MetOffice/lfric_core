@@ -1,5 +1,5 @@
 &base_mesh
-  filename        = 'mesh_C12.nc'
+  filename        = 'mesh_C3.nc'
   prime_mesh_name = 'dynamics'
   geometry        = 'spherical'
   partitioner     = 'cubedsphere'
@@ -11,7 +11,7 @@
 &extrusion
   method           = 'uniform'
   domain_top       = 30000.0
-  number_of_layers = 30
+  number_of_layers = 3
 /
 
 &files
@@ -24,53 +24,7 @@
   element_order    = 0
   coordinate_order = 2
   rehabilitate     = .true.
-  vorticity_in_w1  = .true. 
 /
-
-&formulation
-  transport_only       = .false.
-  rotating             = .true.
-  use_moisture         = .false.
-  shallow              = .false.
-  use_physics          = .false.
-  use_wavedynamics     = .true. 
-  dlayer_on            = .false.
-  dry_static_adjust    = .false.
-  set_hydrostatic_init = .false.
-  init_exner_bt        = .true.
-  si_momentum_equation = .true.
-  vector_invariant     = .true.
-/
-
-&idealised
-  test = 'deep_baroclinic_wave'
-/
-
-&initial_density
-  sample_init_rho = .false.
-  tracer_max = 2.0
-  tracer_background = 0.1
-  r1 = 0.4
-  x1 = 0.4
-  y1 = 0.0
-  r2 = 0.4
-  x2 = -0.4
-  y2 = 0.0
-/
-
-&initial_temperature
-  bvf_square = 0.0001
-/
-
-&initial_wind
-  profile        = 'deep_baroclinic_perturbed'
-  u0             = 0.0
-  v0             = 0.0
-  sbr_angle_lat  = 0.0
-  sbr_angle_lon  = 0.0
-  smp_init_wind=.false.
-/
-
 
 &io
   use_xios_io               = .true.
@@ -104,40 +58,6 @@
   scaling_factor = 1.0
 /
 
-&solver
-  method                         = 'bicgstab'
-  preconditioner                 = 'diagonal'
-  maximum_iterations             = 399
-  tolerance                      = 1.0e-12
-  gcrk                           = 18
-/
-
-&mixed_solver
-  si_method                      = 'gcr'
-  si_preconditioner              = 'pressure'
-  si_maximum_iterations          = 10
-  gcrk                           = 18
-  si_tolerance                   = 1.0e-6
-  guess_np1                      = .F
-  reference_reset_freq           = 4
-  normalise                      = .T
-/
-
-&helmholtz_solver
-  gcrk                           = 18
-  method                         = 'bicgstab'
-  preconditioner                 = 'tridiagonal'
-  si_pressure_tolerance          = 1.0e-6
-  si_pressure_maximum_iterations = 400
-  normalise                      = .T
-/
-
-&subgrid
-  rho_approximation = 'ppm_no_limiter'
-  dep_pt_stencil_extent = 3
-  rho_approximation_stencil_extent = 2
-/
-
 &timestepping
   method             = 'semi_implicit'
   dt                 = 1800.0
@@ -153,26 +73,17 @@
   spinup_winds       = .false.
 /
 
+&multigrid
+  l_multigrid = .false.
+/
+
 &biperiodic_deppt
   method             = 'euler'
   n_dep_pt_iterations     = 1
 /
 
-&transport
-  scheme = 'method_of_lines'
-  operators = 'fv'
-  fv_flux_order = 2
-  fv_advective_order = 3
-  consistent_metric  = .false.
-  enforce_monotonicity = .false.
-/
-
 &partitioning
   panel_decomposition = 'auto'
-/
-
-&multigrid
-  l_multigrid = .false.
 /
 
 &domain_size
@@ -180,76 +91,4 @@
   planar_domain_max_x =  1.0
   planar_domain_min_y = -1.0
   planar_domain_max_y =  1.0
-/
-
-&mixing
-  viscosity = .false.
-  viscosity_mu = 0.0
-  smagorinsky = .false.
-/
-
-&orography
-  profile   = 'none'
-/
-
-&orography_agnesi_cartesian
-  mountain_height = 100.0
-  half_width_x    = 10.0
-  half_width_y    = 10.0
-  x_centre        = 0.0
-  y_centre        = 0.0
-  direction       = 'x'
-/
-
-&orography_agnesi_spherical
-  mountain_height   = 100.0
-  half_width        = 2500.0
-  lambda_centre_dec = 1.5
-  phi_centre_dec    = 0.0
-  lambda_focus_dec  = 1.5
-  phi_focus_dec     = 0.3333
-/
-
-&orography_schar_cartesian
-  mountain_height = 250.0
-  half_width_x    = 20.0
-  half_width_y    = 20.0
-  wavelength      = 20.0
-  x_centre        = 0.0
-  y_centre        = 0.0
-  direction       = 'x'
-/
-
-&orography_schar_spherical
-  mountain_height   = 250.0
-  half_width        = 5000.0
-  wavelength        = 4000.0
-  lambda_centre_dec = 0.25
-  phi_centre_dec    = 0.0
-/
-
-&orography_dcmip200_spherical
-mountain_height     = 2000.0
-radius_dec          = 0.75
-osc_half_width_dec  = 0.0625
-lambda_centre_dec   = 1.5
-phi_centre_dec      = 0.0
-/
-
-&damping_layer
-  dl_base = 800.0
-  dl_str  = 0.5
-/
-
-&checks
-  limit_cfl = .false.
-  max_cfl   = 0.75
-/
-
-&section_choice
-radiation='none',
-boundary_layer='none',
-convection='none',
-microphysics='none',
-cloud='none'
 /

@@ -48,9 +48,9 @@ contains
 
     logical              :: okay
     logical, allocatable :: success_map(:)
-    integer              :: i
+    integer              :: config_i
 
-    allocate( success_map(size(required_configuration)) )
+    allocate( success_map( size(required_configuration) ) )
 
     call log_event( 'Loading '//program_name//' configuration ...', &
                     LOG_LEVEL_ALWAYS )
@@ -58,15 +58,19 @@ contains
     call read_configuration( filename )
 
     okay = ensure_configuration( required_configuration, success_map )
-    if (.not. okay) then
+
+    if ( .not. okay ) then
       write( log_scratch_space, '(A)' ) &
                              'The following required namelists were not loaded:'
-      do i = 1,size(required_configuration)
-        if (.not. success_map(i)) &
+
+      do config_i = 1, size(required_configuration)
+        if ( .not. success_map(config_i) ) &
           log_scratch_space = trim(log_scratch_space) // ' ' &
-                              // required_configuration(i)
+                              // required_configuration(config_i)
       end do
+
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+
     end if
 
     deallocate( success_map )
