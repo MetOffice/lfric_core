@@ -43,8 +43,6 @@ export EXTERNAL_DYNAMIC_LIBRARIES = netcdff netcdf hdf5 yaxt yaxt_c
 
 PROJECT_DIR       := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 export ROOT_DIR   ?= ..
-export PATH       := $(PATH):$(abspath $(ROOT_DIR)/GPL/bin)
-export PYTHONPATH := $(PYTHONPATH):$(abspath $(ROOT_DIR)/GPL/lib/python)
 
 export SUITE_GROUP ?= developer
 export SUITE_GROUP_NAME ?= $(notdir $(realpath $(shell pwd)/$(ROOT_DIR)))-$(PROJECT_NAME)-.*

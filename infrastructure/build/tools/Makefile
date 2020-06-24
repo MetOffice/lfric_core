@@ -5,8 +5,6 @@
 ##############################################################################
 
 export ROOT_DIR   ?= ../../..
-export PATH       := $(PATH):$(abspath $(ROOT_DIR)/GPL/bin)
-export PYTHONPATH := $(PYTHONPATH):$(abspath $(ROOT_DIR)/GPL/lib/python)
 
 .PHONY: test
 test:
