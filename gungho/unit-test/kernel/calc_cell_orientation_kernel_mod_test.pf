@@ -50,12 +50,12 @@ contains
 
     stencil_map_w2_cross(1:4,1) = (/ 101, 102, 103, 104 /)
     stencil_map_w2_cross(1:4,2) = (/ 105, 101, 107, 106 /)
-    stencil_map_w2_cross(1:4,3) = (/ 102, 111, 113, 114 /)
-    stencil_map_w2_cross(1:4,4) = (/ 119, 120, 103, 118 /)
-    stencil_map_w2_cross(1:4,5) = (/ 104, 126, 125, 124 /)
-    stencil_map_w2_cross(1:4,6) = (/ 129, 106, 127, 128 /)
-    stencil_map_w2_cross(1:4,7) = (/ 132, 113, 130, 131 /)
-    stencil_map_w2_cross(1:4,8) = (/ 119, 133, 134, 135 /)
+    stencil_map_w2_cross(1:4,3) = (/ 129, 106, 127, 128 /)
+    stencil_map_w2_cross(1:4,4) = (/ 102, 111, 113, 114 /)
+    stencil_map_w2_cross(1:4,5) = (/ 132, 113, 130, 131 /)
+    stencil_map_w2_cross(1:4,6) = (/ 119, 120, 103, 118 /)
+    stencil_map_w2_cross(1:4,7) = (/ 119, 133, 134, 135 /)
+    stencil_map_w2_cross(1:4,8) = (/ 104, 126, 125, 124 /)
     stencil_map_w2_cross(1:4,9) = (/ 125, 136, 137, 140 /)
 
     map_w3(:) = 1
@@ -72,12 +72,12 @@ contains
 
     @assertEqual(1_r_def, orientation(1), tol)
     @assertEqual(4_r_def, orientation(2), tol)
-    @assertEqual(2_r_def, orientation(3), tol)
-    @assertEqual(3_r_def, orientation(4), tol)
-    @assertEqual(4_r_def, orientation(5), tol)
-    @assertEqual(4_r_def, orientation(6), tol)
-    @assertEqual(3_r_def, orientation(7), tol)
-    @assertEqual(1_r_def, orientation(8), tol)
+    @assertEqual(4_r_def, orientation(3), tol)
+    @assertEqual(2_r_def, orientation(4), tol)
+    @assertEqual(3_r_def, orientation(5), tol)
+    @assertEqual(3_r_def, orientation(6), tol)
+    @assertEqual(1_r_def, orientation(7), tol)
+    @assertEqual(4_r_def, orientation(8), tol)
     @assertEqual(4_r_def, orientation(9), tol)
 
   end subroutine test_of_cell_orientation

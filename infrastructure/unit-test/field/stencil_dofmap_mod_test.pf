@@ -13,7 +13,8 @@ module stencil_dofmap_mod_test
   use stencil_dofmap_mod,  only: stencil_dofmap_type, STENCIL_POINT, &
                                                       STENCIL_1DX,   &
                                                       STENCIL_CROSS, &
-                                                      STENCIL_1DY
+                                                      STENCIL_1DY, &
+                                                      STENCIL_REGION
   use master_dofmap_mod,   only: master_dofmap_type
   use mesh_collection_mod, only: mesh_collection_type, &
                                  mesh_collection
@@ -56,7 +57,7 @@ module stencil_dofmap_mod_test
     integer(i_def),    public :: st_expected_size
   contains
     procedure :: toString => parameter_to_string
- end type stencil_parameter_type
+  end type stencil_parameter_type
 
 contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -71,13 +72,15 @@ contains
 
     select case (this%stencil)
       case ( STENCIL_POINT )
-        tmp = 'point'
+        tmp = 'point '
       case ( STENCIL_CROSS )
-        tmp = 'cross'
+        tmp = 'cross '
       case ( STENCIL_1DX )
-        tmp = '1dx  '
+        tmp = '1dx   '
       case ( STENCIL_1DY )
-        tmp = '1dy  '
+        tmp = '1dy   '
+      case ( STENCIL_REGION )
+        tmp = 'region'
     end select
 
     ! The string describes the stencil type and extent
@@ -94,10 +97,10 @@ contains
 
     type(stencil_parameter_type) :: parameters(5)
 
-    parameters = [ stencil_parameter_type(STENCIL_CROSS,2,9),              &
+    parameters = [ stencil_parameter_type(STENCIL_CROSS,1,5),              &
                    stencil_parameter_type(STENCIL_1DX,1,3),                &
-                   stencil_parameter_type(STENCIL_1DY,2,5),                &
-                   stencil_parameter_type(STENCIL_1DY,3,7),                &
+                   stencil_parameter_type(STENCIL_1DY,1,3),                &
+                   stencil_parameter_type(STENCIL_REGION,1,9),             &
                    stencil_parameter_type(STENCIL_POINT,0,1) ]
 
   end function get_parameters
@@ -176,7 +179,8 @@ contains
     use stencil_dofmap_mod,  only: stencil_dofmap_type, STENCIL_POINT, &
                                                         STENCIL_1DX,   &
                                                         STENCIL_CROSS, &
-                                                        STENCIL_1DY
+                                                        STENCIL_1DY,   &
+                                                        STENCIL_REGION
     use master_dofmap_mod,   only: master_dofmap_type
 
    implicit none
@@ -195,7 +199,8 @@ contains
    ! Counter variables
    integer(i_def)  :: cell, df, extent, next_stencil_cell
    ! Storage for cell numbers around centre cell
-   integer(i_def)  :: cell_left, cell_right, cell_down, cell_up
+   integer(i_def)  :: cell_left, cell_right, cell_down, cell_up, cell_ul, &
+                      cell_dl, cell_ur, cell_dr
 
    ! Get information about test mesh and dofmap
    mesh => mesh_collection%get_mesh( this%mesh_id )
@@ -304,6 +309,42 @@ contains
            cell_right = go_right(cell_right, mesh_dimension_x)
            cell_up = go_up(cell_up, mesh_dimension_x, ncells)
            cell_down = go_down(cell_down, mesh_dimension_x, ncells)
+         end do
+       end do
+
+     case(STENCIL_REGION)
+       do cell = 1,ncells
+         stencil_map => stencil_dofmap%get_dofmap(cell)
+         next_stencil_cell = 2
+         cell_left = go_left(cell, mesh_dimension_x)
+         cell_down = go_down(cell, mesh_dimension_x, ncells)
+         cell_right = go_right(cell, mesh_dimension_x)
+         cell_up = go_up(cell, mesh_dimension_x, ncells)
+         cell_ul = go_up(cell_left, mesh_dimension_x, ncells)
+         cell_dl = go_left(cell_down, mesh_dimension_x)
+         cell_ur = go_right(cell_up, mesh_dimension_x)
+         cell_dr = go_down(cell_right, mesh_dimension_x, ncells)
+         do extent = 1, this%st_extent
+           do df = 1,ndf
+             ! Check map for cell
+             @assertEqual(master_map_copy(df,cell_left), stencil_map(df,next_stencil_cell) )
+             @assertEqual(master_map_copy(df,cell_dl), stencil_map(df,next_stencil_cell + 1) )
+             @assertEqual(master_map_copy(df,cell_down), stencil_map(df,next_stencil_cell + 2) )
+             @assertEqual(master_map_copy(df,cell_dr), stencil_map(df,next_stencil_cell + 3) )
+             @assertEqual(master_map_copy(df,cell_right), stencil_map(df,next_stencil_cell + 4) )
+             @assertEqual(master_map_copy(df,cell_ur), stencil_map(df,next_stencil_cell + 5) )
+             @assertEqual(master_map_copy(df,cell_up), stencil_map(df,next_stencil_cell + 6) )
+             @assertEqual(master_map_copy(df,cell_ul), stencil_map(df,next_stencil_cell + 7) )
+             ! Check map in whole map array
+             @assertEqual(master_map_copy(df,cell_left), whole_map(df,next_stencil_cell,cell) )
+             @assertEqual(master_map_copy(df,cell_dl), whole_map(df,next_stencil_cell + 1,cell) )
+             @assertEqual(master_map_copy(df,cell_down), whole_map(df,next_stencil_cell + 2,cell) )
+             @assertEqual(master_map_copy(df,cell_dr), whole_map(df,next_stencil_cell + 3,cell) )
+             @assertEqual(master_map_copy(df,cell_right), whole_map(df,next_stencil_cell + 4,cell) )
+             @assertEqual(master_map_copy(df,cell_ur), whole_map(df,next_stencil_cell + 5,cell) )
+             @assertEqual(master_map_copy(df,cell_up), whole_map(df,next_stencil_cell + 6,cell) )
+             @assertEqual(master_map_copy(df,cell_ul), whole_map(df,next_stencil_cell + 7,cell) )
+           end do
          end do
        end do
 

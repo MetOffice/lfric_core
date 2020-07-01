@@ -136,7 +136,8 @@ subroutine poly1d_adv_recon_code( nlayers,              &
   real(kind=r_def), intent(in) :: outward_normals_to_horizontal_faces(:,:)
 
   ! Internal variables
-  integer(kind=i_def)                   :: k, df, ij, p, face, stencil
+  integer(kind=i_def)                   :: k, df, ij, p, face, stencil, &
+                                           stencil_depth, depth, face_mod
   real(kind=r_def)                      :: direction
   real(kind=r_def), dimension(nfaces_re_h) :: v_dot_n
   real(kind=r_def)                      :: polynomial_tracer
@@ -154,10 +155,15 @@ subroutine poly1d_adv_recon_code( nlayers,              &
   ! ( 1, 2, 4 )
   ! ( 1, 3, 5 )
   ! First cell is always the centre cell
+  stencil_depth = order/2
   map1d(1,:) = 1
   do face = 1,nfaces_re_h
-    do stencil = 2,order+1
-      map1d(stencil,face) = 2 + mod(face+1,2) + 2*(stencil-2)
+    depth=1
+    face_mod = mod(face+1,2) * stencil_depth
+    do stencil = 2,stencil_depth+1
+      map1d(stencil+depth-1, face) = stencil + face_mod
+      map1d(stencil+depth, face) = stencil + order + face_mod
+      depth=depth+1
     end do
   end do
 

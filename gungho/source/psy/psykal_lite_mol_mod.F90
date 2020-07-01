@@ -178,6 +178,9 @@ subroutine invoke_poly2d_flux( flux, wind, density, coeff, order, stencil_size, 
   ! Initialise number of layers
   nlayers = flux_proxy%vspace%get_nlayers()
 
+  ! Re-calculate stencil extent from the polynomial order
+  stencil_extent = order/2
+
   ! Create a mesh object
   mesh => flux_proxy%vspace%get_mesh()
 
@@ -185,7 +188,7 @@ subroutine invoke_poly2d_flux( flux, wind, density, coeff, order, stencil_size, 
   reference_element => mesh%get_reference_element()
 
   ! Initialise stencil dofmaps
-  stencil => density_proxy%vspace%get_stencil_dofmap(STENCIL_REGION, order)
+  stencil => density_proxy%vspace%get_stencil_dofmap(STENCIL_REGION, stencil_extent)
   stencil_map => stencil%get_whole_dofmap()
   cells_in_stencil => stencil%get_stencil_sizes()
 
@@ -223,9 +226,6 @@ subroutine invoke_poly2d_flux( flux, wind, density, coeff, order, stencil_size, 
       basis_w2(:,df_w2,qp) = wind_proxy%vspace%call_function(BASIS,df_w2,nodes_w2(:,qp))
     end do
   end do
-
-  ! Re-calculate stencil extent from the polynomial order
-  stencil_extent = order/2
 
   ! Call kernels and communication routines
   if ( wind_proxy%is_dirty(depth=1) ) &
@@ -384,13 +384,13 @@ subroutine invoke_poly2d_flux_coeffs( coeff, mdw3, chi, qr, qr_face, order, sten
   stencil_extent = order/2
 
   w3_stencil => coeff_proxy(1,1)%vspace%get_stencil_dofmap(STENCIL_REGION, &
-                                                           order)
+                                                           stencil_extent)
   w3_stencil_size = w3_stencil%get_size()
   w3_stencil_map => w3_stencil%get_whole_dofmap()
   cells_in_stencil => w3_stencil%get_stencil_sizes()
 
   wx_stencil => chi_proxy(1)%vspace%get_stencil_dofmap(STENCIL_REGION, &
-                                                       order)
+                                                       stencil_extent)
   wx_stencil_size = wx_stencil%get_size()
   wx_stencil_map => wx_stencil%get_whole_dofmap()
 
@@ -1428,6 +1428,9 @@ subroutine invoke_poly2d_adv_recon( reconstruction, wind, tracer, coeff, order, 
   ! Initialise number of layers
   nlayers = recon_proxy%vspace%get_nlayers()
 
+  ! Re-calculate stencil extent from the polynomial order
+  stencil_extent = order/2
+
   ! Create a mesh object
   mesh => recon_proxy%vspace%get_mesh()
 
@@ -1436,7 +1439,7 @@ subroutine invoke_poly2d_adv_recon( reconstruction, wind, tracer, coeff, order, 
 
   ! Initialise stencil dofmaps
   stencil => tracer_proxy%vspace%get_stencil_dofmap(STENCIL_REGION, &
-                                                    order)
+                                                    stencil_extent)
   stencil_map => stencil%get_whole_dofmap()
   cells_in_stencil => stencil%get_stencil_sizes()
 
@@ -1478,9 +1481,6 @@ subroutine invoke_poly2d_adv_recon( reconstruction, wind, tracer, coeff, order, 
       basis_w2(:,df_w2,qp) = wind_proxy%vspace%call_function(BASIS,df_w2,nodes_w1(:,qp))
     end do
   end do
-
-  ! Re-calculate stencil extent from the polynomial order
-  stencil_extent = order/2
 
   ! Call kernels and communication routines
   if ( recon_proxy%is_dirty(depth=1) ) &
@@ -1642,12 +1642,12 @@ subroutine invoke_poly2d_advective_coeffs( coeff, mdwt, chi, qr, qr_edge, order,
   stencil_extent = order/2
 
   wt_stencil => coeff_proxy(1,1)%vspace%get_stencil_dofmap(STENCIL_REGION, &
-                                                           order)
+                                                           stencil_extent)
   wt_stencil_size = wt_stencil%get_size()
   wt_stencil_map => wt_stencil%get_whole_dofmap()
 
   wx_stencil => chi_proxy(1)%vspace%get_stencil_dofmap(STENCIL_REGION, &
-                                                       order)
+                                                       stencil_extent)
   wx_stencil_size = wx_stencil%get_size()
   wx_stencil_map => wx_stencil%get_whole_dofmap()
   cells_in_stencil => wx_stencil%get_stencil_sizes()

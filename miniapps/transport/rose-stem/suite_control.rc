@@ -58,7 +58,7 @@
                      resolutions=[("BiP40x40-5x5",1.0)],
                      plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR density T000000:T000020:T000040:T000060:T000080:T000100 -1 -91 0 $PLOT_DIR" )',
     'run_application("transport", "yz_biperiodic_cosmic",
-                     resolutions=[("BiP4x100-2x2",1.0)],
+                     resolutions=[("BiP16x100-2x2",1.0)],
                      env={"nrun":120},
                      plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR density T000000:T000030:T000060:T000090:T000120 0 -100 -100 $PLOT_DIR" )',
     'run_application("transport", "hadley_like_dcmip",

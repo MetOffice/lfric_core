@@ -146,7 +146,7 @@ subroutine poly1d_advective_coeffs_code(nlayers,                   &
   logical(kind=l_def) :: spherical
   integer(kind=i_def) :: ispherical
   integer(kind=i_def) :: k, ijk, df, qf0, stencil, nmonomial, qp, &
-                         m, edge
+                         m, edge, stencil_depth, depth, face_mod
   integer(kind=i_def),           dimension(order+1,nfaces_h) :: map1d
   integer(kind=i_def),           dimension(0:nlayers)        :: kx, vert_face, qv
   real(kind=r_def)                                           :: xx, fn
@@ -174,10 +174,15 @@ subroutine poly1d_advective_coeffs_code(nlayers,                   &
   ! ( 1, 2, 4 )
   ! ( 1, 3, 5 )
   ! First cell is always the centre cell
+  stencil_depth = order/2
   map1d(1,:) = 1
   do edge = 1,nfaces_h
-    do stencil = 2,order+1
-      map1d(stencil,edge) = 2 + mod(edge+1,2) + 2*(stencil-2)
+    depth=1
+    face_mod = mod(edge+1,2) * stencil_depth
+    do stencil = 2,stencil_depth+1
+      map1d(stencil+depth-1, edge) = stencil + face_mod
+      map1d(stencil+depth, edge) = stencil + order + face_mod
+      depth=depth+1
     end do
   end do
 

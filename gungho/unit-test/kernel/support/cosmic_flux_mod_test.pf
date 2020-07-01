@@ -220,14 +220,14 @@ contains
 
     call calc_stencil_ordering(stencil_length,stencil_order_out)
 
-    @assertEqual(8, stencil_order_out(1))
-    @assertEqual(6, stencil_order_out(2))
-    @assertEqual(4, stencil_order_out(3))
+    @assertEqual(5, stencil_order_out(1))
+    @assertEqual(4, stencil_order_out(2))
+    @assertEqual(3, stencil_order_out(3))
     @assertEqual(2, stencil_order_out(4))
     @assertEqual(1, stencil_order_out(5))
-    @assertEqual(3, stencil_order_out(6))
-    @assertEqual(5, stencil_order_out(7))
-    @assertEqual(7, stencil_order_out(8))
+    @assertEqual(6, stencil_order_out(6))
+    @assertEqual(7, stencil_order_out(7))
+    @assertEqual(8, stencil_order_out(8))
     @assertEqual(9, stencil_order_out(9))
 
     deallocate(stencil_order_out)
@@ -253,14 +253,14 @@ contains
 
     call stencil_ordering_and_orientation(stencil_length,orientation,x_direction,stencil_order_out)
 
-    @assertEqual(8, stencil_order_out(1))
-    @assertEqual(6, stencil_order_out(2))
-    @assertEqual(4, stencil_order_out(3))
+    @assertEqual(5, stencil_order_out(1))
+    @assertEqual(4, stencil_order_out(2))
+    @assertEqual(3, stencil_order_out(3))
     @assertEqual(2, stencil_order_out(4))
     @assertEqual(1, stencil_order_out(5))
-    @assertEqual(3, stencil_order_out(6))
-    @assertEqual(5, stencil_order_out(7))
-    @assertEqual(7, stencil_order_out(8))
+    @assertEqual(6, stencil_order_out(6))
+    @assertEqual(7, stencil_order_out(7))
+    @assertEqual(8, stencil_order_out(8))
     @assertEqual(9, stencil_order_out(9))
 
 
@@ -269,27 +269,27 @@ contains
     call stencil_ordering_and_orientation(stencil_length,orientation,x_direction,stencil_order_out)
 
     @assertEqual(9, stencil_order_out(1))
-    @assertEqual(7, stencil_order_out(2))
-    @assertEqual(5, stencil_order_out(3))
-    @assertEqual(3, stencil_order_out(4))
+    @assertEqual(8, stencil_order_out(2))
+    @assertEqual(7, stencil_order_out(3))
+    @assertEqual(6, stencil_order_out(4))
     @assertEqual(1, stencil_order_out(5))
     @assertEqual(2, stencil_order_out(6))
-    @assertEqual(4, stencil_order_out(7))
-    @assertEqual(6, stencil_order_out(8))
-    @assertEqual(8, stencil_order_out(9))
+    @assertEqual(3, stencil_order_out(7))
+    @assertEqual(4, stencil_order_out(8))
+    @assertEqual(5, stencil_order_out(9))
 
     orientation = 1
 
     call stencil_ordering_and_orientation(stencil_length,orientation,y_direction,stencil_order_out)
 
-    @assertEqual(8, stencil_order_out(1))
-    @assertEqual(6, stencil_order_out(2))
-    @assertEqual(4, stencil_order_out(3))
+    @assertEqual(5, stencil_order_out(1))
+    @assertEqual(4, stencil_order_out(2))
+    @assertEqual(3, stencil_order_out(3))
     @assertEqual(2, stencil_order_out(4))
     @assertEqual(1, stencil_order_out(5))
-    @assertEqual(3, stencil_order_out(6))
-    @assertEqual(5, stencil_order_out(7))
-    @assertEqual(7, stencil_order_out(8))
+    @assertEqual(6, stencil_order_out(6))
+    @assertEqual(7, stencil_order_out(7))
+    @assertEqual(8, stencil_order_out(8))
     @assertEqual(9, stencil_order_out(9))
 
     orientation = 2
@@ -297,14 +297,14 @@ contains
     call stencil_ordering_and_orientation(stencil_length,orientation,y_direction,stencil_order_out)
 
     @assertEqual(9, stencil_order_out(1))
-    @assertEqual(7, stencil_order_out(2))
-    @assertEqual(5, stencil_order_out(3))
-    @assertEqual(3, stencil_order_out(4))
+    @assertEqual(8, stencil_order_out(2))
+    @assertEqual(7, stencil_order_out(3))
+    @assertEqual(6, stencil_order_out(4))
     @assertEqual(1, stencil_order_out(5))
     @assertEqual(2, stencil_order_out(6))
-    @assertEqual(4, stencil_order_out(7))
-    @assertEqual(6, stencil_order_out(8))
-    @assertEqual(8, stencil_order_out(9))
+    @assertEqual(3, stencil_order_out(7))
+    @assertEqual(4, stencil_order_out(8))
+    @assertEqual(5, stencil_order_out(9))
 
     deallocate(stencil_order_out)
 

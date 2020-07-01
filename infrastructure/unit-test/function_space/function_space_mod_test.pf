@@ -498,7 +498,7 @@ contains
                                    element_order, &
                                    this%function_space )
 
-    stencil_dofmap => test_fs%get_stencil_dofmap( STENCIL_1DX, 3 )
+    stencil_dofmap => test_fs%get_stencil_dofmap( STENCIL_1DX, 1 )
     stencil_map    => stencil_dofmap%get_dofmap( 1 )
 
     mesh =>mesh_collection%get_mesh(this%mesh_id)
@@ -536,7 +536,7 @@ contains
                                    element_order, &
                                    this%function_space )
 
-    stencil_dofmap => test_fs%get_stencil_dofmap( STENCIL_1DY, 3 )
+    stencil_dofmap => test_fs%get_stencil_dofmap( STENCIL_1DY, 1 )
     stencil_map => stencil_dofmap%get_dofmap(1)
 
     mesh =>mesh_collection%get_mesh(this%mesh_id)
@@ -547,12 +547,6 @@ contains
     @assertEqual( map, stencil_map(:,2) )
     map => test_fs%get_cell_dofmap(mesh%get_cell_next( N, 1 ))
     @assertEqual( map, stencil_map(:,3) )
-    map => test_fs%get_cell_dofmap(&
-          mesh%get_cell_next(S,mesh%get_cell_next( S, 1 )))
-    @assertEqual( map, stencil_map(:,4) )
-    map => test_fs%get_cell_dofmap(&
-              mesh%get_cell_next(N,mesh%get_cell_next( N, 1 )))
-    @assertEqual( map, stencil_map(:,5) )
 
     call test_fs%clear()
     nullify( stencil_dofmap, stencil_map, map, mesh )
@@ -582,7 +576,7 @@ contains
                                    element_order, &
                                    this%function_space )
 
-    stencil_dofmap => test_fs%get_stencil_dofmap(STENCIL_CROSS,3)
+    stencil_dofmap => test_fs%get_stencil_dofmap(STENCIL_CROSS,1)
     stencil_map => stencil_dofmap%get_dofmap(1)
 
     mesh =>mesh_collection%get_mesh(this%mesh_id)

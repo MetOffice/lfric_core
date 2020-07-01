@@ -94,8 +94,8 @@ end function orientation_of_cell
 !>          The kernel iterates over all core cells in a partition and uses a
 !>          cross-stencil inorder to calculate the orientation of cells in the halo.
 !>          The orientation of cells in the cross-stencil is calculated by
-!>          iterating over the 4 cells closest to the centre cell, then the
-!>          cells a distance of 2 away from the centre cell and so on.
+!>          iterating over all the cells in a branch of the stencil and then for
+!>          each of the subsequent branches.
 !!
 !! @param[in] nlayers              Number of layers
 !! @param[inout] orientation       W3 field containing orientation of cells
@@ -144,15 +144,13 @@ subroutine calc_cell_orientation_code(  nlayers,                       &
 
     ! Kernel loops over core cells only, all core cells are assumed to have orientation 1
     orientation(stencil_map_w3_cross(1,1)+k) = 1_r_def
-
-    do stencil=1,halo_depth
-      do branch=1,cross_stencil_branches ! loop over stencil cross branches
-
-        cell_inner = max(int(1),int(4*stencil-7+int(branch)))
-        cell_outer = int(4*(stencil-1)+branch+1,i_def)
+    do branch = 1,cross_stencil_branches
+      cell_inner = 1
+      do stencil = 1,halo_depth
+        cell_outer = 1 + (halo_depth * (branch - 1)) + stencil
 
         if ( orientation(stencil_map_w3_cross(1,cell_inner)+k) < 0.5_r_def ) then
-          call log_event( " Orientation unassigned ", LOG_LEVEL_ERROR )
+          call log_event( "Orientation unassigned ", LOG_LEVEL_ERROR )
         end if
 
         cell_inner_index_of_interest = index_of_interest_map(branch,int(orientation(stencil_map_w3_cross(1,cell_inner)+k)))
@@ -162,8 +160,9 @@ subroutine calc_cell_orientation_code(  nlayers,                       &
           if ( shared_dof_of_interest == int(stencil_map_w2_cross(ii,cell_outer),i_def) ) then
             orientation(stencil_map_w3_cross(1,cell_outer)+k) = orientation_of_cell(branch,ii)
           end if
-        end do
 
+        end do
+        cell_inner = cell_outer
       end do
     end do
   end do

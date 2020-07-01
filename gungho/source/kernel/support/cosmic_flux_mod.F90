@@ -214,9 +214,9 @@ contains
 
   !--------------------------------------------------------------------------------
   !>  @brief  The ordering of the 1D stencils as defined in stencil_dofmap_mod.F90
-  !!          is of the form | 6 | 4 | 2 | 1 | 3 | 5 | 7 |
+  !!          is of the form | 4 | 3 | 2 | 1 | 5 | 6 | 7 |
   !!          If the integer input to this routine is 7 then the integer array
-  !!          which is returned is (/ 6, 4, 2, 1, 3, 5, 7 /)
+  !!          which is returned is (/ 4, 3, 2, 1, 5, 6, 7 /)
   !!
   !!  @param[in]   stencil_length     The length of the stencil
   !!  @param[out]  stencil_order_out  An integer array
@@ -230,14 +230,15 @@ contains
 
     integer :: ii, n
 
-    n = (stencil_length-1)/2
-
-    do ii = 1, n
-      stencil_order_out(ii) = 2*(n+1) - 2*ii
-    end do
+    n = (stencil_length+1)/2
+    stencil_order_out(n) = 1
 
     do ii = n+1, stencil_length
-      stencil_order_out(ii) = 2*ii-stencil_length
+      stencil_order_out(ii) = ii
+    end do
+
+    do ii = n-1, 1, -1
+      stencil_order_out(ii) = stencil_order_out(ii+1)+1
     end do
 
   end subroutine calc_stencil_ordering
@@ -268,45 +269,50 @@ contains
 
     ! Further details of this routine can be found in Ticket #868
 
-    n = (stencil_length-1)/2
+    n = (stencil_length+1)/2
+    stencil_order_out(n) = 1
 
     if (direction == x_direction ) then
       if (orientation == 1 .or. orientation == 2) then
 
-        do ii = 1, n
-          stencil_order_out(ii) = (stencil_length+1) - 2*ii
-        end do
         do ii = n+1, stencil_length
-          stencil_order_out(ii) = 2*ii-stencil_length
+          stencil_order_out(ii) = ii
+        end do
+
+        do ii = n-1, 1, -1
+          stencil_order_out(ii) = stencil_order_out(ii+1)+1
         end do
 
       elseif  (orientation == 3 .or. orientation == 4) then
 
-        do ii = 1, n+1
-          stencil_order_out(ii) = (stencil_length+2)-2*ii
+        do ii = n+1, stencil_length
+          stencil_order_out(ii) = ii - (n-1)
         end do
-        do ii = n+2, stencil_length
-          stencil_order_out(ii) = 2*ii-(stencil_length+1)
+
+        do ii = n-1, 1, -1
+          stencil_order_out(ii) = stencil_order_out(stencil_length+1 - ii) + n-1
         end do
 
       end if
     elseif (direction == y_direction ) then
       if (orientation == 1 .or. orientation == 4) then
 
-        do ii = 1, n
-          stencil_order_out(ii) = (stencil_length+1) - 2*ii
-        end do
         do ii = n+1, stencil_length
-          stencil_order_out(ii) = 2*ii-stencil_length
+          stencil_order_out(ii) = ii
+        end do
+
+        do ii = n-1, 1, -1
+          stencil_order_out(ii) = stencil_order_out(ii+1)+1
         end do
 
       elseif  (orientation == 2 .or. orientation == 3) then
 
-        do ii = 1, n+1
-          stencil_order_out(ii) = (stencil_length+2)-2*ii
+        do ii = n+1, stencil_length
+          stencil_order_out(ii) = ii - (n-1)
         end do
-        do ii = n+2, stencil_length
-          stencil_order_out(ii) = 2*ii-(stencil_length+1)
+
+        do ii = n-1, 1, -1
+          stencil_order_out(ii) = stencil_order_out(stencil_length+1 - ii) + n-1
         end do
 
       end if
