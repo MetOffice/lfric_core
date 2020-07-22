@@ -1,3 +1,5 @@
+
+
 !-----------------------------------------------------------------------------
 ! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
 ! For further details please refer to the file LICENCE.original which you
@@ -18,7 +20,8 @@ module gencube_ps_mod_test
 
   public :: test_C1, &
             test_C2, &
-            test_C3
+            test_C3, &
+            test_stretched_grid
 
   @TestCase
   type, extends(TestCase), public :: gencube_ps_test_type
@@ -29,6 +32,7 @@ module gencube_ps_mod_test
     procedure test_C1
     procedure test_C2
     procedure test_C3
+    procedure test_stretched_grid
 
   end type gencube_ps_test_type
 
@@ -517,5 +521,96 @@ contains
     @assertTrue(abs(coords_rot(1,53) - 135_r_def) < eps, "Incorrect rotated mesh coordinates.")
     @assertTrue(abs(coords_rot(2,53) + 35.2643896827546_r_def) < eps, "Incorrect rotated mesh coordinates.")
   end subroutine test_C3
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_stretched_grid( this )
+
+    implicit none
+
+    class(gencube_ps_test_type), intent(inout) :: this
+    type(gencube_ps_type)  :: csgen_stretch
+
+    character(str_def)     :: test_coord_units_x
+    character(str_def)     :: test_coord_units_y
+
+    ! tol used as relaxed tolerance for stretched mesh values
+    ! at higher resolutions this is expected to tend towards the true value
+    real(r_def), parameter :: eps = 1E-09_r_def
+    real(r_def), parameter :: tol = 0.1
+
+    integer(i_def) :: i
+
+    ! Higher cells used for this test to minimise deformation from a sphere
+    integer(i_def), parameter :: edge_cells = 9
+    integer(i_def), parameter :: nsmooth = 1
+    integer(i_def), parameter :: npanels = 6
+    integer(i_def), parameter :: nmaps = 1
+
+    real(r_def) :: coords(2, 6*edge_cells*edge_cells+2)
+    real(r_def) :: face_coords(2, 6*edge_cells*edge_cells)
+    real(r_def) :: stretch_factor
+
+    ! Testing a stretched mesh with 0.5 stretch factor.
+    stretch_factor = 0.5_r_def
+
+    csgen_stretch = gencube_ps_type( mesh_name, edge_cells, nsmooth,      &
+                                     stretch_factor=stretch_factor )
+
+    ! Generate the mesh and connectivity
+    call csgen_stretch%generate()
+
+    ! Retrieve mesh coordinates
+    call csgen_stretch%get_coordinates( coords,             &
+                                        face_coords,        &
+                                        test_coord_units_x, &
+                                        test_coord_units_y )
+
+    ! Mesh coordinates have expected values at specified points
+    ! (1,1)   should not change from lon =-45
+    ! (2,1)   should go from         lat =acos(sqrt(2/3)) -> 60.9778
+    ! (1,479) should not change from lon =135
+    ! (2,479) should go from         lat =-acos(sqrt(2/3))-> 1.9930
+    ! (1,361) should not change from lon =135
+    ! (2,361) should go from         lat =82.9448         -> 86.4693
+
+    @assertTrue(abs(coords(1,1)   + 45.000000000_r_def) < eps, "Incorrect x-coord, node 1.")
+    @assertTrue(abs(coords(2,1)   - 60.978362602_r_def) < tol, "Incorrect y-coord, node 1.")
+    @assertTrue(abs(coords(1,479) - 135.00000000_r_def) < eps, "Incorrect x-coord, node 479.")
+    @assertTrue(abs(coords(2,479) - 1.9859456090_r_def) < tol, "Incorrect y-coord, node 479.")
+    @assertTrue(abs(coords(1,361) - 135.00000000_r_def) < eps, "Incorrect x-coord, node 361.")
+    @assertTrue(abs(coords(2,361) - 86.471059549_r_def) < tol, "Incorrect y-coord, node 361.")
+
+    ! Testing mesh with 2.0 stretch factor. Same as 0.5 stretch factor.
+    stretch_factor = 2.0_r_def
+
+    csgen_stretch = gencube_ps_type( mesh_name, edge_cells, nsmooth,      &
+                             stretch_factor=stretch_factor )
+
+    ! Generate the mesh and connectivity
+    call csgen_stretch%generate()
+
+    ! Retrieve mesh coordinates
+    call csgen_stretch%get_coordinates( coords,             &
+                                        face_coords,        &
+                                        test_coord_units_x, &
+                                        test_coord_units_y )
+
+    ! Mesh coordinates have expected values at specified points
+    ! (1,1)   should not change from lon =-45
+    ! (2,1)   should go from         lat =acos(sqrt(2/3)) -> -1.9930
+    ! (1,479) should not change from lon =135
+    ! (2,479) should go from         lat =-acos(sqrt(2/3))-> -60.9778
+    ! (1,361) should not change from lon =135
+    ! (2,361) should go from         lat =82.9448         -> 75.9344
+
+    @assertTrue(abs(coords(1,1)   + 45.000000000_r_def) < eps, "Incorrect x-coord, node 1.")
+    @assertTrue(abs(coords(2,1)   + 1.9859456090_r_def) < tol, "Incorrect y-coord, node 1.")
+    @assertTrue(abs(coords(1,479) - 135.00000000_r_def) < eps, "Incorrect x-coord, node 479.")
+    @assertTrue(abs(coords(2,479) + 60.978362602_r_def) < tol, "Incorrect y-coord, node 479.")
+    @assertTrue(abs(coords(1,361) - 135.00000000_r_def) < eps, "Incorrect x-coord, node 361.")
+    @assertTrue(abs(coords(2,361) - 75.950595861_r_def) < tol, "Incorrect y-coord, node 361.")
+
+  end subroutine test_stretched_grid
 
 end module gencube_ps_mod_test

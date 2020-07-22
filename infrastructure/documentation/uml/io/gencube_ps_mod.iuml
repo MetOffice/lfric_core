@@ -12,6 +12,10 @@ class gencube_ps_mod::gencube_ps_type {
   -nsmooth: integer
   -npanels: integer
   -nmaps: integer
+  -lat_north: real
+  -lon_north: real
+  -do_rotate: logical
+  -stretch_factor: real
 
   -target_mesh_names: string[:] <<allocatable>>
   -target_edge_cells: integer[:] <<allocatable>>
@@ -42,6 +46,8 @@ class gencube_ps_mod::gencube_ps_type {
   +write_mesh()
   +orient_lfric()
   +smooth()
+  +rotate_mesh()
+  +stretch_mesh()
 
 }
 

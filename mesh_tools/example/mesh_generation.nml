@@ -46,12 +46,13 @@
 ! intergrid mesh maps) is advised to be left as 0 for general use.
 
 &cubedsphere_mesh
-  edge_cells    = 72, 24, 12, 6, 3
-  smooth_passes = 0
-  do_rotate     = .false.
-  lon_north     = 0.0
-  lat_north     = 90.0
-  rotate_angle  = 0.0
+  edge_cells     = 72, 24, 12, 6, 3
+  smooth_passes  = 0
+  do_rotate      = .false.
+  lon_north      = 0.0
+  lat_north      = 90.0
+  rotate_angle   = 0.0
+  stretch_factor = 1.0
 /
 
 

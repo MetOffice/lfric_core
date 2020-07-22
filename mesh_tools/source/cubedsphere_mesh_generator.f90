@@ -21,7 +21,8 @@ program cubedsphere_mesh_generator
   use cubedsphere_mesh_config_mod,                        &
                          only: edge_cells, smooth_passes, &
                                do_rotate, lat_north,      &
-                               lon_north, rotate_angle
+                               lon_north, rotate_angle,   &
+                               stretch_factor
   use mpi_mod,           only: initialise_comm, store_comm, finalise_comm, &
                                get_comm_size, get_comm_rank
   use gencube_ps_mod,    only: gencube_ps_type
@@ -369,13 +370,14 @@ program cubedsphere_mesh_generator
     ! 6.4 Call generation stratedgy
     if (n_targets == 0 .or. n_meshes == 1 ) then
       ! No mesh maps required for this mesh
-      mesh_gen(i) = gencube_ps_type( mesh_name    = mesh_names(i), &
-                                     edge_cells   = edge_cells(i), &
-                                     nsmooth      = nsmooth,       &
-                                     do_rotate    = do_rotate,     &
-                                     lat_north    = lat_north,     &
-                                     lon_north    = lon_north,     &
-                                     rotate_angle = rotate_angle )
+      mesh_gen(i) = gencube_ps_type( mesh_name      = mesh_names(i), &
+                                     edge_cells     = edge_cells(i), &
+                                     nsmooth        = nsmooth,       &
+                                     do_rotate      = do_rotate,     &
+                                     lat_north      = lat_north,     &
+                                     lon_north      = lon_north,     &
+                                     rotate_angle   = rotate_angle,  &
+                                     stretch_factor = stretch_factor )
 
     else if (n_meshes > 1) then
 
@@ -404,7 +406,8 @@ program cubedsphere_mesh_generator
                         do_rotate=do_rotate,                 &
                         lat_north=lat_north,                 &
                         lon_north=lon_north,                 &
-                        rotate_angle=rotate_angle )
+                        rotate_angle=rotate_angle,           &
+                        stretch_factor=stretch_factor )
     else
       write(log_scratch_space, "(A,I0,A)") &
            '  Number of unique meshes is negative [', n_meshes,']'

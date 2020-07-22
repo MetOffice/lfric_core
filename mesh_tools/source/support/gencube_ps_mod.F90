@@ -75,10 +75,11 @@ module gencube_ps_mod
     integer(i_def)      :: npanels
     integer(i_def)      :: nmaps
 
-    real(r_def)         :: lat_north    = rmdi
-    real(r_def)         :: lon_north    = rmdi
-    real(r_def)         :: rotate_angle = rmdi
-    logical             :: do_rotate    = .false.
+    real(r_def)         :: stretch_factor = 1.0_r_def
+    real(r_def)         :: lat_north      = rmdi
+    real(r_def)         :: lon_north      = rmdi
+    real(r_def)         :: rotate_angle   = rmdi
+    logical             :: do_rotate      = .false.
 
     character(str_def), allocatable :: target_mesh_names(:)
     integer(i_def),     allocatable :: target_edge_cells(:)
@@ -143,11 +144,16 @@ contains
 !> @param[in, optional] target_edge_cells
 !>                               Number of cells per panel edge of the meshes to map to.
 !>
+!> @param[in, optional] stretch_factor
+!>                               Attracts points to the North (< 1) or South (> 1) to give
+!>                               a variable resolution mesh
+!>
 !> @return    self               Instance of gencube_ps_type
 !-------------------------------------------------------------------------------
  function gencube_ps_constructor( mesh_name, edge_cells, nsmooth, do_rotate,   &
                                   lat_north, lon_north, rotate_angle,          &
-                                  target_mesh_names, target_edge_cells )       &
+                                  target_mesh_names, target_edge_cells,        &
+                                  stretch_factor )                             &
                                   result( self )
 
   implicit none
@@ -160,6 +166,8 @@ contains
   real(r_def),        optional, intent(in) :: lat_north
   real(r_def),        optional, intent(in) :: lon_north
   real(r_def),        optional, intent(in) :: rotate_angle
+  real(r_def),        optional, intent(in) :: stretch_factor
+
   character(str_def), optional, intent(in) :: target_mesh_names(:)
   integer(i_def),     optional, intent(in) :: target_edge_cells(:)
 
@@ -184,6 +192,17 @@ contains
       'edge_cells=',    self%edge_cells,  ';' // &
       'smooth_passes=', self%nsmooth
 
+  ! Only attempt to stretch if stretch factor given
+  if ( present(stretch_factor) ) then
+
+    self%stretch_factor = stretch_factor
+
+    if ( (self%stretch_factor < 0.0_r_def) ) then
+      call log_event( 'Invalid stretch factor. must be >= 0.0.', &
+                      LOG_LEVEL_ERROR )
+    end if
+
+  end if
 
 
   if (present(do_rotate)) then
@@ -1135,6 +1154,45 @@ subroutine rotate_mesh(self)
 end subroutine rotate_mesh
 
 !-------------------------------------------------------------------------------
+!> @brief   Apply the Schmidt transform to the generation of the cubedsphere.
+!> @details Attracts points to the north (<1) or south (>1) pole according
+!>          to the value in self%stretch_factor. This gives a variable
+!>          resolution mesh. Negative values are invalid.
+!> @param[in]   self         The gencube_ps_type instance reference.
+!-------------------------------------------------------------------------------
+
+subroutine stretch_mesh(self)
+
+  implicit none
+
+  class(gencube_ps_type), intent(inout)  :: self
+
+  real(r_def) :: stretching ! Holding variable for stretch function
+  real(r_def) :: lat, lon
+
+  integer(i_def) :: nverts, vert
+
+  nverts = size(self%vert_coords, dim=2)
+
+  ! Apply Schmidt stretching transformation
+  if ( self%stretch_factor > 0.0_r_def ) then
+
+    stretching = (1.0_r_def - self%stretch_factor**2) &
+                /(1.0_r_def + self%stretch_factor**2)
+
+    do vert = 1,nverts
+
+      lat = self%vert_coords(2, vert)
+      self%vert_coords(2, vert) = asin( (stretching + sin(lat)) &
+                                     /(1.0_r_def + stretching*sin(lat)) )
+
+    end do
+
+  end if
+
+end subroutine stretch_mesh
+
+!-------------------------------------------------------------------------------
 !> @brief Populates the arguments with the dimensions defining
 !>        the mesh.
 !>
@@ -1289,8 +1347,9 @@ subroutine generate(self)
 
   call orient_lfric(self)
 
-  if (self%nsmooth > 0_i_def) call smooth(self)
-  if (self%do_rotate) call rotate_mesh(self)
+  if (self%nsmooth > 0_i_def)           call smooth(self)
+  if (self%do_rotate)                   call rotate_mesh(self)
+  if (self%stretch_factor /= 1.0_r_def) call stretch_mesh(self)
 
   call calc_cell_centres(self)
 
