@@ -17,6 +17,11 @@ module gravity_wave_driver_mod
                                             finalise_io
   use create_gravity_wave_prognostics_mod, &
                                       only: create_gravity_wave_prognostics
+  use gravity_wave_constants_config_mod, &
+                                      only: b_space,       &
+                                            b_space_w0,    &
+                                            b_space_w3,    &
+                                            b_space_wtheta
   use field_mod,                      only: field_type
   use field_collection_mod,           only: field_collection_type
   use function_space_chain_mod,       only: function_space_chain_type
@@ -35,11 +40,13 @@ module gravity_wave_driver_mod
   use runtime_constants_mod,          only: create_runtime_constants
   use step_gravity_wave_mod,          only: step_gravity_wave
   use final_gravity_wave_mod,         only: final_gravity_wave
+  use boundaries_config_mod,          only: limited_area
   use log_mod,                        only: log_event,          &
                                             log_scratch_space,  &
                                             LOG_LEVEL_ALWAYS,   &
                                             LOG_LEVEL_INFO,     &
-                                            LOG_LEVEL_TRACE
+                                            LOG_LEVEL_TRACE,    &
+                                            LOG_LEVEL_ERROR
   use read_methods_mod,               only: read_checkpoint
   use write_methods_mod,              only: write_checkpoint
   use io_config_mod,                  only: write_diag,           &
@@ -97,6 +104,23 @@ contains
 
   call log_event( 'Initialising '//program_name//' ...', LOG_LEVEL_ALWAYS )
 
+  ! The limited area version is unable to work with buoyancy in W0 when using
+  ! a biperiodic mesh. However, this could be solved by breaking the continuity
+  ! at the edges - so that the W0 dofs on the boundary are not shared, e.g. by
+  ! using a non-periodic mesh.
+  if ( limited_area ) then
+    select case( b_space )
+      case( b_space_w0 )
+        call log_event( 'Limited area version currently unable to run with buoyancy in W0', LOG_LEVEL_ERROR )
+      case( b_space_w3 )
+        call log_event( 'Limited area version has not been tested with buoyancy in W3', LOG_LEVEL_ERROR )
+      case( b_space_wtheta )
+        call log_event( 'Running limited area version with buoyancy in Wtheta', LOG_LEVEL_INFO )
+      case default
+        call log_event( 'Invalid buoyancy space', LOG_LEVEL_ERROR )
+    end select
+  endif
+
   if ( subroutine_timers ) then
     call init_timer()
     call timer(program_name)
@@ -120,7 +144,7 @@ contains
 
   ! Create runtime_constants object. This in turn creates various things
   ! needed by the timestepping algorithms such as mass matrix operators, mass
-  ! matrix diagonal fields and the geopotential field
+  ! matrix diagonal fields and the geopotential field and limited area masks.
   call create_runtime_constants(mesh_id, twod_mesh_id, chi)
 
   ! Create the depository and prognostics field collections.

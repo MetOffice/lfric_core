@@ -34,6 +34,9 @@
 
 {%- set application_configurations = { 'gravity_wave' : ['multigrid_on',
                                                          'multigrid_off',
+                                                         'limited_300x4',
+                                                         'limited_c24',
+                                                         'limited_c24_rec',
                                                          'default'] } %}
 
 {%- set canned_configurations  = ['gravity_wave'] %}
@@ -45,7 +48,19 @@
     'api_documentation_graph(publish=True)',
     'run_application("gravity_wave", "default", resolutions=[("C24",100.0)],
                      env={"nrun":36},
-                     plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR buoyancy T000036 150 0 6 $PLOT_DIR")',
+                     plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR buoyancy T000036 180 0 6 $PLOT_DIR")',
+    'run_application("gravity_wave", "limited_300x4", 
+                resolutions=[("BiP300x4-1000x2000",1.0)],
+                env={"nrun":200},
+                plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR buoyancy:wind:pressure T000200 150 0 6 $PLOT_DIR")',
+    'run_application("gravity_wave", "limited_c24", 
+                resolutions=[("C24",100.0)], 
+                env={"nrun":22},
+                plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR buoyancy:wind:pressure T000022 300 0 6 $PLOT_DIR")',
+    'run_application("gravity_wave", "limited_c24_rec", 
+                resolutions=[("C24",100.0)], 
+                env={"nrun":22},
+                plotstr="slices.py ' + appDiagStemName + ' $NODAL_DATA_DIR buoyancy:wind:pressure T000022 300 0 6 $PLOT_DIR")',
     'canned_test("gravity_wave")',
     'check_compilers("gravity_wave", "default", "fast-debug",
                      resolution=("C24",100.0), publish=True)',

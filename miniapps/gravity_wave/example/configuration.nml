@@ -23,6 +23,7 @@
 
 &initial_temperature
   bvf_square = 0.0001
+  pert_width_scaling = 1.0
 /
 
 &gravity_wave_constants

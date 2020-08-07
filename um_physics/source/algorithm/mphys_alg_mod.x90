@@ -42,7 +42,7 @@ contains
   !>@param[in,out] dcfl           Increment to liquid cloud fraction
   !>@param[in,out] dcff           Increment to ice cloud fraction
   !>@param[in,out] dbcf           Increment to bulk cloud fraction
-  subroutine mphys_alg_step( mr_n, theta, dry_rho_in_w3,                       & 
+  subroutine mphys_alg_step( mr_n, theta, dry_rho_in_w3,                       &
                              height_w3, height_wth, derived_fields,            &
                              microphysics_fields, cloud_fields,                &
                              aerosol_fields, dmr_mphys, theta_inc,             &

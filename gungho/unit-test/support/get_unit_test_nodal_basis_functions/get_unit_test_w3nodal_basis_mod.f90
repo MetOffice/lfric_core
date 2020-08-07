@@ -23,7 +23,8 @@ module get_unit_test_w3nodal_basis_mod
   private
 
   public :: get_w0_w3nodal_diff_basis,     &
-            get_wtheta_w3nodal_basis
+            get_wtheta_w3nodal_basis,      &
+            get_w0_w3nodal_basis
 
   contains
 
@@ -62,6 +63,20 @@ module get_unit_test_w3nodal_basis_mod
     basis_wtheta(:, 2, 1) =  0.50_r_def
 
   end subroutine get_wtheta_w3nodal_basis
+
+!---------------------------------------------------------------------
+
+  subroutine get_w0_w3nodal_basis(basis_w0)
+    ! Return the basis function for a field on w0 function space
+    ! evaluated on w3 nodal points
+
+    implicit none
+
+    real(r_def), allocatable :: basis_w0(:,:,:)
+    allocate(basis_w0(1,8,1))
+    basis_w0(:, :, :) =  0.125_r_def
+
+  end subroutine get_w0_w3nodal_basis
 
 !---------------------------------------------------------------------
 

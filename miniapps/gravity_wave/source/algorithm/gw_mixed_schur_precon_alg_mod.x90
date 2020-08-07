@@ -74,7 +74,8 @@ module gw_mixed_schur_precon_alg_mod
   use runtime_constants_mod,           only: get_mass_matrix,     &
                                              get_div,             &
                                              w0_id, w2_id, w3_id, &
-                                             w3inv_id, wt_id
+                                             w3inv_id, wt_id,     &
+                                             get_mask
   use initial_temperature_config_mod,  only: bvf_square
   use timestepping_config_mod,         only: dt
   use gravity_wave_constants_config_mod, only: cs_square,  &
@@ -93,6 +94,8 @@ module gw_mixed_schur_precon_alg_mod
                                              LOG_LEVEL_INFO,  &
                                              LOG_LEVEL_DEBUG, &
                                              log_scratch_space
+  use fs_continuity_mod,           only: W0, W2, W3, Wtheta
+  use boundaries_config_mod,       only: limited_area
 
   implicit none
 
@@ -383,6 +386,8 @@ contains
     type(field_vector_type),                   intent(in)    :: rhs0
 
     type(operator_type), pointer :: div => null(), M3_inv => null()
+    type(field_type), pointer    :: w2_mask => null()
+    type(field_type), pointer    :: w3_mask => null()
 
     real(kind=r_def) :: const1, const2
 
@@ -391,11 +396,20 @@ contains
 
     ! Compute rhs_u and enforce boundary conditions
     const1 = self%alpha*dt
+
+    if (limited_area) then
+      w2_mask => get_mask(W2)
+      w3_mask => get_mask(W3)
+    endif
+
     call invoke( X_times_Y(self%mb_rb,rhs0%vector(igw_b),self%Mb_lumped_inv), &
                  setval_c( self%rhs_u, 0.0_r_def ),                           &
                  matrix_vector_kernel_type(self%rhs_u, self%mb_rb, self%Q),   &
                  inc_aX_plus_Y(const1, self%rhs_u, rhs0%vector(igw_u)),       &
                  enforce_bc_kernel_type(self%rhs_u) )
+    if (limited_area) then
+      call invoke( inc_X_times_Y(self%rhs_u, w2_mask) )
+    endif
 
     ! Compute rhs_p
     div    => get_div()
@@ -405,6 +419,9 @@ contains
                  dg_matrix_vector_kernel_type(self%rhs_p_tmp,self%hb_ru, div),&
                  dg_matrix_vector_kernel_type(self%rhs_p,self%rhs_p_tmp,M3_inv), &
                  inc_aX_plus_Y(const2, self%rhs_p, rhs0%vector(igw_p)) )
+    if (limited_area) then
+      call invoke( inc_X_times_Y(self%rhs_p, w3_mask) )
+    endif
 
     call self%rhs_p%log_minmax(LOG_LEVEL_DEBUG,  'gw_pressure_rhs ')
 
@@ -430,8 +447,32 @@ contains
     type(field_vector_type),                   intent(inout) :: state
     type(field_vector_type),                   intent(in)    :: rhs
 
+    type(field_type), pointer :: w3_mask => null()
+    type(field_type), pointer :: w2_mask => null()
+    type(field_type), pointer :: wtheta_mask => null()
     type(operator_type), pointer :: div => null()
     real(kind=r_def) :: const1, const2
+    integer(i_def) :: buoyancy_space
+
+    if (limited_area) then
+      select case(b_space)
+        case(b_space_w0)
+          buoyancy_space = W0
+        case(b_space_w3)
+          buoyancy_space = W3
+        case(b_space_wtheta)
+          buoyancy_space = Wtheta
+        case default
+          call log_event( 'gravity_wave, gw_mixed_schur_precon_alg_mod: '//  &
+                          'Invalid buoyancy space', LOG_LEVEL_ERROR )
+      end select
+      w3_mask => get_mask(W3)
+      w2_mask => get_mask(W2)
+      wtheta_mask => get_mask(buoyancy_space)
+
+      ! Apply masks to pressure, from Helmholtz solve
+      call invoke( inc_X_times_Y(self%p_inc, w3_mask) )
+    endif
 
     ! Initialise increment fields
     call invoke( setval_c(self%u_inc, 0.0_r_def), &
@@ -445,6 +486,11 @@ contains
                  inc_aX_plus_Y(const1, self%u_inc, self%rhs_u),        &
                  inc_X_times_Y(self%u_inc, self%Hb_lumped_inv),        &
                  enforce_bc_kernel_type(self%u_inc) )
+
+    if (limited_area) then
+      call invoke( inc_X_times_Y(self%u_inc, w2_mask) )
+    endif
+
     ! b increment
     const2 = -self%alpha*dt*bvf_square
     call invoke( transpose_matrix_vector_kernel_type(self%b_inc,       &
@@ -452,6 +498,10 @@ contains
                                                      self%Q),          &
                  inc_aX_plus_Y(const2, self%b_inc, rhs%vector(igw_b)), &
                  inc_X_times_Y(self%b_inc, self%Mb_lumped_inv) )
+
+    if (limited_area) then
+      call invoke( inc_X_times_Y(self%b_inc, wtheta_mask) )
+    endif
 
     call self%u_inc%log_minmax(LOG_LEVEL_DEBUG,  'u increment')
     call self%p_inc%log_minmax(LOG_LEVEL_DEBUG,  'p increment')
@@ -462,6 +512,11 @@ contains
                  inc_X_plus_Y(state%vector(igw_b), self%b_inc) )
 
     nullify(div)
+    if (limited_area) then
+      nullify(w3_mask)
+      nullify(w2_mask)
+      nullify(wtheta_mask)
+    endif
 
   end subroutine back_substitute
 

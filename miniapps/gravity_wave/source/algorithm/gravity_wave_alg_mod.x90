@@ -18,11 +18,16 @@ module gravity_wave_alg_mod
   ! Configuration options
   use finite_element_config_mod,      only: element_order
   use timestepping_config_mod,        only: dt, alpha
-  use runtime_constants_mod,          only: get_div, &
+  use runtime_constants_mod,          only: get_div,         &
                                             get_mass_matrix, &
-                                            w3inv_id
+                                            w3inv_id,        &
+                                            get_mask
   use initial_temperature_config_mod, only: bvf_square
-  use gravity_wave_constants_config_mod,only: cs_square
+  use gravity_wave_constants_config_mod, only: cs_square,     &
+                                               b_space,       &
+                                               b_space_w0,    &
+                                               b_space_w3,    &
+                                               b_space_wtheta
 
   ! Derived Types
   use field_mod,                      only: field_type
@@ -421,6 +426,8 @@ contains
     use dg_matrix_vector_kernel_mod,        only: dg_matrix_vector_kernel_type
     use transpose_matrix_vector_kernel_mod, only: transpose_matrix_vector_kernel_type
     use enforce_bc_kernel_mod,              only: enforce_bc_kernel_type
+    use fs_continuity_mod,                  only: W0, W2, W3, Wtheta
+    use boundaries_config_mod,              only: limited_area
 
     implicit none
 
@@ -429,6 +436,10 @@ contains
 
     type(operator_type), pointer :: div    => null()
     type(operator_type), pointer :: m3_inv => null()
+    type(field_type), pointer    :: w2_mask => null()
+    type(field_type), pointer    :: w3_mask => null()
+    type(field_type), pointer    :: wtheta_mask => null()
+    integer(i_def)               :: buoyancy_space
 
     ! Auxiliary constants to group invokes
     real(kind=r_def)             :: const1, const2
@@ -437,6 +448,23 @@ contains
     !=== Do a single timestep ==============================================!
     div => get_div()
     m3_inv => get_mass_matrix(w3inv_id)
+
+    if ( limited_area ) then
+      select case(b_space)
+        case(b_space_w0)
+          buoyancy_space = W0
+        case(b_space_w3)
+          buoyancy_space = W3
+        case(b_space_wtheta)
+          buoyancy_space = Wtheta
+        case default
+          call log_event( 'gravity_wave, gravity_wave_alg_mod: '//    &
+                          'Invalid buoyancy space', LOG_LEVEL_ERROR )
+      end select
+      w2_mask => get_mask(W2)
+      w3_mask => get_mask(W3)
+      wtheta_mask => get_mask(buoyancy_space)
+    endif
 
     call state%import_field(wind,     igw_u)
     call state%import_field(pressure, igw_p)
@@ -473,6 +501,14 @@ contains
     ! Apply BC to wind rhs
                  enforce_bc_kernel_type(rhs_n%vector(igw_u)) )
 
+    ! For limited area set the rhs to zero in the exterior,
+    ! as defined by the masks
+    if ( limited_area ) then
+      call invoke( inc_X_times_Y(rhs_n%vector(igw_u), w2_mask),             &
+                   inc_X_times_Y(rhs_n%vector(igw_p), w3_mask),             &
+                   inc_X_times_Y(rhs_n%vector(igw_b), wtheta_mask) )
+    endif
+
     ! Solve mixed system
     call log_event( "Gravity Wave: mixed solve:", LOG_LEVEL_INFO )
     call state_inc%set_scalar(0.0_r_def)
@@ -483,6 +519,12 @@ contains
     call state%export_field(wind,     igw_u)
     call state%export_field(pressure, igw_p)
     call state%export_field(buoyancy, igw_b)
+
+    if (limited_area) then
+      nullify(w3_mask)
+      nullify(w2_mask)
+      nullify(wtheta_mask)
+    endif
 
     if ( subroutine_timers ) call timer('gravity_wave_alg')
 

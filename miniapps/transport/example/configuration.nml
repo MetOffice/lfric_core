@@ -24,6 +24,7 @@ vorticity_in_w1=.true.,
 /
 &initial_temperature
 bvf_square=0.0001,
+pert_width_scaling=1.0,
 /
 &initial_wind
 profile='solid_body_rotation',

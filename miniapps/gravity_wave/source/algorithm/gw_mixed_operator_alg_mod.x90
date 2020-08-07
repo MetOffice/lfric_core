@@ -37,7 +37,8 @@ module gw_mixed_operator_alg_mod
   use runtime_constants_mod,             only: get_div,             &
                                                get_mass_matrix,     &
                                                w0_id, w2_id, w3_id, &
-                                               w3inv_id, wt_id
+                                               w3inv_id, wt_id,     &
+                                               get_mask
   use vector_mod,                        only: abstract_vector_type
 
   implicit none
@@ -161,6 +162,8 @@ contains
                                                   b_space_w0, &
                                                   b_space_w3, &
                                                   b_space_wtheta
+    use fs_continuity_mod,                  only: W0, W2, W3, Wtheta
+    use boundaries_config_mod,              only: limited_area
 
     implicit none
 
@@ -170,16 +173,23 @@ contains
 
     type(operator_type), pointer :: mm_w2, mm_wt => null()
     type(operator_type), pointer :: div, m3_inv => null()
+    type(field_type), pointer    :: w2_mask => null()
+    type(field_type), pointer    :: w3_mask => null()
+    type(field_type), pointer    :: wtheta_mask => null()
+    integer(i_def)               :: buoyancy_space
 
     ! Auxiliary constants to group invokes
     real(kind=r_def)             :: const1, const2, const3
 
     select case(b_space)
     case(b_space_w0)
+       buoyancy_space = W0
        mm_wt => get_mass_matrix(w0_id)
     case(b_space_w3)
+       buoyancy_space = W3
        mm_wt => get_mass_matrix(w3_id)
     case(b_space_wtheta)
+       buoyancy_space = Wtheta
        mm_wt => get_mass_matrix(wt_id)
     end select
 
@@ -189,6 +199,13 @@ contains
     div   => get_div()
     ! Extract inverse pressure mass matrix
     m3_inv => get_mass_matrix(w3inv_id)
+
+    if (limited_area) then
+      ! Extract limited area mask
+      wtheta_mask => get_mask(buoyancy_space)
+      w2_mask => get_mask(W2)
+      w3_mask => get_mask(W3)
+    endif
 
     ! Set auxiliary constants
     const1 = -alpha*dt
@@ -232,6 +249,16 @@ contains
                                          x%vector(igw_b),              &
                                          mm_wt),                       &
                inc_aX_plus_Y(const3, y%vector(igw_p), x%vector(igw_p)) )
+
+          if (limited_area) then
+            ! Enforce lateral boundary condition (LBC) by setting values
+            ! to zero on boundary and exterior, as defined by the masks
+            call invoke( &
+                 inc_X_times_Y(y%vector(igw_u), w2_mask),              &
+                 inc_X_times_Y(y%vector(igw_b), wtheta_mask),          &
+                 inc_X_times_Y(y%vector(igw_p), w3_mask) )
+          endif
+
        class default
           write(log_scratch_space, '(A)') &
                 "gw_mixed_operator_alg_mod: incorrect vector_type argument y"
@@ -242,6 +269,12 @@ contains
              "gw_mixed_operator_alg_mod: incorrect vector_type argument x"
        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end select
+
+    if (limited_area) then
+      nullify(w3_mask)
+      nullify(w2_mask)
+      nullify(wtheta_mask)
+    endif
 
   end subroutine apply_gw_mixed_operator
 

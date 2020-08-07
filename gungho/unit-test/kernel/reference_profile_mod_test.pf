@@ -36,6 +36,7 @@ module reference_profile_mod_test
 
   real(r_def), parameter :: bvf_square = 0.0001_r_def
   real(r_def), parameter :: theta_surf = 300.0_r_def
+  real(r_def), parameter :: pert_width_scaling = 1.0_r_def
 
 contains
 
@@ -66,7 +67,8 @@ contains
                                  fplane=.false., f_lat_deg=0.0_r_def )
 
     call feign_initial_temperature_config( bvf_square=bvf_square, &
-                                           theta_surf=theta_surf )
+                                           theta_surf=theta_surf, &
+                                           pert_width_scaling=pert_width_scaling  )
 
     call feign_planet_config( gravity=gravity, radius=radius, omega=omega, &
                               rd=rd, cp=cp, p_zero=p_zero,                 &

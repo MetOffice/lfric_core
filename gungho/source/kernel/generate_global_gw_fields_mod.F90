@@ -15,7 +15,8 @@
 module generate_global_gw_fields_mod
 
 use constants_mod,                  only : r_def, pi
-use initial_temperature_config_mod, only : bvf_square
+use initial_temperature_config_mod, only : bvf_square, &
+                                           pert_width_scaling
 use planet_config_mod,              only : gravity, &
                                            scaled_radius, scaled_omega, &
                                            Rd, Cp, p_zero, kappa, scaling_factor
@@ -127,7 +128,7 @@ real(kind=r_def), parameter :: LAMBDAC = 2.0_r_def/3.0_r_def*pi,     &     ! Lon
 
 ! great circle distance
   r  = scaled_radius * acos (sin_tmp + cos_tmp*cos(lon-LAMBDAC))
-  D_scaled = D/scaling_factor
+  D_scaled = pert_width_scaling*D/scaling_factor
   shape_function = (D_scaled**2)/(D_scaled**2 + r**2)
 
   theta = DELTA_THETA*shape_function*sin(pi*z/LZ)

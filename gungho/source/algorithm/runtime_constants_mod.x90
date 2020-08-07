@@ -17,6 +17,7 @@ module runtime_constants_mod
                                                LOG_LEVEL_ERROR, &
                                                log_scratch_space
   ! Configuration
+  use boundaries_config_mod,             only: limited_area
   use base_mesh_config_mod,              only: geometry,           &
                                                geometry_spherical, &
                                                f_lat
@@ -52,6 +53,13 @@ module runtime_constants_mod
   use quadrature_xyoz_mod,               only: quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,      only: quadrature_rule_gaussian_type
 
+  ! Limited-area masks
+  use limited_area_masks_alg_mod,        only: create_limited_area_mask,      &
+                                               create_parallel_boundary_mask, &
+                                               create_boundary_mask,          &
+                                               create_lbc_mask,               &
+                                               check_w2b_mask
+
   ! PsyKAl-lite kernels
   use psykal_lite_mod,                   only: invoke_mpi_calc_cell_orientation
 
@@ -80,6 +88,7 @@ module runtime_constants_mod
   use timer_mod,                             only: timer
   use mr_to_sh_mass_ints_kernel_mod,         only: mr_to_sh_mass_ints_kernel_type
   use w3_to_sh_w3_ints_kernel_mod,           only: w3_to_sh_w3_ints_kernel_type
+
 
   implicit none
 
@@ -129,6 +138,15 @@ module runtime_constants_mod
   type(operator_type), target                            :: coriolis
   type(field_type), allocatable, dimension(:,:), target  :: chi_mg
   type(field_type), allocatable, dimension(:), target    :: surface_altitude_mg
+
+  ! Limited-area masks
+  type(field_type), target              :: w2boundary_mask
+  type(field_type), target              :: w2_mask
+  type(field_type), target              :: w3_mask
+  type(field_type), target              :: wtheta_mask
+  type(field_type), target              :: w2lbc_mask
+  type(field_type), target              :: w3lbc_mask
+  type(field_type), target              :: wthetalbc_mask
 
   ! 2D fields
   type(field_type), target                               :: latitude_W3, longitude_W3
@@ -206,6 +224,9 @@ module runtime_constants_mod
   public :: get_coriolis
   public :: get_latitude
   public :: get_longitude
+  public :: get_mask
+  public :: get_boundary_mask
+  public :: get_lbc_mask
   public :: get_coordinates_shifted
   public :: get_cell_orientation_shifted
   public :: get_detj_at_w2_shifted
@@ -294,6 +315,10 @@ contains
     type(field_type) :: nodal_multiplicity_w2_shifted
     type(field_type) :: nodal_multiplicity_w2h
     type(field_type) :: nodal_multiplicity_w0
+
+    type(field_type) :: w2parallel_mask
+    type(field_type) :: w2perp_mask
+    type(field_type) :: w2interior_mask
 
     ! Auxiliary parameters for PSyclone builtins
     integer(i_def), parameter :: i_minus_one = -1_i_def
@@ -780,6 +805,41 @@ contains
 
     end if  ! End shifted mesh properties setup
 
+   if (limited_area) then
+     call log_event( "Creating limited area masks", LOG_LEVEL_INFO )
+     ! Create the W2 masks by combining different masks together
+     call w2perp_mask%initialise( vector_space = w2_fs )
+     call w2parallel_mask%initialise( vector_space = w2_fs )
+     call w2boundary_mask%initialise( vector_space = w2_fs )
+     call w2interior_mask%initialise( vector_space = w2_fs )
+     call w2_mask%initialise( vector_space = w2_fs )
+
+     call create_boundary_mask( w2perp_mask, chi )
+     call create_parallel_boundary_mask ( w2parallel_mask, chi )
+     call create_limited_area_mask( w2interior_mask, chi )
+
+     call invoke( &
+          ! Add the W2parallel and W2perp masks together
+          X_plus_Y ( w2boundary_mask,  w2perp_mask, w2parallel_mask ), &
+          ! Subtract the W2parallel mask from the W2interior_mask
+          X_minus_Y( w2_mask, w2interior_mask, w2parallel_mask ) )
+
+     ! Create the W3 and Wtheta masks directly
+     call w3_mask%initialise( vector_space = w3_fs )
+     call wtheta_mask%initialise( vector_space = wtheta_fs )
+     call w2lbc_mask%initialise( vector_space = w2_fs )
+     call w3lbc_mask%initialise( vector_space = w3_fs )
+     call wthetalbc_mask%initialise( vector_space = wtheta_fs )
+
+     call create_limited_area_mask( w3_mask, chi )
+     call create_limited_area_mask( wtheta_mask, chi )
+     call create_lbc_mask( w2lbc_mask, chi )
+     call create_lbc_mask( w3lbc_mask, chi )
+     call create_lbc_mask( wthetalbc_mask, chi )
+
+     ! Check that the W2 boundary mask has the correct number of dofs
+     call check_w2b_mask( w2boundary_mask )
+   endif
 
    if(l_multigrid) then
       ! compute on the courser multigrid levels
@@ -852,6 +912,71 @@ contains
     if ( subroutine_timers ) call timer('runtime_constants_alg')
 
   end subroutine create_runtime_constants
+
+  !> @brief  Returns pointer to the LBC mask
+  !> @param[in] space The function space of the LBC mask
+  !> @return The LBC mask field
+  function get_lbc_mask(space) result(mask_ptr)
+    implicit none
+    integer(i_def), intent(in) :: space
+    type(field_type), pointer  :: mask_ptr
+
+    select case (space)
+      case (W2)
+        mask_ptr => w2lbc_mask
+      case (W3)
+        mask_ptr => w3lbc_mask
+      case (Wtheta)
+        mask_ptr => wthetalbc_mask
+      case default
+        mask_ptr => null()
+        call log_event( "Mask not available on requested space", &
+          LOG_LEVEL_ERROR)
+    end select
+
+  end function get_lbc_mask
+
+  !> @brief  Returns pointer to the interior mask
+  !> @param[in] space The function space of the interior mask
+  !> @return The interior mask field
+  function get_mask(space) result(mask_ptr)
+    implicit none
+    integer(i_def), intent(in) :: space
+    type(field_type), pointer  :: mask_ptr
+
+    select case (space)
+      case (W2)
+        mask_ptr => w2_mask
+      case (W3)
+        mask_ptr => w3_mask
+      case (Wtheta)
+        mask_ptr => wtheta_mask
+      case default
+        mask_ptr => null()
+        call log_event( "Mask not available on requested space", &
+          LOG_LEVEL_ERROR)
+    end select
+
+  end function get_mask
+
+  !> @brief  Returns pointer to the boundary mask
+  !> @param[in] space The function space of the boundary mask
+  !> @return The boundary mask field
+  function get_boundary_mask(space) result(mask_ptr)
+    implicit none
+    integer(i_def), intent(in) :: space
+    type(field_type), pointer  :: mask_ptr
+
+    select case (space)
+      case (W2)
+        mask_ptr => w2boundary_mask
+      case default
+        mask_ptr => null()
+        call log_event( "Boundary mask not available on requested space", &
+          LOG_LEVEL_ERROR)
+    end select
+
+  end function get_boundary_mask
 
   !> @brief Returns a pointer to the coordinate array on the finest level
   !> @return The coordinate field array

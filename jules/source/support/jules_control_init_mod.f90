@@ -74,7 +74,7 @@ contains
     ! ----------------------------------------------------------------
     ! Model dimensions - in each case, the first variable is
     !  contained in UM module nlsizes_namelist_mod. It must then be
-    !  copied across into variables which live in JULES modules so that 
+    !  copied across into variables which live in JULES modules so that
     !  allocate_jules_arrays can access via modules. Ultimately the
     !  UM variables should be removed and only the JULES ones will exist.
     ! ----------------------------------------------------------------
@@ -108,7 +108,7 @@ contains
     if (l_triffid) then
       land_pts_trif = land_field
       npft_trif     = npft
-      dim_cs1       = 4  
+      dim_cs1       = 4
     else
       land_pts_trif = 1
       npft_trif     = 1
