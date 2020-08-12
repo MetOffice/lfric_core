@@ -115,7 +115,7 @@ module semi_implicit_timestep_alg_mod
   type( field_type ), allocatable :: state_after_slow(:)
   type( field_type ), allocatable :: mr_n(:), mr_inc(:), mr_after_slow(:)
   type( field_type ), allocatable :: rhs_n(:), rhs_np1(:), rhs_adv(:)
-  type( field_type ), allocatable :: rhs_phys(:), inc(:)
+  type( field_type ), allocatable :: rhs_phys(:)
   type( field_type ) :: dtheta ! increment to theta
   type( field_type ) :: du ! increment to u
 
@@ -157,7 +157,6 @@ contains
     allocate(rhs_np1(bundle_size))
     allocate(rhs_adv(bundle_size))
     allocate(rhs_phys(bundle_size))
-    allocate(inc(bundle_size))
 
     ! These need to be allocated for the call to 'slow_physics'
     ! 'advection_control', even if moisture is not used.
@@ -183,7 +182,6 @@ contains
     call clone_bundle(state, rhs_np1,          bundle_size)
     call clone_bundle(state, rhs_adv,          bundle_size)
     call clone_bundle(state, rhs_phys,         bundle_size)
-    call clone_bundle(state, inc,              bundle_size)
 
     call theta%copy_field_properties(dtheta)
     call u%copy_field_properties(du)
@@ -192,6 +190,8 @@ contains
     if (use_moisture)then
       call clone_bundle(mr, mr_after_slow, nummr)
       call clone_bundle(mr, mr_inc,        nummr)
+    else
+      call set_bundle_scalar(0.0_r_def, mr_n, nummr)
     end if
 
     if ( use_physics )then
@@ -604,7 +604,6 @@ contains
     if (allocated(rhs_np1))          deallocate(rhs_np1)
     if (allocated(rhs_adv))          deallocate(rhs_adv)
     if (allocated(rhs_phys))         deallocate(rhs_phys)
-    if (allocated(inc))              deallocate(inc)
     if (allocated(mr_n))             deallocate(mr_n)
     if (allocated(mr_after_slow))    deallocate(mr_after_slow)
     if (allocated(mr_inc))           deallocate(mr_inc)
