@@ -11,6 +11,10 @@
   f_lat_deg       = 45.0
 /
 
+&boundaries
+  limited_area    = .false.
+/
+
 &extrusion
   method           = 'dcmip'
   domain_top       = 30000.0

@@ -23,6 +23,7 @@ module limited_area_masks_alg_mod
 
   public :: check_w2b_mask
   public :: create_lbc_mask
+  public :: create_blend_mask
   public :: create_parallel_boundary_mask
   public :: create_limited_area_mask
   public :: create_boundary_mask
@@ -191,9 +192,10 @@ contains
     use create_w2mask_lbc_kernel_mod, only: create_w2mask_lbc_kernel_type
     use create_wthetamask_lbc_kernel_mod, &
                                       only: create_wthetamask_lbc_kernel_type
-    use boundaries_config_mod,        only: boundary_s, boundary_n,     &
-                                            boundary_e, boundary_w,     &
-                                            rim_width_ns, rim_width_ew
+    use boundaries_config_mod,        only: boundary_s,     boundary_n,    &
+                                            boundary_e,     boundary_w,    &
+                                            rim_width_ns,   rim_width_ew,  &
+                                            outer_width_ns, outer_width_ew
     use fs_continuity_mod,            only: W3, Wtheta, W2
 
     implicit none
@@ -203,27 +205,44 @@ contains
     integer(i_def)                   :: function_space
     integer(i_def)                   :: rim_s, rim_n, &
                                         rim_e, rim_w
-    real(r_def)                      :: coord_bound_s, coord_bound_n, &
-                                        coord_bound_e, coord_bound_w, &
+    integer(i_def)                   :: outer_s, outer_n, &
+                                        outer_e, outer_w
+    real(r_def)                      :: coord_outer_s, coord_outer_n, &
+                                        coord_outer_e, coord_outer_w, &
                                         coord_rim_s,   coord_rim_n,   &
                                         coord_rim_e,   coord_rim_w
 
-    rim_n = boundary_n + rim_width_ns
-    rim_s = boundary_s + rim_width_ns
-    rim_w = boundary_w + rim_width_ew
-    rim_e = boundary_e + rim_width_ew
+    !     |<-------------rim_width------------>|
+    !     |            |           |           |
+    !     |<--outer--> |<--inner-->|           |
+    !     |   width    |   width   |           |
+    !     |            |           |           |
+    !   outer       boundary     blend        rim
+    !                  =
+    !             linear-solver
+    !                boundary
+
+    outer_n = boundary_n - outer_width_ns
+    outer_s = boundary_s - outer_width_ns
+    outer_w = boundary_w - outer_width_ew
+    outer_e = boundary_e - outer_width_ew
+
+    rim_n = outer_n + rim_width_ns
+    rim_s = outer_s + rim_width_ns
+    rim_w = outer_w + rim_width_ew
+    rim_e = outer_e + rim_width_ew
 
     function_space = mask%which_function_space()
 
     call calculate_boundary_coordinates( &
-      coord_bound_s, &
-      coord_bound_n, &
-      coord_bound_e, &
-      coord_bound_w, &
-      boundary_s,    &
-      boundary_n,    &
-      boundary_e,    &
-      boundary_w )
+      coord_outer_s, &
+      coord_outer_n, &
+      coord_outer_e, &
+      coord_outer_w, &
+      outer_s,    &
+      outer_n,    &
+      outer_e,    &
+      outer_w )
 
     call calculate_boundary_coordinates( &
       coord_rim_s, &
@@ -238,10 +257,10 @@ contains
     select case(function_space)
       case(W3)
         call invoke( create_w3mask_lbc_kernel_type ( &
-          coord_bound_s, &
-          coord_bound_n, &
-          coord_bound_e, &
-          coord_bound_w, &
+          coord_outer_s, &
+          coord_outer_n, &
+          coord_outer_e, &
+          coord_outer_w, &
           coord_rim_s,   &
           coord_rim_n,   &
           coord_rim_e,   &
@@ -251,10 +270,10 @@ contains
 
       case(W2)
         call invoke( create_w2mask_lbc_kernel_type ( &
-          coord_bound_s, &
-          coord_bound_n, &
-          coord_bound_e, &
-          coord_bound_w, &
+          coord_outer_s, &
+          coord_outer_n, &
+          coord_outer_e, &
+          coord_outer_w, &
           coord_rim_s,   &
           coord_rim_n,   &
           coord_rim_e,   &
@@ -266,10 +285,10 @@ contains
 
       case(Wtheta)
         call invoke( create_wthetamask_lbc_kernel_type ( &
-          coord_bound_s, &
-          coord_bound_n, &
-          coord_bound_e, &
-          coord_bound_w, &
+          coord_outer_s, &
+          coord_outer_n, &
+          coord_outer_e, &
+          coord_outer_w, &
           coord_rim_s,   &
           coord_rim_n,   &
           coord_rim_e,   &
@@ -284,6 +303,165 @@ contains
     end select
 
   end subroutine create_lbc_mask
+
+  !> @brief Create the mask to define the blending region weights
+  !> @details The blending region weights w are defined so that the blended
+  !!          result is given by  w driving_model + (1-w) nested_model. The
+  !!          weights are 1 near the edge of the domain, and then ramp down
+  !!          to zero in the centre.
+  !> @param[in] chi           Chi coordinates field
+  !> @param[in,out] mask      Mask to create blended lbcs
+  subroutine create_blend_mask( mask, chi )
+    use create_w3mask_blend_kernel_mod, &
+                                      only: create_w3mask_blend_kernel_type
+    use create_w2mask_blend_kernel_mod, &
+                                      only: create_w2mask_blend_kernel_type
+    use create_wthetamask_blend_kernel_mod, &
+                                      only: create_wthetamask_blend_kernel_type
+    use boundaries_config_mod,        only: boundary_s,     boundary_n,     &
+                                            boundary_e,     boundary_w,     &
+                                            rim_width_ns,   rim_width_ew,   &
+                                            outer_width_ns, outer_width_ew, &
+                                            inner_width_ns, inner_width_ew, &
+                                            edge_cells_ns,  edge_cells_ew
+    use fs_continuity_mod,            only: W3, Wtheta, W2
+
+    implicit none
+
+    type(field_type), intent(inout)  :: mask
+    type(field_type), intent(in)     :: chi(:)
+    integer(i_def)                   :: function_space
+    integer(i_def)                   :: rim_s, rim_n,                 &
+                                        rim_e, rim_w
+    integer(i_def)                   :: blend_s, blend_n,             &
+                                        blend_e, blend_w
+    integer(i_def)                   :: outer_s, outer_n,             &
+                                        outer_e, outer_w
+    real(r_def)                      :: coord_outer_s, coord_outer_n, &
+                                        coord_outer_e, coord_outer_w, &
+                                        coord_rim_s,   coord_rim_n,   &
+                                        coord_rim_e,   coord_rim_w,   &
+                                        coord_blend_s, coord_blend_n, &
+                                        coord_blend_e, coord_blend_w
+
+    !     |<-------------rim_width------------>|
+    !     |            |           |           |
+    !     |<--outer--> |<--inner-->|           |
+    !     |   width    |   width   |           |
+    !     |            |           |           |
+    !   outer       boundary     blend        rim
+    !                  =
+    !             linear-solver
+    !                boundary
+
+    outer_n = boundary_n - outer_width_ns
+    outer_s = boundary_s - outer_width_ns
+    outer_w = boundary_w - outer_width_ew
+    outer_e = boundary_e - outer_width_ew
+
+    rim_n = outer_n + rim_width_ns
+    rim_s = outer_s + rim_width_ns
+    rim_w = outer_w + rim_width_ew
+    rim_e = outer_e + rim_width_ew
+
+    blend_n = boundary_n + inner_width_ns
+    blend_s = boundary_s + inner_width_ns
+    blend_w = boundary_w + inner_width_ew
+    blend_e = boundary_e + inner_width_ew
+
+    function_space = mask%which_function_space()
+
+    call calculate_boundary_coordinates( &
+      coord_outer_s, &
+      coord_outer_n, &
+      coord_outer_e, &
+      coord_outer_w, &
+      outer_s,       &
+      outer_n,       &
+      outer_e,       &
+      outer_w )
+
+    call calculate_boundary_coordinates( &
+      coord_rim_s, &
+      coord_rim_n, &
+      coord_rim_e, &
+      coord_rim_w, &
+      rim_s,       &
+      rim_n,       &
+      rim_e,       &
+      rim_w )
+
+    call calculate_boundary_coordinates( &
+      coord_blend_s, &
+      coord_blend_n, &
+      coord_blend_e, &
+      coord_blend_w, &
+      blend_s,       &
+      blend_n,       &
+      blend_e,       &
+      blend_w )
+
+    select case(function_space)
+      case(W3)
+        call invoke( create_w3mask_blend_kernel_type ( &
+          coord_outer_s, &
+          coord_outer_n, &
+          coord_outer_e, &
+          coord_outer_w, &
+          coord_rim_s,   &
+          coord_rim_n,   &
+          coord_rim_e,   &
+          coord_rim_w,   &
+          coord_blend_s, &
+          coord_blend_n, &
+          coord_blend_e, &
+          coord_blend_w, &
+          mask,          &
+          chi ) )
+
+      case(W2)
+        call invoke( create_w2mask_blend_kernel_type ( &
+          coord_outer_s, &
+          coord_outer_n, &
+          coord_outer_e, &
+          coord_outer_w, &
+          coord_rim_s,   &
+          coord_rim_n,   &
+          coord_rim_e,   &
+          coord_rim_w,   &
+          coord_blend_s, &
+          coord_blend_n, &
+          coord_blend_e, &
+          coord_blend_w, &
+          rim_width_ns,  &
+          rim_width_ew,  &
+          mask,          &
+          chi ) )
+
+      case(Wtheta)
+        call invoke( create_wthetamask_blend_kernel_type ( &
+          coord_outer_s, &
+          coord_outer_n, &
+          coord_outer_e, &
+          coord_outer_w, &
+          coord_rim_s,   &
+          coord_rim_n,   &
+          coord_rim_e,   &
+          coord_rim_w,   &
+          coord_blend_s, &
+          coord_blend_n, &
+          coord_blend_e, &
+          coord_blend_w, &
+          mask,          &
+          chi ) )
+
+      case default
+        call log_event("No blend mask rule for this function space", &
+          LOG_LEVEL_ERROR)
+
+    end select
+
+  end subroutine create_blend_mask
 
   !> @brief Create the mask used to construct the W2 boundary dofs.
   !> @details This mask identifies the dofs in the region 1 cell width from

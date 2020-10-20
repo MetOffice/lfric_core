@@ -7,6 +7,9 @@
   f_lat_deg       = 45.0
 /
 
+&boundaries
+  limited_area    = .false.
+/
 
 &extrusion
   method           = 'uniform'

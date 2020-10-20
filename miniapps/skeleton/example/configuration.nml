@@ -7,6 +7,10 @@ partitioner='cubedsphere',
 prime_mesh_name='dynamics',
 /
 
+&boundaries
+limited_area=.false.,
+/
+
 &domain_size
 planar_domain_max_x=1.0,
 planar_domain_max_y=1.0,

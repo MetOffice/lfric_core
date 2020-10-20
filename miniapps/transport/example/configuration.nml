@@ -6,6 +6,9 @@ geometry='spherical',
 partitioner='cubedsphere',
 prime_mesh_name='dynamics',
 /
+&boundaries
+limited_area=.false.,
+/
 &extrusion
 domain_top=10.0,
 method='uniform',

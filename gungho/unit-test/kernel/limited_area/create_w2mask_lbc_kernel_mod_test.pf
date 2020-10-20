@@ -37,8 +37,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use feign_config_mod,     only: feign_base_mesh_config, &
-                                    feign_domain_size_config
+    use feign_config_mod,     only: feign_base_mesh_config
     use base_mesh_config_mod, only: partitioner_planar,     &
                                     geometry_planar
     implicit none
@@ -55,11 +54,6 @@ contains
                                  partitioner     = partitioner_planar, &
                                  fplane          = .false.,            &
                                  f_lat_deg       = 0.0_r_def )
-
-    call feign_domain_size_config( planar_domain_min_x = 0.0_r_def,      &
-                                   planar_domain_max_x = 18000.0_r_def,  &
-                                   planar_domain_min_y = 0.0_r_def,      &
-                                   planar_domain_max_y = 3000.0_r_def )
 
   end subroutine setUp
 

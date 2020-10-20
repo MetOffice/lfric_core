@@ -58,6 +58,7 @@ module runtime_constants_mod
   use limited_area_masks_alg_mod,        only: create_limited_area_mask,      &
                                                create_parallel_boundary_mask, &
                                                create_boundary_mask,          &
+                                               create_blend_mask,             &
                                                create_lbc_mask,               &
                                                check_w2b_mask
 
@@ -148,6 +149,9 @@ module runtime_constants_mod
   type(field_type), target              :: w2lbc_mask
   type(field_type), target              :: w3lbc_mask
   type(field_type), target              :: wthetalbc_mask
+  type(field_type), target              :: w2blend_mask
+  type(field_type), target              :: w3blend_mask
+  type(field_type), target              :: wthetablend_mask
 
   ! 2D fields
   type(field_type), target                               :: latitude_W3, longitude_W3
@@ -228,6 +232,7 @@ module runtime_constants_mod
   public :: get_mask
   public :: get_boundary_mask
   public :: get_lbc_mask
+  public :: get_blend_mask
   public :: get_coordinates_shifted
   public :: get_cell_orientation_shifted
   public :: get_detj_at_w2_shifted
@@ -843,12 +848,18 @@ contains
      call w2lbc_mask%initialise( vector_space = w2_fs )
      call w3lbc_mask%initialise( vector_space = w3_fs )
      call wthetalbc_mask%initialise( vector_space = wtheta_fs )
+     call w2blend_mask%initialise( vector_space = w2_fs )
+     call w3blend_mask%initialise( vector_space = w3_fs )
+     call wthetablend_mask%initialise( vector_space = wtheta_fs )
 
      call create_limited_area_mask( w3_mask, chi )
      call create_limited_area_mask( wtheta_mask, chi )
      call create_lbc_mask( w2lbc_mask, chi )
      call create_lbc_mask( w3lbc_mask, chi )
      call create_lbc_mask( wthetalbc_mask, chi )
+     call create_blend_mask( w2blend_mask, chi )
+     call create_blend_mask( w3blend_mask, chi )
+     call create_blend_mask( wthetablend_mask, chi )
 
      ! Check that the W2 boundary mask has the correct number of dofs
      call check_w2b_mask( w2boundary_mask )
@@ -990,6 +1001,29 @@ contains
     end select
 
   end function get_boundary_mask
+
+  !> @brief  Returns pointer to the blend mask
+  !> @param[in] space The function space of the blend mask
+  !> @return The blend mask field
+  function get_blend_mask(space) result(mask_ptr)
+    implicit none
+    integer(i_def), intent(in) :: space
+    type(field_type), pointer  :: mask_ptr
+
+    select case (space)
+    case (W2)
+      mask_ptr => w2blend_mask
+    case (W3)
+      mask_ptr => w3blend_mask
+    case (Wtheta)
+      mask_ptr => wthetablend_mask
+    case default
+      mask_ptr => null()
+      call log_event( "Blend mask not available on requested space", &
+        LOG_LEVEL_ERROR)
+    end select
+
+  end function get_blend_mask
 
   !> @brief Returns a pointer to the coordinate array on the finest level
   !> @return The coordinate field array

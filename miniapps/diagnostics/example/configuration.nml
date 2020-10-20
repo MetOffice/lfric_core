@@ -7,6 +7,10 @@ partitioner='cubedsphere',
 prime_mesh_name='dynamics',
 /
 
+&boundaries
+limited_area=.false.,
+/
+
 &planet
   gravity        = 9.80665
   radius         = 6371229.0
