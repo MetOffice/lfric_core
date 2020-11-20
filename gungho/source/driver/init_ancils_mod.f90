@@ -29,7 +29,7 @@ module init_ancils_mod
                                              field_collection_real_iterator_type
   use function_space_mod,             only : function_space_type
   use function_space_collection_mod,  only : function_space_collection
-  use fs_continuity_mod,              only : W3
+  use fs_continuity_mod,              only : W3, WTheta
   use pure_abstract_field_mod,        only : pure_abstract_field_type
   use time_axis_mod,                  only : time_axis_type, update_interface
   use jules_control_init_mod,         only: n_land_tile
@@ -65,10 +65,13 @@ contains
     ! Time axis objects for different ancil groups - must be saved to be
     ! available after function call
     type(time_axis_type), save :: sea_time_axis
+    type(time_axis_type), save :: sst_time_axis
     type(time_axis_type), save :: sea_ice_time_axis
     type(time_axis_type), save :: aerosol_time_axis
     type(time_axis_type), save :: albedo_vis_time_axis
     type(time_axis_type), save :: albedo_nir_time_axis
+    type(time_axis_type), save :: pft_time_axis
+    type(time_axis_type), save :: ozone_time_axis
 
     ! Set pointer to time axis read behaviour
     tmp_update_ptr => read_field_time_var
@@ -95,16 +98,27 @@ contains
                               mesh_id, twod_mesh_id, twod=.true.)
       call setup_ancil_field("land_tile_fraction", depository, ancil_fields, &
                               mesh_id, twod_mesh_id, twod=.true., ndata=n_land_tile)
+      call init_time_axis("pft_time", pft_time_axis)
       call setup_ancil_field("canopy_height_in", depository, ancil_fields, &
-                              mesh_id, twod_mesh_id, twod=.true., ndata=npft)
+                              mesh_id, twod_mesh_id, twod=.true., ndata=npft, &
+                              time_axis=pft_time_axis)
       call setup_ancil_field("leaf_area_index_in", depository, ancil_fields, &
-                              mesh_id, twod_mesh_id, twod=.true., ndata=npft)
+                              mesh_id, twod_mesh_id, twod=.true., ndata=npft, &
+                              time_axis=pft_time_axis)
+      call pft_time_axis%set_update_behaviour(tmp_update_ptr)
+      call ancil_times_list%insert_item(pft_time_axis)
 
       call init_time_axis("sea_time", sea_time_axis)
       call setup_ancil_field("chloro_sea", depository, ancil_fields, mesh_id, &
                               twod_mesh_id, twod=.true., time_axis=sea_time_axis)
       call sea_time_axis%set_update_behaviour(tmp_update_ptr)
       call ancil_times_list%insert_item(sea_time_axis)
+
+      call init_time_axis("sst_time", sst_time_axis)
+      call setup_ancil_field("tstar_sea", depository, ancil_fields, mesh_id, &
+                              twod_mesh_id, twod=.true., time_axis=sst_time_axis)
+      call sst_time_axis%set_update_behaviour(tmp_update_ptr)
+      call ancil_times_list%insert_item(sst_time_axis)
 
       !=====  SEA ICE ANCILS  =====
       call init_time_axis("sea_ice_time", sea_ice_time_axis)
@@ -167,10 +181,14 @@ contains
                               mesh_id, twod_mesh_id, twod=.true.)
       call setup_ancil_field("silhouette_area_orog", depository, ancil_fields, &
                               mesh_id, twod_mesh_id, twod=.true.)
-    end if
 
-    ! Set up ancils for the prototype GA/GL configuration:
-    if ( ancil_option == ancil_option_prototype_gagl ) then
+      !=====  OZONE ANCIL  =====
+      call init_time_axis("ozone_time", ozone_time_axis)
+      call setup_ancil_field("ozone", depository, ancil_fields, mesh_id, &
+                             twod_mesh_id, time_axis=ozone_time_axis)
+      call ozone_time_axis%set_update_behaviour(tmp_update_ptr)
+      call ancil_times_list%insert_item(ozone_time_axis)
+
       !=====  AEROSOL ANCILS  =====
       call init_time_axis("aerosols_time", aerosol_time_axis)
       call setup_ancil_field("acc_sol_bc", depository, ancil_fields, mesh_id, &
@@ -245,7 +263,7 @@ contains
     integer(i_def), parameter :: fs_order = 0
 
     ! Pointers
-    type(function_space_type),       pointer :: w3_space => null()
+    type(function_space_type),       pointer :: wth_space => null()
     type(function_space_type),       pointer :: twod_space => null()
     procedure(read_interface),       pointer :: tmp_read_ptr => null()
     procedure(write_interface),      pointer :: tmp_write_ptr => null()
@@ -260,8 +278,8 @@ contains
     end if
 
     ! Set up function spaces for field initialisation
-    w3_space   => function_space_collection%get_fs( mesh_id, fs_order, &
-                                                    W3, ndat )
+    wth_space   => function_space_collection%get_fs( mesh_id, fs_order, &
+                                                     WTheta, ndat )
     twod_space => function_space_collection%get_fs( twod_mesh_id, fs_order, &
                                                     W3, ndat )
 
@@ -273,7 +291,7 @@ contains
       if (present(twod)) then
         call new_field%initialise( twod_space, name=trim(name) )
       else
-        call new_field%initialise( w3_space, name=trim(name) )
+        call new_field%initialise( wth_space, name=trim(name) )
       end if
       ! Add the new field to the field depository
       call depository%add_field(new_field)
@@ -282,11 +300,14 @@ contains
     ! If field is time-varying, also create field storing raw data to be
     ! interpolated
     if (present(time_axis)) then
+      write(log_scratch_space,'(3A,I6)') &
+           "Creating time axis field for ", trim(name)
+      call log_event(log_scratch_space,LOG_LEVEL_INFO)
       if (present(twod)) then
         call new_field%initialise( twod_space, name=trim(name) )
         call time_axis%add_field(new_field)
       else
-        call new_field%initialise( w3_space, name=trim(name) )
+        call new_field%initialise( wth_space, name=trim(name) )
         call time_axis%add_field(new_field)
       end if
     end if
@@ -320,7 +341,7 @@ contains
     call ancil_fields%add_reference_to_field(abs_fld_ptr)
 
     ! Nullify pointers
-    nullify(w3_space)
+    nullify(wth_space)
     nullify(twod_space)
     nullify(tmp_read_ptr)
     nullify(tmp_write_ptr)

@@ -16,8 +16,7 @@ module multi_to_high_kernel_mod
                            GH_FIELD, GH_INTEGER,      &
                            GH_READ, GH_WRITE,         &
                            ANY_DISCONTINUOUS_SPACE_1, &
-                           ANY_DISCONTINUOUS_SPACE_2, &
-                           GH_REAL
+                           ANY_DISCONTINUOUS_SPACE_2
   use constants_mod, only: r_def, i_def
   use kernel_mod,    only: kernel_type
 
@@ -28,11 +27,10 @@ module multi_to_high_kernel_mod
   !> Kernel metadata for PSyclone
   type, public, extends(kernel_type) :: multi_to_high_kernel_type
       private
-      type(arg_type) :: meta_args(4) = (/                             &
+      type(arg_type) :: meta_args(3) = (/                             &
           arg_type(GH_FIELD,   GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),  & ! high-order field
           arg_type(GH_FIELD,   GH_READ,  ANY_DISCONTINUOUS_SPACE_2),  & ! multi-data field
-          arg_type(GH_INTEGER, GH_READ               ),               & ! ndata
-          arg_type(GH_REAL,    GH_READ               )                & ! rmdi
+          arg_type(GH_INTEGER, GH_READ               )                & ! ndata
           /)
       integer :: iterates_over = CELLS
   contains
@@ -47,7 +45,6 @@ contains
   !> @param[out]    high_field    Higher-order field to write to
   !> @param[in]     multi_field   Multi-data field to write from
   !> @param[in]     ndata         Dimension of multi-data field
-  !> @param[in]     rmdi          Missing data value to overwrite above
   !> @param[in]     ndf_high      Number of DOFs per cell for high-order field
   !> @param[in]     undf_high     Number of total DOFs for high-order field
   !> @param[in]     map_high      Dofmap for cell for high-order fields
@@ -57,7 +54,7 @@ contains
   subroutine multi_to_high_code(nlayers,                          &
                                 high_field,                       &
                                 multi_field,                      &
-                                ndata, rmdi,                      &
+                                ndata,                            &
                                 ndf_high, undf_high, map_high,    &
                                 ndf_multi, undf_multi, map_multi)
 
@@ -70,7 +67,6 @@ contains
     integer(kind=i_def), intent(in) :: ndf_high, undf_high
     integer(kind=i_def), intent(in) :: map_high(ndf_high)
 
-    real(kind=r_def), intent(in) :: rmdi
     real(kind=r_def), intent(in) :: multi_field(undf_multi)
     real(kind=r_def), intent(out)  :: high_field(undf_high)
 
@@ -78,9 +74,7 @@ contains
 
     ! Convert multi-data field to high-order field
     do i = 1, ndata
-      if (multi_field(map_multi(1)+i-1) > rmdi) then
-        high_field(map_high(i)) = multi_field(map_multi(1)+i-1)
-      end if
+      high_field(map_high(i)) = multi_field(map_multi(1)+i-1)
     end do
 
   end subroutine multi_to_high_code

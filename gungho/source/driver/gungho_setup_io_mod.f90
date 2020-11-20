@@ -23,10 +23,12 @@ module gungho_setup_io_mod
                                            albedo_nir_ancil_path,     &
                                            albedo_vis_ancil_path,     &
                                            hydtop_ancil_path,         &
+                                           ozone_ancil_path,          &
                                            plant_func_ancil_path,     &
                                            sea_ancil_path,            &
                                            sea_ice_ancil_path,        &
                                            soil_ancil_path,           &
+                                           sst_ancil_path,            &
                                            surface_frac_ancil_path,   &
                                            start_dump_filename,       &
                                            start_dump_directory
@@ -99,7 +101,8 @@ module gungho_setup_io_mod
     end if
 
     ! Setup ancillary files
-    if( ancil_option == ancil_option_basic_gagl ) then
+    if( ancil_option == ancil_option_basic_gagl .or. &
+        ancil_option == ancil_option_prototype_gagl ) then
       ! Set land area ancil filename from namelist
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
                                trim(land_area_ancil_path)
@@ -122,6 +125,12 @@ module gungho_setup_io_mod
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
                                trim(sea_ancil_path)
       call tmp_file%init_xios_file("sea_ancil", path=ancil_fname)
+      call files_list%insert_item(tmp_file)
+
+      ! Set sea ancil filename from namelist
+      write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                               trim(sst_ancil_path)
+      call tmp_file%init_xios_file("sst_ancil", path=ancil_fname)
       call files_list%insert_item(tmp_file)
 
       ! Set sea ice ancil filename from namelist
@@ -148,14 +157,18 @@ module gungho_setup_io_mod
       call tmp_file%init_xios_file("hydtop_ancil", path=ancil_fname)
       call files_list%insert_item(tmp_file)
 
+      ! Set ozone filename from namelist
+      write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                               trim(ozone_ancil_path)
+      call tmp_file%init_xios_file("ozone_ancil", path=ancil_fname)
+      call files_list%insert_item(tmp_file)
+
       ! Set surface fraction ancil filename from namelist
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
                                trim(surface_frac_ancil_path)
       call tmp_file%init_xios_file("surface_frac_ancil", path=ancil_fname)
       call files_list%insert_item(tmp_file)
-    end if
 
-    if( ancil_option == ancil_option_prototype_gagl ) then
       ! Set aerosol ancil filename from namelist
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
                                trim(aerosols_ancil_path)
@@ -165,7 +178,8 @@ module gungho_setup_io_mod
 
     ! Setup orography ancillary file
     if( ( orog_init_option == orog_init_option_ancil ) .or. &
-      ( ancil_option == ancil_option_basic_gagl ) ) then
+      ( ancil_option == ancil_option_basic_gagl .or. &
+        ancil_option == ancil_option_prototype_gagl ) ) then
 
       ! Set orography ancil filename from namelist
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &

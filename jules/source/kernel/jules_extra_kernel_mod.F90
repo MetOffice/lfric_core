@@ -238,7 +238,7 @@ contains
     use jules_physics_init_mod, only: decrease_sath_cond
 
     ! Module imports for surf_couple_extra JULESvn5.4
-    use ancil_info, only: nsoilt, l_soil_point, soil_pts, lice_pts
+    use ancil_info, only: nsoilt, l_soil_point, soil_pts, lice_pts, l_lice_point
     use atm_step_local, only: dim_cs1, land_pts_trif, npft_trif
     use cderived_mod, only: delta_lambda, delta_phi
     use jules_surface_types_mod, only: npft, ntype
@@ -562,19 +562,20 @@ contains
 
     ! Soil and land ice ancils dependant on smvcst_soilt
     ! (soil moisture saturation limit)
-    if ( smvcst_soilt(1, 1, 1) > 0.0_r_um .and. &
-         smvcst_soilt(1, 1, 1) < 1.0e10_r_um ) then
+    if ( smvcst_soilt(1, 1, 1) > 0.0_r_um ) then
       soil_pts = 1
       soil_index = 1
       l_soil_point = .true.
       lice_pts = 0
       lice_index = 0
+      l_lice_point = .false.
     else
       soil_pts = 0
       soil_index = 0
       l_soil_point = .false.
       lice_pts = 1
       lice_index = 1
+      l_lice_point = .true.
     end if
 
     ! Calculate the infiltration rate

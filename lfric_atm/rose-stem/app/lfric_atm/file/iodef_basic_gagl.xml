@@ -54,9 +54,14 @@
 	<axis axis_ref="vert_axis_half_levels"/>
       </grid>
       <grid id="3D_monthly_grid">
-	<domain domain_ref="face_half_levels"/>
-	<axis axis_ref="vert_axis_half_levels"/>
+	<domain domain_ref="face_full_levels"/>
+	<axis axis_ref="vert_axis_full_levels"/>
 	<axis axis_ref="monthly_axis"/>
+      </grid>
+      <grid id="pft_monthly_grid">
+	<domain domain_ref="face_half_levels"/>
+	<axis axis_ref="monthly_axis"/>
+	<axis axis_ref="plant_func_types"/>
       </grid>
     </grid_definition>
 
@@ -569,30 +574,33 @@
 
       <!-- File definition for reading in from a UM2LFRic FD UGRID format dump  -->
       <file id="read_lfric_fd_dump" name="lfric_fd_dump" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+	<!-- aquaplanet fields -->
 	<field id="read_ew_wind_in_w3" name="ew_wind" long_name="eastward_wind" standard_name="eastward_wind" unit="m s-1" grid_ref="half_level_face_grid" operation="instant" />
 	<field id="read_ns_wind_in_w3" name="ns_wind" long_name="northward_wind" standard_name="northward_wind" unit="m s-1" grid_ref="half_level_face_grid" operation="instant" />
+	<field id="read_upward_wind_in_wtheta" name="upward_wind" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_theta_in_wtheta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" operation="instant" />
-	<field id="read_ozone" name="ozone" long_name="mass_fraction_of_ozone_in_air" standard_name="mass_fraction_of_ozone_in_air" unit="1" grid_ref="full_level_face_grid" operation="instant" />
-	<field id="read_upward_wind_in_wtheta" name="upward_wind_in_wtheta" long_name="upward_air_velocity" standard_name="upward_air_velocity" unit="m s-1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_dry_rho_in_w3" name="rho" long_name="air_density" unit="1" grid_ref="half_level_face_grid" operation="instant" />
 	<field id="read_mv_in_wtheta" name="m_v" long_name="humidity_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_mcl_in_wtheta" name="m_cl" long_name="cloud_liquid_water_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_mcf_in_wtheta" name="m_cf" long_name="cloud_ice_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_mr_in_wtheta" name="m_r" long_name="rain_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
-	<field id="read_tstar" name="tstar" long_name="surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_zh" name="zh" long_name="boundary_layer_depth" unit="m" domain_ref="face_half_levels" operation="instant" />
+	<field id="read_area_fraction" name="area_fraction" long_name="cloud_area_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
+	<field id="read_bulk_fraction" name="bulk_fraction" long_name="cloud_bulk_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
+	<field id="read_liquid_fraction" name="liquid_fraction" long_name="cloud_liquid_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
+	<field id="read_ice_fraction" name="frozen_fraction" long_name="cloud_ice_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
+	<field id="read_z0msea" name="z0msea" long_name="sea_surface_roughness_length" unit="m" domain_ref="face_half_levels" operation="instant" />
+	<!-- extra fields for basic_gagl -->
 	<field id="read_dd_mf_cb" name="dd_mf_cb" long_name="downdraft_massflux_at_cloud_base" unit="Pa s-1" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_soil_sat_frac" name="soil_sat_frac" long_name="soil_saturated_fraction" unit="1" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_water_table" name="water_table" long_name="water_table_depth" unit="m" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_wetness_under_soil" name="wetness_under_soil" long_name="wetness_below_soil_column" unit="1" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_soil_temp_in" name="soil_temperature" long_name="soil_temperature" unit="K" domain_ref="face_half_levels" operation="instant" axis_ref="soil_pseudo_levels"/>
 	<field id="read_soil_moist_in" name="soil_moisture" long_name="soil_moisture" unit="kg kg-1" domain_ref="face_half_levels" operation="instant" axis_ref="soil_pseudo_levels"/>
-	<field id="read_z0msea" name="z0msea" long_name="sea_surface_roughness_length" unit="m" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_surface_conductance" name="surface_conductance" long_name="conductance" unit="m s-1" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_can_water_in" name="tile_canopy_water" long_name="canopy_water_content_on_tiles" unit="kg m-2" domain_ref="face_half_levels" operation="instant" axis_ref="veg_pseudo_levels"/>
 	<field id="read_land_tile_temp" name="tile_temperature" long_name="land_tile_temperature" unit="K" domain_ref="face_half_levels" operation="instant" axis_ref="veg_pseudo_levels"/>
-	<field id="read_tstar_sea" name="tstar_sea" long_name="sea_surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="face_half_levels" operation="instant" />
-	<field id="read_tstar_sea_ice" name="tstar_sea_ice" long_name="sea_icesurface_temperature" standard_name="surface_temperature" unit="K" domain_ref="face_half_levels" operation="instant" />
+	<field id="read_tstar_sea_ice" name="tstar_sea_ice" long_name="sea_ice_surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_sea_ice_temperature" name="sea_ice_temperature" long_name="sea_ice_temperature" unit="K" domain_ref="face_half_levels" operation="instant" />
 	<field id="read_tile_snow_mass_in" name="tile_snow_mass" long_name="tile_snow_mass" unit="kg m-2" domain_ref="face_half_levels" operation="instant" axis_ref="veg_pseudo_levels"/>
 	<field id="read_n_snow_layers_in" name="tile_n_snow_layers" long_name="number_of_snow_layers" unit="1" domain_ref="face_half_levels" operation="instant" axis_ref="veg_pseudo_levels"/>
@@ -606,10 +614,6 @@
 	<field id="read_snow_layer_liq_mass_in" name="tile_snow_layer_liq_mass" long_name="snow_layer_liquid_mass_on_tiles" unit="kg m-2" domain_ref="face_half_levels" operation="instant" axis_ref="snow_pseudo_levels"/>
 	<field id="read_snow_layer_temp_in" name="tile_snow_layer_temp" long_name="snow_layer_temperature_on_tiles" unit="K" domain_ref="face_half_levels" operation="instant" axis_ref="snow_pseudo_levels"/>
 	<field id="read_snow_layer_rgrain_in" name="tile_snow_layer_rgrain" long_name="snow_layer_grain_size_on_tiles" unit="microns" domain_ref="face_half_levels" operation="instant" axis_ref="snow_pseudo_levels"/>
-	<field id="read_area_fraction" name="area_fraction" long_name="cloud_area_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
-	<field id="read_bulk_fraction" name="bulk_fraction" long_name="cloud_bulk_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
-	<field id="read_liquid_fraction" name="liquid_fraction" long_name="cloud_liquid_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
-	<field id="read_ice_fraction" name="frozen_fraction" long_name="cloud_ice_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
       </file>
 
       <!-- ancillary files to read -->
@@ -632,6 +636,11 @@
 	<field id="chloro_sea_data" name="mass_concentration_of_chlorophyll_a_in_sea_water" long_name="Mass concentration of chlorophyll A in sea water" unit="kg m-3" operation="instant" domain_ref="face_half_levels" axis_ref="monthly_axis"/>
       </file>
 
+      <file id="sst_ancil" name="sst_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+	<field id="sst_time" name="time" unit="hours" operation="once" axis_ref="monthly_axis"/>
+	<field id="tstar_sea_data" name="surface_temperature" long_name="Sea surface temperature" unit="K" operation="instant" domain_ref="face_half_levels" axis_ref="monthly_axis"/>
+      </file>
+
       <file id="sea_ice_ancil" name="sea_ice_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
 	<field id="sea_ice_time" name="time" unit="hours" operation="once" axis_ref="monthly_axis"/>
 	<field id="sea_ice_thickness_data" name="sea_ice_thickness" long_name="sea_ice_thickness" unit="m" operation="instant" domain_ref="face_half_levels" axis_ref="monthly_axis"/>
@@ -639,12 +648,12 @@
       </file>
 
       <file id="albedo_vis_ancil" name="albedo_vis_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
-	<field id="albedo_vis_time" name="time" unit="hours" operation="once" axis_ref="monthly_axis"/>
+	<field id="albedo_vis_time" name="time" unit="days" operation="once" axis_ref="monthly_axis"/>
 	<field id="albedo_obs_vis_data" name="surface_diffuse_albedo_of_photosynthetically_active_radiation_assuming_no_snow" long_name="surface_diffuse_albedo_of_photosynthetically_active_radiation_assuming_no_snow" unit="1" operation="instant" domain_ref="face_half_levels" axis_ref="monthly_axis"/>
       </file>
 
       <file id="albedo_nir_ancil" name="albedo_nir_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
-	<field id="albedo_nir_time" name="time" unit="hours" operation="once" axis_ref="monthly_axis"/>
+	<field id="albedo_nir_time" name="time" unit="days" operation="once" axis_ref="monthly_axis"/>
 	<field id="albedo_obs_nir_data" name="surface_diffuse_albedo_of_near_infra_red_radiation_assuming_no_snow" long_name="surface_diffuse_albedo_of_near_infra_red_radiation_assuming_no_snow" unit="1" operation="instant" domain_ref="face_half_levels" axis_ref="monthly_axis"/>
       </file>
 
@@ -671,8 +680,14 @@
       </file>
 
       <file id="plant_func_ancil" name="plant_func_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
-	<field id="canopy_height_in" name="canopy_height" long_name="canopy_height" unit="1" operation="once" domain_ref="face_half_levels" axis_ref="plant_func_types"/>
-	<field id="leaf_area_index_in" name="leaf_area_index" long_name="leaf_area_index" unit="1" operation="once" domain_ref="face_half_levels" axis_ref="plant_func_types"/>
+	<field id="pft_time" name="month_number" unit="months" operation="once" axis_ref="monthly_axis"/>
+	<field id="canopy_height_in_data" name="canopy_height" long_name="canopy_height" unit="1" operation="once" grid_ref="pft_monthly_grid"/>
+	<field id="leaf_area_index_in_data" name="leaf_area_index" long_name="leaf_area_index" unit="1" operation="once" grid_ref="pft_monthly_grid"/>
+      </file>
+
+      <file id="ozone_ancil" name="ozone_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+	<field id="ozone_time" name="time" unit="hours" operation="once" axis_ref="monthly_axis"/>
+	<field id="ozone_data" name="mass_fraction_of_ozone_in_air" long_name="mass_fraction_of_ozone_in_air" unit="1" operation="instant" grid_ref="3D_monthly_grid"/>
       </file>
 
       <file id="aerosols_ancil" name="aerosols_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">

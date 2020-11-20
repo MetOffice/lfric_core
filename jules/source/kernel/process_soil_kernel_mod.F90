@@ -124,8 +124,7 @@ contains
     integer(i_um) :: n
 
     ! Only process the ancils if this is a soil point
-    if ( soil_moist_sat(map_2d(1)) > 0.0_r_def .and. &
-         soil_moist_sat(map_2d(1)) < 1.0e10_r_def ) then
+    if ( soil_moist_sat(map_2d(1)) > 0.0_r_def ) then
 
       soil_pts = 1
       soil_index = 1

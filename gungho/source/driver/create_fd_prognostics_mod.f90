@@ -24,7 +24,9 @@ module create_fd_prognostics_mod
                                              LOG_LEVEL_ERROR
   use init_ancils_mod,                only : setup_ancil_field
   use initialization_config_mod,      only : ancil_option,                &
-                                             ancil_option_basic_gagl
+                                             ancil_option_aquaplanet,     &
+                                             ancil_option_basic_gagl,     &
+                                             ancil_option_prototype_gagl
   use nlsizes_namelist_mod,           only : sm_levels
   use jules_control_init_mod,         only : n_land_tile
   use jules_physics_init_mod,         only : snow_lev_tile
@@ -72,21 +74,16 @@ contains
            , LOG_LEVEL_ERROR )
     end if
 
-
     ! Create the field collection
-
     fd_field_collection  =  field_collection_type(name="fd_prognostics")
 
     ! Setup I/O behaviour handler. In the case of FD prognostic fields these
     ! are currently read from a UM2LFRic dump
-
     tmp_read_ptr => read_field_face
     tmp_write_ptr => write_field_face
 
-
     ! Create the fields, set the I/O behaviour and add to
     ! the field collection
-
     !========================================================================
     ! W3 fields - rho levels
     !========================================================================
@@ -171,23 +168,37 @@ contains
          function_space_collection%get_fs(mesh_id, element_order, Wtheta), &
          name='mr_in_wtheta')
 
-    if (ancil_option == ancil_option_basic_gagl) then
-      call mr_in_wtheta%set_read_behaviour(tmp_read_ptr)
-      call mr_in_wtheta%set_write_behaviour(tmp_write_ptr)
-    end if
+    call mr_in_wtheta%set_read_behaviour(tmp_read_ptr)
+    call mr_in_wtheta%set_write_behaviour(tmp_write_ptr)
 
     call fd_field_collection%add_field(mr_in_wtheta)
 
+    !========================================================================
     ! Physics fields
-    call setup_ancil_field("ozone", depository, fd_field_collection, mesh_id, &
-                           twod_mesh_id)
-    call setup_ancil_field("tstar", depository, fd_field_collection, mesh_id, &
+    !========================================================================
+    ! turbulence fields
+    call setup_ancil_field("zh", depository, fd_field_collection, mesh_id, &
                            twod_mesh_id, twod=.true.)
+    ! cloud fields
+    call setup_ancil_field("area_fraction", depository, &
+                           fd_field_collection, mesh_id, twod_mesh_id)
+    call setup_ancil_field("bulk_fraction", depository, &
+                           fd_field_collection, mesh_id, twod_mesh_id)
+    call setup_ancil_field("liquid_fraction", depository, &
+                           fd_field_collection, mesh_id, twod_mesh_id)
+    call setup_ancil_field("ice_fraction", depository, &
+                           fd_field_collection, mesh_id, twod_mesh_id)
+    ! surface fields
+    call setup_ancil_field("z0msea", depository, fd_field_collection, &
+                           mesh_id, twod_mesh_id, twod=.true.)
 
-    if (ancil_option == ancil_option_basic_gagl) then
-      ! turbulence fields
-      call setup_ancil_field("zh", depository, fd_field_collection, mesh_id, &
-                             twod_mesh_id, twod=.true.)
+    if (ancil_option == ancil_option_aquaplanet) then
+      call setup_ancil_field("tstar", depository, fd_field_collection, &
+                             mesh_id, twod_mesh_id, twod=.true.)
+      call setup_ancil_field("ozone", depository, fd_field_collection, &
+                             mesh_id, twod_mesh_id)
+    else if (ancil_option == ancil_option_basic_gagl .or. &
+             ancil_option == ancil_option_prototype_gagl) then
       ! convection fields
       call setup_ancil_field("dd_mf_cb", depository, fd_field_collection, &
                              mesh_id, twod_mesh_id, twod=.true.)
@@ -206,8 +217,6 @@ contains
                              fd_field_collection, mesh_id, twod_mesh_id, &
                              twod=.true., ndata=sm_levels)
       ! surface fields
-      call setup_ancil_field("z0msea", depository, fd_field_collection, &
-                             mesh_id, twod_mesh_id, twod=.true.)
       call setup_ancil_field("surface_conductance", depository, &
                              fd_field_collection, mesh_id, twod_mesh_id, &
                              twod=.true.)
@@ -217,9 +226,6 @@ contains
       call setup_ancil_field("land_tile_temp", depository, &
                              fd_field_collection, mesh_id, twod_mesh_id, &
                              twod=.true., ndata=n_land_tile)
-      call setup_ancil_field("tstar_sea", depository, &
-                             fd_field_collection, mesh_id, twod_mesh_id, &
-                             twod=.true.)
       call setup_ancil_field("tstar_sea_ice", depository, &
                              fd_field_collection, mesh_id, twod_mesh_id, &
                              twod=.true.)
@@ -263,15 +269,6 @@ contains
       call setup_ancil_field("snow_layer_rgrain_in", depository, &
                              fd_field_collection, mesh_id, twod_mesh_id, &
                              twod=.true., ndata=snow_lev_tile)
-      ! cloud fields
-      call setup_ancil_field("area_fraction", depository, &
-                             fd_field_collection, mesh_id, twod_mesh_id)
-      call setup_ancil_field("bulk_fraction", depository, &
-                             fd_field_collection, mesh_id, twod_mesh_id)
-      call setup_ancil_field("liquid_fraction", depository, &
-                             fd_field_collection, mesh_id, twod_mesh_id)
-      call setup_ancil_field("ice_fraction", depository, &
-                             fd_field_collection, mesh_id, twod_mesh_id)
     end if
 
     call log_event( 'Physics: Finite diff prognostics created', LOG_LEVEL_INFO )

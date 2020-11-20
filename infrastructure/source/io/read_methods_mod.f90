@@ -18,7 +18,7 @@ module read_methods_mod
   use field_parent_mod,              only: field_parent_type, &
                                            field_parent_proxy_type
   use files_config_mod,              only: checkpoint_stem_name
-  use fs_continuity_mod,             only: W3
+  use fs_continuity_mod,             only: W3, WTheta
   use integer_field_mod,             only: integer_field_type, &
                                            integer_field_proxy_type
   use r_solver_field_mod,            only: r_solver_field_type, &
@@ -502,7 +502,7 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
   type(field_proxy_type), intent(inout) :: field_proxy
   integer(i_def),         intent(in)    :: time_indices(:)
 
-  integer(i_def) :: undf, fs_id, i, j, nlayers, ndata, time_index, vert_levels
+  integer(i_def) :: undf, fs_id, i, j, k, nlayers, ndata, time_index, vert_levels
   integer(i_def) :: domain_size, vert_axis_size, time_axis_size
   real(dp_xios), allocatable :: recv_field(:)
   real(r_def),   allocatable :: ndata_slice(:)
@@ -523,8 +523,12 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
     call xios_get_domain_attr( 'face_half_levels', ni=domain_size )
     call xios_get_axis_attr( 'vert_axis_half_levels', n_glo=vert_axis_size )
     call xios_get_axis_attr( 'monthly_axis', n_glo=time_axis_size )
+  else if ( fs_id == WTheta ) then
+    call xios_get_domain_attr( 'face_full_levels', ni=domain_size )
+    call xios_get_axis_attr( 'vert_axis_full_levels', n_glo=vert_axis_size )
+    call xios_get_axis_attr( "monthly_axis", n_glo=time_axis_size )
   else
-    call log_event( 'Time varying fields only readable for W3 function space', &
+    call log_event( 'Time varying fields only readable for W3 or WTheta function spaces', &
                      LOG_LEVEL_ERROR )
   end if
 
@@ -564,12 +568,16 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
                                  ( time_index ) * ( domain_size * vert_levels ) )
 
       ! We require multi-data fields with vertical levels to be multi-data first
-      if ( ndata*vert_levels /= 1 .and. .not. field_proxy%is_ndata_first() ) then
+      if ( ndata /= 1 .and. vert_levels /= 1 .and. &
+           .not. field_proxy%is_ndata_first() ) then
         write( log_scratch_space,'(A,A)' ) "Only ndata_first ordering supported for read_field_time_var: "// &
                                       trim( xios_field_name )
         call log_event( log_scratch_space, LOG_LEVEL_ERROR )
       else
-        field_data( (j * ndata) + i + 1 : undf : ndata ) = time_slice
+        do k = 0, vert_levels-1
+          field_data( (j * ndata) + i + (k * ndata) + 1 : undf : ndata*vert_levels ) &
+               = time_slice(k*(domain_size)+1:(k+1)*domain_size)
+        end do
       end if
 
     end do
@@ -623,6 +631,8 @@ subroutine read_time_data(time_id, time_data)
   else if ( time_units == 'hours' ) then
     time_data = mod( time_data, 365.0_dp_xios * 24.0_dp_xios )
     time_data = time_data * 3600.0_dp_xios
+  else if ( time_units == 'months' ) then
+    time_data = (real(time_data-1, dp_xios)/12.0_dp_xios) * 365.0_dp_xios * 24.0_dp_xios * 3600.0_dp_xios
   else
     write( log_scratch_space,'(A,A)' ) "Invalid units for time axis: "// &
                                       trim( time_units )

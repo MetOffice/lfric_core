@@ -172,6 +172,7 @@ contains
 
     type( field_type ), pointer :: tile_snow_mass     => null()
     type( field_type ), pointer :: n_snow_layers      => null()
+    type( field_type ), pointer :: snow_depth         => null()
 
     type( field_type ) :: tmp_diag
     type(function_space_type), pointer  :: tmp_space => null()
@@ -268,6 +269,7 @@ contains
     ! Snow fields
     tile_snow_mass     => snow_fields%get_field('tile_snow_mass')
     n_snow_layers      => snow_fields%get_field('n_snow_layers')
+    snow_depth         => snow_fields%get_field('snow_depth')
 
     ! Local surface fields that need creating
     call tile_temperature%copy_field_properties(snow_sublimation)
@@ -323,7 +325,7 @@ contains
                            peak_to_trough_orog, silhouette_area_orog,          &
                            sea_ice_thickness, sea_ice_temperature,             &
                            tile_temperature, tile_snow_mass, n_snow_layers,    &
-                           canopy_water, soil_temperature,                     &
+                           snow_depth, canopy_water, soil_temperature,         &
                            tile_heat_flux, tile_moisture_flux,                 &
                            sw_up_tile, sw_down_surf, lw_down_surf,             &
                            snow_sublimation, surf_heat_flux, canopy_evap,      &

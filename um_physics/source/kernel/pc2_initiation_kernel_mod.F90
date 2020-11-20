@@ -25,7 +25,7 @@ private
 
 type, public, extends(kernel_type) :: pc2_initiation_kernel_type
   private
-  type(arg_type) :: meta_args(23) = (/                              &
+  type(arg_type) :: meta_args(24) = (/                              &
        arg_type(GH_FIELD,   GH_READ,    WTHETA),                    & ! mv_wth
        arg_type(GH_FIELD,   GH_READ,    WTHETA),                    & ! ml_wth
        arg_type(GH_FIELD,   GH_READ,    WTHETA),                    & ! mi_wth
@@ -41,6 +41,7 @@ type, public, extends(kernel_type) :: pc2_initiation_kernel_type
        arg_type(GH_FIELD,   GH_READ,    WTHETA),                    & ! exner_n_wth
        arg_type(GH_FIELD,   GH_READ,    ANY_DISCONTINUOUS_SPACE_1), & ! zlcl_mixed
        arg_type(GH_FIELD,   GH_READ,    ANY_DISCONTINUOUS_SPACE_1), & ! r_cumulus
+       arg_type(GH_FIELD,   GH_READ,    WTHETA),                    & ! height_wth  
        arg_type(GH_FIELD,   GH_WRITE,   WTHETA),                    & ! dtheta_inc
        arg_type(GH_FIELD,   GH_WRITE,   WTHETA),                    & ! dqv_inc_wth
        arg_type(GH_FIELD,   GH_WRITE,   WTHETA),                    & ! dqcl_inc_wth
@@ -78,6 +79,7 @@ contains
 !> @param[in] exner_n_wth     Start of timestep exner in theta space
 !> @param[in] zlcl_mixed      The height of the lifting condensation level in the mixed layer
 !> @param[in] r_cumulus       A real number representing the logical cumulus flag
+!> @param[in] height_wth      Height of wth levels above mean sea level
 !> @param[out] dtheta_inc_wth Increment to theta in theta space
 !> @param[out] dqv_inc_wth    Increment to water vapour in theta space
 !> @param[out] dqcl_inc_wth   Increment to liquid water content in theta space
@@ -113,6 +115,7 @@ subroutine pc2_initiation_code( nlayers,                           &
                                 exner_n_wth,                       &
                                 zlcl_mixed,                        &
                                 r_cumulus,                         &
+                                height_wth,                        &
                                 ! Responses
                                 dtheta_inc_wth,                    &
                                 dqv_inc_wth,                       &
@@ -136,8 +139,11 @@ subroutine pc2_initiation_code( nlayers,                           &
     use nlsizes_namelist_mod,       only: row_length, rows, model_levels
     use atm_step_local,             only: rhc_row_length, rhc_rows
     use pc2_initiation_ctl_mod,     only: pc2_initiation_ctl
-    use planet_constants_mod,       only: p_zero, kappa, lcrcp
+    use planet_constants_mod,       only: p_zero, kappa, lcrcp, planet_radius
     use gen_phys_inputs_mod,        only: l_mr_physics
+
+    ! Spatially varying field used from module
+    use level_heights_mod,     only: r_theta_levels
 
     ! Redirect routine names to avoid clash with existing qsat routines
     use qsat_mod, only: qsat_wat_new     => qsat_wat,                       &
@@ -164,6 +170,7 @@ subroutine pc2_initiation_code( nlayers,                           &
 
     real(kind=r_def), intent(in), dimension(undf_2d) :: zlcl_mixed
     real(kind=r_def), intent(in), dimension(undf_2d) :: r_cumulus
+    real(kind=r_def), intent(in), dimension(undf_wth) :: height_wth
 
     logical, dimension(row_length,rows) :: l_cumulus
 
@@ -224,6 +231,9 @@ subroutine pc2_initiation_code( nlayers,                           &
     endif
 
     zlcl_mix(1,1) = zlcl_mixed(map_2d(1))
+
+    r_theta_levels(1,1,:) = height_wth(map_wth(1):map_wth(1)+nlayers) &
+                          + planet_radius
 
     i_dummy=1
     zeros=0.0_r_um

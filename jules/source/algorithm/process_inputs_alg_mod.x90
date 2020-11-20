@@ -56,7 +56,6 @@ contains
     type( field_type ), pointer :: sea_ice_fraction   => null()
     type( field_type ), pointer :: tile_fraction      => null()
 
-    type( field_type ), pointer :: tstar            => null()
     type( field_type ), pointer :: tstar_sea        => null()
     type( field_type ), pointer :: tstar_sea_ice    => null()
     type( field_type ), pointer :: land_tile_temp   => null()
@@ -117,8 +116,7 @@ contains
       sea_ice_fraction   => ancil_fields%get_field('sea_ice_fraction')
       tile_fraction      => surface_fields%get_field('tile_fraction')
 
-      tstar            => fd_fields%get_field('tstar')
-      tstar_sea        => fd_fields%get_field('tstar_sea')
+      tstar_sea        => ancil_fields%get_field('tstar_sea')
       tstar_sea_ice    => fd_fields%get_field('tstar_sea_ice')
       land_tile_temp   => fd_fields%get_field('land_tile_temp')
       tile_temperature => surface_fields%get_field('tile_temperature')
@@ -176,26 +174,24 @@ contains
       call invoke(process_surface_kernel_type( land_area_fraction,            &
                                                land_tile_fraction,            &
                                                sea_ice_fraction,              &
-                                               tile_fraction,                 &
-                                               tstar,                         &
-                                               tile_temperature),             &
+                                               tile_fraction),                &
                   multi_to_high_kernel_type(tile_temperature,                 &
-                                   land_tile_temp, n_land_tile, 200.0_r_def), &
+                                            land_tile_temp, n_land_tile),     &
                   single_to_multi_kernel_type(tile_temperature, tstar_sea,    &
                                               first_sea_tile ),               &
                   single_to_multi_kernel_type(tile_temperature, tstar_sea_ice,&
                                               first_sea_ice_tile ),           &
                   multi_to_high_kernel_type(canopy_water,                     &
-                                      can_water_in, n_land_tile, -1.0_r_def), &
+                                            can_water_in, n_land_tile),       &
                   multi_to_high_kernel_type(canopy_height,                    &
-                                         canopy_height_in, npft, -1.0_r_def), &
+                                            canopy_height_in, npft),          &
                   multi_to_high_kernel_type(leaf_area_index,                  &
-                                       leaf_area_index_in, npft, -1.0_r_def), &
+                                            leaf_area_index_in, npft),        &
       ! Soil fields
                   multi_to_high_kernel_type(soil_temperature,                 &
-                                      soil_temp_in, sm_levels, 200.0_r_def),  &
+                                            soil_temp_in, sm_levels),         &
                   multi_to_high_kernel_type(soil_moisture,                    &
-                                      soil_moist_in, sm_levels, -1.0_r_def),  &
+                                            soil_moist_in, sm_levels),        &
                   process_soil_kernel_type( soil_moist_sat,                   &
                                             mean_topog_index,                 &
                                             stdev_topog_index,                &
@@ -211,27 +207,27 @@ contains
                                             frozen_soil_moisture),            &
       ! Snow fields
                   multi_to_high_kernel_type(tile_snow_mass,                   &
-                                 tile_snow_mass_in, n_land_tile, 0.0_r_def),  &
+                                            tile_snow_mass_in, n_land_tile),  &
                   multi_to_high_kernel_type(n_snow_layers,                    &
-                                  n_snow_layers_in, n_land_tile, 0.0_r_def),  &
+                                            n_snow_layers_in, n_land_tile),   &
                   multi_to_high_kernel_type(snow_depth,                       &
-                                     snow_depth_in, n_land_tile, 0.0_r_def),  &
+                                            snow_depth_in, n_land_tile),      &
                   multi_to_high_kernel_type(tile_snow_rgrain,                 &
-                               tile_snow_rgrain_in, n_land_tile, 0.0_r_def),  &
+                                            tile_snow_rgrain_in, n_land_tile),&
                   multi_to_high_kernel_type(snow_under_canopy,                &
-                              snow_under_canopy_in, n_land_tile, 0.0_r_def),  &
+                                           snow_under_canopy_in, n_land_tile),&
                   multi_to_high_kernel_type(snowpack_density,                 &
-                               snowpack_density_in, n_land_tile, 0.0_r_def),  &
+                                            snowpack_density_in, n_land_tile),&
                   multi_to_high_kernel_type(snow_layer_thickness,             &
-                         snow_layer_thickness_in, snow_lev_tile, 0.0_r_def),  &
+                                      snow_layer_thickness_in, snow_lev_tile),&
                   multi_to_high_kernel_type(snow_layer_ice_mass,              &
-                          snow_layer_ice_mass_in, snow_lev_tile, 0.0_r_def),  &
+                                       snow_layer_ice_mass_in, snow_lev_tile),&
                   multi_to_high_kernel_type(snow_layer_liq_mass,              &
-                          snow_layer_liq_mass_in, snow_lev_tile, 0.0_r_def),  &
+                                       snow_layer_liq_mass_in, snow_lev_tile),&
                   multi_to_high_kernel_type(snow_layer_temp,                  &
-                              snow_layer_temp_in, snow_lev_tile, 0.0_r_def),  &
+                                           snow_layer_temp_in, snow_lev_tile),&
                   multi_to_high_kernel_type(snow_layer_rgrain,                &
-                            snow_layer_rgrain_in, snow_lev_tile, 0.0_r_def) )
+                                        snow_layer_rgrain_in, snow_lev_tile) )
 
       call land_area_fraction%log_minmax(LOG_LEVEL_INFO, 'sum of surface tiles')
 

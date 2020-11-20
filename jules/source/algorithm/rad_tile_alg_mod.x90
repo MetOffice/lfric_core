@@ -35,13 +35,14 @@ contains
 ! @param[in]     surface_fields         Fields for surface scheme
 ! @param[in]     soil_fields            Fields for soil hydrology scheme
 ! @param[in]     snow_fields            Fields for snow scheme
+! @param[in,out] albedo_obs_scaling     Scaling factor to adjust albedos by
 ! @param[in]     height_w3              Height of w3 levels above surface
-
+! @param[in]     height_wth             Height of wth levels above mean sea lev
 subroutine rad_tile_alg(tile_sw_direct_albedo, tile_sw_diffuse_albedo,   &
                         tile_lw_albedo, derived_fields,                  &
                         radiation_fields, orography_fields,              &
                         surface_fields, soil_fields, snow_fields,        &
-                        height_w3)
+                        albedo_obs_scaling, height_w3, height_wth)
 
   implicit none
 
@@ -54,7 +55,8 @@ subroutine rad_tile_alg(tile_sw_direct_albedo, tile_sw_diffuse_albedo,   &
   type( field_collection_type ), intent(in)    :: surface_fields
   type( field_collection_type ), intent(in)    :: soil_fields
   type( field_collection_type ), intent(in)    :: snow_fields
-  type( field_type ), intent( in ) :: height_w3
+  type( field_type ), intent( inout ) :: albedo_obs_scaling
+  type( field_type ), intent( in ) :: height_w3, height_wth
 
   ! Unpacked fields from collections
   type( field_type ), pointer :: sd_orog             => null()
@@ -76,6 +78,8 @@ subroutine rad_tile_alg(tile_sw_direct_albedo, tile_sw_diffuse_albedo,   &
 
   type( field_type ), pointer :: tile_snow_mass     => null()
   type( field_type ), pointer :: tile_snow_rgrain   => null()
+  type( field_type ), pointer :: snow_depth         => null()
+  type( field_type ), pointer :: snowpack_density   => null()
   type( field_type ), pointer :: snow_soot          => null()
 
   type( field_type ), pointer :: u1_in_w3           => null()
@@ -103,6 +107,8 @@ subroutine rad_tile_alg(tile_sw_direct_albedo, tile_sw_diffuse_albedo,   &
 
   tile_snow_mass     => snow_fields%get_field('tile_snow_mass')
   tile_snow_rgrain   => snow_fields%get_field('tile_snow_rgrain')
+  snow_depth         => snow_fields%get_field('snow_depth')
+  snowpack_density   => snow_fields%get_field('snowpack_density')
   snow_soot          => snow_fields%get_field('snow_soot')
 
   u1_in_w3 => derived_fields%get_field('u1_in_w3')
@@ -119,15 +125,19 @@ subroutine rad_tile_alg(tile_sw_direct_albedo, tile_sw_diffuse_albedo,   &
                                    soil_roughness, &
                                    albedo_obs_vis, &
                                    albedo_obs_nir, &
+                                   albedo_obs_scaling, &
                                    tile_temperature, &
                                    tile_snow_mass, &
                                    tile_snow_rgrain, &
+                                   snow_depth, &
+                                   snowpack_density, &
                                    snow_soot, &
                                    chloro_sea, &
                                    sea_ice_thickness, &
                                    u1_in_w3, &
                                    u2_in_w3, &
                                    height_w3, &
+                                   height_wth, &
                                    z0msea, &
                                    cos_zenith_angle))
 

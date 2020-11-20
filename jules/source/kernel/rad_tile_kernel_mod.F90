@@ -15,8 +15,9 @@ use argument_mod,      only : arg_type, func_type,       &
                               ANY_DISCONTINUOUS_SPACE_3, &
                               ANY_DISCONTINUOUS_SPACE_4, &
                               ANY_DISCONTINUOUS_SPACE_5, &
-                              ANY_DISCONTINUOUS_SPACE_6
-use fs_continuity_mod, only:  W3
+                              ANY_DISCONTINUOUS_SPACE_6, &
+                              ANY_DISCONTINUOUS_SPACE_7
+use fs_continuity_mod, only:  W3, WTheta
 use constants_mod,     only : r_def, i_def, r_um, i_um
 use kernel_mod,        only : kernel_type
 
@@ -34,7 +35,7 @@ public :: rad_tile_code
 ! Contains the metadata needed by the PSy layer.
 type, extends(kernel_type) :: rad_tile_kernel_type
   private
-  type(arg_type) :: meta_args(22) = (/                          &
+  type(arg_type) :: meta_args(26) = (/                          &
        arg_type(GH_FIELD, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1), & ! tile_sw_direct_albedo
        arg_type(GH_FIELD, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1), & ! tile_sw_diffuse_albedo
        arg_type(GH_FIELD, GH_WRITE, ANY_DISCONTINUOUS_SPACE_2), & ! tile_lw_albedo
@@ -46,15 +47,19 @@ type, extends(kernel_type) :: rad_tile_kernel_type
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5), & ! soil_roughness
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5), & ! albedo_obs_vis
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5), & ! albedo_obs_nir
+       arg_type(GH_FIELD, GH_WRITE, ANY_DISCONTINUOUS_SPACE_6), & ! albedo_obs_scaling
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! tile_temperature
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! tile_snow_mass
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! tile_snow_rgrain
+       arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! snow_depth
+       arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! snowpack_density
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5), & ! snow_soot
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5), & ! chloro_sea
-       arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_6), & ! sea_ice_thickness
+       arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_7), & ! sea_ice_thickness
        arg_type(GH_FIELD, GH_READ,  W3),                        & ! u1_in_w3
        arg_type(GH_FIELD, GH_READ,  W3),                        & ! u2_in_w3
        arg_type(GH_FIELD, GH_READ,  W3),                        & ! height_w3
+       arg_type(GH_FIELD, GH_READ,  WTHETA),                    & ! height_wth
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5), & ! z0msea
        arg_type(GH_FIELD, GH_READ,  ANY_DISCONTINUOUS_SPACE_5)  & ! cos_zenith_angle
        /)
@@ -80,15 +85,19 @@ contains
 ! @param[in]  soil_roughness         Bare soil surface roughness length
 ! @param[in]  albedo_obs_vis         Observed snow-free visible albedo
 ! @param[in]  albedo_obs_nir         Observed snow-free near-IR albedo
+! @param[out] albedo_obs_scaling     Scaling factor to adjust albedos by
 ! @param[in]  tile_temperature       Surface tile temperatures
 ! @param[in]  tile_snow_mass         Snow mass on tiles (kg/m2)
 ! @param[in]  tile_snow_rgrain       Snow grain size on tiles (microns)
+! @param[in]  snow_depth             Snow depth on tiles (m)
+! @param[in]  snowpack_density       Density of snow on ground (kg m-3)
 ! @param[in]  snow_soot              Snow soot content (kg/kg)
 ! @param[in]  chloro_sea             Chlorophyll content of the sea
 ! @param[in]  sea_ice_thickness      Sea ice thickness (m)
 ! @param[in]  u1_in_w3               'Zonal' wind in density space
 ! @param[in]  u2_in_w3               'Meridional' wind in density space
-! @param[in]  height_w3              Height of w3 levels above surface
+! @param[in]  height_w3              Height of w3 levels above mean sea level
+! @param[in]  height_wth             Height of wth levels above mean sea level
 ! @param[in]  z0msea                 Roughness length of sea
 ! @param[in]  cos_zenith_angle       Cosine of the stellar zenith angle
 ! @param[in]  ndf_sw_tile            DOFs per cell for tiles and sw bands
@@ -106,9 +115,18 @@ contains
 ! @param[in]  ndf_2d                 Number of DOFs per cell for 2D fields
 ! @param[in]  undf_2d                Number of total DOFs for 2D fields
 ! @param[in]  map_2d                 Dofmap for cell at the base of the column
+! @param[in]  ndf_scal               Number of DOFs per cell for albedo scaling
+! @param[in]  undf_scal              Number of total DOFs for albedo scaling
+! @param[in]  map_scal               Dofmap for cell at the base of the column
 ! @param[in]  ndf_sice               Number of DOFs per cell for sea ice tiles
 ! @param[in]  undf_sice              Number of total DOFs for sea ice tiles
 ! @param[in]  map_sice               Dofmap for cell at the base of the column
+! @param[in]  ndf_w3                 Number of DOFs per cell for density space
+! @param[in]  undf_w3                Number of unique DOFs for density space
+! @param[in]  map_w3                 Dofmap for cell at the base of the column
+! @param[in]  ndf_wth                Number of DOFs per cell for theta space
+! @param[in]  undf_wth               Number of unique DOFs for theta space
+! @param[in]  map_wth                Dofmap for cell at the base of the column
 subroutine rad_tile_code(nlayers,                                &
                          tile_sw_direct_albedo,                  &
                          tile_sw_diffuse_albedo,                 &
@@ -121,15 +139,19 @@ subroutine rad_tile_code(nlayers,                                &
                          soil_roughness,                         &
                          albedo_obs_vis,                         &
                          albedo_obs_nir,                         &
+                         albedo_obs_scaling,                     &
                          tile_temperature,                       &
                          tile_snow_mass,                         &
                          tile_snow_rgrain,                       &
+                         snow_depth,                             &
+                         snowpack_density,                       &
                          snow_soot,                              &
                          chloro_sea,                             &
                          sea_ice_thickness,                      &
                          u1_in_w3,                               &
                          u2_in_w3,                               &
                          height_w3,                              &
+                         height_wth,                             &
                          z0msea,                                 &
                          cos_zenith_angle,                       &
                          ndf_sw_tile, undf_sw_tile, map_sw_tile, &
@@ -137,8 +159,10 @@ subroutine rad_tile_code(nlayers,                                &
                          ndf_tile, undf_tile, map_tile,          &
                          ndf_pft, undf_pft, map_pft,             &
                          ndf_2d, undf_2d, map_2d,                &
+                         ndf_scal, undf_scal, map_scal,          &
                          ndf_sice, undf_sice, map_sice,          &
-                         ndf_w3, undf_w3, map_w3)
+                         ndf_w3, undf_w3, map_w3,                &
+                         ndf_wth, undf_wth, map_wth)
 
   use socrates_init_mod, only: &
     n_sw_band, sw_wavelength_short, sw_wavelength_long, sw_weight_blue, &
@@ -146,17 +170,22 @@ subroutine rad_tile_code(nlayers,                                &
   use jules_control_init_mod, only: &
     n_surf_tile, n_land_tile, n_sea_tile, n_sea_ice_tile, &
     first_sea_tile, first_sea_ice_tile
+  use surface_config_mod, only: albedo_obs
   use nlsizes_namelist_mod, only: row_length, rows, land_field, ntiles
-  use jules_surface_types_mod, only: ntype, npft
+  use jules_surface_types_mod, only: ntype, npft, ice
   use nvegparm, only: emis_nvg
   use pftparm, only: emis_pft
   use jules_sea_seaice_mod, only: nice, nice_use, emis_sea, emis_sice
   use ancil_info, only: sea_pts, sea_index, ssi_index, sice_pts_ncat,       &
-                        sice_index_ncat, sice_frac_ncat
-
+                        sice_index_ncat, sice_frac_ncat, rad_nband,         &
+                        l_lice_point
   use tilepts_mod, only: tilepts
   use sparm_mod, only: sparm
   use surf_couple_radiation_mod, only: surf_couple_radiation
+
+  ! Horizontally varying information used from modules in Jules
+  use jules_mod, only: albobs_scaling_surft
+  use prognostics, only: snowdepth_surft, rho_snow_grnd_surft
 
   implicit none
 
@@ -172,10 +201,14 @@ subroutine rad_tile_code(nlayers,                                &
   integer(i_def), intent(in) :: map_pft(ndf_pft)
   integer(i_def), intent(in) :: ndf_2d, undf_2d
   integer(i_def), intent(in) :: map_2d(ndf_2d)
+  integer(i_def), intent(in) :: ndf_scal, undf_scal
+  integer(i_def), intent(in) :: map_scal(ndf_scal)
   integer(i_def), intent(in) :: ndf_sice, undf_sice
   integer(i_def), intent(in) :: map_sice(ndf_sice)
   integer(i_def), intent(in) :: ndf_w3, undf_w3
   integer(i_def), intent(in) :: map_w3(ndf_w3)
+  integer(i_def), intent(in) :: ndf_wth, undf_wth
+  integer(i_def), intent(in) :: map_wth(ndf_wth)
 
   real(r_def), intent(out) :: tile_sw_direct_albedo(undf_sw_tile)
   real(r_def), intent(out) :: tile_sw_diffuse_albedo(undf_sw_tile)
@@ -185,6 +218,8 @@ subroutine rad_tile_code(nlayers,                                &
   real(r_def), intent(in) :: tile_temperature(undf_tile)
   real(r_def), intent(in) :: tile_snow_mass(undf_tile)
   real(r_def), intent(in) :: tile_snow_rgrain(undf_tile)
+  real(r_def), intent(in) :: snow_depth(undf_tile)
+  real(r_def), intent(in) :: snowpack_density(undf_tile)
 
   real(r_def), intent(in) :: leaf_area_index(undf_pft)
   real(r_def), intent(in) :: canopy_height(undf_pft)
@@ -194,6 +229,7 @@ subroutine rad_tile_code(nlayers,                                &
   real(r_def), intent(in) :: soil_roughness(undf_2d)
   real(r_def), intent(in) :: albedo_obs_vis(undf_2d)
   real(r_def), intent(in) :: albedo_obs_nir(undf_2d)
+  real(r_def), intent(out):: albedo_obs_scaling(undf_scal)
   real(r_def), intent(in) :: snow_soot(undf_2d)
   real(r_def), intent(in) :: chloro_sea(undf_2d)
   real(r_def), intent(in) :: z0msea(undf_2d)
@@ -204,7 +240,7 @@ subroutine rad_tile_code(nlayers,                                &
   real(r_def), intent(in) :: u1_in_w3(undf_w3)
   real(r_def), intent(in) :: u2_in_w3(undf_w3)
   real(r_def), intent(in) :: height_w3(undf_w3)
-
+  real(r_def), intent(in) :: height_wth(undf_wth)
 
   ! Local variables for the kernel
   integer(i_def) :: i, i_tile, i_pft, i_sice, i_band, n
@@ -258,10 +294,18 @@ subroutine rad_tile_code(nlayers,                                &
 
   ! Jules requires fractions with respect to the land area
   if (flandg(1, 1) > 0.0_r_um) then
+    land_field = 1
     land_index = 1
     frac_tile(1, 1:n_land_tile) = frac_tile(1, 1:n_land_tile) / flandg(1, 1)
   else
+    land_field = 0
     land_index = 0
+  end if
+
+  if (tile_fraction(map_tile(ice)) > 0.5_r_def) then
+    l_lice_point = .true.
+  else
+    l_lice_point = .false.
   end if
 
   ! Set type_pts and type_index
@@ -362,7 +406,7 @@ subroutine rad_tile_code(nlayers,                                &
   ! 10m wind speed over the sea
   ws_10m_sea = sqrt(u1_in_w3(map_w3(1))**2 + u2_in_w3(map_w3(1))**2) &
     * log(10.0_r_def / z0msea(map_2d(1))) &
-    / log(height_w3(map_w3(1)) / z0msea(map_2d(1)))
+    / log((height_w3(map_w3(1))-height_wth(map_wth(1))) / z0msea(map_2d(1)))
 
   ! Chlorophyll content of the sea
   chloro = real(chloro_sea(map_2d(1)), r_um)
@@ -375,6 +419,8 @@ subroutine rad_tile_code(nlayers,                                &
   do i = 1, n_land_tile
     snow_tile(1, i) = real(tile_snow_mass(map_tile(i)), r_um)
     rgrain(1, i) = real(tile_snow_rgrain(map_tile(i)), r_um)
+    snowdepth_surft(1, i) = real(snow_depth(map_tile(i)), r_um)
+    rho_snow_grnd_surft(1, i) = real(snowpack_density(map_tile(i)), r_um)
   end do
 
   ! Lying snow mass on sea ice categories
@@ -494,6 +540,22 @@ subroutine rad_tile_code(nlayers,                                &
         = 1.0_r_def - real(emis_sice, r_def)
     end do
   end do
+
+  ! Scaling factors needed for use in surface exchange code
+  if (albedo_obs .and. flandg(1, 1) > 0.0_r_um) then
+    df_rtile = 0
+    do i_band = 1, rad_nband
+      do i_tile = 1, n_land_tile
+        albedo_obs_scaling(map_scal(1)+df_rtile) = &
+             albobs_scaling_surft(1,i_tile,i_band)
+        ! Counting from 0 so increment index here
+        df_rtile = df_rtile + 1
+      end do
+    end do
+  end if
+
+  ! set this back to 1 before exit
+  land_field = 1
 
 end subroutine rad_tile_code
 

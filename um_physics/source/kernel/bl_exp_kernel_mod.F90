@@ -19,7 +19,8 @@ module bl_exp_kernel_mod
                                      ANY_DISCONTINUOUS_SPACE_6, &
                                      ANY_DISCONTINUOUS_SPACE_7, &
                                      ANY_DISCONTINUOUS_SPACE_8, &
-                                     ANY_DISCONTINUOUS_SPACE_9
+                                     ANY_DISCONTINUOUS_SPACE_9, &
+                                     ANY_DISCONTINUOUS_SPACE_10
   use constants_mod,          only : i_def, i_um, r_def, r_um
   use fs_continuity_mod,      only : W3, Wtheta
   use kernel_mod,             only : kernel_type
@@ -27,7 +28,8 @@ module bl_exp_kernel_mod
                                      flux_bc_opt_specified_scalars
   use cloud_config_mod,       only : rh_crit_opt, rh_crit_opt_tke
   use mixing_config_mod,      only : smagorinsky
-  use surface_config_mod,     only : sea_surf_alg, sea_surf_alg_fixed_roughness
+  use surface_config_mod,     only : albedo_obs, sea_surf_alg, &
+                                     sea_surf_alg_fixed_roughness
   use timestepping_config_mod, only: outer_iterations
 
   implicit none
@@ -41,7 +43,7 @@ module bl_exp_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_exp_kernel_type
     private
-    type(arg_type) :: meta_args(115) = (/                           &
+    type(arg_type) :: meta_args(116) = (/                           &
         arg_type(GH_FIELD, GH_READ,      WTHETA),                   &! theta_in_wth
         arg_type(GH_FIELD, GH_READ,      W3),                       &! rho_in_w3
         arg_type(GH_FIELD, GH_READ,      W3),                       &! wetrho_in_w3
@@ -156,7 +158,8 @@ module bl_exp_kernel_mod
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! parcel_buoyancy
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! qsat_at_lcl
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_9),&! bl_types
-        arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_3) &! snow_unload_rate
+        arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_3),&! snow_unload_rate
+        arg_type(GH_FIELD, GH_READ,      ANY_DISCONTINUOUS_SPACE_10)&! albedo_obs_scaling
         /)
     integer :: iterates_over = CELLS
   contains
@@ -288,6 +291,7 @@ contains
   !> @param[out]    qsat_at_lcl          Saturation specific hum at LCL
   !> @param[out]    bl_types             Diagnosed BL types
   !> @param[out]    snow_unload_rate     Unloading of snow from PFTs by wind
+  !> @param[in]     albedo_obs_scaling   Scaling factor to adjust albedos by
   !> @param[in]     ndf_wth              Number of DOFs per cell for potential temperature space
   !> @param[in]     undf_wth             Number of unique DOFs for potential temperature space
   !> @param[in]     map_wth              Dofmap for the cell at the base of the column for potential temperature space
@@ -321,6 +325,9 @@ contains
   !> @param[in]     ndf_bl               Number of DOFs per cell for BL types
   !> @param[in]     undf_bl              Number of total DOFs for BL types
   !> @param[in]     map_bl               Dofmap for cell for BL types
+  !> @param[in]     ndf_scal             Number of DOFs per cell for albedo scaling
+  !> @param[in]     undf_scal            Number of total DOFs for albedo scaling
+  !> @param[in]     map_scal             Dofmap for cell at the base of the column
   subroutine bl_exp_code(nlayers,                               &
                          theta_in_wth,                          &
                          rho_in_w3,                             &
@@ -437,6 +444,7 @@ contains
                          qsat_at_lcl,                           &
                          bl_types,                              &
                          snow_unload_rate,                      &
+                         albedo_obs_scaling,                    &
                          ndf_wth,                               &
                          undf_wth,                              &
                          map_wth,                               &
@@ -453,7 +461,8 @@ contains
                          ndf_soil, undf_soil, map_soil,         &
                          ndf_surf, undf_surf, map_surf,         &
                          ndf_smtile, undf_smtile, map_smtile,   &
-                         ndf_bl, undf_bl, map_bl)
+                         ndf_bl, undf_bl, map_bl,               &
+                         ndf_scal, undf_scal, map_scal)
 
     !---------------------------------------
     ! LFRic modules
@@ -466,7 +475,8 @@ contains
     !---------------------------------------
     use ancil_info, only: l_soil_point, ssi_pts,                             &
          sea_pts, sice_pts, ssi_index, sea_index, sice_index, fssi_ij,       &
-         sea_frac, sice_frac, sice_pts_ncat, sice_index_ncat, sice_frac_ncat
+         sea_frac, sice_frac, sice_pts_ncat, sice_index_ncat, sice_frac_ncat,&
+         rad_nband
     use atm_fields_bounds_mod, only: tdims
     use atm_step_local, only: dim_cs1, dim_cs2, land_pts_trif, npft_trif,    &
          co2_dim_len, co2_dim_row
@@ -485,6 +495,7 @@ contains
 
     ! spatially varying fields used from modules
     use fluxes, only: sw_sea, sw_sicat
+    use jules_mod, only: albobs_scaling_surft
     use jules_internal, only: unload_backgrnd_pft
     use level_heights_mod, only: r_theta_levels, r_rho_levels
     use ozone_vars, only: o3_gb
@@ -529,6 +540,8 @@ contains
     integer(kind=i_def), intent(in) :: ndf_surf, undf_surf, ndf_bl, undf_bl
     integer(kind=i_def), intent(in) :: map_surf(ndf_surf)
     integer(kind=i_def), intent(in) :: map_bl(ndf_bl)
+    integer(kind=i_def), intent(in) :: ndf_scal, undf_scal
+    integer(kind=i_def), intent(in) :: map_scal(ndf_scal)
 
     real(kind=r_def), dimension(undf_wth), intent(inout):: rh_crit
 
@@ -597,6 +610,7 @@ contains
     real(kind=r_def), intent(out) :: tile_heat_flux(undf_tile)
     real(kind=r_def), intent(out) :: tile_moisture_flux(undf_tile)
     real(kind=r_def), intent(in) :: sw_up_tile(undf_tile)
+    real(kind=r_def), intent(in) :: albedo_obs_scaling(undf_scal)
 
     real(kind=r_def), intent(in) :: leaf_area_index(undf_pft)
     real(kind=r_def), intent(in) :: canopy_height(undf_pft)
@@ -1000,11 +1014,23 @@ contains
     cs_pool_gb_um = real(soil_carbon_content(map_2d(1)), r_um)
 
     ! Soil ancils dependant on smvcst_soilt (soil moisture saturation limit)
-    if ( smvcst_soilt(1,1) > 0.0_r_um .and. &
-         smvcst_soilt(1,1) < 1.0e10_r_um ) then
+    if ( smvcst_soilt(1,1) > 0.0_r_um ) then
       l_soil_point = .true.
     else
       l_soil_point = .false.
+    end if
+
+    ! Scaling factors needed for use in surface exchange code
+    if (albedo_obs .and. flandg(1, 1) > 0.0_r_um) then
+      i_tile = 0
+      do n = 1, rad_nband
+        do i = 1, n_land_tile
+          albobs_scaling_surft(1,i,n) = &
+               albedo_obs_scaling(map_scal(1)+i_tile)
+          ! Counting from 0 so increment index here
+          i_tile = i_tile + 1
+        end do
+      end do
     end if
 
     ! Cosine of the solar zenith angle
@@ -1147,7 +1173,7 @@ contains
     z_theta(1,1,:) = r_theta_levels(1,1,1:nlayers)-r_theta_levels(1,1,0)
     ! vertical velocity
     w(1,1,0) = u3_in_wth(map_wth(1) + 0)
-    etadot = w / r_theta_levels(1,1,nlayers)
+    etadot = w / z_theta(1,1,nlayers)
 
     !-----------------------------------------------------------------------
     ! Things saved from one timestep to the next

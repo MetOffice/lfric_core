@@ -10,6 +10,9 @@ module pc2_initiation_alg_mod
    use field_mod,            only: field_type
    use field_collection_mod, only: field_collection_type
 
+   use runtime_constants_mod, only: get_height
+   use fs_continuity_mod,     only: Wtheta
+
    implicit none
 
    private
@@ -86,6 +89,8 @@ contains
     type( field_type ), pointer :: zlcl_mixed      => null()
     type( field_type ), pointer :: r_cumulus       => null()
 
+    type( field_type ), pointer :: height_wth => null()
+
     if ( subroutine_timers ) call timer("pc2_initiation_alg")
 
     ! Unpack fields
@@ -99,6 +104,8 @@ contains
 
     zlcl_mixed      => turbulence_fields%get_field('z_lcl')
     r_cumulus       => turbulence_fields%get_field('cumulus')
+
+    height_wth      => get_height(Wtheta)
 
     call theta%copy_field_properties(dqv_pc2_inc)
     call theta%copy_field_properties(dqcl_pc2_inc)
@@ -125,6 +132,7 @@ contains
                                               exner_n_wth,       &
                                               zlcl_mixed,        &
                                               r_cumulus,         &
+                                              height_wth,        &
                                                 ! Responses
                                               dtheta_pc2_inc,    &
                                               dqv_pc2_inc,       &

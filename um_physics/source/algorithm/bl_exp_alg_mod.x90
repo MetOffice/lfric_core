@@ -55,7 +55,7 @@ contains
                         turbulence_fields, convection_fields,            &
                         cloud_fields, surface_fields, soil_fields,       &
                         snow_fields, height_w3, height_wth, delta,       &
-                        max_diff_smag)
+                        max_diff_smag, albedo_obs_scaling)
 
     use bl_exp_kernel_mod, only: bl_exp_kernel_type
 
@@ -66,6 +66,7 @@ contains
     type( field_type ), intent( in )        :: theta, rho, exner, mr_n(nummr)
     type( field_type ), intent( in )        :: height_w3, height_wth
     type( field_type ), intent( in )        :: delta, max_diff_smag
+    type( field_type ), intent( in )        :: albedo_obs_scaling
 
     type( field_collection_type ), intent(in)    :: derived_fields
     type( field_collection_type ), intent(in)    :: radiation_fields
@@ -363,7 +364,7 @@ contains
                            uw0_flux, vw0_flux, lcl_height, parcel_top,         &
                            level_parcel_top, wstar, thv_flux,                  &
                            parcel_buoyancy, qsat_at_lcl, bl_types,             &
-                           snow_unload_rate) )
+                           snow_unload_rate, albedo_obs_scaling) )
 
     ! output BL diagnostics
     if (write_diag .and. use_xios_io) then

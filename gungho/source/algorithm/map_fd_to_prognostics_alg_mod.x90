@@ -90,11 +90,6 @@ contains
     ! they are not output by UM2LFRIC and are set to zero or a default value
     ! This will need to be reviewed if this becomes a checkpoint-restart
     ! routine and/or um2lfric is updated for GA/GL physics
-
-    if (ancil_option == ancil_option_aquaplanet) then
-      call invoke(setval_c(mr_in_wtheta, 0.0_r_def))
-    end if
-
     call invoke( setval_x(theta, theta_in_wtheta),    &
                  setval_x(rho, dry_rho_in_w3),        &
                  setval_x(mr(imr_v), mv_in_wtheta),   &

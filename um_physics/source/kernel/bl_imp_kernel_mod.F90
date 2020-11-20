@@ -41,7 +41,7 @@ module bl_imp_kernel_mod
   !>
   type, public, extends(kernel_type) :: bl_imp_kernel_type
     private
-    type(arg_type) :: meta_args(83) = (/                              &
+    type(arg_type) :: meta_args(84) = (/                              &
         arg_type(GH_INTEGER, GH_READ),                                &! outer
         arg_type(GH_FIELD,   GH_READ,      WTHETA),                   &! theta_in_wth
         arg_type(GH_FIELD,   GH_READ,      W3),                       &! wetrho_in_w3
@@ -68,6 +68,7 @@ module bl_imp_kernel_mod
         arg_type(GH_FIELD,   GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2),&! tile_temperature
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_2),&! tile_snow_mass
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_2),&! n_snow_layers
+        arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_2),&! snow_depth
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_2),&! canopy_water
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_5),&! soil_temperature
         arg_type(GH_FIELD,   GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2),&! tile_heat_flux
@@ -167,6 +168,7 @@ contains
   !> @param[in,out] tile_temperature     Surface tile temperatures
   !> @param[in]     tile_snow_mass       Snow mass on tiles (kg/m2)
   !> @param[in]     n_snow_layers        Number of snow layers on tiles
+  !> @param[in]     snow_depth           Snow depth on tiles
   !> @param[in]     canopy_water         Canopy water on each tile
   !> @param[in]     soil_temperature     Soil temperature
   !> @param[in,out] tile_heat_flux       Surface heat flux
@@ -281,6 +283,7 @@ contains
                          tile_temperature,                   &
                          tile_snow_mass,                     &
                          n_snow_layers,                      &
+                         snow_depth,                         &
                          canopy_water,                       &
                          soil_temperature,                   &
                          tile_heat_flux,                     &
@@ -375,7 +378,9 @@ contains
     use c_kappai, only: kappai, de
     use dust_parameters_mod, only: ndiv, ndivh
     use jules_sea_seaice_mod, only: nice_use
+    use jules_snow_mod, only: cansnowtile, rho_snow_const, l_snowdep_surf
     use jules_surface_types_mod, only: npft, ntype, lake, nnvg
+    use jules_vegetation_mod, only: can_model
     use nlsizes_namelist_mod, only: row_length, rows, land_field, &
          sm_levels, ntiles, bl_levels, tr_vars
     use pftparm, only: emis_pft
@@ -387,6 +392,7 @@ contains
     use fluxes, only: sw_sicat
     use level_heights_mod, only: r_theta_levels, r_rho_levels
     use prognostics, only: nsnow_surft
+    use jules_mod, only: snowdep_surft
 
     ! subroutines used
     use bdy_expl3_mod, only: bdy_expl3
@@ -469,6 +475,7 @@ contains
     real(kind=r_def), intent(inout) :: tile_temperature(undf_tile)
     real(kind=r_def), intent(in)    :: tile_snow_mass(undf_tile)
     real(kind=r_def), intent(in)    :: n_snow_layers(undf_tile)
+    real(kind=r_def), intent(in)    :: snow_depth(undf_tile)
     real(kind=r_def), intent(in)    :: canopy_water(undf_tile)
     real(kind=r_def), intent(inout) :: tile_heat_flux(undf_tile)
     real(kind=r_def), intent(inout) :: tile_moisture_flux(undf_tile)
@@ -870,6 +877,15 @@ contains
       snow_surft(1, i) = real(tile_snow_mass(map_tile(i)), r_um)
       ! Number of snow layers on tiles (nsnow_surft)
       nsnow_surft(1, i) = int(n_snow_layers(map_tile(i)), i_um)
+      ! Equivalent snowdepth for surface calculations.
+      ! code copied from jules_land_sf_explicit
+      ! 4 is a magic number inherited from Jules, meaning radiative canopy
+      ! with heat capacity and snow beneath
+      if ( (can_model == 4) .and. cansnowtile(i) .and. l_snowdep_surf) then
+        snowdep_surft(1, i) = snow_surft(1, i) / rho_snow_const
+      else
+        snowdep_surft(1, i) = real(snow_depth(map_tile(i)), r_um)
+      end if
     end do
 
     !-----------------------------------------------------------------------

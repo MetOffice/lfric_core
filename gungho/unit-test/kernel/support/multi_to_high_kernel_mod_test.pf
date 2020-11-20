@@ -108,7 +108,7 @@ contains
     ! Set answers
     this%answer_high_field(map_high(1)) = 3.0_r_def
     this%answer_high_field(map_high(2)) = 1.0_r_def
-    this%answer_high_field(map_high(3)) = 0.0_r_def
+    this%answer_high_field(map_high(3)) = -1.0_r_def
     this%answer_high_field(map_high(4)) = 0.0_r_def
     this%answer_high_field(map_high(5)) = 0.0_r_def
     this%high_field(:) = 0.0_r_def
@@ -116,7 +116,7 @@ contains
     call multi_to_high_code(nlayers,                          &
                             this%high_field(:),               &
                             this%multi_field(:),              &
-                            ndata, 0.0_r_def,                 &
+                            ndata,                            &
                             ndf_high, undf_high, map_high,    &
                             ndf_multi, undf_multi, map_multi)
 

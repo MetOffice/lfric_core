@@ -60,7 +60,8 @@ module slow_physics_alg_mod
   use aerosol_config_mod,        only: c_aerosol,                            &
                                        c_aerosol_glomap_mode_climatology
   use radiation_config_mod,      only: l_planet_grey_surface
-  use jules_control_init_mod,    only: sw_band_tile, lw_band_tile
+  use ancil_info,                only: rad_nband
+  use jules_control_init_mod,    only: sw_band_tile, lw_band_tile, n_land_tile
 #endif
 
   implicit none
@@ -152,6 +153,7 @@ contains
 #ifdef UM_PHYSICS
     type( field_type ) :: tile_lw_albedo
     type( field_type ) :: tile_sw_diffuse_albedo, tile_sw_direct_albedo
+    type( field_type ) :: albedo_obs_scaling
 #endif
     ! ...for spectral GWD
     type( field_type ) :: du_tot_spectral_gwd, dtheta_spectral_gwd
@@ -245,6 +247,10 @@ contains
     !--------------------------------------------------------------------
     ! Socrates radiation scheme
     !--------------------------------------------------------------------
+    vector_space=>function_space_collection%get_fs(twod_mesh_id,0,W3, &
+                                                   n_land_tile*rad_nband)
+    call albedo_obs_scaling%initialise(vector_space)
+
     if (radiation == radiation_socrates .and. &
         radiation_placement == radiation_placement_slow) then
        call illuminate_alg( radiation_fields, clock%get_step() )
@@ -259,7 +265,7 @@ contains
                           tile_lw_albedo, derived_fields,                 &
                           radiation_fields, orography_fields,             &
                           surface_fields, soil_fields, snow_fields,       &
-                          height_w3)
+                          albedo_obs_scaling, height_w3, height_wth)
       end if
 
       call radiation_alg( dtheta_rad,             &
@@ -348,7 +354,8 @@ contains
                       microphysics_fields, orography_fields,             &
                       turbulence_fields, convection_fields, cloud_fields,&
                       surface_fields, soil_fields, snow_fields,          &
-                      height_w3, height_wth, delta, max_diff_smag)
+                      height_w3, height_wth, delta, max_diff_smag,       &
+                      albedo_obs_scaling)
     end if
 #endif
 
