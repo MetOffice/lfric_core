@@ -6,22 +6,30 @@
 
 !>@brief Set prognostic fields from FD start dump
 module map_fd_to_prognostics_alg_mod
-  use constants_mod,                   only: r_def
+  use constants_mod,                   only: r_def, i_def
   use log_mod,                         only: log_event,         &
                                              log_scratch_space, &
                                              LOG_LEVEL_INFO,    &
                                              LOG_LEVEL_TRACE
+  use base_mesh_config_mod,            only: geometry,          &
+                                             geometry_spherical
   ! Derived Types
   use field_mod,                       only: field_type
   use field_collection_mod,            only: field_collection_type
+  use operator_mod,                    only: operator_type
+
 
   use quadrature_xyoz_mod,             only: quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,    only: quadrature_rule_gaussian_type
-  use runtime_constants_mod,           only: get_coordinates, &
-                                             get_height
-  use fs_continuity_mod,               only: W3
+  use runtime_constants_mod,           only: get_coordinates,   &
+                                             get_height,        &
+                                             get_coriolis,      &
+                                             get_rmultiplicity, &
+                                             get_coordinates
+  use fs_continuity_mod,               only: W3, W2
   use initialization_config_mod,       only: ancil_option,                &
-                                             ancil_option_aquaplanet
+                                             ancil_option_aquaplanet,     &
+                                             hydro_coriolis
 
   implicit none
 
@@ -107,7 +115,7 @@ contains
     call moist_dyn_factors_alg( moist_dyn, mr )
 
     ! Initialize hydrostatically balanced exner field
-    call hydrostatic_balance( exner, rho, theta, moist_dyn )
+    call hydrostatic_balance( exner, rho, theta, u, moist_dyn )
 
     call log_event( "Gungho: Set prognostic fields from FD fields", LOG_LEVEL_INFO )
 
@@ -147,25 +155,87 @@ contains
   !> @param[in,out] exner Exner pressure
   !> @param[in] theta     Theta
   !> @param[in] rho       Dry density
+  !> @param[in] u         Wind
   !> @param[in] moist_dyn Moisture arrays for dynamics
-  subroutine hydrostatic_balance(exner, rho, theta, moist_dyn)
+  subroutine hydrostatic_balance(exner, rho, theta, u, moist_dyn)
 
     use hydrostatic_eos_exner_kernel_mod,  only : hydrostatic_eos_exner_kernel_type
+    use hydrostatic_coriolis_kernel_mod,   only : hydrostatic_coriolis_kernel_type
     use moist_dyn_mod,                     only : num_moist_factors
+    use matrix_vector_kernel_mod,          only : matrix_vector_kernel_type
+    use convert_hdiv_field_kernel_mod,     only : convert_hdiv_field_kernel_type
+    use nodal_coordinates_kernel_mod,      only : nodal_coordinates_kernel_type
+    use psykal_builtin_light_mod,          only : invoke_convert_cart2sphere_vector
+    use mass_matrix_solver_alg_mod,        only : mass_matrix_solver_alg
 
     implicit none
 
     type( field_type ), intent( inout ) :: exner
-    type( field_type ), intent( in )    :: theta, rho
+    type( field_type ), intent( in )    :: theta, rho, u
     type( field_type ), intent( in )    :: moist_dyn(num_moist_factors)
 
-    type( field_type ), pointer         :: height_w3 => null()
+    type(field_type)               :: c_terms(3)
+    type(field_type)               :: physical_chi(3)
+    type(field_type )              :: coriolis_term, r_c
+    type(field_type),      pointer :: w2_rmultiplicity => null()
+    type(field_type),      pointer :: chi(:) => null()
+    type(field_type),      pointer :: height_w3 => null()
+    type(operator_type),   pointer :: coriolis => null()
+    integer(i_def)                 :: i
 
     height_w3 => get_height(W3)
 
-    ! Initialize working up from theta distro and hydrostatic balance
-    call invoke( hydrostatic_eos_exner_kernel_type( exner, rho, theta, &
+    if (hydro_coriolis) then
+
+      chi              => get_coordinates()
+      coriolis         => get_coriolis()
+      w2_rmultiplicity => get_rmultiplicity( W2 )
+
+      ! Create intermediate fields.
+      do i = 1,3
+        call u%copy_field_properties(c_terms(i))
+        call u%copy_field_properties(physical_chi(i))
+        call invoke( setval_c(c_terms(i), 0.0_r_def) )
+      end do
+      call coriolis_term%initialise( vector_space=u%get_function_space() )
+      call r_c%initialise( vector_space=u%get_function_space() )
+
+      ! Apply Coriolis mass matrix.
+      call invoke( setval_c(r_c, 0.0_r_def) )
+      call invoke( matrix_vector_kernel_type( r_c, u, coriolis ) )
+
+      ! Calculate Coriolis values.
+      call invoke( setval_c( coriolis_term, 0.0_r_def ),      &
+                   enforce_bc_kernel_type( r_c ) )
+      call mass_matrix_solver_alg(coriolis_term, r_c)
+
+      ! Convert Coriolis term to 3 components (XYZ) in physical space.
+      call invoke( convert_hdiv_field_kernel_type(c_terms, coriolis_term, chi) )
+
+      do i = 1,3
+        call invoke( inc_X_times_Y(c_terms(i), w2_rmultiplicity) )
+      end do
+
+      ! Convert coordinate field to physical space, i.e. to chi at W2 nodes.
+      call invoke( nodal_coordinates_kernel_type(physical_chi, chi) )
+
+      ! Convert to standard SI units (m/s) in spherical coordinates.
+      if ( geometry == geometry_spherical ) then
+        call invoke_convert_cart2sphere_vector(c_terms, physical_chi)
+      end if
+
+      ! Initialize working up from theta distro and hydrostatic balance
+      ! with Coriolis terms.
+      call invoke( hydrostatic_coriolis_kernel_type( exner, rho, theta, &
+                                                     c_terms(3),        &
+                                                     moist_dyn, height_w3 ) )
+
+    else
+
+      ! Initialize working up from theta distro and hydrostatic balance.
+      call invoke( hydrostatic_eos_exner_kernel_type( exner, rho, theta, &
                                                     moist_dyn, height_w3 ) )
+    end if
 
   end subroutine hydrostatic_balance
 
