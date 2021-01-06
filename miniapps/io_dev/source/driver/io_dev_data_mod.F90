@@ -29,7 +29,7 @@ module io_dev_data_mod
   use initialization_config_mod,        only : init_option,               &
                                                init_option_fd_start_dump, &
                                                ancil_option,              &
-                                               ancil_option_basic_gagl
+                                               ancil_option_basic_gal
   ! I/O methods
   use read_methods_mod,                 only : read_state
   use write_methods_mod,                only : write_state
@@ -122,7 +122,7 @@ contains
 
     ! If testing initialisation of time-varying I/O
     select case( ancil_option )
-    case ( ancil_option_basic_gagl )
+    case ( ancil_option_basic_gal )
       call init_variable_fields( model_data%variable_field_times, &
                                  clock, model_data%core_fields )
   end select

@@ -591,7 +591,7 @@
 	<field id="read_liquid_fraction" name="liquid_fraction" long_name="cloud_liquid_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_ice_fraction" name="frozen_fraction" long_name="cloud_ice_fraction" unit="1" grid_ref="full_level_face_grid" operation="instant" />
 	<field id="read_z0msea" name="z0msea" long_name="sea_surface_roughness_length" unit="m" domain_ref="face" operation="instant" />
-	<!-- extra fields for basic_gagl -->
+	<!-- extra fields for basic_gal -->
 	<field id="read_dd_mf_cb" name="dd_mf_cb" long_name="downdraft_massflux_at_cloud_base" unit="Pa s-1" domain_ref="face" operation="instant" />
 	<field id="read_soil_sat_frac" name="soil_sat_frac" long_name="soil_saturated_fraction" unit="1" domain_ref="face" operation="instant" />
 	<field id="read_water_table" name="water_table" long_name="water_table_depth" unit="m" domain_ref="face" operation="instant" />

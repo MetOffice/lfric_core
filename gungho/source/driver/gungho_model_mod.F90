@@ -288,7 +288,7 @@ module gungho_model_mod
     end if
 
     ! Set up surface altitude field - this will be used to generate orography
-    ! for models with global land mass included (i.e GA/GL)
+    ! for models with global land mass included (i.e GAL)
     call init_altitude( twod_mesh_id, surface_altitude )
 
     ! Assignment of orography from surface_altitude

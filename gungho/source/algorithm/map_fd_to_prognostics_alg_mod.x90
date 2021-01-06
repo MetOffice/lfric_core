@@ -98,7 +98,7 @@ contains
     ! Some variables should coming in from the restart file, but currently
     ! they are not output by UM2LFRIC and are set to zero or a default value
     ! This will need to be reviewed if this becomes a checkpoint-restart
-    ! routine and/or um2lfric is updated for GA/GL physics
+    ! routine and/or um2lfric is updated for GAL physics
     call invoke( setval_x(theta, theta_in_wtheta),    &
                  setval_x(rho, dry_rho_in_w3),        &
                  setval_x(mr(imr_v), mv_in_wtheta),   &

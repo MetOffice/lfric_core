@@ -36,8 +36,8 @@ module gungho_setup_io_mod
                                            init_option_fd_start_dump, &
                                            ancil_option,              &
                                            ancil_option_aquaplanet,   &
-                                           ancil_option_basic_gagl,   &
-                                           ancil_option_prototype_gagl
+                                           ancil_option_basic_gal,    &
+                                           ancil_option_prototype_gal
   use io_config_mod,                 only: diagnostic_frequency,      &
                                            checkpoint_write,          &
                                            checkpoint_read,           &
@@ -101,8 +101,8 @@ module gungho_setup_io_mod
     end if
 
     ! Setup ancillary files
-    if( ancil_option == ancil_option_basic_gagl .or. &
-        ancil_option == ancil_option_prototype_gagl ) then
+    if( ancil_option == ancil_option_basic_gal .or. &
+        ancil_option == ancil_option_prototype_gal ) then
       ! Set land area ancil filename from namelist
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
                                trim(land_area_ancil_path)
@@ -178,8 +178,8 @@ module gungho_setup_io_mod
 
     ! Setup orography ancillary file
     if( ( orog_init_option == orog_init_option_ancil ) .or. &
-      ( ancil_option == ancil_option_basic_gagl .or. &
-        ancil_option == ancil_option_prototype_gagl ) ) then
+      ( ancil_option == ancil_option_basic_gal .or. &
+        ancil_option == ancil_option_prototype_gal ) ) then
 
       ! Set orography ancil filename from namelist
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &

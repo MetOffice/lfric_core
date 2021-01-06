@@ -16,8 +16,8 @@ module init_ancils_mod
                                              write_interface
   use io_config_mod,                  only : use_xios_io
   use initialization_config_mod,      only : ancil_option,            &
-                                             ancil_option_basic_gagl, &
-                                             ancil_option_prototype_gagl
+                                             ancil_option_basic_gal,  &
+                                             ancil_option_prototype_gal
   use linked_list_mod,                only : linked_list_type
   use read_methods_mod,               only : read_field_face, &
                                              read_field_single_face, &
@@ -88,10 +88,10 @@ contains
 
     ! We populate the ancil fields collection based on the model configuration
 
-    ! Set up ancils for the basic GA/GL configuration (proto GA/GL also
+    ! Set up ancils for the basic GAL configuration (proto GAL also
     ! includes these):
-    if ( ancil_option == ancil_option_basic_gagl .or. &
-         ancil_option == ancil_option_prototype_gagl ) then
+    if ( ancil_option == ancil_option_basic_gal .or. &
+         ancil_option == ancil_option_prototype_gal ) then
 
       !=====  SURFACE ANCILS  =====
       call setup_ancil_field("land_area_fraction", depository, ancil_fields, &

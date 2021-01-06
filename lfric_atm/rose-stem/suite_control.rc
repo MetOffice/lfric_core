@@ -206,7 +206,7 @@
                          },
                      plotstr="plot_map.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR"
                      )',
-    'run_with_restart_check("lfric_atm", "basic_gagl_short", 2,
+    'run_with_restart_check("lfric_atm", "basic_gal7_short", 2,
                             resolutions=[("C12",300.0)],
                             env={"crun":1, "nrun":2,
                             "directives":{"C12":{"mpi_parts":6,
@@ -215,7 +215,7 @@
                                          },
                             }
                            )',
-    'run_application("lfric_atm", "basic_gagl",
+    'run_application("lfric_atm", "basic_gal7",
                      resolutions=[("C12",300.0)],
                      env={"crun":2, "nrun":72,
                           "directives":{"C12":{"mpi_parts":6,
@@ -244,7 +244,7 @@
                          },
                      plotstr="plot_map.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR"
                      )',
-    'run_application("lfric_atm", "basic_gagl",
+    'run_application("lfric_atm", "basic_gal7",
                      resolutions=[("C12",300.0)],
                      env={"crun":2, "nrun":72,
                           "directives":{"C12":{"mpi_parts":6,
@@ -271,7 +271,7 @@
                          },
                      plotstr="plot_map.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR"
                      )',
-    'run_application("lfric_atm", "basic_gagl",
+    'run_application("lfric_atm", "basic_gal7",
                      resolutions=[("C12",300.0)],
                      env={"crun":2, "nrun":72,
                           "directives":{"C12":{"mpi_parts":6,

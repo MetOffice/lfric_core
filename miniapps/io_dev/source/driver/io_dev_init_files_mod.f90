@@ -24,7 +24,7 @@ module io_dev_init_files_mod
   use initialization_config_mod,     only: init_option,               &
                                            init_option_fd_start_dump, &
                                            ancil_option,              &
-                                           ancil_option_basic_gagl
+                                           ancil_option_basic_gal
   use io_config_mod,                 only: diagnostic_frequency,      &
                                            checkpoint_write,          &
                                            checkpoint_read,           &
@@ -107,7 +107,7 @@ module io_dev_init_files_mod
     end if
 
     ! Setup time-varying input files
-    if ( ancil_option == ancil_option_basic_gagl ) then
+    if ( ancil_option == ancil_option_basic_gal ) then
       ! Set land area ancil filename from namelist
       write(ancil_fname,'(A)') trim(start_dump_directory)//'/'// &
                                trim(time_varying_input_path)

@@ -31,8 +31,8 @@ module gungho_model_data_mod
                                                ancil_option,                &
                                                ancil_option_none,           &
                                                ancil_option_aquaplanet,     &
-                                               ancil_option_basic_gagl,     &
-                                               ancil_option_prototype_gagl
+                                               ancil_option_basic_gal,      &
+                                               ancil_option_prototype_gal
   use io_config_mod,                    only : checkpoint_read,  &
                                                checkpoint_write, &
                                                write_dump
@@ -216,7 +216,7 @@ contains
 
       ! Create and populate collection of fields to be read from ancillary files
       select case ( ancil_choice )
-        case ( ancil_option_basic_gagl, ancil_option_prototype_gagl )
+        case ( ancil_option_basic_gal, ancil_option_prototype_gal )
           call create_fd_ancils( model_data%depository,   &
                                  model_data%ancil_fields, &
                                  mesh_id, twod_mesh_id ,  &
@@ -323,8 +323,8 @@ contains
           put_field = .true.
           call update_tstar_alg(model_data%surface_fields, &
                                 model_data%fd_fields, put_field )
-        case ( ancil_option_basic_gagl, ancil_option_prototype_gagl )
-          call log_event( "Gungho: Reading basic/proto GA/GL ancils ", LOG_LEVEL_INFO )
+        case ( ancil_option_basic_gal, ancil_option_prototype_gal )
+          call log_event( "Gungho: Reading basic/proto GAL ancils ", LOG_LEVEL_INFO )
           call read_state( model_data%ancil_fields )
           call init_variable_fields( model_data%ancil_times_list, &
                                      clock, model_data%ancil_fields )

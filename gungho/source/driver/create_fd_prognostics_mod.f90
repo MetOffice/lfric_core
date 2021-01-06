@@ -25,8 +25,8 @@ module create_fd_prognostics_mod
   use init_ancils_mod,                only : setup_ancil_field
   use initialization_config_mod,      only : ancil_option,                &
                                              ancil_option_aquaplanet,     &
-                                             ancil_option_basic_gagl,     &
-                                             ancil_option_prototype_gagl
+                                             ancil_option_basic_gal,      &
+                                             ancil_option_prototype_gal
   use nlsizes_namelist_mod,           only : sm_levels
   use jules_control_init_mod,         only : n_land_tile
   use jules_physics_init_mod,         only : snow_lev_tile
@@ -197,8 +197,8 @@ contains
                              mesh_id, twod_mesh_id, twod=.true.)
       call setup_ancil_field("ozone", depository, fd_field_collection, &
                              mesh_id, twod_mesh_id)
-    else if (ancil_option == ancil_option_basic_gagl .or. &
-             ancil_option == ancil_option_prototype_gagl) then
+    else if (ancil_option == ancil_option_basic_gal .or. &
+             ancil_option == ancil_option_prototype_gal) then
       ! convection fields
       call setup_ancil_field("dd_mf_cb", depository, fd_field_collection, &
                              mesh_id, twod_mesh_id, twod=.true.)
