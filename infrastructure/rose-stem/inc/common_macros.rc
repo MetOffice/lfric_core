@@ -27,6 +27,33 @@
 
 
 
+{# CHECK CONFGI-DUMP MACROS #}
+{#---------------------------------------------------------------------------#}
+{%- macro check_config_dump_graph() %}
+{%-   if 'check_config_dump' in RUN_TECHNICAL %}
+    [[[R1]]]
+    export_source => check_config_dump
+{%-   endif %}
+{%- endmacro %}
+
+{%- macro check_config_dump_task( family, setup ) %}
+{%-   if 'check_config_dump' in scheduledTasks %}
+  [[check_config_dump]]
+    inherit = {{family}}
+    pre-script = """
+                 {{ '\n'
+                    | command_list( setup['base'],
+                                    setup['tech'],
+                                    setup['reveal'] ) }}
+                 """
+
+    script = rose task-run --app-key=check_config_dump
+
+{%-   endif %}
+{%- endmacro %}
+
+
+
 {# NULL TASK MACROS #}
 {#---------------------------------------------------------------------------#}
 {%- macro null_task_graph() %}

@@ -1,0 +1,29 @@
+#!/usr/bin/ksh
+##############################################################################
+# (c) Crown copyright 2021 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+##############################################################################
+#
+# Usage:
+#     check_config_dump <source directory>
+#
+# Applies `rose config-dump` to the source directory and reports whether
+# rose config-dump had previously been applied by checking the output.
+#
+# NOTE: This script is intended for use from within a rose test suite. If the
+#       rose config-dump is applied to a directory, this scipt will NOT
+#       revert it. 
+
+SOURCE=$1
+cd ${SOURCE}
+result=$(rose config-dump -C ${SOURCE})
+if [[ ${result} == '' ]] ; then
+  echo No changes from application of \'rose config-dump\'
+  ExitStatus=0
+else
+  echo \'rose config-dump\' has not been applied to source.
+  ExitStatus=1
+fi
+
+exit ${ExitStatus}

@@ -100,6 +100,7 @@
   'developer': [
     'validate_rose_meta_graph("gungho",appName="gungho")',
     'validate_rose_meta_graph("gungho",appName="mesh")',
+    'check_config_dump_graph()',
     'check_style_graph()',
     'api_documentation_graph(publish=True)',
     'design_documentation_graph(publish=True)',

@@ -42,6 +42,7 @@
 {%- set groups = {
 'developer': [
     'validate_rose_meta_graph("gravity_wave", appName="gravity_wave")',
+    'check_config_dump_graph()',
     'check_style_graph()',
     'api_documentation_graph(publish=True)',
     'run_application("gravity_wave", "default", resolutions=[("C24",100.0)],

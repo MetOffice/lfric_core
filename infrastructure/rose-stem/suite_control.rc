@@ -20,6 +20,7 @@
                                 'check_compilers("fast-debug", publish=True)',
                                 'api_documentation_graph(publish=True)',
                                 'uml_documentation_graph(publish=True)',
+                                'check_config_dump_graph()',
                                 'check_style_graph()',
                                 'build_system'],
                   'nightly':   ['check_compilers("full-debug", publish=True)',

@@ -300,11 +300,14 @@
 # TECHNICAL                                                                  #
 ##############################################################################
 {%- for app in projectApps %}
-# {{validate_rose_meta_task(projectName, 'LOCAL', appName=app)}}
 {{ validate_rose_meta_task( projectName, 'TECHNICAL',
                             get_target_property(SECONDARY_TARGET, 'setup'),
                             appName=app ) }}
 {%- endfor %}
+
+{{ check_config_dump_task('TECHNICAL',
+                    get_target_property(SECONDARY_TARGET, 'setup')) }}
+
 {{ check_style_task( 'TECHNICAL',
                      get_target_property(SECONDARY_TARGET, 'setup') ) }}
 

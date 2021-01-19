@@ -294,6 +294,10 @@
                            get_target_property(SECONDARY_TARGET, 'setup'),
                            appName=app )}}
 {%- endfor %}
+
+{{ check_config_dump_task('TECHNICAL',
+                    get_target_property(SECONDARY_TARGET, 'setup')) }}
+
 {{check_style_task('TECHNICAL',
                    get_target_property(SECONDARY_TARGET, 'setup') )}}
 

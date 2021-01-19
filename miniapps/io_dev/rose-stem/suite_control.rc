@@ -40,6 +40,7 @@
 {%- set groups = {
 'developer': [
     'validate_rose_meta_graph("io_dev",appName="io_dev")',
+    'check_config_dump_graph()',
     'check_style_graph()',
     'api_documentation_graph(publish=True)',
     'run_application("io_dev", "default", resolutions=[("C12", 3.0)],

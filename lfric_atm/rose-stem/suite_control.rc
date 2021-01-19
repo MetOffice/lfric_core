@@ -73,6 +73,7 @@
   'developer': [
     'validate_rose_meta_graph("lfric_atm",appName="lfric_atm")',
     'check_style_graph()',
+    'check_config_dump_graph()',
     'run_application("lfric_atm", "scm_dry_bl",
                      resolutions=[("BiP4x4-10000x10000",600.0)],
 		     env={"crun":1, "nrun":48},

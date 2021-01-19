@@ -88,6 +88,7 @@
 {%- set groups = {
 'developer': [
     'validate_rose_meta_graph("diagnostics",appName="diagnostics")',
+    'check_config_dump_graph()',
     'check_style_graph()',
     'run_application("diagnostics", "default", resolutions=[("C3",)],
                      env={"nrun":5})',

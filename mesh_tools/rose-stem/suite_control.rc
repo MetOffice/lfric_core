@@ -12,6 +12,7 @@
 {%- set run_application_profile = '' %}
 
 {%- set groups = {'developer': ['validate_rose_meta_graph("mesh_tools",appName="mesh")',
+                                'check_config_dump_graph()',
                                 'check_style_graph()',
                                 'check_compilers("fast-debug", publish=True)'],
                   'nightly'  : ['check_compilers("full-debug", publish=True)',
