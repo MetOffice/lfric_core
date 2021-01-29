@@ -19,8 +19,12 @@ module io_dev_driver_mod
                                         log_scratch_space,         &
                                         LOG_LEVEL_ALWAYS,          &
                                         LOG_LEVEL_INFO
+  use variable_fields_mod,        only: update_variable_fields
   ! Configuration
-  use io_config_mod,              only: use_xios_io
+  use io_config_mod,              only: use_xios_io,               &
+                                        write_diag,                &
+                                        write_dump,                &
+                                        diagnostic_frequency
   ! IO_Dev driver modules
   use io_dev_mod,                 only: program_name
   use io_dev_data_mod,            only: io_dev_data_type,          &
@@ -80,8 +84,7 @@ module io_dev_driver_mod
     ! Instantiate the fields stored in model_data
     call create_model_data( model_data,   &
                             mesh_id,      &
-                            twod_mesh_id, &
-                            clock )
+                            twod_mesh_id )
 
     ! Initialise the fields stored in the model_data
     call initialise_model_data( model_data, chi_xyz, clock )
@@ -95,26 +98,35 @@ module io_dev_driver_mod
 
     implicit none
 
-    logical :: running
     integer(i_timestep) :: new_step
 
     write(log_scratch_space,'(A)') 'Running '//program_name//' ...'
     call log_event( log_scratch_space, LOG_LEVEL_ALWAYS )
 
     ! Model step
-    running = clock%tick()
+    do while( clock%tick() )
 
-    ! Update XIOS calendar
-    if ( use_xios_io ) then
-      call log_event( program_name//': Updating XIOS timestep', LOG_LEVEL_INFO )
-      new_step = clock%get_step() - clock%get_first_step() + 1
-      call xios_update_calendar( new_step )
-    end if
+      ! Update time-varying fields
+      call update_variable_fields( model_data%variable_field_times, &
+                                   clock, model_data%core_fields )
 
-    ! Write out the fields
-    call log_event( program_name//': Writing XIOS output', LOG_LEVEL_INFO)
+      ! Update XIOS calendar
+      if ( use_xios_io ) then
+        call log_event( program_name//': Updating XIOS timestep', LOG_LEVEL_INFO )
+        new_step = clock%get_step() - clock%get_first_step() + 1
+        call xios_update_calendar( new_step )
+      end if
 
-    call output_model_data( model_data, clock )
+      if ( ( mod(clock%get_step(), diagnostic_frequency) == 0 ) &
+           .and. ( write_diag .or. write_dump ) ) then
+
+        ! Write out the fields
+        call log_event( program_name//': Writing XIOS output', LOG_LEVEL_INFO)
+        call output_model_data( model_data )
+
+      end if
+
+    end do
 
   end subroutine run
 

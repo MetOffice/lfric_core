@@ -32,8 +32,8 @@ module init_ancils_mod
   use fs_continuity_mod,              only : W3, WTheta
   use pure_abstract_field_mod,        only : pure_abstract_field_type
   use lfric_xios_time_axis_mod,       only : time_axis_type, update_interface
-  use jules_control_init_mod,         only: n_land_tile
-  use jules_surface_types_mod,        only: npft
+  use jules_control_init_mod,         only : n_land_tile
+  use jules_surface_types_mod,        only : npft
 
   implicit none
 
@@ -259,7 +259,7 @@ contains
 
     ! Local variables
     type(field_type)          :: new_field
-    integer(i_def)            :: ndat
+    integer(i_def)            :: ndat, time_ndat
     integer(i_def), parameter :: fs_order = 0
 
     ! Pointers
@@ -303,6 +303,14 @@ contains
       write(log_scratch_space,'(3A,I6)') &
            "Creating time axis field for ", trim(name)
       call log_event(log_scratch_space,LOG_LEVEL_INFO)
+
+      ! Multiply ndat by 2 (the number of time windows) if a time axis is present
+      time_ndat = ndat * 2
+      ! Set up function spaces for field initialisation
+      wth_space  => function_space_collection%get_fs( mesh_id, fs_order, &
+                                                      WTheta, time_ndat )
+      twod_space => function_space_collection%get_fs( twod_mesh_id, fs_order, &
+                                                      W3, time_ndat )
       if (present(twod)) then
         call new_field%initialise( twod_space, name=trim(name) )
         call time_axis%add_field(new_field)
@@ -322,7 +330,6 @@ contains
     end if
     ! Set field write behaviour for target field
     call fld_ptr%set_write_behaviour(tmp_write_ptr)
-
 
     if (.not. present(time_axis)) then
       !Set up field read behaviour for 2D and 3D fields
@@ -374,12 +381,8 @@ contains
     time_data = real(time_data_dpxios, kind=r_def)
     deallocate(time_data_dpxios)
 
-    ! Set up axis index array
-    allocate(axis_indices(size(time_data)))
-    axis_indices = (/ (i, i=1,size(time_data),1) /)
-
     ! Initialise time axis
-    call time_axis%initialise( time_data, axis_indices, time_id )
+    call time_axis%initialise( time_data, time_id )
 
   end subroutine init_time_axis
 

@@ -32,7 +32,7 @@
 {%- set mesh_build      = "fast-debug" %}
 {%- set MAXRUNAHEAD     = 1 %}
 
-{%- set application_configurations = { 'io_dev' : ['read_write', 'gen_dump', 'check_decomp', 'time_var',
+{%- set application_configurations = { 'io_dev' : ['read_write', 'gen_dump', 'check_decomp', 'time_var', 'time_var_short',
                                                    'default'] } %}
 
 {%- set canned_configurations = ['io_dev'] %}
@@ -61,14 +61,22 @@
                                                    "xios_nodes":1,
                                                    "wallclock":"00:05:00"}}},
                      checkkgo=True, publish=True)',
-    'run_application("io_dev", "time_var",
-                     resolutions=[("C12",3.0)],
+    'run_application("io_dev", "time_var_short",
+                     resolutions=[("C12",1.0)],
                      env={"crun":1, "nrun":1,
                           "directives":{"default":{"mpi_parts":6,
                                                    "threads":1,
                                                    "xios_nodes":1,
                                                    "wallclock":"00:05:00"}}},
-                     checkkgo=True, publish=True)',
+                     checkkgo=False, publish=True)',
+    'run_application("io_dev", "time_var",
+                     resolutions=[("C12",1.0)],
+                     env={"crun":1, "nrun":1,
+                          "directives":{"default":{"mpi_parts":6,
+                                                   "threads":1,
+                                                   "xios_nodes":1,
+                                                   "wallclock":"00:05:00"}}},
+                     checkkgo=False, publish=True)',
     'check_compilers("io_dev", "default", "fast-debug",
                      resolution=("C12", 3.0))',
     'check_compilers("io_dev", "default", "full-debug",

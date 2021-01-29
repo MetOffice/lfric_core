@@ -351,7 +351,7 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
   integer(i_def),         intent(in)    :: time_indices(:)
 
   integer(i_def) :: undf, fs_id, i, j, k, nlayers, ndata, time_index, vert_levels
-  integer(i_def) :: domain_size, vert_axis_size, time_axis_size
+  integer(i_def) :: domain_size, vert_axis_size, time_axis_size, start_index
   real(dp_xios), allocatable :: recv_field(:)
   real(r_def),   allocatable :: ndata_slice(:)
   real(r_def),   allocatable :: time_slice(:)
@@ -359,8 +359,10 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
 
   ! Get the number of layers to distiniguish between 2D and 3D fields
   nlayers = field_proxy%vspace%get_nlayers()
-  ! Get the size of the multi-data field ndata axis
-  ndata = field_proxy%vspace%get_ndata()
+  ! Get the size of the multi-data field ndata axis (ndata is multi-data
+  ! multiplied by length of time window so we divide by that)
+
+  ndata = field_proxy%vspace%get_ndata() / size(time_indices)
 
   ! Get the size of undf as we only read in up to last owned
   undf = field_proxy%vspace%get_last_dof_owned()
@@ -406,9 +408,7 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
                                   kind=r_def )
 
     ! Reshape data into a single array for each time entry in the time window
-    ! The line below will be "do j = 0, 1" when time-varying field interpolation
-    ! is implemented
-    do j = 0, 0
+    do j = 0, size(time_indices)-1
       time_index = time_indices(j+1)
 
       ! Get correct time-entry from current multi-data level
@@ -421,11 +421,16 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices)
         write( log_scratch_space,'(A,A)' ) "Only ndata_first ordering supported for read_field_time_var: "// &
                                       trim( xios_field_name )
         call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+
       else
         do k = 0, vert_levels-1
-          field_data( (j * ndata) + i + (k * ndata) + 1 : undf : ndata*vert_levels ) &
-               = time_slice(k*(domain_size)+1:(k+1)*domain_size)
+          start_index = (k * ndata * size(time_indices)) + (i * size(time_indices)) + j + 1
+
+          field_data( start_index : undf : ndata*size(time_indices)*vert_levels ) &
+                      = time_slice(k*(domain_size)+1:(k+1)*domain_size)
+
         end do
+
       end if
 
     end do

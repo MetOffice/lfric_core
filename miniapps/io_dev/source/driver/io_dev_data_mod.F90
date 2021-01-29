@@ -72,16 +72,13 @@ contains
   !> @param[in]    clock        The model clock object
   subroutine create_model_data( model_data, &
                                 mesh_id,    &
-                                twod_mesh_id, &
-                                clock )
+                                twod_mesh_id )
 
     implicit none
 
     type( io_dev_data_type ), intent(inout) :: model_data
     integer( i_def ),         intent(in)    :: mesh_id
     integer( i_def ),         intent(in)    :: twod_mesh_id
-    ! Clock will be integrated with future I/O testing functionality
-    class( clock_type ),      intent(in)    :: clock
 
     ! Create model data fields
     call setup_io_dev_fields( mesh_id,                        &
@@ -133,14 +130,11 @@ contains
   !> @brief Writes out a checkpoint and dump file dependent on namelist options
   !> @param[inout] model_data The working data set for the model run
   !> @param[in]    clock      The model clock object.
-  subroutine output_model_data( model_data, &
-                                clock )
+  subroutine output_model_data( model_data )
 
     implicit none
 
     type( io_dev_data_type ), intent(inout), target :: model_data
-    ! Clock will be integrated with future I/O testing functionality
-    class( clock_type ),      intent(in)            :: clock
 
     !===================== Write fields to dump ======================!
     if ( write_dump ) then
@@ -155,14 +149,6 @@ contains
       call write_state( model_data%core_fields )
     end if
 
-    !==================== Write checksum output =====================
-    ! Remove multi-data fields from core fields as they cannot currently be passed
-    ! to Psyclone to create checksum
-    call model_data%core_fields%remove_field( "multi_data_field" )
-    call model_data%core_fields%remove_field( "time_varying_multi_data_field" )
-
-    call io_dev_checksum_alg( model_data%core_fields )
-
 
   end subroutine output_model_data
 
@@ -173,6 +159,13 @@ contains
     implicit none
 
       type(io_dev_data_type), intent(inout) :: model_data
+
+      !==================== Write checksum output =====================
+      ! Remove multi-data fields from core fields as they cannot currently be passed
+      ! to Psyclone to create checksum
+      call model_data%core_fields%remove_field( "multi_data_field" )
+
+      call io_dev_checksum_alg( model_data%core_fields )
 
       ! Clear all the fields in each field collection
       call model_data%core_fields%clear()

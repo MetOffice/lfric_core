@@ -25,7 +25,9 @@ module io_dev_init_mod
   ! Configuration
   use finite_element_config_mod,      only : element_order
   use initialization_config_mod,      only : init_option,                     &
-                                             init_option_fd_start_dump
+                                             init_option_fd_start_dump,       &
+                                             ancil_option,                    &
+                                             ancil_option_basic_gal
   ! I/O methods
   use lfric_xios_read_mod,            only : read_field_node,                 &
                                              read_field_edge,                 &
@@ -69,16 +71,13 @@ module io_dev_init_mod
     ! Local variables
     type(time_axis_type), save :: time_varying_fields_axis
     real(r_def)                :: time_data(12)
-    integer(i_def)             :: time_indices(12)
+    logical                    :: interp_flag = .true.
 
     ! Pointers
     class(pure_abstract_field_type), pointer :: tmp_field_ptr => null()
     procedure(update_interface),     pointer :: tmp_update_ptr => null()
 
     call log_event( 'IO_Dev: creating model data', LOG_LEVEL_INFO )
-
-    ! Set pointer to time axis read behaviour
-    tmp_update_ptr => read_field_time_var
 
     !----------------------------------------------------------------------------
     ! Create core fields to send/recieve data from file and set I/O behaviours
@@ -102,23 +101,38 @@ module io_dev_init_mod
     !----------------------------------------------------------------------------
     ! Time varying fields
     !----------------------------------------------------------------------------
-    ! Manually initialise time axis data
-    time_data = (/ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0 /)
-    time_indices = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
-    call time_varying_fields_axis%initialise( time_data,             &
-                                              time_indices,          &
-                                              "variable_field_times" )
+    if ( ancil_option == ancil_option_basic_gal ) then
 
-    call create_field( core_fields, "time_varying_W3_2D_field",      mesh_id, twod_mesh_id, W3, &
-                       time_axis=time_varying_fields_axis, twod=.true. )
+      ! Set pointer to time axis read behaviour
+      tmp_update_ptr => read_field_time_var
 
-    call create_field( core_fields, "time_varying_multi_data_field", mesh_id, twod_mesh_id, W3, &
-                       ndata=5, time_axis=time_varying_fields_axis, twod=.true. )
+      ! Manually initialise time axis data (days in 360D calendar)
+      time_data = (/ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0 /)
+      time_data = ( (time_data*30.0_r_def) - 15.0_r_def ) * 86400_r_def
+      call time_varying_fields_axis%initialise( time_data, &
+                                                "variable_field_times", &
+                                                input_units = 'seconds', &
+                                                upper_limit = 360.0_r_def*86400_r_def, &
+                                                interp_flag = interp_flag )
 
-    call time_varying_fields_axis%set_update_behaviour( tmp_update_ptr )
+      call core_fields%remove_field( "W3_2D_field" )
+      call create_field( core_fields, "W3_2D_field", mesh_id, twod_mesh_id, W3, &
+                         time_axis=time_varying_fields_axis, twod=.true. )
 
-    ! Insert the created time axis object(s) into a list
-    call variable_times_list%insert_item(time_varying_fields_axis)
+      call core_fields%remove_field( "W3_field" )
+      call create_field( core_fields, "W3_field", mesh_id, twod_mesh_id, W3, &
+                         time_axis=time_varying_fields_axis )
+
+      call core_fields%remove_field( "multi_data_field" )
+      call create_field( core_fields, "multi_data_field", mesh_id, twod_mesh_id, W3, &
+                         ndata=5, time_axis=time_varying_fields_axis, twod=.true. )
+
+      call time_varying_fields_axis%set_update_behaviour( tmp_update_ptr )
+
+      ! Insert the created time axis object(s) into a list
+      call variable_times_list%insert_item(time_varying_fields_axis)
+
+    end if
 
     !----------------------------------------------------------------------------
     ! Dump fields
@@ -241,6 +255,15 @@ module io_dev_init_mod
     ! If field is time-varying, also create field storing raw data to be
     ! interpolated
     if ( present(time_axis) ) then
+      ! Set up function space
+      if ( twod_flag ) then
+        vector_space => function_space_collection%get_fs(twod_mesh_id, element_order, fs_id, ndata=ndat*2)
+      else
+        vector_space => function_space_collection%get_fs(mesh_id, element_order, fs_id, ndata=ndat*2)
+      end if
+      ! Initialise field object from specifications
+      call new_field%initialise( vector_space, name=field_name, ndata_first=.true. )
+
       call time_axis%add_field( new_field )
     end if
 

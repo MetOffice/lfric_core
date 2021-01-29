@@ -1,12 +1,13 @@
-class time_axis_mod::time_axis_type {
+class lfric_xios_time_axis_mod::time_axis_type {
   -name : character
   -time_data : real[]<<allocatable>>
-  -index_data : integer[]<<allocatable>>
   -fields : field_collection_type
   -cyclic : logical = .true.
   -time_units : character = 'seconds'
+  -upper_limit : real
+  -does_interpolation : logical = .false.
 
-  +initialise(<<in>>input_data: real[], <<in>>input_index_data: integer[], <<in>>name: character, <<in>>input_units: character<<optional>>, <<in>>cyclic: logical<<optional>>)
+  +initialise(<<in>>input_data: real[], <<in>>name: character, <<in>>input_units: character<<optional>>, <<in>>cyclic: logical<<optional>>, <<in>>upper_limit: real<<optional>>, <<in>>interp_flag: logical<<optional>>)
   +set_update_behaviour(<<in>> procedure <<pointer>> : update_behaviour))
   +get_name(<<out>>output_name: character)
   +get_units(<<out>>output_units: character)

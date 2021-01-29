@@ -4,7 +4,7 @@
   <!-- In this version we have ONE context  -->
   <context id = "io_dev">
 
-    <calendar type = "Gregorian" start_date = "2016-01-01 15:00:00" />
+    <calendar type = "d360" start_date = "2016-01-01 15:00:00" />
 
    <axis_definition>
     <axis id="vert_axis_half_levels" name="half_levels"/>
@@ -69,8 +69,6 @@
         <field id="W3_field" name="W3_field" long_name="Field on W3 function space" unit="1" grid_ref="half_level_face_grid" />
         <field id="W3_2D_field" name="W3_2D_field" long_name="Two dimensional field on W3 function space" unit="1" domain_ref="face" />
         <field id="multi_data_field" name="multi_data_field" long_name="Multi-data (ndata=5) field on W3, 2D function space" unit="1" domain_ref="face" axis_ref="multi_data_axis"/>
-        <field id="time_varying_W3_2D_field" name="time_varying_W3_2D_field" long_name="Time-varying, single-level field on W3 function space" unit="1" operation="once" domain_ref="face" />
-        <field id="time_varying_multi_data_field" name="time_varying_multi_data_field" long_name="Time-varying, multi-data (ndata=5) field on W3, 2D function space" unit="1" operation="once" axis_ref="multi_data_axis" domain_ref="face" />
       </field_group>
 
       <!-- Checkpoint group -->
@@ -113,15 +111,10 @@
       </file>
 
       <!-- File definition for output dump fields -->
-      <file id="io_dev_time_varying_dump" name="io_dev_time_varying_dump" mode="write" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
-        <field id="output_time_varying_W3_2D_field" name="time_varying_W3_2D_field" long_name="Time-varying, single-level field on W3 function space" unit="1" operation="once" axis_ref="monthly_axis" domain_ref="face" />
-        <field id="output_time_varying_multi_data_field" name="time_varying_multi_data_field" long_name="Time-varying, multi-data (ndata=5) field on W3, 2D function space" unit="1" operation="once" grid_ref="multi_data_monthly_single_level_face_grid" />
-      </file>
-
-      <!-- File definition for output dump fields -->
-      <file id="io_dev_time_varying_input" name="io_dev_time_varying_input" mode="read" output_freq="1ts" convention="UGRID" enabled=".FALSE.">
-        <field id="time_varying_W3_2D_field_data" name="time_varying_W3_2D_field" long_name="Time-varying, single-level field on W3 function space" unit="1" operation="once" axis_ref="monthly_axis" domain_ref="face" />
-        <field id="time_varying_multi_data_field_data" name="time_varying_multi_data_field" long_name="Time-varying, multi-data (ndata=5) field on W3, 2D function space" unit="1" operation="once" grid_ref="multi_data_monthly_single_level_face_grid" />
+      <file id="io_dev_time_varying_input" name="io_dev_time_varying_input" mode="read" output_freq="1ts" convention="UGRID" cyclic=".TRUE." enabled=".FALSE.">
+        <field id="W3_2D_field_data" name="W3_2D_field" long_name="Time-varying, single-level field on W3 function space" unit="1" operation="instant" axis_ref="monthly_axis" domain_ref="face" />
+        <field id="multi_data_field_data" name="multi_data_field" long_name="Time-varying, multi-data (ndata=5) field on W3, 2D function space" unit="1" operation="instant" grid_ref="multi_data_monthly_single_level_face_grid" />
+        <field id="W3_field_data" name="W3_field" long_name="Time-varying field on W3 function space" unit="1" operation="instant" grid_ref="monthly_half_level_face_grid" />
       </file>
 
       <!-- File definition for checkpoint write -->
@@ -135,7 +128,7 @@
       </file>
 
       <!-- File definition for output dump fields -->
-      <file id="io_dev_diag" name="io_dev_diag" mode="write" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+      <file id="io_dev_diag" name="io_dev_diag" mode="write" output_freq="1ts" convention="UGRID" enabled=".TRUE." timeseries="both" ts_prefix="time_">
         <field_group group_ref="core_fields" />
       </file>
 
