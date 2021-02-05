@@ -86,7 +86,7 @@ class MetadataIodefGenerator:
                                                 'file_definition')
         self._file_def.set('par_access', "collective")
         self._file_def.set('time_counter', "none")
-        self._file_def.set('type', "one file")
+        self._file_def.set('type', "one_file")
 
     def _find_template_nodes(self, template_path: str):
         """

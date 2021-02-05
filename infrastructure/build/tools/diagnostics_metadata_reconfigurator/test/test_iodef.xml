@@ -1,41 +1,52 @@
 <context id="diagnostics">
 <field_definition prec="8">
-<field_group enabled=".TRUE." freq_op="1ts" id="boundary_layer__small_boundaries" operation="instant">
-<field grid_ref="half_level_face_grid" id="boundary_layer__upward_heat_flux_in_air" standard_name="upward_heat_flux_in_air" unit="W m-2">
-<variable name="checksum" type="bool">True</variable>
-<variable name="element_order" type="int">0</variable>
-<variable name="field_type" type="string">real</variable>
-<variable name="function_space" type="string">W3</variable>
-<variable name="io_driver" type="string">write_field_face</variable>
-<variable name="mesh_id" type="int">0</variable>
-</field>
-<field grid_ref="half_level_face_grid" id="boundary_layer__visibility_centile_with_precipitation" long_name="visibility_centile_with_precipitation" unit="m">
+<field_group enabled=".TRUE." freq_op="1ts" id="another_science_section__another_field_group" operation="instant">
+<field grid_ref="half_level_face_grid" id="another_science_section__low_type_cloud_area_fraction" standard_name="low_type_cloud_area_fraction" unit="1">
 <variable name="checksum" type="bool">False</variable>
 <variable name="element_order" type="int">0</variable>
-<variable name="field_type" type="string">real</variable>
+<variable name="field_type" type="string">REAL_TYPE</variable>
 <variable name="function_space" type="string">W3</variable>
-<variable name="io_driver" type="string">write_field_face</variable>
-<variable name="mesh_id" type="int">0</variable>
+<variable name="io_driver" type="string">WRITE_FIELD_FACE</variable>
+<variable name="mesh_id" type="int">1</variable>
 </field>
 </field_group>
-<field_group enabled=".TRUE." freq_op="1ts" id="convection__rain_group" operation="instant">
-<field grid_ref="half_level_face_grid" id="convection__precipitation_flux" unit="kg m-2 s-1">
+<field_group enabled=".TRUE." freq_op="1ts" id="example_science_section__example_fields" operation="instant">
+<field grid_ref="half_level_face_grid" id="example_science_section__air_potential_temperature" standard_name="air_potential_temperature" unit="K">
+<variable name="checksum" type="bool">True</variable>
+<variable name="element_order" type="int">0</variable>
+<variable name="field_type" type="string">REAL_TYPE</variable>
+<variable name="function_space" type="string">Wtheta</variable>
+<variable name="io_driver" type="string">WRITE_FIELD_FACE</variable>
+<variable name="mesh_id" type="int">1</variable>
+</field>
+</field_group>
+<field_group enabled=".TRUE." freq_op="1ts" id="example_science_section__more_example_fields" operation="instant">
+<field grid_ref="half_level_face_grid" id="example_science_section__air_temperature_over_tiles" standard_name="air_temperature" unit="K">
 <variable name="checksum" type="bool">False</variable>
 <variable name="element_order" type="int">0</variable>
-<variable name="field_type" type="string">real</variable>
-<variable name="function_space" type="string">W3</variable>
-<variable name="io_driver" type="string">write_field_face</variable>
-<variable name="mesh_id" type="int">0</variable>
+<variable name="field_type" type="string">REAL_TYPE</variable>
+<variable name="function_space" type="string">Wtheta</variable>
+<variable name="io_driver" type="string">WRITE_FIELD_FACE</variable>
+<variable name="mesh_id" type="int">1</variable>
+</field>
+<field grid_ref="half_level_face_grid" id="example_science_section__surface_altitude" standard_name="surface_altitude" unit="m">
+<variable name="checksum" type="bool">False</variable>
+<variable name="element_order" type="int">0</variable>
+<variable name="field_type" type="string">REAL_TYPE</variable>
+<variable name="function_space" type="string">Wtheta</variable>
+<variable name="io_driver" type="string">WRITE_FIELD_FACE</variable>
+<variable name="mesh_id" type="int">1</variable>
 </field>
 </field_group>
 </field_definition>
-<file_definition par_access="collective" time_counter="none" type="one file">
+<file_definition par_access="collective" time_counter="none" type="one_file">
 <file convention="UGRID" enabled=".TRUE." id="awseomfile" name="awseomfile" output_freq="1ts">
-<field field_ref="boundary_layer__upward_heat_flux_in_air" name="boundary_layer__upward_heat_flux_in_air__minimum_1ts" operation="minimum" />
-<field field_ref="convection__precipitation_flux" name="convection__precipitation_flux__minimum_1ts" operation="minimum" />
+<field field_ref="example_science_section__air_potential_temperature" name="example_science_section__air_potential_temperature__minimum_1ts" operation="minimum" />
+<field field_ref="example_science_section__surface_altitude" name="example_science_section__surface_altitude__minimum_1ts" operation="minimum" />
+<field field_ref="another_science_section__low_type_cloud_area_fraction" name="another_science_section__low_type_cloud_area_fraction__minimum_1ts" operation="minimum" />
 </file>
 <file convention="UGRID" enabled=".TRUE." id="awseomfile22" name="awseomfile22" output_freq="1ts">
-<field field_ref="boundary_layer__visibility_centile_with_precipitation" name="boundary_layer__visibility_centile_with_precipitation__minimum_1ts" operation="minimum" />
+<field field_ref="example_science_section__air_temperature_over_tiles" name="example_science_section__air_temperature_over_tiles__minimum_1ts" operation="minimum" />
 </file>
 </file_definition>
 </context>

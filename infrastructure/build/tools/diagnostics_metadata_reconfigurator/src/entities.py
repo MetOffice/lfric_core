@@ -17,13 +17,13 @@ from typing import Dict, Set
 class Field:
     """Stores attributes of a metadata field"""
 
-    def __init__(self, unique_id: str, active: bool = False,
-                 checksum: bool = False, long_name: str = None,
-                 standard_name: str = None, units: str = None,
-                 grid_ref: str = None, mesh_id: int = None,
-                 function_space: str = None, order: int = None,
-                 io_driver: str = None, data_type: str = None,
-                 timestep: str = None):
+    def __init__(self, unique_id: str, field_group_id: str,
+                 active: bool = False, checksum: bool = False,
+                 long_name: str = None, standard_name: str = None,
+                 units: str = None, grid_ref: str = None,
+                 mesh_id: int = None, function_space: str = None,
+                 order: int = None,io_driver: str = None,
+                 data_type: str = None, timestep: str = None):
         """
 
         :param unique_id: Identifier for metadata field
@@ -48,6 +48,7 @@ class Field:
         """
         # pylint: disable=too-many-arguments
         self.unique_id = unique_id
+        self.field_group_id = field_group_id
         self.active = active
         self.checksum = checksum
         self.long_name = long_name

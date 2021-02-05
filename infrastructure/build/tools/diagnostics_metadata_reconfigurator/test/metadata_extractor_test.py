@@ -23,13 +23,33 @@ BAD_ROSE_SUITE_PATH = TEST_DIR / Path('input/rose-app.conf')
 
 class TestExtractor(unittest.TestCase):
     def test_extractor(self):
-        immutable_metadata = {"field_group_1": {
-            "field_group_1__field_1": {"unique_id": "section_name_1__field_1",
-                                       "units": "units_1"},
-            "field_group_1__field_2": {"unique_id": "section_name_1__field_2",
-                                       "units": "units_2"}}, "field_group_2": {
-            "field_group_2__field_3": {"unique_id": "section_name_2__field_3",
-                                       "units": "units_3"}}}
+        immutable_metadata = {
+            "meta_data": {
+                "section_name": {
+                    "groups": {
+                        "field_group_1": {
+                            "fields": {
+                                "section_name__field_1": {
+                                    "_unique_id": "section_name__field_1",
+                                    "units": "units_1"},
+                                "section_name__field_2": {
+                                    "_unique_id": "section_name__field_2",
+                                    "units": "units_2"
+                                }
+                            }
+                        },
+                        "field_group_2": {
+                            "fields": {
+                                "section_name__field_3": {
+                                    "_unique_id": "section_name__field_3",
+                                    "units": "units_3"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         extractor = MetadataExtractor(ROSE_SUITE_PATH, IMMUTABLE_DATA_PATH)
         assert (extractor._immutable_metadata == immutable_metadata)
 

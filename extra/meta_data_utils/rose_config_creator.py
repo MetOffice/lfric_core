@@ -88,7 +88,7 @@ help=Unit of Measure: {field.units}
 description={wrap(field.description, width=100)}
            =For more information on {field.item_title}, see the help text
 
-[field_config:{section.name}:{group.name}={field.unique_id}_checksum]
+[field_config:{section.name}:{group.name}={field.unique_id}__checksum]
 type=boolean
 title=Enable Checksum for {field.item_title} checksum
 compulsory=true

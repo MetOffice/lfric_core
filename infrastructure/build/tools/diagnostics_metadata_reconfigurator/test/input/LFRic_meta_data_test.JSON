@@ -1,19 +1,29 @@
 {
-    "field_group_1": {
-        "field_group_1__field_1": {
-            "unique_id": "section_name_1__field_1",
-            "units": "units_1"
-        },
-        "field_group_1__field_2": {
-            "unique_id": "section_name_1__field_2",
-            "units": "units_2"
+    "meta_data": {
+        "section_name": {
+            "groups": {
+                "field_group_1": {
+                    "fields": {
+                        "section_name__field_1": {
+                            "_unique_id": "section_name__field_1",
+                            "units": "units_1"
+                        },
+                        "section_name__field_2": {
+                            "_unique_id": "section_name__field_2",
+                            "units": "units_2"
+                        }
+                    }
+                },
+                "field_group_2": {
+                    "fields": {
+                        "section_name__field_3": {
+                            "_unique_id": "section_name__field_3",
+                            "units": "units_3"
+                        }
+                    }
+                }
+            }
         }
     },
-    "field_group_2": {
-        "field_group_2__field_3": {
-            "unique_id": "section_name_2__field_3",
-            "units": "units_3"
-        }
-    },
-    "checksum": "md5: 34ecdca47e321c42fbba35d45e521e26"
+    "checksum": "md5: 8fec930ffa6141918a19ed2aa6e6a75c"
 }

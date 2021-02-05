@@ -48,13 +48,13 @@ class Metadata:
         """Add a FieldGroup to the collection of field groups"""
         self._field_groups.update({field_group.name: field_group})
 
-    def add_field(self, field: Field, field_group_id: str):
+    def add_field(self, field: Field):
         """
         Add a Field object to the collection of fields and the ID to the
         given field group
         """
         self._fields.update({field.unique_id: field})
-        self._field_groups[field_group_id].add_field(field)
+        self._field_groups[field.field_group_id].add_field(field)
 
     def add_output_stream_field(self, output_stream_field: OutputStreamField,
                                 stream_unique_id: int):

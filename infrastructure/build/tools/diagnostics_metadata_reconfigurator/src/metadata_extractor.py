@@ -23,7 +23,9 @@ KEY_VALUE_RE = re.compile(r'^([a-zA-Z_]+)=\'?(\w+)\'?')
 FIELD_CONFIG_RE = re.compile(r'^\[field_config:([a-zA-Z_]+):([a-zA-Z_]+)\]$')
 FIELD_RE = re.compile(
     r'^([a-zA-Z]+(?:_[a-zA-Z]+)*__[a-zA-Z]+(?:_[a-zA-Z]+)*)=(true|false)$')
-ADDITIONAL_INPUT_RE = re.compile(r'__([a-zA-Z]+)=(true|false)$')
+ADDITIONAL_INPUT_RE = re.compile(
+        r'^[a-zA-Z_]+__[a-zA-Z_]+__([a-zA-Z]+)=(true|false)$'
+)
 BASE_OUTPUT_RE = re.compile(r'^\[output_stream\(([0-9]+)\)\]$')
 OUTPUT_FIELD_RE = re.compile(
     r'^\[output_stream\(([0-9]+)\):field\(([0-9]+)\)\]$')
@@ -103,9 +105,9 @@ class MetadataExtractor:
         :param field: Object containing field's data
         """
         # get the current field's immutable metadata
-        section_name = field.unique_id.split('__')[0]
-        metadata_section = self._immutable_metadata[section_name][
-            field.unique_id]
+        section_name, group_name = field.field_group_id.split('__')
+        metadata_section = self._immutable_metadata["meta_data"][section_name][
+            "groups"][group_name]["fields"][field.unique_id]
 
         # add the immutable metadata to the field
         for attr in metadata_section:
@@ -115,8 +117,8 @@ class MetadataExtractor:
         # hard-code following attributes for now
         field.grid_ref = 'half_level_face_grid'
         field.order = 0
-        field.mesh_id = 0
-        field.io_driver = 'write_field_face'
+        field.mesh_id = 1
+        field.io_driver = 'WRITE_FIELD_FACE'
         return field
 
     def _parse_field_config(self, file_pointer: TextIO, section_name: str,
@@ -146,7 +148,8 @@ class MetadataExtractor:
             f_match = FIELD_RE.search(line)
             if f_match:
                 field_id, active = f_match.groups()
-                field = Field(field_id, active=active.lower() == 'true')
+                field = Field(field_id, field_group_id,
+                              active=active.lower() == 'true')
 
                 # process additional configuration for field
                 # currently only checksum is supported
@@ -166,7 +169,7 @@ class MetadataExtractor:
                     match = ADDITIONAL_INPUT_RE.search(line)
 
                 field = self._add_immutable_field_metadata(field)
-                self._metadata.add_field(field, field_group.name)
+                self._metadata.add_field(field)
             else:
                 line = file_pointer.readline()
         return line

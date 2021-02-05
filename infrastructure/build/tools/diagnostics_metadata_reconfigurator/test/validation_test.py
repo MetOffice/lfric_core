@@ -29,16 +29,19 @@ class ValidationTest(unittest.TestCase):
 
         # Fields with valid naming metadata
         valid_field1 = Field(unique_id="valid_field1",
+                             field_group_id=field_group_name,
                              long_name='valid_long_name1')
         valid_field2 = Field(unique_id="valid_field2",
+                             field_group_id=field_group_name,
                              standard_name="valid_standard_name2")
         valid_field3 = Field(unique_id="valid_field3",
+                             field_group_id=field_group_name,
                              long_name='valid_long_name3',
                              standard_name="valid_standard_name")
 
-        metadata.add_field(valid_field1, field_group_name)
-        metadata.add_field(valid_field2, field_group_name)
-        metadata.add_field(valid_field3, field_group_name)
+        metadata.add_field(valid_field1)
+        metadata.add_field(valid_field2)
+        metadata.add_field(valid_field3)
 
         try:
             validate_metadata(metadata)
@@ -56,24 +59,29 @@ class ValidationTest(unittest.TestCase):
         field_group_name = "TestFieldGroup"
         metadata.add_field_group(FieldGroup(name=field_group_name))
 
-        invalid_field1 = Field(unique_id="invalid_field1")
+        invalid_field1 = Field(unique_id="invalid_field1",
+                               field_group_id=field_group_name,)
         invalid_field2 = Field(unique_id="invalid_field2",
+                               field_group_id=field_group_name,
                                long_name="",
                                standard_name="")
         invalid_field3 = Field(unique_id="invalid_field3",
+                               field_group_id=field_group_name,
                                long_name=None,
                                standard_name=None)
 
         valid_field1 = Field(unique_id="valid_field",
+                             field_group_id=field_group_name,
                              long_name='valid_long_name')
         valid_field2 = Field(unique_id="valid_field2",
+                             field_group_id=field_group_name,
                              standard_name="valid_standard_name")
 
-        metadata.add_field(invalid_field1, field_group_name)
-        metadata.add_field(invalid_field2, field_group_name)
-        metadata.add_field(invalid_field3, field_group_name)
-        metadata.add_field(valid_field1, field_group_name)
-        metadata.add_field(valid_field2, field_group_name)
+        metadata.add_field(invalid_field1)
+        metadata.add_field(invalid_field2)
+        metadata.add_field(invalid_field3)
+        metadata.add_field(valid_field1)
+        metadata.add_field(valid_field2)
 
         # Test wording of error message, beware if it is reformatted
         expected = r"\['invalid_field1', 'invalid_field2', 'invalid_field3'\]"
@@ -92,24 +100,29 @@ class ValidationTest(unittest.TestCase):
         field_group_name = "TestFieldGroup"
         metadata.add_field_group(FieldGroup(name=field_group_name))
 
-        invalid_field1 = Field(unique_id="invalid_field1")
+        invalid_field1 = Field(unique_id="invalid_field1",
+                               field_group_id=field_group_name,)
         invalid_field2 = Field(unique_id="invalid_field2",
+                               field_group_id=field_group_name,
                                long_name="",
                                standard_name="")
         invalid_field3 = Field(unique_id="invalid_field3",
+                               field_group_id=field_group_name,
                                long_name=None,
                                standard_name=None)
 
         valid_field1 = Field(unique_id="valid_field",
+                             field_group_id=field_group_name,
                              long_name='valid_long_name')
         valid_field2 = Field(unique_id="valid_field2",
+                             field_group_id=field_group_name,
                              standard_name="valid_standard_name")
 
-        metadata.add_field(invalid_field1, field_group_name)
-        metadata.add_field(invalid_field2, field_group_name)
-        metadata.add_field(invalid_field3, field_group_name)
-        metadata.add_field(valid_field1, field_group_name)
-        metadata.add_field(valid_field2, field_group_name)
+        metadata.add_field(invalid_field1)
+        metadata.add_field(invalid_field2)
+        metadata.add_field(invalid_field3)
+        metadata.add_field(valid_field1)
+        metadata.add_field(valid_field2)
 
         # Test wording of error message, beware if it is reformatted
         expected = r"\['invalid_field1', 'invalid_field2', 'invalid_field3'\]"
