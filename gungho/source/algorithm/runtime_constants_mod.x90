@@ -45,6 +45,7 @@ module runtime_constants_mod
                                                wtheta_multigrid_function_space_chain
   use assign_coordinate_field_mod,       only: assign_coordinate_field
   use assign_orography_field_mod,        only: assign_orography_field
+  use timestepping_config_mod,           only: dt, tau_u
 
   ! Derived Types
   use field_mod,                         only: field_type
@@ -92,7 +93,8 @@ module runtime_constants_mod
   use timer_mod,                             only: timer
   use mr_to_sh_mass_ints_kernel_mod,         only: mr_to_sh_mass_ints_kernel_type
   use w3_to_sh_w3_ints_kernel_mod,           only: w3_to_sh_w3_ints_kernel_type
-
+  use operator_algebra_kernel_mod,           only: operator_x_plus_ay_kernel_type, &
+                                                   operator_setval_c_kernel_type
 
   implicit none
 
@@ -117,6 +119,7 @@ module runtime_constants_mod
   type(operator_type), allocatable, dimension(:), target :: mm_w3_inv
   type(operator_type), allocatable, dimension(:), target :: mm_wtheta
   type(operator_type), allocatable, dimension(:), target :: mm_dl
+  type(operator_type), target                            :: mm_w2_si
   type(field_type), target                               :: geopotential
   type(field_type), target                               :: temp_w2_field
   type(field_type), target                               :: cell_orientation
@@ -208,6 +211,7 @@ module runtime_constants_mod
   integer(i_def), parameter, public :: w2_shift_id    = 93_i_def
   integer(i_def), parameter, public :: w3_shift_id    = 57_i_def
   integer(i_def), parameter, public :: w3inv_shift_id = 119_i_def
+  integer(i_def), parameter, public :: w2_si_id       = 5626_i_def
 
   ! Public functions to create and access the module contents
 
@@ -686,9 +690,21 @@ contains
                  inc_X_powint_n(w2_normalisation(level), i_minus_one) )
 
     ! Compute Coriolis operator
+    coriolis = operator_type( w2_fs, w2_fs )
     if ( rotating ) then
-      coriolis = operator_type( w2_fs, w2_fs )
+      const = tau_u*dt
       call invoke( compute_coriolis_matrix_kernel_type(coriolis, chi_sph, panel_id, qr) )
+    else
+      call invoke( operator_setval_c_kernel_type(coriolis, 0.0_r_def) )
+      const = 0.0_r_def
+    end if
+
+    ! Compute SI W2 matrix = m2(or dl) + tau_u*dt*coriolis
+    mm_w2_si = operator_type( w2_fs, w2_fs )
+    if ( dlayer_on ) then
+      call invoke( operator_x_plus_ay_kernel_type(mm_w2_si, mm_dl(1), const, coriolis) )
+    else
+      call invoke( operator_x_plus_ay_kernel_type(mm_w2_si, mm_w2(1), const, coriolis) )
     end if
 
     ! Compute latitude and longitude maps
@@ -1311,7 +1327,8 @@ contains
         mm => mm_w3_shifted
       case (w2_shift_id)
         mm => mm_w2_shifted
-
+      case (w2_si_id)
+        mm => mm_w2_si
       case default
         mm => null()
         call log_event( "Mass matrix operator does not exist", LOG_LEVEL_ERROR)

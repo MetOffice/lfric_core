@@ -68,67 +68,64 @@ contains
   !> @param [inout] y field vector to be written
   subroutine apply_mixed_operator(self, x, y)
 
-    use boundaries_config_mod,       only: limited_area
-    use formulation_config_mod,      only: dlayer_on, rotating
-    use io_config_mod,               only: subroutine_timers
-    use timestepping_config_mod,     only: dt, tau_u, tau_r
-    use timer_mod,                   only: timer
-    use field_indices_mod,           only: igh_u, igh_t, igh_d, igh_p, &
-                                           igh_w, igh_uv
-    use operator_mod,                only: operator_type
-    use field_mod,                   only: field_type
-    use si_operators_alg_mod,        only: get_p2theta,       &
-                                           get_div_star,      &
-                                           get_ptheta2,       &
-                                           get_m3_rho_star,   &
-                                           get_m3_exner_star, &
-                                           get_p3theta,       &
-                                           get_rho_at_u
-    use runtime_constants_mod,       only: get_div,           &
-                                           get_mass_matrix,   &
-                                           w2_id, w3inv_id,   &
-                                           wt_id,             &
-                                           dl_id,             &
-                                           get_normalisation, &
-                                           get_coriolis,      &
-                                           get_mask
-    use matrix_vector_kernel_mod,    only: matrix_vector_kernel_type
-    use enforce_bc_kernel_mod,       only: enforce_bc_kernel_type
-    use dg_matrix_vector_kernel_mod, only: dg_matrix_vector_kernel_type
-    use function_space_mod,          only: function_space_type
-    use fs_continuity_mod,           only: W2, W2h, W2v, W3, Wtheta
-    use function_space_collection_mod, only: function_space_collection
+    use boundaries_config_mod,              only: limited_area
+    use io_config_mod,                      only: subroutine_timers
+    use timestepping_config_mod,            only: dt, tau_r
+    use timer_mod,                          only: timer
+    use field_indices_mod,                  only: igh_u, igh_t, igh_d, igh_p, &
+                                                  igh_w, igh_uv
+    use operator_mod,                       only: operator_type
+    use field_mod,                          only: field_type
+    use si_operators_alg_mod,               only: get_p2theta,       &
+                                                  get_div_star,      &
+                                                  get_ptheta2,       &
+                                                  get_m3_rho_star,   &
+                                                  get_m3_exner_star, &
+                                                  get_p3theta,       &
+                                                  get_rho_at_u
+    use runtime_constants_mod,              only: get_div,           &
+                                                  get_mass_matrix,   &
+                                                  w2_id, w3inv_id,   &
+                                                  wt_id,             &
+                                                  w2_si_id,          &
+                                                  get_normalisation, &
+                                                  get_mask
+    use enforce_bc_kernel_mod,              only: enforce_bc_kernel_type
+    use function_space_mod,                 only: function_space_type
+    use fs_continuity_mod,                  only: W2, W2h, W2v, W3, Wtheta
+    use function_space_collection_mod,      only: function_space_collection
+    use apply_mixed_lu_operator_kernel_mod, only: apply_mixed_lu_operator_kernel_type
+    use apply_mixed_lt_operator_kernel_mod, only: apply_mixed_lt_operator_kernel_type
+    use apply_mixed_lr_operator_kernel_mod, only: apply_mixed_lr_operator_kernel_type
+    use apply_mixed_lp_operator_kernel_mod, only: apply_mixed_lp_operator_kernel_type
+
     implicit none
 
     class(mixed_operator_type),  intent(inout) :: self
     class(abstract_vector_type), intent(in)    :: x
     class(abstract_vector_type), intent(inout) :: y
 
-    type(operator_type), pointer             :: mm_vel => null(), &
-                                                mm_w3_inv => null(), &
-                                                mm_wtheta => null(), &
-                                                div   => null(), &
-                                                p2theta => null(), &
-                                                div_star => null(), &
-                                                ptheta2 => null(), &
-                                                m3_rho_star => null(), &
-                                                m3_exner_star => null(), &
-                                                p3theta => null(), &
-                                                coriolis => null()
-    type(field_type), pointer               :: rho_at_u => null(), &
-                                                mt_lumped_inv => null(), &
-                                                m2_diag => null()
-    type(field_type)                         :: f_star, &
-                                                u_tmp, t_tmp, r_tmp, p_tmp, &
-                                                x_uvw, y_uvw
-    real(r_def), parameter                   :: minus_one = -1.0_r_def
-    real(kind=r_def)                         :: tau_r_dt, tau_u_dt, &
-                                                minus_tau_u_dt
-    type(function_space_type), pointer       :: u_fs => null()
-    integer(i_def)                           :: p, mesh_id
-    type(field_type), pointer                :: w2_mask     => null(), &
-                                                w3_mask     => null(), &
-                                                wtheta_mask => null()
+    type(operator_type), pointer       :: mm_vel => null(), &
+                                          mm_w3_inv => null(), &
+                                          mm_wtheta => null(), &
+                                          div   => null(), &
+                                          p2theta => null(), &
+                                          div_star => null(), &
+                                          ptheta2 => null(), &
+                                          m3_rho_star => null(), &
+                                          m3_exner_star => null(), &
+                                          p3theta => null()
+    type(field_type), pointer          :: rho_at_u => null(), &
+                                          mt_lumped_inv => null(), &
+                                          m2_diag => null()
+    type(field_type)                   :: f_star, &
+                                          x_uvw, y_uvw
+    real(kind=r_def)                   :: tau_r_dt
+    type(function_space_type), pointer :: u_fs => null()
+    integer(i_def)                     :: p, mesh_id
+    type(field_type), pointer          :: w2_mask     => null(), &
+                                          w3_mask     => null(), &
+                                          wtheta_mask => null()
 
     if ( subroutine_timers ) call timer('mixed_operator')
 
@@ -140,7 +137,6 @@ contains
     end if
 
     tau_r_dt = tau_r*dt
-    tau_u_dt = tau_u*dt
 
     ! Obtain operators from runtime constants
     mm_w3_inv     => get_mass_matrix(w3inv_id)
@@ -148,13 +144,7 @@ contains
     div           => get_div()
     mt_lumped_inv => get_normalisation(wt_id)
     m2_diag       => get_normalisation(w2_id)
-
-    ! Using modified velocity mass matrix if using damping layer
-    if (dlayer_on) then
-      mm_vel => get_mass_matrix(dl_id)
-    else
-      mm_vel => get_mass_matrix(w2_id)
-    end if
+    mm_vel        => get_mass_matrix(w2_si_id) ! = m2 (or dl) + tau_u*dt*coriolis
 
     ! Obtain operators from si operators
     p2theta           => get_p2theta()
@@ -165,29 +155,18 @@ contains
     p3theta           => get_p3theta()
     rho_at_u          => get_rho_at_u()
 
-
     select type (x)
     type is (field_vector_type)
        select type (y)
        type is (field_vector_type)
+         ! Create fields in 3D W2 space
          p = y%vector(igh_u)%get_element_order()
          mesh_id = y%vector(igh_u)%get_mesh_id()
-         if (split_w)then
-           u_fs => function_space_collection%get_fs( mesh_id, p, W2 )
-         else
-           u_fs => y%vector(igh_u)%get_function_space()
-         end if
+         u_fs => function_space_collection%get_fs( mesh_id, p, W2 )
+
          call f_star%initialise( vector_space = u_fs )
-         ! Create temporary fields
-
-         call t_tmp%initialise( vector_space = y%vector( igh_t )%get_function_space() )
-         call r_tmp%initialise( vector_space = y%vector( igh_d )%get_function_space() )
-         call p_tmp%initialise( vector_space = y%vector( igh_p )%get_function_space() )
-
-         call u_tmp%initialise( vector_space = u_fs )
-
-         call x_uvw%initialise( vector_space = function_space_collection%get_fs( mesh_id, p, W2 ) )
-         call y_uvw%initialise( vector_space = function_space_collection%get_fs( mesh_id, p, W2 ) )
+         call x_uvw%initialise( vector_space = u_fs )
+         call y_uvw%initialise( vector_space = u_fs )
 
          if ( split_w )then
            call invoke( combine_w2_field_kernel_type( x_uvw, x%vector( igh_uv ), &
@@ -196,48 +175,20 @@ contains
            call invoke( setval_X( x_uvw, x%vector( igh_u ) ) )
          end if
 
-         ! Compute lhs
-         if ( rotating ) then
-           minus_tau_u_dt = -tau_u_dt
-           coriolis => get_coriolis()
-           call invoke( setval_c( y_uvw, 0.0_r_def ),                                  &
-                        matrix_vector_kernel_type( y_uvw, x_uvw, coriolis ), &
-                        inc_a_times_X(minus_tau_u_dt, y_uvw ) )
-         else
-           call invoke( setval_c( y_uvw, 0.0_r_def ) )
-         end if
-         ! Initialise lhs_u and lhs_theta to 0
-         call invoke( name = "Compute mixed lhs",                                                &
-         ! Initialise field that are incremented
-                      setval_c( u_tmp, 0.0_r_def ),                                              &
-                      setval_c( t_tmp, 0.0_r_def ),                                              &
-                      setval_c( y%vector( igh_t ),     0.0_r_def ),                              &
-         ! L_u
-                      matrix_vector_kernel_type( y_uvw, x%vector( igh_t ), p2theta ),            &
-                      matrix_vector_kernel_type( y_uvw, x%vector( igh_p ), div_star ),           &
-                      matrix_vector_kernel_type( u_tmp, x_uvw, mm_vel ),                         &
-                      inc_aX_plus_Y( minus_one, y_uvw, u_tmp ),                                  &
-                      enforce_bc_kernel_type( y_uvw ),                                           &
-         ! L_theta
-                      matrix_vector_kernel_type( y%vector(igh_t), x_uvw, ptheta2 ),              &
-                      matrix_vector_kernel_type( t_tmp, x%vector(igh_t), mm_wtheta ),            &
-                      inc_X_plus_Y( y%vector( igh_t ), t_tmp ),                                  &
-         ! L_rho
-                      X_times_Y( f_star, rho_at_u, x_uvw ),                                      &
-                      dg_matrix_vector_kernel_type( r_tmp, f_star, div ),                        &
-                      dg_matrix_vector_kernel_type( y%vector(igh_d), r_tmp, mm_w3_inv ),         &
-                      inc_aX_plus_Y( tau_r_dt, y%vector(igh_d), x%vector(igh_d) ),               &
-         ! L_pi
-                      dg_matrix_vector_kernel_type( y%vector(igh_p), x%vector(igh_d),            &
-                                                    m3_rho_star ),                               &
-                      matrix_vector_kernel_type( y%vector(igh_p), x%vector(igh_t), p3theta ),    &
-                      dg_matrix_vector_kernel_type( p_tmp, x%vector(igh_p), m3_exner_star ),     &
-                      inc_X_minus_Y( p_tmp, y%vector(igh_p) ),                                   &
-                      dg_matrix_vector_kernel_type( y%vector(igh_p), p_tmp, mm_w3_inv ),         &
-         ! Normalise lu and lt
-                      inc_X_times_Y( y_uvw, m2_diag ),                                           &
-                      inc_X_times_Y( y%vector( igh_t ), mt_lumped_inv)                           &
-                      )
+         call invoke( name="apply_mixed_lhs",                                                               &
+                      setval_c( y_uvw,           0.0_r_def),                                                &
+                      setval_c( y%vector(igh_t), 0.0_r_def),                                                &
+                      X_times_Y( f_star, rho_at_u, x_uvw ),                                                 &
+                      apply_mixed_lu_operator_kernel_type( y_uvw, x_uvw, x%vector(igh_t), x%vector(igh_p),  &
+                                                           mm_vel, p2theta, div_star, m2_diag ),            &
+                      apply_mixed_lt_operator_kernel_type( y%vector(igh_t), x_uvw, x%vector(igh_t),         &
+                                                           mm_wtheta, ptheta2, mt_lumped_inv ),             &
+                      apply_mixed_lr_operator_kernel_type( y%vector(igh_d), x%vector(igh_d),                &
+                                                           mm_w3_inv, div, tau_r_dt, f_star ),              &
+                      apply_mixed_lp_operator_kernel_type( y%vector(igh_p), x%vector(igh_t),                &
+                                                           x%vector(igh_d), x%vector(igh_p),                &
+                                                           mm_w3_inv, m3_exner_star, m3_rho_star, p3theta), &
+                      enforce_bc_kernel_type( y_uvw ) )
 
         ! Lateral boundaries
          if ( limited_area ) then
@@ -248,14 +199,12 @@ contains
                       inc_X_times_Y( y%vector(igh_t), wtheta_mask )      &
                       )
          end if
-
          if ( split_w )then
            call invoke( split_w2_field_kernel_type( y%vector( igh_uv ),          &
                                                     y%vector( igh_w ), y_uvw ) )
          else
            call invoke( setval_X( y%vector( igh_u ), y_uvw ) )
          end if
-
 
          nullify( mm_vel, mm_w3_inv, mm_wtheta, div, p2theta, &
                   div_star, ptheta2, m3_rho_star, m3_exner_star, p3theta, rho_at_u, &

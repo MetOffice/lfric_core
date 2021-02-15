@@ -36,8 +36,9 @@ use rotation_vector_mod,     only: rotation_vector_fplane,  &
                                    rotation_vector_sphere
 use planet_config_mod,       only: scaled_omega
 use cross_product_mod,       only: cross_product
-implicit none
 
+implicit none
+private
 !-------------------------------------------------------------------------------
 ! Public types
 !-------------------------------------------------------------------------------

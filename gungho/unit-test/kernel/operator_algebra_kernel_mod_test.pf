@@ -1,0 +1,142 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2021 Met Office. All rights reserved.
+! For further details please refer to the file COPYRIGHT.txt
+! which you should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+
+!> Test the mixed operator application to the equation of state
+!>
+module operator_algebra_kernel_mod_test
+
+  use constants_mod, only : i_def, r_def
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_x_plus_ay
+  public :: test_setval_c
+
+  @TestCase
+  type, extends(TestCase), public :: operator_algebra_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_x_plus_ay
+    procedure test_setval_c
+  end type operator_algebra_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(operator_algebra_test_type), intent(inout) :: this
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(operator_algebra_test_type), intent(inout) :: this
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  @Test( )
+  subroutine test_x_plus_ay( this )
+
+    use operator_algebra_kernel_mod, only : operator_x_plus_ay_kernel_code
+
+    implicit none
+
+    class(operator_algebra_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-12_r_def
+
+    ! Mesh
+    integer(i_def), parameter :: nlayers = 1
+    integer(i_def), parameter :: cell = 1
+    integer(i_def), parameter :: ncell = 1
+
+    ! Spaces
+    integer(i_def), parameter :: ndf1 = 3
+    integer(i_def), parameter :: ndf2 = 2
+
+    ! Operators
+    real(r_def), dimension(ndf1, ndf2, ncell) :: x_plus_ay
+    real(r_def), dimension(ndf1, ndf2, ncell) :: x, y
+
+    ! Reals
+    real(r_def), parameter :: a = 2.0_r_def
+
+    real(r_def)    :: answer
+    integer(i_def) :: df
+
+    ! Set up operators
+    x(:,1,1) = 0.1_r_def
+    x(:,2,1) = 0.2_r_def
+
+    y(:,1,1) = 1.1_r_def
+    y(:,2,1) = 2.1_r_def
+
+    ! Compute x + a*y
+    call operator_x_plus_ay_kernel_code(cell, nlayers,    &
+                                        ncell, x_plus_ay, &
+                                        ncell, x,         &
+                                        a,                &
+                                        ncell, y,         &
+                                        ndf1, ndf2)
+    do df = 1,ndf1
+      answer = 2.3_r_def
+      @assertEqual(answer, x_plus_ay(df,1,1), tol)
+      answer = 4.4_r_def
+      @assertEqual(answer, x_plus_ay(df,2,1), tol)
+    end do
+
+  end subroutine test_x_plus_ay
+
+  @Test( )
+  subroutine test_setval_c( this )
+
+    use operator_algebra_kernel_mod, only : operator_setval_c_kernel_code
+
+    implicit none
+
+    class(operator_algebra_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-12_r_def
+
+    ! Mesh
+    integer(i_def), parameter :: nlayers = 1
+    integer(i_def), parameter :: cell = 1
+    integer(i_def), parameter :: ncell = 1
+
+    ! Spaces
+    integer(i_def), parameter :: ndf1 = 3
+    integer(i_def), parameter :: ndf2 = 2
+
+    ! Operators
+    real(r_def), dimension(ndf1, ndf2, ncell) :: x
+
+    ! Reals
+    real(r_def), parameter :: a = 2.0_r_def
+
+    real(r_def), dimension(ndf1, ndf2, ncell) :: answer
+
+    ! Compute x = a
+    call operator_setval_c_kernel_code(cell, nlayers, &
+                                       ncell, x,      &
+                                       a,             &
+                                       ndf1, ndf2)
+    answer = a
+    @assertEqual(answer, x, tol)
+
+  end subroutine test_setval_c
+end module operator_algebra_kernel_mod_test

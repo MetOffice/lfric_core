@@ -14,9 +14,7 @@ module lam_rhs_alg_mod
   use enforce_bc_kernel_mod,       only: enforce_bc_kernel_type
   use io_config_mod,               only: subroutine_timers
   use timer_mod,                   only: timer
-  use formulation_config_mod,      only: dlayer_on, rotating
   use derived_config_mod,          only: bundle_size
-  use timestepping_config_mod,     only: dt, tau_u
   use si_operators_alg_mod,        only: get_ptheta2,       &
                                          get_rho_at_u
   use runtime_constants_mod,       only: get_div,           &
@@ -24,8 +22,8 @@ module lam_rhs_alg_mod
                                          w2_id, w3inv_id,   &
                                          wt_id,             &
                                          dl_id,             &
+                                         w2_si_id,          &
                                          get_normalisation, &
-                                         get_coriolis,      &
                                          get_mask
   use fs_continuity_mod,           only: W2, W3, Wtheta
   use field_mod,                   only: field_type
@@ -88,18 +86,14 @@ contains
     type(operator_type), pointer :: mm_vel     => null(), &
                                     mm_w3_inv  => null(), &
                                     div        => null(), &
-                                    ptheta2    => null(), &
-                                    coriolis   => null()
+                                    ptheta2    => null()
     type(field_type),    pointer :: rho_at_u      => null(), &
                                     mt_lumped_inv => null(), &
                                     m2_diag       => null()
     type(field_type)             :: f_star, &
                                     u_tmp,  &
-                                    t_tmp,  &
                                     r_tmp
     real(r_def),       parameter :: minus_one = -1.0_r_def
-    real(kind=r_def)             :: tau_u_dt, &
-                                    minus_tau_u_dt
     type(field_type),    pointer :: w2_mask     => null(), &
                                     w3_mask     => null(), &
                                     wtheta_mask => null()
@@ -114,48 +108,25 @@ contains
     w3_mask     => get_mask(W3)
     wtheta_mask => get_mask(Wtheta)
 
-    tau_u_dt = tau_u*dt
-
     ! Obtain operators from runtime constants
     mm_w3_inv     => get_mass_matrix(w3inv_id)
     div           => get_div()
     mt_lumped_inv => get_normalisation(wt_id)
     m2_diag       => get_normalisation(w2_id)
-
-    ! Using modified velocity mass matrix if using damping layer
-    if (dlayer_on) then
-      mm_vel => get_mass_matrix(dl_id)
-    else
-      mm_vel => get_mass_matrix(w2_id)
-    end if
+    mm_vel        => get_mass_matrix(w2_si_id) ! = m2 (or dl) + tau_u*dt*coriolis
 
     ! Obtain operators from SI operators
     ptheta2  => get_ptheta2()
     rho_at_u => get_rho_at_u()
-
     call f_star%initialise( vector_space = rhs(igh_u)%get_function_space() )
     call u_tmp%initialise( vector_space = rhs(igh_u)%get_function_space() )
-    call t_tmp%initialise( vector_space = rhs(igh_t)%get_function_space() )
     call r_tmp%initialise( vector_space = rhs(igh_d)%get_function_space() )
-
-    if ( rotating ) then
-      minus_tau_u_dt = -tau_u_dt
-      coriolis => get_coriolis()
-      call invoke( setval_c( rhs(igh_u), 0.0_r_def ),            &
-                   matrix_vector_kernel_type( rhs(igh_u),        &
-                                              boundary_u,        &
-                                              coriolis ),        &
-                   inc_a_times_X(             minus_tau_u_dt,    &
-                                              rhs(igh_u) ) )
-    else
-      call invoke( setval_c( rhs(igh_u), 0.0_r_def ) )
-    end if
 
     call invoke( name = "Compute_rhs_lbc",                         &
          ! Initialise field that are incremented
                       setval_c( u_tmp, 0.0_r_def ),                &
-                      setval_c( t_tmp, 0.0_r_def ),                &
                       setval_c( rhs(igh_t), 0.0_r_def ),           &
+                      setval_c( rhs(igh_u), 0.0_r_def ),           &
          ! Initialise rhs pressure
                       setval_c( rhs(igh_p), 0.0_r_def ),           &
          ! L_u
@@ -197,7 +168,6 @@ contains
     nullify ( boundary_u, w2_mask, w3_mask, wtheta_mask )
     nullify ( mm_w3_inv, div, mt_lumped_inv, m2_diag, mm_vel )
     nullify ( ptheta2, rho_at_u )
-    if ( rotating ) nullify ( coriolis )
 
     if ( subroutine_timers ) call timer('rhs_lbc')
 

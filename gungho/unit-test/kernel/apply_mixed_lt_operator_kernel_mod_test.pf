@@ -1,0 +1,121 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2021 Met Office. All rights reserved.
+! For further details please refer to the file COPYRIGHT.txt
+! which you should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+
+!> Test the mixed operator to the potential temperature equation
+!>
+module apply_mixed_lt_operator_kernel_mod_test
+
+  use constants_mod, only : i_def, r_def
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: apply_mixed_lt_operator_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type apply_mixed_lt_operator_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(apply_mixed_lt_operator_test_type), intent(inout) :: this
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(apply_mixed_lt_operator_test_type), intent(inout) :: this
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  @Test( )
+  subroutine test_all( this )
+
+    use apply_mixed_lt_operator_kernel_mod, only : apply_mixed_lt_operator_code
+
+    implicit none
+
+    class(apply_mixed_lt_operator_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol = 1.0e-12_r_def
+
+    ! Mesh
+    integer(i_def), parameter :: nlayers = 1
+    integer(i_def), parameter :: cell = 1
+    integer(i_def), parameter :: ncell = 1
+
+    ! Spaces
+    integer(i_def), parameter :: ndf_w2 = 4
+    integer(i_def), parameter :: ndf_wt = 2
+    integer(i_def), parameter :: undf_w2 = ndf_w2*nlayers
+    integer(i_def), parameter :: undf_wt = nlayers + 1
+
+    ! Maps
+    integer(i_def), dimension(ndf_w2) :: map_w2
+    integer(i_def), dimension(ndf_wt) :: map_wt
+
+    ! Operators
+    real(r_def), dimension(ndf_wt, ndf_wt, ncell) :: Mt
+    real(r_def), dimension(ndf_wt, ndf_w2, ncell) :: Proj
+
+    ! Fields
+    real(r_def), dimension(undf_wt) :: Lt, t, Nt
+    real(r_def), dimension(undf_w2) :: u
+
+    integer(i_def) :: df
+    real(r_def) :: answer
+
+    map_w2 = (/ 1_i_def, 2_i_def, 3_i_def, 4_i_def /)
+    map_wt = (/ 1_i_def, 2_i_def /)
+
+    ! Set up operators
+    Mt = 0.0_r_def
+    do df = 1,ndf_wt
+      Mt(df,df,1) = real(df,r_def)
+      Proj(df,:,1) = (-1.0_r_def)**df
+    end do
+
+    ! Set up the fields
+    u = (/ 0.0_r_def, 1.0_r_def, 3.0_r_def, -2.0_r_def /)
+    t = (/ 300.0_r_def, 310.0_r_def /)
+    Nt = 2.0_r_def
+    Lt = 0.0_r_def
+
+    ! Compute Nt*(Mt*t + Proj*u)
+    call apply_mixed_lt_operator_code(cell,                    &
+                                      nlayers,                 &
+                                      Lt,                      &
+                                      u, t,                    &
+                                      ncell, Mt,               &
+                                      ncell, Proj,             &
+                                      Nt,                      &
+                                      ndf_wt, undf_wt, map_wt, &
+                                      ndf_w2, undf_w2, map_w2)
+
+    do df = 1,ndf_wt
+      answer = Nt(df)*(Mt(df,df,1)*t(df) + sum(Proj(df,:,1)*u(:)))
+      @assertEqual(answer, Lt(df), tol)
+    end do
+
+  end subroutine test_all
+
+end module apply_mixed_lt_operator_kernel_mod_test
