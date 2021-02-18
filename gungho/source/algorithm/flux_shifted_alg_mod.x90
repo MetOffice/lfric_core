@@ -222,12 +222,14 @@ contains
   !> @param[in,out] mass_flux Mass flux field: f = density*wind
   !> @param[in]     density Field to advect
   !> @param[in]     wind Advecting wind field
-  subroutine flux_shifted_alg(mass_flux, density, wind)
+  !> @param[in]     logspace Carry out interpolation in log space
+  subroutine flux_shifted_alg(mass_flux, density, wind, logspace)
 
   implicit none
 
   type(field_type), intent(in)    :: density, wind
   type(field_type), intent(inout) :: mass_flux
+  logical, optional, intent(in) :: logspace
 
   type(field_type),    pointer :: chi_sph(:) => null()
   type(field_type),    pointer :: panel_id => null()
@@ -239,6 +241,13 @@ contains
   type(field_type)                    :: rhs_f
 
   type(function_space_type), pointer  :: u_fs  => null()
+  logical :: logspace_loc
+
+  if (.not.present(logspace))then
+    logspace_loc=.false.
+  else
+    logspace_loc=logspace
+  end if
 
   select case(operators)
 
@@ -256,9 +265,10 @@ contains
                                         fv_flux_order, flux2d_stencil_size, nfaces_re_h )
      end if
      ! Compute vertical components of mass flux
-     call invoke_poly1d_shifted_vert_flux( mass_flux, wind, density, &
-                                           vert_flux_coeffs, &
-                                           fv_flux_order, nfaces_re_v)
+     call invoke_poly1d_shifted_vert_flux( mass_flux, wind, density,   &
+                                           vert_flux_coeffs,           &
+                                           fv_flux_order, nfaces_re_v, &
+                                           logspace=logspace_loc)
 
     case(operators_fem)
       ! Project density*wind into the mass flux space

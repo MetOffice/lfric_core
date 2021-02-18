@@ -227,6 +227,7 @@ contains
                                       0.0_r_def,                 &
                                       nqp_h, nqp_v, wqp_h, wqp_v,&
                                       4_i_def, nqp_e, wqp_e )
+
     answer = (/  5.0_r_def/6.0_r_def,  2.0_r_def/6.0_r_def, -1.0_r_def/6.0_r_def /)
     @assertEqual(answer, coeff(:,1,1), tol)
   end subroutine test_all

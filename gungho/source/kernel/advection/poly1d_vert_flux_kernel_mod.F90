@@ -84,21 +84,23 @@ contains
 !! @param[in]  outward_normals_to_vertical_faces Vector of normals to the
 !!                                               reference element vertical
 !!                                               "outward faces"
-subroutine poly1d_vert_flux_code( nlayers,              &
-                                  flux,                 &
-                                  wind,                 &
-                                  density,              &
-                                  coeff,                &
-                                  ndf_w2,               &
-                                  undf_w2,              &
-                                  map_w2,               &
-                                  basis_w2,             &
-                                  ndf_w3,               &
-                                  undf_w3,              &
-                                  map_w3,               &
-                                  global_order,         &
-                                  nfaces_re_v,          &
-                                  outward_normals_to_vertical_faces )
+!! @param[in]  logspace If true, then perform interpolation in log space
+subroutine poly1d_vert_flux_code( nlayers,                           &
+                                  flux,                              &
+                                  wind,                              &
+                                  density,                           &
+                                  coeff,                             &
+                                  ndf_w2,                            &
+                                  undf_w2,                           &
+                                  map_w2,                            &
+                                  basis_w2,                          &
+                                  ndf_w3,                            &
+                                  undf_w3,                           &
+                                  map_w3,                            &
+                                  global_order,                      &
+                                  nfaces_re_v,                       &
+                                  outward_normals_to_vertical_faces, &
+                                  logspace )
 
   implicit none
 
@@ -121,6 +123,8 @@ subroutine poly1d_vert_flux_code( nlayers,              &
   real(kind=r_def), dimension(3,ndf_w2,ndf_w2), intent(in) :: basis_w2
 
   real(kind=r_def), intent(in)  :: outward_normals_to_vertical_faces(:,:)
+
+  logical, intent(in) :: logspace
 
   ! Internal variables
   integer(kind=i_def)            :: k, df, ij, p, stencil, order, id, &
@@ -173,12 +177,29 @@ subroutine poly1d_vert_flux_code( nlayers,              &
       ! Check if this is the upwind cell
       direction = wind(map_w2(df) + k )*v_dot_n(id)
       if ( direction >= 0.0_r_def ) then
-        polynomial_density = 0.0_r_def
-        do p = 1,order+1
-          ijkp = ij + k + smap(p,order) + boundary_offset
-          polynomial_density = polynomial_density &
-                             + density( ijkp )*coeff( p, id, ij+k )
-        end do
+        if (logspace) then
+          ! Interpolate log(tracer)
+          ! I.e. polynomial = exp(c_1*log(tracer_1) + c_2*log(tracer_2) + ...)
+          !                 = tracer_1**c_1*tracer_2**c_2...
+          ! Note that we further take the absolute value before raising to the
+          ! fractional power. This code should only be used for a positive
+          ! quantity, but adding in the abs ensures no errors are thrown
+          ! if negative numbers are passed through in redundant calculations
+          ! in the haloes
+          polynomial_density = 1.0_r_def
+          do p = 1,order+1
+            ijkp = ij + k + smap(p,order) + boundary_offset
+            polynomial_density = polynomial_density &
+                               * abs(density( ijkp ))**coeff( p, id, ij+k )
+          end do
+        else
+          polynomial_density = 0.0_r_def
+          do p = 1,order+1
+            ijkp = ij + k + smap(p,order) + boundary_offset
+            polynomial_density = polynomial_density &
+                               + density( ijkp )*coeff( p, id, ij+k )
+          end do
+        end if
         flux(map_w2(df) + k ) = wind(map_w2(df) + k)*polynomial_density
       end if
     end do
@@ -199,24 +220,48 @@ subroutine poly1d_vert_flux_code( nlayers,              &
   id = 1
   if ( order > 0 ) boundary_offset = 1
   df = id + vert_offset
-  polynomial_density = 0.0_r_def
-  do p = 1,order+1
-    ijkp = ij + k + smap(p,order) + boundary_offset
-    polynomial_density = polynomial_density &
-                       + density( ijkp )*coeff( p, id, ij+k )
-  end do
+  if (logspace) then
+    ! Interpolate log(tracer)
+    ! I.e. polynomial = exp(c_1*log(tracer_1) + c_2*log(tracer_2) + ...)
+    !                 = tracer_1**c_1*tracer_2**c_2...
+    polynomial_density = 1.0_r_def
+    do p = 1,order+1
+      ijkp = ij + k + smap(p,order) + boundary_offset
+      polynomial_density = polynomial_density &
+                         * abs(density( ijkp ))**coeff( p, id, ij+k )
+    end do
+  else
+    polynomial_density = 0.0_r_def
+    do p = 1,order+1
+      ijkp = ij + k + smap(p,order) + boundary_offset
+      polynomial_density = polynomial_density &
+                         + density( ijkp )*coeff( p, id, ij+k )
+    end do
+  end if
   flux(map_w2(df) + k ) = wind(map_w2(df) + k)*polynomial_density
 
   k = nlayers-1
   id = 2
   if ( order > 0 ) boundary_offset =  -1
   df = id + vert_offset
-  polynomial_density = 0.0_r_def
-  do p = 1,order+1
-    ijkp = ij + k + smap(p,order) + boundary_offset
-    polynomial_density = polynomial_density &
-                       + density( ijkp )*coeff( p, id, ij+k )
-  end do
+  if (logspace) then
+    ! Interpolate log(tracer)
+    ! I.e. polynomial = exp(c_1*log(tracer_1) + c_2*log(tracer_2) + ...)
+    !                 = tracer_1**c_1*tracer_2**c_2...
+    polynomial_density = 1.0_r_def
+    do p = 1,order+1
+      ijkp = ij + k + smap(p,order) + boundary_offset
+      polynomial_density = polynomial_density &
+                         * abs(density( ijkp ))**coeff( p, id, ij+k )
+    end do
+  else
+    polynomial_density = 0.0_r_def
+    do p = 1,order+1
+      ijkp = ij + k + smap(p,order) + boundary_offset
+      polynomial_density = polynomial_density &
+                         + density( ijkp )*coeff( p, id, ij+k )
+    end do
+  end if
   flux(map_w2(df) + k ) = wind(map_w2(df) + k)*polynomial_density
 
   deallocate( smap )

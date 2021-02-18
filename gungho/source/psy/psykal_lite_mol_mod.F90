@@ -813,7 +813,8 @@ end subroutine invoke_poly1d_flux_coeffs
 !       PSyclone will generate a getter to nfaces_re_v as well. PSyclone rules
 !       will need to account for both occurences.
 !-------------------------------------------------------------------------------
-subroutine invoke_poly1d_vert_flux( flux, wind, density, coeff, order, nfaces_re_v )
+subroutine invoke_poly1d_vert_flux( flux, wind, density, coeff, order, &
+                                    nfaces_re_v, logspace )
 
   use poly1d_vert_flux_kernel_mod,     only: poly1d_vert_flux_code
   use reference_element_mod,           only: reference_element_type
@@ -826,6 +827,7 @@ subroutine invoke_poly1d_vert_flux( flux, wind, density, coeff, order, nfaces_re
   integer(i_def), intent(in)           :: order
   integer(i_def), intent(in)           :: nfaces_re_v
   type(field_type), intent(in)         :: coeff(order+1,nfaces_re_v)
+  logical, intent(in) :: logspace
 
   class(reference_element_type), pointer :: reference_element => null()
   type( field_proxy_type )  :: flux_proxy, wind_proxy, density_proxy
@@ -930,21 +932,22 @@ subroutine invoke_poly1d_vert_flux( flux, wind, density, coeff, order, nfaces_re
 
   do cell = 1,mesh%get_last_halo_cell(1)
 
-      call poly1d_vert_flux_code( nlayers,                     &
-                                  flux_proxy%data,             &
-                                  wind_proxy%data,             &
-                                  density_proxy%data,          &
-                                  flux_coeff_v,                &
-                                  ndf_w2,                      &
-                                  undf_w2,                     &
-                                  map_w2(:,cell),              &
-                                  basis_w2,                    &
-                                  ndf_w3,                      &
-                                  undf_w3,                     &
-                                  map_w3(:,cell),              &
-                                  order,                       &
-                                  nfaces_re_v,                 &
-                                  outward_normals_to_vertical_faces )
+      call poly1d_vert_flux_code( nlayers,                           &
+                                  flux_proxy%data,                   &
+                                  wind_proxy%data,                   &
+                                  density_proxy%data,                &
+                                  flux_coeff_v,                      &
+                                  ndf_w2,                            &
+                                  undf_w2,                           &
+                                  map_w2(:,cell),                    &
+                                  basis_w2,                          &
+                                  ndf_w3,                            &
+                                  undf_w3,                           &
+                                  map_w3(:,cell),                    &
+                                  order,                             &
+                                  nfaces_re_v,                       &
+                                  outward_normals_to_vertical_faces, &
+                                  logspace )
 
   end do
 
@@ -1907,7 +1910,8 @@ end subroutine invoke_poly1d_vert_adv_coeffs
 !    PSyclone) and one for face quadrature (not supported by PSyclone): Issue
 !    #195
 !-------------------------------------------------------------------------------
-subroutine invoke_poly1d_vert_adv( advective, wind, tracer, coeff, order, nfaces_re_v )
+subroutine invoke_poly1d_vert_adv( advective, wind, tracer, coeff, order, &
+                                   nfaces_re_v, logspace )
 
   use poly1d_vert_adv_kernel_mod, only: poly1d_vert_adv_code, &
                                         poly1d_vert_adv_old_code
@@ -1920,6 +1924,7 @@ subroutine invoke_poly1d_vert_adv( advective, wind, tracer, coeff, order, nfaces
   integer(i_def),   intent(in)         :: order
   integer(i_def),   intent(in)         :: nfaces_re_v
   type(field_type), intent(in)         :: coeff(order+1,nfaces_re_v)
+  logical, intent(in) :: logspace
 
   type( field_proxy_type )  :: adv_proxy, wind_proxy, tracer_proxy
   type( field_proxy_type )  :: coeff_proxy(order+1,nfaces_re_v)
@@ -2009,7 +2014,8 @@ subroutine invoke_poly1d_vert_adv( advective, wind, tracer, coeff, order, nfaces
                                    undf_w2,                     &
                                    map_w2(:,cell),              &
                                    order,                       &
-                                   nfaces_re_v )
+                                   nfaces_re_v,                 &
+                                   logspace )
 
     end do
 
@@ -2029,7 +2035,8 @@ subroutine invoke_poly1d_vert_adv( advective, wind, tracer, coeff, order, nfaces
                                        undf_w2,                     &
                                        map_w2(:,cell),              &
                                        order,                       &
-                                       nfaces_re_v )
+                                       nfaces_re_v,                 &
+                                       logspace )
 
     end do
 

@@ -93,6 +93,7 @@ contains
 !! @param[in]  global_order Desired order of polynomial reconstruction
 !! @param[in]  nfaces_v Number of vertical faces (used by PSyclone to size
 !!                      coeff array)
+!! @param[in]  logspace If true, then perform interpolation in log space
 subroutine poly1d_vert_adv_code( nlayers,              &
                                  advective,            &
                                  wind,                 &
@@ -105,7 +106,8 @@ subroutine poly1d_vert_adv_code( nlayers,              &
                                  undf_w2,              &
                                  map_w2,               &
                                  global_order,         &
-                                 nfaces_v)
+                                 nfaces_v,             &
+                                 logspace )
 
   implicit none
 
@@ -124,6 +126,8 @@ subroutine poly1d_vert_adv_code( nlayers,              &
   real(kind=r_def), dimension(undf_wt), intent(in)    :: tracer
 
   real(kind=r_def), dimension(global_order+1, nfaces_v, undf_wt), intent(in) :: coeff
+
+  logical, intent(in) :: logspace
 
   ! Internal variables
   integer(kind=i_def)            :: k, ij, p, stencil, order, &
@@ -164,28 +168,58 @@ subroutine poly1d_vert_adv_code( nlayers,              &
     ! At the boundaries reduce to centred linear interpolation
     if ( km == 0 .and. direction == 0 ) order = 1
 
-    tracer_m = 0.0_r_def
+    if (logspace) then
+      ! Interpolate log(tracer)
+      ! I.e. polynomial = exp(c_1*log(tracer_1) + c_2*log(tracer_2) + ...)
+      !                 = tracer_1**c_1*tracer_2**c_2...
+      ! Note that we further take the absolute value before raising to the
+      ! fractional power. This code should only be used for a positive
+      ! quantity, but adding in the abs ensures no errors are thrown
+      ! if negative numbers are passed through in redundant calculations
+      ! in the haloes
+      tracer_m = 1.0_r_def
 
-    do p = 1,order+1
-      ijkp = ij + km + smap(p,order) + direction
-      tracer_m = tracer_m  + tracer( ijkp )*coeff( p, direction+1, ij+km )
-    end do
+      do p = 1,order+1
+        ijkp = ij + km + smap(p,order) + direction
+        tracer_m = tracer_m  * abs(tracer( ijkp ))**coeff( p, direction+1, ij+km )
+      end do
+    else
+      tracer_m = 0.0_r_def
+
+      do p = 1,order+1
+        ijkp = ij + km + smap(p,order) + direction
+        tracer_m = tracer_m  + tracer( ijkp )*coeff( p, direction+1, ij+km )
+      end do
+    end if
 
     ! Compute value at W3 point in this cell
     order = min(vertical_order, min(2*(k+1), 2*(nlayers-1 - (k-1))))
     ! At the boundaries reduce to centred linear interpolation
     if ( k == nlayers - 1 .and. direction == 1 ) order = 1
 
-    tracer_p = 0.0_r_def
 
     ! Offset at the top boundary to ensure we use the correct entries
     boundary_offset = 0
     if ( k == nlayers - 1 .and. direction == 1)  boundary_offset = -1
 
-    do p = 1,order+1
-      ijkp = ij + k + smap(p,order) + direction + boundary_offset
-      tracer_p = tracer_p  + tracer( ijkp )*coeff( p, direction+1, ij+k )
-    end do
+    if (logspace) then
+      ! Interpolate log(tracer)
+      ! I.e. polynomial = exp(c_1*log(tracer_1) + c_2*log(tracer_2) + ...)
+      !                 = tracer_1**c_1*tracer_2**c_2...
+      tracer_p = 1.0_r_def
+
+      do p = 1,order+1
+        ijkp = ij + k + smap(p,order) + direction + boundary_offset
+        tracer_p = tracer_p  * abs(tracer( ijkp ))**coeff( p, direction+1, ij+k )
+      end do
+    else
+      tracer_p = 0.0_r_def
+
+      do p = 1,order+1
+        ijkp = ij + k + smap(p,order) + direction + boundary_offset
+        tracer_p = tracer_p  + tracer( ijkp )*coeff( p, direction+1, ij+k )
+      end do
+    end if
 
     ! Compute advective increment
     advective(map_wt(1) + k ) = advective(map_wt(1) + k ) &
@@ -216,19 +250,21 @@ end subroutine poly1d_vert_adv_code
 !! @param[in]  global_order Desired order of polynomial reconstruction
 !! @param[in]  nfaces_v Number of vertical faces (used by PSyclone to size
 !!                      coeff array)
+!! @param[in]  logspace If true, then perform interpolation in log space
 subroutine poly1d_vert_adv_old_code( nlayers,              &
-                                 advective,            &
-                                 wind,                 &
-                                 tracer,               &
-                                 coeff,                &
-                                 ndf_wt,               &
-                                 undf_wt,              &
-                                 map_wt,               &
-                                 ndf_w2,               &
-                                 undf_w2,              &
-                                 map_w2,               &
-                                 global_order,         &
-                                 nfaces_v)
+                                     advective,            &
+                                     wind,                 &
+                                     tracer,               &
+                                     coeff,                &
+                                     ndf_wt,               &
+                                     undf_wt,              &
+                                     map_wt,               &
+                                     ndf_w2,               &
+                                     undf_w2,              &
+                                     map_w2,               &
+                                     global_order,         &
+                                     nfaces_v,             &
+                                     logspace )
 
   implicit none
 
@@ -247,6 +283,8 @@ subroutine poly1d_vert_adv_old_code( nlayers,              &
   real(kind=r_def), dimension(undf_wt), intent(in)    :: tracer
 
   real(kind=r_def), dimension(global_order+1, nfaces_v, undf_wt), intent(in) :: coeff
+
+  logical, intent(in) :: logspace
 
   ! Internal variables
   integer(kind=i_def)            :: k, ij, p, stencil, order, &
@@ -287,17 +325,30 @@ subroutine poly1d_vert_adv_old_code( nlayers,              &
     if ( ( k == 0           .and. direction == 0) .or. &
          ( k == nlayers - 1 .and. direction == 1) ) order = 1
 
-    polynomial_tracer(k) = 0.0_r_def
-
     ! Offset at the top boundary to ensure we use the correct entries
     boundary_offset = 0
     if ( k == nlayers - 1 .and. direction == 1)  boundary_offset = -1
 
-    do p = 1,order+1
-      ijkp = ij + k + smap(p,order) + direction + boundary_offset
-      polynomial_tracer(k) = polynomial_tracer(k) &
-                           + tracer( ijkp )*coeff( p, direction+1, ij+k )
-    end do
+    if (logspace) then
+      ! Interpolate log(tracer)
+      ! I.e. polynomial = exp(c_1*log(tracer_1) + c_2*log(tracer_2) + ...)
+      !                 = tracer_1**c_1*tracer_2**c_2...
+      polynomial_tracer(k) = 1.0_r_def
+
+      do p = 1,order+1
+        ijkp = ij + k + smap(p,order) + direction + boundary_offset
+        polynomial_tracer(k) = polynomial_tracer(k) &
+                             * abs(tracer( ijkp ))**coeff( p, direction+1, ij+k )
+      end do
+    else
+      polynomial_tracer(k) = 0.0_r_def
+
+      do p = 1,order+1
+        ijkp = ij + k + smap(p,order) + direction + boundary_offset
+        polynomial_tracer(k) = polynomial_tracer(k) &
+                             + tracer( ijkp )*coeff( p, direction+1, ij+k )
+      end do
+    end if
   end do
 
   do k = 1, nlayers - 1

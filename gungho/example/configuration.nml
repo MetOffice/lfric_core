@@ -205,6 +205,8 @@
   rho_splitting = 'none'
   theta_splitting = 'none'
   upwind_direction_from_w_at_wtheta = .true.
+  log_rho=.true.
+  log_theta=.true.
 /
 
 &partitioning

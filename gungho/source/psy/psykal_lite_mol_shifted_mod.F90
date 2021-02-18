@@ -770,7 +770,8 @@ end subroutine invoke_poly1d_shifted_flux_coeffs
 !       PSyclone will generate a getter to nfaces_re_v as well. PSyclone rules
 !       will need to account for both occurences.
 !-------------------------------------------------------------------------------
-subroutine invoke_poly1d_shifted_vert_flux( flux, wind, density, coeff, order, nfaces_re_v )
+subroutine invoke_poly1d_shifted_vert_flux( flux, wind, density, coeff, order, &
+                                            nfaces_re_v , logspace)
 
   use poly1d_vert_flux_kernel_mod,     only: poly1d_vert_flux_code
   use reference_element_mod,           only: reference_element_type
@@ -783,6 +784,7 @@ subroutine invoke_poly1d_shifted_vert_flux( flux, wind, density, coeff, order, n
   integer(i_def), intent(in)           :: order
   integer(i_def), intent(in)           :: nfaces_re_v
   type(field_type), intent(in)         :: coeff(order+1,nfaces_re_v)
+  logical, intent(in) :: logspace
 
   class(reference_element_type), pointer :: reference_element => null()
   type( field_proxy_type )  :: flux_proxy, wind_proxy, density_proxy
@@ -887,21 +889,22 @@ subroutine invoke_poly1d_shifted_vert_flux( flux, wind, density, coeff, order, n
 
   do cell = 1,mesh%get_last_halo_cell(1)
 
-      call poly1d_vert_flux_code( nlayers,                     &
-                                  flux_proxy%data,             &
-                                  wind_proxy%data,             &
-                                  density_proxy%data,          &
-                                  flux_coeff_v,                &
-                                  ndf_w2,                      &
-                                  undf_w2,                     &
-                                  map_w2(:,cell),              &
-                                  basis_w2,                    &
-                                  ndf_w3,                      &
-                                  undf_w3,                     &
-                                  map_w3(:,cell),              &
-                                  order,                       &
-                                  nfaces_re_v,                 &
-                                  outward_normals_to_vertical_faces )
+      call poly1d_vert_flux_code( nlayers,                           &
+                                  flux_proxy%data,                   &
+                                  wind_proxy%data,                   &
+                                  density_proxy%data,                &
+                                  flux_coeff_v,                      &
+                                  ndf_w2,                            &
+                                  undf_w2,                           &
+                                  map_w2(:,cell),                    &
+                                  basis_w2,                          &
+                                  ndf_w3,                            &
+                                  undf_w3,                           &
+                                  map_w3(:,cell),                    &
+                                  order,                             &
+                                  nfaces_re_v,                       &
+                                  outward_normals_to_vertical_faces, &
+                                  logspace )
 
   end do
 

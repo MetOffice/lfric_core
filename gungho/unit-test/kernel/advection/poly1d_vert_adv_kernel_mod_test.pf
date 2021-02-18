@@ -65,7 +65,9 @@ contains
                                  theta_vertical_scheme = theta_vertical_scheme_sl, &
                                  slice_order = slice_order_cubic,                  &
                                  vertical_sl_order = vertical_sl_order_cubic,      &
-                                 upwind_direction_from_w_at_wtheta = .true.        &
+                                 upwind_direction_from_w_at_wtheta = .true., &
+                                 log_rho=.true., &
+                                 log_theta=.false. &
                                  )
 
   end subroutine setUp
@@ -137,6 +139,8 @@ contains
 
     flux = 0.0_r_def
 
+    ! First test standard polynomial interpolation
+
     call poly1d_vert_adv_code( nlayers,              &
                                flux,                 &
                                wind,                 &
@@ -149,10 +153,40 @@ contains
                                undf_w2,              &
                                map_w2,               &
                                order,                &
-                               nfaces_v )
+                               nfaces_v,             &
+                               logspace=.false. )
     answer = 1.0_r_def
+    @assertEqual(answer, flux(map_wt(1)+2) , tol)
     @assertEqual(answer, flux(map_wt(1)+3) , tol)
     @assertEqual(answer, flux(map_wt(1)+4) , tol)
+
+    ! Next test polynomial interpolation in log-space
+
+    flux = 0.0_r_def
+
+    do k = 1,nlayers+1
+      density(k) = exp(-real(k,r_def))
+    end do
+
+    call poly1d_vert_adv_code( nlayers,              &
+                               flux,                 &
+                               wind,                 &
+                               density,              &
+                               coeff,                &
+                               ndf_wt,               &
+                               undf_wt,              &
+                               map_wt,               &
+                               ndf_w2,               &
+                               undf_w2,              &
+                               map_w2,               &
+                               order,                &
+                               nfaces_v,             &
+                               logspace=.true. )
+    answer = exp(-2.5_r_def)-exp(-1.5_r_def)
+    @assertEqual(answer, flux(map_wt(1)+2) , tol)
+    answer = exp(-3.5_r_def)-exp(-2.5_r_def)
+    @assertEqual(answer, flux(map_wt(1)+3) , tol)
+
 
   end subroutine test_all
 

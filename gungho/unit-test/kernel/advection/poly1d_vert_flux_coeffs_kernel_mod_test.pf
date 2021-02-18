@@ -376,7 +376,8 @@ contains
                                  map_w3,               &
                                  global_order,         &
                                  nfaces_v,             &
-                                 outward_normals )
+                                 outward_normals,      &
+                                 .false. )
       do k = 0,nlayers-1
         div_f = (flux(map_w2(6)+k)-flux(map_w2(5)+k))/mdw3(map_w3(1)+k)
         ans = this%test_function(z(map_wx(1)+k))

@@ -253,9 +253,10 @@ contains
       end if
 
       ! Compute vertical components of mass flux
-       call invoke_poly1d_vert_flux( mass_flux, u, rho,     &
-                                     vert_flux_coeffs,      &
-                                     fv_flux_order, nfaces_v)
+       call invoke_poly1d_vert_flux( mass_flux, u, rho,       &
+                                     vert_flux_coeffs,        &
+                                     fv_flux_order, nfaces_v, &
+                                     logspace=.false. )
 
       ! Compute rrho = div(F)
       call invoke( rrho_kernel_type(rr_prediction(stage), mass_flux, qr), &

@@ -41,8 +41,10 @@ module advection_alg_mod
   use operator_mod,                   only: operator_type
   use mass_matrix_solver_alg_mod,     only: mass_matrix_solver_alg
   use derived_config_mod,             only: bundle_size
-  use transport_config_mod,           only: operators, &
-                                            operators_fv
+  use transport_config_mod,           only: operators,    &
+                                            operators_fv, &
+                                            log_rho,      &
+                                            log_theta
   use mr_indices_mod,                 only: nummr
   use timestepping_config_mod,        only: dt, beta
   use runge_kutta_init_mod,           only: num_rk_stage, ak
@@ -353,13 +355,15 @@ contains
      call advect_field(advection(igh_d), state(igh_d), advecting_wind, &
                       scheme, wind_n, wind_np1, advect_density=.true., &
                       timestep=dt, si_advective_terms=.false.,         &
-                      shifted=.false., density_predictor=.true.)
+                      shifted=.false., density_predictor=.true.,       &
+                      logspace=.false.)
     else
     ! Reconstruct the advection increment from the mass flux
     call advect_field(mass_flux, state(igh_d), advecting_wind,         &
                       scheme, wind_n, wind_np1, advect_density=.true., &
                       timestep=dt, si_advective_terms=.false.,         &
-                      shifted=.false., density_predictor=.true.)
+                      shifted=.false., density_predictor=.true.,       &
+                      logspace=log_rho )
     mm_w3_inv => get_mass_matrix(w3inv_id)
     div       => get_div()
     call invoke( setval_c(r_rho, 0.0_r_def),                       &
@@ -373,7 +377,8 @@ contains
     call advect_field(advection(igh_d), state(igh_d), advecting_wind,  &
                       scheme, wind_n, wind_np1, advect_density=.true., &
                       timestep=dt, si_advective_terms=.false.,         &
-                      shifted=.false., density_predictor=.true.)
+                      shifted=.false., density_predictor=.true.,       &
+                      logspace=.false. )
   end if
 
   ! Advect potential temperature field
@@ -384,7 +389,7 @@ contains
                     scheme_method_of_lines, wind_n, wind_np1,    &
                     advect_density=.false., timestep=dt,         &
                     si_advective_terms=.false., shifted=.false., &
-                    density_predictor=.false.)
+                    density_predictor=.false., logspace=log_theta )
   ! u_grad_theta now contains a pointwise incremente to theta,
   ! i.e. theta_np1 = theta_n - dt*u_grad_theta
   ! Depending upon what the temporal discretisation is this needs
@@ -454,7 +459,7 @@ contains
                          scheme_method_of_lines, wind_n, wind_np1,    &
                          advect_density=.false., timestep=dt,         &
                          si_advective_terms=.false., shifted=.false., &
-                         density_predictor=.false.)
+                         density_predictor=.false., logspace=.false. )
       ! Make mr_inc into an increment by multiplying by dt
       call invoke( inc_a_times_X(dt, mr_inc(imr)) )
     end do
@@ -585,7 +590,7 @@ contains
                       scheme_method_of_lines, wind_n, wind_np1,                &
                       advect_density=.true., timestep=dt,                      &
                       si_advective_terms=.false., shifted=.false.,             &
-                      density_predictor=.false.)
+                      density_predictor=.false., logspace=log_rho )
 
     call invoke( name = "Compute advected dry density",                        &
                  setval_c(r_rho, 0.0_r_def),                                   &
@@ -619,7 +624,7 @@ contains
                         scheme_method_of_lines, wind_n, wind_np1,              &
                         advect_density=.true., timestep=dt,                    &
                         si_advective_terms=.false., shifted=.true.,            &
-                        density_predictor=.false.)
+                        density_predictor=.false., logspace=.false.)
 
       ! Reconstruct the advection increment from the mass flux
       call invoke( setval_c(r_rho_shifted, 0.0_r_def),                         &
@@ -709,7 +714,7 @@ contains
                            scheme_method_of_lines, wind_n, wind_np1,          &
                            advect_density=.false., timestep=dt,               &
                            si_advective_terms=.false., shifted=.false.,       &
-                           density_predictor=.false. )
+                           density_predictor=.false., logspace=.false. )
 
         ! Get the field from the original collection which we want to update
         single_generic_field => generic_fields%get_field(                     &
@@ -802,7 +807,7 @@ contains
                         scheme_method_of_lines, wind_n, wind_np1,            &
                         advect_density=.false., timestep=timestep,           &
                         si_advective_terms=from_si, shifted=.false.,         &
-                        density_predictor=.false.)
+                        density_predictor=.false., logspace=.false.)
     end do
     ! Compute the updates to the W2 wind field using the physical scalar
     ! update
@@ -833,10 +838,12 @@ contains
   !> @param[in]     shifted Flag for advection on the shifted mesh
   !> @param[in]     density_predictor Flag for advecting the density
   !>                                  predictor rho*[1-beta*dt*div(u)]
-
+  !> @param[in]     logspace If true, then if scheme allows, do interpolation
+  !>                                  in log space
   subroutine advect_field( advection_inc, field, advecting_wind, adv_scheme, &
                            wind_n, wind_np1, advect_density, timestep,       &
-                           si_advective_terms, shifted, density_predictor    )
+                           si_advective_terms, shifted, density_predictor,   &
+                           logspace )
 
 
     use psykal_builtin_light_mod, only: invoke_sign
@@ -856,6 +863,7 @@ contains
     logical,          intent(in)    :: si_advective_terms
     logical,          intent(in)    :: shifted
     logical,          intent(in)    :: density_predictor
+    logical,          intent(in)    :: logspace
 
     ! For Method of Lines
     type(operator_type), pointer  :: div => null(),      &
@@ -1025,15 +1033,15 @@ contains
             case(Wtheta)
               ! Compute: - u.grad(f)
               call advective_update_alg(rk_rhs(stage), field_new,              &
-                                        advecting_wind, timestep )
+                                        advecting_wind, timestep, logspace=logspace )
             case(W3)
               ! Compute the flux using desired spatial reconstruction
               call invoke( setval_c( flux, 0.0_r_def ) )
               if ( advect_density ) then
                 if ( shifted ) then
-                  call flux_shifted_alg(flux, field_new, advecting_wind)
+                  call flux_shifted_alg(flux, field_new, advecting_wind, logspace=logspace )
                 else
-                  call flux_alg(flux, field_new, advecting_wind)
+                  call flux_alg(flux, field_new, advecting_wind, logspace=logspace )
                 end if
 
                 ! Compute: -div(F)
@@ -1045,9 +1053,9 @@ contains
               else
                 ! Compute the advective form increment, first the reconstructed tracer
                 if ( shifted ) then
-                  call flux_shifted_alg(flux, field_new, unit_wind)
+                  call flux_shifted_alg(flux, field_new, unit_wind, logspace=logspace)
                 else
-                  call flux_alg(flux, field_new, unit_wind)
+                  call flux_alg(flux, field_new, unit_wind, logspace=logspace)
                 end if
 
                 ! Remove unit_wind term from flux and
@@ -1127,5 +1135,3 @@ contains
   end subroutine advect_field
 
 end module advection_alg_mod
-
-

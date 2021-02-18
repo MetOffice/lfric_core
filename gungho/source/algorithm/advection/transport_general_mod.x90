@@ -40,7 +40,8 @@ module transport_general_mod
   use timestepping_config_mod,       only: dt
   use function_space_mod,            only: function_space_type
   use transport_config_mod,          only: scheme_method_of_lines,     &
-                                            cfl_mol_3d_stab
+                                           cfl_mol_3d_stab, &
+                                           log_rho
   use runtime_constants_mod,         only: get_detj_at_w2, w3inv_id,   &
                                             get_mass_matrix, get_div
   use operator_mod,                  only: operator_type
@@ -114,7 +115,7 @@ module transport_general_mod
          call advect_field(mass_flux, field, wind,                          &
                            scheme_method_of_lines, wind, wind,              &
                            advect_density, dt_substep, si_advective_terms,  &
-                           shifted, density_predictor                       )
+                           shifted, density_predictor, logspace=log_rho     )
 
          call invoke( setval_c(r_rho, 0.0_r_def),                              &
                       matrix_vector_kernel_type(r_rho, mass_flux, div),        &
@@ -132,7 +133,7 @@ module transport_general_mod
          call advect_field(field_inc, field, wind,                          &
                            scheme_method_of_lines, wind, wind,              &
                            advect_density, dt_substep, si_advective_terms,  &
-                           shifted, density_predictor                       )
+                           shifted, density_predictor, logspace=.false.     )
 
          call invoke( aX_plus_Y(field, dt_substep, field_inc, field_old) )
 
@@ -145,7 +146,8 @@ module transport_general_mod
       call advect_field(field_inc, field, wind,                 &
                         adv_scheme, wind, wind,                 &
                         advect_density, dt, si_advective_terms, &
-                        shifted, density_predictor              )
+                        shifted, density_predictor,             &
+                        logspace=.false.              )
 
        call invoke( setval_c(field, 0.0_r_def),                 &
                      aX_plus_Y(field, dt, field_inc, field_old) )

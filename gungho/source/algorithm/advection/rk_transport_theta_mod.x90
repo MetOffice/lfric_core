@@ -182,8 +182,9 @@ contains
             ! Modify advecting wind
                        consistent_wind_kernel_type(consistent_wind, u, theta_metrics, chi_sph) )
           end if
-          call invoke_poly1d_vert_adv( rt_prediction(stage), consistent_wind, theta,  &
-                                       vert_adv_coeffs, fv_advective_order, nfaces_v  )
+          call invoke_poly1d_vert_adv( rt_prediction(stage), consistent_wind, theta, &
+                                       vert_adv_coeffs, fv_advective_order,          &
+                                       nfaces_v, logspace=.false. )
         case(operators_fem)
           ! Use FEM projection
           ! Initialise fields

@@ -67,7 +67,9 @@ contains
                                  theta_vertical_scheme = theta_vertical_scheme_sl, &
                                  slice_order = slice_order_cubic,                  &
                                  vertical_sl_order = vertical_sl_order_quintic,    &
-                                 upwind_direction_from_w_at_wtheta = .true.        &
+                                 upwind_direction_from_w_at_wtheta = .true.,       &
+                                 log_rho=.false.,                             &
+                                 log_theta=.false.                            &
                                  )
 
   end subroutine setUp

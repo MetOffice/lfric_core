@@ -98,24 +98,54 @@ contains
     coeff(1:2,:,nlayers) =  0.5_r_def
     coeff(3,:,nlayers)   =  0.0_r_def
 
-    call poly1d_vert_flux_code( nlayers,              &
-                                flux,                 &
-                                wind,                 &
-                                density,              &
-                                coeff,                &
-                                ndf_w2,               &
-                                undf_w2,              &
-                                map_w2,               &
-                                basis_w2,             &
-                                ndf_w3,               &
-                                undf_w3,              &
-                                map_w3,               &
-                                order,                &
-                                nfaces_v,             &
-                                outward_normals_to_vertical_faces )
+    ! First test standard polynomial interpolation
+
+    call poly1d_vert_flux_code( nlayers,                           &
+                                flux,                              &
+                                wind,                              &
+                                density,                           &
+                                coeff,                             &
+                                ndf_w2,                            &
+                                undf_w2,                           &
+                                map_w2,                            &
+                                basis_w2,                          &
+                                ndf_w3,                            &
+                                undf_w3,                           &
+                                map_w3,                            &
+                                order,                             &
+                                nfaces_v,                          &
+                                outward_normals_to_vertical_faces, &
+                                logspace=.false.)
     answer = 1.0_r_def
     @assertEqual(answer, flux(map_w2(5)+1) , tol)
     answer = 2.0_r_def
+    @assertEqual(answer, flux(map_w2(5)+2) , tol)
+
+    ! Next test standard polynomial interpolation in log-space
+
+    do k = 1,nlayers
+      density(k) = exp(-real(k,r_def)+0.5_r_def)
+    end do
+
+    call poly1d_vert_flux_code( nlayers,                           &
+                                flux,                              &
+                                wind,                              &
+                                density,                           &
+                                coeff,                             &
+                                ndf_w2,                            &
+                                undf_w2,                           &
+                                map_w2,                            &
+                                basis_w2,                          &
+                                ndf_w3,                            &
+                                undf_w3,                           &
+                                map_w3,                            &
+                                order,                             &
+                                nfaces_v,                          &
+                                outward_normals_to_vertical_faces, &
+                                logspace=.true.)
+    answer = exp(-1.0_r_def)
+    @assertEqual(answer, flux(map_w2(5)+1) , tol)
+    answer = exp(-2.0_r_def)
     @assertEqual(answer, flux(map_w2(5)+2) , tol)
 
   end subroutine test_all

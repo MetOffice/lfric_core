@@ -88,6 +88,8 @@ cfl_mol_1d_stab=1.0,
 cfl_mol_1d_stab=1.0,
 cfl_mol_3d_stab=0.5
 upwind_direction_from_w_at_wtheta = .true.,
+log_rho=.false.
+log_theta=.false.
 /
 &planet
 cp=1005.0

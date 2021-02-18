@@ -250,7 +250,8 @@ contains
   !> @param[in]    adv_field Field to advect
   !> @param[in]    wind Advecting wind field
   !> @param[in]    dt timestep
-  subroutine advective_update_alg(rhs, adv_field, wind, dt)
+  !> @param[in]    logspace Carry out interpolation in log space
+  subroutine advective_update_alg(rhs, adv_field, wind, dt, logspace)
 
     use consistent_wind_kernel_mod,  only: consistent_wind_kernel_type
     use reference_element_mod,       only: reference_element_type
@@ -262,6 +263,8 @@ contains
     type(field_type), intent(in)           :: adv_field, wind
     type(field_type), intent(inout)        :: rhs
     real(kind=r_def), intent(in)           :: dt
+    logical, optional, intent(in) :: logspace
+
     type(quadrature_xyoz_type)             :: qr
     type(quadrature_face_type)             :: qrf
     type(quadrature_rule_gaussian_type)    :: quadrature_rule
@@ -271,6 +274,14 @@ contains
     type(mesh_type),               pointer :: mesh => null()
     integer(kind=i_def)                    :: mono_stencil
     type(field_type)                       :: consistent_wind, u_grad_f
+
+    logical :: logspace_loc
+
+    if (.not.present(logspace))then
+      logspace_loc=.false.
+    else
+      logspace_loc=logspace
+    end if
 
     mt_lumped_inv => get_inverse_lumped_mass_matrix(wt_id)
     call u_grad_f%initialise( adv_field%get_function_space() )
@@ -314,7 +325,8 @@ contains
       end if
       ! Compute vertical component of advective update
       call invoke_poly1d_vert_adv( u_grad_f, consistent_wind, adv_field, &
-                                   vert_adv_coeffs, fv_advective_order, nfaces_re_v )
+                                   vert_adv_coeffs, fv_advective_order, nfaces_re_v, &
+                                   logspace = logspace_loc )
 
     case(operators_fem)
       ! Use project u.grad(adv_field) into the adv_field function space
