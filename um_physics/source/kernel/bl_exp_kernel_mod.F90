@@ -164,7 +164,7 @@ module bl_exp_kernel_mod
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! thv_flux
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! parcel_buoyancy
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_1),&! qsat_at_lcl
-        arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_9),&! bl_types
+        arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_9),&! bl_type_ind
         arg_type(GH_FIELD, GH_WRITE,     ANY_DISCONTINUOUS_SPACE_3),&! snow_unload_rate
         arg_type(GH_FIELD, GH_READ,      ANY_DISCONTINUOUS_SPACE_10)&! albedo_obs_scaling
         /)
@@ -297,7 +297,7 @@ contains
   !> @param[out]    thv_flux             Surface flux of theta_v
   !> @param[out]    parcel_buoyancy      Integral of parcel buoyancy
   !> @param[out]    qsat_at_lcl          Saturation specific hum at LCL
-  !> @param[out]    bl_types             Diagnosed BL types
+  !> @param[out]    bl_type_ind          Diagnosed BL types
   !> @param[out]    snow_unload_rate     Unloading of snow from PFTs by wind
   !> @param[in]     albedo_obs_scaling   Scaling factor to adjust albedos by
   !> @param[in]     ndf_wth              Number of DOFs per cell for potential temperature space
@@ -456,7 +456,7 @@ contains
                          thv_flux,                              &
                          parcel_buoyancy,                       &
                          qsat_at_lcl,                           &
-                         bl_types,                              &
+                         bl_type_ind,                           &
                          snow_unload_rate,                      &
                          albedo_obs_scaling,                    &
                          ndf_wth,                               &
@@ -677,7 +677,7 @@ contains
 
     real(kind=r_def), intent(inout) :: tile_water_extract(undf_smtile)
 
-    real(kind=r_def), dimension(undf_bl),   intent(inout)  :: bl_types
+    real(kind=r_def), dimension(undf_bl),   intent(inout)  :: bl_type_ind
     real(kind=r_def), dimension(undf_pft),  intent(inout)  :: snow_unload_rate
     real(kind=r_def), dimension(undf_surf), intent(inout)  :: rhokm_surf
     real(kind=r_def), dimension(undf_tile), intent(inout):: alpha1_tile,      &
@@ -1646,13 +1646,13 @@ contains
     parcel_buoyancy(map_2d(1)) = delthvu(1,1)
     qsat_at_lcl(map_2d(1)) = qsat_lcl(1,1)
 
-    bl_types(map_bl(1)+0) = bl_type_1(1,1)
-    bl_types(map_bl(1)+1) = bl_type_2(1,1)
-    bl_types(map_bl(1)+2) = bl_type_3(1,1)
-    bl_types(map_bl(1)+3) = bl_type_4(1,1)
-    bl_types(map_bl(1)+4) = bl_type_5(1,1)
-    bl_types(map_bl(1)+5) = bl_type_6(1,1)
-    bl_types(map_bl(1)+6) = bl_type_7(1,1)
+    bl_type_ind(map_bl(1)+0) = bl_type_1(1,1)
+    bl_type_ind(map_bl(1)+1) = bl_type_2(1,1)
+    bl_type_ind(map_bl(1)+2) = bl_type_3(1,1)
+    bl_type_ind(map_bl(1)+3) = bl_type_4(1,1)
+    bl_type_ind(map_bl(1)+4) = bl_type_5(1,1)
+    bl_type_ind(map_bl(1)+5) = bl_type_6(1,1)
+    bl_type_ind(map_bl(1)+6) = bl_type_7(1,1)
 
     do n = 1, npft
       ! Unloading rate of snow from plant functional types

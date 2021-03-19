@@ -92,7 +92,7 @@ contains
     type( field_type ), pointer :: rhokm_surf      => null()
     type( field_type ), pointer :: blend_height_tq => null()
     type( field_type ), pointer :: blend_height_uv => null()
-    type( field_type ), pointer :: bl_types        => null()
+    type( field_type ), pointer :: bl_type_ind     => null()
     type( field_type ), pointer :: zh_nonloc       => null()
     type( field_type ), pointer :: z_lcl           => null()
     type( field_type ), pointer :: inv_depth       => null()
@@ -226,7 +226,7 @@ contains
     z_lcl           => turbulence_fields%get_field('z_lcl')
     inv_depth       => turbulence_fields%get_field('inv_depth')
     qcl_at_inv_top  => turbulence_fields%get_field('qcl_at_inv_top')
-    bl_types        => turbulence_fields%get_field('bl_types')
+    bl_type_ind     => turbulence_fields%get_field('bl_type_ind')
     rhokm_bl        => turbulence_fields%get_field('rhokm_bl')
     rhokh_bl        => turbulence_fields%get_field('rhokh_bl')
     ngstress_bl     => turbulence_fields%get_field('ngstress_bl')
@@ -381,7 +381,7 @@ contains
                            qcl_at_inv_top, shallow_flag,                       &
                            uw0_flux, vw0_flux, lcl_height, parcel_top,         &
                            level_parcel_top, wstar, thv_flux,                  &
-                           parcel_buoyancy, qsat_at_lcl, bl_types,             &
+                           parcel_buoyancy, qsat_at_lcl, bl_type_ind,          &
                            snow_unload_rate, albedo_obs_scaling) )
 
     ! output BL diagnostics
@@ -389,7 +389,7 @@ contains
 
       call ntml%write_field('ntml')
       call cumulus%write_field('cumulus')
-      call bl_types%write_field('bl_types')
+      call bl_type_ind%write_field('bl_type_ind')
       call z0msea%write_field('z0msea')
       call gross_prim_prod%write_field('gross_prim_prod')
       call net_prim_prod%write_field('net_prim_prod')

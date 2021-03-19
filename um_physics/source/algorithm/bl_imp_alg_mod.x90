@@ -106,7 +106,7 @@ contains
     type( field_type ), pointer :: blend_height_tq  => null()
     type( field_type ), pointer :: blend_height_uv  => null()
     type( field_type ), pointer :: zh_nonloc  => null()
-    type( field_type ), pointer :: bl_types  => null()
+    type( field_type ), pointer :: bl_type_ind  => null()
     type( field_type ), pointer :: z_lcl => null()
     type( field_type ), pointer :: inv_depth => null()
     type( field_type ), pointer :: qcl_at_inv_top => null()
@@ -200,7 +200,7 @@ contains
     blend_height_tq => turbulence_fields%get_field('blend_height_tq')
     blend_height_uv => turbulence_fields%get_field('blend_height_uv')
     zh_nonloc => turbulence_fields%get_field('zh_nonloc')
-    bl_types => turbulence_fields%get_field('bl_types')
+    bl_type_ind => turbulence_fields%get_field('bl_type_ind')
     z_lcl => turbulence_fields%get_field('z_lcl')
     inv_depth => turbulence_fields%get_field('inv_depth')
     qcl_at_inv_top => turbulence_fields%get_field('qcl_at_inv_top')
@@ -351,7 +351,7 @@ contains
                            tile_water_extract, z_lcl, inv_depth,               &
                            qcl_at_inv_top,                                     &
                            blend_height_tq, blend_height_uv, ustar,            &
-                           soil_moist_avail, zh_nonloc, zh, bl_types),         &
+                           soil_moist_avail, zh_nonloc, zh, bl_type_ind),      &
 
     ! Map the wind back into dynamics quantities
                 inc_X_times_Y(du_bl, dA),                                    &

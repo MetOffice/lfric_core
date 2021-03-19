@@ -128,7 +128,7 @@ module bl_imp_kernel_mod
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! soil_moist_avail
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! zh_nonloc
         arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_1),&! zh_2d
-        arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_7) &! bl_types
+        arg_type(GH_FIELD,   GH_READ,      ANY_DISCONTINUOUS_SPACE_7) &! bl_type_ind
         /)
     integer :: iterates_over = CELLS
   contains
@@ -229,7 +229,7 @@ contains
   !> @param[in]     soil_moist_avail     Available soil moisture for evaporation
   !> @param[in]     zh_nonloc            Depth of non-local BL scheme
   !> @param[in]     zh_2d                Total BL depth
-  !> @param[in]     bl_types             Diagnosed BL types
+  !> @param[in]     bl_type_ind          Diagnosed BL types
   !> @param[in]     ndf_wth              Number of DOFs per cell for potential temperature space
   !> @param[in]     undf_wth             Number of unique DOFs for potential temperature space
   !> @param[in]     map_wth              Dofmap for the cell at the base of the column for potential temperature space
@@ -348,7 +348,7 @@ contains
                          soil_moist_avail,                   &
                          zh_nonloc,                          &
                          zh_2d,                              &
-                         bl_types,                           &
+                         bl_type_ind,                        &
                          ndf_wth,                            &
                          undf_wth,                           &
                          map_wth,                            &
@@ -518,7 +518,7 @@ contains
 
     real(kind=r_def), intent(in) :: tile_water_extract(undf_smtile)
 
-    real(kind=r_def), dimension(undf_bl),   intent(in)  :: bl_types
+    real(kind=r_def), dimension(undf_bl),   intent(in)  :: bl_type_ind
     real(kind=r_def), dimension(undf_tile), intent(in)  :: alpha1_tile,      &
                                                            ashtf_prime_tile, &
                                                            dtstar_tile,      &
@@ -1079,13 +1079,13 @@ contains
     qcl_inv_top(1,1) = real(qcl_at_inv_top(map_2d(1)), r_um)
     zlcl_mix = 0.0_r_um
 
-    bl_type_1(1,1) = bl_types(map_bl(1)+0)
-    bl_type_2(1,1) = bl_types(map_bl(1)+1)
-    bl_type_3(1,1) = bl_types(map_bl(1)+2)
-    bl_type_4(1,1) = bl_types(map_bl(1)+3)
-    bl_type_5(1,1) = bl_types(map_bl(1)+4)
-    bl_type_6(1,1) = bl_types(map_bl(1)+5)
-    bl_type_7(1,1) = bl_types(map_bl(1)+6)
+    bl_type_1(1,1) = bl_type_ind(map_bl(1)+0)
+    bl_type_2(1,1) = bl_type_ind(map_bl(1)+1)
+    bl_type_3(1,1) = bl_type_ind(map_bl(1)+2)
+    bl_type_4(1,1) = bl_type_ind(map_bl(1)+3)
+    bl_type_5(1,1) = bl_type_ind(map_bl(1)+4)
+    bl_type_6(1,1) = bl_type_ind(map_bl(1)+5)
+    bl_type_7(1,1) = bl_type_ind(map_bl(1)+6)
 
     call bdy_expl3 (                                                 &
          ! IN grid related variables

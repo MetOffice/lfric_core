@@ -397,7 +397,7 @@ contains
     ! Space for the 7 BL types
     vector_space => function_space_collection%get_fs(twod_mesh_id, 0, W3, 7)
     call add_physics_field( turbulence_fields, depository, prognostic_fields,  &
-      'bl_types',  vector_space, twod=.true. )
+      'bl_type_ind',  vector_space, twod=.true. )
 
     ! 3D fields, don't need checkpointing
     call add_physics_field( turbulence_fields, depository, prognostic_fields,  &
