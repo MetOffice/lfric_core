@@ -99,7 +99,6 @@
 
         [[[environment]]]
             ROSE_ORIG_HOST = {{ROSE_ORIG_HOST}}
-            PSYCLONE_VERSION = {{PSYCLONE_VERSION}}
             HOST_SOURCE_LFRIC_BASE = {{HOST_SOURCE_LFRIC_BASE}}
             HOST_SOURCE_SHUMLIB_BASE = {{HOST_SOURCE_SHUMLIB_BASE}}
             SOURCE_LFRIC_REV = {{SOURCE_LFRIC_REV}}

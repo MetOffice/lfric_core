@@ -8,7 +8,7 @@
 set -e
 
 # Path to Psyclone
-PSYCLONE=$PSYCLONE_DIR/${PSYCLONE_VERSION}/bin/psyclone
+export PSYCLONE="$(which psyclone)"
 
 # Version of Psyclone API
 PSYCLONE_API=dynamo0.3
