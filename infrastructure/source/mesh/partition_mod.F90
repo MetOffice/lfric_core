@@ -651,6 +651,7 @@ contains
     integer :: panel        ! panel number
     integer :: cell         ! starting point for num_cells_x calculation
     integer :: cell_next(4) ! The cells around the cell being queried
+    integer :: cell_next_e  ! The cell to the east of the cell being queried
     integer :: num_cells_x  ! number of cells across a panel in x-direction
     integer :: num_cells_y  ! number of cells across a panel in y-direction
     integer :: start_sort, end_sort ! range over which to sort cells
@@ -705,9 +706,11 @@ contains
       ! Starting in the SW corner of the mesh so must walk East on non-periodic
       ! meshes to determine number of cells in the x direction
       call global_mesh%get_cell_next(sw_corner_cells(1),cell_next)
-      do while (cell_next(E) /= sw_corner_cells(1) .and. cell_next(E) /= -1)
+      cell_next_e = cell_next(E)
+      do while (cell_next_e /= sw_corner_cells(1) .and. cell_next_e /= -1)
         num_cells_x=num_cells_x+1
-        call global_mesh%get_cell_next(cell_next(E), cell_next)
+        call global_mesh%get_cell_next(cell_next_e, cell_next)
+        cell_next_e = cell_next(E)
       end do
 
       ! Infer num_cells_y from the total domin size and num_cells_x
