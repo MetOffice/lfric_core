@@ -23,7 +23,7 @@ class TestFortranCharacterset(object):
     _SIMPLE_NO_PROBLEMS = '''
                           program immaculate
 
-                            use iso_fortran_env, only : output_unit
+                            use, intrinsic :: iso_fortran_env, only : output_unit
 
                             implicit none
 
@@ -102,7 +102,7 @@ class TestFortranCharacterset(object):
 _NO_TWS = '''
 program no_trailing_whitespace
 
-  use iso_fortran_env, only : output_unit
+  use, intrinsic :: iso_fortran_env, only : output_unit
 
   implicit none
 
@@ -114,7 +114,7 @@ end program no_trailing_whitespace
 _SOME_TWS = '''
 program some_trailing_whitespace
 
-  use iso_fortran_env, only : output_unit
+  use, intrinsic :: iso_fortran_env, only : output_unit
 
   implicit none 
 
@@ -189,7 +189,7 @@ class TestMissingImplicit(object):
         # pylint: disable=no-self-use
         source = '''
                 program fred
-                    use iso_fortran_env, only : output_unit
+                    use, intrinsic :: iso_fortran_env, only : output_unit
                     implicit none
                     call greeting()
                     call farwell()

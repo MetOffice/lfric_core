@@ -100,8 +100,12 @@ class FortranAnalyser(Analyser):
     self._ignoreModules   = [str.lower(mod) for mod in ignoreModules]
     self._database        = database
 
-    self._ignoreModules.extend( ['iso_fortran_env', 'ieee_arithmetic'] )
-    self._ignoreModules.append( 'omp_lib' )
+    # The intrinsic Fortran modules
+    self._ignoreModules.extend(['iso_c_binding', 'iso_fortran_env',
+                                'ieee_arithmetic', 'ieee_exceptions',
+                                'ieee_features'])
+    # The OpenMP libraries
+    self._ignoreModules.extend(['omp_lib', 'omp_lib_kinds'])
 
     self._fpp = os.getenv( 'FPP', None )
     if not self._fpp:

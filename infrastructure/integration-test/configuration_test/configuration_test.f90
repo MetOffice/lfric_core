@@ -6,7 +6,7 @@
 
 program configuration_test
 
-  use iso_fortran_env,             only : error_unit
+  use, intrinsic :: iso_fortran_env, only : error_unit
   use mpi_mod,                     only : initialise_comm, store_comm,       &
                                           finalise_comm,                     &
                                           get_comm_rank

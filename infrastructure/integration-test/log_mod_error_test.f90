@@ -8,7 +8,7 @@
 !
 program log_mod_error_test
 
-  use iso_fortran_env, only : error_unit
+  use, intrinsic :: iso_fortran_env, only : error_unit
   use log_mod,         only : initialise_logging, finalise_logging, log_event, &
                               LOG_LEVEL_ERROR
   use mpi_mod,         only : initialise_comm, store_comm, &

@@ -6,7 +6,7 @@
 
 program cli_mod_test
 
-  use iso_fortran_env, only : output_unit
+  use, intrinsic :: iso_fortran_env, only : output_unit
   use cli_mod,         only : get_initial_filename
 
   implicit none

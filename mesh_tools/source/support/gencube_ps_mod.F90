@@ -1442,7 +1442,7 @@ subroutine write_mesh(self)
 
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
   use global_mesh_map_mod, only: global_mesh_map_type
-  use iso_fortran_env,     only: stdout => output_unit
+  use, intrinsic :: iso_fortran_env, only: stdout => output_unit
 
   implicit none
 

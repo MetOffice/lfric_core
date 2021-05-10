@@ -33,7 +33,7 @@ subroutine calc_global_cell_map( source_mesh,         &
                                  cell_map,            &
                                  panel_rotations      )
 
-  use iso_fortran_env, only : stdout => output_unit
+  use, intrinsic :: iso_fortran_env, only : stdout => output_unit
 
   implicit none
 

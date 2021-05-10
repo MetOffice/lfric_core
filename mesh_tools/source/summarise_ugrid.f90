@@ -17,7 +17,7 @@ program summarise_ugrid
 
   use cli_mod,         only : get_initial_filename
   use constants_mod,   only : i_def, str_def, str_long, l_def
-  use iso_fortran_env, only : output_unit
+  use, intrinsic :: iso_fortran_env, only : output_unit
   use ncdf_quad_mod,   only : ncdf_quad_type
   use ugrid_2d_mod,    only : ugrid_2d_type
   use ugrid_file_mod,  only : ugrid_file_type
