@@ -373,7 +373,7 @@
                     INTEGRATION_TESTS=`find $SOURCE_DIRECTORY/integration-test -name '*.[Ff]90' -exec egrep -l '^\s*program' {} \;`
                   fi
                   if [[ "${INTEGRATION_TESTS}" != "" ]] ; then
-                    rose task-run --app-key=compile
+                    make -C $SOURCE_DIRECTORY integration-tests
                   else
                     echo 'No integration-tests to process'
                   fi
@@ -384,6 +384,7 @@
     [[[environment]]]
       SOURCE_DIRECTORY = $SOURCE_ROOT/{{appPathFragment}}{{projectName}}
       WORKING_DIR      = {{get_target_property(PRIMARY_TARGET, 'build_root')}}/{{label}}/integration-test
+      BIN_DIR          = $CYLC_TASK_WORK_DIR
       TARGET           = integration-tests
       PROFILE          = {{build}}
       MAKE_THREADS     = 1

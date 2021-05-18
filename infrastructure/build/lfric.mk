@@ -337,7 +337,8 @@ do-integration-tests:
 	            PROJECT_NAME=$(PROJECT_NAME) \
 	            SOURCE_DIR=$(SOURCE_DIR) \
 	            TEST_DIR=$(TEST_DIR) \
-	            WORKING_DIR=$(WORKING_DIR)
+	            WORKING_DIR=$(WORKING_DIR) \
+	            TEST_RUN_DIR=$(BIN_DIR)/test_files	            
 
 .PHONY: do-integration-test/%
 do-integration-test/detect: $(if $(ANY_TESTS), \
@@ -351,7 +352,8 @@ do-integration-test/none:
 do-integration-test/run/%: export PYTHONPATH := $(PYTHONPATH):$(LFRIC_BUILD)
 do-integration-test/run/%: do-integration-test/build
 	$(call MESSAGE,Running,$*)
-	$(Q)cd $(TEST_DIR)/$(dir $*); \
+	$(Q)rsync -a $(TEST_DIR)/ $(TEST_RUN_DIR)
+	$(Q)cd $(TEST_RUN_DIR)/$(dir $*); \
 	    ./$(notdir $(addsuffix .py,$*)) $(addprefix $(BIN_DIR)/,$(notdir $*))
 
 do-integration-test/build: PROCESS_TARGETS = $(SOURCE_DIR) $(TEST_DIR) $(ADDITIONAL_EXTRACTION)
