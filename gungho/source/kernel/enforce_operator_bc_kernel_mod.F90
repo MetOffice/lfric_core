@@ -37,10 +37,6 @@ contains
 end type
 
 !-------------------------------------------------------------------------------
-! Constenforce_operator_bcctors
-!-------------------------------------------------------------------------------
-
-!-------------------------------------------------------------------------------
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 public :: enforce_operator_bc_code
@@ -48,16 +44,16 @@ public :: enforce_operator_bc_code
 contains
 
 !> @brief Applies boundary conditions to an operator
-!! @param[in] cell Horizontal cell index
-!! @param[in] nlayers Number of layers
-!! @param[in,out] op Operator data array to map from space 1 to space 2
-!! @param[in] ncell_3d Total number of cells
-!! @param[in] ndf1 Number of degrees of freedom per cell for to space
-!! @param[in] ndf2 Number of degrees of freedom per cell for from space
-!! @param[in] boundary_value Flags (= 0) for dofs that live on the
+!> @param[in] cell Horizontal cell index
+!> @param[in] nlayers Number of layers
+!> @param[in] ncell_3d Total number of cells
+!> @param[in,out] op Operator data array to map from space 1 to space 2
+!> @param[in] ndf1 Number of degrees of freedom per cell for to space
+!> @param[in] ndf2 Number of degrees of freedom per cell for from space
+!> @param[in] boundary_value Flags (= 0) for dofs that live on the
 !!            vertical boundaries of the cell (=1 for other dofs)
 subroutine enforce_operator_bc_code(cell, nlayers,                   &
-                                    op, ncell_3d,                    &
+                                    ncell_3d, op,                    &
                                     ndf1, ndf2, boundary_value       &
                                    )
 

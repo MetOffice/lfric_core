@@ -196,8 +196,8 @@ contains
       call self%vcycle(level+1,.true.)
       ! Prolong and add solution from coarser level
       ! u^{(ell)} = u^{(ell)} + P u^{(ell+1)}
-      call invoke( prolong_kernel_type(self%u_mg(level)%vector(1),    &
-                                       self%u_mg(level+1)%vector(1) ) )
+      call invoke( prolong_kernel_type(self%u_mg(level)%vector(1), &
+                                       self%u_mg(level+1)%vector(1)) )
       ! Postsmooth u^{(ell)}
       call self%smooth(self%n_postsmooth, level, .false.)
 

@@ -77,8 +77,6 @@ module cma_test_algorithm_mod
   use columnwise_op_mul_kernel_mod,           only : columnwise_op_mul_kernel_type
   use columnwise_op_scaledadd_kernel_mod,     only : columnwise_op_scaledadd_kernel_type
   use columnwise_op_asm_m2v_lumped_inv_kernel_mod, only : columnwise_op_asm_m2v_lumped_inv_kernel_type
-  ! PSYkal_lite kernels
-  use psykal_lite_mod,                   only : invoke_enforce_operator_bc_kernel_type
 
   implicit none
 
@@ -267,9 +265,9 @@ contains
                  mm_diagonal_assembled_kernel_type( mm_vel_h_diag, mm_vel_h ) )
 
     ! Enforce (vertical) BCs for velocity space on all relevant operators
-    call invoke_enforce_operator_bc_kernel_type( mm_vel_v )
-    call invoke_enforce_operator_bc_kernel_type( div_v )
-    call invoke_enforce_operator_bc_kernel_type( grad_v )
+    call invoke( enforce_operator_bc_kernel_type( mm_vel_v ), &
+                 enforce_operator_bc_kernel_type( div_v ),    &
+                 enforce_operator_bc_kernel_type( grad_v ) )
 
     ! Create and assemble CMA representations of operators
     ! Pressure mass matrix

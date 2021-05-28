@@ -4,8 +4,9 @@
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
 
-!>@brief Application of the diagonal of an operator
+!> @brief Application of the diagonal of an operator
 module diagonal_preconditioner_alg_mod
+
   use preconditioner_mod, only: abstract_preconditioner_type
   use vector_mod,         only: abstract_vector_type
   use field_mod,          only: field_type
@@ -15,6 +16,7 @@ module diagonal_preconditioner_alg_mod
                                 LOG_LEVEL_ERROR, &
                                 LOG_LEVEL_INFO,  &
                                 log_scratch_space
+
   implicit none
 
   type, public, extends(abstract_preconditioner_type) :: &
@@ -22,10 +24,10 @@ module diagonal_preconditioner_alg_mod
   private
   type(field_vector_type) :: mass_matrix_diagonal
      contains
-     !> over-ride the abstract interface
-     !> param[in] self a preconditioner
-     !> param[in] x a fieldvector the preconditioner is applied to
-     !> param[inout] y a fieldvector, the result.
+     !> Over-ride the abstract interface
+     !> param[in] self A preconditioner
+     !> param[in] x A field vector the preconditioner is applied to
+     !> param[in,out] y A field vector, the result
      procedure, public  :: apply => apply_diagonal_preconditioner
      procedure, private :: apply_diagonal_preconditioner
 
@@ -39,12 +41,13 @@ module diagonal_preconditioner_alg_mod
 
 contains
 
-  !>@brief Construct new instance of type
+  !> @brief Construct new instance of type
   !>
-  !>@details Construct the diagonal preconditioner object
+  !> @details Construct the diagonal preconditioner object
   !>
-  !>@return instance of the diagonal preconditioner
+  !> @return Instance of the diagonal preconditioner
   function diagonal_preconditioner_constructor(mass_matrix_diagonal) result(self)
+
     implicit none
 
     type(diagonal_preconditioner_type)  :: self
@@ -56,14 +59,15 @@ contains
 
   end function diagonal_preconditioner_constructor
 
-  !>@brief Apply diagonal preconditioner to a field to obtain \f$y=D^-1x\f$
+  !> @brief Apply diagonal preconditioner to a field to obtain \f$y=D^-1x\f$
   !>
-  !>@param[in] self instance of diagonal_preconditioner_type
-  !>@param[in] x field \f$x\f$ to apply preconditioner to
-  !>@param[inout] y Resulting field \f$y=D^-1x\f$
+  !> @param[in] self Instance of diagonal_preconditioner_type
+  !> @param[in] x Field \f$x\f$ to apply preconditioner to
+  !> @param[in,out] y Resulting field \f$y=D^-1x\f$
   subroutine apply_diagonal_preconditioner(self, x, y)
-    use psykal_builtin_light_mod, only: invoke_divide_field
+
     implicit none
+
     class(diagonal_preconditioner_type), intent(inout) :: self
     class(abstract_vector_type),         intent(in)    :: x
     class(abstract_vector_type),         intent(inout) :: y
@@ -75,11 +79,8 @@ contains
        select type (y)
        type is (field_vector_type)
          nfields = size(x%vector)
-         do i = 1,nfields
-           ! Psyclone cannot parse the double dereferening so use psykalite
-           ! instead
-           ! call invoke( X_divideby_Y( y%vector(i), x%vector(i), self%mass_matrix_diagonal%vector(i) ) )
-           call invoke_divide_field( x%vector(i), self%mass_matrix_diagonal%vector(i), y%vector(i) )
+         do i = 1, nfields
+           call invoke( X_divideby_Y( y%vector(i), x%vector(i), self%mass_matrix_diagonal%vector(i) ) )
          end do
        class default
           write(log_scratch_space, '(A)') &
@@ -88,17 +89,20 @@ contains
        end select
     class default
        write(log_scratch_space, '(A)') &
-             "diagonal_preconditionr_alg_mod: incorrect vector_type argument x"
+             "diagonal_preconditioner_alg_mod: incorrect vector_type argument x"
        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end select
 
   end subroutine apply_diagonal_preconditioner
 
   !> Finalizer for the diagonal preconditioner
-  !> @param [inout] self the diagonal preconditioner
+  !> @param[in,out] self The diagonal preconditioner
   subroutine destroy_diagonal_preconditioner(self)
+
     implicit none
+
     type(diagonal_preconditioner_type), intent(inout) :: self
+
   end subroutine destroy_diagonal_preconditioner
 
 end module diagonal_preconditioner_alg_mod

@@ -21,9 +21,12 @@ contains
 
     implicit none
 
-    real(kind=r_def)            :: d(4,2),dd(4,2)
-    integer(kind=i_def)         :: bc(4,2)
-    real(kind=r_def), parameter :: tol = 1.0e-14_r_def
+    integer(kind=i_def), parameter :: nlayers = 1_i_def
+    integer(kind=i_def), parameter :: cell = 1_i_def, ncell_3d = 1_i_def
+    integer(kind=i_def), parameter :: ndf1 = 4_i_def, ndf2 = 2_i_def
+    integer(kind=i_def)            :: bc(ndf1,ndf2)
+    real(kind=r_def)               :: d(ndf1,ndf2), dd(ndf1,ndf2)
+    real(kind=r_def), parameter    :: tol = 1.0e-14_r_def
 
     ! Make up a matrix
     d(1,:) = (/ 2.0_r_def, -2.0_r_def /)
@@ -40,14 +43,13 @@ contains
     bc(1,1) = 0_i_def
     bc(4,2) = 0_i_def
 
-    call enforce_operator_bc_code(1, &
-                                  1, &
-                                  d, &
-                                  1, &
-                                  4, &
-                                  2, &
+    call enforce_operator_bc_code(cell,     &
+                                  nlayers,  &
+                                  ncell_3d, &
+                                  d,        &
+                                  ndf1,     &
+                                  ndf2,     &
                                   bc)
-
 
     @assertEqual( dd, d, tol )
 

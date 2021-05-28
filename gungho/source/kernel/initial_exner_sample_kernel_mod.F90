@@ -61,13 +61,14 @@ contains
   !> @param[in] chi_3 Third component of the chi coordinate field
   !> @param[in] panel_id A field giving the ID for mesh panels
   !> @param[in] current_time Current time of the model run
-  !> @param[in] ndf_w3 Number of degrees of freedom per cell
-  !> @param[in] undf_w3 Total number of degrees of freedom
+  !> @param[in] ndf_w3 Number of degrees of freedom per cell for W3
+  !> @param[in] undf_w3 Total number of degrees of freedom for W3
   !> @param[in] map_w3 Dofmap for the cell at the base of the column for W3
-  !> @param[in] ndf_chi Number of degrees of freedom per cell for chi
-  !> @param[in] undf_chi Number of degrees of freedom for chi
-  !> @param[in] map_chi Dofmap for the cell at the base of the column for chi
-  !> @param[in] basis_chi_on_w3 Basis functions for Wchi
+  !> @param[in] ndf_chi Number of degrees of freedom per cell for Wchi
+  !> @param[in] undf_chi Number of degrees of freedom for Wchi
+  !> @param[in] map_chi Dofmap for the cell at the base of the column for Wchi
+  !> @param[in] basis_chi_on_w3 Basis functions for Wchi evaluated at
+  !!                            W3 nodal points
   !> @param[in] ndf_pid  Number of degrees of freedom per cell for panel_id
   !> @param[in] undf_pid Number of unique degrees of freedom for panel_id
   !> @param[in] map_pid  Dofmap for the cell at the base of the column

@@ -867,7 +867,7 @@ end subroutine invoke_calc_deppts
   end subroutine invoke_multiply_field_data
 
 !-------------------------------------------------------------------------------
-! Implmented in #965, kernel requires stencil support. Note that the w2_field is
+! Implemented in #965, kernel requires stencil support. Note that the w2_field is
 ! required to obtain the W2 stencil_cross which is used in determining
 ! orientation of cells in the halo
   subroutine invoke_mpi_calc_cell_orientation(w2_field,cell_orientation)
@@ -934,60 +934,6 @@ end subroutine invoke_calc_deppts
     end do
 
   end subroutine invoke_mpi_calc_cell_orientation
-
-!=============================================================================!
-! #999 Requires psyclone support for enforce_operator_bc_code,
-! being implemented as part of issue #22
-! #1001 will implement algortihm layer calls to the kernel
-  subroutine invoke_enforce_operator_bc_kernel_type(op)
-    use enforce_operator_bc_kernel_mod, only: enforce_operator_bc_code
-    use mesh_mod, only: mesh_type
-
-    implicit none
-
-    type(operator_type), intent(inout) :: op
-    integer, pointer                   :: boundary_dofs(:,:) => null()
-    integer                            :: cell, ncell_3d
-    integer                            :: ndf1, ndf2
-    type(mesh_type), pointer           :: mesh => null()
-    integer                            :: nlayers
-    type(operator_proxy_type)          :: op_proxy
-    !
-    ! Initialise operator proxies
-    !
-    op_proxy = op%get_proxy()
-    !
-    ! Initialise number of layers
-    !
-    nlayers = op_proxy%fs_to%get_nlayers()
-    !
-    ! Create a mesh object
-    !
-    mesh => op_proxy%fs_to%get_mesh()
-    !
-    ! Get size of operator array
-    !
-    ncell_3d = op_proxy%ncell_3d
-    ndf1 = op_proxy%fs_to%get_ndf()
-    ndf2 = op_proxy%fs_from%get_ndf()
-    !
-    ! Pull out boundary array
-    !
-    boundary_dofs => op_proxy%fs_to%get_boundary_dofs()
-    !
-    ! Call kernels and communication routines
-    !
-    do cell=1,mesh%get_last_halo_cell(1)
-      !
-      call enforce_operator_bc_code(cell, &
-                                    nlayers, &
-                                    op_proxy%local_stencil, &
-                                    ncell_3d, &
-                                    ndf1, &
-                                    ndf2, &
-                                    boundary_dofs)
-    end do
-  end subroutine invoke_enforce_operator_bc_kernel_type
 
   !-------------------------------------------------------------------------------
   !> This routine is called from psykal_lite due to the variable cell_orientation
@@ -1348,7 +1294,7 @@ end subroutine invoke_calc_deppts
   end subroutine invoke_correct_cosmic_wind
 
   !----------------------------------------------------------------------------
-  !> Handles passing double precission deltaT to the vertical_flux kernel.
+  !> Handles passing double precision deltaT to the vertical_flux kernel.
   !>
   !> It is probably not the correct thing to do but it is expedient for getting
   !> the clock change on trunk.
@@ -1447,173 +1393,172 @@ end subroutine invoke_calc_deppts
 
   end subroutine invoke_vertical_flux_kernel
 
+  !----------------------------------------------------------------------------
+  ! This requires a stencil of horizontal cells for the operators
+  ! see PSyclone #1103: https://github.com/stfc/PSyclone/issues/1103
+  ! The LFRic infrastructure for this will be introduced in #2532
+  subroutine invoke_helmholtz_operator_kernel_type(helmholtz_operator, hb_lumped_inv, stencil_depth, u_normalisation, div_star, &
+                                                   t_normalisation, ptheta2v, compound_div, m3_exner_star, p3theta, m3_inv, &
+                                                   w2_mask)
+    use helmholtz_operator_kernel_mod, only: helmholtz_operator_code
+    use mesh_mod, only: mesh_type
+    use stencil_dofmap_mod, only: stencil_cross
+    use stencil_dofmap_mod, only: stencil_dofmap_type
 
-    ! This requires a stencil of horizontal cells for the operators
-    ! see PSyclone #1103: https://github.com/stfc/PSyclone/issues/1103
-    ! The lfric infrastructure for this will be introduced in #2532
-    subroutine invoke_helmholtz_operator_kernel_type(helmholtz_operator, hb_lumped_inv, stencil_depth, u_normalisation, div_star, &
-                                                     t_normalisation, ptheta2v, compound_div, m3_exner_star, p3theta, m3_inv, &
-                                                     w2_mask)
-      USE helmholtz_operator_kernel_mod, only: helmholtz_operator_code
-      USE mesh_mod, only: mesh_type
-      USE stencil_dofmap_mod, only: STENCIL_CROSS
-      USE stencil_dofmap_mod, only: stencil_dofmap_type
+    implicit none
 
-      IMPLICIT NONE
+    type(field_type), intent(in) :: helmholtz_operator(9), hb_lumped_inv, u_normalisation, t_normalisation, w2_mask
+    type(operator_type), intent(in) :: div_star, ptheta2v, compound_div, m3_exner_star, p3theta, m3_inv
+    integer(kind=i_def), intent(in) :: stencil_depth
+    integer(kind=i_def) :: stencil_size
+    integer(kind=i_def) cell
+    integer(kind=i_def) nlayers
+    type(operator_proxy_type) div_star_proxy, ptheta2v_proxy, compound_div_proxy, m3_exner_star_proxy, p3theta_proxy, m3_inv_proxy
+    type(field_proxy_type) helmholtz_operator_proxy(9), hb_lumped_inv_proxy, u_normalisation_proxy, t_normalisation_proxy, &
+                           w2_mask_proxy
+    integer(kind=i_def), pointer :: map_w2(:,:) => null(), map_w3(:,:) => null(), map_wtheta(:,:) => null()
+    integer(kind=i_def) ndf_w3, undf_w3, ndf_w2, undf_w2, ndf_wtheta, undf_wtheta
+    type(mesh_type), pointer :: mesh => null()
+    integer(kind=i_def) hb_lumped_inv_stencil_size
+    integer(kind=i_def), pointer :: hb_lumped_inv_stencil_dofmap(:,:,:) => null()
+    type(stencil_dofmap_type), pointer :: hb_lumped_inv_stencil_map => null()
+    integer(kind=i_def) :: i
+    integer(kind=i_def), allocatable :: cell_stencil(:)
+    !
+    ! Initialise field and/or operator proxies
+    !
+    helmholtz_operator_proxy(1) = helmholtz_operator(1)%get_proxy()
+    helmholtz_operator_proxy(2) = helmholtz_operator(2)%get_proxy()
+    helmholtz_operator_proxy(3) = helmholtz_operator(3)%get_proxy()
+    helmholtz_operator_proxy(4) = helmholtz_operator(4)%get_proxy()
+    helmholtz_operator_proxy(5) = helmholtz_operator(5)%get_proxy()
+    helmholtz_operator_proxy(6) = helmholtz_operator(6)%get_proxy()
+    helmholtz_operator_proxy(7) = helmholtz_operator(7)%get_proxy()
+    helmholtz_operator_proxy(8) = helmholtz_operator(8)%get_proxy()
+    helmholtz_operator_proxy(9) = helmholtz_operator(9)%get_proxy()
+    hb_lumped_inv_proxy = hb_lumped_inv%get_proxy()
+    u_normalisation_proxy = u_normalisation%get_proxy()
+    div_star_proxy = div_star%get_proxy()
+    t_normalisation_proxy = t_normalisation%get_proxy()
+    ptheta2v_proxy = ptheta2v%get_proxy()
+    compound_div_proxy = compound_div%get_proxy()
+    m3_exner_star_proxy = m3_exner_star%get_proxy()
+    p3theta_proxy = p3theta%get_proxy()
+    m3_inv_proxy = m3_inv%get_proxy()
+    w2_mask_proxy = w2_mask%get_proxy()
+    !
+    ! Initialise number of layers
+    !
+    nlayers = helmholtz_operator_proxy(1)%vspace%get_nlayers()
+    !
+    ! Create a mesh object
+    !
+    mesh => helmholtz_operator_proxy(1)%vspace%get_mesh()
+    !
+    ! Initialise stencil dofmaps
+    !
+    hb_lumped_inv_stencil_map => hb_lumped_inv_proxy%vspace%get_stencil_dofmap(STENCIL_CROSS,stencil_depth)
+    hb_lumped_inv_stencil_dofmap => hb_lumped_inv_stencil_map%get_whole_dofmap()
+    hb_lumped_inv_stencil_size = hb_lumped_inv_stencil_map%get_size()
+    !
+    ! Look-up dofmaps for each function space
+    !
+    map_w3 => helmholtz_operator_proxy(1)%vspace%get_whole_dofmap()
+    map_w2 => hb_lumped_inv_proxy%vspace%get_whole_dofmap()
+    map_wtheta => t_normalisation_proxy%vspace%get_whole_dofmap()
+    !
+    ! Initialise number of DoFs for w3
+    !
+    ndf_w3 = helmholtz_operator_proxy(1)%vspace%get_ndf()
+    undf_w3 = helmholtz_operator_proxy(1)%vspace%get_undf()
+    !
+    ! Initialise number of DoFs for w2
+    !
+    ndf_w2 = hb_lumped_inv_proxy%vspace%get_ndf()
+    undf_w2 = hb_lumped_inv_proxy%vspace%get_undf()
+    !
+    ! Initialise number of DoFs for wtheta
+    !
+    ndf_wtheta = t_normalisation_proxy%vspace%get_ndf()
+    undf_wtheta = t_normalisation_proxy%vspace%get_undf()
+    !
+    ! Call kernels and communication routines
+    !
+    if (hb_lumped_inv_proxy%is_dirty(depth=1)) then
+      call hb_lumped_inv_proxy%halo_exchange(depth=1)
+    end if
+    if (u_normalisation_proxy%is_dirty(depth=1)) then
+      call u_normalisation_proxy%halo_exchange(depth=1)
+    end if
+    if (w2_mask_proxy%is_dirty(depth=1)) then
+      call w2_mask_proxy%halo_exchange(depth=1)
+    end if
+    !
+    ! Create cell stencil of the correct size
+    stencil_size =  1 + 4*stencil_depth
+    allocate( cell_stencil( stencil_size ) )
 
-      TYPE(field_type), intent(in) :: helmholtz_operator(9), hb_lumped_inv, u_normalisation, t_normalisation, w2_mask
-      TYPE(operator_type), intent(in) :: div_star, ptheta2v, compound_div, m3_exner_star, p3theta, m3_inv
-      INTEGER(KIND=i_def), intent(in) :: stencil_depth
-      INTEGER(KIND=i_def) :: stencil_size
-      INTEGER(KIND=i_def) cell
-      INTEGER(KIND=i_def) nlayers
-      TYPE(operator_proxy_type) div_star_proxy, ptheta2v_proxy, compound_div_proxy, m3_exner_star_proxy, p3theta_proxy, m3_inv_proxy
-      TYPE(field_proxy_type) helmholtz_operator_proxy(9), hb_lumped_inv_proxy, u_normalisation_proxy, t_normalisation_proxy, &
-                             w2_mask_proxy
-      INTEGER(KIND=i_def), pointer :: map_w2(:,:) => null(), map_w3(:,:) => null(), map_wtheta(:,:) => null()
-      INTEGER(KIND=i_def) ndf_w3, undf_w3, ndf_w2, undf_w2, ndf_wtheta, undf_wtheta
-      TYPE(mesh_type), pointer :: mesh => null()
-      INTEGER(KIND=i_def) hb_lumped_inv_stencil_size
-      INTEGER(KIND=i_def), pointer :: hb_lumped_inv_stencil_dofmap(:,:,:) => null()
-      TYPE(stencil_dofmap_type), pointer :: hb_lumped_inv_stencil_map => null()
-      INTEGER(KIND=i_def) :: i
-      INTEGER(KIND=i_def), allocatable :: cell_stencil(:)
+    !$omp parallel default(shared), private(cell, cell_stencil, i)
+    !$omp do schedule(static)
+    do cell=1,mesh%get_last_edge_cell()
       !
-      ! Initialise field and/or operator proxies
-      !
-      helmholtz_operator_proxy(1) = helmholtz_operator(1)%get_proxy()
-      helmholtz_operator_proxy(2) = helmholtz_operator(2)%get_proxy()
-      helmholtz_operator_proxy(3) = helmholtz_operator(3)%get_proxy()
-      helmholtz_operator_proxy(4) = helmholtz_operator(4)%get_proxy()
-      helmholtz_operator_proxy(5) = helmholtz_operator(5)%get_proxy()
-      helmholtz_operator_proxy(6) = helmholtz_operator(6)%get_proxy()
-      helmholtz_operator_proxy(7) = helmholtz_operator(7)%get_proxy()
-      helmholtz_operator_proxy(8) = helmholtz_operator(8)%get_proxy()
-      helmholtz_operator_proxy(9) = helmholtz_operator(9)%get_proxy()
-      hb_lumped_inv_proxy = hb_lumped_inv%get_proxy()
-      u_normalisation_proxy = u_normalisation%get_proxy()
-      div_star_proxy = div_star%get_proxy()
-      t_normalisation_proxy = t_normalisation%get_proxy()
-      ptheta2v_proxy = ptheta2v%get_proxy()
-      compound_div_proxy = compound_div%get_proxy()
-      m3_exner_star_proxy = m3_exner_star%get_proxy()
-      p3theta_proxy = p3theta%get_proxy()
-      m3_inv_proxy = m3_inv%get_proxy()
-      w2_mask_proxy = w2_mask%get_proxy()
-      !
-      ! Initialise number of layers
-      !
-      nlayers = helmholtz_operator_proxy(1)%vspace%get_nlayers()
-      !
-      ! Create a mesh object
-      !
-      mesh => helmholtz_operator_proxy(1)%vspace%get_mesh()
-      !
-      ! Initialise stencil dofmaps
-      !
-      hb_lumped_inv_stencil_map => hb_lumped_inv_proxy%vspace%get_stencil_dofmap(STENCIL_CROSS,stencil_depth)
-      hb_lumped_inv_stencil_dofmap => hb_lumped_inv_stencil_map%get_whole_dofmap()
-      hb_lumped_inv_stencil_size = hb_lumped_inv_stencil_map%get_size()
-      !
-      ! Look-up dofmaps for each function space
-      !
-      map_w3 => helmholtz_operator_proxy(1)%vspace%get_whole_dofmap()
-      map_w2 => hb_lumped_inv_proxy%vspace%get_whole_dofmap()
-      map_wtheta => t_normalisation_proxy%vspace%get_whole_dofmap()
-      !
-      ! Initialise number of DoFs for w3
-      !
-      ndf_w3 = helmholtz_operator_proxy(1)%vspace%get_ndf()
-      undf_w3 = helmholtz_operator_proxy(1)%vspace%get_undf()
-      !
-      ! Initialise number of DoFs for w2
-      !
-      ndf_w2 = hb_lumped_inv_proxy%vspace%get_ndf()
-      undf_w2 = hb_lumped_inv_proxy%vspace%get_undf()
-      !
-      ! Initialise number of DoFs for wtheta
-      !
-      ndf_wtheta = t_normalisation_proxy%vspace%get_ndf()
-      undf_wtheta = t_normalisation_proxy%vspace%get_undf()
-      !
-      ! Call kernels and communication routines
-      !
-      IF (hb_lumped_inv_proxy%is_dirty(depth=1)) THEN
-        call hb_lumped_inv_proxy%halo_exchange(depth=1)
-      END IF
-      IF (u_normalisation_proxy%is_dirty(depth=1)) THEN
-        call u_normalisation_proxy%halo_exchange(depth=1)
-      END IF
-      IF (w2_mask_proxy%is_dirty(depth=1)) THEN
-        call w2_mask_proxy%halo_exchange(depth=1)
-      END IF
-      !
-      ! Create cell stencil of the correct size
-      stencil_size =  1 + 4*stencil_depth
-      allocate( cell_stencil( stencil_size ) )
-
-      !$omp parallel default(shared), private(cell, cell_stencil, i)
-      !$omp do schedule(static)
-      DO cell=1,mesh%get_last_edge_cell()
-        !
-        ! Populate cell_stencil array used for operators
-        ! (this is the id of each cell in the stencil)
-        cell_stencil(1) = cell
-        do i = 1,4
-          cell_stencil(i+1) = mesh%get_cell_next(i, cell)
-        end do
-        call helmholtz_operator_code(stencil_size,                     &
-                                     cell_stencil, nlayers,            &
-                                     helmholtz_operator_proxy(1)%data, &
-                                     helmholtz_operator_proxy(2)%data, &
-                                     helmholtz_operator_proxy(3)%data, &
-                                     helmholtz_operator_proxy(4)%data, &
-                                     helmholtz_operator_proxy(5)%data, &
-                                     helmholtz_operator_proxy(6)%data, &
-                                     helmholtz_operator_proxy(7)%data, &
-                                     helmholtz_operator_proxy(8)%data, &
-                                     helmholtz_operator_proxy(9)%data, &
-                                     hb_lumped_inv_proxy%data, &
-                                     hb_lumped_inv_stencil_size, &
-                                     hb_lumped_inv_stencil_dofmap(:,:,cell), &
-                                     u_normalisation_proxy%data, &
-                                     div_star_proxy%ncell_3d, &
-                                     div_star_proxy%local_stencil, &
-                                     t_normalisation_proxy%data, &
-                                     ptheta2v_proxy%ncell_3d, &
-                                     ptheta2v_proxy%local_stencil, &
-                                     compound_div_proxy%ncell_3d, &
-                                     compound_div_proxy%local_stencil, &
-                                     m3_exner_star_proxy%ncell_3d, &
-                                     m3_exner_star_proxy%local_stencil, &
-                                     p3theta_proxy%ncell_3d, &
-                                     p3theta_proxy%local_stencil, &
-                                     m3_inv_proxy%ncell_3d, &
-                                     m3_inv_proxy%local_stencil, &
-                                     w2_mask_proxy%data, &
-                                     ndf_w3, undf_w3, map_w3(:,cell), &
-                                     ndf_w2, undf_w2, map_w2(:,cell), &
-                                     ndf_wtheta, undf_wtheta, map_wtheta(:,cell))
-      END DO
-      !$omp end do
-      !
-      ! Set halos dirty/clean for fields modified in the above loop
-      !
-      !$omp master
-      call helmholtz_operator_proxy(1)%set_dirty()
-      call helmholtz_operator_proxy(2)%set_dirty()
-      call helmholtz_operator_proxy(3)%set_dirty()
-      call helmholtz_operator_proxy(4)%set_dirty()
-      call helmholtz_operator_proxy(5)%set_dirty()
-      call helmholtz_operator_proxy(6)%set_dirty()
-      call helmholtz_operator_proxy(7)%set_dirty()
-      call helmholtz_operator_proxy(8)%set_dirty()
-      call helmholtz_operator_proxy(9)%set_dirty()
-      !$omp end master
-      !
-      !$omp end parallel
-      !
-    end subroutine invoke_helmholtz_operator_kernel_type
-
+      ! Populate cell_stencil array used for operators
+      ! (this is the id of each cell in the stencil)
+      cell_stencil(1) = cell
+      do i = 1,4
+        cell_stencil(i+1) = mesh%get_cell_next(i, cell)
+      end do
+      call helmholtz_operator_code(stencil_size,                     &
+                                   cell_stencil, nlayers,            &
+                                   helmholtz_operator_proxy(1)%data, &
+                                   helmholtz_operator_proxy(2)%data, &
+                                   helmholtz_operator_proxy(3)%data, &
+                                   helmholtz_operator_proxy(4)%data, &
+                                   helmholtz_operator_proxy(5)%data, &
+                                   helmholtz_operator_proxy(6)%data, &
+                                   helmholtz_operator_proxy(7)%data, &
+                                   helmholtz_operator_proxy(8)%data, &
+                                   helmholtz_operator_proxy(9)%data, &
+                                   hb_lumped_inv_proxy%data, &
+                                   hb_lumped_inv_stencil_size, &
+                                   hb_lumped_inv_stencil_dofmap(:,:,cell), &
+                                   u_normalisation_proxy%data, &
+                                   div_star_proxy%ncell_3d, &
+                                   div_star_proxy%local_stencil, &
+                                   t_normalisation_proxy%data, &
+                                   ptheta2v_proxy%ncell_3d, &
+                                   ptheta2v_proxy%local_stencil, &
+                                   compound_div_proxy%ncell_3d, &
+                                   compound_div_proxy%local_stencil, &
+                                   m3_exner_star_proxy%ncell_3d, &
+                                   m3_exner_star_proxy%local_stencil, &
+                                   p3theta_proxy%ncell_3d, &
+                                   p3theta_proxy%local_stencil, &
+                                   m3_inv_proxy%ncell_3d, &
+                                   m3_inv_proxy%local_stencil, &
+                                   w2_mask_proxy%data, &
+                                   ndf_w3, undf_w3, map_w3(:,cell), &
+                                   ndf_w2, undf_w2, map_w2(:,cell), &
+                                   ndf_wtheta, undf_wtheta, map_wtheta(:,cell))
+    end do
+    !$omp end do
+    !
+    ! Set halos dirty/clean for fields modified in the above loop
+    !
+    !$omp master
+    call helmholtz_operator_proxy(1)%set_dirty()
+    call helmholtz_operator_proxy(2)%set_dirty()
+    call helmholtz_operator_proxy(3)%set_dirty()
+    call helmholtz_operator_proxy(4)%set_dirty()
+    call helmholtz_operator_proxy(5)%set_dirty()
+    call helmholtz_operator_proxy(6)%set_dirty()
+    call helmholtz_operator_proxy(7)%set_dirty()
+    call helmholtz_operator_proxy(8)%set_dirty()
+    call helmholtz_operator_proxy(9)%set_dirty()
+    !$omp end master
+    !
+    !$omp end parallel
+    !
+  end subroutine invoke_helmholtz_operator_kernel_type
 
 end module psykal_lite_mod

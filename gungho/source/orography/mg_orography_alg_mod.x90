@@ -72,7 +72,7 @@ contains
       call surface_altitude_mg( level )%initialise( vector_space = &
          function_space_collection%get_fs( mg_2D_mesh_id, surface_order, W3) )
       ! We use a simple restriction from fine to coarse levels
-      call invoke( restrict_kernel_type( surface_altitude_mg( level ),    &
+      call invoke( restrict_kernel_type( surface_altitude_mg( level ),  &
                                          surface_altitude_mg( level-1 ) ) )
 
 

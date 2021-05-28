@@ -101,9 +101,8 @@ contains
                                              w3inv_id,                  &
                                              w2h_id,                    &
                                              w2v_id
-    use transpose_matrix_kernel_mod,  only : transpose_matrix_kernel_type
-    use psykal_lite_mod,              only : invoke_enforce_operator_bc_kernel_type
-
+    use transpose_matrix_kernel_mod,            only : transpose_matrix_kernel_type
+    use enforce_operator_bc_kernel_mod,         only : enforce_operator_bc_kernel_type
     use columnwise_op_asm_kernel_mod,           only : columnwise_op_asm_kernel_type
     use columnwise_op_asm_diag_hmht_kernel_mod, only : columnwise_op_asm_diag_hmht_kernel_type
     use columnwise_op_mul_kernel_mod,           only : columnwise_op_mul_kernel_type
@@ -148,7 +147,7 @@ contains
     mm_w2v_noBC => get_mass_matrix(w2v_id)
     mm_w2v = mm_w2v_noBC%deep_copy()
     ! Now apply BCs
-    call invoke_enforce_operator_bc_kernel_type( mm_w2v )
+    call invoke( enforce_operator_bc_kernel_type( mm_w2v ) )
     ! Get horizontal velocity mass matrix
     mm_w2h => get_mass_matrix(w2h_id)
 

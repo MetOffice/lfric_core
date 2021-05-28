@@ -66,35 +66,36 @@ contains
 !> @param[in] moist_dyn_gas Moist dynamics factor in gas law
 !> @param[in] moist_dyn_tot Moist dynamics total mass factor
 !> @param[in] moist_dyn_fac Moist dynamics water factor
-!> @param[in] height_wt Height coordinate in wtheta
-!> @param[in] height_w3 Height coordinate in w3
+!> @param[in] height_wt Height coordinate in Wtheta
+!> @param[in] height_w3 Height coordinate in W3
 !> @param[in] chi_1 First component of the chi coordinate field
 !> @param[in] chi_2 Second component of the chi coordinate field
 !> @param[in] chi_3 Third component of the chi coordinate field
 !> @param[in] panel_id A field giving the ID for mesh panels
-!> @param[in] ndf_w3 Number of degrees of freedom per cell for w3
-!> @param[in] undf_w3 Number of unique degrees of freedom  for w3
-!> @param[in] map_w3 Dofmap for the cell at the base of the column for w3
-!> @param[in] ndf_wt Number of degrees of freedom per cell for wtheta
-!> @param[in] undf_wt Number of unique degrees of freedom  for wtheta
-!> @param[in] map_wt Dofmap for the cell at the base of the column for wt
-!> @param[in] ndf_chi Number of degrees of freedom per cell for wchi
-!> @param[in] undf_chi Number of unique degrees of freedom  for wchi
-!> @param[in] map_chi Dofmap for the cell at the base of the column for wchi
-!> @param[in] basis_chi Dofmap for the cell at the base of the column for wchi
+!> @param[in] ndf_w3 Number of degrees of freedom per cell for W3
+!> @param[in] undf_w3 Number of unique degrees of freedom for W3
+!> @param[in] map_w3 Dofmap for the cell at the base of the column for W3
+!> @param[in] ndf_wt Number of degrees of freedom per cell for Wtheta
+!> @param[in] undf_wt Number of unique degrees of freedom  for Wtheta
+!> @param[in] map_wt Dofmap for the cell at the base of the column for Wtheta
+!> @param[in] ndf_chi Number of degrees of freedom per cell for Wchi
+!> @param[in] undf_chi Number of unique degrees of freedom  for Wchi
+!> @param[in] map_chi Dofmap for the cell at the base of the column for Wchi
+!> @param[in] basis_chi_on_wt Basis functions for Wchi evaluated at
+!!                            Wtheta nodal points
 !> @param[in] ndf_pid  Number of degrees of freedom per cell for panel_id
 !> @param[in] undf_pid Number of unique degrees of freedom for panel_id
 !> @param[in] map_pid  Dofmap for the cell at the base of the column for panel_id
-subroutine hydrostatic_exner_code(nlayers, exner, theta,          &
-                                  moist_dyn_gas, moist_dyn_tot,   &
-                                  moist_dyn_fac,                  &
-                                  height_wt, height_w3,           &
-                                  chi_1, chi_2, chi_3, panel_id,  &
-                                  ndf_w3, undf_w3, map_w3,        &
-                                  ndf_wt, undf_wt, map_wt,        &
-                                  ndf_chi, undf_chi, map_chi,     &
-                                  basis_chi_on_wt,                &
-                                  ndf_pid, undf_pid, map_pid      )
+subroutine hydrostatic_exner_code(nlayers, exner, theta,         &
+                                  moist_dyn_gas, moist_dyn_tot,  &
+                                  moist_dyn_fac,                 &
+                                  height_wt, height_w3,          &
+                                  chi_1, chi_2, chi_3, panel_id, &
+                                  ndf_w3, undf_w3, map_w3,       &
+                                  ndf_wt, undf_wt, map_wt,       &
+                                  ndf_chi, undf_chi, map_chi,    &
+                                  basis_chi_on_wt,               &
+                                  ndf_pid, undf_pid, map_pid     )
 
   use analytic_pressure_profiles_mod, only : analytic_pressure
   use chi_transform_mod,              only : chi2xyz
@@ -102,33 +103,33 @@ subroutine hydrostatic_exner_code(nlayers, exner, theta,          &
   implicit none
 
   ! Arguments
-  integer(kind=i_def), intent(in) :: nlayers, ndf_w3, ndf_wt, ndf_chi, ndf_pid
-  integer(kind=i_def), intent(in) :: undf_w3, undf_wt, undf_chi, undf_pid
-  integer(kind=i_def), dimension(ndf_w3),  intent(in) :: map_w3
-  integer(kind=i_def), dimension(ndf_wt),  intent(in) :: map_wt
-  integer(kind=i_def), dimension(ndf_chi), intent(in) :: map_chi
-  integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
-
-  real(kind=r_def), dimension(undf_w3), intent(inout) :: exner
-  real(kind=r_def), dimension(undf_wt),    intent(in) :: theta
-  real(kind=r_def), dimension(undf_wt),    intent(in) :: moist_dyn_gas, &
-                                                         moist_dyn_tot, &
-                                                         moist_dyn_fac
-  real(kind=r_def), dimension(undf_wt),    intent(in) :: height_wt
-  real(kind=r_def), dimension(undf_w3),    intent(in) :: height_w3
-  real(kind=r_def), dimension(undf_chi),   intent(in) :: chi_1, chi_2, chi_3
-  real(kind=r_def), dimension(undf_pid),   intent(in) :: panel_id
-
-  real(kind=r_def), dimension(1,ndf_chi,ndf_wt),  intent(in)  :: basis_chi_on_wt
+  integer(kind=i_def),                              intent(in)    :: nlayers
+  integer(kind=i_def),                              intent(in)    :: ndf_w3, undf_w3
+  integer(kind=i_def),                              intent(in)    :: ndf_wt, undf_wt
+  integer(kind=i_def),                              intent(in)    :: ndf_chi, undf_chi
+  integer(kind=i_def),                              intent(in)    :: ndf_pid, undf_pid
+  integer(kind=i_def), dimension(ndf_w3),           intent(in)    :: map_w3
+  integer(kind=i_def), dimension(ndf_wt),           intent(in)    :: map_wt
+  integer(kind=i_def), dimension(ndf_chi),          intent(in)    :: map_chi
+  integer(kind=i_def), dimension(ndf_pid),          intent(in)    :: map_pid
+  real(kind=r_def),    dimension(undf_w3),          intent(inout) :: exner
+  real(kind=r_def),    dimension(undf_wt),          intent(in)    :: theta
+  real(kind=r_def),    dimension(undf_wt),          intent(in)    :: moist_dyn_gas, &
+                                                                     moist_dyn_tot, &
+                                                                     moist_dyn_fac
+  real(kind=r_def),    dimension(undf_wt),          intent(in)    :: height_wt
+  real(kind=r_def),    dimension(undf_w3),          intent(in)    :: height_w3
+  real(kind=r_def),    dimension(undf_chi),         intent(in)    :: chi_1, chi_2, chi_3
+  real(kind=r_def),    dimension(undf_pid),         intent(in)    :: panel_id
+  real(kind=r_def),    dimension(1,ndf_chi,ndf_wt), intent(in)    :: basis_chi_on_wt
 
   ! Internal variables
-  integer(kind=i_def)                    :: k, dfc, layers_offset, wt_dof, ipanel
-  real(kind=r_def)                       :: dz
-  real(kind=r_def)                       :: theta_moist
-  real(kind=r_def),   dimension(ndf_chi) :: chi_1_e, chi_2_e, chi_3_e
-  real(kind=r_def)                       :: coords(3), xyz(3)
-
-  real(kind=r_def)            :: exner_start
+  integer(kind=i_def)                  :: k, dfc, layers_offset, wt_dof, ipanel
+  real(kind=r_def)                     :: dz
+  real(kind=r_def)                     :: theta_moist
+  real(kind=r_def)                     :: coords(3), xyz(3)
+  real(kind=r_def)                     :: exner_start
+  real(kind=r_def), dimension(ndf_chi) :: chi_1_e, chi_2_e, chi_3_e
 
   ipanel = int(panel_id(map_pid(1)), i_def)
 

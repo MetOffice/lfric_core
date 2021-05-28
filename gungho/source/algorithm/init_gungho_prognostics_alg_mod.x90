@@ -28,7 +28,7 @@ module init_gungho_prognostics_alg_mod
   use base_mesh_config_mod,            only: geometry,           &
                                              geometry_spherical, &
                                              geometry_planar
-  use formulation_config_mod,          only: use_moisture,         &
+  use formulation_config_mod,          only: use_moisture, &
                                              transport_only
   use initial_pressure_config_mod,     only: method,           &
                                              method_sampled,   &
@@ -207,9 +207,9 @@ contains
                      sample_eos_rho_kernel_type( rho, exner, theta,          &
                                                  moist_dyn(gas_law) ) )
       case(method_sampled)
-        call invoke( initial_rho_sample_kernel_type( rho, chi_sph, &
+        call invoke( initial_rho_sample_kernel_type( rho, chi_sph,             &
                                                      panel_id, initial_time ), &
-                     initial_exner_sample_kernel_type( exner, chi_sph, &
+                     initial_exner_sample_kernel_type( exner, chi_sph,         &
                                                        panel_id, initial_time ) )
       case(method_projected)
         call invoke( set_rho_kernel_type   ( rho,   chi_sph, panel_id, initial_time, qr ), &

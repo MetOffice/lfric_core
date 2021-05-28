@@ -998,8 +998,6 @@ end subroutine advection_alg
                            si_advective_terms, shifted, density_predictor,   &
                            logspace )
 
-
-    use psykal_builtin_light_mod, only: invoke_sign
     use advective_wind_update_kernel_mod, &
       only: advective_wind_update_kernel_type
     use timestepping_config_mod, only: outer_iterations
@@ -1177,7 +1175,7 @@ end subroutine advection_alg
           ! Compute unit wind to make flux alg return recontructed
           ! tracer instead of mass flux
           call unit_wind%initialise( advecting_wind%get_function_space() )
-          call invoke_sign(unit_wind, 1.0_r_def, advecting_wind)
+          call invoke( sign_X(unit_wind, 1.0_r_def, advecting_wind) )
         end if
 
         ! Use Runge-Kutta timestepping to advect field and return either

@@ -15,52 +15,6 @@ module psykal_builtin_light_mod
 contains
 
   !----------------------------------------------------------------------------
-  !> invoke_divide_field: Divide the values of field1 by field2 and put result
-  !> in field_res.
-  !>
-  !> c = a/b
-  !>
-  subroutine invoke_divide_field(field1,field2,field_res)
-    use log_mod, only : log_event, LOG_LEVEL_ERROR
-
-    implicit none
-    type( field_type ), intent(in )    :: field1,field2
-    type( field_type ), intent(inout ) :: field_res
-    type( field_proxy_type)            :: field1_proxy,field2_proxy      &
-                                        , field_res_proxy
-    integer(kind=i_def)                :: i,undf
-
-    field1_proxy = field1%get_proxy()
-    field2_proxy = field2%get_proxy()
-    field_res_proxy = field_res%get_proxy()
-
-    !sanity check
-    undf = field1_proxy%vspace%get_last_dof_annexed()
-    if(undf /= field2_proxy%vspace%get_last_dof_annexed() ) then
-      ! they are not on the same function space
-      call log_event("PSy:divide_field:field1 and field2 live on different w-spaces" &
-                    , LOG_LEVEL_ERROR)
-      !abort
-      stop
-    endif
-    if(undf /= field_res_proxy%vspace%get_last_dof_annexed() ) then
-      ! they are not on the same function space
-      call log_event("PSy:divide_field:field1 and result_field live on different w-spaces" &
-                    , LOG_LEVEL_ERROR)
-      !abort
-      stop
-    endif
-    !$omp parallel do schedule(static), default(none), shared(field1_proxy,field2_proxy, field_res_proxy, undf),  private(i)
-    do i = 1,undf
-      field_res_proxy%data(i) = field1_proxy%data(i)/field2_proxy%data(i)
-    end do
-    !$omp end parallel do
-
-    call field_res_proxy%set_dirty()
-
-  end subroutine invoke_divide_field
-
-  !----------------------------------------------------------------------------
   subroutine invoke_convert_cart2sphere_vector( field, coords)
     use coord_transform_mod, only: cart2sphere_vector
     implicit none
@@ -124,58 +78,5 @@ contains
     call x_p(3)%set_dirty()
 
   end subroutine invoke_pointwise_convert_xyz2llr
-
-  !----------------------------------------------------------------------------
-  !> invoke_sign:  y = sign(a,x) a-scalar; x,y-vector
-  !> See PSyClone issue #560
-  !>
-  subroutine invoke_sign(field_res, scalar, field)
-
-    use log_mod,  only : log_event, LOG_LEVEL_ERROR
-    use mesh_mod, only : mesh_type ! Work around for intel_v15 failures on the Cray
-
-    implicit none
-    type( field_type ), intent(in )    :: field
-    type( field_type ), intent(inout ) :: field_res
-    real(kind=r_def),   intent(in )    :: scalar
-    type( field_proxy_type)            :: field_proxy,      &
-                                          field_res_proxy
-    integer(kind=i_def)                :: i,undf
-    integer(kind=i_def)                :: depth, dplp
-    type(mesh_type), pointer           :: mesh => null()
-
-    field_proxy = field%get_proxy()
-    field_res_proxy = field_res%get_proxy()
-
-    !sanity check
-    undf = field_proxy%vspace%get_last_dof_annexed()
-    if(undf /= field_res_proxy%vspace%get_last_dof_annexed() ) then
-      ! they are not on the same function space
-      call log_event("PSy:sign:field and result_field live on different w-spaces" &
-                    , LOG_LEVEL_ERROR)
-      !abort
-      stop
-    endif
-
-    !$omp parallel do schedule(static), default(none) &
-    !$omp&  shared(field_proxy,field_res_proxy, &
-    !$omp&  undf, scalar),  private(i)
-    do i = 1,undf
-      field_res_proxy%data(i) = sign(scalar, field_proxy%data(i))
-    end do
-    !$omp end parallel do
-
-    mesh => field_res%get_mesh()
-    depth = mesh%get_halo_depth()
-
-    do dplp = 1, depth
-      if( field_proxy%is_dirty(depth=dplp) ) then
-        call field_res_proxy%set_dirty()
-      else
-        call field_res_proxy%set_clean(dplp)
-      end if
-    end do
-
-  end subroutine invoke_sign
 
 end module psykal_builtin_light_mod
