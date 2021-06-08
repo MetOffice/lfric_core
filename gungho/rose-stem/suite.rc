@@ -516,6 +516,9 @@
             FIX_ENUMS             = 1
 {%-         endif %}
 
+        [[[job]]]
+            execution retry delays = 2*PT5S
+
         [[[directives]]]
 {%-         for DIRECTIVE in TARGET_BUILD_BATCHER_DIRECTIVES %}
             {{DIRECTIVE}}
@@ -945,6 +948,9 @@
              NODAL_DATA_DIR = $DESTINATION_DIRECTORY/{{pathFragment}}/results
              PLOT_DIR = $DESTINATION_DIRECTORY/{{pathFragment}}/plots
              PLOT_CONFIG = {{plot_config[plot_label]}}
+
+        [[[job]]]
+            execution retry delays = 2*PT5S, 5*PT10S, 3*PT1M
 
         [[[directives]]]
 {%-                   for DIRECTIVE in TARGET_TECHNICAL_BATCHER_DIRECTIVES %}

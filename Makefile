@@ -18,13 +18,13 @@
 OPERATE_ON ?= infrastructure                             \
               components/lfric-xios                      \
               mesh_tools gungho lfric_atm                \
-              lfricinputs                                \
               miniapps/skeleton                          \
               miniapps/diagnostics                       \
               miniapps/gravity_wave                      \
               miniapps/solver_miniapp                    \
               miniapps/io_dev                            \
-              miniapps/transport
+              miniapps/transport                         \
+              lfricinputs
 
 export SUITE_GROUP ?= developer
 export SUITE_GROUP_NAME ?= $(notdir $(realpath $(shell pwd)))-.*
