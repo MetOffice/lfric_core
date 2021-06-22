@@ -10,7 +10,7 @@
 &files
   diag_stem_name            = 'diagIODev'
   checkpoint_stem_name      = 'restartIoDev'
-  start_dump_filename       = 'IODev_dump_test'
+  start_dump_filename       = 'real/IODev_dump_C12'
   start_dump_directory      = '../data'
   time_varying_input_path   = 'time_var_input'
 /

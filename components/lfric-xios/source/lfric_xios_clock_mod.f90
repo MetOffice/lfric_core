@@ -9,7 +9,9 @@ module lfric_xios_clock_mod
 
   use calendar_mod,  only : calendar_type
   use clock_mod,     only : clock_type
-  use constants_mod, only : i_timestep, r_second
+  use constants_mod, only : i_timestep, r_second, &
+                            l_def
+  use timer_mod,     only : timer
   use xios,          only : operator(+),         &
                             xios_date,           &
                             xios_duration,       &
@@ -28,6 +30,7 @@ module lfric_xios_clock_mod
   type, public, extends(clock_type) :: lfric_xios_clock_type
     private
     integer :: step_offset
+    logical :: uses_timer = .false.
   contains
     private
     procedure, public :: initialise
@@ -37,20 +40,22 @@ module lfric_xios_clock_mod
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Sets up an XIOS clock object.
+  !> @brief Sets up an XIOS clock object.
   !>
-  !> @param [in] calendar          Interprets human readable times.
+  !> @param [in] calendar          Interprets human-readable times.
   !> @param [in] first             Time of first step.
   !> @param [in] last              Time of last step.
   !> @param [in] seconds_per_step  Length of a time step in seconds.
   !> @param [in] spinup_period     Number of seconds in spinup period.
+  !> @param [in] timer_flag        Flag for use of subroutine timers.
   !>
   subroutine initialise( this,             &
                          calendar,         &
                          first,            &
                          last,             &
                          seconds_per_step, &
-                         spinup_period )
+                         spinup_period,    &
+                         timer_flag )
 
     implicit none
 
@@ -60,10 +65,15 @@ contains
     character(*),                 intent(in)    :: last
     real(r_second),               intent(in)    :: seconds_per_step
     real(r_second),               intent(in)    :: spinup_period
+    logical(l_def), optional,     intent(in)    :: timer_flag
 
     type(xios_duration) :: xios_since_timestep_zero, &
                            timestep_length_for_xios
     type(xios_date)     :: xios_start_date
+
+    if ( present(timer_flag) ) then
+      this%uses_timer = timer_flag
+    end if
 
     call this%clock_type%initialise( calendar,         &
                                      first,            &
@@ -97,7 +107,10 @@ contains
     logical                                     :: tick
 
     tick = this%clock_type%tick()
+
+    if ( this%uses_timer ) call timer('xios_update_calendar')
     call xios_update_calendar( this%get_step() - this%get_first_step() + 1 )
+    if ( this%uses_timer ) call timer('xios_update_calendar')
 
   end function tick
 

@@ -22,12 +22,14 @@ module io_dev_data_mod
   use log_mod,                          only : log_event,      &
                                                LOG_LEVEL_INFO, &
                                                LOG_LEVEL_ERROR
+  use timer_mod,                        only : timer
   use variable_fields_mod,              only : init_variable_fields, &
                                                update_variable_fields
   ! Configuration
   use io_config_mod,                    only : write_diag, write_dump, &
                                                checkpoint_read,        &
-                                               checkpoint_write
+                                               checkpoint_write,       &
+                                               subroutine_timers
   use io_dev_config_mod,                only : field_initialisation,            &
                                                field_initialisation_start_dump, &
                                                time_variation,                  &
@@ -120,19 +122,25 @@ contains
     ! Now we make separate init calls based on model configuration
     !---------------------------------------------------------------
     if ( checkpoint_read ) then
+      if ( subroutine_timers ) call timer('read_checkpoint')
       call read_checkpoint( model_data%core_fields, &
                             clock%get_first_step() - 1 )
+      if ( subroutine_timers ) call timer('read_checkpoint')
 
     else
       ! If fields need to be read from dump file, read them
       if ( field_initialisation == field_initialisation_start_dump ) then
+          if ( subroutine_timers ) call timer('read_state: dump')
           call read_state( model_data%dump_fields, prefix='input_' )
+          if ( subroutine_timers ) call timer('read_state: dump')
       end if
 
       ! If testing initialisation of time-varying I/O
       if ( time_variation == time_variation_ancil ) then
+        if ( subroutine_timers ) call timer('init_variable_fields')
         call init_variable_fields( model_data%variable_field_times, &
                                    clock, model_data%core_fields )
+        if ( subroutine_timers ) call timer('init_variable_fields')
       end if
 
     end if
@@ -163,8 +171,10 @@ contains
 
     case ( time_variation_ancil )
       call log_event( "IO_Dev: Updating fields from time_varying ancillary", LOG_LEVEL_INFO )
+      if ( subroutine_timers ) call timer('update_variable_fields')
       call update_variable_fields( model_data%variable_field_times, &
                                    clock, model_data%core_fields )
+      if ( subroutine_timers ) call timer('update_variable_fields')
 
     case ( time_variation_none )
       call log_event( "IO_Dev: No time variation for this run", LOG_LEVEL_INFO )
@@ -187,12 +197,16 @@ contains
 
     !===================== Write fields to dump ======================!
     if ( write_dump ) then
+      if ( subroutine_timers ) call timer('write_state: dump')
       call write_state( model_data%dump_fields, prefix='output_' )
+      if ( subroutine_timers ) call timer('write_state: dump')
     end if
 
     !=================== Write fields to diagnostic files ====================!
     if ( write_diag ) then
+      if ( subroutine_timers ) call timer('write_state: diagnostic')
       call write_state( model_data%core_fields )
+      if ( subroutine_timers ) call timer('write_state: diagnostic')
     end if
 
 
@@ -210,7 +224,9 @@ contains
 
       !=================== Write fields to checkpoint files ====================
       if ( checkpoint_write ) then
+        if ( subroutine_timers ) call timer('write_checkpoint')
         call write_checkpoint( model_data%core_fields, clock )
+        if ( subroutine_timers ) call timer('write_checkpoint')
       end if
 
       !======================== Write checksum output ==========================

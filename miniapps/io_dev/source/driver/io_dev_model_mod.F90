@@ -39,10 +39,11 @@ module io_dev_model_mod
   use mpi_mod,                    only : store_comm,    &
                                          get_comm_size, &
                                          get_comm_rank
+  use timer_mod,                  only : timer, output_timer, init_timer
   ! Configuration
   use configuration_mod,          only : final_configuration
   use derived_config_mod,         only : set_derived_config
-  use io_config_mod,              only : use_xios_io
+  use io_config_mod,              only : use_xios_io, subroutine_timers
   use time_config_mod,            only : timestep_end, timestep_start
   use timestepping_config_mod,    only : dt, spinup_period
   ! IO_Dev driver modules
@@ -167,6 +168,12 @@ contains
 
     call set_derived_config( .true. )
 
+    ! Initialise timer
+    if ( subroutine_timers ) then
+      call init_timer()
+      call timer(program_name)
+    end if
+
     call log_event( 'Initialising '//program_name//' ...', LOG_LEVEL_ALWAYS )
 
     ! Create the mesh
@@ -189,18 +196,21 @@ contains
 
     ! Set up XIOS domain and context
     init_context_ptr => initialise_context
-    call initialise_xios( io_context,      &
-                          xios_context_id, &
-                          communicator,    &
-                          mesh_id,         &
-                          twod_mesh_id,    &
-                          chi_sph,         &
-                          panel_id,        &
-                          timestep_start,  &
-                          timestep_end,    &
-                          spinup_period,   &
-                          dt,              &
-                          init_context_ptr )
+    if ( subroutine_timers ) call timer('initialise_xios')
+    call initialise_xios( io_context,                        &
+                          xios_context_id,                   &
+                          communicator,                      &
+                          mesh_id,                           &
+                          twod_mesh_id,                      &
+                          chi_sph,                           &
+                          panel_id,                          &
+                          timestep_start,                    &
+                          timestep_end,                      &
+                          spinup_period,                     &
+                          dt,                                &
+                          timer_flag=subroutine_timers,      &
+                          populate_filelist=init_context_ptr )
+    if ( subroutine_timers ) call timer('initialise_xios')
 
   end subroutine initialise_infrastructure
 
@@ -215,6 +225,12 @@ contains
     ! Finalise XIOS context if we used it for diagnostic output or checkpointing
     if ( use_xios_io ) then
       call xios_context_finalize()
+    end if
+
+    ! Finalise timer
+    if ( subroutine_timers ) then
+      call timer(program_name)
+      call output_timer()
     end if
 
     ! Finalise aspects of the grid

@@ -8,7 +8,7 @@
 module clock_mod
 
   use calendar_mod,  only : calendar_type
-  use constants_mod, only : i_timestep, r_def, r_second
+  use constants_mod, only : i_timestep, r_def, r_second, l_def
   use log_mod,       only : log_event, log_level_error, log_scratch_space
 
   implicit none
@@ -54,7 +54,7 @@ module clock_mod
 
 contains
 
-  !> Sets up the clock object before use.
+  !> @brief Sets up the clock object before use.
   !>
   !> @param[in,out] this Object pointer.
   !> @param[in] calendar Means to interpret human dates.
@@ -62,22 +62,25 @@ contains
   !> @param[in] last Last date in the current run.
   !> @param[in] seconds_per_step Length of a timestep in seconds.
   !> @param[in] spinup_period Length of spinup period in seconds. May be zero.
+  !> @param[in] timer_flag Flag for use of subroutine timers.
   !>
   subroutine initialise( this,             &
                          calendar,         &
                          first,            &
                          last,             &
                          seconds_per_step, &
-                         spinup_period )
+                         spinup_period,    &
+                         timer_flag )
 
     implicit none
 
-    class(clock_type),    intent(inout) :: this
-    class(calendar_type), intent(in)    :: calendar
-    character(*),         intent(in)    :: first
-    character(*),         intent(in)    :: last
-    real(r_second),       intent(in)    :: seconds_per_step
-    real(r_second),       intent(in)    :: spinup_period
+    class(clock_type),        intent(inout) :: this
+    class(calendar_type),     intent(in)    :: calendar
+    character(*),             intent(in)    :: first
+    character(*),             intent(in)    :: last
+    real(r_second),           intent(in)    :: seconds_per_step
+    real(r_second),           intent(in)    :: spinup_period
+    logical(l_def), optional, intent(in)    :: timer_flag
 
     allocate( this%calendar, source=calendar )
     this%first_step = this%calendar%parse_instance( first )

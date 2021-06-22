@@ -15,7 +15,7 @@ module lfric_xios_io_mod
   use clock_mod,                     only: clock_type
   use constants_mod,                 only: dp_xios,                       &
                                            i_def, i_halo_index, i_native, &
-                                           r_def, r_second,               &
+                                           r_def, r_second, l_def,        &
                                            radians_to_degrees,            &
                                            str_def
   use coord_transform_mod,           only: xyz2llr
@@ -175,13 +175,20 @@ contains
   end subroutine callback_setup_xios
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> @brief  Performs XIOS context, dimension and file initialisation
+  !> @brief Performs XIOS context, dimension and file initialisation.
   !>
   !> @param[out] context           I/O context to be initialised.
-  !> @param[in]  mesh_id           Mesh id
-  !> @param[in]  twod_mesh_id      2D Mesh id
-  !> @param[in]  chi               Coordinate field
+  !> @param[in]  identifier        The XIOS context ID.
+  !> @param[in]  communicator      MPI communicator used by the XIOS context.
+  !> @param[in]  mesh_id           Mesh ID.
+  !> @param[in]  twod_mesh_id      2D Mesh ID.
+  !> @param[in]  chi               Coordinate field.
   !> @param[in]  panel_id          Field containing IDs of mesh panels.
+  !> @param[in]  start_step        The starting model timestep.
+  !> @param[in]  end_step          The final model timestep.
+  !> @param[in]  spinup_period     The number of timesteps taken for spin up.
+  !> @param[in]  seconds_per_step  Seconds per model timestep.
+  !> @param[in]  timer_flag        Flag for use of subroutine timers.
   !> @param[in]  populate_filelist Optional procedure to build file list.
   !>
   subroutine initialise_xios( context,          &
@@ -195,21 +202,23 @@ contains
                               end_step,         &
                               spinup_period,    &
                               seconds_per_step, &
+                              timer_flag,       &
                               populate_filelist )
 
     implicit none
 
-    class(io_context_type), intent(out), allocatable :: context
-    character(*),           intent(in)               :: identifier
-    integer,                intent(in)               :: communicator
-    integer(i_def),         intent(in)               :: mesh_id
-    integer(i_def),         intent(in)               :: twod_mesh_id
-    class(field_type),      intent(in)               :: chi(:)
-    class(field_type),      intent(in)               :: panel_id
-    character(*),           intent(in)               :: start_step
-    character(*),           intent(in)               :: end_step
-    real(r_second),         intent(in)               :: spinup_period
-    real(r_second),         intent(in)               :: seconds_per_step
+    class(io_context_type),   intent(out), allocatable :: context
+    character(*),             intent(in)               :: identifier
+    integer,                  intent(in)               :: communicator
+    integer(i_def),           intent(in)               :: mesh_id
+    integer(i_def),           intent(in)               :: twod_mesh_id
+    class(field_type),        intent(in)               :: chi(:)
+    class(field_type),        intent(in)               :: panel_id
+    character(*),             intent(in)               :: start_step
+    character(*),             intent(in)               :: end_step
+    real(r_second),           intent(in)               :: spinup_period
+    real(r_second),           intent(in)               :: seconds_per_step
+    logical(l_def), optional, intent(in)               :: timer_flag
     procedure(populate_filelist_if), &
                             intent(in), optional, pointer &
                                                   :: populate_filelist
@@ -233,13 +242,14 @@ contains
     end if
     select type(context)
       class is (lfric_xios_context_type)
-        call context%initialise( identifier,    &
-                                 communicator,  &
-                                 callback,      &
-                                 start_step,    &
-                                 end_step,      &
-                                 spinup_period, &
-                                 seconds_per_step )
+        call context%initialise( identifier,       &
+                                 communicator,     &
+                                 callback,         &
+                                 start_step,       &
+                                 end_step,         &
+                                 spinup_period,    &
+                                 seconds_per_step, &
+                                 timer_flag )
       ! No need to default the select as we allocated just above.
     end select
 

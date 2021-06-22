@@ -322,7 +322,7 @@ contains
                             timestep_end,                  &
                             real(spinup_period, r_second), &
                             real(dt, r_second),            &
-                            populate_pointer )
+                            populate_filelist=populate_pointer )
     else
       call initialise_simple_io( &
                             io_context,                    &

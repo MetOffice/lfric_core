@@ -826,6 +826,9 @@
 
                       test -f $CYLC_TASK_WORK_DIR/io_dev_averages.nc && \
                       mv $CYLC_TASK_WORK_DIR/io_dev_averages.nc $DESTINATION_DIRECTORY/{{pathFragment}}/results/ || true
+
+                      test -f $CYLC_TASK_WORK_DIR/timer.txt && \
+                      mv $CYLC_TASK_WORK_DIR/timer.txt $DESTINATION_DIRECTORY/{{pathFragment}}/results/ || true
                       """
 
         [[[environment]]]

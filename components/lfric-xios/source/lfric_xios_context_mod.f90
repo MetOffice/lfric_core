@@ -12,7 +12,8 @@ module lfric_xios_context_mod
                                    io_context_initialiser_type
   use step_calendar_mod,    only : step_calendar_type
   use constants_mod,        only : i_native, &
-                                   r_second
+                                   r_second, &
+                                   l_def
   use lfric_xios_clock_mod, only : lfric_xios_clock_type
   use log_mod,              only : log_event,       &
                                    log_level_error, &
@@ -45,21 +46,23 @@ module lfric_xios_context_mod
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Set up an XIOS context object.
+  !> @brief Set up an XIOS context object.
   !>
-  !> @param [in] id                Unique identifying string.
-  !> @param [in] communicator      MPI communicator used by context.
-  !> @param [in] callback          Object to handle model specifics.
-  !> @param [in] start_time        Time of first step.
-  !> @param [in] finish_time       Time of last step.
-  !> @param [in] spinup_period     Number of seconds in spinup period.
-  !> @param [in] seconds_per_step  Number of seconds in a time step.
+  !> @param [in]     id                Unique identifying string.
+  !> @param [in]     communicator      MPI communicator used by context.
+  !> @param [in,out] callback          Object to handle model specifics.
+  !> @param [in]     start_time        Time of first step.
+  !> @param [in]     finish_time       Time of last step.
+  !> @param [in]     spinup_period     Number of seconds in spinup period.
+  !> @param [in]     seconds_per_step  Number of seconds in a time step.
+  !> @param [in]     timer_flag        Flag for use of subroutine timers.
   !>
   subroutine initialise( this, id, communicator,  &
                          callback,                &
                          start_time, finish_time, &
                          spinup_period,           &
-                         seconds_per_step )
+                         seconds_per_step,        &
+                         timer_flag )
 
     implicit none
 
@@ -71,6 +74,7 @@ contains
     character(*),                       intent(in)    :: finish_time
     real(r_second),                     intent(in)    :: spinup_period
     real(r_second),                     intent(in)    :: seconds_per_step
+    logical(l_def), optional,           intent(in)    :: timer_flag
 
     type(step_calendar_type), allocatable :: calendar
     integer(i_native)                     :: rc
@@ -89,7 +93,8 @@ contains
       call log_event( "Unable to allocate clock", log_level_error )
     end if
     call this%clock%initialise( calendar, start_time, finish_time, &
-                                seconds_per_step, spinup_period )
+                                seconds_per_step, spinup_period,   &
+                                timer_flag=timer_flag )
 
     !> @todo Rather than using this callback we might prefer to pass arrays
     !>       of objects which describe things to be set up. Alternatively we

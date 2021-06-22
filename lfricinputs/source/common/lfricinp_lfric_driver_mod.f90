@@ -161,7 +161,7 @@ call initialise_xios( io_context,       &
                       last_step,        &
                       spinup_period,    &
                       seconds_per_step, &
-                      populate_pointer )
+                      populate_filelist=populate_pointer )
 
 ! Advance XIOS calendar to enable dump writing
 clock => io_context%get_clock()
