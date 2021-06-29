@@ -119,7 +119,8 @@ contains
         key_index = key_index + 1
         if (key_index > ubound({{name}}_key, 1)) then
           write( log_scratch_space, &
-                 '("Key ''", A, "'' not recognised for {{listname}} {{name}}")' ) key
+              '("Key ''", A, "'' not recognised for {{listname}} {{name}}")' ) &
+              trim(adjustl(key))
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
       end if

@@ -124,7 +124,8 @@ contains
         key_index = key_index + 1
         if (key_index > ubound(enum_key, 1)) then
           write( log_scratch_space, &
-                 '("Key ''", A, "'' not recognised for test enum")' ) key
+              '("Key ''", A, "'' not recognised for test enum")' ) &
+              trim(adjustl(key))
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
       end if
@@ -758,7 +759,8 @@ contains
         key_index = key_index + 1
         if (key_index > ubound(value_key, 1)) then
           write( log_scratch_space, &
-                 '("Key ''", A, "'' not recognised for enum value")' ) key
+              '("Key ''", A, "'' not recognised for enum value")' ) &
+              trim(adjustl(key))
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
       end if
@@ -1014,7 +1016,8 @@ contains
         key_index = key_index + 1
         if (key_index > ubound(first_key, 1)) then
           write( log_scratch_space, &
-                 '("Key ''", A, "'' not recognised for twoenum first")' ) key
+              '("Key ''", A, "'' not recognised for twoenum first")' ) &
+              trim(adjustl(key))
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
       end if
@@ -1087,7 +1090,8 @@ contains
         key_index = key_index + 1
         if (key_index > ubound(second_key, 1)) then
           write( log_scratch_space, &
-                 '("Key ''", A, "'' not recognised for twoenum second")' ) key
+              '("Key ''", A, "'' not recognised for twoenum second")' ) &
+              trim(adjustl(key))
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
       end if
@@ -2002,7 +2006,8 @@ contains
         key_index = key_index + 1
         if (key_index > ubound(tubbies_key, 1)) then
           write( log_scratch_space, &
-                 '("Key ''", A, "'' not recognised for telly tubbies")' ) key
+              '("Key ''", A, "'' not recognised for telly tubbies")' ) &
+              trim(adjustl(key))
           call log_event( log_scratch_space, LOG_LEVEL_ERROR )
         end if
       end if
