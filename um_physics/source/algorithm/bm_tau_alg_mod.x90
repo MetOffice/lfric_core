@@ -25,12 +25,12 @@ contains
   !>         calculates decorrelation, homogenisation and phase-relaxation
   !>         time scales for use in the variance calculation in the bimodal
   !>         cloud scheme, as described in UMDP39
-  !>@param[in]     mr                (in)     Mixing ratios, in theta space
+  !>@param[in]     mr_n              (in)     Mixing ratios, in theta space
   !>@param[in]     theta             (in)     theta in its native space
   !>@param[in]     derived_fields    (in)     Group of derived fields
   !>@param[in]     turbulence_fields (in)     Fields for turbulence scheme
   !>@param[in]     cloud_fields      (in,out) Fields for cloud scheme
-  subroutine bm_tau_alg(mr, theta, derived_fields, turbulence_fields,   &
+  subroutine bm_tau_alg(mr_n, theta, derived_fields, turbulence_fields,   &
                      cloud_fields)
 
     use bm_tau_kernel_mod, only: bm_tau_kernel_type
@@ -41,7 +41,7 @@ contains
     type( field_collection_type ), intent(in) :: cloud_fields
     type( field_collection_type ), intent(in) :: derived_fields
 
-    type( field_type ), intent( inout ) :: mr(nummr)
+    type( field_type ), intent(in) :: mr_n(nummr)
 
     ! Convention for variables below is to omit their function space
     ! in their name if they are in native space. However, variable name
@@ -74,8 +74,8 @@ contains
     wetrho_in_wth => derived_fields%get_field('wetrho_in_wth')
     rho_in_wth => derived_fields%get_field('rho_in_wth')
 
-    call invoke( bm_tau_kernel_type( mr(imr_v), theta, exner_in_wth,           &
-                                     mr(imr_ci), cf_ice, wvar, lmix_bl,     &
+    call invoke( bm_tau_kernel_type( mr_n(imr_v), theta, exner_in_wth,         &
+                                     mr_n(imr_ci), cf_ice, wvar, lmix_bl,      &
                                      rho_in_wth, wetrho_in_wth,                &
                                      tau_dec_bm, tau_hom_bm, tau_mph_bm)  )
 

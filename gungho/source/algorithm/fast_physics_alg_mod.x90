@@ -23,8 +23,7 @@ module fast_physics_alg_mod
   use formulation_config_mod, only: use_moisture
   use convection_config_mod,only: cv_scheme, cv_scheme_lambert_lewis, &
                                   cv_scheme_gregory_rowntree
-  use cloud_config_mod,     only: scheme, scheme_pc2, scheme_bimodal,      &
-                                  pc2ini, pc2ini_bimodal
+  use cloud_config_mod,     only: scheme, scheme_pc2
   ! Derived Types
   use field_mod,            only: field_type
   use field_collection_mod, only: field_collection_type
@@ -42,7 +41,6 @@ module fast_physics_alg_mod
   use conv_ll_alg_mod, only: conv_ll_alg
   use conv_gr_alg_mod, only: conv_gr_alg
   use pc2_conv_coupling_alg_mod, only: pc2_conv_coupling_alg
-  use bm_tau_alg_mod,  only: bm_tau_alg
   ! Jules surface schemes
   use jules_extra_alg_mod, only: jules_extra_alg
 #endif
@@ -171,15 +169,6 @@ contains
       end if
 
     end if
-
-    if ( cloud == cloud_um .and. ( scheme == scheme_bimodal .or.          &
-        ( scheme == scheme_pc2 .and. pc2ini == pc2ini_bimodal ) ) ) then
-
-      call bm_tau_alg(mr, theta, derived_fields, turbulence_fields,       &
-                     cloud_fields)
-
-    end if
-
 
     !--------------------------------------------------------------------
     ! UM implicit boundary layer and Jules surface schemes
