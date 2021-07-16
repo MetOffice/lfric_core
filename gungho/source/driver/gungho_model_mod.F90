@@ -29,8 +29,6 @@ module gungho_model_mod
                                          transport_only, &
                                          use_moisture,   &
                                          use_physics
-  use global_mesh_collection_mod, only : global_mesh_collection, &
-                                         global_mesh_collection_type
   use gungho_mod,                 only : load_configuration
   use gungho_model_data_mod,      only : model_data_type
   use gungho_setup_io_mod,        only : init_gungho_files
@@ -67,6 +65,8 @@ module gungho_model_mod
   use minmax_tseries_mod,         only : minmax_tseries,      &
                                          minmax_tseries_init, &
                                          minmax_tseries_final
+  use mesh_collection_mod,        only : mesh_collection, &
+                                         mesh_collection_type
   use moisture_conservation_alg_mod, &
                                   only : moisture_conservation_alg
   use mpi_mod,                    only : store_comm,    &
@@ -270,11 +270,11 @@ contains
     ! Initialise aspects of the grid
     !-------------------------------------------------------------------------
 
-    allocate( global_mesh_collection, &
-              source = global_mesh_collection_type() )
-
     allocate( local_mesh_collection, &
               source = local_mesh_collection_type() )
+
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
 
     ! Create the mesh
     call init_mesh( local_rank, total_ranks, mesh_id,             &
@@ -297,11 +297,6 @@ contains
                    chi_mg_sph            = chi_mg_sph,            &
                    panel_id_mg           = panel_id_mg,           &
                    use_multigrid         = l_multigrid )
-
-
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
     !-------------------------------------------------------------------------
     ! Initialise aspects of output

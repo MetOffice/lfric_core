@@ -18,8 +18,6 @@ module catalyst_demo_driver_mod
   use finite_element_config_mod,      only: element_order
   use formulation_config_mod,         only: l_multigrid
   use function_space_chain_mod,       only: function_space_chain_type
-  use global_mesh_collection_mod,     only: global_mesh_collection, &
-                                            global_mesh_collection_type
   use gw_alg_mod,                     only: gravity_wave_alg_init, &
                                             gravity_wave_alg_step, &
                                             gravity_wave_alg_final
@@ -41,6 +39,8 @@ module catalyst_demo_driver_mod
                                             LOG_LEVEL_DEBUG,    &
                                             LOG_LEVEL_TRACE,    &
                                             log_scratch_space
+  use mesh_collection_mod,            only: mesh_collection, &
+                                            mesh_collection_type
   use operator_mod,                   only: operator_type
   use io_config_mod,                  only: write_diag,           &
                                             diagnostic_frequency, &
@@ -159,11 +159,10 @@ contains
     call timer(program_name)
   end if
 
-  allocate( global_mesh_collection, &
-       source = global_mesh_collection_type() )
-
   allocate( local_mesh_collection, &
        source = local_mesh_collection_type() )
+  allocate( mesh_collection, &
+       source=mesh_collection_type() )
 
   ! Create the mesh
   call init_mesh( local_rank, total_ranks, mesh_id, &
@@ -221,13 +220,6 @@ contains
                            chi_xyz, chi_sph, panel_id,                &
                            multigrid_function_space_chain,            &
                            wind, pressure, buoyancy )
-
-  ! Full global meshes no longer required, so reclaim
-  ! the memory from global_mesh_collection
-  write(log_scratch_space,'(A)') &
-      "Purging global mesh collection."
-  call log_event( log_scratch_space, LOG_LEVEL_INFO )
-  deallocate(global_mesh_collection)
 
   ! Output initial conditions
   ! We only want these once at the beginning of a run

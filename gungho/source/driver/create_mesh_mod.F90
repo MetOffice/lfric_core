@@ -13,7 +13,8 @@ module create_mesh_mod
                                         r_def, imdi, i_native
   use extrusion_mod,              only: extrusion_type, &
                                         uniform_extrusion_type
-  use global_mesh_collection_mod, only: global_mesh_collection
+  use global_mesh_collection_mod, only: global_mesh_collection, &
+                                        global_mesh_collection_type
   use global_mesh_mod,            only: global_mesh_type
   use local_mesh_collection_mod,  only: local_mesh_collection
   use local_mesh_mod,             only: local_mesh_type
@@ -21,7 +22,7 @@ module create_mesh_mod
                                         log_scratch_space, &
                                         LOG_LEVEL_INFO,    &
                                         LOG_LEVEL_ERROR
-  use mesh_collection_mod,        only: mesh_collection_type
+  use mesh_collection_mod,        only: mesh_collection
   use mesh_mod,                   only: mesh_type
   use ncdf_quad_mod,              only: ncdf_quad_type
   use partition_mod,              only: partition_type, &
@@ -88,7 +89,6 @@ subroutine init_mesh( local_rank, total_ranks,       &
                                         key_from_cellshape, &
                                         cellshape_triangle, &
                                         cellshape_quadrilateral
-  use mesh_collection_mod,        only: mesh_collection
   use multigrid_config_mod,       only: chain_mesh_tags
 
   implicit none
@@ -144,9 +144,6 @@ subroutine init_mesh( local_rank, total_ranks,       &
   character(str_def) :: mesh_name
   character(str_def) :: mesh_name_A
   character(str_def) :: mesh_name_B
-
-  allocate( mesh_collection, &
-            source=mesh_collection_type() )
 
   call log_event( "Setting up partition mesh(es)", LOG_LEVEL_INFO )
 
@@ -204,6 +201,7 @@ subroutine init_mesh( local_rank, total_ranks,       &
 
   ! 3.0 Read in all global meshes and create local meshes from them.
   !=================================================================
+  allocate( global_mesh_collection, source = global_mesh_collection_type() )
   call create_all_base_meshes( local_rank, total_ranks,     &
                                xproc, yproc,                &
                                max_stencil_depth,           &
@@ -321,6 +319,11 @@ subroutine init_mesh( local_rank, total_ranks,       &
     mesh_name = trim(prime_mesh_name)//'_double'
     double_level_mesh_id = mesh_collection%get_mesh_id(mesh_name)
   end if
+
+  ! 8.0 Discard global mesh collection and all meshes in it.
+  !     (They should not be used past this point in the code)
+  !=================================================================
+  if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
 end subroutine init_mesh
 

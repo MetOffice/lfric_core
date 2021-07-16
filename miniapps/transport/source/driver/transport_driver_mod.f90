@@ -21,12 +21,11 @@ module transport_driver_mod
   use derived_config_mod,             only: set_derived_config
   use field_mod,                      only: field_type
   use formulation_config_mod,         only: l_multigrid
-  use global_mesh_collection_mod,     only: global_mesh_collection, &
-                                            global_mesh_collection_type
   use init_transport_mod,             only: init_transport
   use io_context_mod,                 only: io_context_type
   use lfric_xios_io_mod,              only: initialise_xios
-  use mesh_collection_mod,            only: mesh_collection
+  use mesh_collection_mod,            only: mesh_collection, &
+                                            mesh_collection_type
   use time_config_mod,                only: timestep_end, timestep_start
   use timestepping_config_mod,        only: dt, spinup_period
   use transport_mod,                  only: transport_load_configuration, &
@@ -47,7 +46,6 @@ module transport_driver_mod
                                             LOG_LEVEL_INFO,                   &
                                             LOG_LEVEL_DEBUG,                  &
                                             LOG_LEVEL_TRACE
-  use mesh_collection_mod,            only: mesh_collection
   use io_config_mod,                  only: diagnostic_frequency,             &
                                             nodal_output_on_w3,               &
                                             write_diag,                       &
@@ -218,11 +216,10 @@ contains
     end if
 
     ! Mesh initialisation
-    allocate( global_mesh_collection, &
-              source = global_mesh_collection_type() )
-
     allocate( local_mesh_collection, &
               source = local_mesh_collection_type() )
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
 
     ! Create the mesh
     call init_mesh( local_rank, total_ranks, mesh_id,      &
@@ -247,10 +244,6 @@ contains
                          wind_n, density, theta, dep_pts_x, dep_pts_y,      &
                          dep_pts_z, increment, wind_divergence,             &
                          wind_shifted, density_shifted )
-
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
     ! Initialise dependencies
     ! scheme_method_of_lines                  -> runge_kutta_init

@@ -21,8 +21,6 @@ program solver_miniapp
   use mpi_mod,                          only : initialise_comm, store_comm, &
                                                finalise_comm,               &
                                                get_comm_size, get_comm_rank
-  use global_mesh_collection_mod,       only : global_mesh_collection, &
-                                               global_mesh_collection_type
   use local_mesh_collection_mod,        only : local_mesh_collection, &
                                                local_mesh_collection_type
   use field_mod,                        only : field_type
@@ -48,6 +46,8 @@ program solver_miniapp
                                                RUN_LOG_LEVEL_DEBUG,    &
                                                RUN_LOG_LEVEL_TRACE,    &
                                                RUN_LOG_LEVEL_WARNING
+  use mesh_collection_mod,              only : mesh_collection, &
+                                               mesh_collection_type
   use checksum_alg_mod,                 only : checksum_alg
 
   implicit none
@@ -120,21 +120,14 @@ program solver_miniapp
   call log_event( 'Initialising '//program_name//' ...', LOG_LEVEL_ALWAYS )
 
   ! Create the mesh and function space collection
-  allocate( global_mesh_collection, &
-            source = global_mesh_collection_type() )
   allocate( local_mesh_collection, &
             source = local_mesh_collection_type() )
+  allocate( mesh_collection, &
+            source=mesh_collection_type() )
 
   call init_mesh( local_rank, total_ranks, mesh_id )
 
   call init_fem( mesh_id, chi_xyz, chi_sph, panel_id )
-
-  ! Full global meshes no longer required, so reclaim
-  ! the memory from global_mesh_collection
-  write(log_scratch_space,'(A)') &
-      "Purging global mesh collection."
-  call log_event( log_scratch_space, LOG_LEVEL_INFO )
-  if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
   ! Create and initialise prognostic fields
   call init_solver_miniapp(mesh_id, chi_sph, panel_id, fv_1)

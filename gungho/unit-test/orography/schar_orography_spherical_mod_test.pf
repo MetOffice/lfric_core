@@ -155,12 +155,20 @@ contains
   @Test( npes=[1] )
   subroutine test_schar_orography_spherical(this)
 
+    use local_mesh_mod,       only : local_mesh_type
+    use partition_mod,        only : partition_type,        &
+                                     partitioner_interface, &
+                                     partitioner_cubedsphere_serial
     implicit none
     ! Arguments
     class(schar_orography_spherical_test_type), intent(inout) :: this
     ! Mesh and partition types
     type(ugrid_mesh_data_type)                :: ugrid_mesh_data
-    type(global_mesh_type)                    :: global_mesh
+    type(global_mesh_type),           pointer :: global_mesh_ptr => null()
+    type(global_mesh_type),            target :: global_mesh
+    type(partition_type)                      :: partition
+    procedure(partitioner_interface), pointer :: partitioner_ptr => null()
+    type(local_mesh_type)                     :: local_mesh
     ! Test parameters
     real(r_def), parameter  :: tol = 1.0e-3_r_def
     real(r_def)             :: vertex_coords_2d(3,1), chi_surf, chi_test
@@ -170,17 +178,32 @@ contains
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
     global_mesh = global_mesh_type( ugrid_mesh_data, npanels )
     call ugrid_mesh_data%clear()
+    global_mesh_ptr => global_mesh
+
+    ! Assign partitioner
+    partitioner_ptr => partitioner_cubedsphere_serial
+    partition = partition_type( global_mesh_ptr, &
+                                partitioner_ptr, &
+                                xproc,           &
+                                yproc,           &
+                                1,               &
+                                local_rank,      &
+                                total_ranks )
+    ! Create local mesh
+    call local_mesh%initialise( global_mesh_ptr, partition )
 
     ! Calculate surface height for selected number of points
-    itest = 385
-    call global_mesh%get_vert_coords(itest,vertex_coords_2d(:,1))
+    itest = local_mesh%get_lid_from_gid(369)
+    call local_mesh%get_vert_coords(local_mesh%get_vert_on_cell(1,itest),&
+                                    vertex_coords_2d(:,1))
     chi_surf = orography_profile%analytic_orography(vertex_coords_2d(1,1), &
                                                     vertex_coords_2d(2,1))
     chi_test = this%mountain_height
     @assertEqual( chi_surf, chi_test, tol )
 
-    itest = 96
-    call global_mesh%get_vert_coords(itest,vertex_coords_2d(:,1))
+    itest = local_mesh%get_lid_from_gid(80)
+    call local_mesh%get_vert_coords(local_mesh%get_vert_on_cell(1,itest),&
+                                    vertex_coords_2d(:,1))
     chi_surf = orography_profile%analytic_orography(vertex_coords_2d(1,1), &
                                                     vertex_coords_2d(2,1))
     chi_test = 107.28412_r_def

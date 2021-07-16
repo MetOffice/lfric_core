@@ -237,8 +237,9 @@ contains
     map(1)  = 1
 
     ! Test assigning orography for selected number of points
-    i = 159
-    call global_mesh%get_vert_coords(i,vertex_coords_2d(:,1))
+    i = local_mesh%get_lid_from_gid(119)
+    call local_mesh%get_vert_coords(local_mesh%get_vert_on_cell(1,i),&
+                                    vertex_coords_2d(:,1))
     ! Create horizontal chi_1 and chi_2 fields from mesh coordinates
     chi_1 = vertex_coords_2d(1,1)
     chi_2 = vertex_coords_2d(2,1)

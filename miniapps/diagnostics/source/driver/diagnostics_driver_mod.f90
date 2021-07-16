@@ -34,6 +34,8 @@ module diagnostics_driver_mod
                                             LOG_LEVEL_INFO, &
                                             LOG_LEVEL_DEBUG, &
                                             LOG_LEVEL_TRACE
+  use mesh_collection_mod,           only : mesh_collection, &
+                                            mesh_collection_type
   use mpi_mod,                       only : store_comm,    &
                                             get_comm_size, &
                                             get_comm_rank
@@ -76,8 +78,6 @@ contains
     use create_mesh_mod,            only : init_mesh
     use derived_config_mod,         only : set_derived_config
     use fieldspec_xml_parser_mod,   only : populate_fieldspec_collection
-    use global_mesh_collection_mod, only : global_mesh_collection, &
-                                           global_mesh_collection_type
     use init_diagnostics_mod,       only : init_diagnostics
     use lfric_xios_io_mod,          only : initialise_xios
     use logging_config_mod,         only : run_log_level, &
@@ -148,11 +148,10 @@ contains
     call log_event( 'Initialising ' // program_name // ' ...', &
                     LOG_LEVEL_ALWAYS )
 
-    allocate(global_mesh_collection, &
-            source = global_mesh_collection_type())
-
     allocate( local_mesh_collection, &
             source = local_mesh_collection_type() )
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
 
     ! Create the mesh
     call init_mesh( local_rank, total_ranks, mesh_id, &
@@ -161,14 +160,6 @@ contains
 
     ! Create FEM specifics (function spaces and chi field)
     call init_fem(mesh_id, chi_xyz, chi_sph, panel_id)
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    write(log_scratch_space, '(A)') &
-            "Purging global mesh collection."
-    call log_event(log_scratch_space, LOG_LEVEL_INFO)
-    if (allocated(global_mesh_collection)) then
-      deallocate(global_mesh_collection)
-    end if
 
     !----------------------------------------------------------------------
     ! IO init

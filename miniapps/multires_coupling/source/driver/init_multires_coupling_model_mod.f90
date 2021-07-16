@@ -11,8 +11,6 @@ module init_multires_coupling_model_mod
 
   use constants_mod,                  only : i_def
   use field_mod,                      only : field_type
-  use global_mesh_collection_mod,     only : global_mesh_collection, &
-                                             global_mesh_collection_type
   use create_mesh_mod,                only : init_mesh, final_mesh
   use create_fem_mod,                 only : init_fem, final_fem
   use runtime_constants_mod,          only : create_runtime_constants, &
@@ -20,6 +18,8 @@ module init_multires_coupling_model_mod
   use fs_continuity_mod,              only : W3
   use local_mesh_collection_mod,      only : local_mesh_collection, &
                                              local_mesh_collection_type
+  use mesh_collection_mod,            only : mesh_collection, &
+                                             mesh_collection_type
   use mpi_mod,                        only : get_comm_size, get_comm_rank
   use multires_coupling_config_mod,   only : multires_coupling_mesh_tags
   use formulation_config_mod,         only : l_multigrid, &
@@ -102,11 +102,11 @@ contains
 
     integer(kind=i_def) :: total_ranks, local_rank
 
-    allocate( global_mesh_collection, &
-              source = global_mesh_collection_type() )
-
     allocate( local_mesh_collection, &
               source = local_mesh_collection_type() )
+
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
 
     ! Get the rank information from the virtual machine
     total_ranks = get_comm_size()
@@ -155,10 +155,6 @@ contains
                                    multires_coupling_mesh_ids,                &
                                    multires_coupling_2D_mesh_ids,             &
                                    chi_sph_fields, panel_id_fields )
-
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
   end subroutine initialise_multires_coupling_model
 

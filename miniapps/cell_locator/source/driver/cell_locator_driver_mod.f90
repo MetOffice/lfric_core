@@ -15,8 +15,6 @@ module cell_locator_driver_mod
   use create_mesh_mod,                only : init_mesh
   use create_fem_mod,                 only : init_fem
   use yaxt,                           only : xt_initialize, xt_finalize
-  use global_mesh_collection_mod,     only : global_mesh_collection, &
-                                             global_mesh_collection_type
   use field_mod,                      only : field_type
   use runtime_constants_mod,          only : create_runtime_constants
   use derived_config_mod,             only : set_derived_config
@@ -31,6 +29,8 @@ module cell_locator_driver_mod
                                              LOG_LEVEL_INFO,    &
                                              LOG_LEVEL_DEBUG,   &
                                              LOG_LEVEL_TRACE
+  use mesh_collection_mod,            only : mesh_collection, &
+                                             mesh_collection_type
   use mpi_mod,                        only : store_comm, &
                                              get_comm_size, get_comm_rank
 
@@ -99,11 +99,11 @@ contains
     call init_timer()
     call timer( 'cell_locator' )
 
-    allocate( global_mesh_collection, &
-              source = global_mesh_collection_type() )
-
     allocate( local_mesh_collection, &
               source = local_mesh_collection_type() )
+
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
 
     ! Create the mesh
     call init_mesh( local_rank, total_ranks, mesh_id, &
@@ -111,13 +111,6 @@ contains
 
     ! Create FEM specifics (function spaces and chi field)
     call init_fem( mesh_id, chi_xyz, chi_sph, panel_id )
-
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    write(log_scratch_space,'(A)') &
-        "Purging global mesh collection."
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-    if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
     ! Sets up chi. Create runtime_constants object. This creates various things
     ! needed by the timestepping algorithms such as mass matrix operators, mass

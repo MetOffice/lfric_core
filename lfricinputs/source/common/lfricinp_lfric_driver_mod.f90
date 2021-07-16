@@ -17,8 +17,6 @@ USE clock_mod,                  ONLY: clock_type
 USE create_mesh_mod,            ONLY: init_mesh
 USE create_fem_mod,             ONLY: init_fem
 USE derived_config_mod,         ONLY: set_derived_config
-USE global_mesh_collection_mod, ONLY: global_mesh_collection,                  &
-                                      global_mesh_collection_type
 USE field_collection_mod,       ONLY: field_collection_type
 USE field_mod,                  ONLY: field_type
 USE io_context_mod,             ONLY: io_context_type
@@ -28,6 +26,8 @@ USE lfric_xios_io_mod,          ONLY: populate_filelist_if
 USE lfricinp_setup_io_mod,      ONLY: init_lfricinp_files
 USE local_mesh_collection_mod,  ONLY: local_mesh_collection,                   &
                                       local_mesh_collection_type
+USE mesh_collection_mod,        ONLY: mesh_collection,                         &
+                                      mesh_collection_type
 
 ! Interface to mpi
 USE mpi_mod,                    ONLY: initialise_comm, store_comm,             &
@@ -139,8 +139,8 @@ CALL load_configuration(lfric_nl_fname, required_lfric_namelists)
 CALL set_derived_config( .TRUE. )
 
 CALL log_event('Initialising mesh', LOG_LEVEL_INFO)
-ALLOCATE(global_mesh_collection, source = global_mesh_collection_type())
 ALLOCATE(local_mesh_collection, source = local_mesh_collection_type())
+ALLOCATE(mesh_collection, source=mesh_collection_type() )
 
 CALL init_mesh(local_rank, total_ranks, mesh_id, twod_mesh_id)
 

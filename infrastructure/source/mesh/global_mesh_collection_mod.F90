@@ -517,8 +517,12 @@ contains
   !===========================================================================
   !> @brief Forced clear of all the global mesh objects in the collection.
   !>
-  !> This routine should not need to be called manually except (possibly) in
-  !> pfunit tests
+  !> This routine should not need to be called manually - except:
+  !> (possibly) in pfunit tests, or
+  !> (temporarily) to make sure global_meshes aren't used in model code
+  !> after local_meshes have been created from them. (This can be removed
+  !> when local_meshes are read directly into the model and global_meshes
+  !> have been removed completely from model code)
   !>
   subroutine clear(self)
 

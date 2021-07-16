@@ -15,8 +15,6 @@ module io_dev_model_mod
                                          PRECISION_REAL
   use convert_to_upper_mod,       only : convert_to_upper
   use field_mod,                  only : field_type
-  use global_mesh_collection_mod, only : global_mesh_collection, &
-                                         global_mesh_collection_type
   use io_context_mod,             only : io_context_type, &
                                          io_context_initialiser_type
   use lfric_xios_clock_mod,       only : lfric_xios_clock_type
@@ -36,6 +34,8 @@ module io_dev_model_mod
                                          LOG_LEVEL_INFO,     &
                                          LOG_LEVEL_DEBUG,    &
                                          LOG_LEVEL_TRACE
+  use mesh_collection_mod,        only : mesh_collection, &
+                                         mesh_collection_type
   use mpi_mod,                    only : store_comm,    &
                                          get_comm_size, &
                                          get_comm_rank
@@ -177,22 +177,14 @@ contains
     call log_event( 'Initialising '//program_name//' ...', LOG_LEVEL_ALWAYS )
 
     ! Create the mesh
-    allocate( global_mesh_collection, &
-              source = global_mesh_collection_type() )
     allocate( local_mesh_collection, &
               source = local_mesh_collection_type() )
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
     call init_mesh( local_rank, total_ranks, mesh_id, twod_mesh_id )
 
     ! Create FEM specifics (function spaces and chi field)
     call init_fem( mesh_id, chi_xyz, chi_sph, panel_id )
-
-
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    write(log_scratch_space,'(A)') &
-        "Purging global mesh collection."
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-    if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
     ! Set up XIOS domain and context
     init_context_ptr => initialise_context

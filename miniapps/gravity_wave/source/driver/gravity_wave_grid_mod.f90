@@ -11,8 +11,6 @@ module gravity_wave_grid_mod
   use base_mesh_config_mod,           only : prime_mesh_name
   use constants_mod,                  only : i_def
   use field_mod,                      only : field_type
-  use global_mesh_collection_mod,     only : global_mesh_collection, &
-                                             global_mesh_collection_type
   use create_mesh_mod,                only : init_mesh
   use create_fem_mod,                 only : init_fem
   use fs_continuity_mod,              only : W3
@@ -26,6 +24,8 @@ module gravity_wave_grid_mod
                                              log_scratch_space,  &
                                              LOG_LEVEL_INFO
   use formulation_config_mod,         only : l_multigrid
+  use mesh_collection_mod,            only : mesh_collection, &
+                                             mesh_collection_type
   use mpi_mod,                        only : get_comm_size, get_comm_rank
 
   implicit none
@@ -63,11 +63,10 @@ contains
 
     integer(i_def), allocatable :: multigrid_mesh_ids(:)
 
-    allocate( global_mesh_collection, &
-              source = global_mesh_collection_type() )
-
     allocate( local_mesh_collection, &
               source = local_mesh_collection_type() )
+    allocate( mesh_collection, &
+              source=mesh_collection_type() )
 
     ! Get the rank information from the virtual machine
     total_ranks = get_comm_size()
@@ -101,10 +100,6 @@ contains
     end if
 
     nullify( function_space )
-
-    ! Full global meshes no longer required, so reclaim
-    ! the memory from global_mesh_collection
-    if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
 
   end subroutine initialise_grid
 
