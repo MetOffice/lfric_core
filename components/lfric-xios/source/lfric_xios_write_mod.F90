@@ -17,7 +17,6 @@ module lfric_xios_write_mod
   use field_collection_mod, only: field_collection_type, &
                                   field_collection_iterator_type
   use field_parent_mod,     only: field_parent_type
-  use files_config_mod,     only: checkpoint_stem_name
   use fs_continuity_mod,    only: W3
   use io_mod,               only: ts_fname
   use integer_field_mod,    only: integer_field_type, integer_field_proxy_type
@@ -27,9 +26,15 @@ module lfric_xios_write_mod
                                   LOG_LEVEL_INFO,    &
                                   LOG_LEVEL_WARNING, &
                                   LOG_LEVEL_ERROR
-  use xios,                 only: xios_send_field, &
+#ifdef UNIT_TEST
+  use lfric_xios_mock_mod,  only: xios_send_field,      &
                                   xios_get_domain_attr, &
                                   xios_get_axis_attr
+#else
+  use xios,                 only: xios_send_field,      &
+                                  xios_get_domain_attr, &
+                                  xios_get_axis_attr
+#endif
 
   implicit none
 
@@ -87,7 +92,7 @@ subroutine checkpoint_write_xios(xios_field_name, file_name, field_proxy)
 
   end select
 
-  call xios_send_field(xios_field_name, send_field)
+  call xios_send_field(xios_field_name, reshape (send_field, (/1, undf/)))
 
 end subroutine checkpoint_write_xios
 
@@ -296,7 +301,7 @@ subroutine write_field_single_face(xios_field_name, field_proxy)
 
   end select
 
-  call xios_send_field(xios_field_name, send_field)
+  call xios_send_field(xios_field_name, reshape(send_field, (/1, domain_size*ndata/)))
 
   deallocate(send_field)
 
@@ -491,13 +496,15 @@ end subroutine write_state
 !>
 !>  @param[in]  state  Fields to checkpoint.
 !>  @param[in]  clock  Model time
+!>  @param[in]  checkpoint_stem_name  The checkpoint file stem name
 !>
-subroutine write_checkpoint( state, clock )
+subroutine write_checkpoint( state, clock, checkpoint_stem_name )
 
   implicit none
 
   type(field_collection_type), intent(inout) :: state
   class(clock_type),           intent(in)    :: clock
+  character(len=*),            intent(in)    :: checkpoint_stem_name
 
   type(field_collection_iterator_type) :: iter
 

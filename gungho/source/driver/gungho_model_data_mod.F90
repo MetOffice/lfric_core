@@ -23,6 +23,7 @@ module gungho_model_data_mod
                                                LOG_LEVEL_INFO,  &
                                                LOG_LEVEL_ERROR, &
                                                log_scratch_space
+  use files_config_mod,                 only : checkpoint_stem_name
   use formulation_config_mod,           only : use_physics
   use initialization_config_mod,        only : init_option,                 &
                                                init_option_analytic,        &
@@ -453,7 +454,8 @@ contains
         ! from a previous run
 
         call read_checkpoint( model_data%prognostic_fields, &
-                              clock%get_first_step() - 1 )
+                              clock%get_first_step() - 1,   &
+                              checkpoint_stem_name )
 
         ! Update factors for moist dynamics
         call moist_dyn_factors_alg( model_data%moist_dyn, model_data%mr )
@@ -581,7 +583,7 @@ contains
 
     !=================== Write fields to checkpoint files ====================!
     if( checkpoint_write ) then
-       call write_checkpoint( prognostic_fields, clock )
+       call write_checkpoint( prognostic_fields, clock, checkpoint_stem_name )
     end if
 
   end subroutine output_model_data

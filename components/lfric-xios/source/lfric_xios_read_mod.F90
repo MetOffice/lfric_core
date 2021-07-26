@@ -17,7 +17,6 @@ module lfric_xios_read_mod
                                   field_collection_iterator_type
   use field_parent_mod,     only: field_parent_type, &
                                   field_parent_proxy_type
-  use files_config_mod,     only: checkpoint_stem_name
   use fs_continuity_mod,    only: W3, WTheta, W2H
   use integer_field_mod,    only: integer_field_type, &
                                   integer_field_proxy_type
@@ -28,12 +27,17 @@ module lfric_xios_read_mod
                                   log_scratch_space, &
                                   LOG_LEVEL_INFO,    &
                                   LOG_LEVEL_ERROR
-  use xios,                 only: xios_field,           &
-                                  xios_recv_field,      &
-                                  xios_get_handle,      &
-                                  xios_get_attr,        &
+#ifdef UNIT_TEST
+  use lfric_xios_mock_mod,  only: xios_recv_field,      &
                                   xios_get_domain_attr, &
-                                  xios_get_axis_attr
+                                  xios_get_axis_attr,   &
+                                  xios_get_field_attr
+#else
+  use xios,                 only: xios_recv_field,      &
+                                  xios_get_domain_attr, &
+                                  xios_get_axis_attr,   &
+                                  xios_get_field_attr
+#endif
 
   implicit none
 
@@ -475,13 +479,11 @@ subroutine read_time_data(time_id, time_data)
   real(dp_xios), allocatable, intent(out) :: time_data(:)
 
   ! Local variables for XIOS interface
-  type(xios_field)   :: time_hdl
   integer(i_def)     :: time_axis_size
   character(str_def) :: axis_id, time_units
 
   ! Set up axis size and units from XIOS configuration
-  call xios_get_handle( time_id, time_hdl )
-  call xios_get_attr( time_hdl, unit=time_units, axis_ref=axis_id )
+  call xios_get_field_attr( time_id, unit=time_units, axis_ref=axis_id )
 
   call xios_get_axis_attr( axis_id, n_glo=time_axis_size )
   allocate( time_data( time_axis_size ) )
@@ -599,15 +601,17 @@ end subroutine read_state
 !>  @details  Iterate over a field collection and read each field
 !>            into a collection, if it is enabled for checkpointing
 !>
-!>  @param[in]  state     The collection of fields to populate
-!>  @param[in]  timestep  The current timestep
+!>  @param[in]  state                 The collection of fields to populate
+!>  @param[in]  timestep              The current timestep
+!>  @param[in]  checkpoint_stem_name  The checkpoint file stem name
 !>
-subroutine read_checkpoint(state, timestep)
+subroutine read_checkpoint(state, timestep, checkpoint_stem_name)
 
   implicit none
 
   type( field_collection_type ), intent(inout) :: state
   integer(i_def),                intent(in)    :: timestep
+  character(len=*),              intent(in)    :: checkpoint_stem_name
 
   type( field_collection_iterator_type) :: iter
 

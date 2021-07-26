@@ -26,6 +26,7 @@ module io_dev_data_mod
   use variable_fields_mod,              only : init_variable_fields, &
                                                update_variable_fields
   ! Configuration
+  use files_config_mod,                 only : checkpoint_stem_name
   use io_config_mod,                    only : write_diag, write_dump, &
                                                checkpoint_read,        &
                                                checkpoint_write,       &
@@ -123,8 +124,9 @@ contains
     !---------------------------------------------------------------
     if ( checkpoint_read ) then
       if ( subroutine_timers ) call timer('read_checkpoint')
-      call read_checkpoint( model_data%core_fields, &
-                            clock%get_first_step() - 1 )
+      call read_checkpoint( model_data%core_fields,     &
+                            clock%get_first_step() - 1, &
+                            checkpoint_stem_name )
       if ( subroutine_timers ) call timer('read_checkpoint')
 
     else
@@ -225,7 +227,8 @@ contains
       !=================== Write fields to checkpoint files ====================
       if ( checkpoint_write ) then
         if ( subroutine_timers ) call timer('write_checkpoint')
-        call write_checkpoint( model_data%core_fields, clock )
+        call write_checkpoint( model_data%core_fields, clock, &
+                               checkpoint_stem_name )
         if ( subroutine_timers ) call timer('write_checkpoint')
       end if
 
