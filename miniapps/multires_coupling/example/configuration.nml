@@ -127,6 +127,7 @@ cloud='none',
 convection='none',
 microphysics='none',
 radiation='none'
+stochastic_physics='none'
 /
 
 &solver

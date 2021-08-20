@@ -9,7 +9,10 @@ module fast_physics_alg_mod
   use section_choice_config_mod, only: boundary_layer, boundary_layer_um, &
                                        convection, convection_um,         &
                                        surface, surface_jules,            &
-                                       cloud, cloud_um
+                                       cloud, cloud_um,                   &
+                                       stochastic_physics,                &
+                                       stochastic_physics_um
+
   use clock_mod,            only: clock_type
   use constants_mod,        only: i_def,r_def
   use log_mod,              only: LOG_LEVEL_INFO
@@ -19,7 +22,10 @@ module fast_physics_alg_mod
 
   use physics_config_mod,   only: blayer_placement, blayer_placement_fast, &
                                   convection_placement,                    &
-                                  convection_placement_fast
+                                  convection_placement_fast,               &
+                                  stochastic_physics_placement,            &
+                                  stochastic_physics_placement_fast
+
   use formulation_config_mod, only: use_moisture
   use convection_config_mod,only: cv_scheme, cv_scheme_lambert_lewis, &
                                   cv_scheme_gregory_rowntree
@@ -43,6 +49,8 @@ module fast_physics_alg_mod
   use pc2_conv_coupling_alg_mod, only: pc2_conv_coupling_alg
   ! Jules surface schemes
   use jules_extra_alg_mod, only: jules_extra_alg
+  ! Stochastic physics
+  use stph_main_alg_mod, only: stph_main_alg
 #endif
 
   implicit none
@@ -112,6 +120,10 @@ contains
     ! ...for boundary layer
     type( field_type ) :: dtheta_bl
     type( field_type ), pointer :: du_bl => null()
+    ! ...for stochastic physics
+    type( field_type ) :: dtheta_stph
+    type( field_type ) :: dmv_stph
+
 #ifdef UM_PHYSICS
     ! ...surface fields passed from BL to Jules
     type( field_type ) :: snow_sublimation
@@ -125,7 +137,7 @@ contains
 #endif
 
     ! Flags to indicate whether scheme has run and increments need adding
-    logical :: boundary_layer_done
+    logical :: boundary_layer_done, stph_done
 
     integer(i_def) :: i_mr
 
@@ -140,6 +152,7 @@ contains
     call invoke( setval_c(dtheta, 0.0_r_def), &
                  setval_c(du, 0.0_r_def) )
     boundary_layer_done = .false.
+    stph_done= .false.
 
     !--------------------------------------------------------------------
     ! UM convection scheme
@@ -195,6 +208,19 @@ contains
                              water_extraction, total_snowmelt)
       end if ! jules
     end if ! fast_bl
+
+    !--------------------------------------------------------------------
+    ! Add Stochastic physics
+    !--------------------------------------------------------------------
+    if (stochastic_physics == stochastic_physics_um .and. &
+        stochastic_physics_placement == stochastic_physics_placement_fast) then
+      call stph_main_alg( dtheta_stph, dmv_stph,                           &
+                          dtheta_bl, mr(imr_v), convection_fields,         &
+                          microphysics_fields, radiation_fields,           &
+                          derived_fields, orography_fields)
+      stph_done=.true. ! Collect this increment later on
+    end if
+
 #endif
 
     !=====================================================================
@@ -205,6 +231,13 @@ contains
       ! boundary layer as part of the implicit solution
       call invoke(inc_X_plus_Y(du, du_bl), &
                   inc_X_plus_Y(dtheta, dtheta_bl) )
+    end if
+
+    if (stph_done) then
+      ! Adding stochastic physics theta and mv
+      ! as part of the implicit solution
+      call invoke(inc_X_plus_Y(dtheta, dtheta_stph), &
+                  inc_X_plus_Y(mr(imr_v), dmv_stph) )
     end if
 
     call dtheta%log_minmax(LOG_LEVEL_INFO, 'fast physics: dtheta' )

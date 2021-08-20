@@ -403,6 +403,10 @@
         <field id="cloud_droplet_re_rts" name="cloud_droplet_re_rts" long_name="Cloud droplet effective radius" unit="m" grid_ref="full_level_face_grid" />
         <field id="sw_aer_optical_depth_rts" name="sw_aer_optical_depth_rts" long_name="Aerosol optical depth in the visible" unit="1" grid_ref="full_level_face_grid" />
         <field id="lw_aer_optical_depth_rts" name="lw_aer_optical_depth_rts" long_name="Aerosol optical depth in the infra-red" unit="1" grid_ref="full_level_face_grid" />
+	<!-- Stochastic Physics fields -->
+	<field id="fp_spt" name="fp_spt" long_name="SPT forcing pattern" unit="1" grid_ref="full_level_face_grid" />
+	<field id="dtheta_spt" name="dtheta_spt" long_name="SPT potential temperature forcing" unit="K" grid_ref="full_level_face_grid" />
+	<field id="dmv_spt" name="dmv_spt" long_name="SPT water vapour increment" unit="kg/kg" grid_ref="full_level_face_grid" />
       </field_group>
 
       <!-- Initial conditions group -->

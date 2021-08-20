@@ -42,6 +42,7 @@ methane_oxidation=.false.,
 orographic_drag='none',
 radiation='none',
 spectral_gwd='none',
+stochastic_physics='none',
 surface='jules',
 /
 &domain_size

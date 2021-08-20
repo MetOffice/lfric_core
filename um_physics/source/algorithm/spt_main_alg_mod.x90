@@ -1,0 +1,342 @@
+!-------------------------------------------------------------------------------
+! (c) Crown copyright 2021 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-------------------------------------------------------------------------------
+
+!> @brief Interface to the Stochastic Perturbation of Tendencies (SPT)
+
+module spt_main_alg_mod
+
+    use constants_mod,        only: r_def, i_def
+
+    use field_mod,            only: field_type
+    use field_collection_mod, only: field_collection_type
+    ! xios output
+    use io_config_mod,        only: write_diag, use_xios_io
+
+    use planet_constants_mod, only: p_zero, kappa, lcrcp
+
+    use fs_continuity_mod,    only: W0
+
+    implicit none
+
+    private
+
+    public spt_main_alg
+
+ contains
+  !>@brief Run the UM Stochastic Perturbation of Tendencies (SPT)
+  !>@details The UM Stochastic Perturbation of Tendencies, creates
+  !>         Perturbations in theta and mv scaled from the physical
+  !>         tendencies of radiation, microphysics and convection.
+  !>
+  !>         Steps:
+  !>             1) Sum up tendencies scaled by the standard dev of pert.
+  !>             2) Project the FP into the increments
+  !>             3) Apply vertical ramp up and down of perturbations
+  !>             4) Apply orographic capping
+  !>             5) Remove points where perturbations cause super-saturation
+  !>             6) Apply a 1-2-1 filter spt_n_smoothing_iters times
+  !>             7) Apply water conservation to the column if requested
+  !>             8) Apply MSE conservation in the column
+  !>             9) Add SPT increments to dX_stph stochastic physics increments
+  !>            10) Add SPT diagnostics to iodef
+  !>         See UMDP-081 for full scheme details
+  !>@param[in,out]     dtheta_stph             STO. PHY. increments for theta
+  !>@param[in,out]     dmv_stph                STO. PHY. increments for Water vapour Mixing ratio
+  !>@param[in]         mv                      Updated Water vapour Mixing ratio
+  !>@param[in]         dtheta                  Increments for theta
+  !>@param[in]         fp_spt                  SPT forcing pattern
+  !>@param[in]         convection_fields       Fields from convection scheme
+  !>@param[in]         microphysics_fields     Fields from microphysics scheme
+  !>@param[in]         radiation_fields        Fields from radiationmicrophysics scheme
+  !>@param[in]         derived_fields          Fields from grid transformations
+  !>@param[in]         orography_fields        Fields from orography
+
+  subroutine spt_main_alg(dtheta_stph, dmv_stph, dtheta, mv,         &
+                          fp_spt, convection_fields,                 &
+                          microphysics_fields, radiation_fields,     &
+                          derived_fields, orography_fields)
+
+  use io_config_mod,           only: subroutine_timers
+  use timer_mod,               only: timer
+
+  ! SPT parameters
+  use stochastic_physics_config_mod, only: spt_use_radiation, &
+                                           spt_use_microphysics,&
+                                           spt_use_convection, &
+                                           spt_convection_cfl_limit, &
+                                           spt_mse_conservation, &
+                                           spt_moisture_conservation, &
+                                           spt_stddev_radiation, &
+                                           spt_stddev_microphysics, &
+                                           spt_stddev_convection, &
+                                           spt_n_smoothing_iters, &
+                                           spt_add_increments
+
+  ! load modules to set up the W0 space for 1-2-1 filtering
+  ! wtheta -> w0 bottom DoF -> wtheta
+  use function_space_collection_mod, only: function_space_collection
+  use function_space_mod,            only: function_space_type
+
+  ! Load modules for 1-2-1 wtheta -> w0 bottom DoF -> wtheta filtering
+  use wth_to_w0_average_kernel_mod, only: wth_to_w0_average_kernel_type
+  use w0_to_wth_average_kernel_mod, only: w0_to_wth_average_kernel_type
+  use fem_constants_mod,            only: get_rmultiplicity
+
+  ! SPT kernels
+  use spt_convection_cfl_limit_cap_kernel_mod, only: spt_convection_cfl_limit_cap_kernel_type
+  use spt_levels_cap_kernel_mod,               only: spt_levels_cap_kernel_type
+  use spt_orog_cap_kernel_mod,                 only: spt_orog_cap_kernel_type
+  use spt_saturation_cap_kernel_mod,           only: spt_saturation_cap_kernel_type
+  use spt_moisture_conservation_kernel_mod,    only: spt_moisture_conservation_kernel_type
+
+  ! Module to get dz at theta
+  use physical_op_constants_mod, only: get_dz_at_wtheta
+
+  implicit none
+
+  ! SPT increments to the flow
+  type( field_type ), intent( inout ) :: dtheta_stph
+  type( field_type ), intent( inout ) :: dmv_stph
+
+  ! model prognostics
+  type( field_type ), intent(in) :: dtheta
+  type( field_type ), intent(in) :: mv
+  type( field_type ), intent(in) :: fp_spt
+
+  ! Collections
+  type( field_collection_type ), intent(in) :: convection_fields
+  type( field_collection_type ), intent(in) :: microphysics_fields
+  type( field_collection_type ), intent(in) :: radiation_fields
+  type( field_collection_type ), intent(in) :: derived_fields
+  type( field_collection_type ), intent(in) :: orography_fields
+
+  ! tendency fields from collections
+  type( field_type ), pointer :: dt_conv             => null()
+  type( field_type ), pointer :: dmv_conv            => null()
+
+  type( field_type ), pointer :: dtheta_rad          => null()
+  type( field_type ), pointer :: dmv_pc2_rad         => null()
+  type( field_type ), pointer :: dtheta_mphys        => null()
+  type( field_type ), pointer :: dmv_mphys           => null()
+  ! Orographic std dev
+  type( field_type ), pointer :: sd_orog             => null()
+
+  ! exner and rho in theta levels
+  type( field_type ), pointer :: exner_wth           => null()
+  type( field_type ), pointer :: rho_in_wth          => null()
+
+  ! mass flux for CFL
+  type( field_type ), pointer :: massflux_up         => null()
+  ! theta with physics increments from present timestep.
+  type( field_type ), pointer :: theta_star          => null()
+
+  ! Inverse multiplicity to w0 for 1-2-1 Filter
+  type( field_type ), pointer :: rmultiplicity_w0    => null()
+
+  ! dZ at theta levels for moisture conservation
+  type( field_type ), pointer :: dz_wth    => null()
+
+  ! SPT forcing
+  type( field_type ) :: dt_spt
+  type( field_type ) :: dtheta_spt
+  type( field_type ) :: dmv_spt
+
+  ! Variables for CFL
+  type( field_type ) :: pressure
+  type( field_type ) :: dt_conv_cfl
+  type( field_type ) :: dmv_conv_cfl
+
+  ! Add up to latest variables
+  type( field_type ) :: T_latest
+
+  ! W0 intermediate field for 1-2-1 filtering
+  type( field_type ) :: field_w0
+
+  ! Set up W0 vector space
+  type(function_space_type), pointer :: vector_space_w0 => null()
+
+  ! Mesh
+  integer(i_def) :: mesh_id
+
+  ! Scalars
+  real(kind=r_def) :: inv_kappa, mlcrcp
+  integer(i_def) :: n
+
+  if ( subroutine_timers ) call timer("spt_main_alg")
+
+  !!!! Unpack tendencies
+  dt_conv              => convection_fields%get_field('dt_conv')
+  dmv_conv             => convection_fields%get_field('dmv_conv')
+  dtheta_rad           => radiation_fields%get_field('dtheta_rad')
+  dmv_pc2_rad          => radiation_fields%get_field('dmv_pc2_rad')
+  dtheta_mphys         => microphysics_fields%get_field('dtheta_mphys')
+  dmv_mphys            => microphysics_fields%get_field('dmv_mphys')
+  ! Unpack std dev of orography
+  sd_orog              => orography_fields%get_field('sd_orog')
+  ! Unpack exner and rho in theta levels
+  exner_wth            => derived_fields%get_field('exner_in_wth')
+  rho_in_wth           => derived_fields%get_field('rho_in_wth')
+  ! Unpack convection mass flux
+  massflux_up          => convection_fields%get_field('massflux_up')
+  ! theta
+  theta_star           => derived_fields%get_field('theta_star')
+
+  !!!!  Set dX_spt forcing
+  call dtheta%copy_field_properties(dtheta_spt)
+  call dtheta%copy_field_properties(dt_spt)
+  call mv%copy_field_properties(dmv_spt)
+
+  mesh_id = dtheta_spt%get_mesh_id()
+
+  ! Initialize variables to 0.0
+  call invoke( setval_c(dtheta_spt, 0.0_r_def), &
+               setval_c(dmv_spt, 0.0_r_def))
+
+  !!!! Compute pressure for CFL and qsat removal
+  call exner_wth%copy_field_properties(pressure)
+  inv_kappa = 1.0_r_def/kappa
+  call invoke(setval_X(pressure,exner_wth),        &
+              inc_X_powreal_a(pressure,inv_kappa), &
+              inc_a_times_X(p_zero,pressure))
+
+  !!!!  1) Sum up tendencies scaled by the standard dev of pert.
+  ! Radiation
+  if (spt_use_radiation) then
+    if (.not. spt_mse_conservation) then
+      call invoke(inc_X_plus_bY(dtheta_spt,spt_stddev_radiation,dtheta_rad))
+    end if
+    call invoke(inc_X_plus_bY(dmv_spt,spt_stddev_radiation,dmv_pc2_rad))
+  end if
+
+  ! Microphysics
+  if (spt_use_microphysics) then
+    if (.not. spt_mse_conservation) then
+      call invoke(inc_X_plus_bY(dtheta_spt,spt_stddev_microphysics, dtheta_mphys))
+    end if
+      call invoke(inc_X_plus_bY(dmv_spt,spt_stddev_microphysics,dmv_mphys))
+  end if
+
+  ! convection
+  if (spt_use_convection) then
+    
+    ! Set copies of dX_conv_cfl
+    call dt_conv%copy_field_properties(dt_conv_cfl)
+    call dmv_conv%copy_field_properties(dmv_conv_cfl)
+    call invoke(setval_X(dt_conv_cfl,dt_conv),   &
+                setval_X(dmv_conv_cfl,dmv_conv))
+    
+    ! Apply CFL condition via spt_convection_cfl_limit_cap_kernel
+    if (spt_convection_cfl_limit) then
+      if (.not. spt_mse_conservation) then
+        call invoke(spt_convection_cfl_limit_cap_kernel_type(dt_conv_cfl,  massflux_up, &
+                                            fp_spt, pressure))
+      end if
+      call invoke(spt_convection_cfl_limit_cap_kernel_type(dmv_conv_cfl,  massflux_up,  &
+                                          fp_spt, pressure))
+    end if
+    
+    ! Apply tendencies to dX_spt, conver dt to theta
+    if (.not. spt_mse_conservation) then
+      call invoke(inc_X_times_Y(dt_conv_cfl,exner_wth), &
+                  inc_X_plus_bY(dtheta_spt,spt_stddev_convection,dt_conv_cfl))
+    end if
+    call invoke(inc_X_plus_bY(dmv_spt,spt_stddev_convection,dmv_conv_cfl) )
+  end if
+
+  !!!! 2) Project the FP into the increments
+  if (.not. spt_mse_conservation) then
+    ! Apply forcing and convert to temp
+    call invoke(inc_X_times_Y(dtheta_spt,fp_spt), &
+                X_times_Y(dt_spt,dtheta_spt, exner_wth))
+  end if
+
+  call invoke(inc_X_times_Y(dmv_spt,fp_spt) )
+
+  !!!!  3) Apply vertical ramp up and down of perturbations
+  if (.not. spt_mse_conservation) then
+    call invoke(spt_levels_cap_kernel_type(dtheta_spt))
+  end if
+  call invoke(spt_levels_cap_kernel_type(dmv_spt))
+
+  !!!!  4) Apply orographic capping
+  if (.not. spt_mse_conservation) then
+    call invoke(spt_orog_cap_kernel_type(dtheta_spt,fp_spt,sd_orog))
+  end if
+  call invoke(spt_orog_cap_kernel_type(dmv_spt,fp_spt,sd_orog))
+
+  !!!!  5) Remove points where perturbations cause super-saturation
+  call theta_star%copy_field_properties(T_latest)
+  call invoke(X_plus_Y(T_latest,theta_star,dtheta), &
+              ! convert T_latest from pot. Temp to Temp
+              inc_X_divideby_Y(T_latest,exner_wth), &
+              spt_saturation_cap_kernel_type(dtheta_spt,dmv_spt, &
+              T_latest,mv, pressure))
+
+  !!!!  6) Apply a 1-2-1 filter spt_n_smoothing_iters times
+  if (spt_n_smoothing_iters>0) then
+
+    ! Initiate field_w0
+    vector_space_w0=>function_space_collection%get_fs(mesh_id, 0, W0)
+    call field_w0%initialise(vector_space_w0)
+    rmultiplicity_w0 => get_rmultiplicity( W0, mesh_id) ! 1/multiplicity of w0
+
+    ! Do filtering for Theta
+    if (.not. spt_mse_conservation) then
+      do n=1,spt_n_smoothing_iters
+        ! 1-2-1 filter consist of 4 invokes:
+        ! 1st sets w0 field to 0.0
+        ! 2nd  does wtheta -> w0 1-2-1 filter
+        ! 3rd sets wtheta field to 0.0
+        ! 4th does w0 -> wtheta 1-2-1 filter
+        call invoke(setval_c(field_w0, 0.0_r_def),                       &
+                    wth_to_w0_average_kernel_type(field_w0, dtheta_spt), &
+                    setval_c(dtheta_spt, 0.0_r_def),                     &
+                    w0_to_wth_average_kernel_type(dtheta_spt, field_w0,  &
+                    rmultiplicity_w0))
+      end do
+    end if
+
+    ! Do filtering for humidity
+    do n=1,spt_n_smoothing_iters
+      call invoke(setval_c(field_w0, 0.0_r_def),                    &
+                  wth_to_w0_average_kernel_type(field_w0, dmv_spt), &
+                  setval_c(dmv_spt, 0.0_r_def),                     &
+                  w0_to_wth_average_kernel_type(dmv_spt, field_w0,  &
+                  rmultiplicity_w0))
+    end do
+
+  end if
+
+  !!!!   7) Apply water conservation to the column if requested
+  if (spt_moisture_conservation) then
+    dz_wth => get_dz_at_wtheta()
+    call invoke(spt_moisture_conservation_kernel_type(dmv_spt,mv,dz_wth,rho_in_wth))
+  end if
+
+  !!!!  8) Apply MSE conservation in the column
+  if (spt_mse_conservation) then
+    mlcrcp= (-1.0_r_def)*lcrcp
+    call invoke(a_times_X(dt_spt, mlcrcp,dmv_spt), &
+                ! Convert dtheta_spt from theta to temperature!
+                X_divideby_Y(dtheta_spt,dt_spt,exner_wth) )
+  end if
+
+  !!!!  9) Add final SPT increments to the flow
+  if (spt_add_increments) then
+    call invoke(inc_X_plus_Y(dtheta_stph, dtheta_spt), &
+                inc_X_plus_Y(dmv_stph, dmv_spt) )
+  end if
+
+  !!!! 10) Add SPT diagnostics to iodef
+  if (write_diag .and. use_xios_io) then
+    call dtheta_spt%write_field('dtheta_spt')
+    call dmv_spt%write_field('dmv_spt')
+  end if
+
+  if ( subroutine_timers ) call timer("spt_main_alg")
+
+  end subroutine spt_main_alg
+end module spt_main_alg_mod

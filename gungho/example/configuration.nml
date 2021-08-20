@@ -132,6 +132,7 @@
   radiation_placement = 'slow'
   spectral_gwd_placement = 'slow'
   orographic_drag_placement = 'slow'
+  stochastic_physics_placement= 'fast'
 /
 
 &planet
@@ -319,5 +320,6 @@ aerosol='none'
 cloud='none'
 spectral_gwd='none'
 orographic_drag='none'
+stochastic_physics='none'
 external_forcing=.false.
 /
