@@ -147,7 +147,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep, small):
     plt.ylabel("z (m)", fontsize=24)
     plt.xlabel(r"$\Delta \theta$ (K)", fontsize=24)
     plt.tick_params(axis='both', labelsize=24)
-    out_file_name = plotpath + "/" + field + "_1d_" + timestep + ".eps"
+    out_file_name = plotpath + "/" + field + "_1d_" + timestep + ".png"
     slice_1d_fig.savefig(out_file_name, bbox_inches='tight')
 
     # x-y plot
@@ -179,7 +179,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep, small):
     for l in cb.ax.yaxis.get_ticklabels():
         l.set_fontsize(24)
 
-    out_file_name = plotpath + "/" + field + "_xz_xy_" + timestep + ".eps"
+    out_file_name = plotpath + "/" + field + "_xz_xy_" + timestep + ".png"
     f.savefig(out_file_name, bbox_inches='tight')
 
 if __name__ == "__main__":
