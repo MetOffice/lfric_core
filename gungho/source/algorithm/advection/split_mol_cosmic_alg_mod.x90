@@ -17,7 +17,6 @@ module split_mol_cosmic_alg_mod
   use function_space_mod,                only: function_space_type
   use function_space_collection_mod,     only: function_space_collection
   use finite_element_config_mod,         only: element_order
-  use fem_constants_mod,                 only: get_detj_at_w2
   use fs_continuity_mod,                 only: W2, W3
   use geometric_constants_mod,           only: get_cell_orientation
   use flux_direction_mod,                only: z_direction
@@ -27,6 +26,7 @@ module split_mol_cosmic_alg_mod
   use timer_mod,                         only: timer
   use rk_transport_rho_mod,              only: rk_transport_rho_step
   use split_vector_field_kernel_mod,     only: split_vector_field_kernel_type
+  use calc_dep_pts_alg_mod,              only: select_detj_at_w2
   use calc_vertical_departure_alg_mod,   only: calc_vertical_departure
   use transport_config_mod,              only: rho_splitting_vh,               &
                                                rho_splitting_hv,               &
@@ -64,25 +64,27 @@ subroutine split_transport_rho_step( wind, rho, rho_splitting, dt )
 
   integer(i_def)            :: mesh_id
   type(field_type)          :: dep_z
-  type(field_type), pointer :: detj_w2 => null()
   type(field_type), pointer :: cell_orient => null()
+  type(field_type)          :: detj_at_w2
 
   mesh_id = rho%get_mesh_id()
   call wind%copy_field_properties(dep_z)
-  detj_w2 => get_detj_at_w2(mesh_id)
   cell_orient => get_cell_orientation(mesh_id)
+
+  call detj_at_w2%initialise( wind%get_function_space() )
+  call select_detj_at_w2( wind, detj_at_w2 )
 
   if ( subroutine_timers ) call timer('split_transport_rho_step')
 
   call calc_vertical_departure(wind, dep_z, dt)
 
-  call split_mol_cosmic_transport_step( rho, wind, dep_z,     &
-                                        detj_w2, cell_orient, &
-                                        rho_splitting, dt     )
+  call split_mol_cosmic_transport_step( rho, wind, dep_z,        &
+                                        detj_at_w2, cell_orient, &
+                                        rho_splitting, dt )
 
   if ( subroutine_timers ) call timer('split_transport_rho_step')
 
-  nullify( detj_w2, cell_orient )
+  nullify( cell_orient )
 
 end subroutine split_transport_rho_step
 

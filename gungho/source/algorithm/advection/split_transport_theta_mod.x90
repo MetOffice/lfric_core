@@ -12,7 +12,6 @@ module split_transport_theta_mod
 
   use constants_mod,                     only: r_def, i_def, tiny_eps
   use log_mod,                           only: log_event, LOG_LEVEL_ERROR
-  use fem_constants_mod,                 only: get_detj_at_w2
   use transport_config_mod,              only: theta_splitting_vh,             &
                                                theta_splitting_hv,             &
                                                theta_splitting_strang,         &
@@ -21,6 +20,7 @@ module split_transport_theta_mod
   use function_space_mod,                only: function_space_type
   use io_config_mod,                     only: subroutine_timers
   use timer_mod,                         only: timer
+  use calc_dep_pts_alg_mod,              only: select_detj_at_w2
   use split_vector_field_kernel_mod,     only: split_vector_field_kernel_type
   use vert_sl_theta_alg_mod,             only: vert_sl_theta
   use rk_transport_theta_mod,            only: rk_transport_theta_step
@@ -55,7 +55,7 @@ module split_transport_theta_mod
     type(field_type) :: wind_horiz, wind_horiz2
     type(field_type) :: wind_vert
     type(function_space_type), pointer :: w2_fs => null()
-    type(field_type), pointer          :: detj_at_w2 => null()
+    type(field_type)                   :: detj_at_w2
 
     integer(i_def)         :: mol_substeps
     integer(i_def)         :: sub_step_count
@@ -72,7 +72,8 @@ module split_transport_theta_mod
 
     call theta_in%initialise( vector_space = theta%get_function_space())
     call theta%copy_field(theta_in)
-    detj_at_w2 => get_detj_at_w2(wind%get_mesh_id())
+
+    call detj_at_w2%initialise( vector_space = w2_fs )
 
     if ( theta_splitting /= theta_splitting_strang .and. &
          theta_splitting /= theta_splitting_vh     .and. &
@@ -92,6 +93,8 @@ module split_transport_theta_mod
      else if ( theta_splitting == theta_splitting_vh ) then
        call vert_sl_theta(wind_vert,theta,full_dt)
     end if
+
+    call select_detj_at_w2( wind_horiz, detj_at_w2 )
 
     call invoke( name = "Split_the_horizontal_vertical_winds",    &
                  X_divideby_Y(wind_horiz2,wind_horiz,detj_at_w2), &
@@ -115,7 +118,7 @@ module split_transport_theta_mod
        call vert_sl_theta(wind_vert,theta,full_dt)
     end if
 
-    nullify( w2_fs, detj_at_w2 )
+    nullify( w2_fs )
 
     if ( subroutine_timers ) call timer('split_transport_theta_step')
 

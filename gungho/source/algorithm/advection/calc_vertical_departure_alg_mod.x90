@@ -16,6 +16,7 @@ module calc_vertical_departure_alg_mod
   use timer_mod,                         only: timer
   use field_mod,                         only: field_type
   use calc_departure_wind_kernel_mod,    only: calc_departure_wind_kernel_type
+  use calc_dep_pts_alg_mod,              only: select_detj_at_w2
   use vertical_trapezoidal_kernel_mod,   only: vertical_trapezoidal_kernel_type
   use function_space_mod,                only: function_space_type
   use geometric_constants_mod,           only: get_coordinates, get_panel_id
@@ -46,6 +47,7 @@ contains
     type( field_type ), pointer          :: chi(:) => null()
     type( field_type ), pointer          :: panel_id => null()
     integer(kind=i_def)                  :: mesh_id
+    type(field_type)                     :: detj_at_w2
 
     mesh_id = wind%get_mesh_id()
 
@@ -54,6 +56,7 @@ contains
     call dep_wind_np1%initialise( vector_space = w2_fs )
     chi => get_coordinates(mesh_id)
     panel_id => get_panel_id(mesh_id)
+    call detj_at_w2%initialise( vector_space = w2_fs )
 
     if ( subroutine_timers ) call timer( 'calc_vertical_departure' )
 
@@ -68,8 +71,10 @@ contains
     !
     ! These invokes are left ungrouped due to PSyclone issue #867.
     !
-    call invoke( calc_departure_wind_kernel_type(dep_wind_n, wind, &
-                                                 chi, panel_id) )
+
+    call select_detj_at_w2( wind, detj_at_w2 )
+
+    call invoke( X_divideby_Y(dep_wind_n, wind, detj_at_w2) )
     call invoke( setval_X(dep_wind_np1, dep_wind_n) )
     call invoke( vertical_trapezoidal_kernel_type(dep_pts_z, dep_wind_n, &
                                                   dep_wind_np1,          &

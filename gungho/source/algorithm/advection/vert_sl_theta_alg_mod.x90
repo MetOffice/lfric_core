@@ -26,6 +26,7 @@ module vert_sl_theta_alg_mod
                                                 vertical_sl_order_cubic,      &
                                                 vertical_sl_order_quintic
   use log_mod,                            only: log_event, LOG_LEVEL_ERROR
+  use calc_dep_pts_alg_mod,               only: select_detj_at_w2
 
   implicit none
 
@@ -55,6 +56,7 @@ contains
     type( field_type ), pointer :: panel_id => null()
 
     integer(kind=i_def) :: mesh_id
+    type(field_type)    :: detj_at_w2
 
 
     if ( subroutine_timers ) call timer( 'vert_sl_theta' )
@@ -75,14 +77,17 @@ contains
       chi  => get_coordinates(mesh_id)
       panel_id => get_panel_id(mesh_id)
       call departure_wind%initialise( vector_space = wind_adv%get_function_space())
+      call detj_at_w2%initialise( vector_space = wind_adv%get_function_space() )
 
-      ! set up the wind and compute SL advection (vertical only) of theta
+      call select_detj_at_w2( wind_adv, detj_at_w2 )
 
-      call invoke( name = "calculate_dept_and_interpolate",                       &
-                  setval_c( departure_wind, 0.0_r_def ),                          &
-                  calc_computational_wind_kernel_type( departure_wind, wind_adv,  &
-                                                       chi, panel_id),            &
-                  vertical_sl_theta_kernel_type( departure_wind, theta, dts)      )
+      ! Set up the wind and compute SL advection (vertical only) of theta
+
+      call invoke( name = "calculate_dept_and_interpolate",                   &
+                   setval_c( departure_wind, 0.0_r_def ),                     &
+                   X_divideby_Y( departure_wind, wind_adv, detj_at_w2 ),      &
+                   vertical_sl_theta_kernel_type( departure_wind, theta, dts ) )
+
       nullify( chi, panel_id )
     else
       call log_event( "vert_sl_theta: Invalid vertical scheme", LOG_LEVEL_ERROR )

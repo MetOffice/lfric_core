@@ -167,6 +167,7 @@ preconditioner='diagonal',
 tolerance=1.0e-6,
 /
 &subgrid
+calculate_detj='upwind',
 dep_pt_stencil_extent=3,
 rho_approximation='ppm_no_limiter',
 rho_approximation_stencil_extent=2,

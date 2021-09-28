@@ -65,6 +65,7 @@ timestep_end = '5'
 dep_pt_stencil_extent=1,
 rho_approximation='ppm_positive_monotone',
 rho_approximation_stencil_extent=2,
+calculate_detj = 'upwind'
 /
 &initial_density
 r1=0.343611696486384,

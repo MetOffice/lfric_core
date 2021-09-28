@@ -51,20 +51,21 @@ module fem_constants_mod
                                                 extra_mesh_label
 
   ! Kernels
-  use calc_detj_at_w2_kernel_mod,         only: calc_detj_at_w2_kernel_type
-  use compute_coriolis_matrix_kernel_mod, only: compute_coriolis_matrix_kernel_type
-  use compute_derham_matrices_kernel_mod, only: compute_derham_matrices_kernel_type
-  use compute_div_operator_kernel_mod,    only: compute_div_operator_kernel_type
-  use compute_dl_matrix_kernel_mod,       only: compute_dl_matrix_kernel_type
-  use compute_mass_matrix_kernel_w2_mod,  only: compute_mass_matrix_kernel_w2_type
-  use invert_local_operator_kernel_mod,   only: invert_local_operator_kernel_type
-  use matrix_vector_kernel_mod,           only: matrix_vector_kernel_type
-  use mg_derham_mat_kernel_mod,           only: mg_derham_mat_kernel_type
-  use mm_diagonal_kernel_mod,             only: mm_diagonal_kernel_type
-  use multiplicity_kernel_mod,            only: multiplicity_kernel_type
-  use operator_algebra_kernel_mod,        only: operator_x_plus_ay_kernel_type, &
-                                                operator_setval_c_kernel_type
-  use w2_normalisation_kernel_mod,        only: w2_normalisation_kernel_type
+  use calc_detj_at_w2_kernel_mod,             only: calc_detj_at_w2_kernel_type
+  use calc_directional_detj_at_w2_kernel_mod, only: calc_directional_detj_at_w2_kernel_type
+  use compute_coriolis_matrix_kernel_mod,     only: compute_coriolis_matrix_kernel_type
+  use compute_derham_matrices_kernel_mod,     only: compute_derham_matrices_kernel_type
+  use compute_div_operator_kernel_mod,        only: compute_div_operator_kernel_type
+  use compute_dl_matrix_kernel_mod,           only: compute_dl_matrix_kernel_type
+  use compute_mass_matrix_kernel_w2_mod,      only: compute_mass_matrix_kernel_w2_type
+  use invert_local_operator_kernel_mod,       only: invert_local_operator_kernel_type
+  use matrix_vector_kernel_mod,               only: matrix_vector_kernel_type
+  use mg_derham_mat_kernel_mod,               only: mg_derham_mat_kernel_type
+  use mm_diagonal_kernel_mod,                 only: mm_diagonal_kernel_type
+  use multiplicity_kernel_mod,                only: multiplicity_kernel_type
+  use operator_algebra_kernel_mod,            only: operator_x_plus_ay_kernel_type, &
+                                                    operator_setval_c_kernel_type
+  use w2_normalisation_kernel_mod,            only: w2_normalisation_kernel_type
 
   implicit none
 
@@ -115,6 +116,8 @@ module fem_constants_mod
   type(field_type),    allocatable, dimension(:), target :: nodal_multiplicity_w1
   type(field_type),    allocatable, dimension(:), target :: w2_normalisation
   type(field_type),    allocatable, dimension(:), target :: detj_at_w2
+  type(field_type),    allocatable, dimension(:), target :: detj_at_w2_above
+  type(field_type),    allocatable, dimension(:), target :: detj_at_w2_below
 
   ! Quadrature objects
   type( quadrature_xyoz_type ),target                    :: qr
@@ -141,6 +144,9 @@ module fem_constants_mod
   public :: get_multiplicity
   public :: get_rmultiplicity
   public :: get_detj_at_w2
+  public :: get_detj_at_w2_above
+  public :: get_detj_at_w2_below
+
 
 contains
 
@@ -189,6 +195,9 @@ contains
     ! Temporary values for iterating through list
     integer(kind=i_def) :: i, mesh_id, num_meshes
 
+    ! Direction switch for computing upwind Det(j)
+    integer(kind=i_def) :: detj_direction
+
     if ( subroutine_timers ) call timer('fem_constants_alg')
     call log_event( "Gungho: creating fem_constants", LOG_LEVEL_INFO )
 
@@ -227,7 +236,9 @@ contains
              nodal_rmultiplicity_w2(num_meshes),  &
              nodal_multiplicity_w1(num_meshes),   &
              w2_normalisation(num_meshes),        &
-             detj_at_w2(num_meshes))
+             detj_at_w2(num_meshes),              &
+             detj_at_w2_above(num_meshes),        &
+             detj_at_w2_below(num_meshes)         )
 
     !======================== Create quadrature object ========================!
 
@@ -520,7 +531,7 @@ contains
                      inc_X_powint_n(w2_normalisation(i), i_minus_one) )
       end if
 
-      !================ Create detj values at W2 dof locations =================!
+      !================ Create Det(J) values at W2 dof locations =================!
 
       if ( label_list(i) == primary_mesh_label .or. &
            label_list(i) == shifted_mesh_label ) then
@@ -530,6 +541,27 @@ contains
                      calc_detj_at_w2_kernel_type(detj_at_w2(i), chi_list(:,i), &
                                                  panel_id_list(i)),            &
                      inc_X_divideby_Y(detj_at_w2(i), nodal_multiplicity_w2(i)) )
+
+        ! Calculate Det(J) at vertical W2 locations using the cell above or below
+        ! This is used to calculate the upwind Det(J)
+
+        call detj_at_w2_above(i)%initialise( vector_space = w2_fs )
+        detj_direction = 1_i_def
+        call invoke( name = "calculate_detj_at_w2_above",                         &
+                     setval_X(detj_at_w2_above(i), detj_at_w2(i)),                &
+                     calc_directional_detj_at_w2_kernel_type(detj_at_w2_above(i), &
+                                                             chi_list(:,i),       &
+                                                             panel_id_list(i),    &
+                                                             detj_direction) )
+
+        call detj_at_w2_below(i)%initialise( vector_space = w2_fs )
+        detj_direction = 0_i_def
+        call invoke( name = "calculate_detj_at_w2_below",                         &
+                     setval_X(detj_at_w2_below(i), detj_at_w2(i)),                &
+                     calc_directional_detj_at_w2_kernel_type(detj_at_w2_below(i), &
+                                                             chi_list(:,i),       &
+                                                             panel_id_list(i),    &
+                                                             detj_direction)  )
       end if
 
     end do ! Loop through meshes
@@ -916,9 +948,9 @@ contains
 
   end function get_multiplicity
 
-  !> @brief Returns the detj values at W2 dof locations
+  !> @brief Returns the Det(J) values at W2 dof locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
-  !> @return The detj field
+  !> @return The Det(J) field
   function get_detj_at_w2(mesh_id) result(detj)
     implicit none
     integer(kind=i_def), intent(in) :: mesh_id
@@ -931,7 +963,41 @@ contains
     detj => detj_at_w2(mesh_index)
     call check_initialised_field(detj, field_name, mesh_id)
 
-   end function get_detj_at_w2
+  end function get_detj_at_w2
+
+  !> @brief Returns the Det(J) values at W2 dof locations using the cell above.
+  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @return The Det(J) field
+  function get_detj_at_w2_above(mesh_id) result(detj)
+    implicit none
+    integer(kind=i_def), intent(in) :: mesh_id
+    integer(kind=i_def)             :: mesh_index
+    type(field_type),       pointer :: detj
+    character(str_def)              :: field_name
+
+    mesh_index = find_mesh_index(mesh_id)
+    field_name = 'detj_at_w2_above'
+    detj => detj_at_w2_above(mesh_index)
+    call check_initialised_field(detj, field_name, mesh_id)
+
+  end function get_detj_at_w2_above
+
+  !> @brief Returns the Det(J) values at W2 dof locations using the cell below.
+  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @return The Det(J) field
+  function get_detj_at_w2_below(mesh_id) result(detj)
+    implicit none
+    integer(kind=i_def), intent(in) :: mesh_id
+    integer(kind=i_def)             :: mesh_index
+    type(field_type),       pointer :: detj
+    character(str_def)              :: field_name
+
+    mesh_index = find_mesh_index(mesh_id)
+    field_name = 'detj_at_w2_below'
+    detj => detj_at_w2_below(mesh_index)
+    call check_initialised_field(detj, field_name, mesh_id)
+
+  end function get_detj_at_w2_below
 
   !> @brief Explicitly reclaim memory from module scope variables
   !
@@ -940,6 +1006,8 @@ contains
     implicit none
 
     deallocate(detj_at_w2)
+    deallocate(detj_at_w2_above)
+    deallocate(detj_at_w2_below)
     deallocate(w2_normalisation)
     deallocate(nodal_multiplicity_w1)
     deallocate(nodal_rmultiplicity_w2)

@@ -4,19 +4,19 @@
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
 
-!> @brief An algorithm for calculating departure points used by Cosmic transport.
-!> @details The algorithm calculates the departure points for the cell edges.
-!>          The departure points are calculated in the x, y and z direction
-!>          separately as 1D calculations.
-!>          This is used by the dimensionally-split swept-area approach of
-!>          Cosmic.
+!> @brief   Algorithms for calculating departure points used by Cosmic transport.
+!> @details Departure points for the cell edges are calculated using departure
+!>          winds. These are computed by dividing the computational winds by
+!>          Det(J) at cell edges. These algorithms compute the departure points,
+!>          and the choice of Det(J) calculation (upwinded or averaged).
+!>          This is used by the Cosmic transport scheme.
 module calc_dep_pts_alg_mod
 
   use constants_mod,                     only: LARGE_REAL_NEGATIVE, i_def, r_def
   use io_config_mod,                     only: subroutine_timers
   use timer_mod,                         only: timer
   use field_mod,                         only: field_type
-  use calc_departure_wind_kernel_mod,    only: calc_departure_wind_kernel_type
+  use calc_upwind_detj_at_w2_kernel_mod, only: calc_upwind_detj_at_w2_kernel_type
   use vertical_trapezoidal_kernel_mod,   only: vertical_trapezoidal_kernel_type
   use function_space_mod,                only: function_space_type
   use function_space_collection_mod,     only: function_space_collection
@@ -24,25 +24,40 @@ module calc_dep_pts_alg_mod
   use finite_element_config_mod,         only: element_order
   use flux_direction_mod,                only: x_direction, y_direction, z_direction
   use biperiodic_deppt_config_mod,       only: method, n_dep_pt_iterations
-  use subgrid_config_mod,                only: dep_pt_stencil_extent
-  use psykal_lite_mod,                   only: invoke_calc_deppts,             &
-                                               invoke_extract_xy,              &
-                                               invoke_cosmic_departure_wind,   &
+  use subgrid_config_mod,                only: dep_pt_stencil_extent,        &
+                                               calculate_detj,               &
+                                               calculate_detj_averaged,      &
+                                               calculate_detj_upwind
+  use psykal_lite_mod,                   only: invoke_calc_deppts,           &
+                                               invoke_extract_xy,            &
+                                               invoke_cosmic_departure_wind, &
                                                invoke_correct_cosmic_wind
-  use geometric_constants_mod,           only: get_coordinates,                &
+  use fem_constants_mod,                 only: get_detj_at_w2,               &
+                                               get_detj_at_w2_above,         &
+                                               get_detj_at_w2_below
+  use geometric_constants_mod,           only: get_coordinates,              &
                                                get_panel_id
-  use log_mod,                           only: log_event,                      &
-                                               log_scratch_space,              &
-                                               LOG_LEVEL_INFO
+  use log_mod,                           only: log_event,                    &
+                                               log_scratch_space,            &
+                                               LOG_LEVEL_INFO,               &
+                                               LOG_LEVEL_ERROR
   use cosmic_divergence_alg_mod,         only: cosmic_divergence_alg
 
   implicit none
 
   private
   public :: calc_dep_pts
+  public :: select_detj_at_w2
 
 contains
 
+  !> @brief   An algorithm for calculating departure points used by Cosmic transport.
+  !> @details The algorithm calculates the departure points for the cell edges.
+  !>          The departure points are calculated in the x, y and z direction
+  !>          separately as 1D calculations.
+  !>          This is used by the dimensionally-split swept-area approach of
+  !>          Cosmic.
+  !>
   !> @param[in,out] dep_pts_x         Departure points in x direction
   !> @param[in,out] dep_pts_y         Departure points in y direction
   !> @param[in,out] dep_pts_z         Departure points in z direction
@@ -132,10 +147,8 @@ contains
                  setval_c( u_y_fem_n, LARGE_REAL_NEGATIVE ),                    &
                  setval_c( u_x_fem_np1, LARGE_REAL_NEGATIVE ),                  &
                  setval_c( u_y_fem_np1, LARGE_REAL_NEGATIVE ),                  &
-                 calc_departure_wind_kernel_type( departure_wind_n, wind_n,     &
-                                                  chi, panel_id ),              &
-                 calc_departure_wind_kernel_type( departure_wind_np1, wind_np1, &
-                                                  chi, panel_id ),              &
+                 X_divideby_Y(departure_wind_n, wind_n, detj_at_w2),            &
+                 X_divideby_Y(departure_wind_np1, wind_np1, detj_at_w2),        &
                  vertical_trapezoidal_kernel_type( dep_pts_z,                   &
                                                    departure_wind_n,            &
                                                    departure_wind_np1,          &
@@ -147,7 +160,7 @@ contains
     call invoke_extract_xy( u_x_fem_n, u_y_fem_n, wind_n, cell_orientation )
     call invoke_extract_xy( u_x_fem_np1, u_y_fem_np1, wind_np1, cell_orientation )
 
-    ! Divide the Piola wind coefficients, u_x_fem and u_y_fem, by detj at the W2 dofs.
+    ! Divide the Piola wind coefficients, u_x_fem and u_y_fem, by Det(J) at the W2 dofs.
     ! Returning wind coefficients, dep_wind_x and dep_wind_y, which have dimension 1/T.
     ! dep_wind_x and dep_wind_y have no length associated with them since we solve
     ! for departure points on a rescaled mesh which is dimensionless where the
@@ -202,5 +215,62 @@ contains
     if ( subroutine_timers ) call timer( 'calc_dep_pts' )
 
   end subroutine calc_dep_pts
+
+  !===========================================================================!
+  !> @brief   Select either averaged or upwind Det(J) at vertical W2 dofs.
+  !> @details Det(J) at vertical W2 dofs can be calculated using either an
+  !>          average from the cells either side or from the upwind cell.
+  !>
+  !> @param[in]     advecting_wind  Advecting wind to determine upwind direction
+  !> @param[in,out] detj_at_w2      Det(J) at W2 dofs
+  subroutine select_detj_at_w2( advecting_wind, &
+                                detj_at_w2 )
+
+    implicit none
+
+    type( field_type ), intent(in)    :: advecting_wind
+    type( field_type ), intent(inout) :: detj_at_w2
+
+    ! Det(J) at W2 fields
+    type( field_type ), pointer :: detj_at_w2_ave   => null()
+    type( field_type ), pointer :: detj_at_w2_above => null()
+    type( field_type ), pointer :: detj_at_w2_below => null()
+
+    ! Mesh ID variable
+    integer(kind=i_def) ::  mesh_id
+
+    ! Get Mesh ID
+    mesh_id = advecting_wind%get_mesh_id()
+
+    ! Get Det(J) at W2 using averaged Det(J)
+    detj_at_w2_ave => get_detj_at_w2(mesh_id)
+
+    select case (calculate_detj)
+
+      case (calculate_detj_averaged)
+        ! Set detj_at_w2 to use average Det(J) of neighbouring cells
+        call invoke( setval_X(detj_at_w2,detj_at_w2_ave) )
+
+      case (calculate_detj_upwind)
+        ! Get Det(J) at W2 from cells above and below respectively
+        detj_at_w2_above => get_detj_at_w2_above(mesh_id)
+        detj_at_w2_below => get_detj_at_w2_below(mesh_id)
+
+        ! Set detj_at_w2 to use average Det(J) for horizontal dofs
+        call invoke( setval_X(detj_at_w2,detj_at_w2_ave) )
+
+        ! Update vertical parts of detj_at_w2 to use upwind Det(J)
+        call invoke( calc_upwind_detj_at_w2_kernel_type(detj_at_w2,       &
+                                                        detj_at_w2_above, &
+                                                        detj_at_w2_below, &
+                                                        advecting_wind) )
+
+      case default
+          call log_event( "Gungho: Invalid Det(J) calculation method", LOG_LEVEL_ERROR )
+    end select
+
+    nullify( detj_at_w2_above, detj_at_w2_below, detj_at_w2_ave )
+
+  end subroutine select_detj_at_w2
 
 end module calc_dep_pts_alg_mod

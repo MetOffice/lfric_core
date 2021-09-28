@@ -46,6 +46,7 @@ module split_slice_mol_alg_mod
   use dg_matrix_vector_kernel_mod,        only: dg_matrix_vector_kernel_type
   use vertical_sl_rho_kernel_mod,         only: vertical_sl_rho_kernel_type
   use calc_computational_wind_kernel_mod, only: calc_computational_wind_kernel_type
+  use calc_dep_pts_alg_mod,               only: select_detj_at_w2
 
 
   implicit none
@@ -87,11 +88,12 @@ contains
 
     type(function_space_type), pointer :: wind_fs => null()
     type(function_space_type), pointer :: rho_fs  => null()
-    type(field_type),          pointer :: detj_w2 => null()
+    type(field_type)                   :: detj_at_w2
 
     wind_fs  => wind%get_function_space()
     rho_fs  => rho%get_function_space()
-    detj_w2 => get_detj_at_w2(wind%get_mesh_id())
+    call detj_at_w2%initialise( vector_space = wind_fs )
+    call select_detj_at_w2( wind, detj_at_w2 )
 
     call rho_temp%initialise( vector_space = rho_fs )
     call wind_horiz%initialise( vector_space = wind_fs )
@@ -100,11 +102,13 @@ contains
 
     if ( subroutine_timers ) call timer('split_slice_mol_transport')
 
+    call select_detj_at_w2( wind, detj_at_w2 )
+
     ! Split wind to wind_horiz=(u,v,0) and wind_vert=(0,0,w)
 
     call invoke( name = "Split_wind_into_horizontal_and_vertical",            &
                  split_vector_field_kernel_type(wind_horiz, wind_vert, wind), &
-                 X_divideby_Y(wind_horiz2,wind_horiz,detj_w2),                &
+                 X_divideby_Y(wind_horiz2, wind_horiz, detj_at_w2),           &
                  inc_a_times_X(dt, wind_horiz2)                               )
 
     call wind_horiz2%field_minmax(cfl_min, cfl_max)
@@ -161,7 +165,7 @@ contains
 
    if ( subroutine_timers ) call timer('split_slice_mol_transport')
 
-   nullify( wind_fs, rho_fs, detj_w2 )
+   nullify( wind_fs, rho_fs )
 
   end subroutine split_slice_mol_transport
 
@@ -198,6 +202,7 @@ contains
    type(function_space_type), pointer :: wind_fs  => null()
    type(function_space_type), pointer :: rho_fs   => null()
    integer(kind=i_def)                :: inc_div, conserv, mesh_id
+   type(field_type)                   :: detj_at_w2
 
    mesh_id = rho%get_mesh_id()
 
@@ -206,10 +211,11 @@ contains
    wind_fs  => vert_wind%get_function_space()
    rho_fs   => rho%get_function_space()
    call wind_comp%initialise( vector_space = wind_fs )
+   call detj_at_w2%initialise( vector_space = wind_fs )
+   call select_detj_at_w2( vert_wind, detj_at_w2 )
 
-   call invoke( setval_c(wind_comp, 0.0_r_def),                 &
-                calc_computational_wind_kernel_type( wind_comp, &
-                vert_wind,  chi, panel_id )                     )
+   call invoke( setval_c(wind_comp, 0.0_r_def), &
+                X_divideby_Y(wind_comp, vert_wind, detj_at_w2) )
 
    if ( vert_scheme == rho_vertical_scheme_mol ) then
 

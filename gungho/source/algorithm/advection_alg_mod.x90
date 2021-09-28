@@ -25,8 +25,7 @@ module advection_alg_mod
                                             get_mass_matrix,                &
                                             get_mass_matrix_diagonal,       &
                                             get_inverse_lumped_mass_matrix, &
-                                            get_inverse_W3_mass_matrix,     &
-                                            get_detj_at_w2
+                                            get_inverse_W3_mass_matrix
   use intermesh_constants_mod,        only: get_mr_to_sh_mass_integrals
   use field_mod,                      only: field_type
   use function_space_collection_mod,  only: function_space_collection
@@ -52,7 +51,8 @@ module advection_alg_mod
                                             method_semi_implicit, beta
   use cosmic_threed_alg_mod,          only: cosmic_threed_transport_step, &
                                             cosmic_threed_advective_step
-  use calc_dep_pts_alg_mod,           only: calc_dep_pts
+  use calc_dep_pts_alg_mod,           only: calc_dep_pts, &
+                                            select_detj_at_w2
   use transport_config_mod,           only: scheme,                         &
                                             scheme_cosmic_3D,               &
                                             scheme_method_of_lines,         &
@@ -224,7 +224,7 @@ contains
     integer(i_def)                     :: imr
     ! Substepping variables
     type(field_type)                   :: cfl
-    type(field_type), pointer          :: detj_at_w2 => null()
+    type(field_type)                   :: detj_at_w2
     real(r_def)                        :: cfl_min, cfl_max
     type(field_type)                   :: rho_in
     type(field_type), dimension(nummr) :: mr_tmp, mr_in
@@ -250,12 +250,14 @@ contains
 
       ! Calculate substepping timestep if needed for mol
       call cfl%initialise( wind_n%get_function_space() )
-      detj_at_w2 => get_detj_at_w2(wind_n%get_mesh_id())
+      call detj_at_w2%initialise( wind_n%get_function_space() )
       ! Set advecting velocity = 0.5(u_np1 + u_n)
-      call invoke( aX_plus_bY(cfl, 0.5_r_def, wind_n, &
-                                   0.5_r_def, wind_np1), &
-                   inc_X_divideby_Y(cfl, detj_at_w2), &
-                   inc_a_times_X(dt, cfl )        &
+      call invoke( aX_plus_bY( cfl, 0.5_r_def, wind_n, &
+                                    0.5_r_def, wind_np1 ) )
+      call select_detj_at_w2( cfl, detj_at_w2 )
+      ! Get CFL
+      call invoke( inc_X_divideby_Y( cfl, detj_at_w2 ), &
+                   inc_a_times_X( dt, cfl )             &
                    )
       call cfl%field_minmax(cfl_min, cfl_max)
       cfl_max = max(abs(cfl_max),abs(cfl_min))
@@ -1056,7 +1058,7 @@ end subroutine advection_alg
     ! For Cosmic
     type(field_type)          :: dep_pts_x, dep_pts_y, dep_pts_z
     type(field_type)          :: wind_divergence
-    type(field_type), pointer :: detj_at_w2 => null()
+    type(field_type)          :: detj_at_w2
     type(field_type), pointer :: cell_orientation => null()
     type(field_type)          :: field_old, field_unity
     real(r_def)               :: inv_dt
@@ -1264,7 +1266,9 @@ end subroutine advection_alg
             call wind_divergence%initialise( field%get_function_space() )
 
             cell_orientation => get_cell_orientation(mesh_id)
-            detj_at_w2 => get_detj_at_w2(mesh_id)
+
+            call detj_at_w2%initialise( advecting_wind%get_function_space() )
+            call select_detj_at_w2( advecting_wind, detj_at_w2 )
 
             call calc_dep_pts( dep_pts_x, dep_pts_y, dep_pts_z, wind_divergence, &
                                wind_n, wind_np1, detj_at_w2, cell_orientation, dt )
@@ -1281,7 +1285,6 @@ end subroutine advection_alg
                                                  advection_inc )
             end if
             call invoke( inc_a_times_X(-1.0_r_def, advection_inc) )
-            nullify( detj_at_w2 )
           case default
             call log_event("Cosmic only implemented for W3 fields", &
                            LOG_LEVEL_ERROR)

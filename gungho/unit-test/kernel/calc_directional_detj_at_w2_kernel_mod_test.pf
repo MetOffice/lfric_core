@@ -1,0 +1,249 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2021 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the Det(J) at W2 computation
+!>
+module calc_directional_detj_at_w2_kernel_mod_test
+
+    use constants_mod,                 only : i_def, r_def
+    use pFUnit_Mod
+
+    use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
+                                                    get_w2_m3x3_q3x3x3_size, &
+                                                    get_w3_m3x3_q3x3x3_size
+
+    use get_unit_test_m3x3_dofmap_mod,       only : get_w0_m3x3_dofmap, &
+                                                    get_w2_m3x3_dofmap, &
+                                                    get_w3_m3x3_dofmap
+
+    use get_unit_test_q3x3x3_basis_mod,      only : get_w0_q3x3x3_diff_basis, &
+                                                    get_w0_q3x3x3_basis
+
+    use yaxt,                          only : xt_initialize, xt_finalize
+    use mpi_mod,                       only : store_comm, clear_comm
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(MPITestCase), public :: calc_directional_detj_at_w2_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type calc_directional_detj_at_w2_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use finite_element_config_mod, only : cellshape_quadrilateral, &
+                                          coord_system_xyz
+    use formulation_config_mod,    only : eos_method_sampled
+    use feign_config_mod,          only : feign_finite_element_config, &
+                                          feign_formulation_config
+
+    implicit none
+
+    class(calc_directional_detj_at_w2_test_type), intent(inout) :: this
+
+    ! Initialise YAXT
+    call xt_initialize(this%getMpiCommunicator())
+    ! Store the MPI communicator for later use
+    call store_comm(this%getMpiCommunicator())
+
+    call feign_finite_element_config(           &
+             cellshape=cellshape_quadrilateral, &
+             coord_order=0_i_def,               &
+             coord_system=coord_system_xyz,     &
+             element_order=0_i_def,             &
+             rehabilitate=.true.,               &
+             vorticity_in_w1=.false. )
+
+    call feign_formulation_config( dlayer_on=.false.,               &
+                                   dry_static_adjust=.false.,       &
+                                   exner_from_eos=.false.,          &
+                                   eos_method=eos_method_sampled,   &
+                                   init_exner_bt=.false.,           &
+                                   l_multigrid=.false.,             &
+                                   rotating=.true.,                 &
+                                   shallow=.false.,                 &
+                                   transport_only=.false.,          &
+                                   use_moisture=.false.,            &
+                                   use_physics=.false.,             &
+                                   use_wavedynamics=.false.,        &
+                                   use_multires_coupling=.false.,   &
+                                   si_momentum_equation=.true.,     &
+                                   vector_invariant=.false.,        &
+                                   moisture_conservation=.false.    )
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(calc_directional_detj_at_w2_test_type), intent(inout) :: this
+
+    ! Finalise YAXT
+    call xt_finalize()
+    ! Clear the stored MPI communicator
+    call clear_comm()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_all( this )
+
+    use, intrinsic :: iso_fortran_env, only : real64
+    use calc_directional_detj_at_w2_kernel_mod, only : calc_directional_detj_at_w2_code
+
+    implicit none
+
+    class(calc_directional_detj_at_w2_test_type), intent(inout) :: this
+
+    real(kind=r_def), parameter :: tol = 1.0e-6_r_def
+    real(kind=r_def), parameter :: dx = 11.0_r_def
+    real(kind=r_def), parameter :: dy = 17.0_r_def
+    real(kind=r_def), parameter :: dz = 10.0_r_def
+
+    ! Fields
+    real(kind=r_def), allocatable :: detj_w2_p(:)
+    real(kind=r_def), allocatable :: chi1(:), chi2(:), chi3(:), panel_id(:)
+
+    integer(kind=i_def) :: cell
+
+    integer(kind=i_def) :: i, j, k
+
+    ! Dofmaps
+    integer(kind=i_def), allocatable :: map_w0(:,:)
+    integer(kind=i_def), allocatable :: map_w2(:,:)
+    integer(kind=i_def), allocatable :: map_pid(:,:)
+
+    ! Basis functions
+    real(kind=r_def),    allocatable :: diff_basis_w0(:,:,:,:)
+    real(kind=r_def),    allocatable :: basis_w0(:,:,:,:)
+
+    ! Sizes
+    integer(kind=i_def) :: nlayers, ncells
+    integer(kind=i_def) :: ndf_w0, undf_w0, ndf_w2, undf_w2, ndf_pid, undf_pid
+    integer(kind=i_def) :: nqp_h, nqp_v
+    integer(kind=i_def) :: dim_space, dim_space_diff
+
+    ! Vertical direction for kernel
+    integer(kind=i_def) :: direction
+
+    nlayers = 3_i_def
+    call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells,   &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v,              &
+                                  nlayers )
+    call get_w2_m3x3_q3x3x3_size( ndf_w2, undf_w2, ncells,   &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v,              &
+                                  nlayers )
+    call get_w3_m3x3_q3x3x3_size( ndf_pid, undf_pid, ncells, &
+                                  dim_space, dim_space_diff, &
+                                  nqp_h, nqp_v, 1_i_def )
+
+    call get_w0_m3x3_dofmap(map_w0)
+    call get_w2_m3x3_dofmap(map_w2)
+    call get_w3_m3x3_dofmap(map_pid)
+
+    call get_w0_q3x3x3_diff_basis(diff_basis_w0)
+    call get_w0_q3x3x3_basis(basis_w0)
+
+    allocate(detj_w2_p(undf_w2))
+
+    ! Compute coordinates using quadratic extrusion
+    allocate(chi1(undf_w0))
+    allocate(chi2(undf_w0))
+    allocate(chi3(undf_w0))
+    allocate(panel_id(undf_pid))
+
+    cell = 1_i_def
+     do j = 1,3
+       do i = 1,3
+         do k = 0,nlayers
+           chi1(map_w0(1,cell)+k) = real(i-1, r_def)*dx
+           chi2(map_w0(1,cell)+k) = real(j-1, r_def)*dy
+           chi3(map_w0(1,cell)+k) = (real(k, r_def)**2)*dz
+         end do
+         cell = cell + 1_i_def
+       end do
+     end do
+
+    panel_id(:) = 1_r_def
+
+    ! Initialise the data
+    detj_w2_p(:) = 0.0_r_def
+
+    ! The kernel should set detj_w2 at dof=6 in layers 0 and 1
+    cell = 1_i_def
+    direction = 0_i_def
+
+    call calc_directional_detj_at_w2_code( nlayers,        &
+                                           detj_w2_p,      &
+                                           chi1,           &
+                                           chi2,           &
+                                           chi3,           &
+                                           panel_id,       &
+                                           direction,      &
+                                           ndf_w2,         &
+                                           undf_w2,        &
+                                           map_w2(:,cell), &
+                                           ndf_w0,         &
+                                           undf_w0,        &
+                                           map_w0(:,cell), &
+                                           basis_w0,       &
+                                           diff_basis_w0,  &
+                                           ndf_pid,        &
+                                           undf_pid,       &
+                                           map_pid         &
+                                           )
+
+
+    ! Check that dof 5 in layer 0 is not updated
+
+    @assertEqual(0.0_r_def, detj_w2_p(map_w2(5,cell)+0), tol)
+
+    ! Check that horizontal dofs are not updated
+
+    @assertEqual(0.0_r_def, detj_w2_p(map_w2(1,cell)+1), tol)
+
+    ! Layer 0 has dx = 11, dy = 17, dz = 10, hence volume is 11*17*10 = 1870
+    ! Layer 1 has dx = 11, dy = 17, dz = 30, hence volume is 11*17*30 = 5610
+
+    ! Check that dof 6 in layer 0 (and 5 in layer 1) is set to 1870
+
+    @assertEqual(1870.0_r_def, detj_w2_p(map_w2(6,cell)+0), tol)
+    @assertEqual(1870.0_r_def, detj_w2_p(map_w2(5,cell)+1), tol)
+
+    ! Check that dof 6 in layer 1 (and 5 in layer 2) is set to 5610
+
+    @assertEqual(5610.0_r_def, detj_w2_p(map_w2(6,cell)+1), tol)
+    @assertEqual(5610.0_r_def, detj_w2_p(map_w2(5,cell)+2), tol)
+
+    deallocate(detj_w2_p)
+    deallocate(chi1)
+    deallocate(chi2)
+    deallocate(chi3)
+    deallocate(panel_id)
+    deallocate(map_w0)
+    deallocate(map_w2)
+    deallocate(map_pid)
+    deallocate(basis_w0)
+    deallocate(diff_basis_w0)
+
+  end subroutine test_all
+
+end module calc_directional_detj_at_w2_kernel_mod_test

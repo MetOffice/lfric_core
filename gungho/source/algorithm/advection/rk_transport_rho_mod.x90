@@ -34,7 +34,6 @@ module rk_transport_rho_mod
   use finite_element_config_mod,         only: element_order
   use runge_kutta_init_mod,              only: num_rk_stage, ak
   use fem_constants_mod,                 only: get_inverse_w3_mass_matrix,     &
-                                               get_detj_at_w2,                 &
                                                get_qr
 
   use transport_config_mod,              only: fv_flux_order,                  &
@@ -55,6 +54,9 @@ module rk_transport_rho_mod
   use function_space_collection_mod,     only: function_space_collection
   use quadrature_xyoz_mod,               only: quadrature_xyoz_type
   use operator_mod,                      only: operator_type
+
+  ! Algorithms
+  use calc_dep_pts_alg_mod,              only: select_detj_at_w2
 
   ! Log
   use io_config_mod,                     only: subroutine_timers
@@ -282,8 +284,8 @@ contains
    real(kind=r_def), intent(in)       :: dt
 
    type(function_space_type), pointer :: w2_fs => null()
-   type(field_type),          pointer :: detj_at_w2 => null()
 
+   type(field_type)    :: detj_at_w2
    real(kind=r_def)    :: dt_substep
    real(kind=r_def)    :: cfl_min, cfl_max
    integer(kind=i_def) :: sub_step_count, mol_substeps
@@ -294,7 +296,9 @@ contains
    mesh_id = wind%get_mesh_id()
    mesh_index = find_mesh_index(mesh_id)
    w2_fs =>  wind%get_function_space()
-   detj_at_w2 => get_detj_at_w2(mesh_id)
+   call detj_at_w2%initialise( vector_space = w2_fs )
+
+   call select_detj_at_w2( wind, detj_at_w2 )
 
    call invoke( X_divideby_Y(wind2(mesh_index), wind, detj_at_w2), &
                 inc_a_times_X(dt, wind2(mesh_index) )            )
@@ -307,7 +311,7 @@ contains
       call rk_transport_rho_step( wind, density, dt_substep)
    end do
 
-   nullify( w2_fs, detj_at_w2 )
+   nullify( w2_fs )
 
    if ( subroutine_timers ) call timer('rk_transport_rho_multistep')
 

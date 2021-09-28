@@ -72,7 +72,8 @@ module transport_driver_mod
   use cusph_cosmic_transport_alg_mod, only: set_winds,      &
                                             cusph_cosmic_transport_step
   use cosmic_threed_alg_mod,          only: cosmic_threed_transport_step
-  use calc_dep_pts_alg_mod,           only: calc_dep_pts
+  use calc_dep_pts_alg_mod,           only: calc_dep_pts, &
+                                            select_detj_at_w2
   use density_inc_update_alg_mod,     only: density_inc_update_alg
   use fem_constants_mod,              only: get_detj_at_w2
   use geometric_constants_mod,        only: get_cell_orientation
@@ -114,7 +115,7 @@ module transport_driver_mod
   type(field_type) :: density_shifted
   type(field_type) :: increment
   type(field_type) :: wind_divergence
-  type(field_type), pointer :: detj_at_w2 => null()
+  type(field_type) :: detj_at_w2
   type(field_type), pointer :: detj_at_w2_shifted => null()
   type(field_type), pointer :: cell_orientation => null()
   type(field_type), pointer :: cell_orientation_shifted => null()
@@ -253,10 +254,11 @@ contains
       call advection_alg_init( mesh_id )
     end if
 
-    ! Calculate det(J) at W2 dofs for chi and shifted_chi fields.
-    ! The calculation of det(J) for the shifted_chi field is done in preparation
-    ! for Ticket #1608.
-    detj_at_w2 => get_detj_at_w2(mesh_id)
+    ! Calculate Det(J) at W2 dofs for chi and shifted_chi fields.
+    ! The calculation of Det(J) for the shifted_chi field is done in preparation
+    ! for Ticket #2669 and has no upwinded version yet.
+    call detj_at_w2%initialise( wind_n%get_function_space() )
+    call select_detj_at_w2( wind_n, detj_at_w2 )
     detj_at_w2_shifted => get_detj_at_w2(shifted_mesh_id)
 
     ! Set cell cell_orientation (and shifted) if using splitting scheme.
@@ -374,6 +376,8 @@ contains
 
     ! Initialise winds before first time step
     call set_winds( wind_n, mesh_id, clock%get_step(), dt )
+    ! Set Det(J) at W2 before first time step
+    call select_detj_at_w2( wind_n, detj_at_w2 )
 
     !--------------------------------------------------------------------------
     ! Model step
@@ -386,9 +390,11 @@ contains
         'Start of timestep ', clock%get_step()
       call log_event( log_scratch_space, LOG_LEVEL_INFO )
 
-      ! Only update the wind for time varying prescribed profiles
+      ! Only update the wind and upwind Det(J) for time varying prescribed profiles
       if (time_varying_wind) then
         call set_winds( wind_n, mesh_id, clock%get_step(), dt )
+        call detj_at_w2%initialise( wind_n%get_function_space() )
+        call select_detj_at_w2( wind_n, detj_at_w2 )
       end if
 
       if (scheme /= scheme_method_of_lines    .or. &
@@ -510,7 +516,7 @@ contains
       call rk_transport_theta_final()
     end if
 
-    nullify( detj_at_w2, detj_at_w2_shifted, cell_orientation, &
+    nullify( detj_at_w2_shifted, cell_orientation, &
              cell_orientation_shifted )
 
   end subroutine run_transport

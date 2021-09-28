@@ -47,12 +47,13 @@ module transport_general_mod
                                            log_rho,                  &
                                            enforce_min_density,      &
                                            enforce_min_tracers
-  use fem_constants_mod,             only: get_detj_at_w2, get_div, &
+  use fem_constants_mod,             only: get_div, &
                                            get_inverse_w3_mass_matrix
   use operator_mod,                  only: operator_type
   use fs_continuity_mod,             only: W3, Wtheta
   use dg_matrix_vector_kernel_mod,   only: dg_matrix_vector_kernel_type
   use matrix_vector_kernel_mod,      only: matrix_vector_kernel_type
+  use calc_dep_pts_alg_mod,          only: select_detj_at_w2
   use psykal_lite_mod,               only: invoke_impose_min_flux_kernel_type
   use enforce_lower_bound_kernel_mod,only: enforce_lower_bound_kernel_type
 
@@ -65,7 +66,6 @@ module transport_general_mod
   real(r_def),      intent(in)      :: dt
 
   type(function_space_type), pointer :: w2_fs => null()
-  type(field_type),          pointer :: detj_at_w2 => null()
   type(field_type)                   :: comp_wind
   type(field_type)                   :: field_old, field_inc
   real(r_def)            :: dt_substep
@@ -74,9 +74,10 @@ module transport_general_mod
   integer(i_def)         :: function_space, mesh_id
   logical(l_def)         :: advect_density, si_advective_terms
   logical(l_def)         :: density_predictor
-  type(operator_type), pointer :: mm_w3_inv     => null(), &
-                                   div           => null()
+  type(operator_type), pointer :: mm_w3_inv => null(), &
+                                  div       => null()
   type(field_type)             :: r_rho, mass_flux
+  type(field_type)             :: detj_at_w2
 
 
   if ( subroutine_timers ) call timer('transport_general')
@@ -105,7 +106,9 @@ module transport_general_mod
 
     w2_fs =>  wind%get_function_space()
     call comp_wind%initialise( vector_space = w2_fs )
-    detj_at_w2 => get_detj_at_w2(mesh_id)
+    call detj_at_w2%initialise( vector_space = w2_fs )
+
+    call select_detj_at_w2( wind, detj_at_w2 )
 
     call invoke( X_divideby_Y(comp_wind, wind, detj_at_w2), &
                  inc_a_times_X(dt, comp_wind )              )
@@ -174,7 +177,7 @@ module transport_general_mod
    end if
 
    if ( adv_scheme == scheme_method_of_lines ) then
-      nullify( w2_fs, detj_at_w2 )
+      nullify( w2_fs )
       if ( advect_density ) then
          nullify( mm_w3_inv, div )
       end if
