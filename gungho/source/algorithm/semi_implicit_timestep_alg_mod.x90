@@ -566,7 +566,7 @@ contains
           !--------------------------------------------------------------------
           if ( limited_area ) then
             call lam_blend_lbc(state(igh_u), state(igh_p), state(igh_d), &
-                               state(igh_t), lbc_fields)
+                               state(igh_t), mr, lbc_fields)
           endif
 
         end do inner_dynamics_loop

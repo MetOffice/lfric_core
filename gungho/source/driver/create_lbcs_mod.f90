@@ -7,7 +7,7 @@
 !> @details Create LBC field collection and add fields.
 module create_lbcs_mod
 
-  use constants_mod,              only : i_def, l_def
+  use constants_mod,              only : i_def, l_def, str_def
   use log_mod,                    only : log_event,             &
                                          log_scratch_space,     &
                                          LOG_LEVEL_INFO
@@ -15,6 +15,8 @@ module create_lbcs_mod
   use field_collection_mod,       only : field_collection_type
   use fs_continuity_mod,          only : W0, W2, W3, Wtheta, W2h
   use function_space_mod,         only : function_space_type
+  use mr_indices_mod,             only : nummr,                      &
+                                         mr_names
   use linked_list_mod,            only : linked_list_type
   use lfric_xios_time_axis_mod,   only : time_axis_type,        &
                                          update_interface
@@ -57,6 +59,8 @@ module create_lbcs_mod
     logical(l_def),   parameter                :: cyclic=.false.
     logical(l_def),   parameter                :: interp_flag=.true.
     character(len=*), parameter                :: axis_id="lbc_axis"
+    character(str_def)                         :: name
+    integer(i_def)                             :: imr
 
     call log_event( 'Create LBC fields', LOG_LEVEL_INFO )
 
@@ -89,6 +93,12 @@ module create_lbcs_mod
 
       call setup_field( lbc_fields, depository, prognostic_fields, &
          "boundary_u_driving", W2, mesh_id, checkpoint_restart_flag )
+
+      do imr = 1, nummr
+        name = trim('lbc_' // adjustl(mr_names(imr)) )
+        call setup_field( lbc_fields, depository, prognostic_fields, &
+           name, wtheta, mesh_id, checkpoint_restart_flag )
+      enddo
 
    else if ( lbc_option == lbc_option_file ) then
       checkpoint_restart_flag = .false.

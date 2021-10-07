@@ -8,9 +8,10 @@
 module init_gungho_lbcs_alg_mod
 
   use clock_mod,                       only: clock_type
-  use constants_mod,                   only: i_def
+  use constants_mod,                   only: i_def, str_def
   use field_mod,                       only: field_type
   use field_collection_mod,            only: field_collection_type
+  use formulation_config_mod,          only: use_moisture
   use fs_continuity_mod,               only: W2, W3, Wtheta
   use log_mod,                         only: log_event,         &
                                              log_scratch_space, &
@@ -22,6 +23,8 @@ module init_gungho_lbcs_alg_mod
                                              update_variable_fields
   use lfric_xios_time_axis_mod,        only: time_axis_type
   use linked_list_mod,                 only: linked_list_type
+  use mr_indices_mod,                  only: nummr,             &
+                                             mr_names
 
   implicit none
 
@@ -54,11 +57,13 @@ module init_gungho_lbcs_alg_mod
     type( field_type ), pointer :: u     => null()
     type( field_type ), pointer :: rho   => null()
     type( field_type ), pointer :: exner => null()
+    type( field_type ), pointer :: mr => null()
 
     type( field_type ), pointer :: lbc_theta  => null()
     type( field_type ), pointer :: lbc_u      => null()
     type( field_type ), pointer :: lbc_rho    => null()
     type( field_type ), pointer :: lbc_exner  => null()
+    type( field_type ), pointer :: lbc_mr  => null()
     type( field_type ), pointer :: boundary_u => null()
 
     type( field_type ), pointer :: w2_lbc_mask      => null()
@@ -66,7 +71,9 @@ module init_gungho_lbcs_alg_mod
     type( field_type ), pointer :: wtheta_lbc_mask  => null()
     type( field_type ), pointer :: w2_boundary_mask => null()
 
-    integer(kind=i_def) :: mesh_id
+    character(str_def)          :: lbc_name
+    integer(i_def)              :: imr
+    integer(i_def)              :: mesh_id
 
     theta => prognostic_fields%get_field( 'theta' )
     u     => prognostic_fields%get_field( 'u' )
@@ -91,9 +98,23 @@ module init_gungho_lbcs_alg_mod
                  X_times_Y( lbc_theta,  theta, wtheta_lbc_mask ), &
                  X_times_Y( boundary_u, u,     w2_boundary_mask ) )
 
+    if ( use_moisture ) then
+
+      do imr = 1, nummr
+
+        lbc_name = trim( 'lbc_' // adjustl(mr_names(imr)) )
+        mr => prognostic_fields%get_field( mr_names(imr) )
+        lbc_mr => lbc_fields%get_field( lbc_name )
+
+        call invoke( X_times_Y( lbc_mr, mr, wtheta_lbc_mask ) )
+
+      enddo
+
+    endif
+
     nullify( w2_lbc_mask, w3_lbc_mask, wtheta_lbc_mask, w2_boundary_mask )
-    nullify( theta, u, rho, exner )
-    nullify( lbc_theta, lbc_u, lbc_rho, lbc_exner, boundary_u )
+    nullify( theta, u, rho, exner, mr )
+    nullify( lbc_theta, lbc_u, lbc_rho, lbc_exner, lbc_mr, boundary_u )
 
   end subroutine init_lbcs_analytic_alg
 

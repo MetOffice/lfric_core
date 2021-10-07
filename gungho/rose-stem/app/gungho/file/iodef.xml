@@ -63,6 +63,19 @@
        <field id="checkpoint_m_ci" name="m_ci" long_name="m_ci" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
        <field id="checkpoint_m_s" name="m_s" long_name="m_s" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
        <field id="checkpoint_m_g" name="m_g" long_name="m_g" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
+       <!-- LBC fields-->
+       <field id="checkpoint_lbc_theta" name="lbc_theta" long_name="lbc_air_potential_temperature" standard_name="lbc_air_potential_temperature" unit="K" domain_ref="checkpoint_Wtheta" />
+       <field id="checkpoint_lbc_rho" name="lbc_rho" long_name="lbc_air_density" standard_name="lbc_air_density" unit="kg m-3" domain_ref="checkpoint_W3" />
+       <field id="checkpoint_lbc_exner" name="lbc_exner" long_name="lbc_exner_pressure" unit="1" domain_ref="checkpoint_W3" />
+       <field id="checkpoint_lbc_u" name="lbc_u" long_name="lbc_U" unit="m s-1" domain_ref="checkpoint_W2" />
+       <field id="checkpoint_boundary_u_diff" name="boundary_u_diff" long_name="boundary_u_diff" unit="m s-1" domain_ref="checkpoint_W2" />
+       <field id="checkpoint_boundary_u_driving" name="boundary_u_driving" long_name="boundary_u_driving" unit="m s-1" domain_ref="checkpoint_W2" />
+       <field id="checkpoint_lbc_m_v" name="lbc_m_v" long_name="lbc_m_v" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
+       <field id="checkpoint_lbc_m_cl" name="lbc_m_cl" long_name="lbc_m_cl" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
+       <field id="checkpoint_lbc_m_r" name="lbc_m_r" long_name="lbc_m_r" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
+       <field id="checkpoint_lbc_m_ci" name="lbc_m_ci" long_name="lbc_m_ci" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
+       <field id="checkpoint_lbc_m_s" name="lbc_m_s" long_name="lbc_m_s" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
+       <field id="checkpoint_lbc_m_g" name="lbc_m_g" long_name="lbc_m_g" unit="kg/kg" domain_ref="checkpoint_Wtheta" />
        </field_group>
 
      <!-- derived fields group -->
