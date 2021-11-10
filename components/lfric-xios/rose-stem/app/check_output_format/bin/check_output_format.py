@@ -10,19 +10,8 @@ output with XIOS.
 '''
 import sys
 import glob
-import iris
 import numpy as np
-
-
-def load_cube_by_varname(filename, var):
-    '''
-    Loads an Iris cube according to the varname
-        filename:   a string holding the path to the file to be tested
-        var:        the varname id to be loaded
-    '''
-    variable_constraint = iris.Constraint(cube_func=(lambda c:
-                                          c.var_name == var))
-    return iris.load_cube(filename, constraint=variable_constraint)
+from netCDF4 import Dataset as ncload
 
 
 def identify_mesh(filename):
@@ -34,8 +23,11 @@ def identify_mesh(filename):
     mesh_dict = {}
     links_dict = {}
 
-    mesh_face_links = load_cube_by_varname(filename, "Mesh2d_face_face_links")
-    n_mesh_faces = mesh_face_links.shape[0]
+    data = ncload(filename)
+
+    n_mesh_faces = data.dimensions['nMesh2d_face_face'].size
+    n_mesh_edges = data.dimensions['nMesh2d_edge_edge'].size
+    n_mesh_nodes = data.dimensions['nMesh2d_node_node'].size
 
     if np.sqrt((n_mesh_faces/6)).is_integer():
         mesh_dict['type'] = "cubedsphere"
@@ -44,13 +36,35 @@ def identify_mesh(filename):
 
         links_dict['face_face'] = n_mesh_faces
         links_dict['face_edge'] = n_mesh_faces * 2
+        links_dict['face_node'] = n_mesh_faces
         links_dict['edge_edge'] = n_mesh_faces * 2
-        links_dict['node'] = n_mesh_faces + 2
+        links_dict['edge_node'] = n_mesh_faces
+        links_dict['node_node'] = n_mesh_faces + 2
+
+        mesh_dict['links'] = links_dict
+
+    elif n_mesh_faces == n_mesh_nodes:
+        mesh_dict['type'] = "planar-biperiodic"
+        mesh_dict['name'] = "Biperiodic mesh of size {0}".format(n_mesh_faces)
+
+        links_dict['face_face'] = n_mesh_faces
+        links_dict['face_edge'] = n_mesh_faces * 2
+        links_dict['face_node'] = n_mesh_nodes
+        links_dict['edge_edge'] = n_mesh_faces * 2
+        links_dict['edge_node'] = n_mesh_nodes
+        links_dict['node_node'] = n_mesh_nodes
 
         mesh_dict['links'] = links_dict
 
     else:
-        sys.exit("Unable to identify mesh in {0}".format(filename))
+        mesh_dict['type'] = "planar"
+        mesh_dict['name'] = "Planar mesh of size {0}".format(n_mesh_faces)
+
+        links_dict['face_edge'] = n_mesh_edges
+        links_dict['face_node'] = n_mesh_nodes
+        links_dict['edge_node'] = n_mesh_nodes
+
+        mesh_dict['links'] = links_dict
 
     return mesh_dict
 
@@ -62,17 +76,18 @@ def test_header(filename, mesh_dict):
         filename:   a string holding the path to the file to be tested
         mesh_dict:  a dictionary holding information about the mesh
     '''
-    cubes = iris.load(filename)
     header_errors = []
 
     mesh_links = mesh_dict['links']
 
+    data = ncload(filename)
+
     for link in mesh_links:
-        for cube in cubes:
-            if "Mesh2d" in cube.var_name:
-                if "_{0}_".format(link) in cube.var_name:
-                    if cube.shape[0] != mesh_links[link]:
-                        header_errors.append([cube.var_name, cube.shape[0],
+        for dim in data.dimensions.values():
+            if "Mesh2d" in dim.name:
+                if "{0}".format(link) in dim.name:
+                    if dim.size != mesh_links[link]:
+                        header_errors.append([dim.name, dim.size,
                                               mesh_links[link]])
 
     return header_errors
@@ -81,14 +96,15 @@ def test_header(filename, mesh_dict):
 if __name__ == "__main__":
 
     try:
-        output_path = sys.argv[1]
+        OUTPUT_PATH = sys.argv[1]
     except ValueError:
         sys.exit("Usage: {0} <output_path>".format(sys.argv[0]))
 
     TOTAL_ERRORS = 0
 
-    diagnostic_paths = glob.glob(output_path + "*/*/*/*/*/*diag.nc")
-    for data_path in diagnostic_paths:
+    DIAGNOSTIC_PATHS = glob.glob(OUTPUT_PATH + "*/*/*/*/*/*diag.nc")
+    for data_path in DIAGNOSTIC_PATHS:
+        print("Checking file: {0}".format(data_path))
 
         mesh = identify_mesh(data_path)
         errors = test_header(data_path, mesh)
@@ -97,8 +113,7 @@ if __name__ == "__main__":
 
         if errors:
             print("\n{0} errors found in {1}:".format(len(errors), data_path))
-            print("{0} {1} mesh identified...".format(mesh['name'],
-                                                      mesh['type']))
+            print("{0} mesh identified...".format(mesh['name']))
 
             for err in errors:
                 print("{0}: expected {1}, got {2}".format(err[0], err[2],

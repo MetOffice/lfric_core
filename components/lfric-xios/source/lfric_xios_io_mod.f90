@@ -17,6 +17,8 @@ module lfric_xios_io_mod
                                            radians_to_degrees,            &
                                            str_def
   use coord_transform_mod,           only: xyz2llr
+  use mesh_constructor_helper_functions_mod, &
+                                     only: domain_size_type
   use field_mod,                     only: field_type, field_proxy_type
   use finite_element_config_mod,     only: element_order
   use lfric_xios_clock_mod,          only: lfric_xios_clock_type
@@ -333,7 +335,7 @@ contains
      r2d = radians_to_degrees
     else
      r2d = 1.0_r_def
-    endif
+    end if
 
     ! Set up array to hold number of dofs for local domains
     allocate(local_undf(1))
@@ -573,6 +575,9 @@ contains
 
     real(kind=r_def), allocatable :: basis_chi(:,:,:)
 
+    type(domain_size_type) :: domain_size
+    real(r_def), parameter :: vertex_location_tol = 1e-8
+
     ! Factor to convert coords from radians to degrees if needed
     ! set as 1.0 for planar mesh
     real(kind=r_def) :: r2d
@@ -610,6 +615,9 @@ contains
       call chi_p(3)%halo_exchange(depth=1)
     end if
 
+    ! Get domains size to determine boundary vertex locations
+    domain_size = mesh%get_domain_size()
+
     ! Loop over cells
     do cell = 1, ncells
 
@@ -641,9 +649,23 @@ contains
           lon_coords( ((map_x(df_x)-1)/nlayers)+1) = xyz(1)*r2d
           lat_coords( ((map_x(df_x)-1)/nlayers)+1) = xyz(2)*r2d
 
-          face_bnds_lon_coords(df_x,cell) = xyz(1)*r2d
-          face_bnds_lat_coords(df_x,cell) = xyz(2)*r2d
-        endif
+          ! For biperiodic meshes, ensure that nodes on mesh boundary have
+          ! consistent coordinates
+          if ( mesh%is_topology_periodic() ) then
+            if (abs(lon_coords( ((map_x(df_x)-1)/nlayers)+1) - domain_size%minimum%x) &
+                  < vertex_location_tol) then
+              lon_coords( ((map_x(df_x)-1)/nlayers)+1) = domain_size%maximum%x
+            end if
+            if (abs(lat_coords( ((map_x(df_x)-1)/nlayers)+1) - domain_size%minimum%y) &
+                  < vertex_location_tol) then
+              lat_coords( ((map_x(df_x)-1)/nlayers)+1) = domain_size%maximum%y
+            end if
+          end if
+
+          face_bnds_lon_coords(df_x,cell) = lon_coords( ((map_x(df_x)-1)/nlayers)+1)
+          face_bnds_lat_coords(df_x,cell) = lat_coords( ((map_x(df_x)-1)/nlayers)+1)
+
+        end if
       end do ! Loop over bottom layer dofs
 
       ! For this cell compute the edge-bounds coordinates from the face-bounds coordinates
@@ -656,7 +678,7 @@ contains
         else
           edge1 = df_x
           edge2 = df_x + 1
-        endif
+        end if
 
         ! Is the edge owned by this cell?
         if (mesh%get_edge_cell_owner(df_x, cell) == cell) then
@@ -738,7 +760,7 @@ contains
      r2d = radians_to_degrees
     else
      r2d = 1.0_r_def
-    endif
+    end if
 
     ! Set k order value to 0 if unassigned
     if (present(k_order))then
@@ -899,7 +921,7 @@ contains
       r2d = radians_to_degrees
     else
       r2d = 1.0_r_def
-    endif
+    end if
 
     ! Set up arrays for AllGather
     allocate(local_undf(1))
