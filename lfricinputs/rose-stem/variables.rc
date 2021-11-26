@@ -25,9 +25,9 @@
   "um2lfric-spice_ifort_gcc_safe-basicgal_N96L70_C12L70"             : BASE~"_t2818",
   "um2lfric-spice_ifort_gcc_rigorous-basicgal_N96L70_C12L70"         : BASE~"_t2818",
 
-  "lfric2um-spice_gfortran_gcc_safe-aquaplanet_C48L38_N48L38"        : BASE~"_t2409",
-  "lfric2um-spice_gfortran_gcc_rigorous-aquaplanet_C48L38_N48L38"    : BASE~"_t2409",
-  "lfric2um-spice_ifort_gcc_safe-aquaplanet_C48L38_N48L38"           : BASE~"_t2409",
+  "lfric2um-spice_gfortran_gcc_safe-aquaplanet_C48L38_N48L38"        : BASE~"_t2337",
+  "lfric2um-spice_gfortran_gcc_rigorous-aquaplanet_C48L38_N48L38"    : BASE~"_t2337",
+  "lfric2um-spice_ifort_gcc_safe-aquaplanet_C48L38_N48L38"           : BASE~"_t2337",
   "lfric2um-spice_ifort_gcc_rigorous-aquaplanet_C48L38_N48L38"       : BASE~"_t2409",
 
   "scintelapi-spice_gfortran_gcc_rigorous-aquaplanet_C48L38_C48L38"  : BASE~"_t2441",
@@ -35,9 +35,9 @@
   "scintelapi-spice_ifort_gcc_rigorous-aquaplanet_C48L38_C48L38"     : BASE~"_t2441",
   "scintelapi-spice_ifort_gcc_safe-aquaplanet_C48L38_C48L38"         : BASE~"_t2441",
 
-  "integration-spice_gfortran_gcc_safe-um2um"                        : BASE~"_t2409",
+  "integration-spice_gfortran_gcc_safe-um2um"                        : BASE~"_t2337",
   "integration-spice_gfortran_gcc_rigorous-um2um"                    : BASE~"_t2409",
-  "integration-spice_ifort_gcc_safe-um2um"                           : BASE~"_t2409",
+  "integration-spice_ifort_gcc_safe-um2um"                           : BASE~"_t2337",
   "integration-spice_ifort_gcc_rigorous-um2um"                       : BASE~"_t2409",
 
   "integration-spice_gfortran_gcc_safe-lfric2lfric"                  : BASE~"_t2441",
@@ -67,7 +67,7 @@
 
   "lfric2um-xc40_crayftn_craycc_safe-aquaplanet_C48L38_N48L38"       : BASE,
   "lfric2um-xc40_crayftn_craycc_rigorous-aquaplanet_C48L38_N48L38"   : BASE,
-  "lfric2um-xc40_ifort_icc_safe-aquaplanet_C48L38_N48L38"            : BASE~"_t2409",
+  "lfric2um-xc40_ifort_icc_safe-aquaplanet_C48L38_N48L38"            : BASE~"_t2337",
   "lfric2um-xc40_ifort_icc_rigorous-aquaplanet_C48L38_N48L38"        : BASE~"_t2409",
 
   "scintelapi-xc40_crayftn_craycc_safe-aquaplanet_C48L38_C48L38"     : BASE,
