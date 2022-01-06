@@ -378,6 +378,7 @@ contains
     ! Initialise XIOS axes
     call init_xios_axis( "vert_axis_full_levels", mesh_id, W0 )
     call init_xios_axis( "vert_axis_half_levels", mesh_id, W3 )
+    call init_xios_axis( "radiation_levels", mesh_id, W0 )
 
     ! Create all the regular checkpoint domains based on current function spaces
     ! Loop over function spaces we need to create domains for:

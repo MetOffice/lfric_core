@@ -18,6 +18,7 @@
       <axis id="land_tile_rad_band" name="land_tile_rad_band" n_glo="18"/>
       <axis id="monthly_axis" name="monthly_axis" n_glo="12"/>
       <axis id="bl_types" name="bl_types" n_glo="7"/>
+      <axis id="radiation_levels" name="radiation_levels"/>
     </axis_definition>
 
     <domain_definition>

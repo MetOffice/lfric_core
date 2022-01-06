@@ -26,8 +26,7 @@ module create_physics_prognostics_mod
   use radiation_config_mod,           only : n_radstep, cloud_representation,  &
                                              cloud_representation_combined,    &
                                              cloud_representation_conv_strat_liq_ice, &
-                                             cloud_representation_split,       &
-                                             l_trans_zen_correction
+                                             cloud_representation_split
   use aerosol_config_mod,             only : glomap_mode,                      &
                                              glomap_mode_climatology,          &
                                              glomap_mode_ukca
@@ -243,10 +242,6 @@ contains
 
     ! 2D fields, don't need checkpointing
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
-      'cos_zenith_angle',   twod_space, twod=.true. )
-    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
-      'lit_fraction',       twod_space, twod=.true. )
-    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'lw_down_surf', twod_space, twod=.true. )
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'sw_down_surf', twod_space, twod=.true. )
@@ -256,12 +251,11 @@ contains
       'sw_down_blue_surf', twod_space, twod=.true. )
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'sw_direct_blue_surf', twod_space, twod=.true. )
+
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
-      'lw_up_tile', surft_space, twod=.true. )
+      'cos_zenith_angle',   twod_space, twod=.true. )
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
-      'sw_up_tile', surft_space, twod=.true. )
-    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
-      'sw_up_blue_tile', surft_space, twod=.true. )
+      'lit_fraction',       twod_space, twod=.true. )
 
     ! 3D fields, don't need checkpointing
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
@@ -272,6 +266,15 @@ contains
       'dtheta_rad', wtheta_space )
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'dmv_pc2_rad', wtheta_space )
+
+    ! Fields on surface tiles, don't need checkpointing
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'lw_up_tile', surft_space, twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'sw_up_tile', surft_space, twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'sw_up_blue_tile', surft_space, twod=.true. )
+
 
     ! Fields which need checkpointing for radiation timestepping
     !
@@ -296,13 +299,21 @@ contains
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'sw_direct_surf_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
-      'sw_direct_toa_rts', twod_space,                                         &
-      checkpoint_flag=(checkpoint_flag .and. l_trans_zen_correction), twod=.true. )
-    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'sw_down_blue_surf_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true.)
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'sw_direct_blue_surf_rts', twod_space, checkpoint_flag=checkpoint_flag,  &
       twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'lw_up_surf_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'sw_up_surf_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'lw_up_toa_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'sw_up_toa_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
+    call add_physics_field( radiation_fields, depository, prognostic_fields,   &
+      'sw_direct_toa_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
+
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &
       'cos_zenith_angle_rts', twod_space, checkpoint_flag=checkpoint_flag, twod=.true. )
     call add_physics_field( radiation_fields, depository, prognostic_fields,   &

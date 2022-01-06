@@ -26,13 +26,39 @@ m_v             = ['m_v',             1e-3, 15e-3]
 m_cl            = ['m_cl',            0,    5e-5]
 m_ci            = ['m_ci',            0,    1e-4]
 u1              = ['u1',              -15,  15]
+sw_temperature_incr = ['sw_temperature_incr', 0, 0.1]
+lw_temperature_incr = ['lw_temperature_incr', -2, 1]
 sw_heating_rate = ['sw_heating_rate', 0,    7e-5]
+trop_level      = ['trop_level', 20, 50]
+sw_direct_toa   = ['sw_direct_toa', 0, 1450]
+sw_down_surf    = ['sw_down_surf', 0, 1400]
+lw_down_surf    = ['lw_down_surf', 100, 600]
+lw_up_surf      = ['lw_up_surf', 100, 600]
+lw_up_toa       = ['lw_up_toa', 100, 600]
 cloud_cover_rts = ['cloud_cover_rts', 0, 1]
 cloud_fraction_rts = ['cloud_fraction_rts', 0, 1]
 cloud_droplet_re_rts = ['cloud_droplet_re_rts', 0, 20e-6]
-trop_level      = ['trop_level', 20, 50]
-sw_down_surf    = ['sw_down_surf', 0, 1400]
-sw_aod          = ['sw_aer_optical_depth_rts', 0, 1e-3]
+warm_cloud_top_re_rts = ['warm_cloud_top_re_rts', 0, 20e-6]
+warm_cloud_top_weight_rts = ['warm_cloud_top_weight_rts', 0, 1]
+liq_cloud_frac_rts = ['liq_cloud_frac_rts', 0, 1]
+ice_cloud_frac_rts = ['ice_cloud_frac_rts', 0, 1]
+liq_cloud_mmr_rts  = ['liq_cloud_mmr_rts', 0, 1e-4]
+ice_cloud_mmr_rts  = ['ice_cloud_mmr_rts', 0, 1e-4]
+liq_cloud_path_rts  = ['liq_cloud_path_rts', 0, 5e-1]
+ice_cloud_path_rts  = ['ice_cloud_path_rts', 0, 5e-1]
+sw_aod_rts = ['sw_aer_optical_depth_rts', 0, 1e-3]
+sw_net_surf_rts = ['sw_net_surf_rts', 0, 1200]
+sw_direct_toa_rts = ['sw_direct_toa_rts', 0, 1450]
+sw_up_toa_rts = ['sw_up_toa_rts', 0, 600]
+sw_up_rts = ['sw_up_rts', 0, 600]
+sw_up_clear_toa_rts = ['sw_up_clear_toa_rts', 0, 600]
+sw_down_clear_surf_rts = ['sw_down_clear_surf_rts', 0, 1400]
+sw_up_clear_surf_rts = ['sw_up_clear_surf_rts', 0, 600]
+lw_net_surf_rts = ['lw_net_surf_rts', -300, 100]
+lw_up_toa_rts = ['lw_up_toa_rts', 100, 400]
+lw_up_clear_toa_rts = ['lw_up_clear_toa_rts', 100, 400]
+lw_down_clear_surf_rts = ['lw_down_clear_surf_rts', 100, 600]
+lw_up_clear_surf_rts = ['lw_up_clear_surf_rts', 100, 600]
 
 def load_cube_by_varname(filename, var):
    variable_constraint = iris.Constraint(cube_func=(lambda c: c.var_name == var))
@@ -100,7 +126,10 @@ if __name__ == "__main__":
 
     import sys
     try:
-        datapath, plotpath = sys.argv[1:3]
+        opts = [opt for opt in sys.argv[1:] if opt.startswith('-')]
+        args = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
+        datapath, plotpath = args[0:2]
+        rts_plots = '-rts' in opts
     except ValueError:
         print("Usage: {0} <datapath> <plotpath>".format(sys.argv[0]))
         exit(1)
@@ -110,9 +139,25 @@ if __name__ == "__main__":
     do_plot(datapath, m_ci,            plotpath)
     do_plot(datapath, u1,              plotpath)
     do_plot(datapath, sw_heating_rate, plotpath)
-    do_plot(datapath, cloud_cover_rts, plotpath)
-    do_plot(datapath, cloud_fraction_rts, plotpath, plotlevel=17)
-    do_plot(datapath, cloud_droplet_re_rts, plotpath, plotlevel=17)
     do_plot(datapath, trop_level,      plotpath)
+    do_plot(datapath, sw_direct_toa,   plotpath)
     do_plot(datapath, sw_down_surf,    plotpath)
-    do_plot(datapath, sw_aod, plotpath, plotlevel=38)
+    do_plot(datapath, lw_down_surf,    plotpath)
+    do_plot(datapath, lw_up_toa,       plotpath)
+    if rts_plots:
+        do_plot(datapath, cloud_cover_rts,        plotpath)
+        do_plot(datapath, cloud_fraction_rts,     plotpath, plotlevel=17)
+        do_plot(datapath, cloud_droplet_re_rts,   plotpath, plotlevel=17)
+        do_plot(datapath, sw_aod_rts,             plotpath, plotlevel=38)
+        do_plot(datapath, sw_net_surf_rts,        plotpath)
+        do_plot(datapath, sw_direct_toa_rts,      plotpath)
+        do_plot(datapath, sw_up_toa_rts,          plotpath)
+        do_plot(datapath, sw_up_rts,              plotpath, plotlevel=70)
+        do_plot(datapath, sw_up_clear_toa_rts,    plotpath)
+        do_plot(datapath, sw_down_clear_surf_rts, plotpath)
+        do_plot(datapath, sw_up_clear_surf_rts,   plotpath)
+        do_plot(datapath, lw_net_surf_rts,        plotpath)
+        do_plot(datapath, lw_up_toa_rts,          plotpath)
+        do_plot(datapath, lw_up_clear_toa_rts,    plotpath)
+        do_plot(datapath, lw_down_clear_surf_rts, plotpath)
+        do_plot(datapath, lw_up_clear_surf_rts,   plotpath)

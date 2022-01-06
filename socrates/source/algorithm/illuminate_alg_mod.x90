@@ -82,8 +82,8 @@ subroutine illuminate_alg(radiation_fields, timestep, dt)
   if (write_diag .and. use_xios_io) then
     if ( subroutine_timers ) call timer("illuminate_xios")
 
-    call sin_stellar_declination_rts%write_field('sin_stellar_declination_rts')
-    call stellar_eqn_of_time_rts%write_field('stellar_eqn_of_time_rts')
+    call sin_stellar_declination_rts%write_field('radiation__sin_stellar_declination_rts')
+    call stellar_eqn_of_time_rts%write_field('radiation__stellar_eqn_of_time_rts')
 
     if ( subroutine_timers ) call timer("illuminate_xios")
   end if

@@ -227,7 +227,7 @@
                                                "wallclock":"00:12:00"},
                                        },
                          },
-                     plotstr="plot_map.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR"
+                     plotstr="plot_map.py -rts $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR"
                      )',
     'run_application("lfric_atm", "basic_gal9",
                      resolutions=[("C12",1800.0)],

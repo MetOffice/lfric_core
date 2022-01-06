@@ -74,6 +74,7 @@ if __name__ == "__main__":
     do_plot(datapath, 'u1',    plotpath)
     do_plot(datapath, 'cloud_fraction_rts', plotpath)
     do_time_plot(datapath, 'sw_down_surf', plotpath)
+    do_time_plot(datapath, 'lw_up_toa', plotpath)
     do_time_plot(datapath, 'trop_level', plotpath)
     if extra_plots_ukca:
         do_plot(datapath, 'h2o2', plotpath)

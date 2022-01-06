@@ -10,6 +10,7 @@
     <axis_definition>
       <axis id="vert_axis_half_levels" name="half_levels"/>
       <axis id="vert_axis_full_levels" name="full_levels"/>
+      <axis id="radiation_levels" name="radiation_levels"/>
       <axis id="land_tiles" name="land_tiles" n_glo="9"/>
       <axis id="surface_tiles" name="surface_tiles" n_glo="11"/>
       <axis id="snow_layers_and_tiles" name="snow_layers_and_tiles" n_glo="27"/>

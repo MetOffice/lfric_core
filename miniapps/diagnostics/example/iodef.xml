@@ -8,6 +8,7 @@
    <axis_definition>
     <axis id="vert_axis_half_levels" name="half_levels"/>
     <axis id="vert_axis_full_levels" name="full_levels"/>
+    <axis id="radiation_levels" name="radiation_levels"/>
     <axis id="model_vert_axis_1_half_levels" n_glo="3" name="half_levels_copy"
           positive="up" unit="m" value="(0, 2) [0.5 1.5 2.5]"/>
     <axis id="fixed_vert_axis_1" n_glo="3" name="fixed_axis"

@@ -20,6 +20,7 @@
       <axis id="bl_types" name="bl_types" n_glo="7"/>
       <axis id="entrainment_levels" name="entrainment_levels" n_glo="3"/>
       <axis id="dust_divisions" name="dust_divisions" n_glo="6"/>
+      <axis id="radiation_levels" name="radiation_levels"/>
     </axis_definition>
 
     <domain_definition>
@@ -185,12 +186,16 @@
 	<field id="checkpoint_lw_down_surf_rts" name="lw_down_surf_rts" long_name="surface_downward_longwave_flux" unit="W m-2" domain_ref="face" />
 	<field id="checkpoint_sw_down_surf_rts" name="sw_down_surf_rts" long_name="surface_downward_shortwave_flux" unit="W m-2" domain_ref="face" />
 	<field id="checkpoint_sw_direct_surf_rts" name="sw_direct_surf_rts" long_name="surface_direct_shortwave_flux" unit="W m-2" domain_ref="face" />
-	<field id="checkpoint_sw_direct_toa_rts" name="sw_direct_toa_rts" long_name="toa_direct_shortwave_flux" unit="W m-2" domain_ref="face" />
 	<field id="checkpoint_sw_down_blue_surf_rts" name="sw_down_blue_surf_rts" long_name="surface_downward_0-690nm_flux" unit="W m-2" domain_ref="face" />
 	<field id="checkpoint_sw_direct_blue_surf_rts" name="sw_direct_blue_surf_rts" long_name="surface_direct_0-690nm_flux" unit="W m-2" domain_ref="face" />
         <field id="checkpoint_lw_up_tile_rts" name="lw_up_tile_rts" long_name="surface_upward_longwave_flux_on_tiles" unit="W m-2" domain_ref="face" axis_ref="surface_tiles" />
         <field id="checkpoint_sw_up_tile_rts" name="sw_up_tile_rts" long_name="surface_upward_shortwave_flux_on_tiles" unit="W m-2" domain_ref="face" axis_ref="surface_tiles" />
         <field id="checkpoint_sw_up_blue_tile_rts" name="sw_up_blue_tile_rts" long_name="surface_upward_0-690nm_flux_on_tiles" unit="W m-2" domain_ref="face" axis_ref="surface_tiles" />
+	<field id="checkpoint_lw_up_surf_rts" name="lw_up_surf_rts" long_name="surface_upward_longwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="checkpoint_sw_up_surf_rts" name="sw_up_surf_rts" long_name="surface_upward_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="checkpoint_lw_up_toa_rts" name="lw_up_toa_rts" long_name="toa_upward_longwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="checkpoint_sw_up_toa_rts" name="sw_up_toa_rts" long_name="toa_upward_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="checkpoint_sw_direct_toa_rts" name="sw_direct_toa_rts" long_name="toa_direct_shortwave_flux" unit="W m-2" domain_ref="face" />
 	<field id="checkpoint_sw_heating_rate_rts" name="sw_heating_rate_rts" long_name="shortwave_heating_rate" unit="K s-1" grid_ref="full_level_face_grid" />
 	<field id="checkpoint_lw_heating_rate_rts" name="lw_heating_rate_rts" long_name="longwave_heating_rate" unit="K s-1" grid_ref="full_level_face_grid" />
 	<field id="checkpoint_cos_zenith_angle_rts" name="cos_zenith_angle_rts" long_name="cosine_of_the_solar_zenith_angle" unit="1" domain_ref="face" />
@@ -535,35 +540,83 @@
 	<field id="turbulence__ent_t_frac_dsc" name="ent_t_frac_dsc" long_name="fraction_of_time_decoupled_stratocumulus_inversion_is_above_level" unit="1" domain_ref="face" axis_ref="entrainment_levels" />
 	<field id="turbulence__ent_zrzi_dsc" name="ent_zrzi_dsc" long_name="level_height_as_fraction_of_dsc_inversion_height_above_mixed_layer_base" unit="1" domain_ref="face" axis_ref="entrainment_levels" />
 	<!-- radiation fields -->
-	<field id="lw_down_surf" name="lw_down_surf" long_name="surface_downward_longwave_flux" unit="W m-2" domain_ref="face" />
-	<field id="sw_down_surf" name="sw_down_surf" long_name="surface_downward_shortwave_flux" unit="W m-2" domain_ref="face" />
-	<field id="sw_up_tile" name="sw_up_tile" long_name="surface_upward_shortwave_flux_on_tiles" unit="W m-2" domain_ref="face" axis_ref="surface_tiles"/>
-	<field id="sw_direct_surf" name="sw_direct_surf" long_name="surface_direct_shortwave_flux" unit="W m-2" domain_ref="face" />
-	<field id="sw_down_blue_surf" name="sw_down_blue_surf" long_name="surface_downward_0-690nm_flux" unit="W m-2" domain_ref="face" />
-	<field id="sw_direct_blue_surf" name="sw_direct_blue_surf" long_name="surface_direct_0-690nm_flux" unit="W m-2" domain_ref="face" />
-	<field id="sw_heating_rate" name="sw_heating_rate" long_name="shortwave_heating_rate" unit="K s-1" grid_ref="full_level_face_grid" />
-	<field id="lw_heating_rate" name="lw_heating_rate" long_name="longwave_heating_rate" unit="K s-1" grid_ref="full_level_face_grid" />
-	<field id="cos_zenith_angle" name="cos_zenith_angle" long_name="cosine_of_the_solar_zenith_angle" unit="1" domain_ref="face" />
-	<field id="lit_fraction" name="lit_fraction" long_name="sunlit_fraction_of_the_timestep" unit="1" domain_ref="face" />
-	<field id="lw_down_surf_rts" name="lw_down_surf_rts" long_name="surface_downward_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
-	<field id="sw_down_surf_rts" name="sw_down_surf_rts" long_name="surface_downward_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
-	<field id="sw_direct_surf_rts" name="sw_direct_surf_rts" long_name="surface_direct_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
-	<field id="sw_direct_toa_rts" name="sw_direct_toa_rts" long_name="toa_direct_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
-	<field id="sw_down_blue_surf_rts" name="sw_down_blue_surf_rts" long_name="surface_downward_0-690nm_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
-	<field id="sw_direct_blue_surf_rts" name="sw_direct_blue_surf_rts" long_name="surface_direct_0-690nm_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
-	<field id="sw_heating_rate_rts" name="sw_heating_rate_rts" long_name="shortwave_heating_rate_radiative_timestep" unit="K s-1" grid_ref="full_level_face_grid" />
-	<field id="lw_heating_rate_rts" name="lw_heating_rate_rts" long_name="longwave_heating_rate_radiative_timestep" unit="K s-1" grid_ref="full_level_face_grid" />
-	<field id="cos_zenith_angle_rts" name="cos_zenith_angle_rts" long_name="cosine_of_the_solar_zenith_angle_radiative_timestep" unit="1" domain_ref="face" />
-	<field id="lit_fraction_rts" name="lit_fraction_rts" long_name="sunlit_fraction_of_the_timestep_radiative_timestep" unit="1" domain_ref="face" />
-	<field id="stellar_irradiance_rts" name="stellar_irradiance_rts" long_name="stellar_irradiance_radiative_timestep" unit="1" domain_ref="face" />
-	<field id="cloud_cover_rts" name="cloud_cover_rts" long_name="total_column_cloud_fraction" unit="1" domain_ref="face" />
-        <field id="cloud_fraction_rts" name="cloud_fraction_rts" long_name="Total cloud fraction in layers" unit="1" grid_ref="full_level_face_grid" />
-        <field id="cloud_droplet_re_rts" name="cloud_droplet_re_rts" long_name="Cloud droplet effective radius" unit="m" grid_ref="full_level_face_grid" />
-        <field id="sw_aer_optical_depth_rts" name="sw_aer_optical_depth_rts" long_name="Aerosol optical depth in the visible" unit="1" grid_ref="full_level_face_grid" />
-        <field id="lw_aer_optical_depth_rts" name="lw_aer_optical_depth_rts" long_name="Aerosol optical depth in the infra-red" unit="1" grid_ref="full_level_face_grid" />
-	<field id="sin_stellar_declination_rts" name="sin_stellar_declination_rts" long_name="sin_stellar_declination" unit="1" domain_ref="face" />
-	<field id="stellar_eqn_of_time_rts" name="stellar_eqn_of_time_rts" long_name="stellar_equation_of_time" unit="1" domain_ref="face" />
-	<!-- stochastic physics fields -->
+	<field id="radiation__dtheta_rad" name="dtheta_rad" long_name="theta_increment_from_radiation" unit="K" grid_ref="full_level_face_grid" />
+	<field id="radiation__sw_temperature_incr" name="sw_temperature_incr" long_name="temperature_increment_from_sw_radiation" unit="K" grid_ref="full_level_face_grid" />
+	<field id="radiation__lw_temperature_incr" name="lw_temperature_incr" long_name="temperature_increment_from_lw_radiation" unit="K" grid_ref="full_level_face_grid" />
+	<field id="radiation__lw_down_surf" name="lw_down_surf" long_name="surface_downward_longwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_down_surf" name="sw_down_surf" long_name="surface_downward_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_direct_surf" name="sw_direct_surf" long_name="surface_direct_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_down_blue_surf" name="sw_down_blue_surf" long_name="surface_downward_0-690nm_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_direct_blue_surf" name="sw_direct_blue_surf" long_name="surface_direct_0-690nm_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_up_surf" name="lw_up_surf" long_name="surface_upward_longwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_up_surf" name="sw_up_surf" long_name="surface_upward_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_up_toa" name="lw_up_toa" long_name="toa_upward_longwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_up_toa" name="sw_up_toa" long_name="toa_upward_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_direct_toa" name="sw_direct_toa" long_name="toa_direct_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__cos_zenith_angle" name="cos_zenith_angle" long_name="cosine_of_the_solar_zenith_angle" unit="1" domain_ref="face" />
+	<field id="radiation__lit_fraction" name="lit_fraction" long_name="sunlit_fraction_of_the_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__sw_heating_rate" name="sw_heating_rate" long_name="shortwave_heating_rate" unit="K s-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__lw_heating_rate" name="lw_heating_rate" long_name="longwave_heating_rate" unit="K s-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__sw_up_tile" name="sw_up_tile" long_name="surface_upward_shortwave_flux_on_tiles" unit="W m-2" domain_ref="face" axis_ref="surface_tiles"/>
+	<field id="radiation__lw_net_surf" name="lw_net_surf" long_name="surface_net_longwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_net_surf" name="sw_net_surf" long_name="surface_net_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_diffuse_surf" name="sw_diffuse_surf" long_name="surface_diffuse_shortwave_flux" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_down_surf_rts" name="lw_down_surf_rts" long_name="surface_downward_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_down_surf_rts" name="sw_down_surf_rts" long_name="surface_downward_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_direct_surf_rts" name="sw_direct_surf_rts" long_name="surface_direct_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_down_blue_surf_rts" name="sw_down_blue_surf_rts" long_name="surface_downward_0-690nm_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_direct_blue_surf_rts" name="sw_direct_blue_surf_rts" long_name="surface_direct_0-690nm_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_up_surf_rts" name="lw_up_surf_rts" long_name="surface_upward_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_up_surf_rts" name="sw_up_surf_rts" long_name="surface_upward_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_up_toa_rts" name="lw_up_toa_rts" long_name="toa_upward_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_up_toa_rts" name="sw_up_toa_rts" long_name="toa_upward_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_direct_toa_rts" name="sw_direct_toa_rts" long_name="toa_direct_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__cos_zenith_angle_rts" name="cos_zenith_angle_rts" long_name="cosine_of_the_solar_zenith_angle_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__lit_fraction_rts" name="lit_fraction_rts" long_name="sunlit_fraction_of_the_timestep_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__stellar_irradiance_rts" name="stellar_irradiance_rts" long_name="stellar_irradiance_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__sin_stellar_declination_rts" name="sin_stellar_declination_rts" long_name="sin_stellar_declination_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__stellar_eqn_of_time_rts" name="stellar_eqn_of_time_rts" long_name="stellar_equation_of_time_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__sw_heating_rate_rts" name="sw_heating_rate_rts" long_name="shortwave_heating_rate_radiative_timestep" unit="K s-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__lw_heating_rate_rts" name="lw_heating_rate_rts" long_name="longwave_heating_rate_radiative_timestep" unit="K s-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__lw_net_surf_rts" name="lw_net_surf_rts" long_name="surface_net_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_net_surf_rts" name="sw_net_surf_rts" long_name="surface_net_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_diffuse_surf_rts" name="sw_diffuse_surf_rts" long_name="surface_diffuse_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__cloud_cover_rts" name="cloud_cover_rts" long_name="total_column_cloud_fraction_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__cloud_fraction_rts" name="cloud_fraction_rts" long_name="total_cloud_fraction_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__cloud_droplet_re_rts" name="cloud_droplet_re_rts" long_name="cloud_droplet_effective_radius_radiative_timestep" unit="m" grid_ref="full_level_face_grid" />
+	<field id="radiation__cloud_top_re_rts" name="cloud_top_re_rts" long_name="weighted_cloud_top_effective_radius_radiative_timestep" unit="m" domain_ref="face" />
+	<field id="radiation__cloud_top_weight_rts" name="cloud_top_weight_rts" long_name="cloud_top_weight_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__warm_cloud_top_re_rts" name="warm_cloud_top_re_rts" long_name="weighted_warm_cloud_top_effective_radius_radiative_timestep" unit="m" domain_ref="face" />
+	<field id="radiation__warm_cloud_top_weight_rts" name="warm_cloud_top_weight_rts" long_name="warm_cloud_top_weight_radiative_timestep" unit="1" domain_ref="face" />
+	<field id="radiation__liq_cloud_frac_rts" name="liq_cloud_frac_rts" long_name="liquid_cloud_fraction_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__liq_conv_frac_rts" name="liq_conv_frac_rts" long_name="liquid_convective_cloud_fraction_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__ice_cloud_frac_rts" name="ice_cloud_frac_rts" long_name="ice_cloud_fraction_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__ice_conv_frac_rts" name="ice_conv_frac_rts" long_name="ice_convective_cloud_fraction_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__liq_cloud_mmr_rts" name="liq_cloud_mmr_rts" long_name="liquid_cloud_mmr_radiative_timestep" unit="kg kg-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__liq_conv_mmr_rts" name="liq_conv_mmr_rts" long_name="liquid_convective_cloud_mmr_radiative_timestep" unit="kg kg-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__ice_cloud_mmr_rts" name="ice_cloud_mmr_rts" long_name="ice_cloud_mmr_radiative_timestep" unit="kg kg-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__ice_conv_mmr_rts" name="ice_conv_mmr_rts" long_name="ice_convective_cloud_mmr_radiative_timestep" unit="kg kg-1" grid_ref="full_level_face_grid" />
+	<field id="radiation__liq_cloud_path_rts" name="liq_cloud_path_rts" long_name="liquid_water_path_radiative_timestep" unit="kg m-2" domain_ref="face" />
+	<field id="radiation__ice_cloud_path_rts" name="ice_cloud_path_rts" long_name="ice_water_path_radiative_timestep" unit="kg m-2" domain_ref="face" />
+	<field id="radiation__sw_aer_optical_depth_rts" name="sw_aer_optical_depth_rts" long_name="aerosol_optical_depth_in_visible_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__lw_aer_optical_depth_rts" name="lw_aer_optical_depth_rts" long_name="aerosol_optical_depth_in_infra-red_radiative_timestep" unit="1" grid_ref="full_level_face_grid" />
+	<field id="radiation__sw_direct_rts" name="sw_direct_rts" long_name="direct_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__sw_down_rts" name="sw_down_rts" long_name="downward_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__sw_up_rts" name="sw_up_rts" long_name="upward_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__lw_down_rts" name="lw_down_rts" long_name="downward_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__lw_up_rts" name="lw_up_rts" long_name="upward_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__sw_direct_clear_rts" name="sw_direct_clear_rts" long_name="direct_clear_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__sw_down_clear_rts" name="sw_down_clear_rts" long_name="downward_clear_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__sw_up_clear_rts" name="sw_up_clear_rts" long_name="upward_clear_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__lw_down_clear_rts" name="lw_down_clear_rts" long_name="downward_clear_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__lw_up_clear_rts" name="lw_up_clear_rts" long_name="upward_clear_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" axis_ref="radiation_levels" />
+	<field id="radiation__sw_down_clear_surf_rts" name="sw_down_clear_surf_rts" long_name="surface_downward_clear_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_up_clear_surf_rts" name="sw_up_clear_surf_rts" long_name="surface_upward_clear_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__sw_up_clear_toa_rts" name="sw_up_clear_toa_rts" long_name="toa_upward_clear_shortwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_down_clear_surf_rts" name="lw_down_clear_surf_rts" long_name="surface_downward_clear_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_up_clear_surf_rts" name="lw_up_clear_surf_rts" long_name="surface_upward_clear_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<field id="radiation__lw_up_clear_toa_rts" name="lw_up_clear_toa_rts" long_name="toa_upward_clear_longwave_flux_radiative_timestep" unit="W m-2" domain_ref="face" />
+	<!-- Stochastic Physics fields -->
 	<field id="fp_spt" name="fp_spt" long_name="SPT forcing pattern" unit="1" grid_ref="full_level_face_grid" />
 	<field id="dtheta_spt" name="dtheta_spt" long_name="SPT potential temperature forcing" unit="K" grid_ref="full_level_face_grid" />
 	<field id="dmv_spt" name="dmv_spt" long_name="SPT water vapour increment" unit="kg/kg" grid_ref="full_level_face_grid" />
@@ -759,12 +812,16 @@
 	<field id="restart_lw_down_surf_rts" name="lw_down_surf_rts" long_name="surface_downward_longwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
 	<field id="restart_sw_down_surf_rts" name="sw_down_surf_rts" long_name="surface_downward_shortwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
 	<field id="restart_sw_direct_surf_rts" name="sw_direct_surf_rts" long_name="surface_direct_shortwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
-	<field id="restart_sw_direct_toa_rts" name="sw_direct_toa_rts" long_name="toa_direct_shortwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
 	<field id="restart_sw_down_blue_surf_rts" name="sw_down_blue_surf_rts" long_name="surface_downward_0-690nm_flux" unit="W m-2" operation="instant" domain_ref="face" />
 	<field id="restart_sw_direct_blue_surf_rts" name="sw_direct_blue_surf_rts" long_name="surface_direct_0-690nm_flux" unit="W m-2" operation="instant" domain_ref="face" />
         <field id="restart_lw_up_tile_rts" name="lw_up_tile_rts" long_name="surface_upward_longwave_flux_on_tiles" unit="W m-2" operation="instant" domain_ref="face" axis_ref="surface_tiles" />
         <field id="restart_sw_up_tile_rts" name="sw_up_tile_rts" long_name="surface_upward_shortwave_flux_on_tiles" unit="W m-2" operation="instant" domain_ref="face" axis_ref="surface_tiles" />
         <field id="restart_sw_up_blue_tile_rts" name="sw_up_blue_tile_rts" long_name="surface_upward_0-690nm_flux_on_tiles" unit="W m-2" operation="instant" domain_ref="face" axis_ref="surface_tiles" />
+	<field id="restart_lw_up_surf_rts" name="lw_up_surf_rts" long_name="surface_upward_longwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
+	<field id="restart_sw_up_surf_rts" name="sw_up_surf_rts" long_name="surface_upward_shortwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
+	<field id="restart_lw_up_toa_rts" name="lw_up_toa_rts" long_name="toa_upward_longwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
+	<field id="restart_sw_up_toa_rts" name="sw_up_toa_rts" long_name="toa_upward_shortwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
+	<field id="restart_sw_direct_toa_rts" name="sw_direct_toa_rts" long_name="toa_direct_shortwave_flux" unit="W m-2" operation="instant" domain_ref="face" />
 	<field id="restart_sw_heating_rate_rts" name="sw_heating_rate_rts" long_name="shortwave_heating_rate" unit="K s-1" operation="instant" grid_ref="full_level_face_grid" />
 	<field id="restart_lw_heating_rate_rts" name="lw_heating_rate_rts" long_name="longwave_heating_rate" unit="K s-1" operation="instant" grid_ref="full_level_face_grid" />
 	<field id="restart_cos_zenith_angle_rts" name="cos_zenith_angle_rts" long_name="cosine_of_the_solar_zenith_angle" unit="1" operation="instant" domain_ref="face" />
@@ -846,12 +903,27 @@
 	<field field_ref="surface__tile_moisture_flux"/>
 	<field field_ref="surface__tile_fraction"/>
 	<field field_ref="surface__tile_temperature"/>
-	<field field_ref="sw_down_surf"/>
-	<field field_ref="sw_heating_rate"/>
-	<field field_ref="cloud_cover_rts"/>
-	<field field_ref="cloud_fraction_rts"/>
-	<field field_ref="cloud_droplet_re_rts"/>
-	<field field_ref="lw_down_surf"/>
+	<field field_ref="radiation__sw_down_surf"/>
+	<field field_ref="radiation__lw_down_surf"/>
+	<field field_ref="radiation__sw_direct_toa"/>
+	<field field_ref="radiation__lw_up_toa"/>
+	<field field_ref="radiation__sw_heating_rate"/>
+	<field field_ref="radiation__lw_heating_rate"/>
+	<field field_ref="radiation__cloud_cover_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__cloud_fraction_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__cloud_droplet_re_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_net_surf_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_direct_toa_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_up_toa_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_up_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_up_clear_toa_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_down_clear_surf_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__sw_up_clear_surf_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__lw_net_surf_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__lw_up_toa_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__lw_up_clear_toa_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__lw_down_clear_surf_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__lw_up_clear_surf_rts" freq_offset="-2ts"/>
 	<field field_ref="trop_level"/>
 	<field field_ref="h2o2"/>
 	<field field_ref="dms"/>
@@ -908,8 +980,8 @@
 	<field field_ref="drydp_acc_ins"/>
 	<field field_ref="drydp_cor_ins"/>
 	<field field_ref="cloud_drop_no_conc"/>
-	<field field_ref="sw_aer_optical_depth_rts"/>
-	<field field_ref="lw_aer_optical_depth_rts"/>
+	<field field_ref="radiation__sw_aer_optical_depth_rts" freq_offset="-2ts"/>
+	<field field_ref="radiation__lw_aer_optical_depth_rts" freq_offset="-2ts"/>
       </file>
 
       <file id="lfric_averages" name="lfric_averages" output_freq="12h" convention="UGRID" enabled=".TRUE.">
