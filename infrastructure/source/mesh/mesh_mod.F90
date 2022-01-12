@@ -76,6 +76,9 @@ module mesh_mod
     !  (0.0 for planar meshes, scaled_radius for cubedsphere)
     real(r_def) :: domain_bottom
 
+    !> Label for the type of extrusion the mesh has
+    integer(i_def) :: extrusion_id
+
     !> Non-dimensional vertical coordinate eta[0,1], eta(0:nlayers)
     real(r_def), allocatable :: eta(:)
 
@@ -205,6 +208,7 @@ module mesh_mod
     procedure, public :: get_vert_on_cell
     procedure, public :: get_domain_size
     procedure, public :: get_domain_top
+    procedure, public :: get_extrusion_id
     procedure, public :: get_dz
     procedure, public :: get_eta
     procedure, public :: get_vertex_cell_owner
@@ -379,6 +383,7 @@ contains
     self%ncells_with_ghost    = self%ncells_2d_with_ghost * self%nlayers
     self%domain_top           = extrusion%get_atmosphere_top()
     self%domain_bottom        = extrusion%get_atmosphere_bottom()
+    self%extrusion_id         = extrusion%get_id()
     self%ncolours             = -1     ! Initialise ncolours to error status
 
     allocate( self%eta ( 0:self%nlayers ) )
@@ -1086,6 +1091,18 @@ contains
 
   end function get_domain_top
 
+  !> @details Returns the identifier for the type of extrusion the mesh has
+  !> @return  Extrusion ID
+  !============================================================================
+  function get_extrusion_id(self) result (extrusion_id)
+
+    implicit none
+    class (mesh_type), intent(in) :: self
+    integer(i_def)                :: extrusion_id
+
+    extrusion_id = self%extrusion_id
+
+  end function get_extrusion_id
 
   !> @details This functions returns an array of 3d-layer thicknesses in
   !>          metres
@@ -2171,7 +2188,7 @@ contains
     !    +---+---+---+
     !
 
-    use extrusion_mod,         only : uniform_extrusion_type
+    use extrusion_mod,         only : uniform_extrusion_type, PRIME_EXTRUSION
     use reference_element_mod, only : reference_cube_type
 
     implicit none
@@ -2261,7 +2278,8 @@ contains
     ! Hard wires for uniform vertical grid on planar mesh.
     extrusion = uniform_extrusion_type( 0.0_r_def,       &
                                         self%domain_top, &
-                                        self%nlayers )
+                                        self%nlayers,    &
+                                        PRIME_EXTRUSION )
     call extrusion%extrude( self%eta )
 
     self%vert_cell_owner (:,:) = reshape( [ &

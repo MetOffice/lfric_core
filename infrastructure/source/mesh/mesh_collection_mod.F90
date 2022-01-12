@@ -41,8 +41,10 @@ module mesh_collection_mod
 
     procedure, public :: get_mesh_by_name
     procedure, public :: get_mesh_by_id
-    generic,   public :: get_mesh => get_mesh_by_id, &
-                                     get_mesh_by_name
+    procedure, public :: get_mesh_variant
+    generic,   public :: get_mesh => get_mesh_by_id,   &
+                                     get_mesh_by_name, &
+                                     get_mesh_variant
 
     procedure, public :: check_for
     procedure, public :: clear
@@ -214,7 +216,6 @@ function get_mesh_by_id( self, mesh_id ) result( mesh )
   nullify(loop)
 
 end function get_mesh_by_id
-
 
 !===========================================================================
 !> @brief Queries the collection as to the presence of a
@@ -388,6 +389,75 @@ function get_mesh_id( self, mesh_name ) result( mesh_id )
 
   return
 end function get_mesh_id
+
+
+!===========================================================================
+!> @brief Returns variant of given mesh with common local mesh.
+!>
+!> @param[in] mesh            Given mesh with desired common local mesh.
+!> @param[in] extrusion_id    Enumerated extrusion id of desired mesh.
+!>
+!> @return    new_mesh       The desired mesh.
+!>
+function get_mesh_variant( self, mesh, extrusion_id )  result( variant_mesh )
+
+  implicit none
+
+  class(mesh_collection_type), intent(in) :: self
+  type(mesh_type),             intent(in) :: mesh
+  integer(i_def),              intent(in) :: extrusion_id
+
+  integer(i_def)                 :: variant_local_mesh_id, local_mesh_id
+  integer(i_def)                 :: n_meshes, i
+  type(mesh_type),       pointer :: variant_mesh
+  type(local_mesh_type), pointer :: variant_local_mesh, local_mesh
+
+  ! Pointer to linked list - used for looping through the list
+  type(linked_list_item_type), pointer :: loop => null()
+
+  n_meshes = self%mesh_list%get_length()
+
+  local_mesh => mesh%get_local_mesh()
+  local_mesh_id = local_mesh%get_id()
+
+  if (n_meshes > 0) then
+
+    variant_mesh => null()
+
+    ! Start at the head of the collection's linked-list
+    loop => self%mesh_list%get_head()
+
+    do i = 1, n_meshes
+      ! If list is empty or we're at the end of list
+      ! and we didn't find a mesh, return a null pointer
+      if ( .not. associated(loop) ) then
+        nullify(variant_mesh)
+        exit
+      end if
+
+      select type(m => loop%payload)
+        type is (mesh_type)
+          variant_mesh => m
+          variant_local_mesh => variant_mesh%get_local_mesh()
+          variant_local_mesh_id = variant_local_mesh%get_id()
+
+          if (local_mesh_id == variant_local_mesh_id .and. &
+              extrusion_id == variant_mesh%get_extrusion_id()) then
+            exit
+          end if
+      end select
+
+      loop => loop%next
+    end do
+
+    nullify(loop)
+    nullify(local_mesh)
+    nullify(variant_local_mesh)
+
+  end if
+
+  return
+end function get_mesh_variant
 
 
 !===========================================================================

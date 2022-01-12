@@ -27,6 +27,12 @@ module extrusion_mod
 
   private
 
+  ! Enumerators for different extrusion types
+  integer(i_def), parameter, public :: PRIME_EXTRUSION = 8881
+  integer(i_def), parameter, public :: TWOD = 6424
+  integer(i_def), parameter, public :: SHIFTED = 1298
+  integer(i_def), parameter, public :: DOUBLE_LEVEL = 734
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief All extrusion implementations inherit from this class.
   !>
@@ -37,6 +43,7 @@ module extrusion_mod
     real(r_def)    :: atmosphere_bottom
     real(r_def)    :: atmosphere_top
     integer(i_def) :: number_of_layers
+    integer(i_def) :: extrusion_id
 
   contains
 
@@ -45,6 +52,7 @@ module extrusion_mod
     procedure, public :: get_atmosphere_bottom
     procedure, public :: get_atmosphere_top
     procedure, public :: get_number_of_layers
+    procedure, public :: get_id
     procedure(extrude_method), public, deferred :: extrude
 
     procedure, public :: extrusion_constructor
@@ -148,23 +156,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New uniform_extrusion_type object.
   !>
   function uniform_extrusion_constructor( atmosphere_bottom, &
                                           atmosphere_top,    &
-                                          number_of_layers ) result(new)
+                                          number_of_layers,  &
+                                          extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(uniform_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function uniform_extrusion_constructor
 
@@ -193,23 +204,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New quadratic_extrusion_type object.
   !>
   function quadratic_extrusion_constructor( atmosphere_bottom, &
                                             atmosphere_top,    &
-                                            number_of_layers ) result(new)
+                                            number_of_layers,  &
+                                            extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(quadratic_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function quadratic_extrusion_constructor
 
@@ -240,23 +254,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New geometric_extrusion_type object.
   !>
   function geometric_extrusion_constructor( atmosphere_bottom, &
                                             atmosphere_top,    &
-                                            number_of_layers ) result(new)
+                                            number_of_layers,  &
+                                            extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(geometric_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function geometric_extrusion_constructor
 
@@ -297,9 +314,10 @@ contains
     class(extrusion_type), target, intent(in) :: extrusion
     type(shifted_extrusion_type)              :: new
 
-    call new%extrusion_constructor( extrusion%atmosphere_bottom, &
-                                    extrusion%atmosphere_top,    &
-                                    extrusion%number_of_layers + 1 )
+    call new%extrusion_constructor( extrusion%atmosphere_bottom,    &
+                                    extrusion%atmosphere_top,       &
+                                    extrusion%number_of_layers + 1, &
+                                    SHIFTED )
 
     new%base_extrusion => extrusion
 
@@ -349,7 +367,7 @@ contains
 
     call new%extrusion_constructor( extrusion%atmosphere_bottom, &
                                     extrusion%atmosphere_top,    &
-                                    nlayers_dl )
+                                    nlayers_dl, DOUBLE_LEVEL )
 
     new%base_extrusion => extrusion
 
@@ -397,11 +415,13 @@ contains
   !>                               in meters.
   !> @param [in] atmosphere_top Top of the atmosphere in meters.
   !> @param [in] number_of_layers Number of layers to split atmosphere into.
+  !> @param [in] extrusion_id  Enumeration for the type of extrusion.
   !>
   subroutine extrusion_constructor( this,              &
                                     atmosphere_bottom, &
                                     atmosphere_top,    &
-                                    number_of_layers )
+                                    number_of_layers,  &
+                                    extrusion_id )
 
     implicit none
 
@@ -409,10 +429,12 @@ contains
     real(r_def),           intent(in) :: atmosphere_bottom
     real(r_def),           intent(in) :: atmosphere_top
     integer(i_def),        intent(in) :: number_of_layers
+    integer(i_def),        intent(in) :: extrusion_id
 
     this%atmosphere_bottom = atmosphere_bottom
     this%atmosphere_top    = atmosphere_top
     this%number_of_layers  = number_of_layers
+    this%extrusion_id      = extrusion_id
 
   end subroutine extrusion_constructor
 
@@ -463,6 +485,22 @@ contains
     layers = this%number_of_layers
 
   end function get_number_of_layers
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Gets the identifier of the type of extrusion.
+  !>
+  !> @return The extrusion ID.
+  !>
+  function get_id( this ) result(extrusion_id)
+
+    implicit none
+
+    class(extrusion_type), intent(in) :: this
+    integer(i_def) :: extrusion_id
+
+    extrusion_id = this%extrusion_id
+
+  end function get_id
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Helper function for generating geometric extrusion

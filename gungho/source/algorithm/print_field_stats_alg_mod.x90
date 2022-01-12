@@ -27,6 +27,7 @@ contains
 subroutine print_field_stats_alg(field, level, printmin, printmax, name)
 
   use field_mod,               only: field_type
+  use mesh_mod,                only: mesh_type
   use constants_mod,           only: r_def, str_def, i_def, radians_to_degrees,&
                                      rmdi
   use log_mod,                 only: log_event, log_level, log_scratch_space
@@ -35,6 +36,7 @@ subroutine print_field_stats_alg(field, level, printmin, printmax, name)
   use fs_continuity_mod,       only: W3, Wtheta
   use geometric_constants_mod, only: get_latitude, get_longitude, get_height
   use field_stats_kernel_mod,  only: field_stats_kernel_type
+  use extrusion_mod,           only: TWOD
 
   implicit none
 
@@ -47,9 +49,11 @@ subroutine print_field_stats_alg(field, level, printmin, printmax, name)
   real(r_def)        :: fmin, fmax, gmax_lev, gmin_lev, gmax_count, gmin_count,&
                         gmax_lat, gmin_lat, gmax_lon, gmin_lon, gmax_height,   &
                         gmin_height, minval, maxval
-  character(str_def) :: field_name, mesh_name
+  character(str_def) :: field_name
   type(field_type)   :: max_lev, min_lev, max_count, min_count, max_lat, &
                         min_lat, max_lon, min_lon, max_height, min_height
+  type( mesh_type ),  pointer :: mesh => null()
+  type( mesh_type ),  pointer :: twod_mesh => null()
   type( field_type ), pointer :: latitude  => null()
   type( field_type ), pointer :: longitude => null()
   type( field_type ), pointer :: height    => null()
@@ -86,9 +90,12 @@ subroutine print_field_stats_alg(field, level, printmin, printmax, name)
 
       if (fmin <= minval .or. fmax >= maxval) then
 
-        mesh_id = field%get_mesh_id()
-        mesh_name = trim(prime_mesh_name)//'_2d'
-        twod_mesh_id = mesh_collection%get_mesh_id(mesh_name)
+        mesh => field%get_mesh()
+        twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
+        mesh_id = mesh%get_id()
+        twod_mesh_id = twod_mesh%get_id()
+
+        nullify(mesh, twod_mesh)
 
         latitude  => get_latitude(twod_mesh_id)
         longitude => get_longitude(twod_mesh_id)

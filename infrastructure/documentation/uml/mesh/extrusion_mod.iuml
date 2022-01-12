@@ -2,9 +2,12 @@ abstract class extrusion_mod::extrusion_type {
   atmosphere_bottom: real
   atmosphere_top: real
   number_of_layers: integer
+  extrusion_id: integer
 
   +{abstract}extrude( <<out>>chi:real[] )
-  -extrusion_constructor( <<in>>atmosphere_bottom: real, <<in>>atmosphere_top: real, <<in>>number_of_layers: integer )
+  -extrusion_constructor( <<in>>atmosphere_bottom: real, <<in>>atmosphere_top: real, <<in>>number_of_layers: integer, <<in>>extrusion_id: integer )
+
+  +get_id(): integer
 }
 
 class extrusion_mod::uniform_extrusion_type {

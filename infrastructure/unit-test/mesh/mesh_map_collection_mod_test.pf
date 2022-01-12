@@ -10,7 +10,7 @@ module mesh_map_collection_mod_test
 
   use constants_mod,              only: r_def, i_def, IMDI, &
                                         str_max_filename, str_def
-  use extrusion_mod,              only: uniform_extrusion_type
+  use extrusion_mod,              only: uniform_extrusion_type, PRIME_EXTRUSION
   use global_mesh_mod,            only: global_mesh_type
   use local_mesh_mod,             only: local_mesh_type
   use mesh_map_collection_mod,    only: mesh_map_collection_type
@@ -91,7 +91,8 @@ contains
     npanels = 6
 
     ! Extrussion to be used for all meshes
-    extrusion = uniform_extrusion_type( radius, domain_top, nlayers )
+    extrusion = uniform_extrusion_type( radius, domain_top, nlayers, &
+                                        PRIME_EXTRUSION )
 
     ! Get coarse mesh
     name = 'C4'

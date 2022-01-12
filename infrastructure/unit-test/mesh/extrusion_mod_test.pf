@@ -43,7 +43,7 @@ contains
   @test
   subroutine test_uniform( this )
 
-    use extrusion_mod, only : uniform_extrusion_type
+    use extrusion_mod, only : uniform_extrusion_type, PRIME_EXTRUSION
 
     implicit none
 
@@ -58,13 +58,15 @@ contains
     type(uniform_extrusion_type) :: unit_under_test
     real(r_def)                  :: eta(0:layers)
 
-    unit_under_test = uniform_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    unit_under_test = uniform_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                              PRIME_EXTRUSION )
 
     ! Test the constructor. This need be done in only one of the child tests.
     !
     @assertEqual( 1.0_r_def, unit_under_test%get_atmosphere_bottom() )
     @assertEqual( 2.0_r_def, unit_under_test%get_atmosphere_top() )
     @assertEqual( layers,    unit_under_test%get_number_of_layers() )
+    @assertEqual( PRIME_EXTRUSION, unit_under_test%get_id() )
 
     ! Now test the extrusion
     call unit_under_test%extrude( eta )
@@ -78,7 +80,8 @@ contains
   subroutine test_shifted_uniform( this )
 
     use extrusion_mod, only : uniform_extrusion_type, &
-                              shifted_extrusion_type
+                              shifted_extrusion_type, &
+                              PRIME_EXTRUSION, SHIFTED
 
     implicit none
 
@@ -95,8 +98,12 @@ contains
     real(r_def)                  :: eta(0:layers+1)
 
     ! Make a base uniform extrusion
-    base_extrusion  = uniform_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    base_extrusion  = uniform_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                              PRIME_EXTRUSION )
     unit_under_test = shifted_extrusion_type( base_extrusion )
+
+    ! Test that the label is the shifted label for the constructor
+    @assertEqual( SHIFTED, unit_under_test%get_id() )
 
     ! Now test the extrusion
     call unit_under_test%extrude( eta )
@@ -109,7 +116,7 @@ contains
   @test
   subroutine test_quadratic( this )
 
-    use extrusion_mod, only : quadratic_extrusion_type
+    use extrusion_mod, only : quadratic_extrusion_type, PRIME_EXTRUSION
 
     implicit none
 
@@ -122,9 +129,10 @@ contains
     real(r_def),    parameter :: tolerance = 0.001_r_def
 
     type(quadratic_extrusion_type) :: unit_under_test
-    real(r_def)                  :: eta(0:layers)
+    real(r_def)                    :: eta(0:layers)
 
-    unit_under_test = quadratic_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    unit_under_test = quadratic_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                                PRIME_EXTRUSION )
 
     call unit_under_test%extrude( eta )
     @assertEqual( expected, eta, tolerance )
@@ -137,7 +145,8 @@ contains
   subroutine test_shifted_quadratic( this )
 
     use extrusion_mod, only : quadratic_extrusion_type, &
-                              shifted_extrusion_type
+                              shifted_extrusion_type,   &
+                              PRIME_EXTRUSION
 
     implicit none
 
@@ -153,7 +162,8 @@ contains
     type(shifted_extrusion_type)   :: unit_under_test
     real(r_def)                    :: eta(0:layers+1)
 
-    base_extrusion = quadratic_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    base_extrusion = quadratic_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                               PRIME_EXTRUSION )
     unit_under_test = shifted_extrusion_type( base_extrusion )
 
     call unit_under_test%extrude( eta )
@@ -166,7 +176,8 @@ contains
   @test
   subroutine test_geometric( this )
 
-    use extrusion_mod, only : geometric_extrusion_type
+    use extrusion_mod, only : geometric_extrusion_type, &
+                              PRIME_EXTRUSION
 
     implicit none
 
@@ -181,7 +192,8 @@ contains
     type(geometric_extrusion_type) :: unit_under_test
     real(r_def)                  :: eta(0:layers)
 
-    unit_under_test = geometric_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    unit_under_test = geometric_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                                PRIME_EXTRUSION )
 
     call unit_under_test%extrude( eta )
     @assertEqual( expected, eta, tolerance )
@@ -193,7 +205,8 @@ contains
   subroutine test_shifted_geometric( this )
 
     use extrusion_mod, only : geometric_extrusion_type, &
-                              shifted_extrusion_type
+                              shifted_extrusion_type,   &
+                              PRIME_EXTRUSION
 
     implicit none
 
@@ -209,7 +222,8 @@ contains
     type(shifted_extrusion_type)   :: unit_under_test
     real(r_def)                    :: eta(0:layers+1)
 
-    base_extrusion = geometric_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    base_extrusion = geometric_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                               PRIME_EXTRUSION )
     unit_under_test = shifted_extrusion_type( base_extrusion )
 
     call unit_under_test%extrude( eta )

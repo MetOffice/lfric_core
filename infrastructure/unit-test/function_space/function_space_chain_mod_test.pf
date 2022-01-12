@@ -89,7 +89,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine setUp( this )
 
-use extrusion_mod, only: uniform_extrusion_type
+use extrusion_mod, only: uniform_extrusion_type, PRIME_EXTRUSION
 use ncdf_quad_mod, only: ncdf_quad_type
 
 implicit none
@@ -197,7 +197,8 @@ end do
 call file_handler%file_close()
 
 ! Create the 3d partitioned meshes
-extrusion = uniform_extrusion_type( radius, domain_top, nlayers )
+extrusion = uniform_extrusion_type( radius, domain_top, nlayers, &
+                                    PRIME_EXTRUSION )
 do i=1, size(mesh_names)
   global_mesh_ptr => global_mesh_collection % get_global_mesh (mesh_names(i))
   source_local_mesh_ptr => local_mesh_collection % get_local_mesh (mesh_names(i))

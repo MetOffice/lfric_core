@@ -9,7 +9,7 @@
 module mesh_collection_mod_test
 
     use constants_mod,        only : i_def, r_def, str_def, l_def
-    use extrusion_mod,        only : uniform_extrusion_type
+    use extrusion_mod,        only : uniform_extrusion_type, PRIME_EXTRUSION
     use global_mesh_mod,      only : global_mesh_type
     use partition_mod,        only : partition_type
     use global_mesh_collection_mod,                                         &
@@ -73,7 +73,8 @@ contains
     call this%local_mesh%init_cell_owner()
     this%extrusion   = uniform_extrusion_type( domain_bottom, &
                                                domain_top,    &
-                                               nlayers )
+                                               nlayers,       &
+                                               PRIME_EXTRUSION )
 
   end subroutine setUp
 
@@ -126,6 +127,7 @@ contains
     character(str_def), allocatable :: test_character_array(:)
 
     type(mesh_type), pointer :: mesh_by_name => null()
+    type(mesh_type), pointer :: mesh_variant => null()
 
     ! Create a mesh collection
     mesh_collection = mesh_collection_type()
@@ -174,6 +176,13 @@ contains
 
     ! Check it's the same mesh as the one extracted by id
     @assertTrue(associated( mesh_by_name, mesh_ptr ))
+
+    ! Check you can extract mesh variant
+    mesh_variant => mesh_collection % get_mesh(mesh_ptr, PRIME_EXTRUSION)
+    @assertAssociated( mesh_variant )
+
+    ! Check it's the same mesh as the one extracted by id
+    @assertTrue(associated( mesh_variant, mesh_ptr ))
 
     call mesh_collection%clear()
 

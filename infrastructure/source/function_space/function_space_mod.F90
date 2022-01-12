@@ -29,7 +29,7 @@ module function_space_mod
                                    levels_setup
   use linked_list_data_mod, only : linked_list_data_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
-  use mesh_collection_mod, only : mesh_collection
+  use mesh_collection_mod,  only : mesh_collection
 
   implicit none
 

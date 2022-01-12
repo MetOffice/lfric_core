@@ -20,7 +20,8 @@ class mesh_collection_mod::mesh_collection_type {
   +get_mesh_id(<<in>>mesh_name:string): integer
   +get_mesh_by_id( <<in>>mesh_id: integer ): mesh_type <<pointer>>
   +get_mesh_by_name( <<in>>mesh_name: string ): mesh_type <<pointer>>
-  +get_mesh() <<generic>>: get_mesh_by_id(...), get_mesh_by_name(...)
+  +get_mesh_variant( <<in>>mesh: mesh_type, <<in>> extrusion_id: integer ): mesh_type <<pointer>>
+  +get_mesh() <<generic>>: get_mesh_by_id(...), get_mesh_by_name(...), get_mesh_variant(...)
   +check_for( <<in>>mesh_name:string ): logical
 
 }

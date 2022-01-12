@@ -35,8 +35,6 @@ module runtime_constants_mod
   ! Public functions to create and access the module contents
   public :: create_runtime_constants
   public :: final_runtime_constants
-  public :: get_shifted_mesh_id
-  public :: get_double_level_mesh_id
 
 contains
   !>@brief Subroutine to create the runtime constants
@@ -284,29 +282,6 @@ contains
     if ( subroutine_timers ) call timer('runtime_constants_alg')
 
   end subroutine create_runtime_constants
-
-  ! The advection scheme specifically needs access to this for now
-  ! This has been lifted out of geometric_constants
-  ! TODO: Find a way to remove this. This should be dealt with in #2580
-  !> @brief Returns a pointer to the shifted mesh id
-  !> @return The shifted mesh id
-  function get_shifted_mesh_id() result(our_mesh_id)
-    implicit none
-    integer(kind=i_def), pointer :: our_mesh_id
-
-    our_mesh_id => global_shifted_mesh_id
-  end function get_shifted_mesh_id
-
-  ! The advection scheme specifically needs access to this for now
-  ! TODO: Find a way to remove this. This should be dealt with in #2580
-  !> @brief Returns a pointer to the double layer mesh id
-  !> @return The double layer mesh id
-  function get_double_level_mesh_id() result(our_mesh_id)
-    implicit none
-    integer(kind=i_def), pointer :: our_mesh_id
-
-    our_mesh_id => global_double_level_mesh_id
-  end function get_double_level_mesh_id
 
 
   !> @brief Explicitly reclaim memory from module scope variables

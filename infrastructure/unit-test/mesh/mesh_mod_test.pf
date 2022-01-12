@@ -9,7 +9,7 @@ module mesh_mod_test
 
   use constants_mod,        only: r_def, i_def, PI, str_max_filename, str_def
   use coord_transform_mod,  only: llr2xyz
-  use extrusion_mod,        only: uniform_extrusion_type
+  use extrusion_mod,        only: uniform_extrusion_type, PRIME_EXTRUSION
   use global_mesh_collection_mod,                              &
                             only: global_mesh_collection_type, &
                                   global_mesh_collection
@@ -192,7 +192,8 @@ contains
     call this%local_mesh%init_cell_owner()
 
     scaled_radius = radius/scaling
-    this%extrusion = uniform_extrusion_type( scaled_radius, domain_top, nlayers )
+    this%extrusion = uniform_extrusion_type( scaled_radius, domain_top, &
+                                             nlayers, PRIME_EXTRUSION )
 
   end subroutine setUp
 
@@ -618,6 +619,11 @@ contains
     test_integer=( mesh_1%get_gid_from_lid( 1 ) )
     @assertEqual( 1, test_integer )
 
+    !-------------------------------------------------------------------
+    ! Test get_extrusion_id
+    test_integer=( mesh_1%get_extrusion_id() )
+    @assertEqual( PRIME_EXTRUSION, test_integer )
+
   end subroutine test_get_integer
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -829,7 +835,8 @@ contains
     end do
 
     ! Create the 3d partitioned meshes
-    extrusion = uniform_extrusion_type( radius, domain_top, nlayers )
+    extrusion = uniform_extrusion_type( radius, domain_top, nlayers, &
+                                        PRIME_EXTRUSION )
     do i=1, size(mesh_names)
       global_mesh_ptr => global_mesh_collection % get_global_mesh (mesh_names(i))
       source_local_mesh_ptr => local_mesh_collection % get_local_mesh (mesh_names(i))

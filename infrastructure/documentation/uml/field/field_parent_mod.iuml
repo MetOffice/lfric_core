@@ -35,7 +35,7 @@ abstract class field_parent_mod::field_parent_proxy_type {
   +cpl_id : integer[]
 
   +max_halo_depth() : integer
-  +get_halo_routing( ) halo_routing: halo_routing_type <<pointer>> 
+  +get_halo_routing( ) halo_routing: halo_routing_type <<pointer>>
   +is_dirty( <<in>>depth: integer ) : logical
   +set_dirty()
   +set_clean( <<in>>depth: integer )

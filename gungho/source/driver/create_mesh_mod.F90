@@ -805,6 +805,7 @@ subroutine create_all_3D_meshes( create_2d_mesh,                  &
                                  create_multires_coupling_meshes, &
                                  multires_coupling_mesh_tags )
 
+  use extrusion_mod,           only: TWOD, SHIFTED, DOUBLE_LEVEL
   use extrusion_config_mod,    only: domain_top
   use gungho_extrusion_mod,    only: create_extrusion,         &
                                      create_shifted_extrusion, &
@@ -843,12 +844,13 @@ subroutine create_all_3D_meshes( create_2d_mesh,                  &
                        extrusion )
 
   ! 2.0 Generate addition 3d mesh partitions based on the prime mesh
-  ! NOTE: This includes 2D meshes as they are currently impplemented
+  ! NOTE: This includes 2D meshes as they are currently implemented
   !       as a 3D mesh of 1-layer thick.
   if (create_2d_mesh) then
     extrusion_2d = uniform_extrusion_type( atmos_bottom, &
                                            domain_top,   &
-                                           one_layer )
+                                           one_layer,    &
+                                           TWOD )
 
     mesh_name = trim(prime_mesh_name)//'_2d'
 

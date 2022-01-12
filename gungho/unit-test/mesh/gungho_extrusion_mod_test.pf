@@ -7,7 +7,7 @@
 module gungho_extrusion_mod_test
 
   use constants_mod,           only : i_def, r_def
-  use extrusion_mod,           only : extrusion_type
+  use extrusion_mod,           only : extrusion_type, PRIME_EXTRUSION
   use gungho_extrusion_mod,    only : create_extrusion
   use feign_config_mod,        only : feign_base_mesh_config, &
                                       feign_extrusion_config, &
@@ -183,7 +183,8 @@ contains
     type(dcmip_extrusion_type) :: unit_under_test
     real(r_def)                :: eta(0:layers)
 
-    unit_under_test = dcmip_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    unit_under_test = dcmip_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                            PRIME_EXTRUSION )
 
     call unit_under_test%extrude( eta )
     @assertEqual( expected, eta, tolerance )
@@ -211,7 +212,8 @@ contains
     type(shifted_extrusion_type) :: unit_under_test
     real(r_def)                  :: eta(0:layers+1)
 
-    base_extrusion = dcmip_extrusion_type( 1.0_r_def, 2.0_r_def, layers )
+    base_extrusion = dcmip_extrusion_type( 1.0_r_def, 2.0_r_def, layers, &
+                                           PRIME_EXTRUSION )
     unit_under_test = shifted_extrusion_type( base_extrusion )
 
     call unit_under_test%extrude( eta )

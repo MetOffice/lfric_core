@@ -171,7 +171,8 @@ contains
     use partition_mod,                  only : partition_type,        &
                                                partitioner_interface, &
                                                partitioner_cubedsphere_serial
-    use extrusion_mod,                  only : uniform_extrusion_type
+    use extrusion_mod,                  only : uniform_extrusion_type, &
+                                               PRIME_EXTRUSION
     use extrusion_config_mod,           only : method_uniform
     use planet_config_mod,              only : scaled_radius
     use assign_orography_field_mod,     only : analytic_orography_spherical_xyz
@@ -222,7 +223,8 @@ contains
     call local_mesh%init_cell_owner()
     local_mesh_ptr => local_mesh
 
-    extrusion = uniform_extrusion_type( radius, domain_top, nlayers )
+    extrusion = uniform_extrusion_type( radius, domain_top, nlayers, &
+                                        PRIME_EXTRUSION )
 
     ! Construct a mesh which is  uniform in vertical for purpose of the test
     mesh = mesh_type( local_mesh_ptr, extrusion )

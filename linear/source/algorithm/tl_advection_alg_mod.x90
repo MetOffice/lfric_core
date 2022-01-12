@@ -18,8 +18,6 @@ module tl_advection_alg_mod
                                             get_cell_orientation,           &
                                             get_dA_at_w2,                   &
                                             get_height
-  use runtime_constants_mod,          only: get_shifted_mesh_id,            &
-                                            get_double_level_mesh_id
   use fem_constants_mod,              only: get_div,                        &
                                             get_mass_matrix,                &
                                             get_mass_matrix_diagonal,       &

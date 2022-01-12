@@ -10,7 +10,7 @@ module mesh_colouring_mod_test
 !-------------------------------------------------------------------------------
   use constants_mod,              only : i_def, imdi, r_def, &
                                          str_def, str_max_filename
-  use extrusion_mod,              only : uniform_extrusion_type
+  use extrusion_mod,              only : uniform_extrusion_type, PRIME_EXTRUSION
   use global_mesh_mod,            only : global_mesh_type
   use local_mesh_mod,             only : local_mesh_type
   use yaxt,                       only : xt_initialize, xt_finalize
@@ -134,9 +134,10 @@ subroutine test_compute_colours_cubedsphere(this)
   call local_mesh%init_cell_owner()
   local_mesh_ptr => local_mesh
 
-  extrusion = uniform_extrusion_type( 100.0_r_def,   &
-                                      10000.0_r_def, &
-                                      this%num_layers )
+  extrusion = uniform_extrusion_type( 100.0_r_def,     &
+                                      10000.0_r_def,   &
+                                      this%num_layers, &
+                                      PRIME_EXTRUSION )
 
   ! Construct a mesh which is  uniform in vertical for purpose of the test
   mesh = mesh_type( local_mesh_ptr, extrusion )
@@ -230,9 +231,10 @@ subroutine test_compute_colours_biperiodic(this)
   call local_mesh%init_cell_owner()
   local_mesh_ptr => local_mesh
 
-  extrusion = uniform_extrusion_type( 100.00_r_def,  &
-                                      10000.0_r_def, &
-                                      this%num_layers )
+  extrusion = uniform_extrusion_type( 100.00_r_def,    &
+                                      10000.0_r_def,   &
+                                      this%num_layers, &
+                                      PRIME_EXTRUSION )
 
   ! Construct a mesh which is  uniform in vertical for purpose of the test
   mesh = mesh_type( local_mesh_ptr, extrusion )
@@ -329,9 +331,10 @@ subroutine test_compute_colours_generic(this)
   call local_mesh%init_cell_owner()
   local_mesh_ptr => local_mesh
 
-  extrusion = uniform_extrusion_type( 100.0_r_def,   &
-                                      10000.0_r_def, &
-                                      this%num_layers )
+  extrusion = uniform_extrusion_type( 100.0_r_def,     &
+                                      10000.0_r_def,   &
+                                      this%num_layers, &
+                                      PRIME_EXTRUSION )
 
   ! Construct a mesh which is  uniform in vertical for purpose of the test
   mesh = mesh_type( local_mesh_ptr, extrusion )

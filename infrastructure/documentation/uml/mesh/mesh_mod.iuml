@@ -10,6 +10,7 @@ class mesh_mod::mesh_type {
   -nlayers : integer
   -domain_top : real
   -domain_bottom : real
+  -extrusion_id : integer
   -eta : real[:] <<allocatable>>
   -dz : real[:] <<allocatable>>
   -vertex_coords : real[::] <<allocatable>>
@@ -79,6 +80,7 @@ class mesh_mod::mesh_type {
   +get_vert_on_cell( <<in>>ivert: integer, <<in>>icell: integer ) : integer
   +get_domain_size() : domain_size_type
   +get_domain_top() : real
+  +get_extrusion_id() : integer
   +get_dz( <<out>>dz: real[:] )
   +get_eta( <<out>>eta: real[:] )
   +get_vertex_cell_owner( <<in>>vertex_index: integer, <<in>>cell_lid: integer ) : integer

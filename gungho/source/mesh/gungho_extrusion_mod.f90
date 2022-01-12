@@ -26,6 +26,7 @@ module gungho_extrusion_mod
                                    geometry_spherical
   use constants_mod,        only : r_def, i_def
   use extrusion_mod,        only : extrusion_type,             &
+                                   PRIME_EXTRUSION,            &
                                    uniform_extrusion_type,     &
                                    quadratic_extrusion_type,   &
                                    geometric_extrusion_type,   &
@@ -118,23 +119,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New uniform_extrusion_type object.
   !>
   function um_L38_29t_9s_40km_extrusion_constructor( atmosphere_bottom, &
                                                      atmosphere_top,    &
-                                                     number_of_layers ) result(new)
+                                                     number_of_layers,  &
+                                                     extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(um_L38_29t_9s_40km_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function um_L38_29t_9s_40km_extrusion_constructor
 
@@ -174,23 +178,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New uniform_extrusion_type object.
   !>
   function um_L85_50t_35s_85km_extrusion_constructor( atmosphere_bottom, &
                                                       atmosphere_top,    &
-                                                      number_of_layers ) result(new)
+                                                      number_of_layers,  &
+                                                      extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(um_L85_50t_35s_85km_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function um_L85_50t_35s_85km_extrusion_constructor
 
@@ -249,23 +256,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New uniform_extrusion_type object.
   !>
   function um_L70_50t_20s_80km_extrusion_constructor( atmosphere_bottom, &
-                                                     atmosphere_top,    &
-                                                     number_of_layers ) result(new)
+                                                      atmosphere_top,    &
+                                                      number_of_layers,  &
+                                                      extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(um_L70_50t_20s_80km_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function um_L70_50t_20s_80km_extrusion_constructor
 
@@ -314,23 +324,26 @@ contains
   !> @param[in] atmosphere_bottom Bottom of the atmosphere in meters.
   !> @param[in] atmosphere_top Top of the atmosphere in meters.
   !> @param[in] number_of_layers Number of layers in the atmosphere.
+  !> @param[in] extrusion_id Identifier of extrusion type.
   !>
   !> @return New dcmip_extrusion_type object.
   !>
   function dcmip_extrusion_constructor( atmosphere_bottom, &
                                         atmosphere_top,    &
-                                        number_of_layers ) result(new)
+                                        number_of_layers,  &
+                                        extrusion_id ) result(new)
 
     implicit none
 
     real(r_def),    intent(in) :: atmosphere_bottom
     real(r_def),    intent(in) :: atmosphere_top
     integer(i_def), intent(in) :: number_of_layers
+    integer(i_def), intent(in) :: extrusion_id
 
     type(dcmip_extrusion_type) :: new
 
     call new%extrusion_constructor( atmosphere_bottom, atmosphere_top, &
-                                    number_of_layers )
+                                    number_of_layers, extrusion_id )
 
   end function dcmip_extrusion_constructor
 
@@ -408,31 +421,38 @@ contains
       case (method_uniform)
         allocate( new, source=uniform_extrusion_type( atmosphere_bottom, &
                                                       domain_top,        &
-                                                      number_of_layers ) )
+                                                      number_of_layers,  &
+                                                      PRIME_EXTRUSION ) )
       case (method_um_L38_29t_9s_40km)
         allocate( new, source=um_L38_29t_9s_40km_extrusion_type( atmosphere_bottom, &
                                                                  domain_top,        &
-                                                                 number_of_layers ) )
+                                                                 number_of_layers,  &
+                                                                 PRIME_EXTRUSION ) )
       case (method_um_L85_50t_35s_85km)
         allocate( new, source=um_L85_50t_35s_85km_extrusion_type( atmosphere_bottom, &
                                                                  domain_top,         &
-                                                                 number_of_layers ) )
+                                                                 number_of_layers,   &
+                                                                 PRIME_EXTRUSION ) )
       case (method_um_L70_50t_20s_80km)
         allocate( new, source=um_L70_50t_20s_80km_extrusion_type( atmosphere_bottom, &
                                                                  domain_top,         &
-                                                                 number_of_layers ) )
+                                                                 number_of_layers,   &
+                                                                 PRIME_EXTRUSION ) )
       case (method_quadratic)
         allocate( new, source=quadratic_extrusion_type( atmosphere_bottom, &
                                                         domain_top,        &
-                                                        number_of_layers ) )
+                                                        number_of_layers,  &
+                                                        PRIME_EXTRUSION ) )
       case (method_geometric)
         allocate( new, source=geometric_extrusion_type( atmosphere_bottom, &
                                                         domain_top,        &
-                                                        number_of_layers ) )
+                                                        number_of_layers,  &
+                                                        PRIME_EXTRUSION ) )
       case (method_dcmip)
         allocate( new, source=dcmip_extrusion_type( atmosphere_bottom, &
                                                     domain_top,        &
-                                                    number_of_layers ) )
+                                                    number_of_layers,  &
+                                                    PRIME_EXTRUSION ) )
       case default
         write( log_scratch_space,                         &
                '(A, ": Unrecognised extrusion method: ", A)' ) &
