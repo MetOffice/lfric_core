@@ -81,6 +81,8 @@ subroutine tearDown(this)
 end subroutine tearDown
 !-------------------------------------------------------------------------------
 @Test( npes=[1] )
+! Note that the amount of testing that can be done is limited as the serial partitioner
+! does not set up halos.
 subroutine test_compute_colours_cubedsphere(this)
 
   use mesh_mod,             only : mesh_type
@@ -93,8 +95,14 @@ subroutine test_compute_colours_cubedsphere(this)
   class(compute_colours_test_type), intent(inout)  :: this
 
   character(len=str_max_filename)  :: filename
-  integer                          :: total_colours, total_cells, colour_idx
-  integer                          :: nc_colour, cic_colour, nc_colour_subset
+  integer(i_def)                   :: total_colours, total_cells, colour_idx
+  integer(i_def)                   :: nc_colour, cic_colour, nc_colour_subset
+  integer(i_def), allocatable      :: nc_all_colours_array(:,:)
+  integer(i_def), allocatable      :: nc_all_colours_edge_array(:)
+  integer(i_def), allocatable      :: nc_all_colours_deepest_array(:)
+  integer(i_def), allocatable      :: nc_all_colours_inner_array(:,:)
+  ! Halo of 1 required till partitioned mesh can be tested
+  integer(i_def), parameter        :: halo_depth = 1
   type(partition_type)             :: partition
   type(ugrid_mesh_data_type)       :: ugrid_mesh_data
   type(global_mesh_type), pointer  :: global_mesh_ptr => null()
@@ -126,7 +134,7 @@ subroutine test_compute_colours_cubedsphere(this)
                             partitioner_ptr, &
                             this%xproc, &
                             this%yproc, &
-                            1, &
+                            halo_depth, &
                             this%local_rank, &
                             this%total_ranks)
 
@@ -161,19 +169,44 @@ subroutine test_compute_colours_cubedsphere(this)
   total_colours = size(cells_in_colour, 1)
   @assertEqual(total_colours, num_colours, "Reported used colours unequal to actual used total.")
 
-  ! Does the total in each colour match the cells in the colour map...
+  ! Extract arrays of from various functions that give number of cells for a given colour
+  ! and area of the domain.
+  ! Array for holding cells per colour per halo depth
+  nc_all_colours_array = mesh%get_last_halo_cell_all_colours()
+  ! Array for holding cells per colour for the deepest halo
+  nc_all_colours_deepest_array = mesh%get_last_halo_cell_all_colours_deepest()
+  ! Array for holding cells per colour for the edge of the domain
+  nc_all_colours_edge_array = mesh%get_last_edge_cell_all_colours()
+  ! Array for holding cells per colour for the inner halos of the domain
+  nc_all_colours_inner_array = mesh%get_last_inner_cell_all_colours()
+
+  ! Check a range of functions for each colour
   do colour_idx=1, num_colours
     ! Does the total in each colour match the cells in the colour map...
     nc_colour = num_cell_per_colour(colour_idx)
     cic_colour = count(cells_in_colour(colour_idx,:) /= 0)
     @assertEqual(nc_colour, cic_colour, "Mismatch between num-per-colour total and cell count.")
-    ! For an unpartitioned mesh all the following should be equal to the number of cells in the colour
-    ! So they are not terribly meaningful tests
+    ! For an unpartitioned mesh all the following should be equal to
+    ! the number of cells in the colour, so they are not terribly
+    ! meaningful tests. It is beneficial that they will break once the
+    ! test is attempted on a parallel setup, and the tests can then be
+    ! extended to be more useful.
     nc_colour_subset = mesh%get_last_edge_cell_per_colour(colour_idx)
-    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. upto last edge cell.")
-    nc_colour_subset = mesh%get_last_halo_cell_per_colour(colour_idx,1)
-    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. upto last halo cell.")
+    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. up to last edge cell.")
+    nc_colour_subset = mesh%get_last_halo_cell_per_colour( colour_idx, halo_depth )
+    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. up to last halo cell.")
+    nc_colour_subset = nc_all_colours_array( colour_idx, halo_depth )
+    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. up to last halo cell from all_colours call")
+    nc_colour_subset = nc_all_colours_deepest_array( colour_idx )
+    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. up to last halo cell from all_colours_deepest call")
+    nc_colour_subset = nc_all_colours_edge_array( colour_idx )
+    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. up to last halo cell from edge_all_colours call")
+    nc_colour_subset = nc_all_colours_inner_array( colour_idx, halo_depth )
+    @assertEqual(nc_colour, nc_colour_subset, "Mismatch between num-per-colour total and no. up to last halo cell from inner_cell_all_colours call")
   end do
+
+  deallocate( nc_all_colours_array, nc_all_colours_edge_array, &
+       nc_all_colours_deepest_array, nc_all_colours_inner_array  )
 
   return
 end subroutine test_compute_colours_cubedsphere

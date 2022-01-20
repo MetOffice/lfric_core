@@ -94,15 +94,19 @@ class mesh_mod::mesh_type {
   +get_num_cells_inner( <<in>>depth: integer ) : integer
   +get_last_inner_cell( <<in>>depth: integer ) : integer
   +get_last_inner_cell_per_colour( <<in>>colour: integer, <<in>>colour: depth ) : integer
+  +get_last_inner_cell_all_colours() : integer[::]
   +get_num_cells_edge() : integer
   +get_last_edge_cell() : integer
   +get_last_edge_cell_per_colour( <<in>>colour: integer ) : integer
+  +get_last_edge_cell_all_colours() : integer[:]
   +get_halo_depth() : integer
   +get_num_cells_halo( <<in>>depth: integer ) : integer
   +get_last_halo_cell() : integer
   +get_last_halo_cell( <<in>>depth: integer ) : integer
   +get_last_halo_cell_per_colour( <<in>>colour: integer ) : integer
   +get_last_halo_cell_per_colour( <<in>>colour: integer, <<in>>depth: integer ) : integer
+  +get_last_halo_cell_all_colours() : integer[::]
+  +get_last_halo_cell_all_colours_deepest() : integer[:]
   +get_num_cells_ghost() : integer
   +get_gid_from_lid( <<in>>cell_lid: integer ) : integer
   +get_mesh_map( <<in>>target_mesh: mesh_type <<pointer>> ) : mesh_map_type <<pointer>>
