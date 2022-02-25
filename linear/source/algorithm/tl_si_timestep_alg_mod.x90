@@ -45,7 +45,6 @@ module tl_si_timestep_alg_mod
   use fs_continuity_mod,           only: Wtheta
 
   ! PsyKAl PSYClone kernels
-  use matrix_vector_kernel_mod,           only: matrix_vector_kernel_type
   use moist_dyn_factors_kernel_mod,       only: moist_dyn_factors_kernel_type
   use tl_moist_dyn_factors_kernel_mod,    only: tl_moist_dyn_factors_kernel_type
   use enforce_lower_bound_kernel_mod,     only: enforce_lower_bound_kernel_type

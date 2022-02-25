@@ -80,7 +80,7 @@ subroutine checkpoint_write_xios(xios_field_name, file_name, field_proxy)
     send_field = field_proxy%data(1:undf)
 
     type is (integer_field_proxy_type)
-    if ( any( abs(field_proxy%data) > xios_max_int) ) then
+    if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
       call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
                       '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
     end if
@@ -144,7 +144,7 @@ subroutine write_field_node(xios_field_name, field_proxy)
     end do
 
     type is (integer_field_proxy_type)
-    if ( any( abs(field_proxy%data) > xios_max_int) ) then
+    if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
       call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
                       '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
     end if
@@ -221,7 +221,7 @@ subroutine write_field_edge(xios_field_name, field_proxy)
     end do
 
     type is (integer_field_proxy_type)
-    if ( any( abs(field_proxy%data) > xios_max_int) ) then
+    if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
       call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
                       '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
     end if
@@ -298,7 +298,7 @@ subroutine write_field_single_face(xios_field_name, field_proxy)
     end do
 
     type is (integer_field_proxy_type)
-    if ( any( abs(field_proxy%data) > xios_max_int) ) then
+    if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
       call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
                       '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
     end if
@@ -396,7 +396,7 @@ subroutine write_field_face(xios_field_name, field_proxy)
       end do
 
     type is (integer_field_proxy_type)
-      if ( any( abs(field_proxy%data) > xios_max_int) ) then
+      if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
         call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
                         '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
       end if

@@ -384,6 +384,7 @@ contains
                                              get_eliminated_q3t
     use matrix_vector_kernel_mod,      only: matrix_vector_kernel_type
     use dg_matrix_vector_kernel_mod,   only: dg_matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod, only: dg_inc_matrix_vector_kernel_type
     use operator_mod,                  only: operator_type
     use field_mod,                     only: field_type
     use timestepping_config_mod,       only: dt, tau_r
@@ -472,13 +473,13 @@ contains
        ! Elimination of rho
       call rhs_tmp%initialise( vector_space = rhs(igh_p)%get_function_space() )
       ! Set rhs_p = rhs_p + M_{3,rho} * rhs_rho
-      call invoke( matrix_vector_kernel_type( rhs(igh_p), rhs(igh_d), m3_rho_star ) )
+      call invoke( dg_inc_matrix_vector_kernel_type( rhs(igh_p), rhs(igh_d), m3_rho_star ) )
 
       ! Elimination of theta
       if ( eliminate_variables == eliminate_variables_analytic ) then
         q2t_op => get_eliminated_q2t()
         q3t_op => get_eliminated_q3t()
-        call invoke( matrix_vector_kernel_type( rhs(igh_p), rhs(igh_t), q3t_op ), &
+        call invoke( dg_inc_matrix_vector_kernel_type( rhs(igh_p), rhs(igh_t), q3t_op ), &
                      matrix_vector_kernel_type( rhs(igh_u), rhs(igh_t), q2t_op ), &
                      enforce_bc_kernel_type( rhs(igh_u) ) )
       else
@@ -486,7 +487,7 @@ contains
         m2_diag   => get_normalisation(W2, mesh_id)
         call rhs_tmp%initialise( vector_space = rhs(igh_p)%get_function_space() )
         ! Set rhs_p = rhs_p + P_{3,theta} * rhs_theta
-        call invoke( matrix_vector_kernel_type( rhs(igh_p), rhs(igh_t), p3theta ) )
+        call invoke( dg_inc_matrix_vector_kernel_type( rhs(igh_p), rhs(igh_t), p3theta ) )
         ! Set rhs_u = rhs_u + M_2^{diag} * P_{2,theta} * rhs_theta
         call rhs_tmp%initialise( vector_space = rhs(igh_u)%get_function_space() )
         p2theta => get_p2theta()
@@ -546,7 +547,7 @@ contains
       call rhs_tmp%initialise( vector_space = rhs(igh_t)%get_function_space() )
       call inc_theta%initialise( vector_space = rhs(igh_t)%get_function_space() )
       call invoke( setval_c(rhs_tmp, 0.0_r_def), &
-                   matrix_vector_kernel_type(rhs_tmp, inc_uvw, ptheta2))
+                   dg_inc_matrix_vector_kernel_type(rhs_tmp, inc_uvw, ptheta2))
 
       if (  eliminate_variables == eliminate_variables_analytic ) then
         call invoke( setval_x( inc_theta, rhs_tmp ) )

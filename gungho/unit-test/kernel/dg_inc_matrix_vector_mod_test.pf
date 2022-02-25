@@ -1,0 +1,139 @@
+!-----------------------------------------------------------------------------
+! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
+! For further details please refer to the file LICENCE.original which you
+! should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------------
+module dg_inc_matrix_vector_mod_test
+
+  use constants_mod, only : i_def, r_single, r_double
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_real64, test_real32
+
+  @TestCase
+  type, extends(TestCase), public :: dg_inc_matrix_vector_mod_test_type
+    private
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_real64
+    procedure test_real32
+  end type dg_inc_matrix_vector_mod_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+    class(dg_inc_matrix_vector_mod_test_type), intent(inout) :: this
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(dg_inc_matrix_vector_mod_test_type), intent(inout) :: this
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST REAL64 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_real64( this )
+
+    use dg_inc_matrix_vector_kernel_mod, only : dg_inc_matrix_vector_code
+
+    implicit none
+
+    class(dg_inc_matrix_vector_mod_test_type), intent(inout) :: this
+
+    real(kind=r_double) :: d(4,2,1), x(2), y(4), answer(4)
+    real(kind=r_double) :: tol
+    integer(kind=i_def) :: i
+
+    ! Make up a matrix
+    d(1,:,1) = (/ 2.0_r_double, -2.0_r_double /)
+    d(2,:,1) = (/ 3.0_r_double, -1.0_r_double /)
+    d(3,:,1) = (/ 0.4_r_double,  1.3_r_double /)
+    d(4,:,1) = (/ -4.5_r_double, 7.9_r_double /)
+    ! rhs vector
+    x(:) = (/ 0.25_r_double, 1.5_r_double /)
+    ! lhs vector
+    y(:) = 0.0_r_double
+    answer = matmul(d(:,:,1),x)
+
+    call dg_inc_matrix_vector_code(1_i_def, &
+                                   1_i_def, &
+                                   y,       &
+                                   x,       &
+                                   1_i_def, &
+                                   d,       &
+                                   4_i_def, &
+                                   4_i_def, &
+                                   (/1_i_def, 2_i_def, 3_i_def, 4_i_def/), &
+                                   2_i_def, &
+                                   2_i_def, &
+                                   (/1_i_def, 2_i_def /) )
+
+    tol = 1.0e-14_r_double
+
+    do i = 1,4
+      @assertEqual( y(i), answer(i), tol )
+    end do
+
+  end subroutine test_real64
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST REAL32 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_real32( this )
+
+    use dg_inc_matrix_vector_kernel_mod, only : dg_inc_matrix_vector_code
+
+    implicit none
+
+    class(dg_inc_matrix_vector_mod_test_type), intent(inout) :: this
+
+    real(kind=r_single) :: d(4,2,1), x(2), y(4), answer(4)
+    real(kind=r_single) :: tol
+    integer(kind=i_def) :: i
+
+    ! Make up a matrix
+    d(1,:,1) = (/ 2.0_r_single, -2.0_r_single /)
+    d(2,:,1) = (/ 3.0_r_single, -1.0_r_single /)
+    d(3,:,1) = (/ 0.4_r_single,  1.3_r_single /)
+    d(4,:,1) = (/ -4.5_r_single, 7.9_r_single /)
+    ! rhs vector
+    x(:) = (/ 0.25_r_single, 1.5_r_single /)
+    ! lhs vector
+    y(:) = 0.0_r_single
+    answer = matmul(d(:,:,1),x)
+
+    call dg_inc_matrix_vector_code(1_i_def, &
+                                   1_i_def, &
+                                   y,       &
+                                   x,       &
+                                   1_i_def, &
+                                   d,       &
+                                   4_i_def, &
+                                   4_i_def, &
+                                   (/1_i_def, 2_i_def, 3_i_def, 4_i_def/), &
+                                   2_i_def, &
+                                   2_i_def, &
+                                   (/1_i_def, 2_i_def /) )
+
+    tol = 1.0e-8_r_single
+
+    do i = 1,4
+      @assertEqual( y(i), answer(i), tol )
+    end do
+
+  end subroutine test_real32
+
+end module dg_inc_matrix_vector_mod_test

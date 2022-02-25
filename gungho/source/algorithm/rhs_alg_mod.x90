@@ -28,6 +28,7 @@ module rhs_alg_mod
   use planet_config_mod,                   only: cp, kappa, rd, p_zero
   use kinetic_energy_gradient_kernel_mod,  only: kinetic_energy_gradient_kernel_type
   use matrix_vector_kernel_mod,            only: matrix_vector_kernel_type
+  use dg_inc_matrix_vector_kernel_mod,     only: dg_inc_matrix_vector_kernel_type
   use operator_mod,                        only: operator_type
   use hydrostatic_kernel_mod,              only: hydrostatic_kernel_type
   use pressure_gradient_bd_kernel_mod,     only: pressure_gradient_bd_kernel_type
@@ -213,7 +214,7 @@ subroutine rhs_alg(rhs, alpha_dt, base_state, state, moist_dyn, compute_eos, &
 
     call invoke( name = "Compute rhs_theta and rhs_rho",                    &
     ! Compute rhs_theta
-                 matrix_vector_kernel_type( rhs(igh_t), theta_base, mm_wtheta ), &
+                 dg_inc_matrix_vector_kernel_type( rhs(igh_t), theta_base, mm_wtheta ), &
     ! Compute rhs_rho
                  setval_X( rhs(igh_d), rho_base ) )
     if ( compute_eos ) then

@@ -75,10 +75,6 @@ contains
                  X_innerproduct_Y( l2, div_u, divergence ) )
     l2 = sqrt(l2)
 
-    ! Convert to pointwise W3 field for output
-    call invoke( dg_matrix_vector_kernel_type( divergence, div_u , m3_inv ) )
-
-
   end subroutine divergence_diagnostic_alg
 
 !=============================================================================!

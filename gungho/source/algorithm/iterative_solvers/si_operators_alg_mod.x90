@@ -380,6 +380,7 @@ contains
     use reference_element_mod,                only: reference_element_type
     use mesh_mod,                             only: mesh_type
     use matrix_vector_kernel_mod,             only: matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod,      only: dg_inc_matrix_vector_kernel_type
     use formulation_config_mod,               only: dlayer_on,       &
                                                     dry_static_adjust
     use sort_ref_kernel_mod,                  only: sort_ref_kernel_type
@@ -588,7 +589,7 @@ contains
                       setval_c(m2_u, 0.0_r_def),                            &
                       setval_c(theta_adv_term, 0.0_r_def),                  &
                       matrix_vector_kernel_type(m2_u, ones, m2),            &
-                      matrix_vector_kernel_type(                            &
+                      dg_inc_matrix_vector_kernel_type(                     &
                                 theta_adv_term, ones, ptheta2v(level)),     &
                       inc_X_times_Y(theta_adv_term, t_normalisation),       &
                       matrix_vector_kernel_type(                            &

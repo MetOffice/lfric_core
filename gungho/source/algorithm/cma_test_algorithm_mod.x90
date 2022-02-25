@@ -65,6 +65,7 @@ module cma_test_algorithm_mod
   use compute_div_operator_kernel_mod,   only : compute_div_operator_kernel_type
   ! Kernels for local operator application and manipulation
   use matrix_vector_kernel_mod,           only : matrix_vector_kernel_type
+  use dg_inc_matrix_vector_kernel_mod,    only : dg_inc_matrix_vector_kernel_type
   use transpose_matrix_vector_kernel_mod, only : transpose_matrix_vector_kernel_type
   use transpose_matrix_kernel_mod,        only : transpose_matrix_kernel_type
   use mm_diagonal_kernel_mod,             only : mm_diagonal_kernel_type
@@ -414,13 +415,13 @@ contains
                  inc_X_divideby_Y( u_v_tmp, mm_vel_v_diag ), &
                  enforce_bc_kernel_type( u_v_tmp ),          &
     ! Apply divergence \f$D_v\f$
-                 matrix_vector_kernel_type( p_out,           &
+                 dg_inc_matrix_vector_kernel_type( p_out,    &
                                             u_v_tmp,         &
                                             div_v ) )
     beta_divided_by_alpha = beta/alpha
     call invoke( inc_a_times_X( beta_divided_by_alpha, p_out ), &
     ! Apply and add pressure mass matrix \f$M_3\f$
-                 matrix_vector_kernel_type( p_out,           &
+                 dg_inc_matrix_vector_kernel_type( p_out,    &
                                             p_in,            &
                                             mm_pressure ),      &
                  inc_a_times_X( alpha, p_out ) )
@@ -481,12 +482,12 @@ contains
                  setval_c( p_in,      1.0_r_def ),                   &
                  setval_c( p_out,     0.0_r_def ),                   &
                  setval_c( p_out_cma, 0.0_r_def ),                   &
-                 columnwise_op_app_kernel_type( p_out_cma,           &
-                                                p_in,                &
+                 columnwise_op_app_kernel_type( p_out_cma, &
+                                                p_in,      &
                                                 mm_pressure_cma ),   &
-                 matrix_vector_kernel_type( p_out,                   &
-                                            p_in,                    &
-                                            mm_pressure ) )
+                 dg_inc_matrix_vector_kernel_type( p_out,  &
+                                                   p_in,   &
+                                                   mm_pressure ) )
     call compare_fields(p_out,p_out_cma,tolerance,label)
   end subroutine test_cma_apply_mass_p
 
@@ -536,7 +537,7 @@ contains
                                                 u_v_in,      &
                                                 div_v_cma ), &
     ! Apply divergence operator in LMA representation
-                 matrix_vector_kernel_type( p_out,           &
+                 dg_inc_matrix_vector_kernel_type( p_out,    &
                                             u_v_in,          &
                                             div_v ) )
     call compare_fields(p_out,p_out_cma,tolerance,label)
@@ -579,7 +580,7 @@ contains
                  matrix_vector_kernel_type( u_v_tmp,      &
                                             u_v_in,       &
                                             mm_vel_v ),               &
-                 matrix_vector_kernel_type( p_out,        &
+                 dg_inc_matrix_vector_kernel_type( p_out, &
                                             u_v_tmp,      &
                                             div_v ) )
 
@@ -623,7 +624,7 @@ contains
                  enforce_bc_kernel_type ( u_v_out_cma ),            &
     ! Successively apply divergence and gradient operators:
     ! first D_v, then D_v^T
-                 matrix_vector_kernel_type( p_tmp,           &
+                 dg_inc_matrix_vector_kernel_type( p_tmp,    &
                                             u_v_in,          &
                                             div_v ),                &
                  matrix_vector_kernel_type( u_v_out,         &
@@ -755,7 +756,7 @@ contains
     ! Step 2: divide by diagonally lumped horizontal mass matrix
                  inc_X_divideby_Y( u_h_tmp, mm_vel_h_diag ),     &
     ! Step 3: weak divergence
-                 matrix_vector_kernel_type( p_out,   &
+                 dg_inc_matrix_vector_kernel_type( p_out, &
                                             u_h_tmp, &
                                             div_h ),             &
 

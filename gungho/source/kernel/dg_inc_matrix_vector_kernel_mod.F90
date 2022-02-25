@@ -3,13 +3,15 @@
 ! For further details please refer to the file LICENCE.original which you
 ! should have received as part of this distribution.
 !-----------------------------------------------------------------------------
-!> @brief This version is for use on continous spaces and will force
-!>        halo exchanges on the input fields
-module matrix_vector_kernel_mod
-  use argument_mod,            only : arg_type,                 &
-                                      GH_FIELD, GH_OPERATOR,    &
-                                      GH_REAL, GH_READ, GH_INC, &
-                                      ANY_SPACE_1, ANY_SPACE_2, &
+!> @brief This version is for use on discontinous spaces and increments the
+!>        output field, hence can be used for WTheta spaces and incrementing
+!>        W3 fields
+module dg_inc_matrix_vector_kernel_mod
+  use argument_mod,            only : arg_type,                  &
+                                      GH_FIELD, GH_OPERATOR,     &
+                                      GH_REAL, GH_READ,          &
+                                      GH_READWRITE, ANY_SPACE_1, &
+                                      ANY_DISCONTINUOUS_SPACE_1, &
                                       CELL_COLUMN
   use constants_mod,           only : i_def, r_single, r_double
   use kernel_mod,              only : kernel_type
@@ -21,12 +23,12 @@ module matrix_vector_kernel_mod
   !-------------------------------------------------------------------------------
   ! Public types
   !-------------------------------------------------------------------------------
-  type, public, extends(kernel_type) :: matrix_vector_kernel_type
+  type, public, extends(kernel_type) :: dg_inc_matrix_vector_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                    &
-         arg_type(GH_FIELD,    GH_REAL, GH_INC,  ANY_SPACE_1),             &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ, ANY_SPACE_2),             &
-         arg_type(GH_OPERATOR, GH_REAL, GH_READ, ANY_SPACE_1, ANY_SPACE_2) &
+    type(arg_type) :: meta_args(3) = (/                                                  &
+         arg_type(GH_FIELD,    GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1),        &
+         arg_type(GH_FIELD,    GH_REAL, GH_READ, ANY_SPACE_1),                           &
+         arg_type(GH_OPERATOR, GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_1, ANY_SPACE_1) &
          /)
     integer :: operates_on = CELL_COLUMN
   end type
@@ -34,18 +36,18 @@ module matrix_vector_kernel_mod
   !-------------------------------------------------------------------------------
   ! Contained functions/subroutines
   !-------------------------------------------------------------------------------
-  public :: matrix_vector_code
+  public :: dg_inc_matrix_vector_code
 
   ! Generic interface for real32 and real64 types
-  interface matrix_vector_code
+  interface dg_inc_matrix_vector_code
     module procedure  &
-      matrix_vector_code_r_single, &
-      matrix_vector_code_r_double
+      dg_inc_matrix_vector_code_r_single, &
+      dg_inc_matrix_vector_code_r_double
   end interface
 
 contains
 
-  !> @brief Computes lhs = matrix*x
+  !> @brief Computes lhs = matrix*x for discontinuous function spaces
   !> @brief real32 and real64 variants
   !! @param[in] cell Horizontal cell index
   !! @param[in] nlayers Number of layers
@@ -64,13 +66,13 @@ contains
 
   ! R_SINGLE PRECISION
   ! ==================
-  subroutine matrix_vector_code_r_single(cell,              &
-                                         nlayers,           &
-                                         lhs, x,            &
-                                         ncell_3d,          &
-                                         matrix,            &
-                                         ndf1, undf1, map1, &
-                                         ndf2, undf2, map2)
+  subroutine dg_inc_matrix_vector_code_r_single(cell,              &
+                                                nlayers,           &
+                                                lhs, x,            &
+                                                ncell_3d,          &
+                                                matrix,            &
+                                                ndf1, undf1, map1, &
+                                                ndf2, undf2, map2)
 
     implicit none
 
@@ -100,18 +102,18 @@ contains
       end do
     end do
 
-  end subroutine matrix_vector_code_r_single
+  end subroutine dg_inc_matrix_vector_code_r_single
 
 
   ! R_DOUBLE PRECISION
   ! ==================
-  subroutine matrix_vector_code_r_double(cell,              &
-                                         nlayers,           &
-                                         lhs, x,            &
-                                         ncell_3d,          &
-                                         matrix,            &
-                                         ndf1, undf1, map1, &
-                                         ndf2, undf2, map2)
+  subroutine dg_inc_matrix_vector_code_r_double(cell,              &
+                                                nlayers,           &
+                                                lhs, x,            &
+                                                ncell_3d,          &
+                                                matrix,            &
+                                                ndf1, undf1, map1, &
+                                                ndf2, undf2, map2)
 
     implicit none
 
@@ -141,6 +143,6 @@ contains
       end do
     end do
 
-  end subroutine matrix_vector_code_r_double
+  end subroutine dg_inc_matrix_vector_code_r_double
 
-end module matrix_vector_kernel_mod
+end module dg_inc_matrix_vector_kernel_mod

@@ -31,6 +31,7 @@ module dense_operator_alg_mod
                                             log_scratch_space
   use mesh_mod,                      only : mesh_type
   use matrix_vector_kernel_mod,      only : matrix_vector_kernel_type
+  use dg_inc_matrix_vector_kernel_mod, only : dg_inc_matrix_vector_kernel_type
   use mm_diagonal_kernel_mod,        only : mm_diagonal_kernel_type
   use operator_mod,                  only : operator_type
   use quadrature_xyoz_mod,           only : quadrature_xyoz_type
@@ -137,7 +138,7 @@ contains
           call y%set_scalar(0.0_r_def)
           call invoke(   &
                matrix_vector_kernel_type(y%vector(1),x%vector(1),self%mass_w0), &
-               matrix_vector_kernel_type(y%vector(2),x%vector(2),self%mass_w3)  &
+               dg_inc_matrix_vector_kernel_type(y%vector(2),x%vector(2),self%mass_w3)  &
                )
            class default
           write(log_scratch_space, '(A)') "dense_operator_alg_mod: incorrect vector_type as argument y"

@@ -319,6 +319,7 @@ contains
   subroutine build_pressure_rhs(self, rhs0)
     use matrix_vector_kernel_mod,     only: matrix_vector_kernel_type
     use dg_matrix_vector_kernel_mod,  only: dg_matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod, only: dg_inc_matrix_vector_kernel_type
     use apply_variable_hx_kernel_mod, only: apply_variable_hx_kernel_type, &
                                             opt_apply_variable_hx_kernel_type
     use operator_mod,                 only: operator_type
@@ -410,14 +411,14 @@ contains
                      opt_apply_variable_hx_kernel_type( self%rhs_p, u_term, mt_lumped_inv, self%rhs_d, &
                                                         compound_div, p3theta, ptheta2, m3_rho_star,   &
                                                         minus_one),                                    &
-                     matrix_vector_kernel_type(self%rhs_p, self%rhs_t, p3theta),                       &
+                     dg_inc_matrix_vector_kernel_type(self%rhs_p, self%rhs_t, p3theta),                &
                      inc_X_plus_Y(self%rhs_p, rhs0%vector(isol_p)) )
       else
         call invoke( setval_c( self%rhs_p, 0.0_r_def ),                                           &
                     apply_variable_hx_kernel_type( self%rhs_p, u_term, mt_lumped_inv, self%rhs_d, &
                                                    compound_div, p3theta, ptheta2, m3_rho_star,   &
                                                    minus_one),                                    &
-                     matrix_vector_kernel_type(self%rhs_p, self%rhs_t, p3theta),                  &
+                     dg_inc_matrix_vector_kernel_type(self%rhs_p, self%rhs_t, p3theta),           &
                      inc_X_plus_Y(self%rhs_p, rhs0%vector(isol_p)) )
       end if
     end if
@@ -458,6 +459,7 @@ contains
 
     use matrix_vector_kernel_mod,     only: matrix_vector_kernel_type
     use dg_matrix_vector_kernel_mod,  only: dg_matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod, only: dg_inc_matrix_vector_kernel_type
     use operator_mod,                 only: operator_type
     use enforce_bc_kernel_mod,        only: enforce_bc_kernel_type
     use timestepping_config_mod,      only: tau_r, dt
@@ -533,7 +535,7 @@ contains
     end if
     if ( eliminate_variables == eliminate_variables_none ) then
       ! theta & rho increment
-      call invoke( matrix_vector_kernel_type(theta_inc, u_inc, ptheta2),    &
+      call invoke( dg_inc_matrix_vector_kernel_type(theta_inc, u_inc, ptheta2),&
                    inc_X_times_Y(theta_inc, t_normalisation),               &
                    inc_aX_plus_Y(minus_one, theta_inc, rhs%vector(isol_t)), &
                    X_times_Y(flux, rho_at_u, u_inc),                        &

@@ -56,6 +56,7 @@ module semi_implicit_timestep_alg_mod
 
   ! PsyKAl PSYClone kernels
   use matrix_vector_kernel_mod,   only: matrix_vector_kernel_type
+  use dg_inc_matrix_vector_kernel_mod, only: dg_inc_matrix_vector_kernel_type
   use moist_dyn_factors_kernel_mod,   &
                                   only: moist_dyn_factors_kernel_type
   use enforce_lower_bound_kernel_mod, &
@@ -500,7 +501,8 @@ contains
           ! increments the field rather than over-writing it
           call set_bundle_scalar(0.0_r_def, rhs_phys, bundle_size)
           call invoke(name="update_rhs_phys_from_fast_physics",                &
-                    matrix_vector_kernel_type(rhs_phys(igh_t), dtheta, mm_wt), &
+                    dg_inc_matrix_vector_kernel_type(rhs_phys(igh_t), dtheta,  &
+                                                                       mm_wt), &
                     matrix_vector_kernel_type(rhs_phys(igh_u), du, mm_vel ),   &
                     enforce_bc_kernel_type(rhs_phys(igh_u))                    &
                     )

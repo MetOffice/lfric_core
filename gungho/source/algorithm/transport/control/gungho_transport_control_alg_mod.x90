@@ -174,7 +174,7 @@ contains
     use field_indices_mod,               only: igh_u, igh_t, igh_d, igh_p
     use formulation_config_mod,          only: use_moisture
     use fs_continuity_mod,               only: Wtheta
-    use matrix_vector_kernel_mod,        only: matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod, only: dg_inc_matrix_vector_kernel_type
     use io_config_mod,                   only: write_conservation_diag
     use moisture_conservation_alg_mod,   only: moisture_conservation_alg
     use moist_dyn_mod,                   only: num_moist_factors
@@ -282,10 +282,10 @@ contains
       call temp_inc%initialise( vector_space = &
                                 fields_np1(igh_t)%get_function_space() )
 
-      call invoke( setval_X(temp_inc, advection_inc(igh_t)),       &
-                   setval_c(advection_inc(igh_t), 0.0_r_def),      &
-                   matrix_vector_kernel_type(advection_inc(igh_t), &
-                                             temp_inc, mm_wt) )
+      call invoke( setval_X(temp_inc, advection_inc(igh_t)),              &
+                   setval_c(advection_inc(igh_t), 0.0_r_def),             &
+                   dg_inc_matrix_vector_kernel_type(advection_inc(igh_t), &
+                                                    temp_inc, mm_wt) )
       nullify( mm_wt )
     end if
 

@@ -62,6 +62,7 @@ module fem_constants_mod
   use compute_mass_matrix_kernel_w2_mod,      only: compute_mass_matrix_kernel_w2_type
   use invert_local_operator_kernel_mod,       only: invert_local_operator_kernel_type
   use matrix_vector_kernel_mod,               only: matrix_vector_kernel_type
+  use dg_inc_matrix_vector_kernel_mod,        only: dg_inc_matrix_vector_kernel_type
   use mg_derham_mat_kernel_mod,               only: mg_derham_mat_kernel_type
   use mm_diagonal_kernel_mod,                 only: mm_diagonal_kernel_type
   use multiplicity_kernel_mod,                only: multiplicity_kernel_type
@@ -483,11 +484,11 @@ contains
            label_list(i) == multigrid_mesh_label ) then
         call ones%initialise( vector_space = wtheta_fs )
         call mmtheta_lumped_inv(i)%initialise( vector_space = wtheta_fs )
-        call invoke( name = "create_mmtheta_lumped_inv",                &
-                     setval_c(ones, 1.0_r_def),                         &
-                     setval_c(mmtheta_lumped_inv(i), 0.0_r_def),        &
-                     matrix_vector_kernel_type(mmtheta_lumped_inv(i),   &
-                                               ones, mm_wtheta(i)),     &
+        call invoke( name = "create_mmtheta_lumped_inv",                       &
+                     setval_c(ones, 1.0_r_def),                                &
+                     setval_c(mmtheta_lumped_inv(i), 0.0_r_def),               &
+                     dg_inc_matrix_vector_kernel_type(mmtheta_lumped_inv(i),   &
+                                                      ones, mm_wtheta(i)),     &
                      inc_X_powint_n(mmtheta_lumped_inv(i), i_minus_one) )
       end if
 

@@ -119,6 +119,7 @@ contains
     use apply_mixed_lp_operator_kernel_mod, only: apply_mixed_lp_operator_kernel_type
     use apply_elim_mixed_lp_operator_kernel_mod, only: apply_elim_mixed_lp_operator_kernel_type
     use matrix_vector_kernel_mod,           only: matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod,    only: dg_inc_matrix_vector_kernel_type
 
     implicit none
 
@@ -248,7 +249,7 @@ contains
            q32_op => get_eliminated_q32()
            call invoke( name="apply_discretely_eliminated_mixed_lhs",                              &
                         setval_c( x_t, 0.0_r_def ),                                                &
-                        matrix_vector_kernel_type( x_t, x_uvw, Ptheta2 ),                          &
+                        dg_inc_matrix_vector_kernel_type( x_t, x_uvw, Ptheta2 ),                   &
                         inc_aX_times_Y( minus_one, x_t, mt_lumped_inv ),                           &
                         setval_c( y_uvw, 0.0_r_def ),                                              &
                         apply_mixed_lu_operator_kernel_type( y_uvw, x_uvw, x_t, x%vector(isol_p),  &
