@@ -9,7 +9,6 @@
 module init_unsaturated_profile_alg_mod
 
 use constants_mod,                   only: r_def, i_def
-use diagnostic_alg_mod,              only: l2norm_diff_2fields
 use field_bundle_mod,                only: set_bundle_scalar, clone_bundle
 use field_mod,                       only: field_type
 use formulation_config_mod,          only: use_moisture
@@ -25,6 +24,7 @@ use log_mod,                         only: LOG_LEVEL_ERROR,  &
 use moist_dyn_factors_alg_mod,       only: moist_dyn_factors_alg
 use moist_dyn_mod,                   only: num_moist_factors
 use mr_indices_mod,                  only: nummr, imr_v, imr_cl
+use norm_alg_mod,                    only: rel_l2_error_alg
 use physics_mappings_alg_mod,        only: map_physics_scalars
 use planet_config_mod,               only: rd, p_zero, kappa, &
                                            recip_epsilon
@@ -152,7 +152,7 @@ subroutine init_unsaturated_profile_alg( theta, mr, exner, rho, moist_dyn )
                                                 p_zero ) )
 
     ! Check tolerance and break if we are close enough
-    call l2norm_diff_2fields( errornorm, latest_rel_hum, specified_rel_hum )
+    errornorm = rel_l2_error_alg( latest_rel_hum, specified_rel_hum )
     write(log_scratch_space, '(A,I5,A,E32.24)') &
       'Outer iteration: ', outer_count, ', Error-norm: ', errornorm
     call log_event(log_scratch_space, LOG_LEVEL_INFO)
@@ -174,7 +174,7 @@ subroutine init_unsaturated_profile_alg( theta, mr, exner, rho, moist_dyn )
                                                   p_zero ) )
 
       ! Check tolerance and break if we are close enough
-      call l2norm_diff_2fields( errornorm, latest_rel_hum, specified_rel_hum )
+      errornorm = rel_l2_error_alg( latest_rel_hum, specified_rel_hum )
       write(log_scratch_space, '(A,I5,A,E32.24)') &
         'Inner iteration: ', inner_count, ', Error-norm: ', errornorm
       call log_event(log_scratch_space, LOG_LEVEL_INFO)

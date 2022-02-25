@@ -7,7 +7,7 @@
 
 module transport_control_alg_mod
 
-  use constants_mod,                     only: i_def, r_def, l_def
+  use constants_mod,                     only: i_def, r_def, l_def, str_def
   use extrusion_mod,                     only: SHIFTED
   use field_mod,                         only: field_type
   use log_mod,                           only: log_event,       &
@@ -312,7 +312,7 @@ contains
   !> @param[in] mr       Transported bundle of mixing ratio fields
   subroutine transport_final( rho, theta, tracer, mr )
 
-    use diagnostic_alg_mod,           only: l2norm_diff_2fields
+    use transport_stats_mod,          only: write_transport_stats
     use reconstruct_w3_field_alg_mod, only: reconstruct_w3_field_alg_final
     use wt_advective_update_alg_mod,  only: wt_advective_update_alg_final
 
@@ -323,34 +323,22 @@ contains
     type(field_type), intent(in) :: mr(nummr)
 
     ! Internal variables
+    character(str_def)  :: field_name
     integer(kind=i_def) :: mesh_index
-    real(kind=r_def)    :: l2_error_rho, l2_error_theta
-    real(kind=r_def)    :: l2_error_tracer, l2_error_mr
-
     type(mesh_type), pointer :: mesh => null()
 
     mesh => rho%get_mesh()
     mesh_index = find_mesh_index(mesh%get_id())
 
-    ! TODO: #2829 should make us call write_transport_stats here to compute
-    ! various error measures. For now just compute them here
-    call l2norm_diff_2fields(l2_error_rho, rho, rho0(mesh_index))
-    call l2norm_diff_2fields(l2_error_theta, theta, theta0(mesh_index))
-    call l2norm_diff_2fields(l2_error_tracer, tracer, tracer0(mesh_index))
-    call l2norm_diff_2fields(l2_error_mr, mr(1), mr0(1,mesh_index))
-
-    write( log_scratch_space, '(A, E15.8)' ) &
-      "Transport stats: L2 rho = ", l2_error_rho
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-    write( log_scratch_space, '(A, E15.8)' ) &
-      "Transport stats: L2 theta = ", l2_error_theta
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-    write( log_scratch_space, '(A, E15.8)' ) &
-      "Transport stats: L2 tracer = ", l2_error_tracer
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-    write( log_scratch_space, '(A, E15.8)' ) &
-      "Transport stats: L2 mr = ", l2_error_mr
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
+    ! Calculate and write out statistics
+    field_name = 'rho'
+    call write_transport_stats(rho, rho0(mesh_index), field_name)
+    field_name = 'theta'
+    call write_transport_stats(theta, theta0(mesh_index), field_name)
+    field_name = 'tracer'
+    call write_transport_stats(tracer, tracer0(mesh_index), field_name)
+    field_name = 'mr'
+    call write_transport_stats(mr(1), mr0(1,mesh_index), field_name)
 
     call reconstruct_w3_field_alg_final()
     call wt_advective_update_alg_final()
