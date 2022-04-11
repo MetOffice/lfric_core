@@ -360,7 +360,7 @@
 {%-   set science_key = appName + '_' + configuration + '_' + science_label %}
 {%-   set environment = scheduledTasksDict[science_key] %}
 
-{%-   for compiler in compiler_setup.keys() %}
+{%-   for compiler in compilers %}
 {%-     for precision in precisions %}
 {%-       set application_key = appName + '_' + configuration + '_'
                               + compiler + '_' + precision + '-bit_'
@@ -387,7 +387,7 @@
                         mesh_rdef + '-bit_' +
                         mesh_build|lower) %}
 
-{%-   for compiler in compiler_setup.keys() %}
+{%-   for compiler in compilers %}
 {%-     for precision in precisions %}
 
 {%-       set label = (compiler|lower + '_' + precision + '-bit_' + build|lower) %}

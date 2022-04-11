@@ -7,7 +7,6 @@
 
 {# SETUP SOME JINJA2 VARIABLES #}
 {%- set plot_config = {} %}
-{%- set compiler_setup = {} %}
 {%- set appConfigsCompilerRuns = {} %}
 {%- set appPrecisionRuns = {} %}
 {%- set appPrecisionBuilds = {} %}
