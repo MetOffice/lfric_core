@@ -21,7 +21,7 @@ module init_diagnostics_mod
     use fieldspec_collection_mod,      only : fieldspec_collection_type, &
                                               fieldspec_collection_iterator_type
     use function_space_collection_mod, only : function_space_collection
-    use gungho_model_data_mod,         only : model_data_type
+    use diagnostics_model_data_mod,    only : model_data_type
     use io_config_mod,                 only : write_diag, &
                                               use_xios_io
     use io_driver_enum_mod,            only : name_from_io_driver
@@ -36,7 +36,6 @@ module init_diagnostics_mod
     use mesh_mod,                      only : mesh_type
     use non_spatial_dimension_mod,     only : NUMERICAL, CATEGORICAL
     use pure_abstract_field_mod,       only : pure_abstract_field_type
-    use runtime_constants_mod,         only : create_runtime_constants
     use fs_continuity_mod,             only : W0, W2H, W3, Wtheta
 
     implicit none
@@ -192,9 +191,6 @@ contains
                 call tmp_field%set_write_behaviour(tmp_ptr)
             end if
         end do
-
-        call create_runtime_constants( mesh, twod_mesh, &
-                                       chi, panel_id, dt )
 
         call log_event('diagnostics: Miniapp initialised', LOG_LEVEL_INFO)
 

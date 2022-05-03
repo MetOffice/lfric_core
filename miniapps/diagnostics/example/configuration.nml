@@ -8,17 +8,8 @@ prime_mesh_name='C3',
 topology='fully_periodic'
 /
 
-&boundaries
-limited_area=.false.,
-/
-
 &planet
-  gravity        = 9.80665
   radius         = 6371229.0
-  omega          = 7.292116E-5
-  rd             = 287.05
-  cp             = 1005.0
-  p_zero         = 100000.0
   scaling_factor = 1.0
 /
 
@@ -34,23 +25,16 @@ element_order=0,
 rehabilitate=.true.,
 coord_order=2
 coord_system='xyz'
-vorticity_in_w1=.false.,
+
 /
 &partitioning
 partitioner = 'cubedsphere'
 panel_decomposition = 'auto'
 /
 
-&files
-  diag_stem_name            = 'diagDiagnostics'
-  checkpoint_stem_name      = 'restartDiagnostics'
-/
-
 &io
   use_xios_io               = .true.
   write_diag                = .true.
-  write_dump                = .false.
-  write_fluxes              = .false.
   diagnostic_frequency      = 1
   nodal_output_on_w3        = .false.
   subroutine_timers         = .false.
@@ -72,18 +56,7 @@ panel_decomposition = 'auto'
 /
 
 &timestepping
-alpha=0.0
 dt=1.0
-inner_iterations=1
-method='semi_implicit'
-outer_iterations=1
-runge_kutta_method='ssp2'
-spinup_alpha=.false.
-spinup_period=0.0
-spinup_winds=.false.
-tau_r=0.0
-tau_t=0.0
-tau_u=0.0
 /
 
 &diagnostics_miniapp

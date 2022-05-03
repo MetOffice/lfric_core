@@ -17,7 +17,7 @@ module diagnostics_step_mod
     use field_collection_mod,           only : field_collection_type
     use hex_alg_mod,                    only : hex_alg
     use io_config_mod,                  only : write_diag
-    use gungho_model_data_mod,          only : model_data_type
+    use diagnostics_model_data_mod,     only : model_data_type
     use log_mod,                        only : log_event, LOG_LEVEL_INFO
     use mesh_mod,                       only : mesh_type
     use non_spatial_alg_mod,            only : non_spatial_alg

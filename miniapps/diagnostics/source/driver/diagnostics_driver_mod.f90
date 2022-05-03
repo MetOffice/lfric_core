@@ -9,7 +9,6 @@
 !>
 module diagnostics_driver_mod
 
-  use check_configuration_mod,       only : get_required_stencil_depth
   use clock_mod,                     only : clock_type
   use constants_mod,                 only : i_def, i_native, str_def, r_def
   use diagnostics_configuration_mod, only : load_configuration, program_name
@@ -17,7 +16,7 @@ module diagnostics_driver_mod
   use field_parent_mod,              only : field_parent_type
   use field_collection_mod,          only : field_collection_type
   use fieldspec_collection_mod,      only : fieldspec_collection
-  use gungho_model_data_mod,         only : model_data_type
+  use diagnostics_model_data_mod,    only : model_data_type
   use io_config_mod,                 only : write_diag, &
                                             use_xios_io
   use io_context_mod,                only : io_context_type
@@ -77,7 +76,6 @@ contains
     use convert_to_upper_mod,       only : convert_to_upper
     use driver_fem_mod,             only : init_fem
     use driver_mesh_mod,            only : init_mesh
-    use derived_config_mod,         only : set_derived_config
     use fieldspec_xml_parser_mod,   only : populate_fieldspec_collection
     use init_diagnostics_mod,       only : init_diagnostics
     use lfric_xios_io_mod,          only : initialise_xios
@@ -147,8 +145,6 @@ contains
                     convert_to_upper(key_from_run_log_level(run_log_level))
     call log_event(log_scratch_space, LOG_LEVEL_ALWAYS)
 
-    call set_derived_config(.true.)
-
     !----------------------------------------------------------------------
     ! Model init
     !----------------------------------------------------------------------
@@ -160,7 +156,7 @@ contains
     allocate( mesh_collection, &
               source=mesh_collection_type() )
 
-    stencil_depth = get_required_stencil_depth()
+    stencil_depth = 1_i_def
 
     ! Create the mesh
     call init_mesh( local_rank, total_ranks, stencil_depth, &

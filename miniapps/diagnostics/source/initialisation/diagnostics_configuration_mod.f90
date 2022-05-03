@@ -38,13 +38,12 @@ contains
 
     character(*), intent(in) :: filename
 
-    character(*), parameter ::                           &
-        required_configuration(10) =  [ 'base_mesh          ', & ! global space setup
+    character(*), parameter ::                                &
+        required_configuration(9) =  [ 'base_mesh          ', & ! global space setup
                                        'extrusion          ', & ! ""
                                        'finite_element     ', & ! ""
                                        'partitioning       ', & ! ""
                                        'planet             ', & ! ""
-                                       'files              ', & ! IO
                                        'io                 ', & ! ""
                                        'logging            ', & ! ""
                                        'time               ', & ! Run Configuration

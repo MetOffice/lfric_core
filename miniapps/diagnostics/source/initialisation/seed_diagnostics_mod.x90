@@ -12,7 +12,7 @@ module seed_diagnostics_mod
     use field_collection_mod,           only : field_collection_type
     use constants_mod,                  only : r_def, i_def
     use diagnostics_miniapp_config_mod, only : seed_red, seed_green, seed_blue
-    use gungho_model_data_mod,          only : model_data_type
+    use diagnostics_model_data_mod,     only : model_data_type
     use colours__prognostics__meta_mod, only : colours__prognostics__meta_type
     use log_mod,                        only : log_event, log_scratch_space, &
                                                LOG_LEVEL_INFO
