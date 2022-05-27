@@ -32,6 +32,20 @@
                                "lfric_mesh"         : {"file":"$BIG_DATA_DIR/meshes/HEAD/mesh_"~C_NUM~".nc", "name":"dynamics"},
                              },
 
+
+"protogal_N96L70_"~C_NUM~"L70" : {
+                               "app"                : "um2lfric",
+                               "opt_config"         : "protogal",
+                               "source_grid_res"    : "N96",
+                               "source_grid_levs"   : "70",
+                               "source_grid_type"   : "global",
+                               "target_grid_res"    : C_NUM,
+                               "target_grid_levs"   : "70",
+                               "target_grid_type"   : "global",
+                               "source_dump"        : "$UMDIR/standard_jobs/lfricinputs/inputs/proto_gal.71L",
+                               "lfric_mesh"         : {"file":"$BIG_DATA_DIR/meshes/HEAD/mesh_"~C_NUM~".nc", "name":"dynamics"},
+                             },
+
 }) %}
 {% endfor %}
 

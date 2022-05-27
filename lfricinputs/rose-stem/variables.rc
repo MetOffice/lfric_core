@@ -30,6 +30,11 @@
   "um2lfric-spice_ifort_gcc_safe-basicgal_N96L70_C12L70"                            : BASE~"_t2752",
   "um2lfric-spice_ifort_gcc_rigorous-basicgal_N96L70_C12L70"                        : BASE~"_t2752",
 
+  "um2lfric-spice_gfortran_gcc_safe-protogal_N96L70_C12L70"                         : BASE~"_t3031",
+  "um2lfric-spice_gfortran_gcc_rigorous-protogal_N96L70_C12L70"                     : BASE~"_t3031",
+  "um2lfric-spice_ifort_gcc_safe-protogal_N96L70_C12L70"                            : BASE~"_t3031",
+  "um2lfric-spice_ifort_gcc_rigorous-protogal_N96L70_C12L70"                        : BASE~"_t3031",
+
   "lfric2um-spice_gfortran_gcc_safe-aquaplanet_C48L38_N48L38"                       : BASE~"_t2337",
   "lfric2um-spice_gfortran_gcc_rigorous-aquaplanet_C48L38_N48L38"                   : BASE~"_t2337",
   "lfric2um-spice_ifort_gcc_safe-aquaplanet_C48L38_N48L38"                          : BASE~"_t2337",
@@ -76,6 +81,11 @@
   "um2lfric-xc40_crayftn_craycc_rigorous-basicgal_N96L70_C12L70"                    : BASE,
   "um2lfric-xc40_ifort_icc_safe-basicgal_N96L70_C12L70"                             : BASE~"_t2752",
   "um2lfric-xc40_ifort_icc_rigorous-basicgal_N96L70_C12L70"                         : BASE~"_t2752",
+
+  "um2lfric-xc40_crayftn_craycc_safe-protogal_N96L70_C12L70"                        : BASE,
+  "um2lfric-xc40_crayftn_craycc_rigorous-protogal_N96L70_C12L70"                    : BASE,
+  "um2lfric-xc40_ifort_icc_safe-protogal_N96L70_C12L70"                             : BASE~"_t3031",
+  "um2lfric-xc40_ifort_icc_rigorous-protogal_N96L70_C12L70"                         : BASE~"_t3031",
 
   "lfric2um-xc40_crayftn_craycc_safe-aquaplanet_C48L38_N48L38"                      : BASE,
   "lfric2um-xc40_crayftn_craycc_rigorous-aquaplanet_C48L38_N48L38"                  : BASE,

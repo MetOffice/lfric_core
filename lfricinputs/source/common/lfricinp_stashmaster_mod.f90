@@ -190,6 +190,8 @@ INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_riv_substorage    = 167
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_riv_flowin        = 168
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_riv_bflowin       = 169
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_ice_subl_cat      = 182
+INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_ls_snow_rate      = 187
+INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_conv_rain_rate    = 188
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_iceberg_calving   = 190
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_sstfrz            = 194
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_tstar_ice_cat_cpl = 195
@@ -320,7 +322,6 @@ INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_etadot            = 387
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_thetavd           = 388
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dry_rho           = 389
 
-INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_exner_surf        = 398
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_psiw_surf         = 390
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_psiw_lid          = 397
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_mv                = 391
@@ -329,6 +330,7 @@ INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_mcf               = 393
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_mr                = 394
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_mgr               = 395
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_mcf2              = 396
+INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_exner_surf        = 398
 
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_p                 = 407
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_pstar             = 409
@@ -436,6 +438,11 @@ INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dEPS_I            = 590
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dPV_sol           = 591
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dPV_mass          = 592
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dPV_0             = 593
+
+! Stochastic Physics
+INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_bl_pert_rand_fld  = 595
+INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_bl_pert_flag      = 596
+
 ! More PV-tracers, diab-friction split
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dPV_conv_d        = 620
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dPV_conv_f        = 621
@@ -456,10 +463,6 @@ INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dtheta_slow       = 609
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dtheta_cld        = 610
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_dtheta_PC2c       = 611
 
-! Stochastic Physics
-INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_bl_pert_rand_fld  = 595
-INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_bl_pert_flag      = 596
-
 ! INFERNO Ignition Ancillaries
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_flash_rate_ancil  = 626
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_pop_den_ancil     = 627
@@ -468,6 +471,9 @@ INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_wealth_index_ancil= 628
 ! Irrigation
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_sthu_irr          = 630
 INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_frac_irr          = 631
+
+! New
+INTEGER(KIND=int64), PUBLIC, PARAMETER :: stashcode_qt                = 16207
 
 
 
