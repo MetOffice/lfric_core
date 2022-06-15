@@ -14,8 +14,9 @@ module leonard_term_alg_mod
 
   use formulation_config_mod,    only: moisture_formulation,    &
                                        moisture_formulation_dry
-  use fs_continuity_mod,          only: W3, Wtheta
+  use fs_continuity_mod,          only: W1, W2, W3, Wtheta
   use geometric_constants_mod,    only: get_height
+  use physical_op_constants_mod,  only: get_dtrdz_fd2
 
   use mixing_config_mod,          only: leonard_kl
 
@@ -36,27 +37,32 @@ contains
   !>          due to the vertical Leonard term fluxes
   !> @param[in,out] mt_inc_leonard      Moisture increment
   !> @param[in,out] thetal_inc_leonard  Theta increment
+  !> @param[in,out] u_inc_leonard       Velocity increment
   !> @param[in]     mr                  Mixing ratios
   !> @param[in]     theta               Potential temperature in wth space
+  !> @param[in]     u                   3D wind field
   !> @param[in]     rho                 Dry density in w3 space
   !> @param[in,out] turbulence_fields   Fields for turbulence scheme
   !> @param[in]     derived_fields      Group of derived fields
   !> @param[in]     dt                  The model timestep length
 subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
-                            mr, theta, rho,                     &
+                            u_inc_leonard, mr, theta, u, rho,   &
                             turbulence_fields, derived_fields,  &
                             dt )
 
     use leonard_term_kl_kernel_mod, only: leonard_term_kl_kernel_type
     use leonard_term_th_kernel_mod, only: leonard_term_th_kernel_type
+    use leonard_term_u_kernel_mod,  only: leonard_term_u_kernel_type
     use planet_constants_mod, only: lcrcp, lsrcp, planet_radius
 
     implicit none
 
+    type( field_type ), intent(inout) :: u_inc_leonard
     type( field_type ), intent(inout) :: mt_inc_leonard
     type( field_type ), intent(inout) :: thetal_inc_leonard
     type( field_type ), intent(in) :: mr ( nummr )
     type( field_type ), intent(in) :: theta
+    type( field_type ), intent(in) :: u
     type( field_type ), intent(in) :: rho
 
     type( field_collection_type ), intent(in)    :: derived_fields
@@ -66,8 +72,14 @@ subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
 
     ! Temporary fields unpacked from collections
     type( field_type ), pointer :: exner_in_wth       => null()
+    type( field_type ), pointer :: wetrho_in_w2       => null()
+    type( field_type ), pointer :: wetrho_in_w3       => null()
+    type( field_type ), pointer :: w_physics          => null()
     type( field_type ), pointer :: velocity_w2v       => null()
     type( field_type ), pointer :: dtrdz_tq_bl        => null()
+    type( field_type ), pointer :: dtrdz_fd2          => null()
+    type( field_type ), pointer :: height_w1          => null()
+    type( field_type ), pointer :: height_w2          => null()
     type( field_type ), pointer :: height_w3          => null()
     type( field_type ), pointer :: height_wth         => null()
 
@@ -80,25 +92,34 @@ subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
     type( field_type ) :: thetal
     ! total water content
     type( field_type ) :: mt
+    ! w increment
+    type( field_type ) :: vel_w2v_inc_leonard
 
     if ( subroutine_timers ) call timer("leonard_term_alg")
 
     mesh_id = theta%get_mesh_id()
 
     ! Unpack derived fields
-    exner_in_wth => derived_fields%get_field('exner_in_wth')
-    velocity_w2v => derived_fields%get_field('velocity_w2v')
+    exner_in_wth  => derived_fields%get_field('exner_in_wth')
+    wetrho_in_w2  => derived_fields%get_field('wetrho_in_w2')
+    wetrho_in_w3  => derived_fields%get_field('wetrho_in_w3')
+    w_physics     => derived_fields%get_field('velocity_w2v')
+    velocity_w2v  => derived_fields%get_field('velocity_w2v')
 
     ! Unpack turbulence fields
     dtrdz_tq_bl  => turbulence_fields%get_field('dtrdz_tq_bl')
 
+    dtrdz_fd2  => get_dtrdz_fd2(mesh_id)
     height_wth => get_height(Wtheta, mesh_id)
     height_w3  => get_height(W3, mesh_id)
+    height_w2  => get_height(W2, mesh_id)
+    height_w1  => get_height(W1, mesh_id)
 
     ! Set-up arrays for local fields
     call rho%copy_field_properties(kl)
     call theta%copy_field_properties(thetal)
     call theta%copy_field_properties(mt)
+    call theta%copy_field_properties(vel_w2v_inc_leonard)
 
     !--------------------------------------------------------------------
     ! Apply stability-limit to leonard_kl:
@@ -109,6 +130,41 @@ subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
                                               height_wth,               &
                                               leonard_kl,               &
                                               dt ),                     &
+
+    !--------------------------------------------------------------------
+    ! Flux of vertical velocity:
+    !--------------------------------------------------------------------
+                 ! Call Leonard term code for scalars
+                 leonard_term_th_kernel_type( vel_w2v_inc_leonard,      &
+                                              velocity_w2v,             &
+                                              stencil_depth,            &
+                                              w_physics,                &
+                                              stencil_depth,            &
+                                              dtrdz_tq_bl,              &
+                                              kl,                       &
+                                              wetrho_in_w3,             &
+                                              height_w3,                &
+                                              planet_radius ),          &
+
+    !--------------------------------------------------------------------
+    ! Flux of horizontal wind:
+    !--------------------------------------------------------------------
+                 ! Call Leonard term code for winds
+                 setval_c(u_inc_leonard,0.0_r_def),                     &
+                 leonard_term_u_kernel_type(  u_inc_leonard,            &
+                                              u,                        &
+                                              stencil_depth,            &
+                                              velocity_w2v,             &
+                                              stencil_depth,            &
+                                              vel_w2v_inc_leonard,      &
+                                              dtrdz_fd2,                &
+                                              height_w1,                &
+                                              height_w2,                &
+                                              wetrho_in_w2,             &
+                                              planet_radius,            &
+                                              leonard_kl,               &
+                                              dt ),                     &
+
     !--------------------------------------------------------------------
     ! Flux of liquid + ice water potential temperature:
     !--------------------------------------------------------------------
@@ -118,7 +174,7 @@ subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
                  inc_X_minus_bY(thetal, lcrcp, mr(imr_cl)),             &
                  inc_X_minus_bY(thetal, lsrcp, mr(imr_ci)),             &
                  inc_X_divideby_Y(thetal, exner_in_wth),                &
-                 ! Call Leonard term code
+                 ! Call Leonard term code for scalars
                  leonard_term_th_kernel_type( thetal_inc_leonard,       &
                                               thetal,                   &
                                               stencil_depth,            &
@@ -137,7 +193,7 @@ subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
                  ! Calculate mt = mv+mcl+mci
       call invoke(     X_plus_Y(mt, mr(imr_v), mr(imr_cl)),             &
                    inc_X_plus_Y(mt, mr(imr_ci)),                        &
-                   ! Call Leonard term code
+                   ! Call Leonard term code for scalars
                    leonard_term_th_kernel_type( mt_inc_leonard,         &
                                                 mt,                     &
                                                 stencil_depth,          &
@@ -151,7 +207,7 @@ subroutine leonard_term_alg(mt_inc_leonard, thetal_inc_leonard, &
 
     end if
 
-    nullify( height_w3, height_wth )
+    nullify( height_w1, height_w2, height_w3, height_wth )
 
     if ( subroutine_timers ) call timer("leonard_term_alg")
 

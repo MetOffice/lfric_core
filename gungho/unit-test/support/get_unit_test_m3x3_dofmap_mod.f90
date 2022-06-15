@@ -27,6 +27,7 @@ module get_unit_test_m3x3_dofmap_mod
             get_wchi_m3x3_dofmap,          &
             get_m3x3_stencil_dofmap_point, &
             get_m3x3_stencil_dofmap_cross, &
+            get_m3x3_stencil_dofmap_region,&
             get_m3x3_stencil_dofmap_1dx,   &
             get_m3x3_stencil_dofmap_1dy
   contains
@@ -370,6 +371,34 @@ module get_unit_test_m3x3_dofmap_mod
     end do
 
   end subroutine get_m3x3_stencil_dofmap_cross
+
+!---------------------------------------------------------------------
+
+  subroutine get_m3x3_stencil_dofmap_region(stencil_map, dofmap)
+    ! Generate a 9-point region stencil dofmap for any given input 3x3 dofmap
+    implicit none
+    integer(i_def), allocatable, intent(out) :: stencil_map(:,:,:)
+    integer(i_def),              intent(in)  :: dofmap(:,:)
+
+    integer(i_def), parameter :: stencil(9,9)= reshape( [ 1,3,9,7,8,2,5,4,6, &
+                                                          2,1,7,8,9,3,6,5,4, &
+                                                          3,2,8,9,7,1,4,6,5, &
+                                                          4,6,3,1,2,5,8,7,9, &
+                                                          5,4,1,2,3,6,9,8,7, &
+                                                          6,5,2,3,1,4,7,9,8, &
+                                                          7,9,6,4,5,8,2,1,3, &
+                                                          8,7,4,5,6,9,3,2,1, &
+                                                          9,8,5,6,4,7,1,3,2], [9,9] )
+    integer(i_def) :: i,j
+
+    allocate(stencil_map(size(dofmap,1),9,9))
+    do j=1,9
+      do i=1,9
+        stencil_map(:,i,j)=dofmap(:,stencil(i,j))
+      end do
+    end do
+
+  end subroutine get_m3x3_stencil_dofmap_region
 
 !---------------------------------------------------------------------
 

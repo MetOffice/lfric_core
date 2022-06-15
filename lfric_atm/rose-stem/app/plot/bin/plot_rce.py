@@ -25,16 +25,9 @@ theta           = ['theta',           297,  299]
 m_v             = ['m_v',             6e-3, 10e-3]
 m_cl            = ['m_cl',            0,    5e-5]
 m_ci            = ['m_ci',            0,    1e-4]
-ls_rain         = ['ls_rain',         1,    9]
-total_prec      = ['total_prec',1,9]
-sw_heating_rate = ['sw_heating_rate', 0,    7e-5]
-cloud_cover_rts = ['cloud_cover_rts', 0, 1]
-cloud_amount_maxrnd = ['cloud_amount_maxrnd',0,1]
-cloud_fraction_rts = ['cloud_fraction_rts', 0, 1]
-cloud_droplet_re_rts = ['cloud_droplet_re_rts', 0, 20e-6]
-trop_level      = ['trop_level', 20, 50]
-sw_down_surf    = ['sw_down_surf', 0, 1400]
-sw_aod          = ['sw_aer_optical_depth_rts', 0, 1e-3]
+ls_prec         = ['ls_prec',         1,    25]
+total_prec      = ['total_prec',      1,    25]
+w_in_wth        = ['w_in_wth',        -5,    5]
 
 def load_cube_by_varname(filename, var):
    variable_constraint = iris.Constraint(cube_func=(lambda c: c.var_name == var))
@@ -100,5 +93,5 @@ if __name__ == "__main__":
     do_plot(datapath, m_v,             plotpath, plotlevel=20)
     do_plot(datapath, m_cl,            plotpath, plotlevel=20)
     do_plot(datapath, m_ci,            plotpath, plotlevel=20)
-    do_plot(datapath, total_prec, plotpath)
-    do_plot(datapath, cloud_amount_maxrnd, plotpath)
+    do_plot(datapath, ls_prec,         plotpath)
+    do_plot(datapath, w_in_wth,        plotpath, plotlevel=20)

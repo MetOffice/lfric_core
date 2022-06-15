@@ -96,6 +96,15 @@ subroutine leonard_term_kl_code( nlayers,                               &
   ! Internal variables
   integer(kind=i_def) :: k, kp
 
+  ! If the full stencil isn't available, we must be at the domain edge.
+  ! Simply set the increment to 0 for now, and exit the routine.
+  if (map_wt_stencil_size < 5_i_def) then
+    do k = 0, nlayers - 1
+      kl(map_w3(1) + k) = leonard_kl
+    end do
+    return
+  end if
+
   ! Leonard term parameter is the min of the input leonard_kl
   ! and the max stable value   6 * dz / ( dt * dw )
   ! For dw we use the maximum horizontal finite difference that

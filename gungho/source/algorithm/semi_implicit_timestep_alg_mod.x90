@@ -422,7 +422,8 @@ contains
     !--------------------------------------------------------------------
     if (use_physics) then
       call slow_physics(du, dtheta, mr_after_slow, visc_m, visc_h,             &
-                        state_n(igh_t), state_n(igh_d), state_n(igh_p),        &
+                        state_n(igh_t), state_n(igh_u),                        &
+                        state_n(igh_d), state_n(igh_p),                        &
                         mr_n, derived_fields, radiation_fields,                &
                         microphysics_fields, orography_fields,                 &
                         turbulence_fields, convection_fields, cloud_fields,    &

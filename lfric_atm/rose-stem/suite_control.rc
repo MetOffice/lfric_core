@@ -248,7 +248,7 @@
  		     "directives":{"default":{"mpi_parts":4,
  		                              "threads":1,
  		                              "wallclock":"0:10:00"} } },
- 		     plotstr="plot_map.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR")',
+ 		     plotstr="plot_map.py -ral $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR")',
     'check_compilers("lfric_atm", "nwp_gal9_copy", "full-debug",
                      resolution=("C12",1800.0))',
     'canned_test("lfric_atm")'
@@ -399,6 +399,6 @@
                                              "xios_nodes":4,
                                              "mpi_parts_xios":144,
  		                             "wallclock":"00:30:00"} } },
- 		    plotstr="plot_map.py $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR")',
+ 		    plotstr="plot_map.py -ral $NODAL_DATA_DIR/lfric_diag.nc  $PLOT_DIR")',
 		     ],
 } %}

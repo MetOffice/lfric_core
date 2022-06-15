@@ -38,7 +38,7 @@ module leonard_term_th_kernel_mod
          arg_type(GH_FIELD,  GH_REAL, GH_READ,  W3),                       &
          arg_type(GH_FIELD,  GH_REAL, GH_READ,  W3),                       &
          arg_type(GH_FIELD,  GH_REAL, GH_READ,  W3),                       &
-         arg_type(GH_SCALAR, GH_REAL, GH_READ)                            &
+         arg_type(GH_SCALAR, GH_REAL, GH_READ)                             &
          /)
     integer :: operates_on = CELL_COLUMN
   contains
@@ -122,6 +122,15 @@ subroutine leonard_term_th_code( nlayers,                               &
   real(kind=r_def), dimension(0:nlayers-1) :: flux
   ! density * r^2 on w3 levels
   real(kind=r_def), dimension(1:nlayers-1) :: rho_rsq
+
+  ! If the full stencil isn't available, we must be at the domain edge.
+  ! Simply set the increment to 0 for now, and exit the routine.
+  if (map_wth_stencil_size < 5_i_def) then
+    do k = 0, nlayers
+      field_inc(map_wt(1) + k) = 0.0_r_def
+    end do
+    return
+  end if
 
   ! Calculate rho * r^2
   do k = 1, nlayers - 1

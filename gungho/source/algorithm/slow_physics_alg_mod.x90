@@ -110,6 +110,7 @@ contains
   !> @param[in,out] visc_m                 Smagorinsky momentum diffusion coef
   !> @param[in,out] visc_h                 Smagorinsky heat diffusion coef
   !> @param[in]     theta                  Theta field at start of timestep
+  !> @param[in]     u                      3D wind field at start of timestep
   !> @param[in]     rho                    Rho on w3 space
   !> @param[in]     exner                  Exner pressure on w3 space
   !> @param[in]     mr_n                   Mixing ratios at start of timestep
@@ -130,7 +131,7 @@ contains
   !> @param[in]     mesh                   Current mesh
   !> @param[in]     twod_mesh              2d mesh
   subroutine slow_physics(du, dtheta, mr, visc_m, visc_h,                      &
-                          theta, rho, exner, mr_n, derived_fields,             &
+                          theta, u, rho, exner, mr_n, derived_fields,          &
                           radiation_fields, microphysics_fields,               &
                           orography_fields, turbulence_fields,                 &
                           convection_fields, cloud_fields, surface_fields,     &
@@ -141,7 +142,7 @@ contains
 
     ! Fields
     type( field_type ), intent( inout ) :: du, dtheta, visc_m, visc_h
-    type( field_type ), intent( in )    :: theta, rho, exner
+    type( field_type ), intent( in )    :: theta, u, rho, exner
 
     ! Field bundles
     type( field_type ), intent( inout ) :: mr(nummr)   ! Latest value, to update
@@ -199,6 +200,7 @@ contains
     ! ...for boundary layer
     type( field_type ) :: dtheta_bl, du_bl
     ! ...for Leonard term flux
+    type( field_type ) :: u_inc_leonard
     type( field_type ), pointer :: mt_inc_leonard => null()
     type( field_type ), pointer :: thetal_inc_leonard => null()
 #ifdef UM_PHYSICS
@@ -482,10 +484,11 @@ contains
     !--------------------------------------------------------------------
 
     if (leonard_term .and. boundary_layer == boundary_layer_um ) then
+      call u%copy_field_properties(u_inc_leonard)
       mt_inc_leonard     => turbulence_fields%get_field('mt_inc_leonard')
       thetal_inc_leonard => turbulence_fields%get_field('thetal_inc_leonard')
       call leonard_term_alg(mt_inc_leonard, thetal_inc_leonard,           &
-                            mr_n, theta, rho,                             &
+                            u_inc_leonard, mr_n, theta, u, rho,           &
                             turbulence_fields, derived_fields,            &
                             dt)
       leonard_term_done = .true. ! Collect this increment later on
@@ -614,7 +617,8 @@ contains
 
     if (leonard_term_done) then
       call invoke(inc_X_plus_Y(mr(imr_v), mt_inc_leonard), &
-                  inc_X_plus_Y(dtheta, thetal_inc_leonard) )
+                  inc_X_plus_Y(dtheta, thetal_inc_leonard), &
+                  inc_X_plus_Y(du, u_inc_leonard) )
     end if
 
     if (boundary_layer_done) then

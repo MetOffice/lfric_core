@@ -33,6 +33,7 @@ sw_heating_rate = ['sw_heating_rate', 0,    7e-5]
 trop_level      = ['trop_level', 20, 50]
 grid_snow_mass  = ['grid_snow_mass',0,1000]
 total_prec      = ['total_prec',0,1e-3]
+ls_prec         = ['ls_prec',0,1e-3]
 sw_direct_toa   = ['sw_direct_toa', 0, 1450]
 sw_up_toa       = ['sw_up_toa',0,600]
 sw_down_surf    = ['sw_down_surf', 0, 1400]
@@ -135,6 +136,7 @@ if __name__ == "__main__":
         args = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
         datapath, plotpath = args[0:2]
         rts_plots = '-rts' in opts
+        ral_plots = '-ral' in opts
     except ValueError:
         print("Usage: {0} <datapath> <plotpath>".format(sys.argv[0]))
         exit(1)
@@ -151,7 +153,6 @@ if __name__ == "__main__":
     do_plot(datapath, lw_down_surf,    plotpath)
     do_plot(datapath, lw_up_toa,       plotpath)
     do_plot(datapath, trop_level,      plotpath)
-    do_plot(datapath, total_prec,      plotpath)
     if rts_plots:
         do_plot(datapath, cloud_cover_rts,        plotpath)
         do_plot(datapath, cloud_fraction_rts,     plotpath, plotlevel=17)
@@ -169,3 +170,7 @@ if __name__ == "__main__":
         do_plot(datapath, lw_up_clear_toa_rts,    plotpath)
         do_plot(datapath, lw_down_clear_surf_rts, plotpath)
         do_plot(datapath, lw_up_clear_surf_rts,   plotpath)
+    if ral_plots:
+        do_plot(datapath, ls_prec,      plotpath)
+    else:
+        do_plot(datapath, total_prec,   plotpath)
