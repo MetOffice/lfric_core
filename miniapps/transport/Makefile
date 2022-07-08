@@ -41,6 +41,7 @@ default: build unit-tests integration-tests
 documentation doc docs: document-uml document-latex document-api
 	$(Q)echo > /dev/null
 
+include $(ROOT_DIR)/infrastructure/build/lfric.mk
 include $(INTERNAL_DEPENDENCIES:=/build/import.mk)
 -include $(PROJECT_DIR)/build/project.mk
 
@@ -178,7 +179,3 @@ clean: ALWAYS
 	$(Q)-if [ -d bin ] ; then rm -r bin ; fi
 	$(Q)-if [ -d test ] ; then rm -r test ; fi
 
-###############################################################################
-# Build system
-#
-include $(ROOT_DIR)/infrastructure/build/lfric.mk
