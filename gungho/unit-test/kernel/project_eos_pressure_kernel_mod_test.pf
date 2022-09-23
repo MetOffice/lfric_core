@@ -60,7 +60,6 @@ contains
                                           feign_initial_temperature_config, &
                                           feign_planet_config,              &
                                           feign_finite_element_config
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
     use initial_temperature_config_mod, &
                                    only : perturb_none
 

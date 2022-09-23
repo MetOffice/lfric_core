@@ -42,9 +42,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use initial_wind_config_mod,   only : profile_none
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
-
     implicit none
 
     class(sample_initial_u_test_type), intent(inout) :: this

@@ -63,7 +63,6 @@ contains
                                           feign_finite_element_config
     use initial_temperature_config_mod, &
                                    only : perturb_none
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
 
     implicit none
 

@@ -58,7 +58,6 @@ contains
                                           topology_fully_periodic
     use finite_element_config_mod, only : cellshape_quadrilateral
     use feign_config_mod,          only : feign_base_mesh_config
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
 
     implicit none
 

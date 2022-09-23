@@ -61,7 +61,6 @@ contains
                                           feign_initial_temperature_config
     use initial_temperature_config_mod, &
                                    only : perturb_none
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
 
     implicit none
 

@@ -38,7 +38,6 @@ contains
     use finite_element_config_mod, only : cellshape_quadrilateral, &
                                           coord_system_xyz
     use feign_config_mod,          only : feign_finite_element_config
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
 
     implicit none
 

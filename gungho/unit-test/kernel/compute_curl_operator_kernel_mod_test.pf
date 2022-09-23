@@ -47,7 +47,6 @@ contains
     use finite_element_config_mod, only : cellshape_quadrilateral, &
                                           coord_system_xyz
     use feign_config_mod,          only : feign_finite_element_config
-    use mesh_mod,                  only : PLANE_BI_PERIODIC
 
     implicit none
 
@@ -83,7 +82,6 @@ contains
 
     use compute_curl_operator_kernel_mod, &
                                     only : compute_curl_operator_code
-    use mesh_mod,                   only : mesh_type
 
     implicit none
 

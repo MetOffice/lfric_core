@@ -77,7 +77,6 @@ contains
 
     use fv_divergence_kernel_mod, only : fv_divergence_code
     use flux_direction_mod,       only : x_direction, y_direction, z_direction
-    use mesh_mod,                 only : mesh_type
 
     implicit none
 

@@ -8,7 +8,6 @@ module departure_point_kernel_mod_test
 
   use pFUnit_Mod
   use constants_mod,      only : i_def, r_def, r_second
-  use mesh_mod,           only : mesh_type
 
   implicit none
 
@@ -18,7 +17,6 @@ module departure_point_kernel_mod_test
   @TestCase
   type, extends(TestCase) :: developed_departure_point_test_type
     private
-    type(mesh_type)          :: mesh
   contains
     procedure setUp
     procedure tearDown

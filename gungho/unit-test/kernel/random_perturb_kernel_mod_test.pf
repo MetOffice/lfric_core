@@ -43,8 +43,6 @@ contains
 
     class(random_perturb_test_type), intent(inout) :: this
 
-    integer(i_def) :: i
-
     allocate(this%map_wtheta(ndf_wtheta))
     allocate(this%theta(undf_wtheta))
     allocate(this%height_wt(undf_wtheta))
