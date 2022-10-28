@@ -297,6 +297,7 @@ u2 = -1.0   ! 2nd velocity component for advected hill
 ! Method to compute Det(J) and FFSL options
 calculate_detj                   = 'upwind'
 dep_pt_stencil_extent            = 1
-rho_approximation                = 'ppm_no_limiter'
+inner_order                      = 2
+outer_order                      = 2
 rho_approximation_stencil_extent = 2
 /

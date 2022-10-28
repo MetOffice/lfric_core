@@ -280,7 +280,8 @@ tolerance=1.0e-6,
 &subgrid
 calculate_detj='averaged',
 dep_pt_stencil_extent=3,
-rho_approximation='ppm_no_limiter',
+inner_order = 2
+outer_order = 2
 rho_approximation_stencil_extent=2,
 /
 &surface

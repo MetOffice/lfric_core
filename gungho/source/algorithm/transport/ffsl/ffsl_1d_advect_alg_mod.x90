@@ -52,9 +52,7 @@ contains
   !> @param[in]     dep_pts           Departure points in the chosen direction
   !> @param[in]     detj_at_w2        Det(J) at W2 dofs
   !> @param[in]     dt                The model timestep length
-  !> @param[in]     order             Order of the reconstruction,
-  !!                                  0 for constant, 2 for PPM. This is included
-  !!                                  here to be ready for #3324
+  !> @param[in]     order             Order of the reconstruction
   !> @param[in,out] increment         Advective increment
   subroutine ffsl_1d_advect_first( direction,  &
                                    field,      &
@@ -114,6 +112,7 @@ contains
                              field,      &
                              dep_pts,    &
                              detj_at_w2, &
+                             order,      &
                              dt,         &
                              flux,       &
                              inc_rho )
@@ -124,6 +123,7 @@ contains
                              ini_one,    &
                              dep_pts,    &
                              detj_at_w2, &
+                             order,      &
                              dt,         &
                              flux,       &
                              inc_one )
@@ -158,9 +158,7 @@ contains
   !> @param[in]     detj_at_w2        Det(J) at W2 dofs
   !> @param[in]     dt                The model timestep length
   !> @param[in]     panel_id          Panel ID of the cells
-  !> @param[in]     order             Order of the reconstruction,
-  !!                                  0 for constant, 2 for PPM. This is included
-  !!                                  here to be ready for #3324
+  !> @param[in]     order             Order of the reconstruction
   !> @param[in,out] increment         Advective increment
   subroutine ffsl_1d_advect_final( direction,  &
                                    field_x,    &
@@ -234,6 +232,7 @@ contains
                              field_y,    &
                              dep_pts,    &
                              detj_at_w2, &
+                             order,      &
                              dt,         &
                              panel_id,   &
                              flux,       &
@@ -245,6 +244,7 @@ contains
                              ini_one,    &
                              dep_pts,    &
                              detj_at_w2, &
+                             order,      &
                              dt,         &
                              flux,       &
                              inc_one )
@@ -270,11 +270,13 @@ contains
   !> @param[in]     field             Input field
   !> @param[in]     dep_pts           Departure points in the chosen direction
   !> @param[in]     detj_at_w2        Det(J) at W2 dofs
+  !> @param[in]     order             Order of the reconstruction
   !> @param[in]     dt                The model timestep length
   !> @param[in,out] increment         Advective increment
   subroutine ffsl_1d_advect_vert( field,      &
                                   dep_pts,    &
                                   detj_at_w2, &
+                                  order,      &
                                   dt,         &
                                   increment )
 
@@ -284,6 +286,7 @@ contains
     type(field_type), intent(in)    :: field
     type(field_type), intent(in)    :: dep_pts
     type(field_type), intent(in)    :: detj_at_w2
+    integer(i_def),   intent(in)    :: order
     real(r_def),      intent(in)    :: dt
     type(field_type), intent(inout) :: increment
 
@@ -322,13 +325,13 @@ contains
     one_over_dt = 1.0_r_def / dt
 
     ! Compute the increment of the field, F(q)
-    call ffsl_1d_flux_vert( field, dep_pts, detj_at_w2, dt, &
-                            flux, inc_rho )
+    call ffsl_1d_flux_vert( field, dep_pts, detj_at_w2, order, &
+                            dt, flux, inc_rho )
     call invoke( X_minus_bY( adv_rho, field, dt, inc_rho ) )
 
     ! Compute the increment of one, F(1)
-    call ffsl_1d_flux_vert( ini_one, dep_pts, detj_at_w2, dt, &
-                            flux, inc_one )
+    call ffsl_1d_flux_vert( ini_one, dep_pts, detj_at_w2, order, &
+                            dt, flux, inc_one )
 
     ! Get the advective increment from these conservative increments
     ! adv_rho   = q - dt * F(q)

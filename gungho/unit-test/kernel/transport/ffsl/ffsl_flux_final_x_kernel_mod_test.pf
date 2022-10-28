@@ -30,17 +30,17 @@ contains
   subroutine setUp( this )
 
     use feign_config_mod,   only : feign_subgrid_config
-    use subgrid_config_mod, only : calculate_detj_upwind, &
-                                   rho_approximation_ppm_no_limiter
+    use subgrid_config_mod, only : calculate_detj_upwind
 
     implicit none
 
     class(ffsl_flux_final_x_test_type), intent(inout) :: this
 
-    call feign_subgrid_config( calculate_detj = calculate_detj_upwind,              &
-                               dep_pt_stencil_extent = 2,                           &
-                               rho_approximation =rho_approximation_ppm_no_limiter, &
-                               rho_approximation_stencil_extent=2                   &
+    call feign_subgrid_config( calculate_detj = calculate_detj_upwind, &
+                               dep_pt_stencil_extent = 2,              &
+                               inner_order = 2,                        &
+                               outer_order = 2,                        &
+                               rho_approximation_stencil_extent=2      &
                                )
 
   end subroutine setUp
@@ -76,8 +76,10 @@ contains
     integer(kind=i_def), parameter :: ndf_w3 = 1
     integer(kind=i_def), parameter :: ndf_w2 = 4
     integer(kind=i_def), parameter :: stencil_size = 9
+    integer(kind=i_def), parameter :: stencil_extent = ( stencil_size - 1_i_def ) / 2_i_def
     integer(kind=i_def), parameter :: undf_w2 = ndf_w2*nlayers
     integer(kind=i_def), parameter :: undf_w3 = ndf_w3*nlayers*stencil_size
+    integer(kind=i_def), parameter :: order = 2
 
     integer(kind=i_def), dimension(ndf_w3)              :: map_w3
     integer(kind=i_def), dimension(ndf_w2)              :: map_w2
@@ -113,27 +115,29 @@ contains
     panel_id(:) = (/ 1.0_r_def, 1.0_r_def, 1.0_r_def, &
                      1.0_r_def, 1.0_r_def, 1.0_r_def, &
                      1.0_r_def, 1.0_r_def, 1.0_r_def /)
-    call ffsl_flux_final_x_code( nlayers,      &
-                                 flux,         &
-                                 field_x,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 field_y,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 panel_id,     &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 dep_pts,      &
-                                 dt,           &
-                                 ndf_w2,       &
-                                 undf_w2,      &
-                                 map_w2,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
-                                 map_w3,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
+    call ffsl_flux_final_x_code( nlayers,        &
+                                 flux,           &
+                                 field_x,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 field_y,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 panel_id,       &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 dep_pts,        &
+                                 order,          &
+                                 stencil_extent, &
+                                 dt,             &
+                                 ndf_w2,         &
+                                 undf_w2,        &
+                                 map_w2,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
+                                 map_w3,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
                                  map_w3 )
     ! Get correct tolerance
     if ( r_def == real64 ) then
@@ -152,27 +156,29 @@ contains
     panel_id(:) = (/ 1.0_r_def, 1.0_r_def, 1.0_r_def, &
                      1.0_r_def, 1.0_r_def, 1.0_r_def, &
                      1.0_r_def, 1.0_r_def, 1.0_r_def /)
-    call ffsl_flux_final_x_code( nlayers,      &
-                                 flux,         &
-                                 field_x,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 field_y,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 panel_id,     &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 dep_pts,      &
-                                 dt,           &
-                                 ndf_w2,       &
-                                 undf_w2,      &
-                                 map_w2,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
-                                 map_w3,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
+    call ffsl_flux_final_x_code( nlayers,        &
+                                 flux,           &
+                                 field_x,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 field_y,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 panel_id,       &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 dep_pts,        &
+                                 order,          &
+                                 stencil_extent, &
+                                 dt,             &
+                                 ndf_w2,         &
+                                 undf_w2,        &
+                                 map_w2,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
+                                 map_w3,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
                                  map_w3 )
     answer = 0.952_r_def
     @assertEqual(answer, flux(1), use_tol)
@@ -185,27 +191,29 @@ contains
     panel_id(:) = (/ 4.0_r_def, 4.0_r_def, 4.0_r_def, &
                      4.0_r_def, 1.0_r_def, 1.0_r_def, &
                      1.0_r_def, 1.0_r_def, 1.0_r_def /)
-    call ffsl_flux_final_x_code( nlayers,      &
-                                 flux,         &
-                                 field_x,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 field_y,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 panel_id,     &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 dep_pts,      &
-                                 dt,           &
-                                 ndf_w2,       &
-                                 undf_w2,      &
-                                 map_w2,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
-                                 map_w3,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
+    call ffsl_flux_final_x_code( nlayers,        &
+                                 flux,           &
+                                 field_x,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 field_y,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 panel_id,       &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 dep_pts,        &
+                                 order,          &
+                                 stencil_extent, &
+                                 dt,             &
+                                 ndf_w2,         &
+                                 undf_w2,        &
+                                 map_w2,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
+                                 map_w3,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
                                  map_w3 )
     answer = 0.388_r_def
     @assertEqual(answer, flux(1), use_tol)
@@ -218,27 +226,29 @@ contains
     panel_id(:) = (/ 3.0_r_def, 3.0_r_def, 3.0_r_def, &
                      3.0_r_def, 3.0_r_def, 5.0_r_def, &
                      5.0_r_def, 5.0_r_def, 5.0_r_def /)
-    call ffsl_flux_final_x_code( nlayers,      &
-                                 flux,         &
-                                 field_x,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 field_y,      &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 panel_id,     &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 dep_pts,      &
-                                 dt,           &
-                                 ndf_w2,       &
-                                 undf_w2,      &
-                                 map_w2,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
-                                 map_w3,       &
-                                 ndf_w3,       &
-                                 undf_w3,      &
+    call ffsl_flux_final_x_code( nlayers,        &
+                                 flux,           &
+                                 field_x,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 field_y,        &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 panel_id,       &
+                                 stencil_size,   &
+                                 stencil_map,    &
+                                 dep_pts,        &
+                                 order,          &
+                                 stencil_extent, &
+                                 dt,             &
+                                 ndf_w2,         &
+                                 undf_w2,        &
+                                 map_w2,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
+                                 map_w3,         &
+                                 ndf_w3,         &
+                                 undf_w3,        &
                                  map_w3 )
     answer = -0.444_r_def
     @assertEqual(answer, flux(1), use_tol)

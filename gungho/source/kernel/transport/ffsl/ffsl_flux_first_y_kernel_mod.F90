@@ -21,12 +21,10 @@ module ffsl_flux_first_y_kernel_mod
                                  GH_FIELD, GH_REAL,     &
                                  CELL_COLUMN, GH_WRITE, &
                                  GH_READ, GH_SCALAR,    &
-                                 STENCIL, Y1D
+                                 STENCIL, Y1D, GH_INTEGER
   use constants_mod,      only : r_def, i_def
   use fs_continuity_mod,  only : W3, W2
   use kernel_mod,         only : kernel_type
-  use subgrid_config_mod, only : dep_pt_stencil_extent, &
-                                 rho_approximation_stencil_extent
 
   implicit none
 
@@ -38,11 +36,13 @@ module ffsl_flux_first_y_kernel_mod
   !> The type declaration for the kernel. Contains the metadata needed by the PSy layer
   type, public, extends(kernel_type) :: ffsl_flux_first_y_kernel_type
     private
-    type(arg_type) :: meta_args(4) = (/                             &
-         arg_type(GH_FIELD,  GH_REAL, GH_WRITE, W2),                & ! flux
-         arg_type(GH_FIELD,  GH_REAL, GH_READ,  W3, STENCIL(Y1D)),  & ! field
-         arg_type(GH_FIELD,  GH_REAL, GH_READ,  W2),                & ! dep_pts
-         arg_type(GH_SCALAR, GH_REAL, GH_READ     )                 & ! dt
+    type(arg_type) :: meta_args(6) = (/                               &
+         arg_type(GH_FIELD,  GH_REAL,    GH_WRITE, W2),               & ! flux
+         arg_type(GH_FIELD,  GH_REAL,    GH_READ,  W3, STENCIL(Y1D)), & ! field
+         arg_type(GH_FIELD,  GH_REAL,    GH_READ,  W2),               & ! dep_pts
+         arg_type(GH_SCALAR, GH_INTEGER, GH_READ     ),               & ! order
+         arg_type(GH_SCALAR, GH_INTEGER, GH_READ     ),               & ! extent_size
+         arg_type(GH_SCALAR, GH_REAL,    GH_READ     )                & ! dt
          /)
     integer :: operates_on = CELL_COLUMN
   contains
@@ -63,6 +63,8 @@ contains
   !> @param[in]     stencil_size      Local length of field W3 stencil
   !> @param[in]     stencil_map       Dofmap for the field stencil
   !> @param[in]     dep_pts           Departure points in y
+  !> @param[in]     order             Order of reconstruction
+  !> @param[in]     extent_size       Stencil extent needed for the LAM edge
   !> @param[in]     dt                Time step
   !> @param[in]     ndf_w2            Number of degrees of freedom for W2 per cell
   !> @param[in]     undf_w2           Number of unique degrees of freedom for W2
@@ -77,6 +79,8 @@ contains
                                      stencil_size, &
                                      stencil_map,  &
                                      dep_pts,      &
+                                     order,        &
+                                     extent_size,  &
                                      dt,           &
                                      ndf_w2,       &
                                      undf_w2,      &
@@ -111,6 +115,8 @@ contains
     real(kind=r_def), dimension(undf_w2), intent(inout) :: flux
     real(kind=r_def), dimension(undf_w3), intent(in)    :: field
     real(kind=r_def), dimension(undf_w2), intent(in)    :: dep_pts
+    integer(kind=i_def), intent(in)                     :: order
+    integer(kind=i_def), intent(in)                     :: extent_size
     real(kind=r_def), intent(in)                        :: dt
 
     ! Variables for flux calculation
@@ -151,7 +157,7 @@ contains
     stencil_half = (stencil_size + 1_i_def) / 2_i_def
 
     ! Get size the stencil should be to check if we are at the edge of a LAM domain
-    lam_edge_size = 2_i_def*(dep_pt_stencil_extent+rho_approximation_stencil_extent)+1_i_def
+    lam_edge_size = 2_i_def*extent_size+1_i_def
 
     if ( lam_edge_size > stencil_size) then
 
@@ -168,6 +174,7 @@ contains
 
       ! Initialise field_local to zero
       field_local(1:stencil_size) = 0.0_r_def
+      coeffs(1:3) = 0.0_r_def
 
       do k = 0,nlayers-1
 
@@ -201,7 +208,13 @@ contains
               mass_from_whole_cells = mass_from_whole_cells + field_local(stencil_half + (dof_iterator-1) + (ii-1) )
             end do
           end if
-          call second_order_coeffs( field_local(ind_lo:ind_hi), coeffs, .false., .false.)
+          if ( order == 0 ) then
+            ! Piecewise constant reconstruction
+            coeffs(1) = field_local(ind_lo+2)
+          else
+            ! Piecewise parabolic reconstruction
+            call second_order_coeffs( field_local(ind_lo:ind_hi), coeffs, .false., .false.)
+          end if
 
           ! Calculates the left and right integration limits for the fractional cell.
           call calc_integration_limits( departure_dist,             &

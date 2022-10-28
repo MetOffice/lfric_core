@@ -190,8 +190,9 @@ stretching_method='linear',
 /
 
 &subgrid
-  rho_approximation = 'ppm_no_limiter'
   dep_pt_stencil_extent = 3
+  inner_order = 2
+  outer_order = 2
   rho_approximation_stencil_extent = 2
   calculate_detj = 'upwind'
 /

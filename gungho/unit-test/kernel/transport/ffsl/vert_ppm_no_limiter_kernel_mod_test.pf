@@ -4,125 +4,30 @@
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
 
-!> Test the subgrid rho calculation
-!>
-!> This code tests the case of ppm_no_limiter. It is expected that this unit
-!> test will also test the other ppm options and hence the rho_approximation
-!> variable has been included in this unit test.
+!> This code tests PPM with no limiter in the vertical.
 
 module vert_ppm_no_limiter_kernel_mod_test
 
-  use constants_mod, only : i_def, i_native, r_def, str_long
+  use constants_mod, only : i_def, r_def, str_long
   use pFUnit_Mod
 
   implicit none
 
   private
-  public :: vert_ppm_no_limiter_test_type, vert_ppm_no_limiter_test_constructor, &
-            getParameters, test_approximation_no_limiter, rho_parameter_type
+  public :: test_all
 
-  @testParameter
-  type, extends(AbstractTestParameter) :: rho_parameter_type
-    integer(i_native) :: rho_approximation
-    real(r_def)       :: rho(5)
-    real(r_def)       :: dz(5)
-    real(r_def)       :: answer_level0(1:3)
-    real(r_def)       :: answer_level1(1:3)
-    real(r_def)       :: answer_level2(1:3)
-    real(r_def)       :: answer_level3(1:3)
-    real(r_def)       :: answer_level4(1:3)
-  contains
-    procedure toString
-  end type rho_parameter_type
-
-  @testCase(testParameters={getParameters()}, constructor=vert_ppm_no_limiter_test_constructor)
-  type, extends(ParameterizedTestCase) :: vert_ppm_no_limiter_test_type
+  @TestCase
+  type, public, extends(TestCase) :: vert_ppm_no_limiter_test_type
     private
-    integer(i_native) :: rho_approximation
-    real(r_def)       :: rho(5)
-    real(r_def)       :: dz(5)
-    real(r_def)       :: answer_level0(1:3)
-    real(r_def)       :: answer_level1(1:3)
-    real(r_def)       :: answer_level2(1:3)
-    real(r_def)       :: answer_level3(1:3)
-    real(r_def)       :: answer_level4(1:3)
   contains
-    procedure test_approximation_no_limiter
+    procedure test_all
   end type vert_ppm_no_limiter_test_type
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  function vert_ppm_no_limiter_test_constructor( testParameter ) &
-                                                  result( vert_ppm_no_limiter_test )
-
-    implicit none
-
-    type(rho_parameter_type), intent(in) :: testParameter
-    type(vert_ppm_no_limiter_test_type)  :: vert_ppm_no_limiter_test
-
-    vert_ppm_no_limiter_test%rho_approximation = testParameter%rho_approximation
-    vert_ppm_no_limiter_test%rho               = testParameter%rho
-    vert_ppm_no_limiter_test%dz                = testParameter%dz
-    vert_ppm_no_limiter_test%answer_level0     = testParameter%answer_level0
-    vert_ppm_no_limiter_test%answer_level1     = testParameter%answer_level1
-    vert_ppm_no_limiter_test%answer_level2     = testParameter%answer_level2
-    vert_ppm_no_limiter_test%answer_level3     = testParameter%answer_level3
-    vert_ppm_no_limiter_test%answer_level4     = testParameter%answer_level4
-
-  end function vert_ppm_no_limiter_test_constructor
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  function toString( this ) result( string )
-    use subgrid_config_mod, only : key_from_rho_approximation
-    implicit none
-    class(rho_parameter_type), intent( in ) :: this
-    character(:), allocatable :: string
-
-    character(str_long) :: buffer
-    write( buffer, '(I0, A)') &
-                         this%rho_approximation, &
-                         key_from_rho_approximation(this%rho_approximation)
-    string = trim( buffer )
-  end function toString
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  function getParameters() result( parameters )
-
-    use subgrid_config_mod, &
-                       only : rho_approximation_constant_subgrid,     &
-                              rho_approximation_constant_positive,    &
-                              rho_approximation_ppm_no_limiter,       &
-                              rho_approximation_ppm_positive_only,    &
-                              rho_approximation_ppm_positive_monotone
-
-    implicit none
-
-    type(rho_parameter_type) :: parameters(2)
-
-    parameters &
-     = [ rho_parameter_type( rho_approximation_ppm_no_limiter,                 &
-       (/ 1.0_r_def, 2.0_r_def, 3.0_r_def, 4.0_r_def, 5.0_r_def /),            &
-       (/ 1.0_r_def, 1.0_r_def, 1.0_r_def, 1.0_r_def, 1.0_r_def /),            &
-                             (/ 0.5_r_def, 1.0_r_def, 0.0_r_def /),            &
-                             (/ 1.5_r_def, 1.0_r_def, 0.0_r_def /),            &
-                             (/ 2.5_r_def, 1.0_r_def, 0.0_r_def /),            &
-                             (/ 3.5_r_def, 1.0_r_def, 0.0_r_def /),            &
-                             (/ 4.5_r_def, 1.0_r_def, 0.0_r_def /) ),          &
-         rho_parameter_type( rho_approximation_ppm_no_limiter,                 &
-           (/  1.0_r_def,  4.0_r_def, 9.0_r_def, 16.0_r_def, 25.0_r_def /),    &
-           (/  1.0_r_def,  2.0_r_def, 3.0_r_def,  4.0_r_def,  5.0_r_def /),    &
-           (/  0.0_r_def,  2.0_r_def, 0.0_r_def /),                            &
-           (/  2.0_r_def,  4.0_r_def, 0.0_r_def /),                            &
-           (/  6.0_r_def,  6.0_r_def, 0.0_r_def /),                            &
-           (/ 12.0_r_def,  8.0_r_def, 0.0_r_def /),                            &
-           (/ 20.0_r_def, 10.0_r_def, 0.0_r_def /) ) ]
-
-  end function getParameters
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
-  subroutine test_approximation_no_limiter( this )
+  subroutine test_all( this )
 
     use, intrinsic :: iso_fortran_env,  only : real64
     use vert_ppm_no_limiter_kernel_mod, only : vert_ppm_no_limiter_code
@@ -137,21 +42,39 @@ contains
     integer(i_def), parameter :: ndf_w3  = 1
     integer(i_def), parameter :: map_w3(1) = 1
 
+    real(r_def) :: rho(5)
+    real(r_def) :: dz(5)
+    real(r_def) :: answer_level0(1:3)
+    real(r_def) :: answer_level1(1:3)
+    real(r_def) :: answer_level2(1:3)
+    real(r_def) :: answer_level3(1:3)
+    real(r_def) :: answer_level4(1:3)
+
     real(r_def)      :: use_tol
 
     real(kind=r_def) :: a0(1:nlayers)
     real(kind=r_def) :: a1(1:nlayers)
     real(kind=r_def) :: a2(1:nlayers)
 
-    call vert_ppm_no_limiter_code( nlayers,                 &
-                                   a0,                      &
-                                   a1,                      &
-                                   a2,                      &
-                                   this%rho,                &
-                                   this%dz,                 &
-                                   ndf_w3,                  &
-                                   undf_w3,                 &
-                                   map_w3                   )
+    ! Test with constant grid spacing
+
+    rho = (/ 1.0_r_def, 2.0_r_def, 3.0_r_def, 4.0_r_def, 5.0_r_def /)
+    dz  = (/ 1.0_r_def, 1.0_r_def, 1.0_r_def, 1.0_r_def, 1.0_r_def /)
+    answer_level0 = (/ 0.5_r_def, 1.0_r_def, 0.0_r_def /)
+    answer_level1 = (/ 1.5_r_def, 1.0_r_def, 0.0_r_def /)
+    answer_level2 = (/ 2.5_r_def, 1.0_r_def, 0.0_r_def /)
+    answer_level3 = (/ 3.5_r_def, 1.0_r_def, 0.0_r_def /)
+    answer_level4 = (/ 4.5_r_def, 1.0_r_def, 0.0_r_def /)
+
+    call vert_ppm_no_limiter_code( nlayers, &
+                                   a0,      &
+                                   a1,      &
+                                   a2,      &
+                                   rho,     &
+                                   dz,      &
+                                   ndf_w3,  &
+                                   undf_w3, &
+                                   map_w3 )
 
     if ( r_def == real64 ) then
       use_tol = tol
@@ -160,26 +83,78 @@ contains
       use_tol = 1000.0_r_def*spacing( maxval( (/ a0, a1, a2 /) ) )
     endif
 
-    @assertEqual( this%answer_level0(1), a0(1), use_tol)
-    @assertEqual( this%answer_level0(2), a1(1), use_tol)
-    @assertEqual( this%answer_level0(3), a2(1), use_tol)
+    @assertEqual( answer_level0(1), a0(1), use_tol)
+    @assertEqual( answer_level0(2), a1(1), use_tol)
+    @assertEqual( answer_level0(3), a2(1), use_tol)
 
-    @assertEqual( this%answer_level1(1), a0(2), use_tol)
-    @assertEqual( this%answer_level1(2), a1(2), use_tol)
-    @assertEqual( this%answer_level1(3), a2(2), use_tol)
+    @assertEqual( answer_level1(1), a0(2), use_tol)
+    @assertEqual( answer_level1(2), a1(2), use_tol)
+    @assertEqual( answer_level1(3), a2(2), use_tol)
 
-    @assertEqual( this%answer_level2(1), a0(3), use_tol)
-    @assertEqual( this%answer_level2(2), a1(3), use_tol)
-    @assertEqual( this%answer_level2(3), a2(3), use_tol)
+    @assertEqual( answer_level2(1), a0(3), use_tol)
+    @assertEqual( answer_level2(2), a1(3), use_tol)
+    @assertEqual( answer_level2(3), a2(3), use_tol)
 
-    @assertEqual( this%answer_level3(1), a0(4), use_tol)
-    @assertEqual( this%answer_level3(2), a1(4), use_tol)
-    @assertEqual( this%answer_level3(3), a2(4), use_tol)
+    @assertEqual( answer_level3(1), a0(4), use_tol)
+    @assertEqual( answer_level3(2), a1(4), use_tol)
+    @assertEqual( answer_level3(3), a2(4), use_tol)
 
-    @assertEqual( this%answer_level4(1), a0(5), use_tol)
-    @assertEqual( this%answer_level4(2), a1(5), use_tol)
-    @assertEqual( this%answer_level4(3), a2(5), use_tol)
+    @assertEqual( answer_level4(1), a0(5), use_tol)
+    @assertEqual( answer_level4(2), a1(5), use_tol)
+    @assertEqual( answer_level4(3), a2(5), use_tol)
 
-  end subroutine test_approximation_no_limiter
+    ! Test with variable grid spacing
+
+    rho = (/ 1.0_r_def, 4.0_r_def, 9.0_r_def, 16.0_r_def, 25.0_r_def /)
+    dz  = (/ 1.0_r_def, 2.0_r_def, 3.0_r_def,  4.0_r_def,  5.0_r_def /)
+    answer_level0 = (/  0.0_r_def,  2.0_r_def, 0.0_r_def /)
+    answer_level1 = (/  2.0_r_def,  4.0_r_def, 0.0_r_def /)
+    answer_level2 = (/  6.0_r_def,  6.0_r_def, 0.0_r_def /)
+    answer_level3 = (/ 12.0_r_def,  8.0_r_def, 0.0_r_def /)
+    answer_level4 = (/ 20.0_r_def, 10.0_r_def, 0.0_r_def /)
+
+    call vert_ppm_no_limiter_code( nlayers, &
+                                   a0,      &
+                                   a1,      &
+                                   a2,      &
+                                   rho,     &
+                                   dz,      &
+                                   ndf_w3,  &
+                                   undf_w3, &
+                                   map_w3 )
+
+    if ( r_def == real64 ) then
+      use_tol = tol
+    else
+      ! Increase tolerance due to normalising dz in vert_ppm code
+      use_tol = 1000.0_r_def*spacing( maxval( (/ a0, a1, a2 /) ) )
+    endif
+
+    @assertEqual( answer_level0(1), a0(1), use_tol)
+    @assertEqual( answer_level0(2), a1(1), use_tol)
+    @assertEqual( answer_level0(3), a2(1), use_tol)
+
+    @assertEqual( answer_level1(1), a0(2), use_tol)
+    @assertEqual( answer_level1(2), a1(2), use_tol)
+    @assertEqual( answer_level1(3), a2(2), use_tol)
+
+    @assertEqual( answer_level2(1), a0(3), use_tol)
+    @assertEqual( answer_level2(2), a1(3), use_tol)
+    @assertEqual( answer_level2(3), a2(3), use_tol)
+
+    @assertEqual( answer_level3(1), a0(4), use_tol)
+    @assertEqual( answer_level3(2), a1(4), use_tol)
+    @assertEqual( answer_level3(3), a2(4), use_tol)
+
+    @assertEqual( answer_level4(1), a0(5), use_tol)
+    @assertEqual( answer_level4(2), a1(5), use_tol)
+    @assertEqual( answer_level4(3), a2(5), use_tol)
+
+
+
+
+
+
+  end subroutine test_all
 
 end module vert_ppm_no_limiter_kernel_mod_test

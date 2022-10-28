@@ -69,7 +69,8 @@ calendar_start='2016-01-01 15:00:00'
 /
 &subgrid
 dep_pt_stencil_extent=1,
-rho_approximation='ppm_no_limiter',
+inner_order = 2
+outer_order = 2
 rho_approximation_stencil_extent=2,
 calculate_detj = 'upwind'
 /

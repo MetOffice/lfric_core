@@ -32,12 +32,13 @@ module ffsl_1d_flux_alg_mod
   use ffsl_flux_first_x_kernel_mod,   only: ffsl_flux_first_x_kernel_type
   use ffsl_flux_first_y_kernel_mod,   only: ffsl_flux_first_y_kernel_type
   use ffsl_vertical_flux_kernel_mod,  only: ffsl_vertical_flux_kernel_type
+  use ffsl_vert_constant_flux_kernel_mod, &
+                                      only: ffsl_vert_constant_flux_kernel_type
   use fv_divergence_kernel_mod,       only: fv_divergence_kernel_type
   use vert_ppm_no_limiter_kernel_mod, only: vert_ppm_no_limiter_kernel_type
 
   ! Configs
-  use subgrid_config_mod,             only: dep_pt_stencil_extent, &
-                                            rho_approximation_stencil_extent
+  use subgrid_config_mod,             only: rho_approximation_stencil_extent
 
   implicit none
 
@@ -62,6 +63,7 @@ contains
   !> @param[in]     field             Input field
   !> @param[in]     dep_pts           Departure points in the chosen direction
   !> @param[in]     detj_at_w2        Det(J) at W2 dofs
+  !> @param[in]     order             Order of the reconstruction
   !> @param[in]     dt                The model timestep length
   !> @param[in,out] flux              Horizontal flux. Included here to be
   !!                                  ready for #2997
@@ -70,6 +72,7 @@ contains
                                  field,          &
                                  dep_pts,        &
                                  detj_at_w2,     &
+                                 order,          &
                                  dt,             &
                                  flux,           &
                                  increment )
@@ -80,6 +83,7 @@ contains
     type(field_type), intent(in)    :: field
     type(field_type), intent(in)    :: dep_pts
     type(field_type), intent(in)    :: detj_at_w2
+    integer(i_def),   intent(in)    :: order
     real(r_def),      intent(in)    :: dt
     type(field_type), intent(inout) :: flux
     type(field_type), intent(inout) :: increment
@@ -91,10 +95,13 @@ contains
     ! Inverse mass matrix and stencil extent
     type(operator_type), pointer :: m3_inv => null()
     integer(kind=i_def)          :: stencil_extent
+    integer(kind=i_def)          :: cfl_stencil_extent
+    real(kind=r_def)             :: cfl_min, cfl_max
 
-    ! Get stencil extent
-    ! @TODO #3323 will modify this to use the max horizontal CFL
-    stencil_extent = dep_pt_stencil_extent + rho_approximation_stencil_extent
+    call dep_pts%field_minmax(cfl_min, cfl_max)
+    stencil_extent     = int( max( abs(cfl_max), abs(cfl_min) ) ) &
+                         + 1 + rho_approximation_stencil_extent
+    cfl_stencil_extent = int(stencil_extent)
 
     ! Get inverse mass matrix
     m3_inv => get_inverse_w3_mass_matrix(increment%get_mesh_id())
@@ -107,10 +114,10 @@ contains
     ! Compute the flux
     if (direction == x_direction) then
       call invoke( ffsl_flux_first_x_kernel_type( flux, field, stencil_extent, &
-                                                  dep_pts, dt ) )
+                                                  dep_pts, order, cfl_stencil_extent, dt ) )
     else if (direction == y_direction) then
       call invoke( ffsl_flux_first_y_kernel_type( flux, field, stencil_extent, &
-                                                  dep_pts, dt ) )
+                                                  dep_pts, order, cfl_stencil_extent, dt ) )
     end if
 
     ! Multiply by Det(J) to get mass flux
@@ -137,6 +144,7 @@ contains
   !> @param[in]     field_y           Input field from steps in y
   !> @param[in]     dep_pts           Departure points in the chosen direction
   !> @param[in]     detj_at_w2        Det(J) at W2 dofs
+  !> @param[in]     order             Order of the reconstruction
   !> @param[in]     dt                The model timestep length
   !> @param[in]     panel_id          Panel ID of the cells
   !> @param[in,out] flux              Horizontal flux. Included here to be
@@ -147,6 +155,7 @@ contains
                                  field_y,    &
                                  dep_pts,    &
                                  detj_at_w2, &
+                                 order,      &
                                  dt,         &
                                  panel_id,   &
                                  flux,       &
@@ -159,6 +168,7 @@ contains
     type(field_type), intent(in)    :: field_y
     type(field_type), intent(in)    :: dep_pts
     type(field_type), intent(in)    :: detj_at_w2
+    integer(i_def),   intent(in)    :: order
     real(r_def),      intent(in)    :: dt
     type(field_type), intent(in)    :: panel_id
     type(field_type), intent(inout) :: flux
@@ -171,10 +181,13 @@ contains
     ! Inverse mass matrix and stencil extent
     type(operator_type), pointer :: m3_inv => null()
     integer(kind=i_def)          :: stencil_extent
+    integer(kind=i_def)          :: cfl_stencil_extent
+    real(kind=r_def)             :: cfl_min, cfl_max
 
-    ! Get stencil extent
-    ! @TODO #3323 will modify this to use the max horizontal CFL
-    stencil_extent = dep_pt_stencil_extent + rho_approximation_stencil_extent
+    call dep_pts%field_minmax(cfl_min, cfl_max)
+    stencil_extent = int( max( abs(cfl_max), abs(cfl_min) ) ) &
+                     + 1 + rho_approximation_stencil_extent
+    cfl_stencil_extent = int(stencil_extent)
 
     ! Get inverse mass matrix
     m3_inv => get_inverse_w3_mass_matrix(increment%get_mesh_id())
@@ -189,12 +202,12 @@ contains
       call invoke( ffsl_flux_final_x_kernel_type( flux, field_x, stencil_extent,  &
                                                   field_y, stencil_extent,        &
                                                   panel_id, stencil_extent,       &
-                                                  dep_pts, dt ) )
+                                                  dep_pts, order, cfl_stencil_extent, dt ) )
     else if (direction == y_direction) then
       call invoke( ffsl_flux_final_y_kernel_type( flux, field_x, stencil_extent,  &
                                                   field_y, stencil_extent,        &
                                                   panel_id, stencil_extent,       &
-                                                  dep_pts, dt ) )
+                                                  dep_pts, order, cfl_stencil_extent, dt ) )
     end if
 
     ! Multiply by Det(J) to get mass flux
@@ -216,6 +229,7 @@ contains
   !> @param[in]     field             Input tracer field
   !> @param[in]     dep_pts           Departure points in the chosen direction
   !> @param[in]     detj_at_w2        Det(J) at W2 dofs
+  !> @param[in]     order             Order of the reconstruction
   !> @param[in]     dt                The model timestep length
   !> @param[in,out] flux              Vertical flux. Included here to be
   !!                                  ready for #2997
@@ -223,6 +237,7 @@ contains
   subroutine ffsl_1d_flux_vert( field,          &
                                 dep_pts,        &
                                 detj_at_w2,     &
+                                order,          &
                                 dt,             &
                                 flux,           &
                                 increment )
@@ -232,6 +247,7 @@ contains
     type(field_type), intent(in)    :: field
     type(field_type), intent(in)    :: dep_pts
     type(field_type), intent(in)    :: detj_at_w2
+    integer(i_def),   intent(in)    :: order
     real(r_def),      intent(in)    :: dt
     type(field_type), intent(inout) :: flux
     type(field_type), intent(inout) :: increment
@@ -261,15 +277,19 @@ contains
     m3_inv => get_inverse_w3_mass_matrix(field%get_mesh_id())
     dz_w3 => get_dz_w3(field%get_mesh_id())
 
-    ! Compute PPM coefficients for reconstruction
-    call invoke( vert_ppm_no_limiter_kernel_type(a0, a1, a2, field, dz_w3) )
-
-    ! Compute flux
-    call invoke( ffsl_vertical_flux_kernel_type(flux, dep_pts, field, a0, a1, a2, dt), &
-    ! Multiply by Det(J) to get mass flux
-                 X_times_Y(mass_flux, flux, detj_at_w2),                               &
-    ! Take difference and multiply by inverse mass matrix to get increment
-                 fv_divergence_kernel_type( difference, mass_flux, z_direction),       &
+    ! Compute subgrid coefficients and compute the flux
+    if (order == 0) then
+      ! Constant reconstruction and flux
+      call invoke( ffsl_vert_constant_flux_kernel_type(flux, dep_pts, field, dt) )
+    else
+      ! Compute PPM coefficients for reconstruction and compute flux
+      call invoke( vert_ppm_no_limiter_kernel_type(a0, a1, a2, field, dz_w3), &
+                   ffsl_vertical_flux_kernel_type(flux, dep_pts, field, a0, a1, a2, dt) )
+    end if
+    ! Multiply by Det(J) to get mass flux, take difference and multiply by inverse
+    ! mass matrix to get increment
+    call invoke( X_times_Y(mass_flux, flux, detj_at_w2),                         &
+                 fv_divergence_kernel_type( difference, mass_flux, z_direction), &
                  dg_matrix_vector_kernel_type(increment, difference, m3_inv) )
 
     nullify( m3_inv, dz_w3 )

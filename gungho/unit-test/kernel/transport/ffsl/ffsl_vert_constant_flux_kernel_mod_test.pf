@@ -1,0 +1,160 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2022 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the calculation of flux through a vertical cell edge for FFSL
+!> transport using constant reconstruction.
+
+module ffsl_vert_constant_flux_kernel_mod_test
+
+  use constants_mod,      only : i_def, r_def
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: ffsl_vert_constant_flux_test_type, &
+            test_all
+
+  @TestCase
+  type, extends(TestCase) :: ffsl_vert_constant_flux_test_type
+    private
+    real(kind=r_def), allocatable :: dep_pts(:), flux(:), rho(:)
+    integer(i_def) :: map_w2(1:6)
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure test_all
+  end type ffsl_vert_constant_flux_test_type
+
+    integer(i_def), parameter :: nlayers = 5
+    integer(i_def), parameter :: ndf_w2  = 6
+    integer(i_def), parameter :: undf_w2 = nlayers*4+nlayers+1
+    integer(i_def), parameter :: ndf_w3  = 1
+    integer(i_def), parameter :: undf_w3 = nlayers
+
+    real(r_def),    parameter :: deltaT  = 1.0_r_def
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(ffsl_vert_constant_flux_test_type), intent(inout) :: this
+
+    this%map_w2 = (/ 1,6,11,16,21,22 /)
+
+    allocate( this%dep_pts(1:undf_w2) )
+    allocate( this%flux(1:undf_w2) )
+    allocate( this%rho(1:undf_w3) )
+
+    this%flux(:) = 0.0_r_def
+    this%rho(:) = (/ 1.0_r_def, 2.0_r_def, 3.0_r_def, 4.0_r_def, 5.0_r_def /)
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(ffsl_vert_constant_flux_test_type), intent(inout) :: this
+
+    deallocate( this%rho )
+    deallocate( this%flux )
+    deallocate( this%dep_pts )
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_all( this )
+
+    use ffsl_vert_constant_flux_kernel_mod, only : ffsl_vert_constant_flux_code
+
+    implicit none
+
+    class(ffsl_vert_constant_flux_test_type), intent(inout) :: this
+
+    real(r_def), parameter :: tol    = 1.0e-6_r_def
+
+    integer(i_def) :: map_w3(1)
+
+    map_w3(1) = 1
+
+    ! Test with small cfl values
+
+    ! Since we have 5 layers there are 26 unique degrees of freedom for W2.
+    ! The unique dofs which relate to the vertical components of W2 are
+    ! 21,22,23,24,25 and 26.
+    ! Hence in dep_pts variable below the vertical departure points are
+    ! 0.0,0.5,0.5,0.5,0.5,0.0, taking into account 0.0 departure points for the
+    ! top and bottom boundaries.
+    this%dep_pts(:) = (/ 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.5_r_def, 0.5_r_def, 0.5_r_def, 0.5_r_def, &
+                         0.0_r_def /)
+
+    call ffsl_vert_constant_flux_code( nlayers,      &
+                                       this%flux,    &
+                                       this%dep_pts, &
+                                       this%rho,     &
+                                       deltaT,       &
+                                       ndf_w2,       &
+                                       undf_w2,      &
+                                       this%map_w2,  &
+                                       ndf_w3,       &
+                                       undf_w3,      &
+                                       map_w3 )
+
+    ! The rho values for the 5 layers are (1.0,2.0,3.0,4.0,5.0)
+    ! As the departure distance is 0.5 and the reconstruction is constant,
+    ! the flux should be half*rho.
+    @assertEqual(0.0_r_def, this%flux(21), tol)
+    @assertEqual(0.5_r_def, this%flux(22), tol)
+    @assertEqual(1.0_r_def, this%flux(23), tol)
+    @assertEqual(1.5_r_def, this%flux(24), tol)
+    @assertEqual(2.0_r_def, this%flux(25), tol)
+    @assertEqual(0.0_r_def, this%flux(26), tol)
+
+    ! Test with large cfl and negative cfl values
+
+    this%dep_pts(:) = (/ 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def, &
+                         0.0_r_def, 0.8_r_def, 1.5_r_def, -1.2_r_def, -0.5_r_def, &
+                         0.0_r_def /)
+
+    call ffsl_vert_constant_flux_code( nlayers,      &
+                                       this%flux,    &
+                                       this%dep_pts, &
+                                       this%rho,     &
+                                       deltaT,       &
+                                       ndf_w2,       &
+                                       undf_w2,      &
+                                       this%map_w2,  &
+                                       ndf_w3,       &
+                                       undf_w3,      &
+                                       map_w3 )
+
+    ! The rho values for the 5 layers are (1.0,2.0,3.0,4.0,5.0)
+    ! For the integer part of the dep_pts we take the value of rho
+    ! in the cell, for the fractional part it is that fraction*rho.
+    ! For negative dep_pts the flux will be negative.
+    @assertEqual(0.0_r_def, this%flux(21), tol)
+    @assertEqual(0.8_r_def, this%flux(22), tol)
+    @assertEqual(2.5_r_def, this%flux(23), tol)
+    @assertEqual(-5.0_r_def, this%flux(24), tol)
+    @assertEqual(-2.5_r_def, this%flux(25), tol)
+    @assertEqual(0.0_r_def, this%flux(26), tol)
+
+  end subroutine test_all
+
+end module ffsl_vert_constant_flux_kernel_mod_test

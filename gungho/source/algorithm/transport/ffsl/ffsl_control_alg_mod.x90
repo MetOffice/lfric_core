@@ -36,6 +36,7 @@ module ffsl_control_alg_mod
 
   ! Configs
   use finite_element_config_mod,        only: element_order
+  use subgrid_config_mod,               only: outer_order
   use transport_config_mod,             only: dry_field_name
 
   ! Transport runtime
@@ -147,7 +148,8 @@ contains
       case (direction_v)
         ! Vertical PPM routine requires a flux output to be ready for #2997
         call flux_z%initialise( vector_space=dep_pts_z%get_function_space() )
-        call ffsl_1d_flux_vert( field_n, dep_pts_z, detj_at_w2, step_dt, flux_z, increment )
+        call ffsl_1d_flux_vert( field_n, dep_pts_z, detj_at_w2, outer_order, &
+                                step_dt, flux_z, increment )
 
       case (direction_h)
         ! 2D FFSL
@@ -297,7 +299,7 @@ contains
 
       case (direction_v)
         ! Vertical PPM scheme
-        call ffsl_1d_advect_vert( field_to_adv, dep_pts_z, detj_at_w2, step_dt, increment )
+        call ffsl_1d_advect_vert( field_to_adv, dep_pts_z, detj_at_w2, outer_order, step_dt, increment )
 
       case (direction_h)
         ! 2D FFSL
