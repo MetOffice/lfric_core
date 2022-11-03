@@ -100,6 +100,7 @@ contains
 
     integer(i_def) :: npanels
     integer(i_def) :: rim_depth
+    integer(i_def) :: void_cell
     real(r_def)    :: domain_size(2)
     real(r_def)    :: north_pole(2)
     real(r_def)    :: null_island(2)
@@ -141,6 +142,7 @@ contains
                               constructor_inputs, &
                               rim_depth,          &
                               domain_size,        &
+                              void_cell, &
                               face_next_2d, &
                               node_on_face_2d, &
                               edge_on_face_2d,&
@@ -159,6 +161,7 @@ contains
     @assertEqual('periodic', trim(topology))
     @assertEqual('xyz',       trim(coord_sys))
     @assertEqual(0,max_stencil_depth)
+    @assertEqual( -9999, void_cell )
 
     @assertTrue(periodic_x)
     @assertTrue(periodic_y)

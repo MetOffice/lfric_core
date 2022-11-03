@@ -95,37 +95,40 @@ abstract interface
   !-----------------------------------------------------------------------------
   !> @brief Interface: Returns mesh metadata information.
   !>
-  !> @param[out, optional]  mesh_name          Name of mesh instance to generate
-  !> @param[out, optional]  geometry           Domain geometry enumeration key
-  !> @param[out, optional]  topology           Domain topology enumeration key
-  !> @param[out, optional]  coord_sys          Co-ordinate sys enumeration key
-  !> @param[out, optional]  periodic_x         Periodic in E-W direction.
-  !> @param[out, optional]  periodic_y         Periodic in N-S direction.
-  !> @param[out, optional]  edge_cells_x       Number of panel edge cells (x-axis).
-  !> @param[out, optional]  edge_cells_y       Number of panel edge cells (y-axis).
-  !> @param[out, optional]  constructor_inputs Inputs used to create this mesh from
-  !>                                           the this ugrid_generator_type
-  !> @param[out, optional]  nmaps              Number of maps to create with this mesh
-  !>                                           as source mesh
-  !> @param[out, optional]  rim_depth          Rim depth of LBC mesh (LAMs).
-  !> @param[out, optional]  domain_size        Size of global model domain.
-  !> @param[out, optional]  target_mesh_names  Mesh names of the target meshes that
-  !>                                           this mesh has maps for.
-  !> @param[out, optional]  maps_edge_cells_x  Number of panel edge cells (x-axis) of
-  !>                                           target mesh(es) to create map(s) for.
-  !> @param[out, optional]  maps_edge_cells_y  Number of panel edge cells (y-axis) of
-  !>                                           target mesh(es) to create map(s) for.
-  !> @param[out, optional]  north_pole         [Longitude, Latitude] of north pole
-  !>                                           used in for domain orientation (degrees)
-  !> @param[out, optional]  null_island        [Longitude, Latitude] of null
-  !>                                           island used for domain orientation (degrees)
+  !> @param[out]  mesh_name           Optional: Name of mesh instance to generate
+  !> @param[out]  geometry            Optional: Domain geometry enumeration key
+  !> @param[out]  topology            Optional: Domain topology enumeration key
+  !> @param[out]  coord_sys           Optional: Co-ordinate sys enumeration key
+  !> @param[out]  periodic_x          Optional: Periodic in E-W direction.
+  !> @param[out]  periodic_y          Optional: Periodic in N-S direction.
+  !> @param[out]  edge_cells_x        Optional: Number of panel edge cells (x-axis).
+  !> @param[out]  edge_cells_y        Optional: Number of panel edge cells (y-axis).
+  !> @param[out]  constructor_inputs  Optional: Inputs used to create this mesh from
+  !>                                            the this ugrid_generator_type
+  !> @param[out]  nmaps               Optional: Number of maps to create with this mesh
+  !>                                            as source mesh
+  !> @param[out]  rim_depth           Optional: Rim depth of LBC mesh (LAMs).
+  !> @param[out]  domain_size         Optional: Size of global model domain.
+  !> @param[out]  void_cell           Optional: Value used to indicate cell id is external
+  !>                                            to the mesh domain.
+  !> @param[out]  target_mesh_names   Optional: Mesh names of the target meshes that
+  !>                                            this mesh has maps for.
+  !> @param[out]  maps_edge_cells_x   Optional: Number of panel edge cells (x-axis) of
+  !>                                            target mesh(es) to create map(s) for.
+  !> @param[out]  maps_edge_cells_y   Optional: Number of panel edge cells (y-axis) of
+  !>                                            target mesh(es) to create map(s) for.
+  !> @param[out]  north_pole          Optional: [Longitude, Latitude] of north pole
+  !>                                            used in for domain orientation (degrees)
+  !> @param[out]  null_island         Optional: [Longitude, Latitude] of null
+  !>                                            island used for domain orientation (degrees)
   !-----------------------------------------------------------------------------
   subroutine get_metadata_interface ( self, mesh_name,                       &
                                       geometry, topology, coord_sys,         &
                                       periodic_x, periodic_y,                &
                                       edge_cells_x, edge_cells_y,            &
                                       constructor_inputs, nmaps, rim_depth,  &
-                                      domain_size, target_mesh_names,        &
+                                      domain_size, void_cell,                &
+                                      target_mesh_names,                     &
                                       maps_edge_cells_x, maps_edge_cells_y,  &
                                       north_pole, null_island  )
 
@@ -155,6 +158,7 @@ abstract interface
     integer(i_def), optional, intent(out) :: rim_depth
     integer(i_def), optional, intent(out) :: edge_cells_x
     integer(i_def), optional, intent(out) :: edge_cells_y
+    integer(i_def), optional, intent(out) :: void_cell
 
     real(r_def),    optional, intent(out) :: domain_size(2)
     real(r_def),    optional, intent(out) :: north_pole(2)

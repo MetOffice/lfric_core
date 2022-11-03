@@ -43,7 +43,6 @@ module gen_planar_mod
   private
 
   public :: set_partition_parameters
-  public :: NON_PERIODIC_ID
 
   ! Mesh Vertex directions: local aliases for reference_element_mod
   ! values.
@@ -56,7 +55,9 @@ module gen_planar_mod
   integer(i_def), parameter :: CLOSED   = -100
   integer(i_def), parameter :: PERIODIC =  101
 
-  integer(i_def), parameter :: NON_PERIODIC_ID = -1
+  ! Set to -9999 to be used for fill value so meshes
+  ! are more Cf-compliant.
+  integer(i_def), parameter :: VOID_ID = -9999
 
   ! For a planar meshes there is only one panel.
   integer(i_def), parameter :: NPANELS  = 1
@@ -146,18 +147,7 @@ module gen_planar_mod
 
     procedure :: write_mesh
     procedure :: clear
-
-    ! Objects should have a finaliser, however the inclusion of a finaliser
-    ! in this object causes the current version of the Cray compiler (8.4.3)
-    ! to fail to compile. Later versions appear to have no issue with this
-    ! code.
-    !
-    ! It's not clear as to why the Cray compiler fails internally for the
-    ! this object, while passing others with similar constructs.
-    ! This finaliser code should be uncommented when we are using a later
-    ! version of the Cray compiler, such as (8.7.0). (LFRic ticket #1989)
-    !
-    ! final     :: gen_planar_final
+    final     :: gen_planar_final
 
   end type gen_planar_type
 
@@ -701,7 +691,7 @@ subroutine set_border_adjacency( self, edge_index, border_cells, border_type )
   select case(border_type)
   case(CLOSED)
     do i=1, ncells_border
-      self%cell_next(edge_index, border_cells(i)) = NON_PERIODIC_ID
+      self%cell_next(edge_index, border_cells(i)) = VOID_ID
     end do
 
   case(PERIODIC)
@@ -736,7 +726,7 @@ subroutine set_border_adjacency( self, edge_index, border_cells, border_type )
     ! default .false., so it is consistence to make the default
     ! border type as non-periodic.
     do i=1, ncells_border
-      self%cell_next(edge_index, border_cells(i)) = NON_PERIODIC_ID
+      self%cell_next(edge_index, border_cells(i)) = VOID_ID
     end do
 
   end select
@@ -794,13 +784,13 @@ subroutine calc_face_to_vert(self)
 
 
   ! East neighbour.
-  if (self%cell_next(E, cell) /= NON_PERIODIC_ID ) then
+  if (self%cell_next(E, cell) /= VOID_ID ) then
     verts_on_cell(NW , self%cell_next(E, cell)) = verts_on_cell(NE, cell)
     verts_on_cell(SW , self%cell_next(E, cell)) = verts_on_cell(SE, cell)
   end if
 
   ! South neighbour.
-  if (self%cell_next(S, cell) /= NON_PERIODIC_ID ) then
+  if (self%cell_next(S, cell) /= VOID_ID ) then
     verts_on_cell(NW , self%cell_next(S, cell)) = verts_on_cell(SW, cell)
     verts_on_cell(NE , self%cell_next(S, cell)) = verts_on_cell(SE, cell)
   end if
@@ -819,7 +809,7 @@ subroutine calc_face_to_vert(self)
       verts_on_cell(SW , self%cell_next(E, cell)) = verts_on_cell(SE, cell)
 
       ! South neighbour.
-      if (self%cell_next(S, cell) /= NON_PERIODIC_ID ) then
+      if (self%cell_next(S, cell) /= VOID_ID ) then
         verts_on_cell(NW , self%cell_next(S, cell)) = verts_on_cell(SW, cell)
         verts_on_cell(NE , self%cell_next(S, cell)) = verts_on_cell(SE, cell)
       end if
@@ -841,7 +831,7 @@ subroutine calc_face_to_vert(self)
     end if
 
     ! South neighbour.
-    if (self%cell_next(S, cell) /= NON_PERIODIC_ID ) then
+    if (self%cell_next(S, cell) /= VOID_ID ) then
       verts_on_cell(NW , self%cell_next(S, cell)) = verts_on_cell(SW, cell)
       verts_on_cell(NE , self%cell_next(S, cell)) = verts_on_cell(SE, cell)
     end if
@@ -1842,6 +1832,7 @@ subroutine get_metadata( self,               &
                          nmaps,              &
                          rim_depth,          &
                          domain_size,        &
+                         void_cell,          &
                          target_mesh_names,  &
                          maps_edge_cells_x,  &
                          maps_edge_cells_y,  &
@@ -1861,6 +1852,7 @@ subroutine get_metadata( self,               &
   integer(i_def),      optional, intent(out) :: edge_cells_y
   integer(i_def),      optional, intent(out) :: nmaps
   integer(i_def),      optional, intent(out) :: rim_depth
+  integer(i_def),      optional, intent(out) :: void_cell
   real(r_def),         optional, intent(out) :: domain_size(2)
 
   character(str_longlong), optional, intent(out) :: constructor_inputs
@@ -1884,6 +1876,7 @@ subroutine get_metadata( self,               &
   if (present(edge_cells_y)) edge_cells_y = self%edge_cells_y
   if (present(nmaps))        nmaps        = self%nmaps
   if (present(rim_depth))    rim_depth    = imdi
+  if (present(void_cell))    void_cell    = VOID_ID
 
   if (present(constructor_inputs)) constructor_inputs = trim(self%constructor_inputs)
 
@@ -1923,7 +1916,6 @@ function get_global_mesh_maps(self) result(global_mesh_maps)
 
   type(global_mesh_map_collection_type), pointer :: global_mesh_maps
 
-  nullify(global_mesh_maps)
   global_mesh_maps => self%global_mesh_maps
 
   return
@@ -1931,8 +1923,7 @@ end function get_global_mesh_maps
 
 
 !-------------------------------------------------------------------------------
-!> @brief   Subroutine to manually deallocate any memory used by the object.
-!>
+!> @brief Subroutine to manually deallocate any memory used by the object.
 !-------------------------------------------------------------------------------
 subroutine clear(self)
 
@@ -1959,6 +1950,20 @@ subroutine clear(self)
 
     return
   end subroutine clear
+
+!-------------------------------------------------------------------------------
+!> @brief Finaliser for the planar ugrid mesh generator (gen_planar_type)
+!-------------------------------------------------------------------------------
+subroutine gen_planar_final(self)
+
+    implicit none
+
+    type (gen_planar_type), intent(inout) :: self
+
+    call self%clear()
+
+    return
+end subroutine gen_planar_final
 
 
 !-------------------------------------------------------------------------------
@@ -2123,19 +2128,6 @@ function is_generated(self) result(answer)
 
   return
 end function is_generated
-
-
-subroutine gen_planar_final(self)
-
-    implicit none
-
-    type (gen_planar_type), intent(inout) :: self
-
-    call self%clear()
-
-    return
-end subroutine gen_planar_final
-
 
 !>==============================================================================
 !> @brief Sets common partition parameters to be applied to global meshes

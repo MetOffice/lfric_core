@@ -12,7 +12,7 @@
                                "target_grid_levs"   : "38",
                                "target_grid_type"   : "global",
                                "source_dump"        : "$UMDIR/standard_jobs/lfricinputs/inputs/lfric2um_startdump_aquaplanet_N48L38_C48L38.nc",
-                               "lfric_mesh"         : {"file":"$BIG_DATA_DIR/meshes/HEAD/mesh_C48.nc", "name":"dynamics"},
+                               "lfric_mesh"         : {"file":"$CANNED_MESH_DIR/mesh_C48.nc", "name":"dynamics"},
                              },
 
 }) %}

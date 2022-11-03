@@ -14,8 +14,8 @@ CRAYFTN_VERSION := $(shell ftn -V 2>&1 \
 
 $(info ** Chosen Cray Fortran compiler version $(CRAYFTN_VERSION))
 
-ifeq ($(shell test $(CRAYFTN_VERSION) -lt 008003004; echo $$?), 0)
-  $(error CrayFTN is too old. It must be at least 8.3.4)
+ifeq ($(shell test $(CRAYFTN_VERSION) -lt 008007000; echo $$?), 0)
+  $(error CrayFTN is too old. It must be at least 8.7.0)
 endif
 
 F_MOD_DESTINATION_ARG     = -J

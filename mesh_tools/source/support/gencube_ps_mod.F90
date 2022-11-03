@@ -74,6 +74,9 @@ module gencube_ps_mod
   ! flag to print out mesh data for debugging purposes
   logical(l_def),     parameter :: DEBUG = .false.
 
+  ! Set to -9999 to be used for fill value so meshes
+  ! are more Cf-compliant.
+  integer(i_def), parameter :: VOID_ID = -9999
 !-------------------------------------------------------------------------------
 
   type, extends(ugrid_generator_type), public :: gencube_ps_type
@@ -125,6 +128,7 @@ module gencube_ps_mod
     procedure :: write_mesh
 
     procedure :: clear
+    final     :: gen_cubedsphere_final
 
   end type gencube_ps_type
 
@@ -1261,7 +1265,6 @@ function get_global_mesh_maps(self) result (global_mesh_maps)
 
   type(global_mesh_map_collection_type), pointer  :: global_mesh_maps
 
-  nullify(global_mesh_maps)
   global_mesh_maps => self%global_mesh_maps
 
   return
@@ -1788,6 +1791,7 @@ end function get_number_of_panels
 !>                                           as source mesh.
 !> @param[out]  rim_depth          Optional, Depth of LBC mesh rim (in cells)
 !> @param[out]  domain_size        Optional, Domain size in x/y-axes.
+!> @param[out]  void_cell          Optional, Cell ID for null connectivity.
 !> @param[out]  target_mesh_names  Optional, Mesh names of the target meshes that
 !>                                           this mesh has maps for.
 !> @param[out]  maps_edge_cells_x  Optional, Number of panel edge cells (x-axis) of
@@ -1812,6 +1816,7 @@ subroutine get_metadata( self,               &
                          nmaps,              &
                          rim_depth,          &
                          domain_size,        &
+                         void_cell,          &
                          target_mesh_names,  &
                          maps_edge_cells_x,  &
                          maps_edge_cells_y,  &
@@ -1832,6 +1837,7 @@ subroutine get_metadata( self,               &
   integer(i_def),     optional, intent(out) :: edge_cells_y
   integer(i_def),     optional, intent(out) :: nmaps
   integer(i_def),     optional, intent(out) :: rim_depth
+  integer(i_def),     optional, intent(out) :: void_cell
   real(r_def),        optional, intent(out) :: domain_size(2)
 
   character(str_longlong), optional, intent(out) :: constructor_inputs
@@ -1853,6 +1859,8 @@ subroutine get_metadata( self,               &
   if (present(edge_cells_y)) edge_cells_y   = self%edge_cells
   if (present(nmaps))        nmaps          = self%nmaps
   if (present(rim_depth))    rim_depth      = imdi
+  if (present(void_cell))    void_cell      = VOID_ID
+
   if (present(domain_size))  domain_size    = radians_to_degrees * self%domain_size
   if (present(north_pole))   north_pole(:)  = radians_to_degrees * self%north_pole(:)
   if (present(null_island))  null_island(:) = radians_to_degrees * self%null_island(:)
@@ -1868,6 +1876,9 @@ subroutine get_metadata( self,               &
   return
 end subroutine get_metadata
 
+!-------------------------------------------------------------------------------
+!> @brief Subroutine to manually deallocate any memory used by the object.
+!-------------------------------------------------------------------------------
 subroutine clear(self)
 
   implicit none
@@ -1892,6 +1903,21 @@ subroutine clear(self)
 
   return
 end subroutine clear
+
+!-----------------------------------------------------------------------------
+!> @brief Finaliser for the cubedsphere ugrid mesh generator (gencube_ps_type)
+!-----------------------------------------------------------------------------
+subroutine gen_cubedsphere_final(self)
+
+  implicit none
+
+  type(gencube_ps_type), intent(inout) :: self
+
+  call self%clear()
+
+  return
+end subroutine gen_cubedsphere_final
+
 
 subroutine get_panel_edge_cell_ids( edge_cells, panel_edge_cells )
 

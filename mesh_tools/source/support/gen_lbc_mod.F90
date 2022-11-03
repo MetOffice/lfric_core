@@ -52,7 +52,6 @@ module gen_lbc_mod
              calc_lbc_lam_map,             &
              extract_coords
 
-  public :: NO_CELL_INNER_ID, NO_CELL_OUTER_ID
 
   ! Mesh Vertex directions: local aliases for reference_element_mod values
   integer(i_def), parameter :: NW = NWB
@@ -60,8 +59,8 @@ module gen_lbc_mod
   integer(i_def), parameter :: SE = SEB
   integer(i_def), parameter :: SW = SWB
 
-  integer(i_def), parameter :: NO_CELL_OUTER_ID = -1
-  integer(i_def), parameter :: NO_CELL_INNER_ID = -2
+  ! Set to -9999 to mark null (void) cell connectivity.
+  integer(i_def), parameter :: VOID_ID = -9999
 
   integer(i_def), parameter :: horz_npanels = 2
   integer(i_def), parameter :: vert_npanels = 2
@@ -254,7 +253,8 @@ module gen_lbc_mod
     integer(i_def) :: max_num_faces_per_node
 
     ! Used to generate LBC
-    type(gen_planar_type)     :: lam_strategy
+    type(gen_planar_type), pointer :: lam_strategy => null()
+
     type(base_lbc_panel_type) :: base_h_panel
     type(base_lbc_panel_type) :: base_v_panel
 
@@ -330,7 +330,7 @@ function gen_lbc_constructor( lam_strategy, rim_depth ) result( self )
 
   implicit none
 
-  type(gen_planar_type), intent(in) :: lam_strategy
+  type(gen_planar_type), intent(in), target :: lam_strategy
   integer(i_def),        intent(in) :: rim_depth
 
   type(gen_lbc_type) :: self
@@ -343,9 +343,9 @@ function gen_lbc_constructor( lam_strategy, rim_depth ) result( self )
   integer(i_def) :: lam_n_edges
   integer(i_def) :: lam_n_faces
 
-  self%lam_strategy = lam_strategy
-  self%rim_depth    = rim_depth
-  self%nmaps        = 1
+  self%lam_strategy => lam_strategy
+  self%rim_depth    =  rim_depth
+  self%nmaps        =  1
 
   allocate( self%target_mesh_names(self%nmaps))
   allocate( self%global_mesh_maps, source=global_mesh_map_collection_type())
@@ -759,6 +759,7 @@ end function get_number_of_panels
 !>                                           as source mesh
 !> @param[out] rim_depth           Optional, Rim depth of LBC mesh (LAMs).
 !> @param[out] domain_size         Optional, Size of global model domain.
+!> @param[out] void_cell           Optional, Cell ID used for null connectivity.
 !> @param[out] target_mesh_names   Optional, Mesh names of the target meshes that
 !>                                           this mesh has maps for.
 !> @param[out] maps_edge_cells_x   Optional, Number of panel edge cells (x-axis) of
@@ -783,6 +784,7 @@ subroutine get_metadata( self,               &
                          nmaps,              &
                          rim_depth,          &
                          domain_size,        &
+                         void_cell,          &
                          target_mesh_names,  &
                          maps_edge_cells_x,  &
                          maps_edge_cells_y,  &
@@ -803,6 +805,7 @@ subroutine get_metadata( self,               &
   integer(i_def), optional, intent(out) :: edge_cells_y
   integer(i_def), optional, intent(out) :: nmaps
   integer(i_def), optional, intent(out) :: rim_depth
+  integer(i_def), optional, intent(out) :: void_cell
   real(r_def),    optional, intent(out) :: domain_size(2)
 
   character(str_longlong), optional, intent(out) :: constructor_inputs
@@ -825,8 +828,15 @@ subroutine get_metadata( self,               &
   if (present(edge_cells_y)) edge_cells_y = self%outer_cells_y
   if (present(nmaps))        nmaps        = self%nmaps
   if (present(rim_depth))    rim_depth    = self%rim_depth
+  if (present(void_cell))    void_cell    = VOID_ID
 
   if (present(constructor_inputs)) constructor_inputs = self%constructor_inputs
+
+  if (present(edge_cells_x))    edge_cells_x = self%outer_cells_x
+  if (present(edge_cells_y))    edge_cells_y = self%outer_cells_y
+  if (present(nmaps))           nmaps        = self%nmaps
+
+  if (present(void_cell)) void_cell = VOID_ID
 
   if (self%nmaps > 0) then
     if (present(target_mesh_names)) then
@@ -865,9 +875,6 @@ function get_global_mesh_maps(self) result(global_mesh_maps)
 
   type(global_mesh_map_collection_type), pointer :: global_mesh_maps
 
-  global_mesh_maps => null()
-  nullify(global_mesh_maps)
-
   global_mesh_maps => self%global_mesh_maps
 
   return
@@ -899,6 +906,8 @@ subroutine clear(self)
 
   call self%base_h_panel%base_lbc_panel_clear()
   call self%base_v_panel%base_lbc_panel_clear()
+
+  self%lam_strategy => null()
 
   return
 end subroutine clear
@@ -1519,18 +1528,18 @@ function calc_panel_adjacency( panel, base_id ) &
   !----------
   do i=1, panel%length
     cell = panel%north_cells(i)
-    cell_next(N, cell) = NO_CELL_OUTER_ID
+    cell_next(N, cell) = VOID_ID
 
     cell = panel%south_cells(i)
-    cell_next(S, cell) = NO_CELL_INNER_ID
+    cell_next(S, cell) = VOID_ID
   end do
 
   do i=1, panel%depth
     cell = panel%east_cells(i)
-    cell_next(E, cell) = NO_CELL_OUTER_ID
+    cell_next(E, cell) = VOID_ID
 
     cell = panel%west_cells(i)
-    cell_next(W, cell) = NO_CELL_OUTER_ID
+    cell_next(W, cell) = VOID_ID
   end do
 
   return

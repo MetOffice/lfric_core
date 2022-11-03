@@ -1,0 +1,31 @@
+# Note this script requires that mesh_tools has been built in advance.
+
+# Big data on spice
+BIG_DATA_DIR=/data/users/lfric/data/meshes/HEAD
+
+generator_dir=../../../../mesh_tools/bin
+
+generator=cubedsphere_mesh_generator
+mesh_nml_dir=./cubedsphere
+${generator_dir}/${generator} ${mesh_nml_dir}/C12.nml
+${generator_dir}/${generator} ${mesh_nml_dir}/C24.nml
+${generator_dir}/${generator} ${mesh_nml_dir}/C48.nml
+${generator_dir}/${generator} ${mesh_nml_dir}/C96.nml
+
+generator=planar_mesh_generator
+mesh_nml_dir=./planar
+${generator_dir}/${generator} ${mesh_nml_dir}/aquaplanet_lam.nml
+${generator_dir}/${generator} ${mesh_nml_dir}/falklands.nml
+
+tol=1.0E-13
+echo
+echo
+echo '========================================================='
+echo 'Comparing regenerated input meshes against existing files'
+echo '========================================================='
+nccmp -gmdfs --Tolerance ${tol} mesh_C12.nc  ${BIG_DATA_DIR}/mesh_C12.nc
+nccmp -gmdfs --Tolerance ${tol} mesh_C24.nc  ${BIG_DATA_DIR}/mesh_C24.nc
+nccmp -gmdfs --Tolerance ${tol} mesh_C48.nc  ${BIG_DATA_DIR}/mesh_C48.nc
+nccmp -gmdfs --Tolerance ${tol} mesh_C96.nc  ${BIG_DATA_DIR}/mesh_C96.nc
+nccmp -gmdfs --Tolerance ${tol} falklands.nc ${BIG_DATA_DIR}/falklands.nc
+nccmp -gmdfs --Tolerance ${tol} aquaplanet_lam.nc ../aquaplanet_lam.nc

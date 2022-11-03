@@ -17,7 +17,7 @@ module gen_planar_mod_test
 
   use constants_mod,                  only: i_def, r_def, str_def, l_def, &
                                             imdi, str_longlong
-  use gen_planar_mod,                 only: gen_planar_type, NON_PERIODIC_ID
+  use gen_planar_mod,                 only: gen_planar_type
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
   use global_mesh_map_mod,            only: global_mesh_map_type
 
@@ -100,6 +100,7 @@ module gen_planar_mod_test
   integer(i_def),     parameter :: npanels = 1
   integer(i_def),     parameter :: nmaps = 1
   integer(i_def),     parameter :: ncells = 20
+  integer(i_def),     parameter :: mdi = -9999
 
   character(str_def), parameter :: target_mesh_names(nmaps) = ['unit_test_target']
   integer(i_def),     parameter :: target_edge_cells_x(nmaps) = [10]
@@ -229,25 +230,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) /= mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) /= mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) /= mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) /= mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -565,25 +566,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) /= mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) /= mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -591,7 +592,7 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1),  (/  5, 6, 2, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1),  (/  5, 6, 2, mdi /), "Incorrect faces_on_face connectivity.")
     @assertEqual(this%faces_on_face(:,11), (/ 15,16,12, 6 /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1),  (/  1, 2, 3, 4 /), "Incorrect edges_on_face connectivity.")
@@ -705,25 +706,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) /= mdi )
     end do
 
     ! Test eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) /= mdi )
     end do
 
     ! Test western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertFalse( any(this%faces_on_face == imdi), "Incomplete faces_on_face connectivity.")
@@ -732,8 +733,8 @@ contains
     @assertFalse( any(this%nodes_on_edge == imdi), "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1),  (/  NON_PERIODIC_ID,  6,  2, 16 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,11), (/  NON_PERIODIC_ID, 16, 12,  6 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1),  (/  mdi,  6,  2, 16 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,11), (/  mdi, 16, 12,  6 /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1),  (/  1,  2,  3,  4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,20), (/ 43, 16, 44, 37 /), "Incorrect edges_on_face connectivity.")
@@ -847,25 +848,25 @@ contains
 
     ! Test Northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -873,8 +874,8 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1),  (/ non_periodic_id,  6,  2, non_periodic_id /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,11), (/ non_periodic_id, 16, 12, 6 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1),  (/ mdi,  6,  2, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,11), (/ mdi, 16, 12, 6 /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1),  (/  1, 2, 3, 4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,20), (/ 47,48,49,37 /), "Incorrect edges_on_face connectivity.")
@@ -990,25 +991,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) /= mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) /= mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1016,8 +1017,8 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  2, NON_PERIODIC_ID, 2, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  1, NON_PERIODIC_ID, 1, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  2, mdi, 2, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  1, mdi, 1, mdi /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1), (/ 1, 2, 3, 4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,2), (/ 3, 5, 1, 6 /), "Incorrect edges_on_face connectivity.")
@@ -1140,25 +1141,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) /= mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) /= mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1166,9 +1167,9 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual((/ 3, NON_PERIODIC_ID, 2, NON_PERIODIC_ID /), this%faces_on_face(:,1), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 1, NON_PERIODIC_ID, 3, NON_PERIODIC_ID /), this%faces_on_face(:,2), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 2, NON_PERIODIC_ID, 1, NON_PERIODIC_ID /), this%faces_on_face(:,3), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 3, mdi, 2, mdi /), this%faces_on_face(:,1), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 1, mdi, 3, mdi /), this%faces_on_face(:,2), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 2, mdi, 1, mdi /), this%faces_on_face(:,3), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1), (/ 1, 2, 3, 4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,2), (/ 3, 5, 6, 7 /), "Incorrect edges_on_face connectivity.")
@@ -1297,25 +1298,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) /= mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) /= mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1323,10 +1324,10 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  2, 3, 2, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  1, 4, 1, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,3), (/  4, NON_PERIODIC_ID, 4 ,1 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,4), (/  3, NON_PERIODIC_ID, 3, 2 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  2, 3, 2, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  1, 4, 1, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,3), (/  4, mdi, 4 ,1 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,4), (/  3, mdi, 3, 2 /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1), (/ 1,  2, 3, 4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,2), (/ 3,  5, 1, 6 /), "Incorrect edges_on_face connectivity.")
@@ -1456,25 +1457,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) /= mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) /= mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1482,12 +1483,12 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual((/ 3, 4, 2, NON_PERIODIC_ID /), this%faces_on_face(:,1), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 1, 5, 3, NON_PERIODIC_ID /), this%faces_on_face(:,2), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 2, 6, 1, NON_PERIODIC_ID /), this%faces_on_face(:,3), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 6, NON_PERIODIC_ID, 5, 1 /), this%faces_on_face(:,4), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 4, NON_PERIODIC_ID, 6, 2 /), this%faces_on_face(:,5), "Incorrect faces_on_face connectivity.")
-    @assertEqual((/ 5, NON_PERIODIC_ID, 4, 3 /), this%faces_on_face(:,6), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 3, 4, 2, mdi /), this%faces_on_face(:,1), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 1, 5, 3, mdi /), this%faces_on_face(:,2), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 2, 6, 1, mdi /), this%faces_on_face(:,3), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 6, mdi, 5, 1 /), this%faces_on_face(:,4), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 4, mdi, 6, 2 /), this%faces_on_face(:,5), "Incorrect faces_on_face connectivity.")
+    @assertEqual((/ 5, mdi, 4, 3 /), this%faces_on_face(:,6), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1), (/ 1, 2, 3, 4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,2), (/ 3, 5, 6, 7 /), "Incorrect edges_on_face connectivity.")
@@ -1613,25 +1614,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) /= mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) /= mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1639,8 +1640,8 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, 2, NON_PERIODIC_ID, 2 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  NON_PERIODIC_ID, 1, NON_PERIODIC_ID, 1 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, 2, mdi, 2 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  mdi, 1, mdi, 1 /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual(this%edges_on_face(:,1), (/ 1, 2, 3, 4 /), "Incorrect edges_on_face connectivity.")
     @assertEqual(this%edges_on_face(:,2), (/ 5, 4, 6, 2 /), "Incorrect edges_on_face connectivity.")
@@ -1764,25 +1765,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) /= mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) /= mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1790,9 +1791,9 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, 2, NON_PERIODIC_ID, 3 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  NON_PERIODIC_ID, 3, NON_PERIODIC_ID, 1 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,3), (/  NON_PERIODIC_ID, 1, NON_PERIODIC_ID, 2 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, 2, mdi, 3 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  mdi, 3, mdi, 1 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,3), (/  mdi, 1, mdi, 2 /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
     @assertEqual((/ 5, 6, 7, 2 /), this%edges_on_face(:,2), "Incorrect edges_on_face connectivity.")
@@ -1923,25 +1924,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) /= mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) /= mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -1949,10 +1950,10 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, 3, 2, 3 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  1, 4, NON_PERIODIC_ID, 4 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,3), (/  NON_PERIODIC_ID, 1, 4, 1 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,4), (/  3, 2, NON_PERIODIC_ID, 2 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, 3, 2, 3 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  1, 4, mdi, 4 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,3), (/  mdi, 1, 4, 1 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,4), (/  3, 2, mdi, 2 /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual(this%edges_on_face(:,1), (/ 1, 2,  3, 4 /), "Incorrect edges_on_face connectivity.")
@@ -2091,25 +2092,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) /= mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) /= NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) /= mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -2117,12 +2118,12 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, 3, 2, 5 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  1, 4, NON_PERIODIC_ID, 6 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,3), (/  NON_PERIODIC_ID, 5, 4, 1 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,4), (/  3, 6, NON_PERIODIC_ID, 2 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,5), (/  NON_PERIODIC_ID, 1, 6, 3 /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,6), (/  5, 2, NON_PERIODIC_ID, 4 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, 3, 2, 5 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  1, 4, mdi, 6 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,3), (/  mdi, 5, 4, 1 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,4), (/  3, 6, mdi, 2 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,5), (/  mdi, 1, 6, 3 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,6), (/  5, 2, mdi, 4 /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual((/  1,  2,  3,  4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
@@ -2263,25 +2264,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -2289,7 +2290,7 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, mdi, mdi, mdi /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
@@ -2411,25 +2412,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -2437,8 +2438,8 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, 2, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID, 1 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, 2, mdi, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  mdi, mdi, mdi, 1 /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
@@ -2570,25 +2571,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -2596,9 +2597,9 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, 2, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  NON_PERIODIC_ID, 3, NON_PERIODIC_ID, 1 /),               "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,3), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID, 2 /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, 2, mdi, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  mdi, 3, mdi, 1 /),               "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,3), (/  mdi, mdi, mdi, 2 /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual((/ 1, 2,  3, 4 /),  this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
@@ -2730,25 +2731,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -2756,8 +2757,8 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/ NON_PERIODIC_ID, NON_PERIODIC_ID, 2, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/ 1, NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/ mdi, mdi, 2, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/ 1, mdi, mdi, mdi /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
@@ -2889,25 +2890,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -2915,9 +2916,9 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, 2, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,2), (/  1, NON_PERIODIC_ID, 3, NON_PERIODIC_ID /),               "Incorrect faces_on_face connectivity.")
-    @assertEqual(this%faces_on_face(:,3), (/  2, NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, mdi, 2, mdi /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,2), (/  1, mdi, 3, mdi /),               "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,3), (/  2, mdi, mdi, mdi /), "Incorrect faces_on_face connectivity.")
 
 
     @assertEqual((/ 1, 2, 3,  4 /),  this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
@@ -3054,25 +3055,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -3080,7 +3081,7 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, mdi, mdi, mdi /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
 
@@ -3214,25 +3215,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -3240,7 +3241,7 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, mdi, mdi, mdi /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
 
@@ -3384,25 +3385,25 @@ contains
 
     ! Test northern border
     do icell=1, edge_cells_x
-      @assertTrue( this%faces_on_face(N, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(N, icell) == mdi )
     end do
 
     ! Test Eastern border
     do row=1, edge_cells_y
       icell = row*edge_cells_x
-      @assertTrue( this%faces_on_face(E, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(E, icell) == mdi )
     end do
 
     ! Test Southern border
     do i=1, edge_cells_x
       icell = (edge_cells_y-1)*edge_cells_x +i
-      @assertTrue( this%faces_on_face(S, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(S, icell) == mdi )
     end do
 
     ! Test Western border
     do row=1, edge_cells_y
       icell = (row-1)*edge_cells_x + 1
-      @assertTrue( this%faces_on_face(W, icell) == NON_PERIODIC_ID )
+      @assertTrue( this%faces_on_face(W, icell) == mdi )
     end do
 
     @assertTrue(minval(this%nodes_on_face, 2) /= 0, "Incomplete nodes_on_face connectivity.")
@@ -3410,7 +3411,7 @@ contains
     @assertTrue(minval(this%nodes_on_edge, 2) /= 0, "Incomplete nodes_on_edge connectivity.")
 
     ! Mesh connectivity has expected values at certain points
-    @assertEqual(this%faces_on_face(:,1), (/  NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID, NON_PERIODIC_ID /), "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%faces_on_face(:,1), (/  mdi, mdi, mdi, mdi /), "Incorrect faces_on_face connectivity.")
 
     @assertEqual((/ 1, 2, 3, 4 /), this%edges_on_face(:,1), "Incorrect edges_on_face connectivity.")
 

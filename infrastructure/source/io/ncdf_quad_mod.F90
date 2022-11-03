@@ -126,6 +126,7 @@ type, extends(ugrid_file_type), public :: ncdf_quad_type
                                                   !< orientation (degrees)
 
   integer(i_def) :: npanels
+  integer(i_def) :: void_cell
 
 contains
 
@@ -676,6 +677,7 @@ subroutine assign_attributes(self)
                        trim(self%mesh_name)//'_face_links' )
   call check_err(ierr, routine, cmess)
 
+
   ! Only present for spherical lon-lat domains (geometry=spherical, coord_sys=ll)
   if ( trim(self%coord_sys) == 'll' .and. &
        trim(self%geometry)  == 'spherical' ) then
@@ -808,18 +810,11 @@ subroutine assign_attributes(self)
   ierr = nf90_put_att( self%ncid, id, trim(attname), [1] )
   call check_err(ierr, routine, cmess)
 
-  attname = 'flag_values'
+  attname = '_FillValue'
   cmess   = 'Adding attribute "'//trim(attname)// &
             '" to variable "'//trim(var_name)//'"'
-  ierr = nf90_put_att( self%ncid, id, trim(attname), [-1] )
+  ierr = nf90_put_att( self%ncid, id, trim(attname), self%void_cell )
   call check_err(ierr, routine, cmess)
-
-  attname = 'flag_meanings'
-  cmess   = 'Adding attribute "'//trim(attname)// &
-            '" to variable "'//trim(var_name)//'"'
-  ierr = nf90_put_att( self%ncid, id, trim(attname), 'out_of_mesh' )
-  call check_err(ierr, routine, cmess)
-
 
   !===================================================================
   ! 6.0 Add attributes for mesh node coordinate variables
@@ -1317,6 +1312,8 @@ end subroutine get_dimensions
 !>  @param[out]     face_coordinates         Coordinates of each face.
 !>  @param[out]     coord_units_x            Units of x coordinates.
 !>  @param[out]     coord_units_y            Units of y coordinates.
+!>  @param[out]     void_cell                Values to mark a cell as external
+!>                                           to domain.
 !>  @param[out]     face_node_connectivity   Nodes adjoining each face.
 !>  @param[out]     edge_node_connectivity   Nodes adjoining each edge.
 !>  @param[out]     face_edge_connectivity   Edges adjoining each face.
@@ -1332,6 +1329,7 @@ subroutine read_mesh( self, mesh_name, geometry, topology, coord_sys, &
                       constructor_inputs,                             &
                       node_coordinates, face_coordinates,             &
                       coord_units_x, coord_units_y,                   &
+                      void_cell,                                      &
                       face_node_connectivity, edge_node_connectivity, &
                       face_edge_connectivity, face_face_connectivity, &
                       num_targets, target_mesh_names )
@@ -1356,6 +1354,7 @@ subroutine read_mesh( self, mesh_name, geometry, topology, coord_sys, &
   real(r_def),         intent(out) :: face_coordinates(:,:)
   character(str_def),  intent(out) :: coord_units_x
   character(str_def),  intent(out) :: coord_units_y
+  integer(i_def),      intent(out) :: void_cell
   integer(i_def),      intent(out) :: face_node_connectivity(:,:)
   integer(i_def),      intent(out) :: edge_node_connectivity(:,:)
   integer(i_def),      intent(out) :: face_edge_connectivity(:,:)
@@ -1562,6 +1561,15 @@ subroutine read_mesh( self, mesh_name, geometry, topology, coord_sys, &
   ierr = nf90_get_var( self%ncid, self%mesh_face_links_id, &
                        face_face_connectivity(:,:))
   call check_err(ierr, routine, cmess)
+
+  attname = '_FillValue'
+  cmess = 'Getting _FillValue for mesh "'//trim(mesh_name)//'" cell-cell connectivity'
+  ierr = nf90_inquire_attribute(self%ncid, self%mesh_face_links_id, trim(attname))
+  call check_err(ierr, routine, cmess)
+  if (ierr == NF90_NOERR) then
+    ierr = nf90_get_att(self%ncid, self%mesh_face_links_id, trim(attname), self%void_cell)
+    void_cell = self%void_cell
+  end if
 
   ! Only present for spherical lon-lat domains (geometry=spherical, coord_sys=ll)
   if ( trim(coord_sys) == 'll' .and. &
@@ -1774,6 +1782,8 @@ end subroutine read_map
 !>  @param[in]      face_coordinates         Coordinates of each face.
 !>  @param[in]      coord_units_x            Units of x coordinates.
 !>  @param[in]      coord_units_y            Units of y coordinates.
+!>  @param[in]      void_cell                Values to mark a cell as external
+!>                                           to domain.
 !>  @param[in]      face_node_connectivity   Nodes adjoining each face.
 !>  @param[in]      edge_node_connectivity   Nodes adjoining each edge.
 !>  @param[in]      face_edge_connectivity   Edges adjoining each face.
@@ -1784,15 +1794,16 @@ end subroutine read_map
 
 !-------------------------------------------------------------------------------
 
-subroutine write_mesh( self, mesh_name, geometry, topology, coord_sys,      &
-                       periodic_x, periodic_y, npanels,                     &
-                       north_pole, null_island, max_stencil_depth,          &
-                       constructor_inputs,                                  &
-                       num_nodes, num_edges, num_faces,                     &
-                       node_coordinates, face_coordinates,                  &
-                       coord_units_x, coord_units_y,                        &
-                       face_node_connectivity, edge_node_connectivity,      &
-                       face_edge_connectivity, face_face_connectivity,      &
+subroutine write_mesh( self, mesh_name, geometry, topology, coord_sys, &
+                       periodic_x, periodic_y, npanels,                &
+                       north_pole, null_island, max_stencil_depth,     &
+                       constructor_inputs,                             &
+                       num_nodes, num_edges, num_faces,                &
+                       node_coordinates, face_coordinates,             &
+                       coord_units_x, coord_units_y,                   &
+                       void_cell,                                      &
+                       face_node_connectivity, edge_node_connectivity, &
+                       face_edge_connectivity, face_face_connectivity, &
 
                        ! Intergrid maps
                        num_targets, target_mesh_names, &
@@ -1826,6 +1837,8 @@ subroutine write_mesh( self, mesh_name, geometry, topology, coord_sys,      &
   integer(i_def),      intent(in) :: edge_node_connectivity(:,:)
   integer(i_def),      intent(in) :: face_edge_connectivity(:,:)
   integer(i_def),      intent(in) :: face_face_connectivity(:,:)
+  integer(i_def),      intent(in) :: void_cell
+
   integer(i_def),      intent(in) :: num_targets
 
   character(str_def),  intent(in), allocatable :: target_mesh_names(:)
@@ -1887,6 +1900,8 @@ subroutine write_mesh( self, mesh_name, geometry, topology, coord_sys,      &
 
   self%coord_units_x = coord_units_x
   self%coord_units_y = coord_units_y
+
+  self%void_cell = void_cell
 
   if ( self%nmesh_targets >0 ) then
 
@@ -2055,6 +2070,8 @@ end function is_mesh_present
 !>  @param[in]      face_coordinates         Coordinates of each face.
 !>  @param[in]      coord_units_x            Units of x coordinates.
 !>  @param[in]      coord_units_y            Units of y coordinates.
+!>  @param[in]      void_cell                Values to mark a cell as external
+!>                                           to domain.
 !>  @param[in]      face_node_connectivity   Nodes adjoining each face.
 !>  @param[in]      edge_node_connectivity   Nodes adjoining each edge.
 !>  @param[in]      face_edge_connectivity   Edges adjoining each face.
@@ -2072,6 +2089,7 @@ subroutine append_mesh( self, mesh_name, geometry, topology, coord_sys,    &
                         num_nodes, num_edges, num_faces,                   &
                         node_coordinates, face_coordinates,                &
                         coord_units_x, coord_units_y,                      &
+                        void_cell,                                         &
                         face_node_connectivity, edge_node_connectivity,    &
                         face_edge_connectivity, face_face_connectivity,    &
 
@@ -2100,10 +2118,12 @@ subroutine append_mesh( self, mesh_name, geometry, topology, coord_sys,    &
   real(r_def),             intent(in)  :: face_coordinates(:,:)
   character(str_def),      intent(in)  :: coord_units_x
   character(str_def),      intent(in)  :: coord_units_y
+  integer(i_def),          intent(in)  :: void_cell
   integer(i_def),          intent(in)  :: face_node_connectivity(:,:)
   integer(i_def),          intent(in)  :: edge_node_connectivity(:,:)
   integer(i_def),          intent(in)  :: face_edge_connectivity(:,:)
   integer(i_def),          intent(in)  :: face_face_connectivity(:,:)
+
   integer(i_def),          intent(in)  :: num_targets
 
   character(str_def),      intent(in),    &
@@ -2151,6 +2171,7 @@ subroutine append_mesh( self, mesh_name, geometry, topology, coord_sys,    &
       face_coordinates = face_coordinates,               &
       coord_units_x    = coord_units_x,                  &
       coord_units_y    = coord_units_y,                  &
+      void_cell        = void_cell,                      &
       face_node_connectivity = face_node_connectivity,   &
       edge_node_connectivity = edge_node_connectivity,   &
       face_edge_connectivity = face_edge_connectivity,   &
@@ -2159,7 +2180,7 @@ subroutine append_mesh( self, mesh_name, geometry, topology, coord_sys,    &
       target_mesh_names = target_mesh_names,             &
       target_global_mesh_maps = target_global_mesh_maps, &
       north_pole = north_pole,                           &
-      null_island = null_island  )
+      null_island = null_island )
   return
 end subroutine append_mesh
 

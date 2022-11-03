@@ -25,14 +25,14 @@
 !     respectively
 !===================================================================
 &mesh
-  mesh_filename  = 'mesh_C24.nc'
-  geometry       = 'spherical'
-  topology       = 'periodic'
-  n_meshes       = 1
-  mesh_names     = 'C24'
-  parition_mesh  = .false.
-  coord_sys      = 'll'
-  rotate_mesh    = .false.
+  mesh_filename   = 'mesh_C24.nc'
+  geometry        = 'spherical'
+  topology        = 'periodic'
+  n_meshes        = 1
+  mesh_names      = 'C24'
+  partition_mesh  = .false.
+  coord_sys       = 'll'
+  rotate_mesh     = .false.
 /
 
 !==================================================================

@@ -138,6 +138,9 @@ module global_mesh_mod
   ! Number of panels on the mesh to be constructed.
     integer(i_def) :: npanels
 
+  ! ID used for invalid cells in connectivity.
+    integer(i_def) :: void_cell
+
   !======================================================
   ! Intergrid map(s) information.
   !======================================================
@@ -170,6 +173,7 @@ module global_mesh_mod
     procedure, public :: get_cell_id
     procedure, public :: get_cell_on_vert
     procedure, public :: get_cell_on_edge
+    procedure, public :: get_void_cell
     procedure, public :: get_nverts
     procedure, public :: get_nedges
     procedure, public :: get_ncells
@@ -286,6 +290,7 @@ contains
                                    self%constructor_inputs, &
                                    self%rim_depth, &
                                    self%domain_size, &
+                                   self%void_cell, &
                                    self%cell_next_2d, &
                                    self%vert_on_cell_2d, &
                                    self%edge_on_cell_2d, &
@@ -353,12 +358,13 @@ contains
     end if
 
     allocate( self%cell_on_vert_2d( self%max_cells_per_vertex, self%nverts ) )
-    call calc_cell_on_vertex( self%vert_on_cell_2d, &
-                              self%nverts_per_cell, &
-                              self%ncells, &
-                              self%cell_on_vert_2d, &
+    call calc_cell_on_vertex( self%vert_on_cell_2d,      &
+                              self%nverts_per_cell,      &
+                              self%ncells,               &
+                              self%cell_on_vert_2d,      &
                               self%max_cells_per_vertex, &
-                              self%nverts)
+                              self%nverts,               &
+                              self%void_cell )
 
     ! Populate cells either side of each edge.
     ! There can only ever be 2 cells incident on an edge (whatever the
@@ -366,9 +372,10 @@ contains
     allocate( self%cell_on_edge_2d(2,self%nedges) )
     call calc_cell_on_edge( self%edge_on_cell_2d, &
                             self%nedges_per_cell, &
-                            self%ncells, &
+                            self%ncells,          &
                             self%cell_on_edge_2d, &
-                            self%nedges )
+                            self%nedges,          &
+                            self%void_cell )
 
     ! Allocate each vertex to the cell with the highest global cell index
     ! of the cells neighbouring the vertex.
@@ -402,6 +409,8 @@ contains
     implicit none
 
     type(global_mesh_type) :: self
+
+    integer(i_def), parameter :: void = -9999
 
     global_mesh_id_counter = global_mesh_id_counter + 1
 
@@ -460,15 +469,15 @@ contains
     self%vert_coords(1:2,15) = [ 1.0_r_def,  2.0_r_def]
     self%vert_coords(1:2,16) = [ 2.0_r_def,  2.0_r_def]
 
-    self%cell_next_2d(:,1)     = [0, 0, 2, 4]
-    self%cell_next_2d(:,2)     = [1, 0, 3, 5]
-    self%cell_next_2d(:,3)     = [2, 0, 0, 6]
-    self%cell_next_2d(:,4)     = [0, 1, 5, 7]
-    self%cell_next_2d(:,5)     = [4, 2, 6, 8]
-    self%cell_next_2d(:,6)     = [5, 3, 0, 9]
-    self%cell_next_2d(:,7)     = [0, 4, 8, 0]
-    self%cell_next_2d(:,8)     = [7, 5, 9, 0]
-    self%cell_next_2d(:,9)     = [8, 6, 0, 0]
+    self%cell_next_2d(:,1)     = [void, void,    2,    4]
+    self%cell_next_2d(:,2)     = [   1, void,    3,    5]
+    self%cell_next_2d(:,3)     = [   2, void, void,    6]
+    self%cell_next_2d(:,4)     = [void,    1,    5,    7]
+    self%cell_next_2d(:,5)     = [   4,    2,    6,    8]
+    self%cell_next_2d(:,6)     = [   5,    3, void,    9]
+    self%cell_next_2d(:,7)     = [void,    4,    8, void]
+    self%cell_next_2d(:,8)     = [   7,    5,    9, void]
+    self%cell_next_2d(:,9)     = [   8,    6, void, void]
 
     self%vert_on_cell_2d(:,1)  = [ 1,  2,  6,  5]
     self%vert_on_cell_2d(:,2)  = [ 2,  3,  7,  6]
@@ -490,47 +499,47 @@ contains
     self%edge_on_cell_2d(:,8)  = [19, 16, 20, 23]
     self%edge_on_cell_2d(:,9)  = [20, 17, 21, 24]
 
-    self%cell_on_vert_2d(:,1)  = [0, 0, 1, 0]
-    self%cell_on_vert_2d(:,2)  = [0, 0, 2, 1]
-    self%cell_on_vert_2d(:,3)  = [0, 0, 3, 2]
-    self%cell_on_vert_2d(:,4)  = [0, 0, 0, 3]
-    self%cell_on_vert_2d(:,5)  = [0, 1, 4, 0]
-    self%cell_on_vert_2d(:,6)  = [1, 2, 5, 4]
-    self%cell_on_vert_2d(:,7)  = [2, 3, 6, 5]
-    self%cell_on_vert_2d(:,8)  = [3, 0, 0, 6]
-    self%cell_on_vert_2d(:,9)  = [0, 4, 7, 0]
-    self%cell_on_vert_2d(:,10) = [4, 5, 8, 7]
-    self%cell_on_vert_2d(:,11) = [5, 6, 9, 8]
-    self%cell_on_vert_2d(:,12) = [6, 0, 0, 9]
-    self%cell_on_vert_2d(:,13) = [0, 7, 0, 0]
-    self%cell_on_vert_2d(:,14) = [7, 8, 0, 0]
-    self%cell_on_vert_2d(:,15) = [8, 9, 0, 0]
-    self%cell_on_vert_2d(:,16) = [9, 0, 0, 0]
+    self%cell_on_vert_2d(:,1)  = [void, void,    1, void]
+    self%cell_on_vert_2d(:,2)  = [void, void,    2,    1]
+    self%cell_on_vert_2d(:,3)  = [void, void,    3,    2]
+    self%cell_on_vert_2d(:,4)  = [void, void, void,    3]
+    self%cell_on_vert_2d(:,5)  = [void,    1,    4, void]
+    self%cell_on_vert_2d(:,6)  = [   1,    2,    5,    4]
+    self%cell_on_vert_2d(:,7)  = [   2,    3,    6,    5]
+    self%cell_on_vert_2d(:,8)  = [   3, void, void,    6]
+    self%cell_on_vert_2d(:,9)  = [void,    4,    7, void]
+    self%cell_on_vert_2d(:,10) = [   4,    5,    8,    7]
+    self%cell_on_vert_2d(:,11) = [   5,    6,    9,    8]
+    self%cell_on_vert_2d(:,12) = [   6, void, void,    9]
+    self%cell_on_vert_2d(:,13) = [void,    7, void, void]
+    self%cell_on_vert_2d(:,14) = [   7,    8, void, void]
+    self%cell_on_vert_2d(:,15) = [   8,    9, void, void]
+    self%cell_on_vert_2d(:,16) = [   9, void, void, void]
 
-    self%cell_on_edge_2d(:,1)  = [0, 1]
-    self%cell_on_edge_2d(:,2)  = [0, 2]
-    self%cell_on_edge_2d(:,3)  = [0, 3]
-    self%cell_on_edge_2d(:,4)  = [1, 0]
-    self%cell_on_edge_2d(:,5)  = [2, 1]
-    self%cell_on_edge_2d(:,6)  = [3, 2]
-    self%cell_on_edge_2d(:,7)  = [0, 3]
-    self%cell_on_edge_2d(:,8)  = [1, 4]
-    self%cell_on_edge_2d(:,9)  = [2, 5]
-    self%cell_on_edge_2d(:,10) = [3, 6]
-    self%cell_on_edge_2d(:,11) = [4, 0]
-    self%cell_on_edge_2d(:,12) = [5, 4]
-    self%cell_on_edge_2d(:,13) = [6, 5]
-    self%cell_on_edge_2d(:,14) = [0, 6]
-    self%cell_on_edge_2d(:,15) = [4, 7]
-    self%cell_on_edge_2d(:,16) = [5, 8]
-    self%cell_on_edge_2d(:,17) = [6, 9]
-    self%cell_on_edge_2d(:,18) = [7, 0]
-    self%cell_on_edge_2d(:,19) = [8, 7]
-    self%cell_on_edge_2d(:,20) = [9, 8]
-    self%cell_on_edge_2d(:,21) = [0, 9]
-    self%cell_on_edge_2d(:,22) = [7, 0]
-    self%cell_on_edge_2d(:,23) = [8, 0]
-    self%cell_on_edge_2d(:,24) = [9, 0]
+    self%cell_on_edge_2d(:,1)  = [void,    1]
+    self%cell_on_edge_2d(:,2)  = [void,    2]
+    self%cell_on_edge_2d(:,3)  = [void,    3]
+    self%cell_on_edge_2d(:,4)  = [   1, void]
+    self%cell_on_edge_2d(:,5)  = [   2,    1]
+    self%cell_on_edge_2d(:,6)  = [   3,    2]
+    self%cell_on_edge_2d(:,7)  = [void,    3]
+    self%cell_on_edge_2d(:,8)  = [   1,    4]
+    self%cell_on_edge_2d(:,9)  = [   2,    5]
+    self%cell_on_edge_2d(:,10) = [   3,    6]
+    self%cell_on_edge_2d(:,11) = [   4, void]
+    self%cell_on_edge_2d(:,12) = [   5,    4]
+    self%cell_on_edge_2d(:,13) = [   6,    5]
+    self%cell_on_edge_2d(:,14) = [void,    6]
+    self%cell_on_edge_2d(:,15) = [   4,    7]
+    self%cell_on_edge_2d(:,16) = [   5,    8]
+    self%cell_on_edge_2d(:,17) = [   6,    9]
+    self%cell_on_edge_2d(:,18) = [   7, void]
+    self%cell_on_edge_2d(:,19) = [   8,    7]
+    self%cell_on_edge_2d(:,20) = [   9,    8]
+    self%cell_on_edge_2d(:,21) = [void,    9]
+    self%cell_on_edge_2d(:,22) = [   7, void]
+    self%cell_on_edge_2d(:,23) = [   8, void]
+    self%cell_on_edge_2d(:,24) = [   9, void]
 
     self%vert_on_edge_2d(:,1)   = [1, 2]
     self%vert_on_edge_2d(:,2)   = [2, 3]
@@ -595,20 +604,22 @@ contains
   !          ncell           Number of cells.
   !          cells_per_vert  Number of cells per vertex.
   !          nvert           Number of vertices.
+  !          void_cell       Cell ID to use for null connectivity.
   ! Output:  cell_on_vert    Array with indices of cells on vertices.
   !-------------------------------------------------------------------------------
-  subroutine calc_cell_on_vertex(vert_on_cell,  &
-                                verts_per_cell, &
-                                ncell,          &
-                                cell_on_vert,   &
-                                cells_per_vert, &
-                                nvert)
+  subroutine calc_cell_on_vertex( vert_on_cell,   &
+                                  verts_per_cell, &
+                                  ncell,          &
+                                  cell_on_vert,   &
+                                  cells_per_vert, &
+                                  nvert,          &
+                                  void_cell )
 
   implicit none
 
   integer(i_def), intent(in)  :: verts_per_cell, ncell
   integer(i_def), intent(in)  :: vert_on_cell(verts_per_cell, ncell)
-  integer(i_def), intent(in)  :: cells_per_vert, nvert
+  integer(i_def), intent(in)  :: cells_per_vert, nvert, void_cell
   integer(i_def), intent(out) :: cell_on_vert(cells_per_vert, nvert)
 
   integer(i_def) :: cell
@@ -616,7 +627,7 @@ contains
   integer(i_def) :: cellno
   integer(i_def) :: vert
 
-  cell_on_vert = 0
+  cell_on_vert = void_cell
 
   ! There is no order to how the cell IDs are listed around the vertex
   ! Some may have 4 or 3 (i.e. vertices on corners of panels).
@@ -627,9 +638,9 @@ contains
 
       do cellno=1, cells_per_vert
         if (cell_on_vert(cellno,vert) == cell) exit
-        if (cell_on_vert(cellno,vert) == 0) then
-           cell_on_vert(cellno,vert) = cell
-           exit
+        if (cell_on_vert(cellno,vert) == void_cell) then
+          cell_on_vert(cellno,vert) = cell
+          exit
         end if
       end do
 
@@ -648,18 +659,20 @@ contains
   !          edges_per_cell  Number of edges per cell.
   !          ncell           Number of cells.
   !          nedge           Number of edges.
+  !          void_cell       Cell ID to use for null connectivity.
   ! Output:  cell_on_edge    Array with indices of cells on edges.
   !-------------------------------------------------------------------------------
-  subroutine calc_cell_on_edge( edge_on_cell, &
+  subroutine calc_cell_on_edge( edge_on_cell,   &
                                 edges_per_cell, &
-                                ncell, &
-                                cell_on_edge, &
-                                nedge)
+                                ncell,          &
+                                cell_on_edge,   &
+                                nedge,          &
+                                void_cell )
   implicit none
 
   integer(i_def), intent(in)  :: edges_per_cell, ncell
   integer(i_def), intent(in)  :: edge_on_cell(edges_per_cell, ncell)
-  integer(i_def), intent(in)  :: nedge
+  integer(i_def), intent(in)  :: nedge, void_cell
   integer(i_def), intent(out) :: cell_on_edge(2, nedge)
 
   integer(i_def) :: cell
@@ -667,7 +680,7 @@ contains
   integer(i_def) :: cellno
   integer(i_def) :: edge
 
-  cell_on_edge=0
+  cell_on_edge = void_cell
 
   do cell=1,ncell
     do edgeno=1,edges_per_cell
@@ -675,8 +688,8 @@ contains
       edge=edge_on_cell(edgeno,cell)
 
       do cellno=1, 2
-        if(cell_on_edge(cellno,edge) == cell)exit
-        if(cell_on_edge(cellno,edge) == 0)then
+        if ( cell_on_edge(cellno,edge) == cell ) exit
+        if ( cell_on_edge(cellno,edge) == void_cell ) then
           cell_on_edge(cellno,edge)=cell
           exit
         end if
@@ -707,6 +720,24 @@ contains
     npanels = self%npanels
 
   end function get_npanels
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Queries the ID value used for void cells. These are invalid cells
+  !>         in the cell-cell connectivity.
+  !> @return cell_id  The ID value used for null cell-connectivity.
+  !>
+  function get_void_cell( self ) result ( cell_id )
+
+    implicit none
+
+    class(global_mesh_type), intent(in) :: self
+
+    integer(i_def) :: cell_id
+
+    cell_id = self%void_cell
+
+  end function get_void_cell
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

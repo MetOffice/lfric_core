@@ -45,6 +45,8 @@ class ncdf_quad_mod::ncdf_quad_type {
 
   -target_mesh_maps: global_mesh_map_collection_type
 
+  -void_cell: integer
+
   +read_mesh( ... )
   +read_map( ... )
   +write_mesh( ... )

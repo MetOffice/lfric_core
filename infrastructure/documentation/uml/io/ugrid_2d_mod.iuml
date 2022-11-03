@@ -52,6 +52,7 @@ class ugrid_2d_mod::ugrid_2d_type {
   -edge_on_cell_gid: integer[::], <<allocatable>>
 
   -max_stencil_depth: integer
+  -void_cell: integer
   -node_coordinates: real[::] <<allocatable>>
   -face_coordinates: real[::] <<allocatable>>
   -face_node_connectivity: integer[::] <<allocatable>>

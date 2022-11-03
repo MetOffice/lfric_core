@@ -6,13 +6,13 @@
 
     [[WEIGHTS]]
 
-
-
-
     [[LINUX]]
         [[[environment]]]
-            FASTMEM = \$TMPDIR
-            BIG_DATA_DIR = /data/users/lfric/data
+            FASTMEM         = \$TMPDIR
+            BIG_DATA_DIR    = /data/users/lfric/data
+#           CANNED_MESH_DIR = $BIG_DATA_DIR
+            CANNED_MESH_DIR = /data/users/hadrx/AddFillValueMeshes
+
 {% if SPICE %}
         [[[directives]]]
             --mem=40960
@@ -78,12 +78,14 @@
                      module list 2>&1
                      """
 
-
     [[XC40]]
         [[[environment]]]
-            UMDIR = /projects/um1
-            FASTMEM = \$RAMTMP
-            BIG_DATA_DIR = /data/d03/lfric/data
+            UMDIR           = /projects/um1
+            FASTMEM         = \$RAMTMP
+            BIG_DATA_DIR    = /data/d03/lfric/data
+#           CANNED_MESH_DIR = $BIG_DATA_DIR
+            CANNED_MESH_DIR = /data/d02/hadrx/AddFillValueMeshes
+
         [[[remote]]]
             host = $(rose host-select xc)
         [[[directives]]]

@@ -639,15 +639,16 @@ contains
     integer(i_def),              intent(out)   :: num_ghost               ! Number of cells that are ghost cells - surrounding,
                                                                           ! but not in the partitioned domain
 
-    integer(i_def) :: face      ! which face of the cube is implied by local_rank (0->5)
+    integer(i_def) :: face       ! which face of the cube is implied by local_rank (0->5)
     integer(i_def) :: start_cell ! lowest cell id of the face implaced by local_rank
     integer(i_def) :: start_rank ! The number of the first rank on the face implied by local_rank
     integer(i_def) :: local_xproc, local_yproc ! x- and y-dirn processor id of this partition
-    integer(i_def) :: start_x   ! global cell id of start of the domain on this partition in x-dirn
-    integer(i_def) :: num_x     ! number of cells in the domain on this partition in x-dirn
-    integer(i_def) :: start_y   ! global cell id of start of the domain on this partition in y-dirn
-    integer(i_def) :: num_y     ! number of cells in the domain on this partition in y-dirn
-    integer(i_def) :: ix, iy    ! loop counters over cells on this partition in x- and y-dirns
+    integer(i_def) :: start_x    ! global cell id of start of the domain on this partition in x-dirn
+    integer(i_def) :: num_x      ! number of cells in the domain on this partition in x-dirn
+    integer(i_def) :: start_y    ! global cell id of start of the domain on this partition in y-dirn
+    integer(i_def) :: num_y      ! number of cells in the domain on this partition in y-dirn
+    integer(i_def) :: ix, iy     ! loop counters over cells on this partition in x- and y-dirns
+    integer(i_def) :: void_cell  ! Cell id that marks the cell as a cell outside of the partition.
 
     ! Create linked lists
 
@@ -680,9 +681,11 @@ contains
     logical(l_def) :: periodic_x = .false. ! Periodic in the E-W direction
     logical(l_def) :: periodic_y = .false. ! Periodic in the N-S direction
 
-    call global_mesh%get_mesh_periodicity(periodic_x, periodic_y)
 
-    if(num_panels==1)then
+    call global_mesh%get_mesh_periodicity(periodic_x, periodic_y)
+    void_cell = global_mesh%get_void_cell()
+
+    if (num_panels==1) then
       ! A single panelled mesh might be rectangluar - so find the dimensions
       ! First determine the southwest corner cell depending on periodicity. If
       ! biperiodic, cell ID 1 can be used as mesh conectivity loops round
@@ -690,8 +693,8 @@ contains
       call global_mesh%get_cell_next(cell,cell_next)
       if (.not. periodic_x) then
         ! If not periodic in E-W direction then walk West until you reach mesh
-        ! edge defined by cell ID -1 (this is set by the mesh generator)
-        do while (cell_next(W) /= -1)
+        ! edge defined by the void cell.
+        do while (cell_next(W) /= void_cell)
           cell = cell_next(W)
           call global_mesh%get_cell_next(cell,cell_next)
         end do
@@ -699,8 +702,8 @@ contains
 
       if (.not. periodic_y) then
         ! If not periodic in N-S direction then walk South until you reach mesh
-        ! edge defined by cell ID -1 (this is set by the mesh generator)
-        do while (cell_next(S) /= -1)
+        ! edge defined by the void cell.
+        do while (cell_next(S) /= void_cell)
           cell = cell_next(S)
           call global_mesh%get_cell_next(cell,cell_next)
         end do
@@ -726,7 +729,7 @@ contains
       ! meshes to determine number of cells in the x direction
       call global_mesh%get_cell_next(sw_corner_cells(1),cell_next)
       cell_next_e = cell_next(E)
-      do while (cell_next_e /= sw_corner_cells(1) .and. cell_next_e /= -1)
+      do while (cell_next_e /= sw_corner_cells(1) .and. cell_next_e /= void_cell)
         num_cells_x=num_cells_x+1
         call global_mesh%get_cell_next(cell_next_e, cell_next)
         cell_next_e = cell_next(E)
@@ -746,7 +749,7 @@ contains
       panel=1
       do i=1,global_mesh%get_nverts()
         call global_mesh%get_cell_on_vert(i,cells)
-        if(cells(4) == 0)then
+        if (cells(4) == void_cell) then
           do j=1,3
             call global_mesh%get_cell_next(cells(j),cell_next)
             oth1=j+1
@@ -1054,11 +1057,11 @@ contains
         ! get all the cells sharing this vert
         call global_mesh%get_cell_on_vert( verts(j), cells )
         ! iterate through these cells
-        do k = 1,global_mesh%get_max_cells_per_vertex()
+        do k = 1, global_mesh%get_max_cells_per_vertex()
           ! Assume we are not adding the cell at first
           ! then flag for adding depending on checks
           add_cell = 0
-          if(cells(k) > 0)then
+          if (cells(k) > 0) then
             ! check if cell is already in known_cells list
             if (.not.(known_cells%item_exists(cells(k)))) then
               ! Not in known_cells so flag to add initially

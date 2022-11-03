@@ -11,7 +11,7 @@ fplane=.false.,
 geometry='spherical',
 topology= 'fully_periodic',
 offline_partitioning=.false.
-prime_mesh_name='dynamics',
+prime_mesh_name='C24',
 /
 
 &boundaries
@@ -347,8 +347,8 @@ external_forcing=.false.
 /
 
 &multires_coupling
-  multires_coupling_mesh_tags = 'dynamics'
-  dynamics_mesh_name= 'dynamics'
-  physics_mesh_name= 'dynamics'
+  multires_coupling_mesh_tags = 'C24'
+  dynamics_mesh_name= 'C24'
+  physics_mesh_name= 'C24'
   multires_coupling_mode='test'
 /

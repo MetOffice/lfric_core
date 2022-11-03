@@ -44,6 +44,7 @@ type, public :: ugrid_2d_type
   logical(l_def) :: periodic_y = .false.   !< Periodic in N-S direction.
 
   integer(i_def) :: max_stencil_depth = 0
+  integer(i_def) :: void_cell = 0
 
   character(str_longlong) :: constructor_inputs !< Inputs used to generate mesh.
 
@@ -388,7 +389,9 @@ subroutine set_by_generator(self, generator_strategy)
         null_island        = self%null_island,        &
         rim_depth          = self%rim_depth,          &
         domain_size        = self%domain_size,        &
-        nmaps              = self%nmaps )
+        nmaps              = self%nmaps,              &
+        void_cell          = self%void_cell )
+
 
   self%npanels = generator_strategy%get_number_of_panels()
 
@@ -402,7 +405,6 @@ subroutine set_by_generator(self, generator_strategy)
           maps_edge_cells_x = self%target_edge_cells_x, &
           maps_edge_cells_y = self%target_edge_cells_y )
 
-    nullify(self%target_global_mesh_maps)
     self%target_global_mesh_maps => generator_strategy%get_global_mesh_maps()
   end if
 
@@ -491,6 +493,7 @@ subroutine set_from_file_read(self, mesh_name, filename)
       face_coordinates       = self%face_coordinates,       &
       coord_units_x          = self%coord_units_xy(1),      &
       coord_units_y          = self%coord_units_xy(2),      &
+      void_cell              = self%void_cell,              &
       face_node_connectivity = self%face_node_connectivity, &
       edge_node_connectivity = self%edge_node_connectivity, &
       face_edge_connectivity = self%face_edge_connectivity, &
@@ -498,7 +501,7 @@ subroutine set_from_file_read(self, mesh_name, filename)
       num_targets            = self%nmaps,                  &
       target_mesh_names      = self%target_mesh_names,      &
       north_pole             = self%north_pole,             &
-      null_island            = self%null_island   )
+      null_island            = self%null_island )
 
   call self%file_handler%file_close()
 
@@ -546,6 +549,7 @@ subroutine write_to_file(self, filename)
        face_coordinates       = self%face_coordinates,       &
        coord_units_x          = self%coord_units_xy(1),      &
        coord_units_y          = self%coord_units_xy(2),      &
+       void_cell              = self%void_cell,              &
        face_node_connectivity = self%face_node_connectivity, &
        edge_node_connectivity = self%edge_node_connectivity, &
        face_edge_connectivity = self%face_edge_connectivity, &
@@ -604,6 +608,7 @@ subroutine append_to_file(self, filename)
        face_coordinates       = self%face_coordinates,       &
        coord_units_x          = self%coord_units_xy(1),      &
        coord_units_y          = self%coord_units_xy(2),      &
+       void_cell              = self%void_cell,              &
        face_node_connectivity = self%face_node_connectivity, &
        edge_node_connectivity = self%edge_node_connectivity, &
        face_edge_connectivity = self%face_edge_connectivity, &
@@ -635,6 +640,8 @@ end subroutine append_to_file
 !> @param[out] periodic_x         Periodic in E-W direction.
 !> @param[out] periodic_y         Periodic in N-S direction.
 !> @param[out] max_stencil_depth  Maximum stencil depth supported (Local meshes).
+!> @param[out] void_cell          Values to mark a cell as external
+!>                                to domain.
 !> @param[out] edge_cells_x       Number of panel edge cells (x-axis).
 !> @param[out] edge_cells_y       Number of panel edge cells (y-axis).
 !> @param[out] ncells_global      Number of cells in the global mesh.
@@ -656,18 +663,19 @@ end subroutine append_to_file
 !> @param[out] null_island        Optional, [Longitude, Latitude] of null
 !>                                island used for domain orientation (degrees).
 !-------------------------------------------------------------------------------
-subroutine get_metadata( self, mesh_name,                  &
-                         geometry, topology, coord_sys,    &
-                         npanels, periodic_x, periodic_y,  &
-                         max_stencil_depth,                &
-                         edge_cells_x, edge_cells_y,       &
-                         ncells_global, domain_size,       &
-                         rim_depth, inner_depth,           &
-                         halo_depth, partition_of,         &
-                         num_edge, last_edge_cell,         &
-                         num_ghost, last_ghost_cell,       &
-                         constructor_inputs, nmaps,        &
-                         target_mesh_names,                &
+subroutine get_metadata( self, mesh_name,                 &
+                         geometry, topology, coord_sys,   &
+                         npanels, periodic_x, periodic_y, &
+                         max_stencil_depth,               &
+                         void_cell,                       &
+                         edge_cells_x, edge_cells_y,      &
+                         ncells_global, domain_size,      &
+                         rim_depth, inner_depth,          &
+                         halo_depth, partition_of,        &
+                         num_edge, last_edge_cell,        &
+                         num_ghost, last_ghost_cell,      &
+                         constructor_inputs, nmaps,       &
+                         target_mesh_names,               &
                          north_pole, null_island )
 
   implicit none
@@ -682,6 +690,7 @@ subroutine get_metadata( self, mesh_name,                  &
   logical(l_def),       optional, intent(out) :: periodic_y
 
   integer(i_def),       optional, intent(out) :: max_stencil_depth
+  integer(i_def),       optional, intent(out) :: void_cell
   integer(i_def),       optional, intent(out) :: edge_cells_x
   integer(i_def),       optional, intent(out) :: edge_cells_y
 
@@ -727,6 +736,7 @@ subroutine get_metadata( self, mesh_name,                  &
   if (present(periodic_x))         periodic_x         = self%periodic_x
   if (present(periodic_y))         periodic_y         = self%periodic_y
   if (present(max_stencil_depth))  max_stencil_depth  = self%max_stencil_depth
+  if (present(void_cell))          void_cell          = self%void_cell
   if (present(constructor_inputs)) constructor_inputs = self%constructor_inputs
   if (present(edge_cells_x))       edge_cells_x       = self%edge_cells_x
   if (present(edge_cells_y))       edge_cells_y       = self%edge_cells_y
@@ -910,7 +920,6 @@ subroutine set_global_mesh_maps( self, global_maps  )
   type(global_mesh_map_collection_type), &
                          intent(in), target :: global_maps
 
-  nullify(self%target_global_mesh_maps)
   self%target_global_mesh_maps => global_maps
 
 end subroutine set_global_mesh_maps
@@ -930,7 +939,6 @@ subroutine get_global_mesh_maps( self, global_maps  )
   type(global_mesh_map_collection_type), &
                          intent(out), pointer :: global_maps
 
-  nullify(global_maps)
   global_maps => self%target_global_mesh_maps
 
 end subroutine get_global_mesh_maps
@@ -972,14 +980,16 @@ subroutine clear(self)
 
   if (allocated(self%node_coordinates))       deallocate( self%node_coordinates )
   if (allocated(self%face_coordinates))       deallocate( self%face_coordinates )
+
   if (allocated(self%face_node_connectivity)) deallocate( self%face_node_connectivity )
   if (allocated(self%edge_node_connectivity)) deallocate( self%edge_node_connectivity )
   if (allocated(self%face_edge_connectivity)) deallocate( self%face_edge_connectivity )
   if (allocated(self%face_face_connectivity)) deallocate( self%face_face_connectivity )
-  if (allocated(self%target_mesh_names))      deallocate( self%target_mesh_names )
 
+  if (allocated(self%target_mesh_names))      deallocate( self%target_mesh_names )
   if (allocated(self%target_edge_cells_x))    deallocate( self%target_edge_cells_x )
   if (allocated(self%target_edge_cells_y))    deallocate( self%target_edge_cells_y )
+
   if (allocated(self%file_handler))           deallocate( self%file_handler )
 
   self%mesh_name  = cmdi
@@ -1018,6 +1028,8 @@ subroutine clear(self)
   self%num_ghost        = imdi
   self%last_ghost_cell  = imdi
   self%num_faces_global = imdi
+
+  self%target_global_mesh_maps => null()
 
 end subroutine clear
 

@@ -1,0 +1,16 @@
+&mesh
+coord_sys      = 'll'
+geometry       = 'spherical'
+mesh_filename  = 'mesh_C96.nc'
+mesh_names     = 'dynamics'
+n_meshes       = 1
+partition_mesh = .false.
+rotate_mesh    = .false.,
+topology       = 'periodic'
+/
+
+&cubedsphere_mesh
+edge_cells     = 96
+smooth_passes  = 0
+stretch_factor = 1.0
+/

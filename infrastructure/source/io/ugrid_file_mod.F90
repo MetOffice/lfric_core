@@ -177,6 +177,8 @@ abstract interface
   !> @param[out]    face_coordinates       Face coordinates
   !> @param[out]    coord_units_x          Units for x-coord
   !> @param[out]    coord_units_y          Units for y-coord
+  !> @param[out]    void_cell              Values to mark a cell as external
+  !>                                       to domain.
   !> @param[out]    face_node_connectivity Nodes around each face
   !> @param[out]    edge_node_connectivity Nodes defining each edge
   !> @param[out]    face_edge_connectivity Edges bounding each face
@@ -194,6 +196,7 @@ abstract interface
                                   node_coordinates,                 &
                                   face_coordinates,                 &
                                   coord_units_x, coord_units_y,     &
+                                  void_cell,                        &
                                   face_node_connectivity,           &
                                   edge_node_connectivity,           &
                                   face_edge_connectivity,           &
@@ -225,6 +228,7 @@ abstract interface
     real(r_def),        intent(out) :: face_coordinates(:,:)
     character(str_def), intent(out) :: coord_units_x
     character(str_def), intent(out) :: coord_units_y
+    integer(i_def),     intent(out) :: void_cell
     integer(i_def),     intent(out) :: face_node_connectivity(:,:)
     integer(i_def),     intent(out) :: edge_node_connectivity(:,:)
     integer(i_def),     intent(out) :: face_edge_connectivity(:,:)
@@ -265,6 +269,8 @@ abstract interface
   !> @param[in]      edge_node_connectivity  Nodes defining each edge
   !> @param[in]      face_edge_connectivity  Edges bounding each face
   !> @param[in]      face_face_connectivity  Faces adjacent to each face.
+  !> @param[in]      void_cell               Value use to mark a cell as
+  !>                                         external to domain bounds.
   !> @param[in]      num_targets             Number of mesh maps from mesh
   !> @param[in]      target_mesh_names       Mesh(es) that this mesh has maps for
   !> @param[in]      target_mesh_maps        Mesh maps from this mesh to target mesh(es)
@@ -279,6 +285,7 @@ abstract interface
                                    num_nodes, num_edges, num_faces,                &
                                    node_coordinates, face_coordinates,             &
                                    coord_units_x, coord_units_y,                   &
+                                   void_cell,                                      &
                                    face_node_connectivity,                         &
                                    edge_node_connectivity,                         &
                                    face_edge_connectivity,                         &
@@ -317,10 +324,12 @@ abstract interface
     real(r_def),        intent(in) :: face_coordinates(:,:)
     character(str_def), intent(in) :: coord_units_x
     character(str_def), intent(in) :: coord_units_y
+    integer(i_def),     intent(in) :: void_cell
     integer(i_def),     intent(in) :: face_node_connectivity(:,:)
     integer(i_def),     intent(in) :: edge_node_connectivity(:,:)
     integer(i_def),     intent(in) :: face_edge_connectivity(:,:)
     integer(i_def),     intent(in) :: face_face_connectivity(:,:)
+
 
     integer(i_def),     intent(in) :: num_targets
     character(str_def), intent(in), allocatable :: target_mesh_names(:)

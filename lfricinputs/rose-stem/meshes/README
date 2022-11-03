@@ -1,0 +1,54 @@
+LFRicInputs Canned Mesh generation
+==================================
+
+Canned meshes to be used as inputs for the LFRicInputs test-suite
+may need to be regenerated every time there is a change to the LFRic
+mesh tools or related infrastructure. This will be the case until
+LfricInputs generates it's meshes on demand from within a test-suite.
+
+Due to the size of LFRicInputs canned meshes, they are not stored
+under version control. Instead, the namelists to generate the meshes
+are stored so they can be recreated.
+
+Updating canned meshes for Lfric inputs
+
+For developers on branch:
+==========================
+1. Ensure you have compiled mesh tools on your branch.
+
+   <working_dir>/mesh_tools/make build
+
+2. Generate the canned meshes.
+
+   > cd <working_dir>/lfricinputs/rose-stem/meshes/support
+   > ./generate_canned
+
+   This should regenerate all the required meshes from the mesh_tools that
+   were built in 1). It should also report differences between these mesh
+   files and the ones used by LFRicInputs at the head of trunk in $BIG_DATA_DIR.
+
+3. To test LFricInputs with the new meshes on branch you need to edit the
+   family-common.rc file to used these new meshes:
+
+   CANNED_MESH_DIR = $CYLC_SUITE_RUN_DIR/meshes
+
+   You will need to perform the edit for the LINUX and XC40 families.
+
+4. Launching LFRic Inputs should now use meshes generated using the same
+   infrastructure on the test branch. Note: this may still results in changes
+   to KGOs from rose_ana tests.
+
+For Code reviewers:
+=======================
+1. Perform the same steps as for developers to confirm their changes.
+
+2. Update KGOs for rose_ana tasks (LFRic Inputs team)
+
+3. Update BIG_DATA_DIR with meshes generated in <working_dir>/rose_stem/meshes
+   BIG_DATA_DIR on Spice: /data/users/lfric/data/meshes/HEAD 
+   BIG_DATA_DIR on XC40:  /data/d03/lfric/data/meshes/HEAD
+
+4. Revert edits so that CANNED_MESH_DIR = $BIG_DATA_DIR in family-common.rc
+
+NOTE: Do not commit regenerate canned meshes to trunk, fcm will deny
+      the changeset on size anyway.

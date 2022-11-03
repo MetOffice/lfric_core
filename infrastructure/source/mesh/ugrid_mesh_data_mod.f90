@@ -83,6 +83,9 @@ module ugrid_mesh_data_mod
     real(r_def)    :: north_pole(2)  = rmdi
     ! Domain size (Global mesh).
     real(r_def)    :: domain_size(2) = rmdi
+    !> ID value to mark null cell-cell connectivity,
+    integer(i_def) :: void_cell
+
   contains
     procedure, public :: read_from_file
     procedure, public :: set_by_ugrid_2d
@@ -157,6 +160,7 @@ contains
   !> @param[out] constructor_inputs  Configuration arguments for global mesh object constructor.
   !> @param[out] rim_depth        Global LBC mesh rim depth (in cells).
   !> @param[out] domain_size      Global mesh domain size.
+  !> @param[out] void_cell        ID value to mark null cell-cell connectivity.
   !> @param[out] face_next_2d     Full domain cell to cell connectivities.
   !> @param[out] node_on_face_2d  Full domain vertices on a cell.
   !> @param[out] edge_on_face_2d  Full domain edges on a cell.
@@ -188,6 +192,7 @@ contains
                        constructor_inputs, &
                        rim_depth, &
                        domain_size, &
+                       void_cell, &
                        face_next_2d, &
                        node_on_face_2d, &
                        edge_on_face_2d, &
@@ -226,6 +231,7 @@ contains
     integer(i_def), intent(out) :: npanels
     integer(i_def), intent(out) :: rim_depth
     real(r_def),    intent(out) :: domain_size(2)
+    integer(i_def), intent(out) :: void_cell
     real(r_def),    intent(out) :: north_pole(2)
     real(r_def),    intent(out) :: null_island(2)
 
@@ -260,6 +266,8 @@ contains
 
     node_coords = self%node_coords
     face_coords = self%face_coords
+
+    void_cell = self%void_cell
     face_next_2d = self%face_next_2d
     node_on_face_2d = self%node_on_face_2d
     edge_on_face_2d = self%edge_on_face_2d
@@ -354,6 +362,7 @@ contains
               null_island        = self%null_island,        &
               npanels            = self%npanels,            &
               domain_size        = self%domain_size,        &
+              void_cell          = self%void_cell,          &
               rim_depth          = self%rim_depth,          &
               nmaps              = self%ntarget_meshes,     &
               target_mesh_names  = self%target_global_mesh_names )

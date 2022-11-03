@@ -1,0 +1,26 @@
+&mesh
+coord_sys='ll',
+geometry='spherical',
+mesh_filename='falklands.nc',
+mesh_names='gungho',
+n_meshes=1,
+partition_mesh=.false.
+rotate_mesh=.true.,
+topology='non_periodic',
+/
+
+&planar_mesh
+create_lbc_mesh=.false.,
+domain_x=14.256,
+domain_y=9.504,
+edge_cells_x=396,
+edge_cells_y=264,
+periodic_x=.false.,
+periodic_y=.false.,
+first_node=173.732,-4.416
+/
+&rotation
+rotation_target='north_pole'
+target_null_island = 113.10, 51.88
+target_north_pole  = -66.90, 38.12
+/
