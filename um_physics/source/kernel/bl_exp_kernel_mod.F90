@@ -610,7 +610,7 @@ contains
     use ancil_info, only: ssi_pts, sea_pts, sice_pts, sice_pts_ncat,          &
                           rad_nband, nsoilt, nsurft, dim_cslayer, nmasst
     use atm_fields_bounds_mod, only: tdims, pdims_s, pdims_l, pdims
-    use atm_step_local, only: dim_cs1, dim_cs2, co2_dim_len, co2_dim_row
+    use atm_step_local, only: dim_cs1, co2_dim_len, co2_dim_row
     use bl_option_mod, only: alpha_cd
     use c_kappai, only: kappai, de
     use cv_run_mod, only: i_convection_vn, i_convection_vn_6a,                &
@@ -1051,9 +1051,9 @@ contains
 
     real(r_um), dimension(land_field) :: emis_soil
 
-    real(r_um), dimension(dim_cs2) :: resp_s_tot_soilt
+    real(r_um), dimension(land_field) :: resp_s_tot_soilt
 
-    real(r_um), dimension(land_field,dim_cslayer,dim_cs2) :: resp_s_acc_gb_um
+    real(r_um), dimension(land_field,dim_cs1) :: resp_s_acc_gb_um
 
     real(r_um), dimension(land_field,ntiles) :: tsurf_elev_surft, epot_surft,&
          aresist_surft, dust_emiss_frac, flake, gc_surft, resft,             &

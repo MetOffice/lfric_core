@@ -499,8 +499,6 @@ contains
 
     real(r_um), dimension(river_row_length, river_rows) :: twatstor
 
-    real(r_um), dimension(land_pts, dim_cslayer, dim_cs1) :: resp_s_acc_gb_um
-
     real(r_um), dimension(land_pts) :: dhf_surf_minus_soil,                   &
          ls_rainfrac_gb, tot_surf_runoff, tot_sub_runoff, inlandout_atm_gb
 
@@ -874,7 +872,7 @@ contains
     fsat_soilt, fwetl_soilt, zw_soilt, sthzw_soilt,                           &
     ls_rainfrac_gb, substore, surfstore, flowin, bflowin,                     &
     tot_surf_runoff, tot_sub_runoff, acc_lake_evap, twatstor,                 &
-    asteps_since_triffid, resp_s_acc_gb_um,                                   &
+    asteps_since_triffid,                                                     &
     inlandout_atm_gb,                                                         &
 
     !OUT- mostly for SCM diagnostics output below

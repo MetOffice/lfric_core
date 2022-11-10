@@ -436,7 +436,7 @@ contains
     use ancil_info, only: ssi_pts, sea_pts, sice_pts, sice_pts_ncat,           &
                           nsurft, nsoilt, dim_cslayer, rad_nband, nmasst
     use atm_fields_bounds_mod, only: pdims, pdims_s
-    use atm_step_local, only: dim_cs1, dim_cs2
+    use atm_step_local, only: dim_cs1
     use csigma, only: sbcon
     use dust_parameters_mod, only: ndiv, ndivh
     use jules_deposition_mod, only: l_deposition
@@ -776,7 +776,7 @@ contains
 
     real(r_um), dimension(row_length,rows,ndiv) :: dust_flux, r_b_dust
 
-    real(r_um), dimension(dim_cs2) :: resp_s_tot_soilt
+    real(r_um), dimension(land_field) :: resp_s_tot_soilt
 
     real(r_um), dimension(land_field) :: npp_gb
 
