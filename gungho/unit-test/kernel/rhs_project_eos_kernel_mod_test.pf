@@ -143,7 +143,8 @@ contains
     real(r_def), allocatable :: theta_data(:)
     real(r_def), allocatable :: moist_dyn_gas_data(:)
 
-    integer(i_def)            :: nlayers, ncells, ncell_3d
+    integer(i_def)            :: nlayers
+    integer(i_def)            :: ncells_w0, ncells_w3, ncells_wtheta
     integer(i_def)            :: ndf_wtheta, undf_wtheta
     integer(i_def)            :: ndf_w3, undf_w3
     integer(i_def)            :: ndf_w0, undf_w0
@@ -176,17 +177,18 @@ contains
     nlayers = 3_i_def
 
     ! Get sizes
-    call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
-                                  dim_space, dim_space_diff, &
-                                  nqp_h, nqp_v, &
+    call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells_w0, &
+                                  dim_space, dim_space_diff,  &
+                                  nqp_h, nqp_v,               &
                                   nlayers )
-    call get_w3_m3x3_q3x3x3_size( ndf_w3, undf_w3, ncells, &
-                                  dim_space, dim_space_diff, &
-                                  nqp_h, nqp_v, &
+    call get_w3_m3x3_q3x3x3_size( ndf_w3, undf_w3, ncells_w3, &
+                                  dim_space, dim_space_diff,  &
+                                  nqp_h, nqp_v,               &
                                   nlayers )
-    call get_wtheta_m3x3_q3x3x3_size( ndf_wtheta, undf_wtheta, ncells, &
+    call get_wtheta_m3x3_q3x3x3_size( ndf_wtheta, undf_wtheta,   &
+                                      ncells_wtheta,             &
                                       dim_space, dim_space_diff, &
-                                      nqp_h, nqp_v, &
+                                      nqp_h, nqp_v,              &
                                       nlayers )
    ! Get basis functions
     call get_w0_q3x3x3_basis(basis_w0)
@@ -200,10 +202,10 @@ contains
     call get_wtheta_m3x3_dofmap(map_wtheta)
 
     ndf_pid = 1_i_def
-    undf_pid = ncells
+    undf_pid = ncells_w3
     call get_w3_m3x3_dofmap(map_pid, 1_i_def)
 
-    allocate(m3_inv(ndf_w3, ndf_w3, ncell_3d))
+    allocate( m3_inv(ndf_w3, ndf_w3, ncells_w3) )
     m3_inv(:,:,:) = 0.1
 
     ! Get quadrature weights

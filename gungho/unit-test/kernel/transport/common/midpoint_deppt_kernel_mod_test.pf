@@ -84,8 +84,8 @@ contains
     integer(kind=i_def), dimension(ndf_w2)              :: map_w2
     integer(kind=i_def), dimension(ndf_w2,stencil_size) :: stencil_map
 
-    real(kind=r_def), dimension(undf_w2)  :: dep_pts_x
-    real(kind=r_def), dimension(undf_w2)  :: dep_pts_y
+    real(kind=r_def), dimension(undf_w2s) :: dep_pts_x
+    real(kind=r_def), dimension(undf_w2s) :: dep_pts_y
     real(kind=r_def), dimension(undf_w2s) :: wind_n
 
     real(kind=r_def)    :: dt
@@ -119,7 +119,7 @@ contains
                               n_it,         &
                               dt,           &
                               ndf_w2,       &
-                              undf_w2,      &
+                              undf_w2s,     &
                               map_w2 )
     ! Get correct tolerance
     if ( r_def == real64 ) then
@@ -156,7 +156,7 @@ contains
                               n_it,         &
                               dt,           &
                               ndf_w2,       &
-                              undf_w2,      &
+                              undf_w2s,     &
                               map_w2 )
     answer = 0.75_r_def
     @assertEqual(answer, dep_pts_x(1), use_tol)

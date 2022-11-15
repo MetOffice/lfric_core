@@ -191,7 +191,7 @@ contains
     map_w3(1) = 1
     map_w2v = (/1, 2/)
 
-    z(0) = 0.0_r_def
+    z(1) = 0.0_r_def
     do k = 0,nlayers-1
       z(map_wx(2)+k) = z(map_wx(1)+k) + dz
       dz = dz * 1.5_r_def

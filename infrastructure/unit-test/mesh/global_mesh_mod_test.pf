@@ -8,8 +8,8 @@
 !>
 module global_mesh_mod_test
 
-  use constants_mod,              only: r_def, i_def, str_max_filename, &
-                                        str_def, l_def
+  use constants_mod,              only: i_def, l_def, r_def, &
+                                        str_def, str_max_filename
   use reference_element_mod,      only: reference_cube_type
   use global_mesh_mod,            only: global_mesh_type
   use global_mesh_map_mod,        only: global_mesh_map_type
@@ -208,7 +208,6 @@ contains
     integer(i_def) :: ncells
     integer(i_def) :: max_cells_on_vert
     integer(i_def) :: cell_owner
-    integer(i_def) :: global_mesh_id1
     integer(i_def) :: global_mesh_id2
 
     integer(i_def), allocatable :: edge_on_cells(:,:)
@@ -227,7 +226,7 @@ contains
 
     ! Check the global mesh id
     global_mesh_id2 = global_mesh%get_id()
-    @assertTrue(global_mesh_id1 /= global_mesh_id2)
+    @assertTrue(global_mesh_id2 > 0)
 
     !
     ! Generate the global_mesh
@@ -352,7 +351,7 @@ contains
 
     ! Check the global mesh id
     global_mesh_id2 = global_mesh%get_id()
-    @assertTrue(global_mesh_id1 /= global_mesh_id2)
+    @assertTrue( global_mesh_id2 > 0 )
 
     ! Generate the global_mesh
     cell_id = global_mesh%get_cell_id( 1, 0, 0 )
@@ -455,6 +454,7 @@ contains
     character(str_def)   :: target_name
 
     integer(i_def) :: multigrid_ids(4), npanels
+    logical(l_def) :: id_matches(4)
 
     type(global_mesh_type),     pointer :: global_mesh_ptr => null()
     type(global_mesh_type),     pointer :: target_mesh_ptr => null()
@@ -480,6 +480,15 @@ contains
       call ugrid_mesh_data%clear()
       MultiGrid_ids(i) = global_mesh%get_id()
       call global_mesh_collection%add_new_global_mesh( global_mesh )
+    end do
+
+    ! Check that each ID appears only once
+    !
+    do i = 1, size(multigrid_ids)
+      do j = 1, size(multigrid_ids)
+        id_matches(j) = (multigrid_ids(j) == multigrid_ids(i))
+      end do
+      @assertTrue(count(id_matches) == 1)
     end do
 
     ! 2.0 Now extract each global mesh, retrieve and add it's target mesh

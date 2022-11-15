@@ -88,7 +88,7 @@ contains
     allocate( tri_diag(undf_sh_w3) )
     allocate( tri_above(undf_sh_w3) )
     allocate( field_wt(undf_wt) )
-    allocate( map_wt(1, ncells) )
+    allocate( map_wt(2, ncells) )
     allocate( map_sh_w3(1, ncells) )
 
     map_wt(1,:) = 1_i_def

@@ -87,10 +87,11 @@ contains
     integer(i_def), parameter :: nqp_v = 2
     integer(i_def), parameter :: nqp_e = 1
     integer(i_def), parameter :: nfaces = 4
+    integer(i_def), parameter :: nedges = 8
     integer(i_def), parameter :: undf_wt = (nlayers+1)*stencil_size
     integer(i_def), parameter :: undf_wx = ndf_wx*nlayers*stencil_size
     integer(i_def), parameter :: undf_pid = stencil_size
-    integer(i_def), parameter :: ndata = (mol_order+1)*nfaces
+    integer(i_def), parameter :: ndata = (mol_order+1)*nedges
     integer(i_def), parameter :: ndf_c = 1
     integer(i_def), parameter :: undf_c = ndata
 
@@ -101,7 +102,7 @@ contains
 
 
     real(r_def), dimension(ndf_wx,nqp_h,nqp_v) :: basis_wx
-    real(r_def), dimension(ndf_wx,nqp_e,4,2) :: edge_basis_wx
+    real(r_def), dimension(1,ndf_wx,nqp_e,8) :: edge_basis_wx
     real(r_def), dimension(nqp_h)            :: wqp_h
     real(r_def), dimension(nqp_v), parameter :: wqp_v = (/ 0.5_r_def, 0.5_r_def /)
     real(r_def), dimension(nqp_e), parameter :: wqp_e = (/ 1.0_r_def /)
@@ -195,21 +196,21 @@ contains
 
     edge_basis_wx(:,:,:,:) = 0.0_r_def
     edge_basis_wx(1,1,1,1) = 0.5_r_def
-    edge_basis_wx(1,1,2,1) = 0.5_r_def
-    edge_basis_wx(2,1,2,1) = 0.5_r_def
-    edge_basis_wx(2,1,3,1) = 0.5_r_def
-    edge_basis_wx(3,1,1,1) = 0.5_r_def
-    edge_basis_wx(3,1,4,1) = 0.5_r_def
-    edge_basis_wx(4,1,3,1) = 0.5_r_def
-    edge_basis_wx(4,1,4,1) = 0.5_r_def
-    edge_basis_wx(5,1,1,2) = 0.5_r_def
-    edge_basis_wx(5,1,2,2) = 0.5_r_def
-    edge_basis_wx(6,1,2,2) = 0.5_r_def
-    edge_basis_wx(6,1,3,2) = 0.5_r_def
-    edge_basis_wx(7,1,1,2) = 0.5_r_def
-    edge_basis_wx(7,1,4,2) = 0.5_r_def
-    edge_basis_wx(8,1,3,2) = 0.5_r_def
-    edge_basis_wx(8,1,4,2) = 0.5_r_def
+    edge_basis_wx(1,1,1,2) = 0.5_r_def
+    edge_basis_wx(1,2,1,2) = 0.5_r_def
+    edge_basis_wx(1,2,1,3) = 0.5_r_def
+    edge_basis_wx(1,3,1,1) = 0.5_r_def
+    edge_basis_wx(1,3,1,4) = 0.5_r_def
+    edge_basis_wx(1,4,1,3) = 0.5_r_def
+    edge_basis_wx(1,4,1,4) = 0.5_r_def
+    edge_basis_wx(1,5,1,5) = 0.5_r_def
+    edge_basis_wx(1,5,1,6) = 0.5_r_def
+    edge_basis_wx(1,6,1,6) = 0.5_r_def
+    edge_basis_wx(1,6,1,7) = 0.5_r_def
+    edge_basis_wx(1,7,1,5) = 0.5_r_def
+    edge_basis_wx(1,7,1,8) = 0.5_r_def
+    edge_basis_wx(1,8,1,7) = 0.5_r_def
+    edge_basis_wx(1,8,1,8) = 0.5_r_def
 
     call poly1d_advective_coeffs_code(nlayers,                   &
                                       coeff,                     &
@@ -241,7 +242,7 @@ contains
                                       ndf_pid, undf_pid,         &
                                       smap_pid(:,1),             &
                                       nqp_h, nqp_v, wqp_h, wqp_v,&
-                                      nfaces, nqp_e, wqp_e )
+                                      nedges, nqp_e, wqp_e )
 
     answer = (/  5.0_r_def/6.0_r_def,  2.0_r_def/6.0_r_def, -1.0_r_def/6.0_r_def /)
 

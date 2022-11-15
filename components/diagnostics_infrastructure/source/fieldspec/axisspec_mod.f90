@@ -102,7 +102,7 @@ contains
 
     self%unique_id = trim(unique_id)
     self%axis_category = axis_category
-    if (unique_id(1:15) == "model_vert_axis") then
+    if (index(unique_id, 'model_vert_axis') == 1) then
       self%is_primary_axis = .true.
     else
       self%is_primary_axis = .false.

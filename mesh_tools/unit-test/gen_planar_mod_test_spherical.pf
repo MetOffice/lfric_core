@@ -1,0 +1,463 @@
+!-----------------------------------------------------------------------------
+! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
+! For further details please refer to the file LICENCE.original which you
+! should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+!> @brief     Tests for mesh_tools/source/support/gen_planar_mod.F90
+!
+!> @details   [1]  Constructor can be called with program default args.
+!>            [2]  Constructor fails with invalid args.
+!>            [3]  Type generates mesh with appropriate dimensions for args.
+!>            [4]  Mesh contains correct values at fixed points for fixed args.
+!>            [5]  Mesh connectivity has correct dimensions.
+!>            [6]  Mesh connectivity has correct values at fixed points.
+!>            [7]  Mesh coords have correct values at fixed points.
+!>
+module gen_planar_mod_test_spherical
+
+  use constants_mod,                  only: i_def,                            &
+                                            r_def,                            &
+                                            str_def, str_longlong, str_short
+  use gen_planar_mod,                 only: gen_planar_type
+  use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
+  use global_mesh_map_mod,            only: global_mesh_map_type
+
+  use pFUnit_Mod
+
+  use reference_element_mod,          only: reference_cube_type, &
+                                            W, S, E, N
+
+  use mesh_config_mod, only: coord_sys_ll,       &
+                             geometry_spherical, &
+                             topology_non_periodic
+
+  implicit none
+
+  private
+  public :: gen_planar_test_constructor, &
+            getParameters,               &
+            test_gen
+
+  integer(i_def), parameter :: mdi = -9999
+
+  @testParameter
+  type, public, extends(AbstractTestParameter) :: config_type
+    integer,     public :: x_size
+    logical,     public :: x_periodic
+    real(r_def), public :: x_domain
+    integer,     public :: y_size
+    logical,     public :: y_periodic
+    real(r_def), public :: y_domain
+
+    real(r_def), public :: first_node(2)
+    logical, public :: rotate_mesh
+    real(r_def), public :: target_north_pole(2)
+    real(r_def), public :: target_null_island(2)
+
+    integer, public :: topology
+    integer, public :: coord_sys
+
+    character(:), public, allocatable :: topology_string
+    character(:), public, allocatable :: coord_sys_string
+
+    integer, public :: nodes
+    integer, public :: edges
+    integer, public :: faces
+
+    integer, public, allocatable :: nodes_on_face(:, :)
+    integer, public, allocatable :: faces_on_face(:, :)
+    integer, public, allocatable :: edges_on_face(:, :)
+    integer, public, allocatable :: nodes_on_edge(:, :)
+
+    real, public, allocatable :: coords(:, :)
+    real, public, allocatable :: face_coords(:, :)
+
+    integer, public :: number_of_maps
+
+  contains
+    procedure, public :: toString
+  end type config_type
+
+  @TestCase(testParameters={getParameters()}, constructor=gen_planar_test_constructor)
+  type, extends(ParameterizedTestCase), public :: gen_planar_test_type
+    private
+    integer     :: x_size
+    logical     :: x_periodic
+    real(r_def) :: x_domain
+    integer     :: y_size
+    logical     :: y_periodic
+    real(r_def) :: y_domain
+
+    real(r_def), public :: first_node(2)
+    logical, public :: rotate_mesh
+    real(r_def), public :: target_north_pole(2)
+    real(r_def), public :: target_null_island(2)
+
+    integer, public :: topology
+    integer, public :: coord_sys
+
+    character(:), public, allocatable :: topology_string
+    character(:), public, allocatable :: coord_sys_string
+
+    integer, public :: nodes
+    integer, public :: edges
+    integer, public :: faces
+
+    integer, public, allocatable :: nodes_on_face(:, :)
+    integer, public, allocatable :: faces_on_face(:, :)
+    integer, public, allocatable :: edges_on_face(:, :)
+    integer, public, allocatable :: nodes_on_edge(:, :)
+
+    real, public, allocatable :: coords(:, :)
+    real, public, allocatable :: face_coords(:, :)
+
+    integer, public :: number_of_maps
+
+  contains
+    procedure :: test_gen
+  end type gen_planar_test_type
+
+  character(str_def), parameter :: mesh_name = 'unit_test'
+
+  character(str_def), parameter :: target_mesh_names(1) = ['unit_test_target']
+
+  real(r_def),        parameter :: eps = 1E-09_r_def
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function toString( this ) result(string)
+    implicit none
+    class(config_type), intent(in) :: this
+    character(:), allocatable :: string
+    character(str_def) :: buffer
+    write(                                                              &
+      buffer,                                                           &
+      '(I0, "x", I0, " ", L1, "x", L1, " ", L1)' &
+    ) this%x_size, this%y_size, this%x_periodic, this%y_periodic,       &
+      this%rotate_mesh
+    string = trim(buffer)
+  end function toString
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function gen_planar_test_constructor( testParameter ) result(gen_planar_test)
+
+    implicit none
+
+    type(config_type), intent(in) :: testParameter
+    type(gen_planar_test_type) :: gen_planar_test
+
+    gen_planar_test%x_size     = testParameter%x_size
+    gen_planar_test%x_periodic = testParameter%x_periodic
+    gen_planar_test%x_domain   = testParameter%x_domain
+    gen_planar_test%y_size     = testParameter%y_size
+    gen_planar_test%y_periodic = testParameter%y_periodic
+    gen_planar_test%y_domain   = testParameter%y_domain
+
+    gen_planar_test%first_node = testParameter%first_node
+    gen_planar_test%rotate_mesh = testParameter%rotate_mesh
+    gen_planar_test%target_north_pole = testParameter%target_north_pole
+    gen_planar_test%target_null_island = testParameter%target_null_island
+
+    gen_planar_test%topology = testParameter%topology
+    gen_planar_test%coord_sys = testParameter%coord_sys
+
+    gen_planar_test%topology_string = testParameter%topology_string
+    gen_planar_test%coord_sys_string = testParameter%coord_sys_string
+
+    gen_planar_test%nodes = testParameter%nodes
+    gen_planar_test%edges = testParameter%edges
+    gen_planar_test%faces = testParameter%faces
+
+    gen_planar_test%nodes_on_face = testParameter%nodes_on_face
+    gen_planar_test%faces_on_face = testParameter%faces_on_face
+    gen_planar_test%edges_on_face = testParameter%edges_on_face
+    gen_planar_test%nodes_on_edge = testParameter%nodes_on_edge
+
+    gen_planar_test%coords = testParameter%coords
+    gen_planar_test%face_coords = testParameter%face_coords
+
+    gen_planar_test%number_of_maps = testParameter%number_of_maps
+
+  end function gen_planar_test_constructor
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function getParameters() result(parameters)
+    implicit none
+    type(config_type) :: parameters(3)
+    parameters = [                                                 &
+      ! 1x1
+      config_type(                                                 &
+        x_size=1, x_periodic=.false., x_domain=50.0,               &
+        y_size=1, y_periodic=.false., y_domain=10.0,               &
+        first_node=(/-25.0_r_def, -5.0_r_def/),                    &
+        rotate_mesh=.false.,                                       &
+        target_north_pole=(/0.0_r_def, 0.0_r_def/),                &
+        target_null_island=(/0.0_r_def, 0.0_r_def/),               &
+        topology=topology_non_periodic, coord_sys=coord_sys_ll,    &
+        topology_string='non_periodic', coord_sys_string='ll',     &
+        nodes=4, edges=4, faces=1,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),         &
+        faces_on_face=reshape( (/mdi, mdi, mdi, mdi/), (/4, 1/) ), &
+        edges_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),         &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                     &
+                                 3, 2,   4, 3/), (/2, 4/) ),       &
+        coords=reshape( (/-25.0, -5.0,                             &
+                           25.0, -5.0,                             &
+                           25.0,  5.0,                             &
+                          -25.0,  5.0/), (/2, 4/) ),               &
+        face_coords=reshape( (/0.0, 0.0/), (/2, 1/) ),             &
+        number_of_maps=0                                           &
+      ),                                                           &
+      ! 1x1 rotated south
+      config_type(                                                 &
+        x_size=1, x_periodic=.false., x_domain=180.0,              &
+        y_size=1, y_periodic=.false., y_domain=10.0,               &
+        first_node=(/0.0_r_def, -5.0_r_def/),                      &
+        rotate_mesh=.true.,                                        &
+        target_north_pole=(/0.0_r_def, 85.0_r_def/),               &
+        target_null_island=(/180.0_r_def, 5.0_r_def/),             &
+        topology=topology_non_periodic, coord_sys=coord_sys_ll,    &
+        topology_string='non_periodic', coord_sys_string='ll',     &
+        nodes=4, edges=4, faces=1,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),         &
+        faces_on_face=reshape( (/mdi, mdi, mdi, mdi/), (/4, 1/) ), &
+        edges_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),         &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                     &
+                                 3, 2,   4, 3/), (/2, 4/) ),       &
+        coords=reshape( (/  0.0, -10.0,                            &
+                          180.0,   0.0,                            &
+                          180.0,  10.0,                            &
+                            0.0,   0.0/), (/2, 4/) ),              &
+        face_coords=reshape( (/90.0, 0.0/), (/2, 1/) ),            &
+        number_of_maps=0                                           &
+      ),                                                           &
+      ! 1x1 rotated north
+      config_type(                                                 &
+        x_size=1, x_periodic=.false., x_domain=180.0,              &
+        y_size=1, y_periodic=.false., y_domain=10.0,               &
+        first_node=(/0.0_r_def, -5.0_r_def/),                      &
+        rotate_mesh=.true.,                                        &
+        target_north_pole=(/180.0_r_def, 85.0_r_def/),             &
+        target_null_island=(/0.0_r_def, 5.0_r_def/),               &
+        topology=topology_non_periodic, coord_sys=coord_sys_ll,    &
+        topology_string='non_periodic', coord_sys_string='ll',     &
+        nodes=4, edges=4, faces=1,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),         &
+        faces_on_face=reshape( (/mdi, mdi, mdi, mdi/), (/4, 1/) ), &
+        edges_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),         &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                     &
+                                 3, 2,   4, 3/), (/2, 4/) ),       &
+        coords=reshape( (/  0.0,   0.0,                            &
+                          180.0, -10.0,                            &
+                          180.0,   0.0,                            &
+                            0.0,  10.0/), (/2, 4/) ),              &
+        face_coords=reshape( (/90.0, 0.0/), (/2, 1/) ),            &
+        number_of_maps=0                                           &
+      )                                                            &
+    ]
+  end function getParameters
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_gen( this )
+
+    implicit none
+
+    class(gen_planar_test_type), intent(inout) :: this
+
+    integer(i_def), parameter :: npanels = 1
+
+    type(gen_planar_type) :: mesh_gen
+    integer(i_def) :: nodes, edges, faces
+    integer(i_def) :: nodes_per_face, edges_per_face
+    integer(i_def) :: nodes_per_edge
+    integer(i_def) :: max_faces_per_node
+
+    integer(i_def), pointer  :: edge_cell_ids(:) => null()
+
+    integer(i_def) :: faces_on_face(4, this%x_size * this%y_size)
+    integer(i_def) :: nodes_on_face(4, this%x_size * this%y_size)
+    integer(i_def) :: edges_on_face(4, this%x_size * this%y_size)
+    integer(i_def) :: nodes_on_edge(2, this%edges)
+
+    real(r_def) :: face_coords(2, this%x_size * this%y_size)
+    real(r_def) :: coords(2, this%nodes)
+
+    character(str_def)      :: test_str(5)
+    character(str_longlong) :: big_test_str
+    character(str_longlong) :: expected_test_str
+    character(str_short)    :: lon_domain_str, lat_domain_str
+    character(str_short)    :: lon_first_node_str, lat_first_node_str
+    character(str_short)    :: lon_north_str, lat_north_str
+    character(str_short)    :: lon_null_str, lat_null_str
+
+    character(str_def) :: test_coord_units_x
+    character(str_def) :: test_coord_units_y
+
+    integer(i_def) :: test_npanels
+    integer(i_def) :: test_edge_cells_x, test_edge_cells_y
+    integer(i_def) :: test_nmaps
+    integer(i_def) :: target_edge_cells_x, target_edge_cells_y
+
+    character(str_def), allocatable :: test_target_mesh_names(:)
+
+    integer(i_def), allocatable :: test_maps_edge_cells_x(:)
+    integer(i_def), allocatable :: test_maps_edge_cells_y(:)
+
+    type(global_mesh_map_collection_type), pointer :: global_mesh_maps => null()
+    type(global_mesh_map_type),            pointer :: global_mesh_map  => null()
+
+    type(reference_cube_type) :: cube_element
+    cube_element = reference_cube_type()
+
+    mesh_gen = gen_planar_type( reference_element=cube_element,           &
+                                mesh_name=mesh_name,                      &
+                                geometry=geometry_spherical,              &
+                                topology=this%topology,                   &
+                                coord_sys=this%coord_sys,                 &
+                                edge_cells_x=this%x_size,                 &
+                                edge_cells_y=this%y_size,                 &
+                                periodic_x=this%x_periodic,               &
+                                periodic_y=this%y_periodic,               &
+                                domain_x=this%x_domain,                   &
+                                domain_y=this%y_domain,                   &
+                                first_node=this%first_node,               &
+                                rotate_mesh=this%rotate_mesh,             &
+                                target_north_pole=this%target_north_pole, &
+                                target_null_island=this%target_null_island )
+
+    ! Test metadata retrieval
+    call mesh_gen%get_metadata( mesh_name          = test_str(1),            &
+                                geometry           = test_str(2),            &
+                                topology           = test_str(3),            &
+                                coord_sys          = test_str(4),            &
+                                constructor_inputs = big_test_str,           &
+                                edge_cells_x       = test_edge_cells_x,      &
+                                edge_cells_y       = test_edge_cells_y,      &
+                                nmaps              = test_nmaps,             &
+                                target_mesh_names  = test_target_mesh_names, &
+                                maps_edge_cells_x  = test_maps_edge_cells_x, &
+                                maps_edge_cells_y  = test_maps_edge_cells_y )
+
+    @assertEqual( mesh_name,             trim(test_str(1)) )
+    @assertEqual( 'spherical',           trim(test_str(2)) )
+    @assertEqual( this%topology_string,  trim(test_str(3)) )
+    @assertEqual( this%coord_sys_string, trim(test_str(4)) )
+
+    @assertEqual( this%x_size, test_edge_cells_x )
+    @assertEqual( this%y_size, test_edge_cells_y )
+    @assertEqual( this%number_of_maps, test_nmaps )
+
+    write(lon_domain_str, '(F10.2)') this%x_domain
+    write(lat_domain_str, '(F10.2)') this%y_domain
+    write(lon_first_node_str, '(F10.2)') this%first_node(1)
+    write(lat_first_node_str, '(F10.2)') this%first_node(2)
+    if (this%rotate_mesh) then
+      write(lon_north_str, '(F10.2)') this%target_north_pole(1)
+      write(lat_north_str, '(F10.2)') this%target_north_pole(2)
+      write(lon_null_str, '(F10.2)') this%target_null_island(1)
+      write(lat_null_str, '(F10.2)') this%target_null_island(2)
+      write(                                                               &
+        expected_test_str,                                                 &
+        '("geometry=spherical;topology=", A, ";coord_sys=", A, ";edge_cells_x=", I0, ";edge_cells_y=", I0, ";periodic_x=", L1, ";periodic_y=", L1, ";domain_x=", A, ";domain_y=", A, ";rotate_mesh=", L1, ";north_pole=[", A, ",", A, "];null_island=[", A, ",", A, "];first_node=[", A, ",", A, "]")'           &
+      ) this%topology_string, this%coord_sys_string,                       &
+        this%x_size, this%y_size, this%x_periodic, this%y_periodic,        &
+        trim(adjustl(lon_domain_str)), trim(adjustl(lat_domain_str)),      &
+        this%rotate_mesh,                                                  &
+        trim(adjustl(lon_north_str)), trim(adjustl(lat_north_str)),        &
+        trim(adjustl(lon_null_str)), trim(adjustl(lat_null_str)),          &
+        trim(adjustl(lon_first_node_str)), trim(adjustl(lat_first_node_str))
+    else
+      write(                                                               &
+        expected_test_str,                                                 &
+        '("geometry=spherical;topology=", A, ";coord_sys=", A, ";edge_cells_x=", I0, ";edge_cells_y=", I0, ";periodic_x=", L1, ";periodic_y=", L1, ";domain_x=", A, ";domain_y=", A, ";rotate_mesh=", L1)'                                  &
+      ) this%topology_string, this%coord_sys_string,                       &
+        this%x_size, this%y_size, this%x_periodic, this%y_periodic,        &
+        trim(adjustl(lon_domain_str)), trim(adjustl(lat_domain_str)),      &
+        this%rotate_mesh
+    end if
+    @assertEqual( trim(expected_test_str), trim(big_test_str) )
+
+    test_npanels = mesh_gen%get_number_of_panels()
+    @assertEqual( npanels, test_npanels )
+
+    ! Generate the mesh and connectivity
+    call mesh_gen%generate()
+
+    ! Retrieve calculated dimensions
+    call mesh_gen%get_dimensions( nodes, edges, faces, &
+                                  nodes_per_face,      &
+                                  edges_per_face,      &
+                                  nodes_per_edge,      &
+                                  max_faces_per_node )
+
+    ! Mesh has correct dimensions for arguments
+    @assertEqual(this%nodes, nodes, "Incorrect number of vertices for mesh dimensions")
+    @assertEqual(this%edges, edges, "Incorrect number of edges for mesh dimensions")
+    @assertEqual(this%faces, faces, "Incorrect number of faces for mesh dimensions")
+
+    ! Mesh has correct element dimensions
+    @assertEqual(4, edges_per_face, "Number of edges per face does not correspond to quad mesh")
+    @assertEqual(2, nodes_per_edge, "Number of vertices per edge does not correspond to quad mesh")
+    @assertEqual(4, max_faces_per_node, "Max number of faces around a node does not correspond to quad mesh")
+
+    ! Retrieve mesh connectivity
+!    call mesh_gen%get_connectivity( nodes_on_face, nodes_on_edge, &
+!                                    edges_on_face, faces_on_face )
+    call mesh_gen%get_connectivity( nodes_on_face, edges_on_face, &
+                                    faces_on_face, nodes_on_edge )
+
+    @assertEqual(this%nodes_on_face, nodes_on_face, "Incorrect vertex sequence on faces.")
+    @assertEqual(this%faces_on_face, faces_on_face, "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%edges_on_face, edges_on_face, "Incorrect edges_on_face connectivity.")
+    @assertEqual(this%nodes_on_edge, nodes_on_edge, "Incorrect nodes_on_edge connectivity.")
+
+    ! Retrieve mesh coordinates
+    call mesh_gen%get_coordinates( coords,             &
+                                   face_coords,        &
+                                   test_coord_units_x, &
+                                   test_coord_units_y )
+
+    @assertEqual( this%coords, coords, 0.005_r_def, "Incorrect mesh coordinates." )
+    @assertEqual( this%face_coords, face_coords, 0.005_r_def, "Incorrect cell coordinates." )
+    @assertEqual( 'degrees_east', trim(test_coord_units_x) )
+    @assertEqual( 'degrees_north', trim(test_coord_units_y) )
+
+    ! I don't think these are ever used.
+    !
+    if (this%number_of_maps > 0) then
+      @assertEqual( this%number_of_maps, size(test_target_mesh_names) )
+      @assertEqual( trim(target_mesh_names(1)), trim(test_target_mesh_names(1)) )
+      @assertEqual( this%number_of_maps, size(test_maps_edge_cells_x ) )
+      @assertEqual( this%number_of_maps, size(test_maps_edge_cells_y ) )
+      @assertEqual( target_edge_cells_x, test_maps_edge_cells_x )
+      @assertEqual( target_edge_cells_y, test_maps_edge_cells_y )
+
+      ! Retrieve global mesh maps
+      nullify(global_mesh_maps)
+      global_mesh_maps => mesh_gen%get_global_mesh_maps()
+      @assertAssociated(global_mesh_maps)
+;
+      ! Although no actual global mesh maps have written to file maps have been
+      ! created for global meshes in the order they are virtually listed,
+      ! i.e. mesh "unit_test", id=1
+      !      mesh "unit_test_target", id=2
+      nullify(global_mesh_map)
+      global_mesh_map  => global_mesh_maps%get_global_mesh_map(1,2)
+
+      @assertAssociated( global_mesh_map )
+      @assertEqual( 20, global_mesh_map%get_nsource_cells() )
+      @assertEqual( 6,  global_mesh_map%get_ntarget_cells_per_source_cell() )
+      @assertEqual( 1,  global_mesh_map%get_source_id() )
+      @assertEqual( 2,  global_mesh_map%get_target_id() )
+      @assertEqual( 2,  global_mesh_map%get_ntarget_cells_per_source_x() )
+      @assertEqual( 3,  global_mesh_map%get_ntarget_cells_per_source_y() )
+    end if
+
+    call mesh_gen%clear()
+    nullify(edge_cell_ids)
+
+  end subroutine test_gen
+
+end module gen_planar_mod_test_spherical

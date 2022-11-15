@@ -39,7 +39,7 @@ contains
     integer(kind=i_def) :: map(2)
     real(kind=r_def) :: x(nz), y(nz)
     real(kind=r_def) :: a0, ap, am
-    real(kind=r_def) :: tri(2,2,nz-1)
+    real(kind=r_def) :: tri(2, 2, nz-1)
     real(kind=r_def) :: answer(nz)
 
     integer(kind=r_def) :: k
@@ -63,13 +63,13 @@ contains
     am = -0.7_r_def
 
     do k = 1,nz-1
-      tri(1,1,k) = 0.5_r_def*a0
-      tri(2,2,k) = 0.5_r_def*a0
+      tri(1,1,k) = 0.5_r_def * a0
+      tri(2,2,k) = 0.5_r_def * a0
       tri(1,2,k) = ap
       tri(2,1,k) = am
     end do
 
-    call operator_tri_solve_code(1_i_def, nz-1, y, x, 1_i_def, tri, 2_i_def, nz, map)
+    call operator_tri_solve_code( 1_i_def, nz-1, y, x, nz-1, tri, 2_i_def, nz, map )
 
     @assertEqual( answer, y, tol )
 

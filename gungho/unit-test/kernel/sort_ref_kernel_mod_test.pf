@@ -97,10 +97,10 @@ contains
                                 theta_data(map_wtheta(1,cell) + k) + 1.0_r_def
     end do
 
-    call sort_ref_code( nlayers,    &
-                        theta_data, &
-                        ndf_wtheta, &
-                        ndf_wtheta, &
+    call sort_ref_code( nlayers,     &
+                        theta_data,  &
+                        ndf_wtheta,  &
+                        undf_wtheta, &
                         map_wtheta(:,cell) )
 
     ! The answer returns the min dth.  If the kernel is sorts correctly, then

@@ -85,8 +85,8 @@ contains
     class(swe_buoyancy_gradient_facet_kernel_test_type), intent(inout) :: this
 
     real(kind=r_def), parameter :: tol     = 1.0e-6_r_def
-    real(kind=r_def), parameter :: answer1 = -0.75_r_def, &
-                                   answer2 = -0.5_r_def,  &
+    real(kind=r_def), parameter :: answer1 = -1.5_r_def, &
+                                   answer2 = -2.5_r_def,  &
                                    answer3 = 0.0_r_def
 
     integer(i_def) :: cell
@@ -150,8 +150,8 @@ contains
     call get_w3_qfaces_cube_h_basis(basis_w3_face)
 
     ! Get dofmaps
-    call get_w2_m3x3_dofmap(map_w2)
-    call get_w3_m3x3_dofmap(map_w3)
+    call get_w2_m3x3_dofmap(map_w2, nlayers)
+    call get_w3_m3x3_dofmap(map_w3, nlayers)
 
     ! The W3 field uses a cross stencil
     call get_m3x3_stencil_dofmap_cross(cross_stencil_w3_map, map_w3)
@@ -184,22 +184,24 @@ contains
 
     ! Call the kernel
 
-    call swe_buoyancy_gradient_facet_code( nlayers,                             &
-                                           r_u_bd_data,                         &
-                                           geopot_data,                         &
-                                           buoyancy_data,                       &
-                                           cross_stencil_w3_size,               &
-                                           cross_stencil_w3_map,                &
-                                           ndf_w2, undf_w2,                     &
-                                           map_w2, basis_w2_face,               &
-                                           ndf_w3, undf_w3,                     &
-                                           map_w3, basis_w3_face,               &
-                                           nfaces_re_h,                         &
-                                           nfaces_re,                           &
-                                           outward_normals_to_horizontal_faces, &
-                                           outward_normals_to_faces,            &
-                                           adjacent_face(:,cell),               &
-                                           nfaces_qr, nqp_f, wqp_f         )
+    call swe_buoyancy_gradient_facet_code( &
+      nlayers,                             &
+      r_u_bd_data,                         &
+      geopot_data,                         &
+      buoyancy_data,                       &
+      cross_stencil_w3_size,               &
+      cross_stencil_w3_map,                &
+      ndf_w2, undf_w2,                     &
+      map_w2, basis_w2_face,               &
+      ndf_w3, undf_w3,                     &
+      map_w3, basis_w3_face,               &
+      nfaces_re_h,                         &
+      nfaces_re,                           &
+      outward_normals_to_horizontal_faces, &
+      outward_normals_to_faces,            &
+      adjacent_face(:,cell),               &
+      nfaces_qr, nqp_f, wqp_f              &
+    )
 
     ! Test only on level 0
     k=0

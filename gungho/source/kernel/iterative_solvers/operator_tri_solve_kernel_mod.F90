@@ -84,7 +84,7 @@ subroutine operator_tri_solve_code(cell, nlayers, &
   tri_0(0) = 0.0_r_def
   tri_m(0) = 0.0_r_def
   do k = 0, nlayers - 1
-    ik = 1 + k + (cell-1)*nlayers
+    ik = 1 + k + (cell - 1) * nlayers
     tri_0(k)   = matrix(1,1,ik) + tri_0(k)
     tri_p(k)   = matrix(1,2,ik)
     tri_m(k+1) = matrix(2,1,ik)

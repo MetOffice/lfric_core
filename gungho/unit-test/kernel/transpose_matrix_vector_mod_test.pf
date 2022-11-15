@@ -38,6 +38,10 @@ contains
     real(kind=r_double) :: tol
     integer(kind=i_def) :: i
 
+    ! Explicit temporary arrays to prevent run-time warnings
+    integer(i_def) :: ninth(2)
+    integer(i_def) :: twelth(4)
+
     ! Make up a matrix
     d(1,:,1) = (/ 2.0_r_double, -2.0_r_double /)
     d(2,:,1) = (/ 3.0_r_double, -1.0_r_double /)
@@ -49,18 +53,20 @@ contains
     y(:) = 0.0_r_double
     answer = matmul(transpose(d(:,:,1)),x)
 
-    call transpose_matrix_vector_code(1_i_def,              &
-                                      1_i_def,              &
-                                      y,                    &
-                                      x,                    &
-                                      1_i_def,              &
-                                      d,                    &
-                                      2_i_def,              &
-                                      2_i_def,              &
-                                      (/1_i_def, 2_i_def/), &
-                                      4_i_def,              &
-                                      4_i_def,              &
-                                      (/1_i_def, 2_i_def, 3_i_def, 4_i_def/) )
+    ninth = (/1_i_def, 2_i_def/)
+    twelth = (/1_i_def, 2_i_def, 3_i_def, 4_i_def/)
+    call transpose_matrix_vector_code(1_i_def, &
+                                      1_i_def, &
+                                      y,       &
+                                      x,       &
+                                      1_i_def, &
+                                      d,       &
+                                      2_i_def, &
+                                      2_i_def, &
+                                      ninth,   &
+                                      4_i_def, &
+                                      4_i_def, &
+                                      twelth )
 
     tol = 1.0e-14_r_double
 
@@ -83,6 +89,10 @@ contains
     real(kind=r_single) :: tol
     integer(kind=i_def) :: i
 
+    ! Explicit temporary arrays to prevent run-time warnings
+    integer(i_def) :: ninth(2)
+    integer(i_def) :: twelth(4)
+
     ! Make up a matrix
     d(1,:,1) = (/ 2.0_r_single, -2.0_r_single /)
     d(2,:,1) = (/ 3.0_r_single, -1.0_r_single /)
@@ -94,18 +104,20 @@ contains
     y(:) = 0.0_r_single
     answer = matmul(transpose(d(:,:,1)),x)
 
-    call transpose_matrix_vector_code(1_i_def,              &
-                                      1_i_def,              &
-                                      y,                    &
-                                      x,                    &
-                                      1_i_def,              &
-                                      d,                    &
-                                      2_i_def,              &
-                                      2_i_def,              &
-                                      (/1_i_def, 2_i_def/), &
-                                      4_i_def,              &
-                                      4_i_def,              &
-                                      (/1_i_def, 2_i_def, 3_i_def, 4_i_def/) )
+    ninth = (/1_i_def, 2_i_def/)
+    twelth = (/1_i_def, 2_i_def, 3_i_def, 4_i_def/)
+    call transpose_matrix_vector_code(1_i_def, &
+                                      1_i_def, &
+                                      y,       &
+                                      x,       &
+                                      1_i_def, &
+                                      d,       &
+                                      2_i_def, &
+                                      2_i_def, &
+                                      ninth,   &
+                                      4_i_def, &
+                                      4_i_def, &
+                                      twelth )
 
     tol = 1.0e-6_r_single
 

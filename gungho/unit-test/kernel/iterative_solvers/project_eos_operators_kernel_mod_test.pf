@@ -291,11 +291,11 @@ contains
     answer_exner = real((1.0_r_def-kappa)/kappa*(p_zero/(rd*300_r_def)),r_solver)
     answer_rho = 1.0_r_solver
     answer_theta = 0.5_r_solver * 1.0_r_solver/300_r_solver
-    k = 1
+    k = 0
 
-    @assertEqual(answer_exner, m3exner(map_w3(1,cell)+k, map_w3(1,cell)+k,k), tol)
-    @assertEqual(answer_rho, m3rho(map_w3(1,cell)+k, map_w3(1,cell)+k,k), tol)
-    @assertEqual(answer_theta, p3theta(map_wtheta(1,cell)+k, map_w3(1,cell)+k,k), tol)
+    @assertEqual( answer_exner, m3exner( map_w3(1, cell ) + k, map_w3(1, cell ) + k, k + 1 ), tol )
+    @assertEqual( answer_rho, m3rho( map_w3(1, cell ) + k, map_w3( 1, cell ) + k, k + 1 ), tol)
+    @assertEqual( answer_theta, p3theta( map_wtheta( 1, cell ) + k, map_w3( 1, cell ) + k, k + 1 ), tol )
 
     deallocate(m3exner)
     deallocate(m3rho)

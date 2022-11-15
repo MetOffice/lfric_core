@@ -55,6 +55,13 @@ module trapezoidal_deppt_kernel_mod
 contains
 
   !> @brief Compute horizontal departure points using the trapezoidal method.
+  !>
+  !> If the departure point happens to be an integer length which falls on a
+  !> cell face then the next cell out along the stencil arm will be needed.
+  !> This is true at the extremity of the stencil so although the departure is
+  !> contained wholy within the specified stencil the kernel will still fail
+  !> as it attempts to access beyond the bounds of the array.
+  !>
   !> @param[in]     nlayers           Number of layers
   !> @param[in,out] dep_pts_x         Departure distance in x
   !> @param[in,out] dep_pts_y         Departure distance in y

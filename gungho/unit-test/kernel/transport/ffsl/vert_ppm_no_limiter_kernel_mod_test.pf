@@ -38,7 +38,7 @@ contains
 
     real(r_def),    parameter :: tol     = 1.0e-12_r_def   ! r_def 64bit
     integer(i_def), parameter :: nlayers = 5
-    integer(i_def), parameter :: undf_w3 = 1
+    integer(i_def), parameter :: undf_w3 = 5
     integer(i_def), parameter :: ndf_w3  = 1
     integer(i_def), parameter :: map_w3(1) = 1
 

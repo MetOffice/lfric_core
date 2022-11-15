@@ -179,12 +179,12 @@ contains
     integer(kind=i_def), parameter :: ncell = 1
 
     ! Spaces
-    integer(kind=i_def), parameter :: ndf1 = 1
+    integer(kind=i_def), parameter :: ndf1 = 2
     integer(kind=i_def), parameter :: ndf2 = 2
 
     ! Operators
-    real(kind=r_def), dimension(ndf1, ndf2, ncell) :: x
-    real(kind=r_def), dimension(ndf1, ndf2, ncell) :: y
+    real(kind=r_def), dimension(ndf1, ndf2, ncell) :: original
+    real(kind=r_def), dimension(ndf1, ndf2, ncell) :: copy
 
     ! Reals
     real(kind=r_def), parameter :: a = 2.0_r_def
@@ -193,20 +193,22 @@ contains
     integer(kind=i_def) :: df
 
     ! Set up operators
-    y(1,1,1) = 1.1_r_def
-    y(2,1,1) = 2.1_r_def
+    original = 5.0_r_def
+    original(1,1,1) = 1.1_r_def
+    original(2,1,1) = 2.1_r_def
 
     ! Compute a*x*y
-    call operator_setval_x_kernel_code(cell, nlayers, &
-                                       ncell, x,      &
-                                       ncell, y,      &
+    call operator_setval_x_kernel_code(cell, nlayers,   &
+                                       ncell, copy,     &
+                                       ncell, original, &
                                        ndf1, ndf2)
     if ( r_def == real64 ) then
       use_tol = tol
     else
-      use_tol = 10.0_r_def*spacing( maxval(x) )
+      use_tol = 10.0_r_def*spacing( maxval(copy) )
     endif
-    @assertEqual(x, y, use_tol)
+
+    @assertEqual(original, copy, use_tol)
 
   end subroutine test_setval_x
 

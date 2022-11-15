@@ -140,10 +140,10 @@ contains
                                   nlayers )
     call get_w3_m3x3_q3x3x3_size( ndf_pid, undf_pid, ncells, &
                                   dim_space, dim_space_diff, &
-                                  nqp_h, nqp_v, 1 )
+                                  nqp_h, nqp_v, nlayers )
     call get_wtheta_m3x3_q3x3x3_size( ndf_wth, undf_wth, ncells, &
                                       dim_space, dim_space_diff, &
-                                      nqp_h, nqp_v, 1 )
+                                      nqp_h, nqp_v, nlayers )
 
     call get_w0_m3x3_dofmap(map_w0)
     call get_w2_m3x3_dofmap(map_w2)

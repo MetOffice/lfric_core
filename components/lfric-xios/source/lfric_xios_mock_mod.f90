@@ -200,8 +200,12 @@ type(xios_mock_data_type), public :: mock_xios_data
 
     real(dp_xios), allocatable :: mock_data(:,:)
 
+    ! The mock_data is in XIOS 2D layered form but it is needed in 1D model
+    ! form.
+    !
     mock_data = mock_xios_data%get_data()
-    latest_data = mock_data(:,1)
+    latest_data = reshape(mock_data, &
+                          (/size(mock_data, 1) * size(mock_data, 2)/))
 
   end subroutine get_latest_data
 

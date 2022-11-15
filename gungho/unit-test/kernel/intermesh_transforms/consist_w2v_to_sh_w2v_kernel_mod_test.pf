@@ -18,7 +18,7 @@ module consist_w2v_to_sh_w2v_kernel_mod_test
   public :: consist_w2v_to_sh_w2v_test_type, test_all
 
   @TestCase
-  type, extends(MPITestCase) :: consist_w2v_to_sh_w2v_test_type
+  type, extends(TestCase) :: consist_w2v_to_sh_w2v_test_type
     private
   contains
 
@@ -52,6 +52,7 @@ contains
   end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
   subroutine test_all( this )
 
     use consist_w2v_to_sh_w2v_kernel_mod, only : consist_w2v_to_sh_w2v_code

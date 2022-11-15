@@ -7,25 +7,47 @@
 
 module trapezoidal_deppt_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def
+  use, intrinsic :: iso_fortran_env, only: real64
+
+  use constants_mod,                       only : i_def, r_def
+  use get_unit_test_m3x3_dofmap_mod,       only : get_w2_m3x3_dofmap, &
+                                                  get_m3x3_stencil_dofmap_cross
+  use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w2_m3x3_q3x3x3_size
   use pFUnit_Mod
+  use trapezoidal_deppt_kernel_mod,        only: trapezoidal_deppt_code
 
   implicit none
 
   private
 
-  public :: test_all
+  public :: test_unitary_wind_field, test_varying_wind_field
 
   @TestCase
   type, public, extends(TestCase) :: trapezoidal_deppt_test_type
     private
+    integer(kind=i_def)              :: ndf_w2
+    integer(kind=i_def)              :: undf_w2
+    integer(kind=i_def), allocatable :: dofmap_w2(:, :)
+    integer(kind=i_def), allocatable :: stencil_map_w2(:, :, :)
+
+    real(kind=r_def), allocatable :: wind_n(:)
+    real(kind=r_def), allocatable :: wind_np1(:)
+    real(kind=r_def), allocatable :: dep_pts_x(:)
+    real(kind=r_def), allocatable :: dep_pts_y(:)
   contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
+    private
+    procedure, public :: setUp
+    procedure, public :: tearDown
+    procedure, public :: test_unitary_wind_field
+    procedure, public :: test_varying_wind_field
   end type trapezoidal_deppt_test_type
 
+  integer(kind=i_def), parameter :: nlayers = 1
+  integer(kind=i_def), parameter :: stencil_size = 5
+  real(kind=r_def),    parameter :: tol = 1.0e-12_r_def   ! r_def 64-bit
+
 contains
+
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
@@ -39,12 +61,32 @@ contains
 
     class(trapezoidal_deppt_test_type), intent(inout) :: this
 
-    call feign_departure_points_config( departure_grid = departure_grid_physical,     &
-                                        method = method_trapezoidal,                  &
-                                        n_dep_pt_iterations = 1,                      &
-                                        vertical_limit = vertical_limit_boundary,     &
-                                        vertical_method = vertical_method_trapezoidal &
-                                      )
+    integer(kind=i_def) :: ncells_w2
+    integer(kind=i_def) :: dim_space_w2, dim_space_diff_w2
+    integer(kind=i_def) :: nqp_h_w2, nqp_v_w2
+
+    call feign_departure_points_config(             &
+      departure_grid = departure_grid_physical,     &
+      method = method_trapezoidal,                  &
+      n_dep_pt_iterations = 1,                      &
+      vertical_limit = vertical_limit_boundary,     &
+      vertical_method = vertical_method_trapezoidal &
+    )
+
+    call get_w2_m3x3_q3x3x3_size( this%ndf_w2, this%undf_w2, ncells_w2, &
+                                  dim_space_w2, dim_space_diff_w2,      &
+                                  nqp_h_w2, nqp_v_w2, nlayers )
+    call get_w2_m3x3_dofmap( this%dofmap_w2, nlayers )
+    call get_m3x3_stencil_dofmap_cross( this%stencil_map_w2, this%dofmap_w2 )
+
+    allocate( this%wind_n(this%undf_w2) )
+    allocate( this%wind_np1(this%undf_w2) )
+    allocate( this%dep_pts_x(this%undf_w2) )
+    allocate( this%dep_pts_y(this%undf_w2) )
+
+    ! Initialise output as zero
+    this%dep_pts_x(:) = 0.0_r_def
+    this%dep_pts_y(:) = 0.0_r_def
 
   end subroutine setUp
 
@@ -57,121 +99,130 @@ contains
 
     class(trapezoidal_deppt_test_type), intent(inout) :: this
 
+    if (allocated( this%dep_pts_y ))      deallocate( this%dep_pts_y )
+    if (allocated( this%dep_pts_x ))      deallocate( this%dep_pts_x )
+    if (allocated( this%wind_np1 ))       deallocate( this%wind_np1 )
+    if (allocated( this%wind_n ))         deallocate( this%wind_n )
+    if (allocated( this%stencil_map_w2 )) deallocate( this%stencil_map_w2 )
+    if (allocated( this%dofmap_w2 ))      deallocate( this%dofmap_w2 )
+
     call final_configuration()
 
   end subroutine tearDown
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
   @Test
-  subroutine test_all( this )
-
-    use, intrinsic :: iso_fortran_env, only: real64
-    use trapezoidal_deppt_kernel_mod,  only: trapezoidal_deppt_code
+  subroutine test_unitary_wind_field( this )
 
     implicit none
 
     class(trapezoidal_deppt_test_type), intent(inout) :: this
 
-    real(kind=r_def), parameter :: tol = 1.0e-12_r_def   ! r_def 64-bit
-    real(kind=r_def) :: answer, use_tol
+    real(kind=r_def),    parameter :: dt = 0.5_r_def
+    integer(kind=i_def), parameter :: n_it = 1_i_def
 
-    integer(kind=i_def), parameter :: nlayers = 1
-    integer(kind=i_def), parameter :: ndf_w2 = 4
-    integer(kind=i_def), parameter :: stencil_size = 5
-    integer(kind=i_def), parameter :: undf_w2  = ndf_w2*nlayers
-    integer(kind=i_def), parameter :: undf_w2s = ndf_w2*nlayers*stencil_size
+    real(kind=r_def) :: use_tol
+    real(kind=r_def) :: slice(3)
 
-    integer(kind=i_def), dimension(ndf_w2)              :: map_w2
-    integer(kind=i_def), dimension(ndf_w2,stencil_size) :: stencil_map
-
-    real(kind=r_def), dimension(undf_w2)  :: dep_pts_x
-    real(kind=r_def), dimension(undf_w2)  :: dep_pts_y
-    real(kind=r_def), dimension(undf_w2s) :: wind_n
-    real(kind=r_def), dimension(undf_w2)  :: wind_np1
-
-    real(kind=r_def)    :: dt
-    integer(kind=i_def) :: n_it
-
-    ! Set up maps
-    map_w2(:) = (/ 1, 2, 3, 4 /)
-    ! Cross stencil has form
-    !       5
-    !     2 1 4
-    !       3
-    stencil_map(1,:) = (/ 1, 2, 3, 4, 5 /)
-    stencil_map(2,:) = (/ 6, 7, 8, 9, 10 /)
-    stencil_map(3,:) = (/ 11, 12, 13, 14, 15 /)
-    stencil_map(4,:) = (/ 16, 17, 18, 19, 20 /)
-
-    ! Initialise output as zero
-    dep_pts_x(:) = 0.0_r_def
-    dep_pts_y(:) = 0.0_r_def
+    real(kind=r_def), allocatable :: expected(:)
 
     ! Set up winds to be constant
-    wind_n(:) = 1.0_r_def
-    wind_np1(:) = 1.0_r_def
-    dt = 1.0_r_def
-    n_it = 1_i_def
-    call trapezoidal_deppt_code( nlayers,      &
-                                 dep_pts_x,    &
-                                 dep_pts_y,    &
-                                 wind_n,       &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 wind_np1,     &
-                                 n_it,         &
-                                 dt,           &
-                                 ndf_w2,       &
-                                 undf_w2,      &
-                                 map_w2 )
+    this%wind_n(:) = 1.0_r_def
+    this%wind_np1(:) = 1.0_r_def
+
+    ! Pass column 5 as this is the centre of the 3x3 mesh.
+    !
+    call trapezoidal_deppt_code( nlayers,             &
+                                 this%dep_pts_x,      &
+                                 this%dep_pts_y,      &
+                                 this%wind_n,         &
+                                 stencil_size,        &
+                                 this%stencil_map_w2(:,:,5), &
+                                 this%wind_np1,       &
+                                 n_it,                &
+                                 dt,                  &
+                                 this%ndf_w2,         &
+                                 this%undf_w2,        &
+                                 this%dofmap_w2(:, 5) )
+
+    slice(1) = this%dep_pts_x(16)
+    slice(2) = this%dep_pts_x(17)
+    slice(3) = this%dep_pts_x(21)
+
     ! Get correct tolerance
     if ( r_def == real64 ) then
       use_tol = tol
     else
-      use_tol = 10.0_r_def*spacing( maxval( dep_pts_x(1:4) ) )
+      use_tol = 10.0_r_def*spacing( maxval( slice ) )
     end if
-    answer = 1.0_r_def
-    @assertEqual(answer, dep_pts_x(1), use_tol)
-    @assertEqual(answer, dep_pts_x(3), use_tol)
-    answer = -1.0_r_def
-    @assertEqual(answer, dep_pts_y(2), use_tol)
-    @assertEqual(answer, dep_pts_y(4), use_tol)
-    ! Check other dofs are zero
-    answer = 0.0_r_def
-    @assertEqual(answer, dep_pts_x(2), use_tol)
-    @assertEqual(answer, dep_pts_x(4), use_tol)
-    @assertEqual(answer, dep_pts_y(1), use_tol)
-    @assertEqual(answer, dep_pts_y(3), use_tol)
+
+    expected = (/0.0_r_def, 0.5_r_def, 0.5_r_def/)
+    @assertEqual( expected, slice, use_tol )
+
+    slice(1) = this%dep_pts_y(7)
+    slice(2) = this%dep_pts_y(9)
+    slice(3) = this%dep_pts_y(22)
+    expected = (/0.0_r_def, -0.5_r_def, -0.5_r_def/)
+    @assertEqual( expected, slice, use_tol )
+
+  end subroutine test_unitary_wind_field
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_varying_wind_field( this )
+
+    implicit none
+
+    class(trapezoidal_deppt_test_type), intent(inout) :: this
+
+    real(kind=r_def),    parameter :: dt = 0.4_r_def
+    integer(kind=i_def), parameter :: n_it = 1_i_def
+
+    real(kind=r_def) :: use_tol
+    real(kind=r_def) :: slice(3)
+
+    real(kind=r_def), allocatable :: expected(:)
 
     ! Set up winds to vary
-    wind_n(:) = (/ 1.0_r_def, 3.0_r_def, 4.0_r_def, 2.0_r_def, 4.0_r_def, &
-                   1.0_r_def, 4.0_r_def, 4.0_r_def, 4.0_r_def, 2.0_r_def, &
-                   2.0_r_def, 1.0_r_def, 4.0_r_def, 4.0_r_def, 5.0_r_def, &
-                   2.0_r_def, 4.0_r_def, 1.0_r_def, 4.0_r_def, 0.0_r_def  /)
-    wind_np1(:) = 1.0_r_def
-    dt = 0.5_r_def
-    n_it = 1_i_def
-    call trapezoidal_deppt_code( nlayers,      &
-                                 dep_pts_x,    &
-                                 dep_pts_y,    &
-                                 wind_n,       &
-                                 stencil_size, &
-                                 stencil_map,  &
-                                 wind_np1,     &
-                                 n_it,         &
-                                 dt,           &
-                                 ndf_w2,       &
-                                 undf_w2,      &
-                                 map_w2 )
-    answer = 0.75_r_def
-    @assertEqual(answer, dep_pts_x(1), use_tol)
-    answer = 0.5_r_def
-    @assertEqual(answer, dep_pts_x(3), use_tol)
-    answer = -0.625_r_def
-    @assertEqual(answer, dep_pts_y(2), use_tol)
-    answer = -0.25_r_def
-    @assertEqual(answer, dep_pts_y(4), use_tol)
+    this%wind_n = 0.0_r_def
+    this%wind_n(7) = 4.0_r_def
+    this%wind_n(9) = 1.0_r_def
+    this%wind_n(22) = 2.0_r_def
+    this%wind_n(16) = 3.0_r_def
+    this%wind_n(17) = 1.0_r_def
+    this%wind_n(21) = 2.0_r_def
 
-  end subroutine test_all
+    this%wind_np1 = 1.0_r_def
+
+    ! Pass column 5 as this is the centre of the 3x3 mesh.
+    !
+    call trapezoidal_deppt_code( nlayers,                    &
+                                 this%dep_pts_x,             &
+                                 this%dep_pts_y,             &
+                                 this%wind_n,                &
+                                 stencil_size,               &
+                                 this%stencil_map_w2(:,:,5), &
+                                 this%wind_np1,              &
+                                 n_it,                       &
+                                 dt,                         &
+                                 this%ndf_w2,                &
+                                 this%undf_w2,               &
+                                 this%dofmap_w2(:,5) )
+
+    slice(1) = this%dep_pts_x(16)
+    slice(2) = this%dep_pts_x(17)
+    slice(3) = this%dep_pts_x(21)
+
+    ! Get correct tolerance
+    if ( r_def == real64 ) then
+      use_tol = tol
+    else
+      use_tol = 10.0_r_def*spacing( maxval( slice ) )
+    end if
+
+    expected = (/0.0_r_def, 0.56_r_def, 0.44_r_def/)
+    @assertEqual( expected, slice, use_tol )
+
+  end subroutine test_varying_wind_field
 
 end module trapezoidal_deppt_kernel_mod_test

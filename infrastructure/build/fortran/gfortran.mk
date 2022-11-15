@@ -34,7 +34,7 @@ FFLAGS_UNIT_WARNINGS      = -Wall -Wconversion -Wunused-variable \
                             -Werror=tabs
 FFLAGS_INIT               = -finit-integer=31173 -finit-real=snan \
                             -finit-logical=true -finit-character=85
-FFLAGS_RUNTIME            = -fcheck=all -ffpe-trap=invalid,zero,overflow
+FFLAGS_RUNTIME            = -fcheck=all -ffpe-trap=invalid,zero,overflow,underflow
 # Option for checking code meets Fortran standard - currently 2008
 FFLAGS_FORTRAN_STANDARD   = -std=f2008
 

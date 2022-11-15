@@ -1,0 +1,1353 @@
+!-----------------------------------------------------------------------------
+! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
+! For further details please refer to the file LICENCE.original which you
+! should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+!> @brief     Tests for mesh_tools/source/support/gen_planar_mod.F90
+!>
+!> @details   [1]  Constructor can be called with program default args.
+!>            [2]  Constructor fails with invalid args.
+!>            [3]  Type generates mesh with appropriate dimensions for args.
+!>            [4]  Mesh contains correct values at fixed points for fixed args.
+!>            [5]  Mesh connectivity has correct dimensions.
+!>            [6]  Mesh connectivity has correct values at fixed points.
+!>            [7]  Mesh coords have correct values at fixed points.
+!>
+module gen_planar_mod_test_cartesian
+
+  use constants_mod,                  only: i_def,                            &
+                                            r_def,                            &
+                                            str_def, str_longlong, str_short
+  use gen_planar_mod,                 only: gen_planar_type
+  use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
+  use global_mesh_map_mod,            only: global_mesh_map_type
+
+  use pFUnit_Mod
+
+  use reference_element_mod,          only: reference_cube_type, &
+                                            W, S, E, N
+
+  use mesh_config_mod, only: coord_sys_xyz,         &
+                             geometry_planar,       &
+                             topology_non_periodic, &
+                             topology_channel,      &
+                             topology_periodic
+
+  implicit none
+
+  private
+  public :: gen_planar_test_constructor, &
+            getParameters,               &
+            test_gen
+
+  integer(i_def), parameter :: mdi = -9999
+
+  @testParameter
+  type, public, extends(AbstractTestParameter) :: config_type
+    integer,     public :: x_size
+    logical,     public :: x_periodic
+    real(r_def), public :: x_domain
+    integer,     public :: y_size
+    logical,     public :: y_periodic
+    real(r_def), public :: y_domain
+
+    integer, public :: topology
+    integer, public :: coord_sys
+
+    character(:), public, allocatable :: topology_string
+    character(:), public, allocatable :: coord_sys_string
+
+    integer, public :: nodes
+    integer, public :: edges
+    integer, public :: faces
+
+    integer, public, allocatable :: nodes_on_face(:, :)
+    integer, public, allocatable :: faces_on_face(:, :)
+    integer, public, allocatable :: edges_on_face(:, :)
+    integer, public, allocatable :: nodes_on_edge(:, :)
+
+    real, public, allocatable :: coords(:, :)
+    real, public, allocatable :: face_coords(:, :)
+
+    integer, public :: number_of_maps
+  contains
+    procedure, public :: toString
+  end type config_type
+
+  @TestCase(testParameters={getParameters()}, constructor=gen_planar_test_constructor)
+  type, extends(ParameterizedTestCase), public :: gen_planar_cart_test_type
+    private
+    integer     :: x_size
+    logical     :: x_periodic
+    real(r_def) :: x_domain
+    integer     :: y_size
+    logical     :: y_periodic
+    real(r_def) :: y_domain
+
+    integer, public :: topology
+    integer, public :: coord_sys
+
+    character(:), public, allocatable :: topology_string
+    character(:), public, allocatable :: coord_sys_string
+
+    integer, public :: nodes
+    integer, public :: edges
+    integer, public :: faces
+
+    integer, public, allocatable :: nodes_on_face(:, :)
+    integer, public, allocatable :: faces_on_face(:, :)
+    integer, public, allocatable :: edges_on_face(:, :)
+    integer, public, allocatable :: nodes_on_edge(:, :)
+
+    real, public, allocatable :: coords(:, :)
+    real, public, allocatable :: face_coords(:, :)
+
+    integer, public :: number_of_maps
+  contains
+    procedure :: test_gen
+  end type gen_planar_cart_test_type
+
+  character(str_def), parameter :: mesh_name = 'unit_test'
+
+  character(str_def), parameter :: target_mesh_names(1) = ['unit_test_target']
+
+  real(r_def),        parameter :: eps = 1E-09_r_def
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function toString( this ) result(string)
+    implicit none
+    class(config_type), intent(in) :: this
+    character(:), allocatable :: string
+    character(str_def) :: buffer
+    write( buffer, '(I0, "x", I0, " ", L1, "x", L1)' )    &
+      this%x_size, this%y_size, this%x_periodic, this%y_periodic
+    string = trim(buffer)
+  end function toString
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function gen_planar_test_constructor( testParameter ) result(gen_planar_test)
+
+    implicit none
+
+    type(config_type), intent(in) :: testParameter
+    type(gen_planar_cart_test_type) :: gen_planar_test
+
+    gen_planar_test%x_size     = testParameter%x_size
+    gen_planar_test%x_periodic = testParameter%x_periodic
+    gen_planar_test%x_domain   = testParameter%x_domain
+    gen_planar_test%y_size     = testParameter%y_size
+    gen_planar_test%y_periodic = testParameter%y_periodic
+    gen_planar_test%y_domain   = testParameter%y_domain
+
+    gen_planar_test%topology = testParameter%topology
+    gen_planar_test%coord_sys = testParameter%coord_sys
+
+    gen_planar_test%topology_string = testParameter%topology_string
+    gen_planar_test%coord_sys_string = testParameter%coord_sys_string
+
+    gen_planar_test%nodes = testParameter%nodes
+    gen_planar_test%edges = testParameter%edges
+    gen_planar_test%faces = testParameter%faces
+
+    gen_planar_test%nodes_on_face = testParameter%nodes_on_face
+    gen_planar_test%faces_on_face = testParameter%faces_on_face
+    gen_planar_test%edges_on_face = testParameter%edges_on_face
+    gen_planar_test%nodes_on_edge = testParameter%nodes_on_edge
+
+    gen_planar_test%coords = testParameter%coords
+    gen_planar_test%face_coords = testParameter%face_coords
+
+    gen_planar_test%number_of_maps = testParameter%number_of_maps
+
+  end function gen_planar_test_constructor
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function getParameters() result(parameters)
+    implicit none
+    type(config_type) :: parameters(18)
+    parameters = [                                                  &
+      ! Biperiodic 2x2
+      config_type(                                                  &
+        x_size=2, x_periodic=.true., x_domain=30000.0,              &
+        y_size=2, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_periodic, coord_sys=coord_sys_xyz,        &
+        topology_string='periodic', coord_sys_string='xyz',         &
+        nodes=4,  edges=8,  faces=4,                                &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 1, 4, 3,                        &
+                                 4, 3, 2, 1,                        &
+                                 3, 4, 1, 2/), (/4, 4/) ),          &
+        faces_on_face=reshape( (/2, 3, 2, 3,                        &
+                                 1, 4, 1, 4,                        &
+                                 4, 1, 4, 1,                        &
+                                 3, 2, 3, 2/), (/4, 4/) ),          &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 3, 5, 1, 6,                        &
+                                 7, 4, 8, 2,                        &
+                                 8, 6, 7, 5/), (/4, 4/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 1,   3, 4,                      &
+                                 1, 4,   2, 3/), (/2, 8/) ),        &
+        coords=reshape( (/-15000.00,      0.00,                     &
+                               0.00,      0.00,                     &
+                               0.00,   4000.00,                     &
+                          -15000.00,   4000.00/), (/2, 4/) ),       &
+        face_coords=reshape( (/-7500.00,   2000.00,                 &
+                                7500.00,   2000.00,                 &
+                               -7500.00,  -2000.00,                 &
+                                7500.00,  -2000.00/), (/2, 4/) ),   &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Biperiodic 5x4
+      config_type(                                                  &
+        x_size=5, x_periodic=.true., x_domain=30000.0,              &
+        y_size=4, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_periodic, coord_sys=coord_sys_xyz,        &
+        topology_string='periodic', coord_sys_string='xyz',         &
+        nodes=20, edges=40, faces=20,                               &
+        nodes_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  2,  5,  6,  3,                    &
+                                  5,  7,  8,  6,                    &
+                                  7,  9, 10,  8,                    &
+                                  9,  1,  4, 10,                    &
+                                 11, 12,  2,  1,                    &
+                                 12, 13,  5,  2,                    &
+                                 13, 14,  7,  5,                    &
+                                 14, 15,  9,  7,                    &
+                                 15, 11,  1,  9,                    &
+                                 16, 17, 12, 11,                    &
+                                 17, 18, 13, 12,                    &
+                                 18, 19, 14, 13,                    &
+                                 19, 20, 15, 14,                    &
+                                 20, 16, 11, 15,                    &
+                                  4,  3, 17, 16,                    &
+                                  3,  6, 18, 17,                    &
+                                  6,  8, 19, 18,                    &
+                                  8, 10, 20, 19,                    &
+                                 10,  4, 16, 20/), (/4, 20/) ),     &
+        faces_on_face=reshape( (/ 5,  6,  2, 16,                    &
+                                  1,  7,  3, 17,                    &
+                                  2,  8,  4, 18,                    &
+                                  3,  9,  5, 19,                    &
+                                  4, 10,  1, 20,                    &
+                                 10, 11,  7,  1,                    &
+                                  6, 12,  8,  2,                    &
+                                  7, 13,  9,  3,                    &
+                                  8, 14, 10,  4,                    &
+                                  9, 15,  6,  5,                    &
+                                 15, 16, 12,  6,                    &
+                                 11, 17, 13,  7,                    &
+                                 12, 18, 14,  8,                    &
+                                 13, 19, 15,  9,                    &
+                                 14, 20, 11, 10,                    &
+                                 20,  1, 17, 11,                    &
+                                 16,  2, 18, 12,                    &
+                                 17,  3, 19, 13,                    &
+                                 18,  4, 20, 14,                    &
+                                 19,  5, 16, 15/), (/4, 20/) ),     &
+        edges_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  3,  5,  6,  7,                    &
+                                  6,  8,  9, 10,                    &
+                                  9, 11, 12, 13,                    &
+                                 12, 14,  1, 15,                    &
+                                 16, 17, 18,  2,                    &
+                                 18, 19, 20,  5,                    &
+                                 20, 21, 22,  8,                    &
+                                 22, 23, 24, 11,                    &
+                                 24, 25, 16, 14,                    &
+                                 26, 27, 28, 17,                    &
+                                 28, 29, 30, 19,                    &
+                                 30, 31, 32, 21,                    &
+                                 32, 33, 34, 23,                    &
+                                 34, 35, 26, 25,                    &
+                                 36,  4, 37, 27,                    &
+                                 37,  7, 38, 29,                    &
+                                 38, 10, 39, 31,                    &
+                                 39, 13, 40, 33,                    &
+                                 40, 15, 36, 35/), (/4, 20/) ),     &
+        nodes_on_edge=reshape( (/ 4,  1,    1,  2,                  &
+                                  3,  2,    4,  3,                  &
+                                  2,  5,    6,  5,                  &
+                                  3,  6,    5,  7,                  &
+                                  8,  7,    6,  8,                  &
+                                  7,  9,   10,  9,                  &
+                                  8, 10,    9,  1,                  &
+                                 10,  4,    1, 11,                  &
+                                 11, 12,    2, 12,                  &
+                                 12, 13,    5, 13,                  &
+                                 13, 14,    7, 14,                  &
+                                 14, 15,    9, 15,                  &
+                                 15, 11,   11, 16,                  &
+                                 16, 17,   12, 17,                  &
+                                 17, 18,   13, 18,                  &
+                                 18, 19,   14, 19,                  &
+                                 19, 20,   15, 20,                  &
+                                 20, 16,   16,  4,                  &
+                                 17,  3,   18,  6,                  &
+                                 19,  8,   20, 10/), (/2, 40/) ),   &
+        coords=reshape( (/-12000.00,   2000.00,                     &
+                           -6000.00,   2000.00,                     &
+                           -6000.00,   4000.00,                     &
+                          -12000.00,   4000.00,                     &
+                               0.00,   2000.00,                     &
+                               0.00,   4000.00,                     &
+                            6000.00,   2000.00,                     &
+                            6000.00,   4000.00,                     &
+                           12000.00,   2000.00,                     &
+                           12000.00,   4000.00,                     &
+                          -12000.00,      0.00,                     &
+                           -6000.00,      0.00,                     &
+                               0.00,      0.00,                     &
+                            6000.00,      0.00,                     &
+                           12000.00,      0.00,                     &
+                          -12000.00,  -2000.00,                     &
+                           -6000.00,  -2000.00,                     &
+                               0.00,  -2000.00,                     &
+                            6000.00,  -2000.00,                     &
+                           12000.00,  -2000.00/), (/2, 20/) ),      &
+        face_coords=reshape( (/ -9000.00,   3000.00,                &
+                                -3000.00,   3000.00,                &
+                                 3000.00,   3000.00,                &
+                                 9000.00,   3000.00,                &
+                                15000.00,   3000.00,                &
+                                -9000.00,   1000.00,                &
+                                -3000.00,   1000.00,                &
+                                 3000.00,   1000.00,                &
+                                 9000.00,   1000.00,                &
+                                15000.00,   1000.00,                &
+                                -9000.00,  -1000.00,                &
+                                -3000.00,  -1000.00,                &
+                                 3000.00,  -1000.00,                &
+                                 9000.00,  -1000.00,                &
+                                15000.00,  -1000.00,                &
+                                -9000.00,  -3000.00,                &
+                                -3000.00,  -3000.00,                &
+                                 3000.00,  -3000.00,                &
+                                 9000.00,  -3000.00,                &
+                                15000.00,  -3000.00/), (/2, 20/) ), &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Periodic in X 5x4
+      config_type(                                                  &
+        x_size=5, x_periodic=.true., x_domain=30000.0,              &
+        y_size=4, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=25, edges=45, faces=20,                               &
+        nodes_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  2,  5,  6,  3,                    &
+                                  5,  7,  8,  6,                    &
+                                  7,  9, 10,  8,                    &
+                                  9,  1,  4, 10,                    &
+                                 11, 12,  2,  1,                    &
+                                 12, 13,  5,  2,                    &
+                                 13, 14,  7,  5,                    &
+                                 14, 15,  9,  7,                    &
+                                 15, 11,  1,  9,                    &
+                                 16, 17, 12, 11,                    &
+                                 17, 18, 13, 12,                    &
+                                 18, 19, 14, 13,                    &
+                                 19, 20, 15, 14,                    &
+                                 20, 16, 11, 15,                    &
+                                 21, 22, 17, 16,                    &
+                                 22, 23, 18, 17,                    &
+                                 23, 24, 19, 18,                    &
+                                 24, 25, 20, 19,                    &
+                                 25, 21, 16, 20/), (/4, 20/) ),     &
+        faces_on_face=reshape( (/ 5,   6,  2, mdi,                  &
+                                  1,   7,  3, mdi,                  &
+                                  2,   8,  4, mdi,                  &
+                                  3,   9,  5, mdi,                  &
+                                  4,  10,  1, mdi,                  &
+                                 10,  11,  7,   1,                  &
+                                  6,  12,  8,   2,                  &
+                                  7,  13,  9,   3,                  &
+                                  8,  14, 10,   4,                  &
+                                  9,  15,  6,   5,                  &
+                                 15,  16, 12,   6,                  &
+                                 11,  17, 13,   7,                  &
+                                 12,  18, 14,   8,                  &
+                                 13,  19, 15,   9,                  &
+                                 14,  20, 11,  10,                  &
+                                 20, mdi, 17,  11,                  &
+                                 16, mdi, 18,  12,                  &
+                                 17, mdi, 19,  13,                  &
+                                 18, mdi, 20,  14,                  &
+                                 19, mdi, 16,  15/), (/4, 20/) ),   &
+        edges_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  3,  5,  6,  7,                    &
+                                  6,  8,  9, 10,                    &
+                                  9, 11, 12, 13,                    &
+                                 12, 14,  1, 15,                    &
+                                 16, 17, 18,  2,                    &
+                                 18, 19, 20,  5,                    &
+                                 20, 21, 22,  8,                    &
+                                 22, 23, 24, 11,                    &
+                                 24, 25, 16, 14,                    &
+                                 26, 27, 28, 17,                    &
+                                 28, 29, 30, 19,                    &
+                                 30, 31, 32, 21,                    &
+                                 32, 33, 34, 23,                    &
+                                 34, 35, 26, 25,                    &
+                                 36, 37, 38, 27,                    &
+                                 38, 39, 40, 29,                    &
+                                 40, 41, 42, 31,                    &
+                                 42, 43, 44, 33,                    &
+                                 44, 45, 36, 35/), (/4, 20/) ),     &
+        nodes_on_edge=reshape( (/ 4,  1,    1,  2,                  &
+                                  3,  2,    4,  3,                  &
+                                  2,  5,    6,  5,                  &
+                                  3,  6,    5,  7,                  &
+                                  8,  7,    6,  8,                  &
+                                  7,  9,   10,  9,                  &
+                                  8, 10,    9,  1,                  &
+                                 10,  4,    1, 11,                  &
+                                 11, 12,    2, 12,                  &
+                                 12, 13,    5, 13,                  &
+                                 13, 14,    7, 14,                  &
+                                 14, 15,    9, 15,                  &
+                                 15, 11,   11, 16,                  &
+                                 16, 17,   12, 17,                  &
+                                 17, 18,   13, 18,                  &
+                                 18, 19,   14, 19,                  &
+                                 19, 20,   15, 20,                  &
+                                 20, 16,   16, 21,                  &
+                                 21, 22,   17, 22,                  &
+                                 22, 23,   18, 23,                  &
+                                 23, 24,   19, 24,                  &
+                                 24, 25,   20, 25,                  &
+                                 25, 21/), (/2, 45/) ),             &
+        coords=reshape( (/-12000.00,   2000.00,                     &
+                           -6000.00,   2000.00,                     &
+                           -6000.00,   4000.00,                     &
+                          -12000.00,   4000.00,                     &
+                               0.00,   2000.00,                     &
+                               0.00,   4000.00,                     &
+                            6000.00,   2000.00,                     &
+                            6000.00,   4000.00,                     &
+                           12000.00,   2000.00,                     &
+                           12000.00,   4000.00,                     &
+                          -12000.00,      0.00,                     &
+                           -6000.00,      0.00,                     &
+                               0.00,      0.00,                     &
+                            6000.00,      0.00,                     &
+                           12000.00,      0.00,                     &
+                          -12000.00,  -2000.00,                     &
+                           -6000.00,  -2000.00,                     &
+                               0.00,  -2000.00,                     &
+                            6000.00,  -2000.00,                     &
+                           12000.00,  -2000.00,                     &
+                          -12000.00,  -4000.00,                     &
+                           -6000.00,  -4000.00,                     &
+                               0.00,  -4000.00,                     &
+                            6000.00,  -4000.00,                     &
+                           12000.00,  -4000.00/), (/2, 25/) ),      &
+        face_coords=reshape( (/ -9000.00,   3000.00,                &
+                                -3000.00,   3000.00,                &
+                                 3000.00,   3000.00,                &
+                                 9000.00,   3000.00,                &
+                                15000.00,   3000.00,                &
+                                -9000.00,   1000.00,                &
+                                -3000.00,   1000.00,                &
+                                 3000.00,   1000.00,                &
+                                 9000.00,   1000.00,                &
+                                15000.00,   1000.00,                &
+                                -9000.00,  -1000.00,                &
+                                -3000.00,  -1000.00,                &
+                                 3000.00,  -1000.00,                &
+                                 9000.00,  -1000.00,                &
+                                15000.00,  -1000.00,                &
+                                -9000.00,  -3000.00,                &
+                                -3000.00,  -3000.00,                &
+                                 3000.00,  -3000.00,                &
+                                 9000.00,  -3000.00,                &
+                                15000.00,  -3000.00/), (/2, 20/) ), &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Periodic in Y 5x4
+      config_type(                                                  &
+        x_size=5, x_periodic=.false., x_domain=30000.0,             &
+        y_size=4, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=24, edges=44, faces=20,                               &
+        nodes_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  2,  5,  6,  3,                    &
+                                  5,  7,  8,  6,                    &
+                                  7,  9, 10,  8,                    &
+                                  9, 11, 12, 10,                    &
+                                 13, 14,  2,  1,                    &
+                                 14, 15,  5,  2,                    &
+                                 15, 16,  7,  5,                    &
+                                 16, 17,  9,  7,                    &
+                                 17, 18, 11,  9,                    &
+                                 19, 20, 14, 13,                    &
+                                 20, 21, 15, 14,                    &
+                                 21, 22, 16, 15,                    &
+                                 22, 23, 17, 16,                    &
+                                 23, 24, 18, 17,                    &
+                                  4,  3, 20, 19,                    &
+                                  3,  6, 21, 20,                    &
+                                  6,  8, 22, 21,                    &
+                                  8, 10, 23, 22,                    &
+                                 10, 12, 24, 23/), (/4, 20/) ),     &
+        faces_on_face=reshape( (/mdi,  6,   2, 16,                  &
+                                   1,  7,   3, 17,                  &
+                                   2,  8,   4, 18,                  &
+                                   3,  9,   5, 19,                  &
+                                   4, 10, mdi, 20,                  &
+                                 mdi, 11,   7,  1,                  &
+                                   6, 12,   8,  2,                  &
+                                   7, 13,   9,  3,                  &
+                                   8, 14,  10,  4,                  &
+                                   9, 15, mdi,  5,                  &
+                                 mdi, 16,  12,  6,                  &
+                                  11, 17,  13,  7,                  &
+                                  12, 18,  14,  8,                  &
+                                  13, 19,  15,  9,                  &
+                                  14, 20, mdi, 10,                  &
+                                 mdi,  1,  17, 11,                  &
+                                  16,  2,  18, 12,                  &
+                                  17,  3,  19, 13,                  &
+                                  18,  4,  20, 14,                  &
+                                  19,  5, mdi, 15/), (/4, 20/) ),   &
+        edges_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  3,  5,  6,  7,                    &
+                                  6,  8,  9, 10,                    &
+                                  9, 11, 12, 13,                    &
+                                 12, 14, 15, 16,                    &
+                                 17, 18, 19,  2,                    &
+                                 19, 20, 21,  5,                    &
+                                 21, 22, 23,  8,                    &
+                                 23, 24, 25, 11,                    &
+                                 25, 26, 27, 14,                    &
+                                 28, 29, 30, 18,                    &
+                                 30, 31, 32, 20,                    &
+                                 32, 33, 34, 22,                    &
+                                 34, 35, 36, 24,                    &
+                                 36, 37, 38, 26,                    &
+                                 39,  4, 40, 29,                    &
+                                 40,  7, 41, 31,                    &
+                                 41, 10, 42, 33,                    &
+                                 42, 13, 43, 35,                    &
+                                 43, 16, 44, 37/), (/4, 20/) ),     &
+        nodes_on_edge=reshape( (/ 4,  1,    1,  2,                  &
+                                  3,  2,    4,  3,                  &
+                                  2,  5,    6,  5,                  &
+                                  3,  6,    5,  7,                  &
+                                  8,  7,    6,  8,                  &
+                                  7,  9,   10,  9,                  &
+                                  8, 10,    9, 11,                  &
+                                 12, 11,   10, 12,                  &
+                                  1, 13,   13, 14,                  &
+                                  2, 14,   14, 15,                  &
+                                  5, 15,   15, 16,                  &
+                                  7, 16,   16, 17,                  &
+                                  9, 17,   17, 18,                  &
+                                 11, 18,   13, 19,                  &
+                                 19, 20,   14, 20,                  &
+                                 20, 21,   15, 21,                  &
+                                 21, 22,   16, 22,                  &
+                                 22, 23,   17, 23,                  &
+                                 23, 24,   18, 24,                  &
+                                 19,  4,   20,  3,                  &
+                                 21,  6,   22,  8,                  &
+                                 23, 10,   24, 12/), (/2, 44/) ),   &
+        coords=reshape( (/-12000.00,   2000.00,                     &
+                           -6000.00,   2000.00,                     &
+                           -6000.00,   4000.00,                     &
+                          -12000.00,   4000.00,                     &
+                               0.00,   2000.00,                     &
+                               0.00,   4000.00,                     &
+                            6000.00,   2000.00,                     &
+                            6000.00,   4000.00,                     &
+                           12000.00,   2000.00,                     &
+                           12000.00,   4000.00,                     &
+                           18000.00,   2000.00,                     &
+                           18000.00,   4000.00,                     &
+                          -12000.00,      0.00,                     &
+                           -6000.00,      0.00,                     &
+                               0.00,      0.00,                     &
+                            6000.00,      0.00,                     &
+                           12000.00,      0.00,                     &
+                           18000.00,      0.00,                     &
+                          -12000.00,  -2000.00,                     &
+                           -6000.00,  -2000.00,                     &
+                               0.00,  -2000.00,                     &
+                            6000.00,  -2000.00,                     &
+                           12000.00,  -2000.00,                     &
+                           18000.00,  -2000.00/), (/2, 24/) ),      &
+        face_coords=reshape( (/ -9000.00,   3000.00,                &
+                                -3000.00,   3000.00,                &
+                                 3000.00,   3000.00,                &
+                                 9000.00,   3000.00,                &
+                                15000.00,   3000.00,                &
+                                -9000.00,   1000.00,                &
+                                -3000.00,   1000.00,                &
+                                 3000.00,   1000.00,                &
+                                 9000.00,   1000.00,                &
+                                15000.00,   1000.00,                &
+                                -9000.00,  -1000.00,                &
+                                -3000.00,  -1000.00,                &
+                                 3000.00,  -1000.00,                &
+                                 9000.00,  -1000.00,                &
+                                15000.00,  -1000.00,                &
+                                -9000.00,  -3000.00,                &
+                                -3000.00,  -3000.00,                &
+                                 3000.00,  -3000.00,                &
+                                 9000.00,  -3000.00,                &
+                                15000.00,  -3000.00/), (/2, 20/) ), &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Non-periodic 5x4
+      config_type(                                                  &
+        x_size=5, x_periodic=.false., x_domain=30000.0,             &
+        y_size=4, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_non_periodic, coord_sys=coord_sys_xyz,    &
+        topology_string='non_periodic', coord_sys_string='xyz',     &
+        nodes=30, edges=49, faces=20,                               &
+        nodes_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  2,  5,  6,  3,                    &
+                                  5,  7,  8,  6,                    &
+                                  7,  9, 10,  8,                    &
+                                  9, 11, 12, 10,                    &
+                                 13, 14,  2,  1,                    &
+                                 14, 15,  5,  2,                    &
+                                 15, 16,  7,  5,                    &
+                                 16, 17,  9,  7,                    &
+                                 17, 18, 11,  9,                    &
+                                 19, 20, 14, 13,                    &
+                                 20, 21, 15, 14,                    &
+                                 21, 22, 16, 15,                    &
+                                 22, 23, 17, 16,                    &
+                                 23, 24, 18, 17,                    &
+                                 25, 26, 20, 19,                    &
+                                 26, 27, 21, 20,                    &
+                                 27, 28, 22, 21,                    &
+                                 28, 29, 23, 22,                    &
+                                 29, 30, 24, 23/), (/4, 20/) ),     &
+        faces_on_face=reshape( (/ mdi,   6,   2, mdi,               &
+                                    1,   7,   3, mdi,               &
+                                    2,   8,   4, mdi,               &
+                                    3,   9,   5, mdi,               &
+                                    4,  10, mdi, mdi,               &
+                                  mdi,  11,   7,   1,               &
+                                    6,  12,   8,   2,               &
+                                    7,  13,   9,   3,               &
+                                    8,  14,  10,   4,               &
+                                    9,  15, mdi,   5,               &
+                                  mdi,  16,  12,   6,               &
+                                   11,  17,  13,   7,               &
+                                   12,  18,  14,   8,               &
+                                   13,  19,  15,   9,               &
+                                   14,  20, mdi,  10,               &
+                                  mdi, mdi,  17,  11,               &
+                                   16, mdi,  18,  12,               &
+                                   17, mdi,  19,  13,               &
+                                   18, mdi,  20,  14,               &
+                                   19, mdi, mdi,  15/), (/4, 20/) ),&
+        edges_on_face=reshape( (/  1,  2,  3,  4,                   &
+                                   3,  5,  6,  7,                   &
+                                   6,  8,  9, 10,                   &
+                                   9, 11, 12, 13,                   &
+                                  12, 14, 15, 16,                   &
+                                  17, 18, 19,  2,                   &
+                                  19, 20, 21,  5,                   &
+                                  21, 22, 23,  8,                   &
+                                  23, 24, 25, 11,                   &
+                                  25, 26, 27, 14,                   &
+                                  28, 29, 30, 18,                   &
+                                  30, 31, 32, 20,                   &
+                                  32, 33, 34, 22,                   &
+                                  34, 35, 36, 24,                   &
+                                  36, 37, 38, 26,                   &
+                                  39, 40, 41, 29,                   &
+                                  41, 42, 43, 31,                   &
+                                  43, 44, 45, 33,                   &
+                                  45, 46, 47, 35,                   &
+                                  47, 48, 49, 37/), (/4, 20/) ),    &
+        nodes_on_edge=reshape( (/ 4,  1,    1,  2,                  &
+                                  3,  2,    4,  3,                  &
+                                  2,  5,    6,  5,                  &
+                                  3,  6,    5,  7,                  &
+                                  8,  7,    6,  8,                  &
+                                  7,  9,   10,  9,                  &
+                                  8, 10,    9, 11,                  &
+                                 12, 11,   10, 12,                  &
+                                  1, 13,   13, 14,                  &
+                                  2, 14,   14, 15,                  &
+                                  5, 15,   15, 16,                  &
+                                  7, 16,   16, 17,                  &
+                                  9, 17,   17, 18,                  &
+                                 11, 18,   13, 19,                  &
+                                 19, 20,   14, 20,                  &
+                                 20, 21,   15, 21,                  &
+                                 21, 22,   16, 22,                  &
+                                 22, 23,   17, 23,                  &
+                                 23, 24,   18, 24,                  &
+                                 19, 25,   25, 26,                  &
+                                 20, 26,   26, 27,                  &
+                                 21, 27,   27, 28,                  &
+                                 22, 28,   28, 29,                  &
+                                 23, 29,   29, 30,                  &
+                                 24, 30/), (/2, 49/) ),             &
+        coords=reshape( (/-12000.00,   2000.00,                     &
+                           -6000.00,   2000.00,                     &
+                           -6000.00,   4000.00,                     &
+                          -12000.00,   4000.00,                     &
+                               0.00,   2000.00,                     &
+                               0.00,   4000.00,                     &
+                            6000.00,   2000.00,                     &
+                            6000.00,   4000.00,                     &
+                           12000.00,   2000.00,                     &
+                           12000.00,   4000.00,                     &
+                           18000.00,   2000.00,                     &
+                           18000.00,   4000.00,                     &
+                          -12000.00,      0.00,                     &
+                           -6000.00,      0.00,                     &
+                               0.00,      0.00,                     &
+                            6000.00,      0.00,                     &
+                           12000.00,      0.00,                     &
+                           18000.00,      0.00,                     &
+                          -12000.00,  -2000.00,                     &
+                           -6000.00,  -2000.00,                     &
+                               0.00,  -2000.00,                     &
+                            6000.00,  -2000.00,                     &
+                           12000.00,  -2000.00,                     &
+                           18000.00,  -2000.00,                     &
+                          -12000.00,  -4000.00,                     &
+                           -6000.00,  -4000.00,                     &
+                               0.00,  -4000.00,                     &
+                            6000.00,  -4000.00,                     &
+                           12000.00,  -4000.00,                     &
+                           18000.00,  -4000.00/), (/2, 30/) ),      &
+        face_coords=reshape( (/ -9000.00,   3000.00,                &
+                                -3000.00,   3000.00,                &
+                                 3000.00,   3000.00,                &
+                                 9000.00,   3000.00,                &
+                                15000.00,   3000.00,                &
+                                -9000.00,   1000.00,                &
+                                -3000.00,   1000.00,                &
+                                 3000.00,   1000.00,                &
+                                 9000.00,   1000.00,                &
+                                15000.00,   1000.00,                &
+                                -9000.00,  -1000.00,                &
+                                -3000.00,  -1000.00,                &
+                                 3000.00,  -1000.00,                &
+                                 9000.00,  -1000.00,                &
+                                15000.00,  -1000.00,                &
+                                -9000.00,  -3000.00,                &
+                                -3000.00,  -3000.00,                &
+                                 3000.00,  -3000.00,                &
+                                 9000.00,  -3000.00,                &
+                                15000.00,  -3000.00/), (/2, 20/) ), &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Non-periodic 1x1
+      config_type(                                                  &
+        x_size=1, x_periodic=.false., x_domain=30000.0,             &
+        y_size=1, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_non_periodic, coord_sys=coord_sys_xyz,    &
+        topology_string='non_periodic', coord_sys_string='xyz',     &
+        nodes=4,  edges=4,  faces=1,                                &
+        nodes_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),          &
+        faces_on_face=reshape( (/mdi, mdi, mdi, mdi/), (/4, 1/) ),  &
+        edges_on_face=reshape( (/1, 2, 3, 4/), (/4, 1/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3/), (/2, 4/) ),        &
+        coords=reshape( (/    0.00,    0.00,                        &
+                          30000.00,    0.00,                        &
+                          30000.00, 8000.00,                        &
+                              0.00, 8000.00/), (/2, 4/) ),          &
+        face_coords=reshape( (/15000.00, 4000.00/), (/2, 1/) ),     &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Non-periodic 1x2
+      config_type (                                                 &
+        x_size=1, x_periodic=.false., x_domain=30000.0,             &
+        y_size=2, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_non_periodic, coord_sys=coord_sys_xyz,    &
+        topology_string='non_periodic', coord_sys_string='xyz',     &
+        nodes=6, edges=7, faces=2,                                  &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 5, 6, 2, 1/), (/4, 2/) ),          &
+        faces_on_face=reshape( (/mdi,   2, mdi, mdi,                &
+                                 mdi, mdi, mdi,   1/), (/4, 2/) ),  &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 5, 6, 7, 2/), (/4, 2/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 1, 5,   5, 6,                      &
+                                 2, 6/), (/2, 7/) ),                &
+        coords=reshape( (/    0.00,     0.00,                       &
+                          30000.00,     0.00,                       &
+                          30000.00,  4000.00,                       &
+                              0.00,  4000.00,                       &
+                              0.00, -4000.00,                       &
+                          30000.00, -4000.00/), (/2, 6/) ),         &
+        face_coords=reshape( (/15000.00,  2000.00,                  &
+                               15000.00, -2000.00/), (/2, 2/) ),    &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Non-periodic 1x3
+      config_type (                                                 &
+        x_size=1, x_periodic=.false., x_domain=30000.0,             &
+        y_size=3, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_non_periodic, coord_sys=coord_sys_xyz,    &
+        topology_string='non_periodic', coord_sys_string='xyz',     &
+        nodes=8, edges=10, faces=3,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 5, 6, 2, 1,                        &
+                                 7, 8, 6, 5/), (/4, 3/) ),          &
+        faces_on_face=reshape( (/mdi,   2, mdi, mdi,                &
+                                 mdi,   3, mdi,   1,                &
+                                 mdi, mdi, mdi,   2/), (/4, 3/) ),  &
+        edges_on_face=reshape( (/1,  2,  3,  4,                     &
+                                 5,  6,  7,  2,                     &
+                                 8,  9, 10,  6/), (/4, 3/) ),       &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 1, 5,   5, 6,                      &
+                                 2, 6,   5, 7,                      &
+                                 7, 8,   6, 8/), (/2, 10/) ),       &
+        coords=reshape( (/    0.00,  2666.667,                      &
+                          30000.00,  2666.667,                      &
+                          30000.00,  5333.333,                      &
+                              0.00,  5333.333,                      &
+                              0.00,     0.00,                       &
+                          30000.00,     0.00,                       &
+                              0.00, -2666.667,                      &
+                          30000.00, -2666.667/), (/2, 8/) ),        &
+        face_coords=reshape( (/15000.00,  4000.00,                  &
+                               15000.00,  1333.33,                  &
+                               15000.00, -1333.33/), (/2, 3/) ),    &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Non-periodic 2x1
+      config_type (                                                 &
+        x_size=2, x_periodic=.false., x_domain=30000.0,             &
+        y_size=1, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_non_periodic, coord_sys=coord_sys_xyz,    &
+        topology_string='non_periodic', coord_sys_string='xyz',     &
+        nodes=6, edges=7, faces=2,                                  &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 5, 6, 3/), (/4, 2/) ),          &
+        faces_on_face=reshape( (/mdi, mdi,   2, mdi,                &
+                                   1, mdi, mdi, mdi/), (/4, 2/) ),  &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 3, 5, 6, 7/), (/4, 2/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 5,   6, 5,                      &
+                                 3, 6/), (/2, 7/) ),                &
+        coords=reshape( (/-15000.00,     0.00,                      &
+                               0.00,     0.00,                      &
+                               0.00,  8000.00,                      &
+                          -15000.00,  8000.00,                      &
+                           15000.00,     0.00,                      &
+                           15000.00,  8000.00/), (/2, 6/) ),        &
+        face_coords=reshape( (/-7500.00,  4000.00,                  &
+                                7500.00,  4000.00/), (/2, 2/) ),    &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! Non-periodic 3x1
+      config_type(                                                  &
+        x_size=3, x_periodic=.false., x_domain=30000.0,             &
+        y_size=1, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_non_periodic, coord_sys=coord_sys_xyz,    &
+        topology_string='non_periodic', coord_sys_string='xyz',     &
+        nodes=8, edges=10, faces=3,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 5, 6, 3,                        &
+                                 5, 7, 8, 6/), (/4, 3/) ),          &
+        faces_on_face=reshape( (/mdi, mdi,   2, mdi,                &
+                                   1, mdi,   3, mdi,                &
+                                   2, mdi, mdi, mdi/), (/4, 3/) ),  &
+        edges_on_face=reshape( (/1, 2, 3,  4,                       &
+                                 3, 5, 6,  7,                       &
+                                 6, 8, 9, 10/), (/4, 3/) ),         &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 5,   6, 5,                      &
+                                 3, 6,   5, 7,                      &
+                                 8, 7,   6, 8/), (/2, 10/) ),       &
+        coords=reshape( (/-10000.00,     0.00,                      &
+                               0.00,     0.00,                      &
+                               0.00,  8000.00,                      &
+                          -10000.00,  8000.00,                      &
+                           10000.00,     0.00,                      &
+                           10000.00,  8000.00,                      &
+                           20000.00,     0.00,                      &
+                           20000.00,  8000.00/), (/2, 8/) ),        &
+        face_coords=reshape( (/-5000.00,  4000.00,                  &
+                                5000.00,  4000.00,                  &
+                               15000.00,  4000.00/), (/2, 3/) ),    &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 2x1 Trench in X
+      config_type(                                                  &
+        x_size=2, x_periodic=.true., x_domain=30000.0,              &
+        y_size=1, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=4, edges=6, faces=2,                                  &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 1, 4, 3/), (/4, 2/) ),          &
+        faces_on_face=reshape( (/ 2, mdi,  2, mdi,                  &
+                                  1, mdi,  1, mdi/), (/4, 2/) ),    &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 3, 5, 1, 6/), (/4, 2/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 1,   3, 4/), (/2, 6/) ),        &
+        coords=reshape( (/-15000.00,    0.00,                       &
+                               0.00,    0.00,                       &
+                               0.00, 8000.00,                       &
+                          -15000.00, 8000.00/), (/2, 4/) ),         &
+        face_coords=reshape( (/-7500.0, 4000.0,                     &
+                                7500.0, 4000.0/), (/2, 2/) ),       &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 3x1 Trench in X
+      config_type(                                                  &
+        x_size=3, x_periodic=.true., x_domain=30000.0,              &
+        y_size=1, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=6, edges=9, faces=3,                                  &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 5, 6, 3,                        &
+                                 5, 1, 4, 6/), (/4, 3/) ),          &
+        faces_on_face=reshape( (/ 3, mdi,  2, mdi,                  &
+                                  1, mdi,  3, mdi,                  &
+                                  2, mdi,  1, mdi/), (/4, 3/) ),    &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 3, 5, 6, 7,                        &
+                                 6, 8, 1, 9/), (/4, 3/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 5,   6, 5,                      &
+                                 3, 6,   5, 1,                      &
+                                 6, 4/), (/2, 9/) ),                &
+        coords=reshape( (/-10000.00,    0.00,                       &
+                               0.00,    0.00,                       &
+                               0.00, 8000.00,                       &
+                          -10000.00, 8000.00,                       &
+                           10000.00,    0.00,                       &
+                           10000.00, 8000.00/), (/2, 6/) ),         &
+        face_coords=reshape( (/ -5000.0, 4000.0,                    &
+                                 5000.0, 4000.0,                    &
+                                15000.0, 4000.0/), (/2, 3/) ),      &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 2x2 Trench in X
+        config_type(                                                &
+        x_size=2, x_periodic=.true., x_domain=30000.0,              &
+        y_size=2, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=6, edges=10, faces=4,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 1, 4, 3,                        &
+                                 5, 6, 2, 1,                        &
+                                 6, 5, 1, 2/), (/4, 4/) ),          &
+        faces_on_face=reshape( (/ 2,   3,  2, mdi,                  &
+                                  1,   4,  1, mdi,                  &
+                                  4, mdi,  4,   1,                  &
+                                  3, mdi,  3,   2/), (/4, 4/) ),    &
+        edges_on_face=reshape( (/1,  2, 3, 4,                       &
+                                 3,  5, 1, 6,                       &
+                                 7,  8, 9, 2,                       &
+                                 9, 10, 7, 5/), (/4, 4/) ),         &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 1,   3, 4,                      &
+                                 1, 5,   5, 6,                      &
+                                 2, 6,   6, 5/), (/2, 10/) ),       &
+        coords=reshape( (/-15000.00,     0.00,                      &
+                               0.00,     0.00,                      &
+                               0.00,  4000.00,                      &
+                          -15000.00,  4000.00,                      &
+                          -15000.00, -4000.00,                      &
+                               0.00, -4000.00/), (/2, 6/) ),        &
+        face_coords=reshape( (/-7500.0,  2000.0,                    &
+                                7500.0,  2000.0,                    &
+                               -7500.0, -2000.0,                    &
+                                7500.0, -2000.0/), (/2, 4/) ),      &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 3x2 Trench in X
+      config_type(                                                  &
+        x_size=3, x_periodic=.true., x_domain=30000.0,              &
+        y_size=2, y_periodic=.false., y_domain=8000.0,              &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=9, edges=15, faces=6,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 5, 6, 3,                        &
+                                 5, 1, 4, 6,                        &
+                                 7, 8, 2, 1,                        &
+                                 8, 9, 5, 2,                        &
+                                 9, 7, 1, 5/), (/4, 6/) ),          &
+        faces_on_face=reshape( (/ 3,   4,  2, mdi,                  &
+                                  1,   5,  3, mdi,                  &
+                                  2,   6,  1, mdi,                  &
+                                  6, mdi,  5,   1,                  &
+                                  4, mdi,  6,   2,                  &
+                                  5, mdi,  4,   3/), (/4, 6/) ),    &
+        edges_on_face=reshape( (/ 1,  2,  3,  4,                    &
+                                  3,  5,  6,  7,                    &
+                                  6,  8,  1,  9,                    &
+                                 10, 11, 12,  2,                    &
+                                 12, 13, 14,  5,                    &
+                                 14, 15, 10,  8/), (/4, 6/) ),      &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 5,   6, 5,                      &
+                                 3, 6,   5, 1,                      &
+                                 6, 4,   1, 7,                      &
+                                 7, 8,   2, 8,                      &
+                                 8, 9,   5, 9,                      &
+                                 9, 7/), (/2, 15/) ),               &
+        coords=reshape( (/-10000.00,    0.00,                       &
+                               0.00,    0.00,                       &
+                               0.00, 4000.00,                       &
+                          -10000.00, 4000.00,                       &
+                           10000.00,    0.00,                       &
+                           10000.00, 4000.00,                       &
+                          -10000.00,  -4000.00,                     &
+                               0.00,  -4000.00,                     &
+                           10000.00,  -4000.00/), (/2, 9/) ),       &
+        face_coords=reshape( (/-5000.0,  2000.0,                    &
+                                5000.0,  2000.0,                    &
+                               15000.0,  2000.0,                    &
+                               -5000.0, -2000.0,                    &
+                                5000.0, -2000.0,                    &
+                               15000.0, -2000.0/), (/2, 6/) ),      &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 1x2 Trench in Y
+      config_type(                                                  &
+        x_size=1, x_periodic=.false., x_domain=30000.0,             &
+        y_size=2, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=4, edges=6, faces=2,                                  &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 4, 3, 2, 1/), (/4, 2/) ),          &
+        faces_on_face=reshape( (/mdi,  2, mdi,  2,                  &
+                                 mdi,  1, mdi,  1/), (/4, 2/) ),    &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 5, 4, 6, 2/), (/4, 2/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 1, 4,   2, 3/), (/2, 6/) ),        &
+        coords=reshape( (/    0.00,    0.00,                        &
+                          30000.00,    0.00,                        &
+                          30000.00, 4000.00,                        &
+                              0.00, 4000.00/), (/2, 4/) ),          &
+        face_coords=reshape( (/15000.00,  2000.0,                   &
+                               15000.00, -2000.0/), (/2, 2/) ),     &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 1x3 Trench in Y
+      config_type(                                                  &
+        x_size=1, x_periodic=.false., x_domain=30000.0,             &
+        y_size=3, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=6, edges=9, faces=3,                                  &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 5, 6, 2, 1,                        &
+                                 4, 3, 6, 5/), (/4, 3/) ),          &
+        faces_on_face=reshape( (/mdi,  2, mdi,  3,                  &
+                                 mdi,  3, mdi,  1,                  &
+                                 mdi,  1, mdi,  2/), (/4, 3/) ),    &
+        edges_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 5, 6, 7, 2,                        &
+                                 8, 4, 9, 6/), (/4, 3/) ),          &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 1, 5,   5, 6,                      &
+                                 2, 6,   5, 4,                      &
+                                 6, 3/), (/2, 9/) ),                &
+        coords=reshape( (/     0.00, 2666.667,                      &
+                           30000.00, 2666.667,                      &
+                           30000.00, 5333.333,                      &
+                               0.00, 5333.333,                      &
+                               0.00,    0.000,                      &
+                           30000.00,    0.000/), (/2, 6/) ),        &
+        face_coords=reshape( (/ 15000.0,  4000.000,                 &
+                                15000.0,  1333.333,                 &
+                                15000.0, -1333.33/), (/2, 3/) ),    &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 2x2 Trench in Y
+      config_type(                                                  &
+        x_size=2, x_periodic=.false., x_domain=30000.0,             &
+        y_size=2, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=6, edges=10, faces=4,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 5, 6, 3,                        &
+                                 4, 3, 2, 1,                        &
+                                 3, 6, 5, 2/), (/4, 4/) ),          &
+        faces_on_face=reshape( (/mdi,  3,   2,  3,                  &
+                                   1,  4, mdi,  4,                  &
+                                 mdi,  1,   4,  1,                  &
+                                  3,   2, mdi,  2/), (/4, 4/) ),    &
+        edges_on_face=reshape( (/1,  2,  3, 4,                      &
+                                 3,  5,  6, 7,                      &
+                                 8,  4,  9, 2,                      &
+                                 9,  7, 10, 5/), (/4, 4/) ),        &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 5,   6, 5,                      &
+                                 3, 6,   1, 4,                      &
+                                 2, 3,   5, 6/), (/2, 10/) ),       &
+        coords=reshape( (/-15000.00,    0.00,                       &
+                               0.00,    0.00,                       &
+                               0.00, 4000.00,                       &
+                          -15000.00, 4000.00,                       &
+                           15000.00,    0.00,                       &
+                           15000.00, 4000.00/), (/2, 6/) ),         &
+        face_coords=reshape( (/-7500.0,  2000.0,                    &
+                                7500.0,  2000.0,                    &
+                               -7500.0, -2000.0,                    &
+                                7500.0, -2000.0/), (/2, 4/) ),      &
+        number_of_maps=0                                            &
+      ),                                                            &
+      ! 2x3 Trench in Y
+      config_type(                                                  &
+        x_size=2, x_periodic=.false., x_domain=30000.0,             &
+        y_size=3, y_periodic=.true., y_domain=8000.0,               &
+        topology=topology_channel, coord_sys=coord_sys_xyz,         &
+        topology_string='channel', coord_sys_string='xyz',          &
+        nodes=9, edges=15, faces=6,                                 &
+        nodes_on_face=reshape( (/1, 2, 3, 4,                        &
+                                 2, 5, 6, 3,                        &
+                                 7, 8, 2, 1,                        &
+                                 8, 9, 5, 2,                        &
+                                 4, 3, 8, 7,                        &
+                                 3, 6, 9, 8/), (/4, 6/) ),          &
+        faces_on_face=reshape( (/mdi,  3,   2,  5,                  &
+                                   1,  4, mdi,  6,                  &
+                                 mdi,  5,   4,  1,                  &
+                                   3,  6, mdi,  2,                  &
+                                 mdi,  1,   6,  3,                  &
+                                   5,  2, mdi,  4/), (/4, 6/) ),    &
+        edges_on_face=reshape( (/1,  2,  3,  4,                     &
+                                 3,  5,  6,  7,                     &
+                                 8,  9, 10,  2,                     &
+                                10, 11, 12,  5,                     &
+                                13,  4, 14,  9,                     &
+                                14,  7, 15, 11/), (/4, 6/) ),       &
+        nodes_on_edge=reshape( (/4, 1,   1, 2,                      &
+                                 3, 2,   4, 3,                      &
+                                 2, 5,   6, 5,                      &
+                                 3, 6,   1, 7,                      &
+                                 7, 8,   2, 8,                      &
+                                 8, 9,   5, 9,                      &
+                                 7, 4,   8, 3,                      &
+                                 9, 6/), (/2, 15/) ),               &
+        coords=reshape( (/-15000.00, 2666.667,                      &
+                               0.00, 2666.667,                      &
+                               0.00, 5333.333,                      &
+                          -15000.00, 5333.333,                      &
+                           15000.00, 2666.667,                      &
+                           15000.00, 5333.333,                      &
+                          -15000.00,    0.000,                      &
+                               0.00,    0.000,                      &
+                           15000.00,    0.000/), (/2, 9/) ),        &
+        face_coords=reshape( (/-7500.0,  4000.0,                    &
+                                7500.0,  4000.0,                    &
+                               -7500.0,  1333.333,                  &
+                                7500.0,  1333.333,                  &
+                               -7500.0, -1333.333,                  &
+                                7500.0, -1333.333/), (/2, 6/) ),    &
+        number_of_maps=0                                            &
+      )                                                             &
+    ]
+
+  end function getParameters
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @test
+  subroutine test_gen( this )
+
+    implicit none
+
+    class(gen_planar_cart_test_type), intent(inout) :: this
+
+    integer(i_def), parameter :: npanels = 1
+
+    type(gen_planar_type) :: mesh_gen
+    integer(i_def) :: nodes, edges, faces
+    integer(i_def) :: nodes_per_face, edges_per_face
+    integer(i_def) :: nodes_per_edge
+    integer(i_def) :: max_faces_per_node
+
+    integer(i_def)           :: row,i
+    integer(i_def), pointer  :: edge_cell_ids(:) => null()
+    integer(i_def)           :: icell
+
+    integer(i_def) :: faces_on_face(4, this%x_size * this%y_size)
+    integer(i_def) :: nodes_on_face(4, this%x_size * this%y_size)
+    integer(i_def) :: edges_on_face(4, this%x_size * this%y_size)
+    integer(i_def) :: nodes_on_edge(2, this%edges)
+
+    real(r_def) :: face_coords(2, this%x_size * this%y_size)
+    real(r_def) :: coords(2, this%nodes)
+
+    character(str_def)      :: test_str(5)
+    character(str_longlong) :: big_test_str
+    character(str_longlong) :: expected_test_str
+    character(str_short)    :: first_number_str
+    character(str_short)    :: second_number_str
+
+    character(str_def) :: test_coord_units_x, test_coord_units_y
+
+    integer(i_def) :: test_npanels
+    integer(i_def) :: test_edge_cells_x, test_edge_cells_y
+    integer(i_def) :: test_nmaps
+    integer(i_def) :: target_edge_cells_x, target_edge_cells_y
+
+    character(str_def), allocatable :: test_target_mesh_names(:)
+
+    integer(i_def), allocatable :: test_maps_edge_cells_x(:)
+    integer(i_def), allocatable :: test_maps_edge_cells_y(:)
+
+    type(global_mesh_map_collection_type), pointer :: global_mesh_maps => null()
+    type(global_mesh_map_type),            pointer :: global_mesh_map  => null()
+
+    type(reference_cube_type) :: cube_element
+    cube_element = reference_cube_type()
+
+    mesh_gen = gen_planar_type( reference_element=cube_element, &
+                                mesh_name=mesh_name,            &
+                                geometry=geometry_planar,       &
+                                topology=this%topology,         &
+                                coord_sys=this%coord_sys,       &
+                                edge_cells_x=this%x_size,       &
+                                edge_cells_y=this%y_size,       &
+                                periodic_x=this%x_periodic,     &
+                                periodic_y=this%y_periodic,     &
+                                domain_x=this%x_domain,         &
+                                domain_y=this%y_domain )
+
+    ! Test metadata retrieval
+    call mesh_gen%get_metadata( mesh_name          = test_str(1),            &
+                                geometry           = test_str(2),            &
+                                topology           = test_str(3),            &
+                                coord_sys          = test_str(4),            &
+                                constructor_inputs = big_test_str,           &
+                                edge_cells_x       = test_edge_cells_x,      &
+                                edge_cells_y       = test_edge_cells_y,      &
+                                nmaps              = test_nmaps,             &
+                                target_mesh_names  = test_target_mesh_names, &
+                                maps_edge_cells_x  = test_maps_edge_cells_x, &
+                                maps_edge_cells_y  = test_maps_edge_cells_y )
+
+    @assertEqual( mesh_name,             trim(test_str(1)) )
+    @assertEqual( 'planar',              trim(test_str(2)) )
+    @assertEqual( this%topology_string,  trim(test_str(3)) )
+    @assertEqual( this%coord_sys_string, trim(test_str(4)) )
+
+    @assertEqual( this%x_size, test_edge_cells_x )
+    @assertEqual( this%y_size, test_edge_cells_y )
+    @assertEqual( this%number_of_maps, test_nmaps )
+
+    write(first_number_str, '(F10.2)') this%x_domain
+    write(second_number_str, '(F10.2)') this%y_domain
+    write(                                                               &
+      expected_test_str,                                                 &
+      '("geometry=planar;topology=", A, ";coord_sys=", A, ";edge_cells_x=", I0, ";edge_cells_y=", I0, ";periodic_x=", L1, ";periodic_y=", L1, ";domain_x=", A, ";domain_y=", A)'                                                       &
+    ) this%topology_string, this%coord_sys_string, &
+      this%x_size, this%y_size, this%x_periodic, this%y_periodic,        &
+      trim(adjustl(first_number_str)), adjustl(trim(second_number_str))
+    @assertEqual( trim(expected_test_str), trim(big_test_str) )
+
+    test_npanels = mesh_gen%get_number_of_panels()
+    @assertEqual( npanels, test_npanels )
+
+    ! Generate the mesh and connectivity
+    call mesh_gen%generate()
+
+    ! Retrieve calculated dimensions
+    call mesh_gen%get_dimensions( nodes, edges, faces, &
+                                  nodes_per_face,      &
+                                  edges_per_face,      &
+                                  nodes_per_edge,      &
+                                  max_faces_per_node )
+
+    ! Mesh has correct dimensions for arguments
+    @assertEqual(this%nodes, nodes, "Incorrect number of vertices for mesh dimensions")
+    @assertEqual(this%edges, edges, "Incorrect number of edges for mesh dimensions")
+    @assertEqual(this%faces, faces, "Incorrect number of faces for mesh dimensions")
+
+    ! Mesh has correct element dimensions
+    @assertEqual(4, edges_per_face, "Number of edges per face does not correspond to quad mesh")
+    @assertEqual(2, nodes_per_edge, "Number of vertices per edge does not correspond to quad mesh")
+    @assertEqual(4, max_faces_per_node, "Max number of faces around a node does not correspond to quad mesh")
+
+    ! Retrieve mesh connectivity
+    call mesh_gen%get_connectivity( nodes_on_face, edges_on_face, &
+                                    faces_on_face, nodes_on_edge )
+
+    @assertEqual(this%nodes_on_face, nodes_on_face, "Incorrect vertex sequence on faces.")
+    @assertEqual(this%faces_on_face, faces_on_face, "Incorrect faces_on_face connectivity.")
+    @assertEqual(this%edges_on_face, edges_on_face, "Incorrect edges_on_face connectivity.")
+    @assertEqual(this%nodes_on_edge, nodes_on_edge, "Incorrect nodes_on_edge connectivity.")
+
+    ! Retrieve mesh coordinates
+    call mesh_gen%get_coordinates( coords,             &
+                                   face_coords,        &
+                                   test_coord_units_x, &
+                                   test_coord_units_y )
+
+    @assertEqual( this%coords, coords, 0.005_r_def, "Incorrect mesh coordinates." )
+    @assertEqual( this%face_coords, face_coords, 0.005_r_def, "Incorrect cell coordinates." )
+    @assertEqual( 'm', trim(test_coord_units_x) )
+    @assertEqual( 'm', trim(test_coord_units_y) )
+
+    ! I don't think this is ever used.
+    !
+    if (this%number_of_maps > 0) then
+      @assertEqual( this%number_of_maps, size(test_target_mesh_names) )
+      @assertEqual( trim(target_mesh_names(1)), trim(test_target_mesh_names(1)) )
+      @assertEqual( this%number_of_maps + 1, size(test_maps_edge_cells_x ) )
+      @assertEqual( this%number_of_maps + 1, size(test_maps_edge_cells_y ) )
+      @assertEqual( target_edge_cells_x, test_maps_edge_cells_x )
+      @assertEqual( target_edge_cells_y, test_maps_edge_cells_y )
+
+      ! Retrieve global mesh maps
+      nullify(global_mesh_maps)
+      global_mesh_maps => mesh_gen%get_global_mesh_maps()
+      @assertAssociated(global_mesh_maps)
+
+      ! Although no actual global mesh maps have written to file maps have been
+      ! created for global meshes in the order they are virtually listed,
+      ! i.e. mesh "unit_test", id=1
+      !      mesh "unit_test_target", id=2
+      nullify(global_mesh_map)
+      global_mesh_map  => global_mesh_maps%get_global_mesh_map(1,2)
+
+      @assertAssociated( global_mesh_map )
+      @assertEqual( 20, global_mesh_map%get_nsource_cells() )
+      @assertEqual( 6,  global_mesh_map%get_ntarget_cells_per_source_cell() )
+      @assertEqual( 1,  global_mesh_map%get_source_id() )
+      @assertEqual( 2,  global_mesh_map%get_target_id() )
+      @assertEqual( 2,  global_mesh_map%get_ntarget_cells_per_source_x() )
+      @assertEqual( 3,  global_mesh_map%get_ntarget_cells_per_source_y() )
+    end if
+
+    call mesh_gen%clear()
+    nullify(edge_cell_ids)
+
+  end subroutine test_gen
+
+end module gen_planar_mod_test_cartesian

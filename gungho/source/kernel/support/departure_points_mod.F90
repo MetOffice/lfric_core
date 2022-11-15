@@ -720,21 +720,21 @@ contains
   !----------------------------------------------------------------------------
   !> @brief  Subroutine to interpolate the wind u to the point x.
   !!
-  !> @param[in,out] u_int         Wind interpolated to point x
-  !> @param[in]     x_in          Interpolation destination
-  !> @param[in]     u_in          Wind at neighbouring points
-  !> @param[in]     n_points      Number of wind points in stencil
-  !> @param[in]     n_centre      Index of arrival point in stencil
+  !> @param[out] u_int         Wind interpolated to point x
+  !> @param[in]  x_in          Interpolation destination
+  !> @param[in]  u_in          Wind at neighbouring points
+  !> @param[in]  n_points      Number of wind points in stencil
+  !> @param[in]  n_centre      Index of arrival point in stencil
   !----------------------------------------------------------------------------
   subroutine interpolate_u_to_x(u_int, x_in, u_in, n_points, n_centre)
 
     implicit none
 
-    real(kind=r_def),    intent(inout) :: u_int
-    real(kind=r_def),    intent(in)    :: x_in
-    integer(kind=i_def), intent(in)    :: n_points
-    integer(kind=i_def), intent(in)    :: n_centre
-    real(kind=r_def),    intent(in)    :: u_in(1:n_points)
+    real(kind=r_def),    intent(out) :: u_int
+    real(kind=r_def),    intent(in)  :: x_in
+    integer(kind=i_def), intent(in)  :: n_points
+    integer(kind=i_def), intent(in)  :: n_centre
+    real(kind=r_def),    intent(in)  :: u_in(1:n_points)
 
     integer(kind=i_def) :: int_x
     real(kind=r_def)    :: frac_x

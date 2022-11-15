@@ -58,7 +58,7 @@ contains
     real(kind=r_def),    parameter :: four_pi = 12.0_r_def
 
     map_2d = 1_i_def
-    map_w2(0:4) = 0_i_def
+    map_w2 = 0_i_def
     map_w2(5) = 1_i_def
 
     dz = domain_top / nlayers

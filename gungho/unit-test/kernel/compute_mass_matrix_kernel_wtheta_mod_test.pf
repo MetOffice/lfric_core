@@ -152,6 +152,25 @@ contains
     call get_w0_3x3x3_field(chi1, chi2, chi3, dx, dy, dz, &
                             map_w0, nlayers)
 
+    allocate( basis_wtheta_r32(size(basis_wtheta, 1), &
+                               size(basis_wtheta, 2), &
+                               size(basis_wtheta, 3), &
+                               size(basis_wtheta, 4) ) )
+    allocate( basis_w0_r32(size(basis_w0, 1), &
+                           size(basis_w0, 2), &
+                           size(basis_w0, 3), &
+                           size(basis_w0, 4) ) )
+    allocate( diff_basis_w0_r32(size(diff_basis_w0, 1), &
+                                size(diff_basis_w0, 2), &
+                                size(diff_basis_w0, 3), &
+                                size(diff_basis_w0, 4) ) )
+    allocate( wh_r32(size(wh, 1)) )
+    allocate( wv_r32(size(wv, 1)) )
+    allocate( chi1_r32(size(chi1, 1)) )
+    allocate( chi2_r32(size(chi2, 1)) )
+    allocate( chi3_r32(size(chi3, 1)) )
+    allocate( panel_id_r32(size(panel_id, 1)) )
+
     ! Coerce test data into required word size
     basis_wtheta_r32  = real( basis_wtheta,  kind=r_single )
     basis_w0_r32      = real( basis_w0,      kind=r_single )
@@ -295,6 +314,25 @@ contains
     call get_w0_3x3x3_field(chi1, chi2, chi3, dx, dy, dz, &
                             map_w0, nlayers)
 
+    allocate( basis_wtheta_r64(size(basis_wtheta, 1), &
+                               size(basis_wtheta, 2), &
+                               size(basis_wtheta, 3), &
+                               size(basis_wtheta, 4) ) )
+    allocate( basis_w0_r64(size(basis_w0, 1), &
+                           size(basis_w0, 2), &
+                           size(basis_w0, 3), &
+                           size(basis_w0, 4) ) )
+    allocate( diff_basis_w0_r64(size(diff_basis_w0, 1), &
+                                size(diff_basis_w0, 2), &
+                                size(diff_basis_w0, 3), &
+                                size(diff_basis_w0, 4) ) )
+    allocate( wh_r64(size(wh, 1)) )
+    allocate( wv_r64(size(wv, 1)) )
+    allocate( chi1_r64(size(chi1, 1)) )
+    allocate( chi2_r64(size(chi2, 1)) )
+    allocate( chi3_r64(size(chi3, 1)) )
+    allocate( panel_id_r64(size(panel_id, 1)) )
+
     ! Coerce test data into required word size
     basis_wtheta_r64  = real( basis_wtheta,  kind=r_double )
     basis_w0_r64      = real( basis_w0,      kind=r_double )
@@ -437,6 +475,25 @@ contains
 
     call get_w0_3x3x3_field(chi1, chi2, chi3, dx, dy, dz, &
                             map_w0, nlayers)
+
+    allocate( basis_wtheta_r64(size(basis_wtheta, 1), &
+                               size(basis_wtheta, 2), &
+                               size(basis_wtheta, 3), &
+                               size(basis_wtheta, 4) ) )
+    allocate( basis_w0_r64(size(basis_w0, 1), &
+                           size(basis_w0, 2), &
+                           size(basis_w0, 3), &
+                           size(basis_w0, 4) ) )
+    allocate( diff_basis_w0_r64(size(diff_basis_w0, 1), &
+                                size(diff_basis_w0, 2), &
+                                size(diff_basis_w0, 3), &
+                                size(diff_basis_w0, 4) ) )
+    allocate( wh_r64(size(wh, 1)) )
+    allocate( wv_r64(size(wv, 1)) )
+    allocate( chi1_r64(size(chi1, 1)) )
+    allocate( chi2_r64(size(chi2, 1)) )
+    allocate( chi3_r64(size(chi3, 1)) )
+    allocate( panel_id_r64(size(panel_id, 1)) )
 
     ! Coerce test data into required word size
     basis_wtheta_r64  = real( basis_wtheta,  kind=r_double )

@@ -885,7 +885,9 @@ contains
         basis_x(:, 3, i) = abs(unit_vec(3, i)) * x2(:) &
         + (1.0_r_def - abs(unit_vec(3, i))) * x1(:)
 
-        basis_vector(:, i) = unit_vec(:, i)
+        do j1 = 1, size(basis_vector, 1)
+          basis_vector(j1, i) = unit_vec(j1, i)
+        end do
 
       end do
 
@@ -1000,7 +1002,9 @@ contains
         basis_x(:, 3, i) = abs(unit_vec(3, i)) * x1(:) &
                          + (1.0_r_def - abs(unit_vec(3, i))) * x2(:)
 
-        basis_vector(:, i) = unit_vec(:, i)
+        do j1 = 1, size(basis_vector, 1)
+          basis_vector(j1, i) = unit_vec(j1, i)
+        end do
 
       end do
 
@@ -1255,7 +1259,9 @@ contains
         basis_x(:, 3, i) = abs(unit_vec(3, i)) * x1(:) &
                          + (1.0_r_def - abs(unit_vec(3, i))) * x2(:)
 
-        basis_vector(:, i) = unit_vec(:, i)
+        do j1 = 1, size(basis_vector, 1)
+          basis_vector(j1, i) = unit_vec(j1, i)
+        end do
 
       end do
 
@@ -1325,7 +1331,9 @@ contains
         basis_x(:, 3, i) = abs(unit_vec(3, i)) * x1(:) &
                          + (1.0_r_def - abs(unit_vec(3, i))) * x2(:)
 
-        basis_vector(:, i) = unit_vec(:, i)
+        do j1 = 1, size(basis_vector, 1)
+          basis_vector(j1, i) = unit_vec(j1, i)
+        end do
 
       end do
 
@@ -1427,7 +1435,10 @@ contains
         basis_x(:, 3, i) = abs(unit_vec(3, i)) * x1(:) &
                          + (1.0_r_def - abs(unit_vec(3, i))) * x2(:)
 
-        basis_vector(:, i) = unit_vec(:, i)
+        do j1 = 1, size(basis_vector, 1)
+          basis_vector(j1, i) = unit_vec(j1, i)
+        end do
+
       end do
 
       basis_index(1,:) = lx(1:ndof_cell)
@@ -1495,7 +1506,10 @@ contains
         basis_x(:, 3, i) = abs(unit_vec(3, i)) * x1(:) &
                          + (1.0_r_def - abs(unit_vec(3, i))) * x2(:)
 
-        basis_vector(:, i) = unit_vec(:, i)
+        do j1 = 1, size(basis_vector, 1)
+          basis_vector(j1, i) = unit_vec(j1, i)
+        end do
+
       end do
 
       basis_index(1,:) = lx(1:ndof_cell)

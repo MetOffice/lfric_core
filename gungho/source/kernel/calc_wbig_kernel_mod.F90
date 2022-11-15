@@ -77,7 +77,7 @@ subroutine calc_wbig_code(nlayers,                    &
   ! Internal variables
   integer(kind=i_def) :: k
 
-  do k = 0, nlayers
+  do k = 0, nlayers - 1
 
     if ( (w_in_wth(map_wth(1) + k)) > 1.0_r_def ) then
 
