@@ -10,7 +10,7 @@ module calc_dz_face_kernel_mod
 use argument_mod,  only: arg_type,                              &
                          GH_FIELD, GH_SCALAR, GH_READ, GH_INC,  &
                          CELL_COLUMN, ANY_SPACE_1, ANY_SPACE_2, &
-                         GH_INTEGER, GH_REAL
+                         GH_INTEGER, GH_REAL, GH_LOGICAL
 use constants_mod, only: r_def, i_def
 use kernel_mod,    only: kernel_type
 
@@ -22,11 +22,12 @@ implicit none
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: calc_dz_face_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                         &
+  type(arg_type) :: meta_args(5) = (/                         &
        arg_type(GH_FIELD,  GH_REAL,    GH_INC,  ANY_SPACE_1), &
        arg_type(GH_FIELD,  GH_REAL,    GH_READ, ANY_SPACE_2), &
        arg_type(GH_FIELD,  GH_REAL,    GH_READ, ANY_SPACE_1), &
-       arg_type(GH_SCALAR, GH_INTEGER, GH_READ)               &
+       arg_type(GH_SCALAR, GH_INTEGER, GH_READ),              &
+       arg_type(GH_SCALAR, GH_LOGICAL, GH_READ)               &
        /)
   integer :: operates_on = CELL_COLUMN
 contains
@@ -52,6 +53,7 @@ contains
 !> @param[in]     height      Height field of cell centres
 !> @param[in]     height_face Height field of cell faces
 !> @param[in]     df_to_do    Number of dofs to calculate dz for
+!> @param[in]     include_surface Flag for whether to include level 0 in level 1
 !> @param[in]     ndf_dz      Number of degrees of freedom per cell for dz
 !> @param[in]     undf_dz     Number of unique degrees of freedom for dz
 !> @param[in]     map_dz      Dofmap for the cell at the base of the column for dz
@@ -59,7 +61,7 @@ contains
 !> @param[in]     undf_height Number of unique degrees of freedom for height
 !> @param[in]     map_height  Dofmap for the cell at the base of the column for height
 subroutine calc_dz_face_code(nlayers, dz, height, height_face, df_to_do, &
-                             ndf_dz, undf_dz, map_dz,                    &
+                             include_surface, ndf_dz, undf_dz, map_dz,   &
                              ndf_height, undf_height, map_height)
   implicit none
 
@@ -74,6 +76,8 @@ subroutine calc_dz_face_code(nlayers, dz, height, height_face, df_to_do, &
   real(kind=r_def), dimension(undf_height), intent(in) :: height
   real(kind=r_def), dimension(undf_dz), intent(in)     :: height_face
 
+  logical, intent(in) :: include_surface
+
   ! Internal variables
   integer(kind=i_def) :: df, k
 
@@ -85,6 +89,12 @@ subroutine calc_dz_face_code(nlayers, dz, height, height_face, df_to_do, &
       dz(map_dz(df)+k) = height(map_height(df)+k) &
                        - height(map_height(df)+k-1)
     end do
+
+    if (include_surface) then
+      ! Include the dz(0) value in dz(1)
+      dz(map_dz(df)+1) = dz(map_dz(df)+1) + dz(map_dz(df))
+    end if
+
     ! Top-most level is double the distance between top and last cell centre
     dz(map_dz(df)+nlayers) = 2.0_r_def * ( height_face(map_dz(df)+nlayers) - &
                                            height(map_height(df)+nlayers-1) )

@@ -65,6 +65,8 @@ contains
     type( field_type ), pointer :: canopy_height       => null()
     type( field_type ), pointer :: tile_temperature    => null()
     type( field_type ), pointer :: tile_lw_grey_albedo => null()
+    type( field_type ), pointer :: tile_heat_flux      => null()
+    type( field_type ), pointer :: tile_moisture_flux  => null()
     type( field_type ), pointer :: screen_temperature  => null()
     type( field_type ), pointer :: time_since_transition => null()
     type( field_type ), pointer :: gc_tile             => null()
@@ -101,6 +103,8 @@ contains
     call surface_fields%get_field('canopy_height', canopy_height)
     call surface_fields%get_field('tile_temperature', tile_temperature)
     call surface_fields%get_field('tile_lw_grey_albedo', tile_lw_grey_albedo)
+    call surface_fields%get_field('tile_heat_flux', tile_heat_flux)
+    call surface_fields%get_field('tile_moisture_flux', tile_moisture_flux)
     call surface_fields%get_field('screen_temperature', screen_temperature)
     call surface_fields%get_field('time_since_transition', time_since_transition)
     call surface_fields%get_field('gc_tile', gc_tile)
@@ -140,6 +144,8 @@ contains
                  setval_c(gc_tile,             0.0_r_def),                    &
                  setval_c(surface_conductance, 1.0_r_def),                    &
                  setval_c(canopy_water,        0.0_r_def),                    &
+                 setval_c(tile_heat_flux,      0.0_r_def),                    &
+                 setval_c(tile_moisture_flux,  0.0_r_def),                    &
                  ! These need initialising to rmdi as code checks against this
                  setval_c(screen_temperature,  rmdi),                         &
                  setval_c(time_since_transition, rmdi),                       &

@@ -32,7 +32,10 @@ endif
 
 $(info LFRic compile options required for files with OpenMP - see Ticket 1490)
 %psy.o %psy.mod:   private FFLAGS_EXTRA = $(FFLAGS_INTEL_FIX_ARG)
-psy/%.o psy/%.mod: private FFLAGS_EXTRA = $(FFLAGS_INTEL_FIX_ARG)
+# NOTE: The -qoverride-limits option contained in $(FFLAGS_INTEL_FIX_ARG) is
+# not currently applied here. This is a temporary workaround for #3205
+# which it was found to be inadvertently preventing compilation
+# psy/%.o psy/%.mod: private FFLAGS_EXTRA = $(FFLAGS_INTEL_FIX_ARG)
 
 
 

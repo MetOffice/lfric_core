@@ -753,9 +753,6 @@ contains
     call add_physics_field( turbulence_fields, depository, prognostic_fields,  &
       adv_fields_last_outer, &
       'rhokh_bl', w3_space )
-    call add_physics_field( turbulence_fields, depository, prognostic_fields,  &
-      adv_fields_last_outer, &
-      'rdz_tq_bl', w3_space )
 
     ! W2 fields, don't need checkpointing
     call add_physics_field( turbulence_fields, depository, prognostic_fields,  &

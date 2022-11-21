@@ -19,11 +19,13 @@ module bl_exp_alg_mod
   use fs_continuity_mod,             only: W2, W3, Wtheta
   use geometric_constants_mod,       only: get_height, get_da_at_w2
   use physical_op_constants_mod,     only: get_delta_at_wtheta, get_max_diff, &
-                                           get_rdz_fd1
+                                           get_rdz_fd1, get_dz_at_wtheta,     &
+                                           get_rdz_w3, get_dtrdz_wth
   use map_fd_to_prognostics_alg_mod, only: set_wind
   use jules_control_init_mod,        only: n_surf_interp
   use jules_surface_config_mod,      only: formdrag, formdrag_dist_drag
   use surface_config_mod,            only: buddy_sea, buddy_sea_on
+  use um_sizes_init_mod,             only: um_sizes_init
 
   use io_config_mod,        only: subroutine_timers
   use timer_mod,            only: timer
@@ -73,6 +75,7 @@ contains
                         snow_fields, aerosol_fields)
 
     use bl_exp_kernel_mod, only: bl_exp_kernel_type
+    use psykal_lite_phys_mod, only: invoke_jules_exp_kernel_type
     use interp_bl_kernel_mod, only: interp_bl_kernel_type
     use bl_exp_du_kernel_mod, only: bl_exp_du_kernel_type
     use planet_constants_mod, only: lcrcp, lsrcp
@@ -99,6 +102,7 @@ contains
 
     ! Temporary fields unpacked fields from collections
     type( field_type ), pointer :: exner_in_wth  => null()
+    type( field_type ), pointer :: rho_in_wth    => null()
     type( field_type ), pointer :: wetrho_in_wth => null()
     type( field_type ), pointer :: wetrho_in_w3  => null()
     type( field_type ), pointer :: wetrho_in_w2  => null()
@@ -127,7 +131,6 @@ contains
     type( field_type ), pointer :: moist_flux_bl   => null()
     type( field_type ), pointer :: heat_flux_bl    => null()
     type( field_type ), pointer :: dtrdz_tq_bl     => null()
-    type( field_type ), pointer :: rdz_tq_bl       => null()
     type( field_type ), pointer :: dw_bl           => null()
     type( field_type ), pointer :: lmix_bl         => null()
     type( field_type ), pointer :: dsldzm          => null()
@@ -250,17 +253,21 @@ contains
     type( field_type ), pointer :: delta => null()
     type( field_type ), pointer :: max_diff_smag => null()
     type( field_type ), pointer :: dA => null()
-    type( field_type ), pointer :: rdz => null()
+    type( field_type ), pointer :: rdz_fd1 => null()
+    type( field_type ), pointer :: rdz_w3 => null()
+    type( field_type ), pointer :: dtrdz_wth => null()
     type( field_type ), pointer :: w2_rmultiplicity => null()
+    type( field_type ), pointer :: dz_wth => null()
 
     ! local variables
     type(mesh_type),           pointer :: mesh => null()
     type(function_space_type), pointer :: vector_space => null()
     type( field_type ) :: gross_prim_prod, dtl_mphys, dmt_mphys, ngstress_w2,  &
          fd_tau_w2, rhokm_bl, ngstress_bl, fd_taux, fd_tauy, fd_tauz,          &
-         surf_interp, zht, z0h_eff, oblen, soil_respiration
+         surf_interp, zht, z0h_eff, oblen, soil_respiration, rhostar,          &
+         recip_l_mo_sea, h_blend_orog, t1_sd_2d, q1_sd_2d
 
-    integer(i_def) :: stencil_depth
+    integer(i_def) :: stencil_depth, ncells, ncells_halo
 
     type(xios_date)      :: datetime
     integer(i_def), save :: day_of_year
@@ -271,6 +278,7 @@ contains
 
     ! Unpack derived fields
     call derived_fields%get_field('exner_in_wth', exner_in_wth)
+    call derived_fields%get_field('rho_in_wth', rho_in_wth)
     call derived_fields%get_field('wetrho_in_wth', wetrho_in_wth)
     call derived_fields%get_field('wetrho_in_w3', wetrho_in_w3)
     call derived_fields%get_field('wetrho_in_w2', wetrho_in_w2)
@@ -300,7 +308,6 @@ contains
     call turbulence_fields%get_field('moist_flux_bl', moist_flux_bl)
     call turbulence_fields%get_field('heat_flux_bl', heat_flux_bl)
     call turbulence_fields%get_field('dtrdz_tq_bl', dtrdz_tq_bl)
-    call turbulence_fields%get_field('rdz_tq_bl', rdz_tq_bl)
     call turbulence_fields%get_field('dw_bl', dw_bl)
     call turbulence_fields%get_field('lmix_bl', lmix_bl)
     call turbulence_fields%get_field('dsldzm', dsldzm)
@@ -434,8 +441,11 @@ contains
     delta            => get_delta_at_wtheta( mesh%get_id() )
     max_diff_smag    => get_max_diff( mesh%get_id() )
     dA               => get_da_at_w2( mesh%get_id() )
-    rdz              => get_rdz_fd1( mesh%get_id() )
+    rdz_fd1          => get_rdz_fd1( mesh%get_id() )
+    rdz_w3           => get_rdz_w3( mesh%get_id() )
+    dtrdz_wth        => get_dtrdz_wth( mesh%get_id() )
     w2_rmultiplicity => get_rmultiplicity( W2, mesh%get_id() )
+    dz_wth           => get_dz_at_wtheta( mesh%get_id() )
 
     ! Initialise diagnostics
     call initialise_diags_for_bl_exp(zh, zht, z0h_eff, gross_prim_prod, oblen, &
@@ -453,20 +463,69 @@ contains
     call rho%copy_field_properties(fd_taux)
     call rho%copy_field_properties(fd_tauy)
 
+    call zh%copy_field_properties(recip_l_mo_sea)
+    call zh%copy_field_properties(rhostar)
+    call zh%copy_field_properties(h_blend_orog)
+    call zh%copy_field_properties(t1_sd_2d)
+    call zh%copy_field_properties(q1_sd_2d)
+
     vector_space => function_space_collection%get_fs( zh%get_mesh(), &
                                                       0, W3, n_surf_interp )
     call surf_interp%initialise(vector_space)
 
+    ncells = mesh%get_last_edge_cell()
     ! Set stencil depth if required
     if (buddy_sea == buddy_sea_on) then
       stencil_depth = 1
     else
       stencil_depth = 0
     end if
+    ncells_halo = mesh%get_last_halo_cell(stencil_depth)
 
     ! Get date and time
     call xios_get_current_date(datetime)
     day_of_year = int(xios_date_get_day_of_year(datetime), i_def) + 1_i_def
+
+    ! Switch UM to running i-first on whole domain
+    call um_sizes_init(ncells)
+    ! Call explicit Jules scheme
+    call invoke_jules_exp_kernel_type(ncells, ncells_halo, theta, exner_in_wth,&
+                               u_in_w3, v_in_w3,                               &
+                               mr_n(imr_v), mr_n(imr_cl), mr_n(imr_ci),        &
+                               height_w3, height_wth, zh, z0msea, z0m,         &
+                               tile_fraction, leaf_area_index,                 &
+                               canopy_height, peak_to_trough_orog,             &
+                               silhouette_area_orog, soil_albedo,              &
+                               soil_roughness, soil_moist_wilt,                &
+                               soil_moist_crit, soil_moist_sat,                &
+                               soil_thermal_cond, soil_suction_sat,            &
+                               clapp_horn_b, soil_respiration,                 &
+                               thermal_cond_wet_soil, sea_ice_temperature,     &
+                               sea_ice_conductivity, tile_temperature,         &
+                               tile_snow_mass, n_snow_layers, snow_depth,      &
+                               snow_layer_thickness, snow_layer_ice_mass,      &
+                               snow_layer_liq_mass, snow_layer_temp,           &
+                               surface_conductance, canopy_water,              &
+                               soil_temperature, soil_moisture,                &
+                               unfrozen_soil_moisture, frozen_soil_moisture,   &
+                               tile_heat_flux, tile_moisture_flux,             &
+                               net_prim_prod, cos_zenith_angle, skyview,       &
+                               sw_up_tile, tile_lw_grey_albedo,                &
+                               sw_down_surf, lw_down_surf,                     &
+                               sw_down_blue_surf, dd_mf_cb, ozone, cf_bulk,    &
+                               cf_liquid, rhokm_bl, surf_interp, rhokh_bl,     &
+                               moist_flux_bl, heat_flux_bl, gradrinr,          &
+                               alpha1_tile, ashtf_prime_tile, dtstar_tile,     &
+                               fraca_tile, z0h_tile, z0m_tile, rhokh_tile,     &
+                               chr1p5m_tile, resfs_tile, gc_tile, canhc_tile,  &
+                               tile_water_extract, blend_height_tq, z0m_eff,   &
+                               ustar, soil_moist_avail, snow_unload_rate,      &
+                               albedo_obs_scaling, soil_clay, soil_sand,       &
+                               dust_mrel, dust_flux, day_of_year, urbwrr,      &
+                               urbhwr, urbhgt, urbztm, urbdisp, urbemisw,      &
+                               urbemisr, rhostar, recip_l_mo_sea,              &
+                               h_blend_orog, t1_sd_2d, q1_sd_2d,               &
+                               gross_prim_prod, z0h_eff, stencil_depth)
 
                 ! Calculate TL = T - (lc/cp)*mcl - ((lc+lf)/cp)*mci
     call invoke(     X_times_Y(dtl_mphys, dtheta_mphys, exner_in_wth),         &
@@ -476,71 +535,45 @@ contains
                     X_plus_Y(dmt_mphys, dmr_mphys(imr_v), dmr_mphys(imr_cl)),  &
                 inc_X_plus_Y(dmt_mphys, dmr_mphys(imr_ci)),                    &
                 ! Call explicit BL scheme
-                bl_exp_kernel_type( theta, rho,                                &
-                           wetrho_in_wth, exner, exner_in_wth,                 &
-                           u_in_w3, stencil_depth, v_in_w3, stencil_depth,     &
-                           w_in_wth, velocity_w2v,                             &
-                           mr_n(imr_v), mr_n(imr_cl), mr_n(imr_ci),            &
-                           height_w3, height_wth, shear, delta, max_diff_smag, &
-                           zh, z0msea, z0m, ntml, cumulus,                     &
-                           tile_fraction, stencil_depth,                       &
-                           leaf_area_index, canopy_height,                     &
-                           sd_orog, peak_to_trough_orog, silhouette_area_orog, &
-                           soil_albedo, soil_roughness,                        &
-                           soil_moist_wilt, soil_moist_crit, soil_moist_sat,   &
-                           soil_thermal_cond, soil_suction_sat, clapp_horn_b,  &
-                           soil_respiration,                                   &
-                           thermal_cond_wet_soil, sea_ice_temperature,         &
-                           sea_ice_conductivity,                               &
-                           tile_temperature, tile_lw_grey_albedo,              &
-                           tile_snow_mass, n_snow_layers, snow_depth,          &
-                           snow_layer_thickness, snow_layer_ice_mass,          &
-                           snow_layer_liq_mass, snow_layer_temp,               &
-                           surface_conductance, canopy_water,                  &
-                           soil_temperature, soil_moisture,                    &
-                           unfrozen_soil_moisture, frozen_soil_moisture,       &
-                           tile_heat_flux, tile_moisture_flux,                 &
-                           gross_prim_prod, net_prim_prod,                     &
-                           cos_zenith_angle, skyview,                          &
-                           sw_up_tile, sw_down_surf,                           &
-                           lw_down_surf, sw_down_blue_surf, dd_mf_cb,          &
-                           dtl_mphys, dmt_mphys,                               &
-                           sw_heating_rate, lw_heating_rate, ozone,            &
-                           cf_bulk, cf_liquid, rh_crit, dsldzm, wvar,          &
-                           visc_m, visc_h, dw_bl,                              &
-                           rhokm_bl, surf_interp, rhokh_bl, tke_bl,            &
-                           ngstress_bl, bq_bl, bt_bl, moist_flux_bl,           &
-                           heat_flux_bl, dtrdz_tq_bl, rdz_tq_bl,               &
-                           fd_taux, fd_tauy, lmix_bl, gradrinr,                &
-                           alpha1_tile, ashtf_prime_tile, dtstar_tile,         &
-                           fraca_tile, z0h_tile, z0m_tile, rhokh_tile,         &
-                           chr1p5m_tile, resfs_tile, gc_tile, canhc_tile,      &
-                           tile_water_extract, blend_height_tq, z0m_eff, ustar,&
-                           soil_moist_avail, zh_nonloc, zhsc, z_lcl, inv_depth,&
-                           qcl_at_inv_top, shallow_flag,                       &
-                           uw0_flux, vw0_flux, lcl_height, parcel_top,         &
-                           level_parcel_top, wstar, thv_flux,                  &
-                           parcel_buoyancy, qsat_at_lcl, bl_weight_1dbl,       &
-                           bl_type_ind, snow_unload_rate, albedo_obs_scaling,  &
-                           level_ent, level_ent_dsc,                           &
-                           ent_we_lim, ent_t_frac, ent_zrzi,                   &
-                           ent_we_lim_dsc, ent_t_frac_dsc, ent_zrzi_dsc,       &
-                           soil_clay, soil_sand, dust_mrel, dust_flux,         &
-                           day_of_year, urbwrr, urbhwr, urbhgt, urbztm,        &
-                           urbdisp, urbemisw, urbemisr,                        &
-                           zht, z0h_eff, oblen ),                              &
-
+                bl_exp_kernel_type( theta, rho, rho_in_wth, wetrho_in_wth,     &
+                                    exner, exner_in_wth, u_in_w3, v_in_w3,     &
+                                    w_in_wth, velocity_w2v, mr_n(imr_v),       &
+                                    mr_n(imr_cl), mr_n(imr_ci), height_w3,     &
+                                    height_wth, dz_wth, rdz_w3, dtrdz_wth,     &
+                                    shear, delta, max_diff_smag, zh, ntml,     &
+                                    cumulus, tile_fraction, sd_orog,           &
+                                    peak_to_trough_orog, silhouette_area_orog, &
+                                    tile_temperature, rhostar, recip_l_mo_sea, &
+                                    h_blend_orog, t1_sd_2d, q1_sd_2d,          &
+                                    dtl_mphys, dmt_mphys, sw_heating_rate,     &
+                                    lw_heating_rate, cf_bulk, cf_liquid,       &
+                                    rh_crit, dsldzm, wvar, visc_m, visc_h,     &
+                                    dw_bl, rhokm_bl, surf_interp, rhokh_bl,    &
+                                    tke_bl, ngstress_bl, bq_bl, bt_bl,         &
+                                    moist_flux_bl, heat_flux_bl, dtrdz_tq_bl,  &
+                                    fd_taux, fd_tauy, lmix_bl, gradrinr,       &
+                                    z0m_eff, ustar, zh_nonloc, zhsc, z_lcl,    &
+                                    inv_depth, qcl_at_inv_top, shallow_flag,   &
+                                    uw0_flux, vw0_flux, lcl_height,            &
+                                    parcel_top, level_parcel_top, wstar,       &
+                                    thv_flux, parcel_buoyancy, qsat_at_lcl,    &
+                                    bl_weight_1dbl, bl_type_ind, level_ent,    &
+                                    level_ent_dsc, ent_we_lim, ent_t_frac,     &
+                                    ent_zrzi, ent_we_lim_dsc, ent_t_frac_dsc,  &
+                                    ent_zrzi_dsc, zht, oblen ),                &
+                ! Initialise w2 fields
                 setval_c(rhokm_w2,       0.0_r_def),                           &
                 setval_c(surf_interp_w2, 0.0_r_def),                           &
                 setval_c(ngstress_w2,    0.0_r_def),                           &
                 setval_c(wetrho_in_w2,   0.0_r_def),                           &
                 setval_c(tau_w2,         0.0_r_def),                           &
-
                 ! Re-grid the required variables into w2
                 interp_bl_kernel_type(rhokm_bl, surf_interp, ngstress_bl,      &
                                       wetrho_in_w3,                            &
                                       rhokm_w2, surf_interp_w2, ngstress_w2,   &
                                       wetrho_in_w2, w2_rmultiplicity) )
+    ! Switch UM back to columns
+    call um_sizes_init(1_i_def)
 
     if (formdrag == formdrag_dist_drag) then
       if ( subroutine_timers ) call timer('bl_exp_alg')
@@ -554,8 +587,8 @@ contains
 
     ! Calculate explicit momentum diffusion on cell faces
     call invoke(bl_exp_du_kernel_type(tau_w2, tau_land_w2, tau_ssi_w2,         &
-                                      rhokm_w2, rdz, u_physics,                &
-                                      surf_interp_w2, ngstress_w2, fd_tau_w2) )
+                                      rhokm_w2, rdz_fd1, u_physics,            &
+                                      surf_interp_w2, ngstress_w2, fd_tau_w2))
 
     if ( subroutine_timers ) call timer('bl_exp_alg')
 
@@ -564,7 +597,7 @@ contains
 
       call output_diags_for_bl_exp(ntml, cumulus, bl_type_ind, wvar, dsldzm, &
                                    gradrinr, rhokh_bl, tke_bl, dtrdz_tq_bl,  &
-                                   rdz_tq_bl, zhsc, level_ent, level_ent_dsc,&
+                                   rdz_w3, zhsc, level_ent, level_ent_dsc,   &
                                    ent_we_lim, ent_t_frac, ent_zrzi,         &
                                    ent_we_lim_dsc, ent_t_frac_dsc,           &
                                    ent_zrzi_dsc, zht, z0h_eff, oblen,        &

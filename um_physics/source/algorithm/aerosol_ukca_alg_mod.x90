@@ -59,6 +59,7 @@ contains
     use constants_mod,                 only: i_timestep, i_def
     use geometric_constants_mod,       only: get_latitude, get_longitude,      &
                                              get_height
+    use physical_op_constants_mod,     only: get_rdz_w3
     use aerosol_ukca_kernel_mod,       only: aerosol_ukca_kernel_type
 
     use io_config_mod,                 only: subroutine_timers, use_xios_io,   &
@@ -97,6 +98,7 @@ contains
     type( field_type ), pointer :: longitude_w3 => null()
     type( field_type ), pointer :: height_w3 => null()
     type( field_type ), pointer :: height_wth => null()
+    type( field_type ), pointer :: rdz_w3 => null()
 
     ! Radiation fields
     type( field_type ), pointer :: sin_stellar_declination_rts => null()
@@ -114,7 +116,6 @@ contains
     type( field_type ), pointer :: tke_bl => null()
     type( field_type ), pointer :: zh => null()
     type( field_type ), pointer :: rhokh_bl => null()
-    type( field_type ), pointer :: rdz_tq_bl => null()
     type( field_type ), pointer :: dtrdz_tq_bl => null()
     type( field_type ), pointer :: zhsc => null()
     type( integer_field_type ), pointer :: level_ent => null()
@@ -303,7 +304,6 @@ contains
     call turbulence_fields%get_field('tke_bl', tke_bl)
     call turbulence_fields%get_field('zh', zh)
     call turbulence_fields%get_field('rhokh_bl', rhokh_bl)
-    call turbulence_fields%get_field('rdz_tq_bl', rdz_tq_bl)
     call turbulence_fields%get_field('dtrdz_tq_bl', dtrdz_tq_bl)
     call turbulence_fields%get_field('zhsc', zhsc)
     call turbulence_fields%get_field('level_ent', level_ent)
@@ -437,6 +437,7 @@ contains
     mesh => state(igh_t)%get_mesh()
     height_wth => get_height( Wtheta, mesh%get_id() )
     height_w3 => get_height( W3, mesh%get_id() )
+    rdz_w3    => get_rdz_w3( mesh%get_id() )
 
     ! Do UKCA time step
 
@@ -569,7 +570,7 @@ contains
                                           zh,                                  &
                                           wetrho_in_w3,                        &
                                           rhokh_bl,                            &
-                                          rdz_tq_bl,                           &
+                                          rdz_w3,                              &
                                           dtrdz_tq_bl,                         &
                                           zhsc,                                &
                                           level_ent,                           &

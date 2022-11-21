@@ -15,7 +15,8 @@ module bl_imp_alg_mod
   use fs_continuity_mod,             only: W1, W2, W3, Wtheta
   use geometric_constants_mod,       only: get_height, get_da_at_w2, &
                                            get_latitude
-  use physical_op_constants_mod,     only: get_rdz_fd1, get_dtrdz_fd2
+  use physical_op_constants_mod,     only: get_rdz_fd1, get_dtrdz_fd2, &
+                                           get_rdz_w3
   use mr_indices_mod,                only: nummr, imr_v, imr_cl, imr_ci, imr_r
   use timestepping_config_mod,       only: outer_iterations
 
@@ -126,7 +127,6 @@ contains
     type( field_type ), pointer :: moist_flux_bl  => null()
     type( field_type ), pointer :: heat_flux_bl   => null()
     type( field_type ), pointer :: dtrdz_tq_bl    => null()
-    type( field_type ), pointer :: rdz_tq_bl      => null()
     type( field_type ), pointer :: dsldzm         => null()
     type( field_type ), pointer :: wvar           => null()
     type( field_type ), pointer :: gradrinr       => null()
@@ -215,6 +215,7 @@ contains
     type( field_type ), pointer :: rdz        => null()
     type( field_type ), pointer :: dtrdz      => null()
     type( field_type ), pointer :: latitude   => null()
+    type( field_type ), pointer :: rdz_w3     => null()
 
     type( field_type ) :: du_conv_w2, dw_conv
     type( field_type ) :: dissip, diss_u, diss_v, diss_w
@@ -272,7 +273,6 @@ contains
     call turbulence_fields%get_field('moist_flux_bl', moist_flux_bl)
     call turbulence_fields%get_field('heat_flux_bl', heat_flux_bl)
     call turbulence_fields%get_field('dtrdz_tq_bl', dtrdz_tq_bl)
-    call turbulence_fields%get_field('rdz_tq_bl', rdz_tq_bl)
     call turbulence_fields%get_field('dsldzm', dsldzm)
     call turbulence_fields%get_field('wvar', wvar)
     call turbulence_fields%get_field('gradrinr', gradrinr)
@@ -370,6 +370,7 @@ contains
     dA         => get_da_at_w2(mesh%get_id())
     rdz        => get_rdz_fd1(mesh%get_id())
     dtrdz      => get_dtrdz_fd2(mesh%get_id())
+    rdz_w3     => get_rdz_w3( mesh%get_id() )
 
     mesh       => zh%get_mesh()
     latitude   => get_latitude(mesh%get_id())
@@ -478,7 +479,7 @@ contains
                            dsldzm, wvar, gradrinr, tau_dec_bm, tau_hom_bm,     &
                            tau_mph_bm,                                         &
                            rhokh_bl, bq_bl, bt_bl, moist_flux_bl, heat_flux_bl,&
-                           dtrdz_tq_bl, rdz_tq_bl,                             &
+                           dtrdz_tq_bl, rdz_w3,                                &
                            thetal_inc_leonard, mt_inc_leonard,                 &
                            alpha1_tile, ashtf_prime_tile, dtstar_tile,         &
                            fraca_tile, z0h_tile, z0m_tile, rhokh_tile,         &

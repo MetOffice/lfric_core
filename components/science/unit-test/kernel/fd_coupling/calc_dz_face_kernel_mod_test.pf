@@ -67,7 +67,7 @@ contains
     end do
 
     call calc_dz_face_code( nlayers, dz_face, height_centre, &
-                            height_face, ndf,                &
+                            height_face, ndf, .false.,       &
                             ndf, undf_face, map_face,        &
                             ndf, undf_centre, map_centre )
 

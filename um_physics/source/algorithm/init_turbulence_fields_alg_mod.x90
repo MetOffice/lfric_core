@@ -42,7 +42,6 @@ contains
     type( field_type ), pointer :: moist_flux_bl  => null()
     type( field_type ), pointer :: tke_bl         => null()
     type( field_type ), pointer :: rhokh_bl       => null()
-    type( field_type ), pointer :: rdz_tq_bl      => null()
     type( field_type ), pointer :: dtrdz_tq_bl    => null()
     type( field_type ), pointer :: zhsc           => null()
     type( integer_field_type ), pointer :: level_ent => null()
@@ -63,7 +62,6 @@ contains
     call turbulence_fields%get_field('moist_flux_bl', moist_flux_bl)
     call turbulence_fields%get_field('tke_bl', tke_bl)
     call turbulence_fields%get_field('rhokh_bl', rhokh_bl)
-    call turbulence_fields%get_field('rdz_tq_bl', rdz_tq_bl)
     call turbulence_fields%get_field('dtrdz_tq_bl', dtrdz_tq_bl)
     call turbulence_fields%get_field('zhsc', zhsc)
     call turbulence_fields%get_field('level_ent', level_ent)
@@ -86,7 +84,6 @@ contains
                  setval_c(moist_flux_bl,  0.0_r_def), &
                  setval_c(tke_bl,         0.0_r_def), &
                  setval_c(rhokh_bl,       0.0_r_def), &
-                 setval_c(rdz_tq_bl,      0.0_r_def), &
                  setval_c(dtrdz_tq_bl,    0.0_r_def), &
                  setval_c(zhsc,           0.0_r_def), &
                  int_setval_c(level_ent,     2_i_def), &

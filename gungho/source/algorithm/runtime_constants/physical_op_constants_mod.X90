@@ -14,8 +14,10 @@
 module physical_op_constants_mod
 
   ! Infrastructure
-  use constants_mod,                      only: i_def, r_def, str_def, str_short
+  use constants_mod,                      only: i_def, r_def, l_def, &
+                                                str_def, str_short
   use field_mod,                          only: field_type
+  use field_parent_mod,                   only: write_interface
   use field_collection_mod,               only: field_collection_type
   use function_space_mod,                 only: function_space_type
   use function_space_collection_mod,      only: function_space_collection
@@ -23,6 +25,7 @@ module physical_op_constants_mod
   use io_config_mod,                      only: subroutine_timers
   use log_mod,                            only: log_event, LOG_LEVEL_INFO, &
                                                 LOG_LEVEL_ERROR
+  use lfric_xios_write_mod,               only: write_field_face
   use mesh_mod,                           only: mesh_type
   use mesh_collection_mod,                only: mesh_collection
   use model_clock_mod,                    only: model_clock_type
@@ -77,7 +80,9 @@ module physical_op_constants_mod
   type(field_collection_type) :: delta_at_wtheta_collection
   type(field_collection_type) :: dx_at_w2_collection
   type(field_collection_type) :: dtrdz_fd2_collection
+  type(field_collection_type) :: dtrdz_wth_collection
   type(field_collection_type) :: rdz_fd1_collection
+  type(field_collection_type) :: rdz_w3_collection
   type(field_collection_type) :: dz_at_wtheta_collection
   type(field_collection_type) :: max_diff_wtheta_collection
   type(field_collection_type) :: dA_msl_proj_collection
@@ -104,7 +109,9 @@ module physical_op_constants_mod
   public :: get_delta_at_wtheta
   public :: get_dx_at_w2
   public :: get_dtrdz_fd2
+  public :: get_dtrdz_wth
   public :: get_rdz_fd1
+  public :: get_rdz_w3
   public :: get_dz_at_wtheta
   public :: get_max_diff
   public :: get_u_lon_map
@@ -144,6 +151,7 @@ contains
     ! Internal variables
     type(function_space_type),  pointer :: w1_k0_fs  => null()
     type(function_space_type),  pointer :: w2_k0_fs  => null()
+    type(function_space_type),  pointer :: w3_k0_fs  => null()
     type(function_space_type),  pointer :: w2_fs     => null()
     type(function_space_type),  pointer :: w2b_fs    => null()
     type(function_space_type),  pointer :: w3_fs     => null()
@@ -158,11 +166,14 @@ contains
     type(field_type),           pointer :: height_w3 => null()
     type(field_type),           pointer :: height_wth => null()
     type(field_type)                    :: dx_at_w2
-    type(field_type)                    :: r_squared
+    type(field_type)                    :: r_squared_w2
+    type(field_type)                    :: r_squared_wth
     type(field_type)                    :: geopotential
     type(field_type)                    :: delta_at_wtheta
     type(field_type)                    :: dtrdz_fd2
+    type(field_type)                    :: dtrdz_wth
     type(field_type)                    :: rdz_fd1
+    type(field_type)                    :: rdz_w3
     type(field_type)                    :: dz_at_wtheta
     type(field_type)                    :: max_diff_wtheta
     type(field_type)                    :: dA_msl_proj
@@ -172,7 +183,7 @@ contains
     type(field_type),           pointer :: latitude => null()
     type(field_type)                    :: Pnm_star
 #endif
-
+    procedure(write_interface), pointer :: write_behaviour => null()
 
     real(kind=r_def)          :: diffusion_const
     integer(kind=i_def)       :: num_meshes, i
@@ -184,6 +195,8 @@ contains
     ! Parameters of the cells
     integer(i_def), parameter :: n_faces = 4_i_def
     integer(i_def), parameter :: n_centres = 1_i_def
+    logical(l_def), parameter :: inc_surf = .true.
+    logical(l_def), parameter :: ign_surf = .false.
 
     real(r_def) :: cast_delta_t
 
@@ -198,7 +211,9 @@ contains
     call delta_at_wtheta_collection%initialise (name="delta_at_wtheta", table_len=100)
     call dx_at_w2_collection%initialise(name="dx_at_w2", table_len=100)
     call dtrdz_fd2_collection%initialise(name="dtrdz_fd2", table_len=100)
+    call dtrdz_wth_collection%initialise(name="dtrdz_wth", table_len=100)
     call rdz_fd1_collection%initialise(name="rdz_fd1", table_len=100)
+    call rdz_w3_collection%initialise(name="rdz_w3", table_len=100)
     call dz_at_wtheta_collection%initialise(name="dz_at_wtheta", table_len=100)
     call max_diff_wtheta_collection%initialise(name="max_diff_wtheta", table_len=100)
 
@@ -226,6 +241,7 @@ contains
 
       w1_k0_fs  => function_space_collection%get_fs( mesh, 0, W1 )
       w2_k0_fs  => function_space_collection%get_fs( mesh, 0, W2 )
+      w3_k0_fs  => function_space_collection%get_fs( mesh, 0, W3 )
       w2_fs     => function_space_collection%get_fs( mesh, element_order, W2 )
       w2b_fs    => function_space_collection%get_fs( mesh, element_order, W2broken )
       w3_fs     => function_space_collection%get_fs( mesh, element_order, W3 )
@@ -306,11 +322,18 @@ contains
                                                             panel_id_list(i), qr)    )
 
           ! Quantities needed by all UM physics schemes
-          call r_squared%initialise( vector_space = w2_k0_fs )
+          call r_squared_w2%initialise( vector_space = w2_k0_fs )
+          call r_squared_wth%initialise( vector_space = wtheta_k0_fs )
           field_name = trim("dtrdz_fd2_") // adjustl(mesh_number)
           call dtrdz_fd2%initialise( vector_space = w2_k0_fs, name = field_name )
+          field_name = trim("dtrdz_wth_") // adjustl(mesh_number)
+          call dtrdz_wth%initialise( vector_space = wtheta_k0_fs, name = field_name )
           field_name = trim("rdz_fd1_") // adjustl(mesh_number)
           call rdz_fd1%initialise( vector_space = w1_k0_fs, name = field_name )
+          field_name = trim("rdz_w3_") // adjustl(mesh_number)
+          call rdz_w3%initialise( vector_space = w3_k0_fs, name = field_name )
+          write_behaviour => write_field_face
+          call rdz_w3%set_write_behaviour(write_behaviour)
           field_name = trim("dz_at_wtheta_") // adjustl(mesh_number)
           call dz_at_wtheta%initialise( vector_space = wtheta_k0_fs, name = field_name )
           field_name = trim("delta_at_wtheta_") // adjustl(mesh_number)
@@ -332,26 +355,41 @@ contains
                        calc_delta_at_wtheta_kernel_type(delta_at_wtheta,       &
                                                         dx_at_w2),             &
                        ! Calculate r
-                       a_plus_X(r_squared, radius, height_w2),                 &
+                       a_plus_X(r_squared_w2, radius, height_w2),              &
                        ! Calculate r^2
-                       inc_X_powint_n(r_squared, 2_i_def),                     &
+                       inc_X_powint_n(r_squared_w2, 2_i_def),                  &
                        ! Calculate dz at location of lowest order W2 dofs
                        setval_c(dtrdz_fd2, 1.0_r_def),                         &
                        calc_dz_centre_kernel_type(dtrdz_fd2, &
                                                   height_w1, n_faces),         &
                        ! Calculate r^2 * dz_at_fd2
-                       inc_X_times_Y(dtrdz_fd2, r_squared),                    &
+                       inc_X_times_Y(dtrdz_fd2, r_squared_w2),                 &
                        ! Calculate dt / (r^2 * dz_at_fd2 )
                        inc_a_divideby_X(cast_delta_t, dtrdz_fd2),              &
+                       ! Calculate r
+                       a_plus_X(r_squared_wth, radius, height_wth),            &
+                       ! Calculate r^2
+                       inc_X_powint_n(r_squared_wth, 2_i_def),                 &
+                       ! Calculate dz_at_wtheta
+                       calc_dz_face_kernel_type(dtrdz_wth, height_w3,          &
+                                              height_wth, n_centres, inc_surf),&
+                       ! Calculate r^2 * dz_at_wth
+                       inc_X_times_Y(dtrdz_wth, r_squared_wth),                &
+                       ! Calculate dt / (r^2 * dz_at_wth )
+                       inc_a_divideby_X(cast_delta_t, dtrdz_wth),              &
                        ! Calculate dz at location of lowest order W1 dofs
                        setval_c(rdz_fd1, 1.0_r_def),                           &
                        calc_dz_face_kernel_type(rdz_fd1, height_w2, height_w1, &
-                                                n_faces),                      &
+                                                n_faces, ign_surf),            &
                        ! Calculate 1/dz_at_fd1
                        inc_X_powint_n(rdz_fd1, (-1_i_def)),                    &
+                       ! Calculate 1/dz at w3 locations
+                       calc_dz_centre_kernel_type(rdz_w3, height_wth,          &
+                                                  n_centres),                  &
+                       inc_X_powint_n(rdz_w3, (-1_i_def)),                     &
                        ! Calculate dz_at_wtheta
                        calc_dz_face_kernel_type(dz_at_wtheta, height_w3,       &
-                                                height_wth, n_centres) )
+                                             height_wth, n_centres, ign_surf) )
 
           ! Calculate maximum diffusion coefficient allowed in this run for
           ! stability based on UMDP 28 equation 32: max_diff = dx^2/(8*dt)
@@ -364,7 +402,9 @@ contains
 
           call delta_at_wtheta_collection%add_field( delta_at_wtheta )
           call dtrdz_fd2_collection%add_field( dtrdz_fd2 )
+          call dtrdz_wth_collection%add_field( dtrdz_wth )
           call rdz_fd1_collection%add_field( rdz_fd1 )
+          call rdz_w3_collection%add_field( rdz_w3 )
           call dz_at_wtheta_collection%add_field( dz_at_wtheta )
           call max_diff_wtheta_collection%add_field( max_diff_wtheta )
 
@@ -516,6 +556,22 @@ contains
 
   end function get_dtrdz_fd2
 
+  !> @brief Returns the dt/(r^2 dz) values at lowest-order W2 DoF locations
+  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @return The dtrdz_wth field
+  function get_dtrdz_wth(mesh_id) result(dtrdz)
+    implicit none
+    integer(kind=i_def), intent(in) :: mesh_id
+    type(field_type),       pointer :: dtrdz
+    character(len=str_short)        :: mesh_number
+    character(len=str_def)          :: field_name
+
+    write(mesh_number, '(I8)') mesh_id
+    field_name = trim('dtrdz_wth_') // adjustl(mesh_number)
+    call dtrdz_wth_collection%get_field(field_name, dtrdz)
+
+  end function get_dtrdz_wth
+
   !> @brief Returns the 1/dz values at lowest-order W1 DoF locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The rdz_fd1 field
@@ -531,6 +587,22 @@ contains
     call rdz_fd1_collection%get_field(field_name, rdz)
 
   end function get_rdz_fd1
+
+  !> @brief Returns the 1/dz values at lowest-order W1 DoF locations
+  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @return The rdz_w3 field
+  function get_rdz_w3(mesh_id) result(rdz)
+    implicit none
+    integer(kind=i_def), intent(in) :: mesh_id
+    type(field_type),       pointer :: rdz
+    character(len=str_short)        :: mesh_number
+    character(len=str_def)          :: field_name
+
+    write(mesh_number, '(I8)') mesh_id
+    field_name = trim('rdz_w3_') // adjustl(mesh_number)
+    call rdz_w3_collection%get_field(field_name, rdz)
+
+  end function get_rdz_w3
 
   !> @brief Returns the 1/dz values at lowest-order Wtheta DoF locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
@@ -696,7 +768,9 @@ contains
     call delta_at_wtheta_collection%clear()
     call dx_at_w2_collection%clear()
     call dtrdz_fd2_collection%clear()
+    call dtrdz_wth_collection%clear()
     call rdz_fd1_collection%clear()
+    call rdz_w3_collection%clear()
     call dz_at_wtheta_collection%clear()
 #ifdef UM_PHYSICS
     call Pnm_star_collection%clear()
