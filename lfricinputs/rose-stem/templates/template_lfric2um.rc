@@ -30,6 +30,7 @@
 	post-script = """
                       find . -regex '.*PET0+\..+\.Log' -exec cp {} $ROSE_TASK_LOG_DIR \;
                       find . -regex '.*PET0+\..+\.Log' -exec cat {} \;
+                      module purge
                       """
         [[[environment]]]
             ROSE_TASK_APP = {{lfric2um_configs[config]["app"]}}

@@ -73,7 +73,7 @@ CONTAINS
 SUBROUTINE lfricinp_initialise_lfric(program_name_arg,                         &
                                      lfric_nl_fname,                           &
                                      required_lfric_namelists,                 &
-                                     calendar, start_date, time_origin,        &
+                                     time_origin,                              &
                                      first_step, last_step,                    &
                                      spinup_period, seconds_per_step)
 
@@ -82,15 +82,13 @@ SUBROUTINE lfricinp_initialise_lfric(program_name_arg,                         &
 
 IMPLICIT NONE
 
-CHARACTER(LEN=*),                    INTENT(IN)  :: program_name_arg
-CHARACTER(LEN=*),                    INTENT(IN)  :: lfric_nl_fname
-CHARACTER(LEN=*),                    INTENT(IN)  :: required_lfric_namelists(:)
-CHARACTER(LEN=*),                    INTENT(IN)  :: calendar, start_date, time_origin
-INTEGER(KIND=i_def),                 INTENT(IN)  :: first_step, last_step
-REAL(r_second),                      INTENT(IN)  :: spinup_period
-REAL(r_second),                      INTENT(IN)  :: seconds_per_step
-
-CHARACTER(LEN=10) :: char_first_step, char_last_step
+CHARACTER(LEN=*),    INTENT(IN) :: program_name_arg
+CHARACTER(LEN=*),    INTENT(IN) :: lfric_nl_fname
+CHARACTER(LEN=*),    INTENT(IN) :: required_lfric_namelists(:)
+CHARACTER(LEN=*),    INTENT(IN) :: time_origin
+INTEGER(KIND=i_def), INTENT(IN) :: first_step, last_step
+REAL(r_second),      INTENT(IN) :: spinup_period
+REAL(r_second),      INTENT(IN) :: seconds_per_step
 
 CLASS(extrusion_type),    ALLOCATABLE :: extrusion
 TYPE(step_calendar_type), ALLOCATABLE :: model_calendar

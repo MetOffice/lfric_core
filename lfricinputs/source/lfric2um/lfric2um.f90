@@ -45,8 +45,6 @@ CALL datetime % initialise()
 CALL lfricinp_initialise_lfric(program_name_arg="lfric2um",                    &
      lfric_nl_fname=lfric_nl_fname,                                            &
      required_lfric_namelists = required_lfric_namelists,                      &
-     calendar = datetime % calendar,                                           &
-     start_date = datetime % first_validity_time,                              &
      time_origin = datetime % first_validity_time,                             &
      first_step = datetime % first_step,                                       &
      last_step = datetime % last_step,                                         &

@@ -1,11 +1,4 @@
 {# Dictionary of suite groups                                 #}
-{#                                                            #}
-{# TODO: "developer", "nightly" and "weekly" suite groups are #}
-{#       currently launching only on XC40 due to the use of   #}
-{#       deprecated LFRic environment modules on Spice.       #}
-{#       Full system testing on Spice and XC40 will be        #}
-{#       restored in the LFRic ticket                         #}
-{#       https://code.metoffice.gov.uk/trac/lfric/ticket/3319 #}
 
 {%- do SUITE_GROUPS.update({
 
@@ -300,13 +293,13 @@
                             "lfric2um-spice",
                             "um2lfric-spice",],
 
-"developer"              : ["standard-xc40-developer",
-                            "integration-xc40-safe",],
+"developer"              : ["standard-developer",
+                            "integration-spice-safe",],
 
-"nightly"                : ["standard-xc40",
-                            "integration-xc40",],
+"nightly"                : ["standard",
+                            "integration",],
 
-"weekly"                 : ["standard-xc40",
-                            "integration-xc40",],
+"weekly"                 : ["standard",
+                            "integration",],
 
 }) %}

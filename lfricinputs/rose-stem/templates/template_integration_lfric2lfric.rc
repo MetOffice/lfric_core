@@ -47,6 +47,7 @@
 	post-script = """
                       find . -regex '.*PET0+\..+\.Log' -exec cp {} $ROSE_TASK_LOG_DIR \;
                       find . -regex '.*PET0+\..+\.Log' -exec cat {} \;
+                      module purge
                       """
         [[[environment]]]
             ROSE_TASK_APP = {{um2lfric_configs[um2lfric_config]["app"]}}
@@ -67,6 +68,7 @@
 	post-script = """
                       find . -regex '.*PET0+\..+\.Log' -exec cp {} $ROSE_TASK_LOG_DIR \;
                       find . -regex '.*PET0+\..+\.Log' -exec cat {} \;
+                      module purge
                       """
         [[[environment]]]
             ROSE_TASK_APP = {{lfric2um_configs[lfric2um_config]["app"]}}
