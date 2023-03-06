@@ -104,6 +104,16 @@ subroutine sample_w3_to_wtheta_code_r_single( nlayers,   &
   ! Internal variables
   integer(kind=i_def) :: k
   real(kind=r_single) :: weight_lower, weight_upper, weight_denom
+  real(kind=r_single) :: top_value, log_top_value
+
+  ! At top and bottom do linear extrapolation to get values on boundaries
+  ! Bottom first
+  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), r_single)
+  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), r_single)
+  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), r_single)
+
+  field_wt(map_wt(1)) = weight_upper / weight_denom * field_w3(map_w3(1)+1) &
+                      + weight_lower / weight_denom * field_w3(map_w3(1))
 
   do k = 1, nlayers - 1
 
@@ -116,23 +126,26 @@ subroutine sample_w3_to_wtheta_code_r_single( nlayers,   &
 
   end do
 
-  ! At top and bottom do linear extrapolation to get values on boundaries
-  ! Bottom first
-  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), r_single)
-  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), r_single)
-  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), r_single)
-
-  field_wt(map_wt(1)) = weight_upper / weight_denom * field_w3(map_w3(1)+1) &
-                      + weight_lower / weight_denom * field_w3(map_w3(1))
-
   ! Now top
   k = nlayers
   weight_denom = real(height_w3(map_w3(1)+k-1) - height_w3(map_w3(1)+k-2), r_single)
   weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-2), r_single)
   weight_lower = real(height_w3(map_w3(1)+k-1) - height_wt(map_wt(1)+k), r_single)
 
-  field_wt(map_wt(1)+k) = weight_upper / weight_denom * field_w3(map_w3(1)+k-1) &
-                      + weight_lower / weight_denom * field_w3(map_w3(1)+k-2)
+  if ( field_w3(map_w3(1)+k-1) > 0.0_r_single .and. &
+       field_w3(map_w3(1)+k-2) > 0.0_r_single ) then
+    ! Danger of getting a negative value from extrapolation, so perform the
+    ! calculation for the top value in log space (which cannot be negative)
+    log_top_value = weight_upper / weight_denom * log(field_w3(map_w3(1)+k-1)) &
+                    + weight_lower / weight_denom * log(field_w3(map_w3(1)+k-2))
+    top_value = exp(log_top_value)
+  else
+    ! If the field was originally negative, allow extrapolation to be negative
+    top_value = weight_upper / weight_denom * field_w3(map_w3(1)+k-1) &
+                + weight_lower / weight_denom * field_w3(map_w3(1)+k-2)
+  end if
+
+  field_wt(map_wt(1)+k) = top_value
 
 end subroutine sample_w3_to_wtheta_code_r_single
 
@@ -169,6 +182,16 @@ subroutine sample_w3_to_wtheta_code_r_double( nlayers,   &
   ! Internal variables
   integer(kind=i_def) :: k
   real(kind=r_double) :: weight_lower, weight_upper, weight_denom
+  real(kind=r_double) :: top_value, log_top_value
+
+  ! At top and bottom do linear extrapolation to get values on boundaries
+  ! Bottom first
+  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), r_double)
+  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), r_double)
+  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), r_double)
+
+  field_wt(map_wt(1)) = weight_upper / weight_denom * field_w3(map_w3(1)+1) &
+                      + weight_lower / weight_denom * field_w3(map_w3(1))
 
   do k = 1, nlayers - 1
     weight_denom = real(height_w3(map_w3(1)+k) - height_w3(map_w3(1)+k-1), r_double)
@@ -180,23 +203,26 @@ subroutine sample_w3_to_wtheta_code_r_double( nlayers,   &
 
   end do
 
-  ! At top and bottom do linear extrapolation to get values on boundaries
-  ! Bottom first
-  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), r_double)
-  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), r_double)
-  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), r_double)
-
-  field_wt(map_wt(1)) = weight_upper / weight_denom * field_w3(map_w3(1)+1) &
-                      + weight_lower / weight_denom * field_w3(map_w3(1))
-
   ! Now top
   k = nlayers
   weight_denom = real(height_w3(map_w3(1)+k-1) - height_w3(map_w3(1)+k-2), r_double)
   weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-2), r_double)
   weight_lower = real(height_w3(map_w3(1)+k-1) - height_wt(map_wt(1)+k), r_double)
 
-  field_wt(map_wt(1)+k) = weight_upper / weight_denom * field_w3(map_w3(1)+k-1) &
-                      + weight_lower / weight_denom * field_w3(map_w3(1)+k-2)
+  if ( field_w3(map_w3(1)+k-1) > 0.0_r_double .and. &
+       field_w3(map_w3(1)+k-2) > 0.0_r_double ) then
+    ! Danger of getting a negative value from extrapolation, so perform the
+    ! calculation for the top value in log space (which cannot be negative)
+    log_top_value = weight_upper / weight_denom * log(field_w3(map_w3(1)+k-1)) &
+                    + weight_lower / weight_denom * log(field_w3(map_w3(1)+k-2))
+    top_value = exp(log_top_value)
+  else
+    ! If the field was originally negative, allow extrapolation to be negative
+    top_value = weight_upper / weight_denom * field_w3(map_w3(1)+k-1) &
+                + weight_lower / weight_denom * field_w3(map_w3(1)+k-2)
+  end if
+
+  field_wt(map_wt(1)+k) = top_value
 
 end subroutine sample_w3_to_wtheta_code_r_double
 

@@ -280,7 +280,8 @@ module mol_consistent_alg_mod
       ! Turn density back into mixing ratio
                   X_divideby_Y(mr_sh_w3_np1, rho_X_np1, rho_d_np1) )
       ! Turn back to Wtheta -- separate invoke as on different mesh
-      call invoke( inject_sh_w3_to_wt_kernel_type(mr_wt_np1, mr_sh_w3_np1) )
+      call invoke( inject_sh_w3_to_wt_kernel_type(mr_wt_np1, mr_sh_w3_np1), &
+                   enforce_lower_bound_kernel_type(mr_wt_np1, 0.0_r_tran) )
 
       ! ---------------------------------------------------------------------- !
       ! Blending zone update
@@ -325,7 +326,8 @@ module mol_consistent_alg_mod
         ! Turn density back into mixing ratio
         call invoke( X_divideby_Y(mr_sh_w3_np1, rho_X_np1, rho_d_np1) )
         ! Turn back to Wtheta -- separate invoke as on different mesh
-        call invoke( inject_sh_w3_to_wt_kernel_type(mr_wt_np1, mr_sh_w3_np1) )
+        call invoke( inject_sh_w3_to_wt_kernel_type(mr_wt_np1, mr_sh_w3_np1), &
+                     enforce_lower_bound_kernel_type(mr_wt_np1, 0.0_r_tran) )
 
         ! ------------------------------------------------------------------- !
         ! Blending zone update

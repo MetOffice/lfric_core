@@ -99,15 +99,15 @@ subroutine inject_sh_w3_to_wt_code_r_single(                &
   field_wt(map_wt(1)) = (4.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)) &
                         - (1.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+1)
 
-  ! Top boundary value
-  k = nlayers
-  field_wt(map_wt(1)+k) = - (1.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+k-1) &
-                          + (4.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+k)
-
   ! All interior levels
   do k = 1, nlayers - 1
     field_wt(map_wt(1)+k) = field_w3_sh(map_w3_sh(1)+k)
   end do
+
+  ! Top boundary value
+  k = nlayers
+  field_wt(map_wt(1)+k) = - (1.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+k-1) &
+                          + (4.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+k)
 
 end subroutine inject_sh_w3_to_wt_code_r_single
 
@@ -145,15 +145,15 @@ subroutine inject_sh_w3_to_wt_code_r_double(                &
   field_wt(map_wt(1)) = (4.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)) &
                         - (1.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+1)
 
-  ! Top boundary value
-  k = nlayers
-  field_wt(map_wt(1)+k) = - (1.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+k-1) &
-                          + (4.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+k)
-
   ! All interior levels
   do k = 1, nlayers - 1
     field_wt(map_wt(1)+k) = field_w3_sh(map_w3_sh(1)+k)
   end do
+
+  ! Top boundary value
+  k = nlayers
+  field_wt(map_wt(1)+k) = - (1.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+k-1) &
+                          + (4.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+k)
 
 end subroutine inject_sh_w3_to_wt_code_r_double
 

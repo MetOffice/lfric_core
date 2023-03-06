@@ -71,10 +71,6 @@ contains
     class(sample_w3_to_wtheta_test_type), intent(inout) :: this
 
     real(kind=r_def),      parameter :: tol = 1.0e-12_r_def
-    real(kind=r_def),      parameter :: dx = 5.0_r_def
-    real(kind=r_def),      parameter :: dy = 3.0_r_def
-    real(kind=r_def),      parameter :: dz = 7.0_r_def
-    real(kind=r_def),      parameter :: dV = dx * dy * dz
     real(kind=r_def),      parameter :: theta0 = 300_r_def
     real(kind=r_def),      parameter :: dtheta_dz = - 0.5_r_def
 
@@ -91,6 +87,7 @@ contains
     integer(kind=i_def)              :: ndf_wt, ndf_w3
     integer(kind=i_def)              :: dim_space, dim_space_diff
     integer(kind=i_def)              :: undf_wt, undf_w3
+    real(kind=r_def)                 :: answer_top
 
     ! Dofmaps
     integer(kind=i_def), allocatable :: map_wt(:,:)
@@ -148,10 +145,16 @@ contains
                                    undf_w3,        &
                                    map_w3(:,cell)  )
 
-    do k = 0, nlayers
+    do k = 0, nlayers - 1
         @assertEqual(answer(map_wt(1, cell)+k), field_wt(map_wt(1, cell)+k), tol)
     end do
 
+    ! Extrapolation will be in log space at the top
+    ! Use weights from quadratic height
+    ! answer_top = exp(-log(298.75)*0.625 + log(296.75)*1.625)
+    answer_top = 295.50680486599106_r_def
+    k = nlayers
+    @assertEqual(answer_top, field_wt(map_wt(1, cell)+k), tol)
 
     deallocate( answer )
     deallocate( field_w3 )
