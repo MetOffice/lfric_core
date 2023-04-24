@@ -64,9 +64,9 @@ do-unit-test/get-source: $(addsuffix /extract, $(SOURCE_DIR) \
 # Integration tests
 ###############################################################################
 
-ALL_INTEGRATION_TESTS = $(patsubst $(TEST_DIR)/%,%,$(basename               \
-                            $(shell find $(TEST_DIR) -name '*.[Ff]90'       \
-                                         -exec egrep -l "^\s*program" {} \; \
+ALL_INTEGRATION_TESTS = $(patsubst $(TEST_DIR)/%,%,$(basename                 \
+                            $(shell find $(TEST_DIR) -name '*.[Ff]90'         \
+                                         -exec egrep -l "^\s*program\s" {} \; \
                                          2>/dev/null)))
 .PHONY: do-integration-tests/%
 do-integration-tests/%: export PYTHONPATH  := $(PYTHONPATH):$(LFRIC_BUILD)
