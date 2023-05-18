@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation>
 
+  <!-- file suitable for global NWP runs -->
+
   <!-- In this version we have ONE context  -->
   <context id = "gungho_atm">
 
@@ -20,8 +22,11 @@
     <file_definition src="./file_def_check_restart_nwp.xml"/>
     <file_definition src="./file_def_ancil_main.xml"/>
     <file_definition src="./file_def_ancil_gal.xml"/>
+    <file_definition src="./file_def_diags_empty.xml"/>
     <file_definition src="./file_def_diags_gal.xml"/>
     <file_definition src="./file_def_diags_ave.xml"/>
+    <file_definition src="./file_def_diags_var_ops_ver.xml"/>
+    <file_definition src="./file_def_diags_jedi.xml"/>
 
     <!-- Local file definitions -->
     <file_definition type="one_file" par_access="collective" time_counter="none">

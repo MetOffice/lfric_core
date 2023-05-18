@@ -27,6 +27,7 @@ module diagnostics_calc_mod
                                            write_field_edge
   use diagnostics_io_mod,            only: write_scalar_diagnostic,     &
                                            write_vector_diagnostic
+  use initialise_diagnostics_mod,    only: diagnostic_to_be_sampled
   use field_mod,                     only: field_type
   use field_parent_mod,              only: write_interface
   use fs_continuity_mod,             only: W3
@@ -73,23 +74,28 @@ subroutine write_divergence_diagnostic(u_field, clock, mesh)
 
   procedure(write_interface), pointer  :: tmp_write_ptr
 
-  ! Create the divergence diagnostic
-  call divergence_diagnostic_alg( div_field, l2_norm, u_field, mesh )
+  if (diagnostic_to_be_sampled('divergence') .or. &
+      diagnostic_to_be_sampled('init_divergence') ) then
 
-  write( log_scratch_space, '(A,E16.8)' )  &
-       'L2 of divergence =',l2_norm
-  call log_event( log_scratch_space, LOG_LEVEL_INFO )
+    ! Create the divergence diagnostic
+    call divergence_diagnostic_alg( div_field, l2_norm, u_field, mesh )
 
-  if (use_xios_io) then
+    write( log_scratch_space, '(A,E16.8)' )  &
+         'L2 of divergence =',l2_norm
+    call log_event( log_scratch_space, LOG_LEVEL_INFO )
+
+    if (use_xios_io) then
       !If using XIOS, we need to set a field I/O method appropriately
       tmp_write_ptr => write_field_face
       call div_field%set_write_behaviour(tmp_write_ptr)
+    end if
+
+    call write_scalar_diagnostic( 'divergence', div_field, &
+                                  clock, mesh, .false. )
+
+    nullify(tmp_write_ptr)
+
   end if
-
-  call write_scalar_diagnostic( 'divergence', div_field, &
-                                clock, mesh, .false. )
-
-  nullify(tmp_write_ptr)
 
 end subroutine write_divergence_diagnostic
 
@@ -143,10 +149,19 @@ subroutine write_vorticity_diagnostic(u_field, clock)
 
   type(field_type) :: vorticity
 
-  call vorticity_diagnostic_alg(vorticity, u_field)
+  if (diagnostic_to_be_sampled('xi1') .or. &
+      diagnostic_to_be_sampled('xi2') .or. &
+      diagnostic_to_be_sampled('xi3') .or. &
+      diagnostic_to_be_sampled('init_xi1') .or. &
+      diagnostic_to_be_sampled('init_xi2') .or. &
+      diagnostic_to_be_sampled('init_xi3')) then
 
-  call write_vector_diagnostic('xi', vorticity, clock, &
-                               vorticity%get_mesh(), nodal_output_on_w3)
+    call vorticity_diagnostic_alg(vorticity, u_field)
+
+    call write_vector_diagnostic('xi', vorticity, clock, &
+                                 vorticity%get_mesh(), nodal_output_on_w3)
+
+  end if
 
 end subroutine write_vorticity_diagnostic
 
@@ -171,10 +186,15 @@ subroutine write_pv_diagnostic(u_field, theta, rho, clock)
 
   type(field_type) :: pv
 
-  call potential_vorticity_diagnostic_alg(pv, u_field, theta, rho)
+  if (diagnostic_to_be_sampled('potential_vorticity') .or. &
+      diagnostic_to_be_sampled('init_potential_vorticity') ) then
 
-  call write_scalar_diagnostic('potential_vorticity', pv, clock, &
-                               pv%get_mesh(), .false.)
+    call potential_vorticity_diagnostic_alg(pv, u_field, theta, rho)
+
+    call write_scalar_diagnostic('potential_vorticity', pv, clock, &
+                                 pv%get_mesh(), .false.)
+
+  end if
 
 end subroutine write_pv_diagnostic
 

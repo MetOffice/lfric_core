@@ -43,7 +43,7 @@ module initialise_diagnostics_mod
        mesh_collection,                                                       &
        mesh_collection_type
   use base_mesh_config_mod,            only: prime_mesh_name
-  use io_config_mod,                   only: diag_always_on_sampling
+  use io_config_mod,                   only: diag_always_on_sampling, use_xios_io
 
   implicit none
 
@@ -172,8 +172,10 @@ contains
     implicit none
     character(*), intent(in) :: unique_id
     logical(l_def) :: sampling_on
-    if (diag_always_on_sampling) then
+    if (diag_always_on_sampling .or. .not. use_xios_io) then
       sampling_on = .true. ! for testing
+      ! This is used when xios is off to ensure existing behvaiour of
+      ! old nodal output is preserved
     else
       sampling_on = field_is_active(unique_id, .true.) ! derived from metadata
     end if

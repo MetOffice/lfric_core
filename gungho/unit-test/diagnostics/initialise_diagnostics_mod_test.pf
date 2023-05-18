@@ -21,6 +21,7 @@ module initialise_diagnostics_mod_test
   use fs_continuity_mod,              only : W2, W3, Wtheta, W2H, W0
   use function_space_mod,             only : function_space_type
   use field_mod,                      only : field_type
+  use feign_config_mod,               only : feign_io_config
 
   implicit none
 
@@ -88,6 +89,25 @@ contains
 
     type( field_type ) :: test_field
     logical(l_def) :: ignore
+
+    call feign_io_config( checkpoint_frequency=1, &
+                          checkpoint_read=.false., &
+                          checkpoint_write=.false., &
+                          counter_output_suffix='', &
+                          diag_active_files=(/ '' /), &
+                          diag_always_on_sampling=.false., &
+                          diagnostic_frequency=1, &
+                          file_convention=400256111, &
+                          nodal_output_on_w3=.false., &
+                          subroutine_counters=.false., &
+                          subroutine_timers=.false., &
+                          timer_output_path='', &
+                          use_xios_io=.true., &
+                          write_conservation_diag=.false., &
+                          write_diag=.true., &
+                          write_dump=.false., &
+                          write_fluxes=.false., &
+                          write_minmax_tseries=.false. )
 
     @assertTrue(init_diag(test_field, 'diag_field_half_level_face_grid'))
     @assertTrue(init_diag(test_field, 'diag_field_half_level_face_grid', activate=.true.))

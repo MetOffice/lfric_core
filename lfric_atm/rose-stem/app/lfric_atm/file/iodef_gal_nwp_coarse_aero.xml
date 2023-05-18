@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation>
 
+  <!-- file suitable for global NWP runs with aerosol climatology on a coarse mesh -->
+
   <!-- In this version we have ONE context  -->
   <context id = "gungho_atm">
 
@@ -10,7 +12,7 @@
 
     <!-- Include grid definitions -->
     <grid_definition src="./grid_def_main.xml"/>
-     <grid_definition src="./grid_def_aero_coarse.xml"/>
+    <grid_definition src="./grid_def_aero_coarse.xml"/>
 
     <!-- Include field definitions -->
     <field_definition src="./field_def_diags.xml"/>
@@ -20,6 +22,7 @@
     <file_definition src="./file_def_check_restart_nwp.xml"/>
     <file_definition src="./file_def_ancil_main.xml"/>
     <file_definition src="./file_def_ancil_gal.xml"/>
+    <file_definition src="./file_def_diags_empty.xml"/>
     <file_definition src="./file_def_diags_gal.xml"/>
     <file_definition src="./file_def_diags_ave.xml"/>
 

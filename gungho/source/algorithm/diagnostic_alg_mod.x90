@@ -29,6 +29,7 @@ module diagnostic_alg_mod
                                               log_scratch_space, &
                                               LOG_LEVEL_INFO,    &
                                               LOG_LEVEL_ERROR
+  use initialise_diagnostics_mod, only: init_diag => init_diagnostic_field
 
   implicit none
 
@@ -526,8 +527,6 @@ contains
     use compute_column_integral_kernel_mod, only: compute_column_integral_kernel_type
     use geometric_constants_mod,            only: get_height
     use io_config_mod,                      only: write_diag, use_xios_io
-    use lfric_xios_write_mod,               only: write_field_single_face
-    use field_parent_mod,                   only: write_interface
     use mr_indices_mod,                     only: nummr, mr_names
     use function_space_mod,                 only: function_space_type
     use physics_mappings_alg_mod,           only: map_physics_scalars
@@ -545,8 +544,8 @@ contains
 
     ! Set up local fields
     ! 3D fields
-    type( field_type ) :: mr_w3(nummr)         ! mixing ratio of moist species X
-    type( field_type ) :: rho_moist_X(nummr)   ! moist mass per unit volume in cell (rho_field * mr_w3)
+    type( field_type ) :: mr_w3         ! mixing ratio of moist species
+    type( field_type ) :: rho_moist_X   ! moist mass per unit volume in cell (rho_field * mr_w3)
     type( field_type ) :: air_temperature      ! air temperature on W3
     type( field_type ) :: pot_energy           ! potential energy field
 
@@ -565,93 +564,102 @@ contains
     type( field_type ), pointer :: height_w3 => null()
     type( field_type ), pointer :: height_wth => null()
     type(function_space_type), pointer :: w3_fs => null()
-    procedure(write_interface), pointer :: write_diag_behaviour => null()
+
+    logical :: dry_mass_flag, wet_mass_flag, encorr_flag, ignore, X_mass_flag
 
     height_w3  => get_height( W3, mesh%get_id() )
     height_wth => get_height( Wtheta, mesh%get_id() )
     w3_fs      => rho_field%get_function_space()
-    write_diag_behaviour => write_field_single_face
 
-    ! Set up tot_col_dry_air_mass field and make it writeable
-    call tot_col_dry_air_mass%initialise( vector_space = &
-                    function_space_collection%get_fs(twod_mesh, 0, W3) )
+    dry_mass_flag = init_diag(tot_col_dry_air_mass,'processed__tot_col_dry_air_mass')
+    wet_mass_flag = init_diag(tot_col_wetplusdry_mass,'processed__tot_col_wetplusdry_mass')
+    encorr_flag = init_diag(tot_col_encorr,'processed__tot_col_encorr')
 
-    call tot_col_dry_air_mass%copy_field_properties(tot_col_wetplusdry_mass)
-    call tot_col_dry_air_mass%copy_field_properties(tot_col_int_energy)
-    call tot_col_dry_air_mass%copy_field_properties(tot_col_pot_energy)
-    call tot_col_dry_air_mass%copy_field_properties(tot_col_encorr)
+    if (encorr_flag .or. wet_mass_flag) then
+      if (.not. dry_mass_flag) ignore = init_diag(tot_col_dry_air_mass,'processed__tot_col_dry_air_mass', activate=.true.)
+    end if
 
-    ! Make the 2D column total fields write-enabled for diagnostic purposes
-    call tot_col_dry_air_mass%set_write_behaviour(write_diag_behaviour)
-    call tot_col_wetplusdry_mass%set_write_behaviour(write_diag_behaviour)
-    call tot_col_int_energy%set_write_behaviour(write_diag_behaviour)
-    call tot_col_pot_energy%set_write_behaviour(write_diag_behaviour)
-    call tot_col_encorr%set_write_behaviour(write_diag_behaviour)
-
-    cvTdot = cv * temperature_correction_rate
-
-    call invoke( compute_column_integral_kernel_type(rho_field,             &
+    if (dry_mass_flag .or. encorr_flag .or. wet_mass_flag) then
+      call invoke( compute_column_integral_kernel_type(rho_field,           &
                                                      height_w3, height_wth, &
                                                      tot_col_dry_air_mass,  &
-                                                     radius),               &
-                 setval_X(tot_col_wetplusdry_mass, tot_col_dry_air_mass),   &
-                 a_times_X(tot_col_encorr, cvTdot, tot_col_dry_air_mass) )
+                                                     radius))
+    end if
+
+    if (dry_mass_flag .and. use_xios_io) then
+      call tot_col_dry_air_mass%write_field(tot_col_dry_air_mass%get_name())
+    end if
+
+    if (encorr_flag .and. use_xios_io) then
+      cvTdot = cv * temperature_correction_rate
+      call invoke(a_times_X(tot_col_encorr, cvTdot, tot_col_dry_air_mass))
+      call tot_col_encorr%write_field(tot_col_encorr%get_name())
+    end if
+
+    if (wet_mass_flag) then
+      call invoke( setval_X(tot_col_wetplusdry_mass, tot_col_dry_air_mass))
+    end if
+
+    ! Initialise the moisture fields
+    call mr_w3%initialise( vector_space = w3_fs )
+    call rho_moist_X%initialise( vector_space = w3_fs )
 
     do i_mr = 1, nummr
 
-      ! Initialise the moisture fields
-      call mr_w3(i_mr)%initialise( vector_space = w3_fs )
-
-      call rho_moist_X(i_mr)%initialise( vector_space = w3_fs )
-
-      call tot_col_moist_mass(i_mr)%initialise( vector_space = &
-                      function_space_collection%get_fs(twod_mesh, 0, W3) )
-
-      call tot_col_moist_mass(i_mr)%set_write_behaviour(write_diag_behaviour)
-
-      ! Get mr field on w3
-      call map_physics_scalars(mr_w3(i_mr), mr(i_mr))  ! argument order is target, source
-
-      call invoke( X_times_Y(rho_moist_X(i_mr), rho_field, mr_w3(i_mr)) )
-
-      call invoke( compute_column_integral_kernel_type(rho_moist_X(i_mr), height_w3, &
-                                                  height_wth, tot_col_moist_mass(i_mr), &
-                                                  radius) )
-
-      if (write_diag .and. use_xios_io) then
-
-        call tot_col_moist_mass(i_mr)%write_field('processed__tot_col_'//trim(mr_names(i_mr)))
-
+      X_mass_flag = init_diag(tot_col_moist_mass(i_mr),'processed__tot_col_'//trim(mr_names(i_mr)))
+      if (wet_mass_flag) then
+        if (.not. X_mass_flag) &
+             ignore = init_diag(tot_col_moist_mass(i_mr),'processed__tot_col_'//trim(mr_names(i_mr)), activate=.true.)
       end if
 
-      ! Increment by each moisture species to get total wet + dry mass
-      call invoke( inc_X_plus_Y(tot_col_wetplusdry_mass, tot_col_moist_mass(i_mr)) )
+      if (wet_mass_flag .or. X_mass_flag) then
+        ! Get mr field on w3
+        call map_physics_scalars(mr_w3, mr(i_mr))  ! argument order is target, source
+        call invoke( X_times_Y(rho_moist_X, rho_field, mr_w3) )
+        call invoke( compute_column_integral_kernel_type(rho_moist_X, height_w3,          &
+                                                    height_wth, tot_col_moist_mass(i_mr), &
+                                                    radius) )
+      end if
+
+      if (X_mass_flag .and. use_xios_io) then
+        call tot_col_moist_mass(i_mr)%write_field(tot_col_moist_mass(i_mr)%get_name())
+      end if
+
+      if (wet_mass_flag) then
+        ! Increment by each moisture species to get total wet + dry mass
+        call invoke( inc_X_plus_Y(tot_col_wetplusdry_mass, tot_col_moist_mass(i_mr)) )
+      end if
 
     end do
 
-    ! Set up the air_temperature field then calculate it
-    call rho_field%copy_field_properties(air_temperature)
-    call invoke( X_times_Y(air_temperature, theta_field_in_w3, exner_field) )
-    ! Calculate cv * air_temperature * rho_field and run kernel for column
-    ! dry internal energy
-    call invoke( inc_aX_times_Y(cv, air_temperature, rho_field), &
-                 compute_column_integral_kernel_type(air_temperature, height_w3, &
-                                                 height_wth, tot_col_int_energy, &
-                                                 radius) )
+    if (wet_mass_flag .and. use_xios_io) then
+      call tot_col_wetplusdry_mass%write_field(tot_col_wetplusdry_mass%get_name())
+    end if
 
-    ! Retrieve height field and set as pot_energy then calculate column potential energy
-    call height_w3%copy_field(pot_energy)
-    call invoke( inc_aX_times_Y(gravity, pot_energy, rho_field), &
-                 compute_column_integral_kernel_type(pot_energy, height_w3, &
+    if (init_diag(tot_col_int_energy,'processed__tot_col_int_energy') .and. use_xios_io) then
+
+      ! Set up the air_temperature field then calculate it
+      call rho_field%copy_field_properties(air_temperature)
+      call invoke( X_times_Y(air_temperature, theta_field_in_w3, exner_field) )
+      ! Calculate cv * air_temperature * rho_field and run kernel for column
+      ! dry internal energy
+      call invoke( inc_aX_times_Y(cv, air_temperature, rho_field), &
+                   compute_column_integral_kernel_type(air_temperature, height_w3, &
+                                                   height_wth, tot_col_int_energy, &
+                                                   radius) )
+      call tot_col_int_energy%write_field(tot_col_int_energy%get_name())
+
+    end if
+
+    if (init_diag(tot_col_pot_energy,'processed__tot_col_pot_energy') .and. use_xios_io) then
+
+      ! Retrieve height field and set as pot_energy then calculate column potential energy
+      call height_w3%copy_field(pot_energy)
+      call invoke( inc_aX_times_Y(gravity, pot_energy, rho_field), &
+                   compute_column_integral_kernel_type(pot_energy, height_w3, &
                                                  height_wth, tot_col_pot_energy, &
                                                  radius) )
-    if (write_diag .and. use_xios_io) then
-
-      call tot_col_dry_air_mass%write_field('processed__tot_col_dry_air_mass')
-      call tot_col_wetplusdry_mass%write_field('processed__tot_col_wetplusdry_mass')
-      call tot_col_int_energy%write_field('processed__tot_col_int_energy')
-      call tot_col_pot_energy%write_field('processed__tot_col_pot_energy')
-      call tot_col_encorr%write_field('processed__tot_col_encorr')
+      call tot_col_pot_energy%write_field(tot_col_pot_energy%get_name())
 
     end if
 
@@ -683,14 +691,11 @@ contains
 
     type( field_type ) :: wbig
 
-    ! Give wbig the same properties as w_in_wth (on WTHETA levels)
-    call w_in_wth%copy_field_properties(wbig)
+    ! Create diagnostic if requested
+    if (init_diag(wbig, 'processed__wbig') .and. use_xios_io) then
 
-    call invoke( calc_wbig_kernel_type(w_in_wth, wbig) )
-
-    if (write_diag .and. use_xios_io) then
-
-      call wbig%write_field('processed__wbig')
+      call invoke( calc_wbig_kernel_type(w_in_wth, wbig) )
+      call wbig%write_field(wbig%get_name())
 
     end if
 
@@ -709,19 +714,23 @@ contains
     type(field_type), intent(in) :: exner
     type(field_type)             :: pressure
     integer(i_def)               :: fs
+    logical                      :: pressure_flag
 
-    call exner%copy_field(pressure)
+    fs = exner%which_function_space()
+    if (fs == W3) then
+      pressure_flag = init_diag(pressure, 'processed__pressure_in_w3')
+    else if (fs == Wtheta) then
+      pressure_flag = init_diag(pressure, 'processed__pressure_in_wth')
+    end if
 
-    call invoke(inc_X_powreal_a(pressure, one_over_kappa), &
-                inc_a_times_X(p_zero, pressure))
+    if (pressure_flag .and. use_xios_io) then
 
-    if (use_xios_io) then
-      fs = pressure%which_function_space()
-      if (fs == W3) then
-        call pressure%write_field('processed__pressure_in_w3')
-      else if (fs == Wtheta) then
-        call pressure%write_field('processed__pressure_in_wth')
-      end if
+      call invoke(setval_X(pressure, exner), &
+                  inc_X_powreal_a(pressure, one_over_kappa), &
+                  inc_a_times_X(p_zero, pressure))
+
+      call pressure%write_field(pressure%get_name())
+
     end if
 
   end subroutine pressure_diag_alg

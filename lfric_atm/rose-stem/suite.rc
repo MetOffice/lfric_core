@@ -54,9 +54,6 @@
     [[events]]
         mail events = timeout
         abort on timeout = True
-{%- if 'nightly' in groupsToRun %}
-        abort on stalled = True
-{%- endif %}
         timeout = PT3H
 
 {%- set scheduledTasks = schedule() | deduplicate_schedule() %}
@@ -730,6 +727,10 @@ echo $RELATIVE_LOG_ROOT > $DESTINATION_DIRECTORY/compile.log.path
 
                       test -f $CYLC_TASK_WORK_DIR/lfric_ral_diagnostics.nc && \
                       cp $CYLC_TASK_WORK_DIR/lfric_ral_diagnostics.nc \
+                         $DESTINATION_DIRECTORY/'+pathFragment+'/results/ || true
+
+                      test -f $CYLC_TASK_WORK_DIR/lfric_gal_diagnostics.nc && \
+                      cp $CYLC_TASK_WORK_DIR/lfric_gal_diagnostics.nc \
                          $DESTINATION_DIRECTORY/'+pathFragment+'/results/ || true
 
                       test -f $CYLC_TASK_WORK_DIR/lfric_initial.nc && \

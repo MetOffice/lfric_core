@@ -34,23 +34,26 @@
   <field id="w_in_w3_star" name="w_in_w3_star" long_name="physics_predictor_upward_air_velocity_at_cell_centres" unit="ms-1" grid_ref="half_level_face_grid" />
   <field id="height_w3" name="height_w3" long_name="height_of_cell_centres_above_earth_radius" unit="m" grid_ref="half_level_face_grid" />
   <field id="height_wth" name="height_wth" long_name="height_of_cell_interfaces_above_earth_radius" unit="m" grid_ref="full_level_face_grid" />
+  <!-- First line extracts level 0, second line removes vertical coordinate, cannot do as one -->
+  <field id="zoomed__orography" field_ref="height_wth" grid_ref="full_level_0_face_zoom"/>
+  <field id="orography" name="orography" long_name="surface_altitude" standard_name="surface_altitude" unit="m" domain_ref="face" > zoomed__orography </field>
   <field id="temp_correction_field" name="temp_correction_field" long_name="temperature_rate_for_energy_correction" unit="K s-1" domain_ref="face" />
   <field id="accumulated_fluxes" name="accumulated_fluxes" long_name="accumulated_energy_fluxes" unit="W m-2" domain_ref="face" />
   <field id="ageofair" name="ageofair" long_name="ageofair" unit="s" grid_ref="half_level_face_grid" />
   <!-- chemistry diagnostics -->
   <field id="chemistry__h2o2" name="h2o2" long_name="hydrogen_peroxide_mmr" unit="kg kg-1" grid_ref="full_level_face_grid" />
-        <field id="chemistry__emiss_c2h6" name="emissions_C2H6" long_name="C2H6 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_c3h8" name="emissions_C3H8" long_name="C3H8 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_c5h8" name="emissions_C5H8" long_name="Biogenic surface C5H8 emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_ch4" name="emissions_CH4" long_name="CH4 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_co" name="emissions_CO" long_name="CO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_hcho" name="emissions_HCHO" long_name="HCHO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_me2co" name="emissions_Me2CO" long_name="Me2CO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_mecho" name="emissions_MeCHO" long_name="MeCHO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_nh3" name="emissions_NH3" long_name="ammonia gas emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_no" name="emissions_NO" long_name="NOx surface emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_meoh" name="emissions_MeOH" long_name="Biogenic surface methanol (CH3OH) emissions" unit="kg m-2 s-1" domain_ref="face" /> 
-        <field id="chemistry__emiss_no_aircrft" name="emissions_NO_aircrft" long_name="NOx aircraft emissions" unit="kg m-2 s-1" grid_ref="full_level_face_grid" /> 
+  <field id="chemistry__emiss_c2h6" name="emissions_C2H6" long_name="C2H6 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_c3h8" name="emissions_C3H8" long_name="C3H8 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_c5h8" name="emissions_C5H8" long_name="Biogenic surface C5H8 emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_ch4" name="emissions_CH4" long_name="CH4 surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_co" name="emissions_CO" long_name="CO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_hcho" name="emissions_HCHO" long_name="HCHO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_me2co" name="emissions_Me2CO" long_name="Me2CO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_mecho" name="emissions_MeCHO" long_name="MeCHO surf emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_nh3" name="emissions_NH3" long_name="ammonia gas emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_no" name="emissions_NO" long_name="NOx surface emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_meoh" name="emissions_MeOH" long_name="Biogenic surface methanol (CH3OH) emissions" unit="kg m-2 s-1" domain_ref="face" /> 
+  <field id="chemistry__emiss_no_aircrft" name="emissions_NO_aircrft" long_name="NOx aircraft emissions" unit="kg m-2 s-1" grid_ref="full_level_face_grid" /> 
   <field id="chemistry__dms" name="dms" long_name="dimethyl_sulfide_mmr" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="chemistry__so2" name="so2" long_name="sulfur_dioxide_mmr" unit="kg kg-1" grid_ref="full_level_face_grid" />
   <field id="chemistry__h2so4" name="h2so4" long_name="sulfuric_acid_mmr" unit="kg kg-1" grid_ref="full_level_face_grid" />
@@ -210,6 +213,9 @@
   <field id="convection__conv_rain" name="conv_rain" long_name="surface_convective_rainfall_rate" unit="kg m-2 s-1" domain_ref="face" />
   <field id="convection__conv_snow" name="conv_snow" long_name="surface_convective_snowfall_rate" unit="kg m-2 s-1" domain_ref="face" />
   <field id="convection__conv_prec" name="conv_prec" long_name="surface_convective_precipitation_rate" unit="kg m-2 s-1" domain_ref="face"> convection__conv_rain + convection__conv_snow </field>
+  <field id="convection__conv_rain_acc" name="conv_rain_acc" long_name="surface_convective_rainfall_amount" unit="kg m-2" domain_ref="face"> $DT * convection__conv_rain </field>
+  <field id="convection__conv_snow_acc" name="conv_snow_acc" long_name="surface_convective_snowfall_amount" unit="kg m-2" domain_ref="face"> $DT * convection__conv_snow </field>
+  <field id="convection__conv_prec_acc" name="conv_prec_acc" long_name="surface_convective_precipitation_amount" unit="kg m-2" domain_ref="face"> $DT * convection__conv_prec </field>
   <field id="convection__conv_rain_3d" name="conv_rain_3d" long_name="convective_rainfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
   <field id="convection__conv_snow_3d" name="conv_snow_3d" long_name="convective_snowfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
   <field id="convection__deep_dt" name="deep_dt" long_name="temperature_increment_from_deep_convection" unit="K s-1" grid_ref="full_level_face_grid" />
@@ -253,6 +259,9 @@
   <field id="microphysics__ls_rain" name="ls_rain" long_name="surface_microphysical_rainfall_rate" unit="kg m-2 s-1" domain_ref="face" />
   <field id="microphysics__ls_snow" name="ls_snow" long_name="surface_microphysical_snowfall_rate" unit="kg m-2 s-1" domain_ref="face" />
   <field id="microphysics__ls_prec" name="ls_prec" long_name="surface_microphysical_precipitation_rate" unit="kg m-2 s-1" domain_ref="face"> microphysics__ls_rain + microphysics__ls_snow </field>
+  <field id="microphysics__ls_rain_acc" name="ls_rain_acc" long_name="surface_microphysical_rainfall_amount" unit="kg m-2" domain_ref="face"> $DT * microphysics__ls_rain </field>
+  <field id="microphysics__ls_snow_acc" name="ls_snow_acc" long_name="surface_microphysical_snowfall_amount" unit="kg m-2" domain_ref="face"> $DT * microphysics__ls_snow </field>
+  <field id="microphysics__ls_prec_acc" name="ls_prec_acc" long_name="surface_microphysical_precipitation_amount" unit="kg m-2" domain_ref="face"> $DT * microphysics__ls_prec </field>
   <field id="microphysics__ls_rain_3d" name="ls_rain_3d" long_name="microphysical_rainfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
   <field id="microphysics__ls_snow_3d" name="ls_snow_3d" long_name="microphysical_snowfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
   <field id="microphysics__superc_liq" name="supercooled_liq_mphys" long_name="supercooled_liquid_cloud_after_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
@@ -315,6 +324,12 @@
   <field id="orographic_drag__tauy_orographic_drag" name="tauy_orog" long_name="orographic_drag_V_wind_stress" unit="Pa" grid_ref="full_level_face_grid"> orographic_drag__tauy_orog_blk + orographic_drag__tauy_orog_gwd </field>
   <!-- Jules surface exchange diagnostics -->
   <field id="surface__tile_fraction" name="tile_fraction" long_name="surface_tile_fraction" unit="1" domain_ref="face" axis_ref="surface_tiles"/>
+  <!-- Extracts tile types for sea and sea-ice, removes pseudo-level coordinate, then calculate sea-ice fraction -->
+  <field id="zoomed__sea_ice_tile" field_ref="surface__tile_fraction" domain_ref="face" axis_ref="surface_tiles_sea_ice_zoom"/>
+  <field id="zoomed__sea_tile" field_ref="surface__tile_fraction" domain_ref="face" axis_ref="surface_tiles_sea_zoom"/>
+  <field id="surface__sea_ice_tile" domain_ref="face"> zoomed__sea_ice_tile </field>
+  <field id="surface__sea_tile" domain_ref="face"> zoomed__sea_tile </field>
+  <field id="surface__sea_ice_fraction" name="sea_ice_fraction" long_name="sea_ice_area_fraction" standard_name="sea_ice_area_fraction" unit="1" domain_ref="face"> surface__sea_ice_tile / (surface__sea_ice_tile + surface__sea_tile + 1.0e-16) </field>
   <field id="surface__z0m" name="z0m" long_name="surface_roughness_length" unit="m" domain_ref="face" />
   <field id="surface__z0m_tile" name="z0m_tile" long_name="surface_roughness_length_on_tiles" unit="m" domain_ref="face" axis_ref="surface_tiles"/>
   <field id="surface__z0m_eff" name="z0m_eff" long_name="effective_surface_roughness_length_for_momentum_in_air" unit="m" domain_ref='face' />
@@ -585,13 +600,17 @@
   <field id="processed__wbig" name="wbig" long_name="wbig_eq_1_where_wphysics_gt_1" unit="1" grid_ref="full_level_face_grid" />
   <field id="processed__pressure_in_w3" name="pressure_in_w3" long_name="pressure_at_cell_centres" unit="Pa" grid_ref="half_level_face_grid" />
   <field id="processed__pressure_in_wth" name="pressure_in_wth" long_name="pressure_at_cell_interfaces" unit="Pa" grid_ref="full_level_face_grid" />
+  <!-- First line extracts level 0, second line removes vertical coordinate, cannot do as one -->
+  <field id="zoomed__pstar" field_ref="processed__pressure_in_wth" grid_ref="full_level_0_face_zoom"/>
+  <field id="processed__pstar" name="pstar" long_name="surface_air_pressure" standard_name="surface_air_pressure" unit="Pa" domain_ref="face"> zoomed__pstar </field>
   <field id="processed__pmsl" name="pmsl" long_name="air_pressure_at_mean_sea_level" unit="Pa" domain_ref="face" />
+  <field id="processed__radius" name="radius" long_name="radius" unit="m" grid_ref="half_level_face_grid" > height_w3 + 6371229.0 </field>
+  <field id="processed__r2rho" name="r2rho" long_name="product_of_air_density_and_radius_squared" unit="kg m-1" grid_ref="half_level_face_grid"> processed__radius * processed__radius * rho </field>
   <field id="processed__temperature" name="temperature" long_name="air_temperature" standard_name="air_temperature" unit="K" grid_ref="full_level_face_grid"> theta * exner_in_wth </field>
+  <field id="processed__total_rain" name="total_rain" long_name="surface_rainfall_rate" standard_name="rainfall_flux" unit="kg m-2 s-1" domain_ref="face"> microphysics__ls_rain + convection__conv_rain </field>
+  <field id="processed__total_snow" name="total_snow" long_name="surface_snowfall_rate" standard_name="snowfall_flux" unit="kg m-2 s-1" domain_ref="face"> microphysics__ls_snow + convection__conv_snow </field>
   <field id="processed__total_prec" name="total_prec" long_name="precipitation_rate" standard_name="precipitation_flux" unit="kg m-2 s-1" domain_ref="face"> microphysics__ls_rain + microphysics__ls_snow + convection__conv_rain + convection__conv_snow </field>
-  <!-- First line extracts level 0, second line removes vertical coordinate, cannot do as one -->
-  <field id="processed__height0" field_ref="height_wth" grid_ref="full_level_face_grid"/>
-  <field id="processed__orography" name="orography" long_name="surface_altitude" standard_name="surface_altitude" unit="m" domain_ref="face" > processed__height0 </field>
-  <!-- First line extracts level 0, second line removes vertical coordinate, cannot do as one -->
-  <field id="processed__pressure0" field_ref="processed__pressure_in_wth" grid_ref="full_level_face_grid"/>
-  <field id="processed__pstar" name="pstar" long_name="surface_air_pressure" standard_name="surface_air_pressure" unit="Pa" domain_ref="face"> processed__pressure0 </field>
+  <field id="processed__total_rain_acc" name="total_rain_acc" long_name="surface_rainfall_amount" standard_name="rainfall_amount" unit="kg m-2" domain_ref="face"> $DT * processed__total_rain </field>
+  <field id="processed__total_snow_acc" name="total_snow_acc" long_name="surface_snowfall_amount" standard_name="snowfall_amount" unit="kg m-2" domain_ref="face"> $DT * processed__total_snow </field>
+  <field id="processed__total_prec_acc" name="total_prec_acc" long_name="surface_precipitation_amount" standard_name="precipitation_amount" unit="kg m-2" domain_ref="face"> $DT * processed__total_prec </field>
 </field_group>

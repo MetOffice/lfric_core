@@ -10,8 +10,6 @@ module pmsl_alg_mod
   use field_mod,               only: field_type
   use field_collection_mod,    only: field_collection_type
   use io_config_mod,           only: write_diag, use_xios_io,subroutine_timers
-  use field_parent_mod,        only: write_interface
-  use lfric_xios_write_mod,    only: write_field_single_face
   use timer_mod,               only: timer
   use extrusion_config_mod,    only: number_of_layers, domain_top
   use constants_mod,           only: r_def, i_def
@@ -20,6 +18,7 @@ module pmsl_alg_mod
   use fs_continuity_mod,       only: Wtheta, W3
   use function_space_collection_mod, only: function_space_collection
   use mesh_mod,                only: mesh_type
+  use initialise_diagnostics_mod, only: init_diag => init_diagnostic_field
 
   implicit none
   private
@@ -61,7 +60,6 @@ contains
     type( field_type ), pointer     :: exner_wth  => null()
     type( field_type ), pointer     :: height_w3 => null()
     type( field_type ), pointer     :: height_wth => null()
-    procedure(write_interface), pointer :: write_diag_behaviour => null()
 
     integer(kind=i_def) :: k, levelupper
 
@@ -72,33 +70,27 @@ contains
 
     if ( subroutine_timers ) call timer('pmsl_alg')
 
-    ! Unpack fields
-    call derived_fields%get_field('exner_in_wth', exner_wth)
-    height_w3       => get_height(W3, exner_w3%get_mesh_id())
-    height_wth      => get_height(Wtheta, theta_wth%get_mesh_id())
+    if (init_diag(pmsl, 'processed__pmsl') .and. use_xios_io) then
 
-    ! Set up PMSL field and make it writeable
-    call pmsl%initialise( vector_space = &
-                    function_space_collection%get_fs(twod_mesh, 0, W3) )
+      ! Unpack fields
+      call derived_fields%get_field('exner_in_wth', exner_wth)
+      height_w3       => get_height(W3, exner_w3%get_mesh_id())
+      height_wth      => get_height(Wtheta, theta_wth%get_mesh_id())
 
-    ! Find level above boundary layer to use in PMSL calculation
-    ! domain_top is the top model height and is the same everywhere
+      ! Find level above boundary layer to use in PMSL calculation
+      ! domain_top is the top model height and is the same everywhere
+      do k = 1, number_of_layers
+        levelupper = k
+        if (domain_top * eta_theta_levels(k) > upperheight) exit
+      end do
 
-    DO k = 1, number_of_layers
-      levelupper = k
-      IF (domain_top * eta_theta_levels(k) > upperheight) EXIT
-    END DO
+      ! Call kernel to calculate PMSL
+      call invoke(pmsl_kernel_type(exner_w3, exner_wth, theta_wth, &
+                  height_w3, height_wth, levelupper, pmsl))
 
-    ! Call kernel to calculate PMSL
+      ! Output diagnostic
+      call pmsl%write_field(pmsl%get_name())
 
-    call invoke(pmsl_kernel_type(exner_w3, exner_wth, theta_wth, &
-                height_w3, height_wth, levelupper, pmsl))
-
-    ! Output diagnostic if requested
-    if (write_diag .and. use_xios_io) then
-      write_diag_behaviour => write_field_single_face
-      call pmsl%set_write_behaviour(write_diag_behaviour)
-      call pmsl%write_field('processed__pmsl')
     end if
 
     if ( subroutine_timers ) call timer('pmsl_alg')

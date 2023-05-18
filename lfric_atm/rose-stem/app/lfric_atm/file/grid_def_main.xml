@@ -16,7 +16,6 @@
     <domain domain_ref="edge"/>
     <axis axis_ref="vert_axis_half_levels"/>
   </grid>
-
   <grid id="aero_mode_grid">
     <domain domain_ref="face"/>
     <axis axis_ref="vert_axis_full_levels"/>
@@ -56,5 +55,13 @@
     <domain domain_ref="edge"/>
     <axis axis_ref="vert_axis_half_levels"/>
     <axis axis_ref="lbc_axis"/>
+  </grid>
+
+  <!-- Zoom filters -->
+  <grid id="full_level_0_face_zoom">
+    <domain domain_ref="face"/>
+    <axis axis_ref="vert_axis_full_levels" >
+      <zoom_axis begin="0" n="1"/>
+    </axis>
   </grid>
 </grid_definition>

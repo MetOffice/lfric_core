@@ -4,4 +4,11 @@
   <axis id="surface_tiles" name="surface_tiles" n_glo="12"/>
   <axis id="snow_layers_and_tiles" name="snow_layers_and_tiles" n_glo="30"/>
   <axis id="land_tile_rad_band" name="land_tile_rad_band" n_glo="20"/>
+  <!-- Zoom filters -->
+  <axis id="surface_tiles_sea_zoom" axis_ref="surface_tiles">
+    <zoom_axis begin="10" n="1"/>
+  </axis>
+  <axis id="surface_tiles_sea_ice_zoom" axis_ref="surface_tiles">
+    <zoom_axis begin="11" n="1"/>
+  </axis>
 </axis_definition>

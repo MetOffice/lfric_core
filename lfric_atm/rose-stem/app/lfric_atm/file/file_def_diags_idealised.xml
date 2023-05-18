@@ -1,6 +1,6 @@
 <file_definition type="one_file" par_access="collective" time_counter="none">
 
-  <!-- Diagnostic output file for idealised regional runs -->
+  <!-- Diagnostic output file for idealised runs -->
   <file id="lfric_diag" name="lfric_diag" output_freq="6h" convention="UGRID" enabled=".TRUE.">
     <field field_ref="theta" />
     <field field_ref="m_v" />
@@ -11,18 +11,26 @@
     <field field_ref="u_in_w3" />
     <field field_ref="v_in_w3" />
     <field field_ref="w_in_wth" />
-    <field field_ref="divergence" />
-    <field field_ref="potential_vorticity" />
     <field field_ref="cloud__cloud_amount_maxrnd" />
     <field field_ref="cloud__ceilometer_cloud_amount_maxrnd" />
     <field field_ref="cloud__combined_cloud_amount" />
     <field field_ref="cloud__very_low_type_cloud_amount" />
     <field field_ref="cloud__high_type_cloud_amount" />
     <field field_ref="cloud__cloud_base_altitude" />
+    <field field_ref="cloud__cloud_fraction_below_1000feet_asl" />
+    <field field_ref="convection__dt_conv" />
+    <field field_ref="convection__dmv_conv" />
+    <field field_ref="convection__massflux_up" />
+    <field field_ref="convection__massflux_up_half" />
+    <field field_ref="convection__entrain_up" />
+    <field field_ref="convection__detrain_up" />
     <field field_ref="microphysics__ls_prec" />
     <field field_ref="microphysics__ls_rain" />
     <field field_ref="microphysics__ls_snow" />
     <field field_ref="surface__tile_fraction" />
+    <field field_ref="surface__tile_heat_flux"/>
+    <field field_ref="surface__latent_heat"/>
+    <field field_ref="surface__tile_moisture_flux"/>
     <field field_ref="surface__grid_surface_temperature" />
     <field field_ref="surface__t1p5m" />
     <field field_ref="surface__rh1p5m" />
@@ -46,15 +54,52 @@
     <field field_ref="radiation__sw_net_surf" />
     <field field_ref="radiation__lw_up_toa" />
     <field field_ref="radiation__lw_down_surf" />
-    <field field_ref="radiation__lw_down_surf_rts" />
+    <field field_ref="radiation__lw_down_surf_rts" freq_offset="-1ts"/>
+    <field field_ref="radiation__sw_aer_optical_depth_rts" freq_offset="-1ts"/>
+    <field field_ref="radiation__lw_aer_optical_depth_rts" freq_offset="-1ts"/>
     <field field_ref="processed__trop_level" />
     <field field_ref="processed__tot_col_dry_air_mass" />
     <field field_ref="processed__tot_col_wetplusdry_mass" />
     <field field_ref="processed__tot_col_m_v" />
     <field field_ref="processed__tot_col_m_ci" />
+    <field field_ref="processed__tot_col_int_energy" />
+    <field field_ref="processed__tot_col_pot_energy" />
     <field field_ref="processed__pmsl" />
+    <field field_ref="processed__total_prec" />
+    <field field_ref="chemistry__h2o2" />
+    <field field_ref="chemistry__dms" />
+    <field field_ref="chemistry__so2" />
+    <field field_ref="chemistry__h2so4" />
+    <field field_ref="chemistry__dmso" />
+    <field field_ref="chemistry__monoterpene" />
+    <field field_ref="chemistry__secondary_organic" />
+    <field field_ref="aerosol__n_nuc_sol" />
+    <field field_ref="aerosol__n_ait_sol" />
+    <field field_ref="aerosol__n_acc_sol" />
+    <field field_ref="aerosol__n_cor_sol" />
+    <field field_ref="aerosol__n_ait_ins" />
+    <field field_ref="aerosol__n_acc_ins" />
+    <field field_ref="aerosol__n_cor_ins" />
+    <field field_ref="aerosol__nuc_sol_su" />
+    <field field_ref="aerosol__nuc_sol_om" />
+    <field field_ref="aerosol__ait_sol_su" />
+    <field field_ref="aerosol__ait_sol_bc" />
+    <field field_ref="aerosol__ait_sol_om" />
+    <field field_ref="aerosol__acc_sol_su" />
+    <field field_ref="aerosol__acc_sol_bc" />
+    <field field_ref="aerosol__acc_sol_om" />
+    <field field_ref="aerosol__acc_sol_ss" />
+    <field field_ref="aerosol__acc_sol_du" />
+    <field field_ref="aerosol__cor_sol_su" />
+    <field field_ref="aerosol__cor_sol_bc" />
+    <field field_ref="aerosol__cor_sol_om" />
+    <field field_ref="aerosol__cor_sol_ss" />
+    <field field_ref="aerosol__cor_sol_du" />
+    <field field_ref="aerosol__ait_ins_bc" />
+    <field field_ref="aerosol__ait_ins_om" />
+    <field field_ref="aerosol__acc_ins_du" />
+    <field field_ref="aerosol__cor_ins_du" />
     <field field_ref="aerosol__cloud_drop_no_conc" />
-    <field_group group_ref="lbc_diags" />
   </file>
 
 </file_definition>

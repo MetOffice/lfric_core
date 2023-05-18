@@ -1,6 +1,6 @@
 <file_definition type="one_file" par_access="collective" time_counter="none">
 
-  <!-- Main diagnostic output file for regional runs -->
+  <!-- Empty required diagnostic file -->
   <file id="lfric_diag" name="lfric_diag" output_freq="6h" convention="UGRID" enabled=".TRUE.">
   </file>
 
