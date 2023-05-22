@@ -47,7 +47,7 @@ def make_figures(filein, plotpath, fields, vertical_spacing, lid, n_full, fignam
         zmax = lid
         zi_f = np.linspace(zmin, zmax, n_full)
 
-  
+
     zi_h = 0.5*(zi_f[1:] + zi_f[0:n_full-1])
 
     directions = ['yz']
@@ -114,7 +114,7 @@ def make_figures(filein, plotpath, fields, vertical_spacing, lid, n_full, fignam
                 inc = 0.01*fi**(1.0/kappa) * p0
             else:
                 inc = fi
-        
+
                 plot_data[:,:,l] = plot_data[:,:,l] + inc
 
         for direction in directions:
@@ -131,8 +131,8 @@ def make_figures(filein, plotpath, fields, vertical_spacing, lid, n_full, fignam
             c_map = cm.summer
 
             for l in range(nplots):
-                ax = interp_fig.add_subplot(nxplots,nyplots,l+1)                    
-         
+                ax = interp_fig.add_subplot(nxplots,nyplots,l+1)
+
                 if direction == 'xz':
                     mean_plot_data = np.mean(plot_data,axis=0)
                     lon, height = np.meshgrid(xi, zi)
@@ -179,5 +179,5 @@ if __name__ == "__main__":
   except ValueError:
      print("Usage: {0} <filein> <plotpath> <figname> <vertical_grid> <lid> <n_full> [<fields_list>]".format(sys.argv[0]))
      exit(1)
-  
+
   make_figures(filein, plotpath, field_list, vertical_grid, int(lid), int(n_full), figname)

@@ -16,9 +16,10 @@ module ffsl_control_alg_mod
   use function_space_mod,               only: function_space_type
   use fs_continuity_mod,                only: W2, W3, Wtheta, W2H, W2V
   use geometric_constants_mod,          only: get_panel_id
-  use log_mod,                          only: log_event,      &
-                                              LOG_LEVEL_INFO, &
-                                              LOG_LEVEL_ERROR
+  use log_mod,                          only: log_event,       &
+                                              LOG_LEVEL_INFO,  &
+                                              LOG_LEVEL_ERROR, &
+                                              LOG_LEVEL_WARNING
   use mesh_mod,                         only: mesh_type
   use mesh_collection_mod,              only: mesh_collection
 
@@ -67,6 +68,7 @@ module ffsl_control_alg_mod
 
   public :: ffsl_conservative_control
   public :: ffsl_advective_control
+  public :: ffsl_consistent_control
 
 contains
 
@@ -450,5 +452,112 @@ contains
             dep_pts_x_get, dep_pts_y_get, dep_pts_z_get)
 
   end subroutine ffsl_advective_control
+
+  !=============================================================================
+  !> @brief Controls consistent and conservative FFSL transport.
+  !> @details Calls the transport step for the consistent and conservative flux
+  !!          form semi-Lagrangian (FFSL), based on options in the
+  !!          transport_metadata.
+  !!          NOTE: The proper consistent scheme has not yet been implemented,
+  !!          so this is currently a wrapper around standard conservative FFSL.
+  !> @param[in,out] field_np1          Field to return at end of transport step
+  !> @param[in]     field_n            Field at the start of the transport step
+  !> @param[in]     direction          Either 3D/vertical/horizontal FFSL transport
+  !> @param[in]     step_dt            The dt for this time step
+  !> @param[in]     transport_metadata Contains the configuration options for
+  !!                                   transporting these fields
+  subroutine ffsl_consistent_control(field_np1, field_n, direction, &
+                                     step_dt, transport_metadata)
+
+    use enforce_lower_bound_kernel_mod, only: enforce_lower_bound_kernel_type
+
+    implicit none
+
+    ! Arguments
+    type(r_tran_field_type),       intent(inout) :: field_np1
+    type(r_tran_field_type),       intent(in)    :: field_n
+    integer(kind=i_def),           intent(in)    :: direction
+    real(kind=r_tran),             intent(in)    :: step_dt
+    type(transport_metadata_type), intent(in)    :: transport_metadata
+
+    ! Internal variables
+    integer(kind=i_def)                   :: split_step
+    real(kind=r_tran)                     :: min_value
+    type(r_tran_field_type)               :: field_sh_w3_n, field_sh_w3_np1
+    type(r_tran_field_type)               :: rho_X_n, rho_X_np1
+    type(r_tran_field_type),      pointer :: rho_d_n => null()
+    type(r_tran_field_type),      pointer :: rho_d_np1 => null()
+    type(mesh_type),              pointer :: primary_mesh => null()
+    type(mesh_type),              pointer :: shifted_mesh => null()
+    type(function_space_type),    pointer :: w3_shifted_fs => null()
+    type(transport_runtime_type), pointer :: transport_runtime => null()
+
+    call log_event('Consistent FFSL not yet implemented. ' // &
+                   'Defaulting to conservative FFSL', LOG_LEVEL_WARNING)
+
+    ! Check field is in Wtheta
+    if (field_n%which_function_space() /= Wtheta) then
+      call log_event('Consistent FFSL only implemented for Wtheta variables', &
+                     LOG_LEVEL_ERROR)
+    end if
+
+    primary_mesh => field_n%get_mesh()
+    shifted_mesh => mesh_collection%get_mesh(primary_mesh, SHIFTED)
+
+    w3_shifted_fs => function_space_collection%get_fs(shifted_mesh, 0, W3)
+
+    ! Get transport runtime
+    transport_runtime => get_transport_runtime(primary_mesh)
+
+    call field_sh_w3_n%initialise( w3_shifted_fs )
+    call field_sh_w3_np1%initialise( w3_shifted_fs )
+    call rho_X_n%initialise( w3_shifted_fs )
+    call rho_X_np1%initialise( w3_shifted_fs )
+
+    ! Get dry density from transport runtime, for this split step
+    split_step = transport_runtime%get_tracer_step_ctr()
+    rho_d_n => transport_runtime%get_rho_d_n(shifted_mesh%get_id(), split_step)
+    rho_d_np1 => transport_runtime%get_rho_d_np1(shifted_mesh%get_id(), split_step)
+
+    ! ------------------------------------------------------------------------ !
+    ! Turn field into density on shifted mesh
+    ! ------------------------------------------------------------------------ !
+
+    call invoke( inject_wt_to_sh_w3_kernel_type(field_sh_w3_n, field_n), &
+                 X_times_Y(rho_X_n, field_sh_w3_n, rho_d_n) )
+
+    ! We need the density at the start of the whole transport step, for the
+    ! final call to end_of_conservative_step_alg. The mixing ratio is stored by
+    ! default, so need to overwrite this. So if this is the first split step
+    ! we do this here.
+    if (transport_runtime%get_tracer_step_ctr() == 1) then
+      call transport_runtime%set_field_n(rho_X_n)
+    end if
+
+    ! ------------------------------------------------------------------------ !
+    ! Actually transport density using standard conservative FFSL
+    ! ------------------------------------------------------------------------ !
+
+    call ffsl_conservative_control(rho_X_np1, rho_X_n, direction, &
+                                   step_dt, transport_metadata)
+
+    ! -------------------------------------------------------------------- !
+    ! Return from density on shifted mesh to field in Wtheta
+    ! -------------------------------------------------------------------- !
+
+    call invoke( X_divideby_Y(field_sh_w3_np1, rho_X_np1, rho_d_np1) )
+    ! Turn back to Wtheta. This kernel needs to be in a separate invoke as
+    ! the target field is on different mesh to that in previous kernel, so
+    ! needs to extract a different "nlayers"
+    call invoke( inject_sh_w3_to_wt_kernel_type(field_np1, field_sh_w3_np1) )
+    ! This could lead to negative values at top so enforce lower bound
+    if ( transport_metadata%get_enforce_min_value() ) then
+      min_value = transport_metadata%get_min_value()
+      call invoke( enforce_lower_bound_kernel_type(field_np1, min_value) )
+    end if
+
+    nullify(transport_runtime, primary_mesh, shifted_mesh, rho_d_n, rho_d_np1)
+
+  end subroutine ffsl_consistent_control
 
 end module ffsl_control_alg_mod

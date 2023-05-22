@@ -9,7 +9,8 @@ module split_transport_mod
 
   use constants_mod,                    only: i_def, r_tran
   use ffsl_control_alg_mod,             only: ffsl_conservative_control, &
-                                              ffsl_advective_control
+                                              ffsl_advective_control,    &
+                                              ffsl_consistent_control
   use r_tran_field_mod,                 only: r_tran_field_type
   use log_mod,                          only: log_event, LOG_LEVEL_ERROR
   use transport_metadata_mod,           only: transport_metadata_type
@@ -225,6 +226,10 @@ contains
       case ( equation_form_advective )
         call ffsl_advective_control(field_np1, field_n, direction, &
                                     step_dt, transport_metadata)
+
+      case ( equation_form_consistent )
+        call ffsl_consistent_control(field_np1, field_n, direction, &
+                                     step_dt, transport_metadata)
 
       case default
         call log_event('Trying to solve unrecognised form of transport equation', &

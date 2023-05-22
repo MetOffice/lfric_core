@@ -12,6 +12,7 @@
 
     <!-- Include grid definitions -->
     <grid_definition src="./grid_def_main.xml"/>
+    <grid_definition src="./grid_def_aero_ctl.xml"/>
 
     <!-- Include field definitions -->
     <field_definition src="./field_def_diags.xml"/>
