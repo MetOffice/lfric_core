@@ -73,7 +73,7 @@ contains
 
     procedure(filelist_populator), pointer :: fl_populator => null()
     class(io_context_type),        pointer :: model_io_context => null()
-    class(extrusion_type), allocatable     :: extrusion
+    class(extrusion_type),     allocatable :: extrusion
 
     call init_logger( mpi%get_comm(), program_name )
 

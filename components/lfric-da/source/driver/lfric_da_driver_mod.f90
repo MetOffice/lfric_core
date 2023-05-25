@@ -59,7 +59,7 @@ contains
 
     implicit none
 
-    deallocate(da_io_context)
+    if (allocated(da_io_context)) deallocate(da_io_context)
 
   end subroutine final_da
 
