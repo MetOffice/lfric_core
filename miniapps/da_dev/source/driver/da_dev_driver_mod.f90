@@ -93,18 +93,20 @@ contains
     ! Create FEM specifics (function spaces and chi field)
     call init_fem( mesh, chi, panel_id )
 
-    ! Initialise I/O context
-    fl_populator => init_da_dev_files
-    call init_io( program_name, mpi%get_comm(), chi, panel_id, &
-                  model_clock, get_calendar(), populate_filelist=fl_populator )
+    if ( use_xios_io ) then
+      ! Initialise I/O context
+      fl_populator => init_da_dev_files
+      call init_io( program_name, mpi%get_comm(), chi, panel_id, &
+                    model_clock, get_calendar(), populate_filelist=fl_populator )
 
-    ! Do initial step
-    model_io_context => get_io_context()
-    if (model_clock%is_initialisation()) then
-      select type (model_io_context)
-      type is (lfric_xios_context_type)
-          call advance(model_io_context, model_clock)
-      end select
+      ! Do initial step
+      model_io_context => get_io_context()
+      if (model_clock%is_initialisation()) then
+        select type (model_io_context)
+        type is (lfric_xios_context_type)
+            call advance(model_io_context, model_clock)
+        end select
+      end if
     end if
 
   end subroutine initialise_lfric
@@ -162,9 +164,11 @@ contains
 
     call model_data%depository%get_field( test_field, working_field )
 
-    ! Switch to the main model I/O context
-    model_io_context => get_io_context()
-    call model_io_context%set_current()
+    if ( use_xios_io ) then
+      ! Switch to the main model I/O context
+      model_io_context => get_io_context()
+      call model_io_context%set_current()
+    end if
 
     call da_dev_increment_alg( working_field )
 

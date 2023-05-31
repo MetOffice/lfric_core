@@ -69,7 +69,7 @@
 
 
 {%- set application_configurations = { 'da_dev' : ['default', 'model', 'pseudomodel'],
-                                       'jedi_forecast' : ['default', 'model'],
+                                       'jedi_forecast' : ['default', 'model', 'no_xios'],
                                        'jedi_forecast_pseudo' : ['default', 'pseudomodel']} %}
 
 {%- set canned_configurations = ['da_dev', 'jedi_forecast', 'jedi_forecast_pseudo'] %}
@@ -94,6 +94,9 @@
                         env={"nrun":5})',
     'run_application("jedi_forecast", "model", resolutions=[("C12",)],
                         env={"nrun":5})',
+    'run_application("jedi_forecast", "no_xios", resolutions=[("C12",)],
+                        env={"nrun":5,
+                             "directives":{"default":{"use_xios":"False"} } } )',
     'check_compilers("jedi_forecast", "default", "fast-debug", resolution=("C12",))',
     'check_compilers("jedi_forecast", "default", "full-debug", resolution=("C12",))',
     'canned_test("jedi_forecast")',
