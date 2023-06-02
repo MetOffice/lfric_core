@@ -107,7 +107,7 @@ contains
     type(transport_metadata_type), intent(in)    :: transport_metadata
 
     ! Internal variables
-    integer(kind=i_def)                   :: mesh_id, step
+    integer(kind=i_def)                   :: mesh_id
     type(mesh_type),              pointer :: mesh => null()
     type(r_tran_field_type)               :: increment
     type(r_tran_field_type)               :: sum_flux
