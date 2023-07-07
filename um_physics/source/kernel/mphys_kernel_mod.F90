@@ -30,7 +30,7 @@ private
 
 type, public, extends(kernel_type) :: mphys_kernel_type
   private
-  type(arg_type) :: meta_args(43) = (/                                      &
+  type(arg_type) :: meta_args(45) = (/                                      &
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mv_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ml_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mi_wth
@@ -56,6 +56,7 @@ type, public, extends(kernel_type) :: mphys_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! dmg_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_rain_2d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_snow_2d
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_graup_2d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! lsca_2d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! ls_rain_3d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! ls_snow_3d
@@ -69,6 +70,7 @@ type, public, extends(kernel_type) :: mphys_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, WTHETA),                   & ! dbcf_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_2),    & ! f_arr_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_liq_wth
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_rain_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! sfwater
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! sfrain
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! sfsnow
@@ -113,6 +115,7 @@ contains
 !> @param[in,out] dmg_wth             Increment to graupel mass mixing ratio
 !> @param[in,out] ls_rain_2d          Large scale rain from twod_fields
 !> @param[in,out] ls_snow_2d          Large scale snow from twod_fields
+!> @param[in,out] ls_graup_2d         Large scale graupel from twod_fields
 !> @param[in,out] lsca_2d             Large scale cloud amount (2d)
 !> @param[in,out] ls_rain_3d          Large scale rain from 3d fields (kg m-2 s-1)
 !> @param[in,out] ls_snow_3d          Large scale snow from 3d fields (kg m-2 s-1)
@@ -127,6 +130,7 @@ contains
 !> @param[in]     f_arr_wth           Parameters related to fractional standard
 !!                                     deviation of condensate
 !> @param[in,out] superc_liq_wth      Supercooled cloud liquid water content
+!> @param[in,out] superc_rain_wth     Supercooled rain water content
 !> @param[in,out] sfwater             Sub-grid orographic water produced by Seeder Feeder scheme
 !> @param[in,out] sfrain              Extra rain produced by Seeder Feeder scheme
 !> @param[in,out] sfsnow              Extra snow produced by Seeder Feeder scheme
@@ -165,7 +169,7 @@ subroutine mphys_code( nlayers, seg_len,            &
                        dmv_wth,  dml_wth,  dmi_wth, &
                        dmr_wth,  dmg_wth,           &
                        ls_rain_2d, ls_snow_2d,      &
-                       lsca_2d,                     &
+                       ls_graup_2d, lsca_2d,        &
                        ls_rain_3d, ls_snow_3d,      &
                        autoconv, accretion,         &
                        rim_cry, rim_agg,            &
@@ -173,6 +177,7 @@ subroutine mphys_code( nlayers, seg_len,            &
                        dcfl_wth, dcff_wth, dbcf_wth,&
                        f_arr_wth,                   &
                        superc_liq_wth,              &
+                       superc_rain_wth,             &
                        sfwater, sfrain, sfsnow,     &
                        refl_tot, refl_1km,          &
                        ndf_wth, undf_wth, map_wth,  &
@@ -260,6 +265,7 @@ subroutine mphys_code( nlayers, seg_len,            &
     real(kind=r_def), intent(inout), dimension(undf_wth) :: dmg_wth
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_rain_2d
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_snow_2d
+    real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_graup_2d
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: lsca_2d
     real(kind=r_def), intent(inout), dimension(undf_wth) :: ls_rain_3d
     real(kind=r_def), intent(inout), dimension(undf_wth) :: ls_snow_3d
@@ -273,6 +279,7 @@ subroutine mphys_code( nlayers, seg_len,            &
     real(kind=r_def), intent(inout), dimension(undf_wth) :: dbcf_wth
 
     real(kind=r_def), pointer, intent(inout) :: superc_liq_wth(:)
+    real(kind=r_def), pointer, intent(inout) :: superc_rain_wth(:)
 
     real(kind=r_def), pointer, intent(inout) :: sfwater(:)
     real(kind=r_def), pointer, intent(inout) :: sfrain(:)
@@ -782,6 +789,8 @@ subroutine mphys_code( nlayers, seg_len,            &
     ! Copy ls_rain and ls_snow
     ls_rain_2d(map_2d(1,i))  = ls_rain(i,j)
     ls_snow_2d(map_2d(1,i))  = ls_snow(i,j)
+    ls_graup_2d(map_2d(1,i)) = ls_graup(i,j)
+
     lsca_2d(map_2d(1,i))     = ls_rainfrac(i)
     do k = 1, nlayers
       ls_rain_3d(map_wth(1,i) + k) = ls_rain3d(i,j,k)
@@ -826,6 +835,21 @@ subroutine mphys_code( nlayers, seg_len,            &
       end do ! nlayers
     end do ! seg_len
   end if ! not assoc. superc_liq_wth
+
+  if (.not. associated(superc_rain_wth, empty_real_data) ) then
+    do i = 1, seg_len
+      do k = 1, nlayers
+        if (t_n(i,j,k) < tm) then
+          ! Following the UM, have taken start of timestep quantity for the
+          ! supercooled rain. This is where the model cloud should
+          ! be in a steady-state.
+          superc_rain_wth( map_wth(1,i) + k) = mr_wth(map_wth(1,i) + k)
+        else
+          superc_rain_wth( map_wth(1,i) + k) = 0.0_r_um
+        end if
+      end do ! nlayers
+    end do ! seg_len
+  end if ! not assoc. superc_rain_wth
 
   if (l_sfwater_diag) then
     do k=1,nlayers

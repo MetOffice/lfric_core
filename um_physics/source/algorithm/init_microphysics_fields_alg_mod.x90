@@ -33,6 +33,7 @@ contains
     ! Microphysics increments and outputs
     type( field_type ), pointer :: ls_rain      => null()
     type( field_type ), pointer :: ls_snow      => null()
+    type( field_type ), pointer :: ls_graup     => null()
     type( field_type ), pointer :: lsca_2d      => null()
     type( field_type ), pointer :: ls_rain_3d   => null()
     type( field_type ), pointer :: ls_snow_3d   => null()
@@ -52,6 +53,7 @@ contains
     call microphysics_fields%get_field('dmv_mphys', dmv_mphys)
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
+    call microphysics_fields%get_field('ls_graup', ls_graup)
     call microphysics_fields%get_field('lsca_2d', lsca_2d)
     call microphysics_fields%get_field('ls_rain_3d', ls_rain_3d)
     call microphysics_fields%get_field('ls_snow_3d', ls_snow_3d)
@@ -76,6 +78,7 @@ contains
                  setval_c(n_g,          0.0_r_def), &
                  setval_c(ls_rain,      0.0_r_def), &
                  setval_c(ls_snow,      0.0_r_def), &
+                 setval_c(ls_graup,     0.0_r_def), &
                  setval_c(lsca_2d,      0.0_r_def), &
                  setval_c(ls_rain_3d,   0.0_r_def), &
                  setval_c(ls_snow_3d,   0.0_r_def), &

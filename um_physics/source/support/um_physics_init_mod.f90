@@ -937,6 +937,8 @@ contains
         casdiags % l_surface_rain  = .true.
         casdiags % l_surface_snow  = .true.
         casdiags % l_surface_graup = .true.
+        casdiags % l_rainfall_3d = .true.
+        casdiags % l_snowonly_3d = .true.
 
         max_step_length = real(timestep_mp_in, r_um)
 

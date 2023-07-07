@@ -32,11 +32,12 @@ module jules_extra_kernel_mod
   !>
   type, public, extends(kernel_type) :: jules_extra_kernel_type
     private
-    type(arg_type) :: meta_args(57) = (/                                       &
+    type(arg_type) :: meta_args(58) = (/                                       &
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! ls_rain
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! conv_rain
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! ls_snow
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! conv_snow
+         arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! ls_graup
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! lsca_2d
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_1), & ! cca_2d
          arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_2), & ! tile_fraction
@@ -111,6 +112,7 @@ contains
   !> @param[in]     conv_rain              Convective rainfall rate (kg m-2 s-1)
   !> @param[in]     ls_snow                Large-scale snowfall rate (kg m-2 s-1)
   !> @param[in]     conv_snow              Convective snowfall rate (kg m-2 s-1)
+  !> @param[in]     ls_graup               Large-scale graupelfall rate (kg m-2 s-1)
   !> @param[in]     lsca_2d                Large-scale cloud amout (2d)
   !> @param[in]     cca_2d                 Convective cloud amout (2d) with no anvil
   !> @param[in]     tile_fraction          Surface tile fractions
@@ -185,6 +187,7 @@ contains
                conv_rain,                  &
                ls_snow,                    &
                conv_snow,                  &
+               ls_graup,                   &
                lsca_2d,                    &
                cca_2d,                     &
                tile_fraction,              &
@@ -382,7 +385,8 @@ contains
 
     real(kind=r_def), dimension(undf_2d), intent(in) :: ls_rain, conv_rain,   &
                                                         ls_snow, conv_snow,   &
-                                                        lsca_2d, cca_2d
+                                                        ls_graup, lsca_2d,    &
+                                                        cca_2d
 
     real(kind=r_def), intent(in)    :: tile_fraction(undf_tile)
     real(kind=r_def), intent(in)    :: snowice_sublimation(undf_tile)
@@ -682,6 +686,7 @@ contains
       forcing%ls_snow_ij(i,1) = ls_snow(map_2d(1,i))   ! Large-scale snowfall rate
       forcing%con_snow_ij(i,1) = conv_snow(map_2d(1,i)) ! Convective snowfallfall rate
       cca_2d_ij(i,1)   = cca_2d(map_2d(1,i))    ! Convective cloud amount
+      ls_graup_ij(i,1) = ls_graup(map_2d(1,i)) ! Large-scale graupelfall rate
     end do
 
     allocate(ls_rainfrac_gb(land_pts))

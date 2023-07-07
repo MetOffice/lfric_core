@@ -67,6 +67,7 @@ contains
     ! Temporary fields: unpacked fields from collections
     type( field_type ), pointer :: ls_rain                => null()
     type( field_type ), pointer :: ls_snow                => null()
+    type( field_type ), pointer :: ls_graup               => null()
     type( field_type ), pointer :: conv_rain              => null()
     type( field_type ), pointer :: conv_snow              => null()
     type( field_type ), pointer :: lsca_2d                => null()
@@ -143,6 +144,7 @@ contains
     ! Unpack precipitation fields
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
+    call microphysics_fields%get_field('ls_graup', ls_graup)
     call convection_fields%get_field('conv_rain', conv_rain)
     call convection_fields%get_field('conv_snow', conv_snow)
     call microphysics_fields%get_field('lsca_2d', lsca_2d)
@@ -223,7 +225,7 @@ contains
     call um_sizes_init(ncells)
 
     call invoke(jules_extra_kernel_type( ls_rain, conv_rain, ls_snow,          &
-                           conv_snow, lsca_2d, cca_2d,                         &
+                           conv_snow, ls_graup, lsca_2d, cca_2d,               &
                            tile_fraction, leaf_area_index,                     &
                            canopy_height, snow_unload_rate,                    &
                            soil_moist_wilt, soil_moist_crit,                   &

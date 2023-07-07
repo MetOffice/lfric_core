@@ -184,7 +184,7 @@ contains
          l_snow_infilt, l_snow_nocan_hc, l_snowdep_surf, lai_alb_lim_sn,    &
          n_lai_exposed, rho_snow_et_crit, rho_snow_fresh, snow_hcon,        &
          unload_rate_u, i_basal_melting_opt, i_grain_growth_opt,            &
-         i_relayer_opt
+         i_relayer_opt, graupel_options
     use jules_soil_mod, only: dzsoil_io, l_dpsids_dsdz, l_soil_sat_down,    &
          l_vg_soil, soilhc_method, check_jules_soil, confrac, cs_min, zsmc, &
          zst, sm_levels
@@ -367,6 +367,7 @@ contains
     cansnowpft(1:npft)     = can_snow_pft(1:npft)
     dzsnow(1:nsmax)        = (/ 0.04_r_um, 0.12_r_um, 0.34_r_um /)
     frac_snow_subl_melt    = 1
+    graupel_options        = 2
     select case (basal_melting)
       case(basal_melting_none)
         i_basal_melting_opt = 0

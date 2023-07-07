@@ -24,6 +24,7 @@ module mphys_diagnostics_mod
 
   logical (l_def) :: dt_mphys_flag
   logical (l_def) :: superc_liq_flag
+  logical (l_def) :: superc_rain_flag
   logical (l_def) :: sfwater_flag
   logical (l_def) :: sfrain_flag
   logical (l_def) :: sfsnow_flag
@@ -44,12 +45,16 @@ contains
   !> @param[inout] sfwater         Water due to subgrid hills
   !> @param[inout] sfrain          Seeder-Feeder rain over subgrid hills
   !> @param[inout] sfsnow          Seeder-Feeder snow over subgrid hills
-  subroutine initialise_diags_for_mphys(superc_liq, sfwater, sfrain, sfsnow,  &
+  !> @param[inout] refl_tot        Total radar reflectivity
+  !> @param[inout] refl_1km        Radar Reflectivity at 1km above the surface
+  subroutine initialise_diags_for_mphys(superc_liq, superc_rain,               &
+                                        sfwater, sfrain, sfsnow,               &
                                         refl_tot, refl_1km)
 
     implicit none
 
     type( field_type ), intent(inout) :: superc_liq
+    type( field_type ), intent(inout) :: superc_rain
     type( field_type ), intent(inout) :: sfwater
     type( field_type ), intent(inout) :: sfrain
     type( field_type ), intent(inout) :: sfsnow
@@ -59,6 +64,7 @@ contains
     if ( subroutine_timers ) call timer("mphys_diagnostics")
 
     superc_liq_flag = init_diag(superc_liq, 'microphysics__superc_liq')
+    superc_rain_flag = init_diag(superc_rain, 'microphysics__superc_rain')
     sfwater_flag = init_diag(sfwater, 'microphysics__sfwater')
     sfrain_flag = init_diag(sfrain, 'microphysics__sfrain')
     sfsnow_flag = init_diag(sfsnow, 'microphysics__sfsnow')
@@ -69,10 +75,18 @@ contains
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  ! Note: If adding new diagnostics below, please consider whether CASIM
+  !       should have equivalent diagnostics added to the file
+  !       casim_diagnostics_mod.x90
+  !----------------------------------------------------------------------------
+
   subroutine output_diags_for_mphys(exner_in_wth, dtheta_mphys,               &
                                     dmv_mphys, dmcl_mphys, dmci_mphys,        &
+                                    dmr_mphys, dmg_mphys, dms_mphys,          &
                                     dcfl_mphys, dcff_mphys, dbcf_mphys,       &
-                                    superc_liq, ls_rain, ls_snow, lsca_2d,    &
+                                    superc_liq, superc_rain,                  &
+                                    ls_rain, ls_snow, ls_graup, lsca_2d,      &
                                     ls_rain_3d, ls_snow_3d, autoconv,         &
                                     accretion, rim_cry, rim_agg,              &
                                     sfwater, sfrain, sfsnow,                  &
@@ -85,12 +99,17 @@ contains
                                         dmv_mphys,                            &
                                         dmcl_mphys,                           &
                                         dmci_mphys,                           &
+                                        dmr_mphys,                            &
+                                        dmg_mphys,                            &
+                                        dms_mphys,                            &
                                         dcfl_mphys,                           &
                                         dcff_mphys,                           &
                                         dbcf_mphys,                           &
                                         superc_liq,                           &
+                                        superc_rain,                          &
                                         ls_rain,                              &
                                         ls_snow,                              &
+                                        ls_graup,                             &
                                         lsca_2d,                              &
                                         ls_rain_3d,                           &
                                         ls_snow_3d,                           &
@@ -104,7 +123,7 @@ contains
                                         refl_tot,                             &
                                         refl_1km
 
-    type ( field_type) :: dt_mphys
+    type ( field_type ) :: dt_mphys
 
     !--------------------------------------
     ! End of declarations
@@ -124,19 +143,23 @@ contains
       call dt_mphys%write_field(dt_mphys%get_name())
     end if
 
+    !----------------------------------------
+    ! Output changes to mixing ratios
+    !----------------------------------------
     call dmv_mphys%write_field('microphysics__dmv_mphys')
-
     call dmcl_mphys%write_field('microphysics__dmcl_mphys')
-
     call dmci_mphys%write_field('microphysics__dmci_mphys')
+    call dmr_mphys%write_field('microphysics__dmr_mphys')
+    call dms_mphys%write_field('microphysics__dms_mphys')
+    call dmg_mphys%write_field('microphysics__dmg_mphys')
 
     call dbcf_mphys%write_field('microphysics__dbcf_mphys')
-
     call dcfl_mphys%write_field('microphysics__dcfl_mphys')
-
     call dcff_mphys%write_field('microphysics__dcff_mphys')
 
     if (superc_liq_flag) call superc_liq%write_field(superc_liq%get_name())
+
+    if (superc_rain_flag) call superc_rain%write_field(superc_rain%get_name())
 
     if (sfwater_flag) call sfwater%write_field(sfwater%get_name())
 
@@ -151,6 +174,8 @@ contains
     call ls_rain%write_field('microphysics__ls_rain')
 
     call ls_snow%write_field('microphysics__ls_snow')
+
+    call ls_graup%write_field('microphysics__ls_graup')
 
     call lsca_2d%write_field('microphysics__lsca_2d')
 

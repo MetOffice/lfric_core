@@ -525,16 +525,23 @@
 	<field id="microphysics__dmv_mphys" name="dmv_mphys" long_name="water_vapour_mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__dmcl_mphys" name="dmcl_mphys" long_name="cloud_liquid__mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__dmci_mphys" name="dmci_mphys" long_name="cloud_ice_mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
+        <field id="microphysics__dmr_mphys" name="dmr_mphys" long_name="rain_mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
+        <field id="microphysics__dms_mphys" name="dms_mphys" long_name="snow_mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
+        <field id="microphysics__dmg_mphys" name="dmg_mphys" long_name="graupel_mixing_ratio_increment_due_to_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
         <field id="microphysics__dbcf_mphys" name="dbcf_mphys" long_name="bulk_cloud_volume_increment_due_to_microphysics" unit="1" grid_ref="full_level_face_grid" />
         <field id="microphysics__dcfl_mphys" name="dcfl_mphys" long_name="liquid_cloud_volume_increment_due_to_microphysics" unit="1" grid_ref="full_level_face_grid" />
         <field id="microphysics__dcff_mphys" name="dcff_mphys" long_name="frozen_cloud_volume_increment_due_to_microphysics" unit="1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__lsca_2d" name="lsca_2d" long_name="large_scale_cloud_amount_(2d)" unit="1" domain_ref="face" />
 	<field id="microphysics__ls_rain" name="ls_rain" long_name="surface_microphysical_rainfall_rate" unit="kg m-2 s-1" domain_ref="face" />
 	<field id="microphysics__ls_snow" name="ls_snow" long_name="surface_microphysical_snowfall_rate" unit="kg m-2 s-1" domain_ref="face" />
-	<field id="microphysics__ls_prec" name="ls_prec" long_name="surface_microphysical_precipitation_rate" unit="kg m-2 s-1" domain_ref="face"> microphysics__ls_rain + microphysics__ls_snow </field>
+        <field id="microphysics__ls_graup" name="ls_graup" long_name="surface_microphysical_graupelfall_rate" unit="kg m-2 s-1" domain_ref="face" />
+        <field id="microphysics__total_fpr" name="total_fpr" long_name="surface_microphysical_total_frozen_precipitation_rate" unit="kg m-2 s-2" domain_ref="face"> microphysics__ls_snow + microphysics__ls_graup </field>
+	<field id="microphysics__ls_prec" name="ls_prec" long_name="surface_microphysical_precipitation_rate" unit="kg m-2 s-1" domain_ref="face"> microphysics__ls_rain + microphysics__ls_snow + microphysics__ls_graup </field>
 	<field id="microphysics__ls_rain_3d" name="ls_rain_3d" long_name="microphysical_rainfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__ls_snow_3d" name="ls_snow_3d" long_name="microphysical_snowfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
+        <field id="microphysics__ls_graup_3d" name="ls_graup_3d" long_name="microphysical_graupelfall_rate" unit="kg m-2 s-1" grid_ref="full_level_face_grid" />
         <field id="microphysics__superc_liq" name="supercooled_liq_mphys" long_name="supercooled_liquid_cloud_after_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
+        <field id="microphysics__superc_rain" name="supercooled_rain_mphys" long_name="supercooled_rain_after_microphysics" unit="kg kg-1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__autoconv" name="autoconv" long_name="rain_autoconversion_rate" unit="kg kg-1 s-1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__accretion" name="accretion" long_name="rain_accretion_rate" unit="kg kg-1 s-1" grid_ref="full_level_face_grid" />
 	<field id="microphysics__rim_cry" name="rim_cry" long_name="riming_rate_for_ice_crystals" unit="kg kg-1 s-1" grid_ref="full_level_face_grid" />

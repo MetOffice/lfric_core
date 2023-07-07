@@ -100,6 +100,7 @@ contains
     type( field_type ), pointer :: dmv_mphys           => null()
     type( field_type ), pointer :: ls_rain             => null()
     type( field_type ), pointer :: ls_snow             => null()
+    type( field_type ), pointer :: ls_graup            => null()
     type( field_type ), pointer :: lsca_2d             => null()
     type( field_type ), pointer :: ls_rain_3d          => null()
     type( field_type ), pointer :: ls_snow_3d          => null()
@@ -119,6 +120,7 @@ contains
     type( field_type ), pointer :: sd_orog            => null()
 
     type( field_type ) :: superc_liq
+    type( field_type ) :: superc_rain
 
     type( field_type ) :: sfwater
     type( field_type ) :: sfrain
@@ -159,6 +161,7 @@ contains
 
     call microphysics_fields%get_field('ls_rain', ls_rain)
     call microphysics_fields%get_field('ls_snow', ls_snow)
+    call microphysics_fields%get_field('ls_graup', ls_graup)
     call microphysics_fields%get_field('lsca_2d', lsca_2d)
     call microphysics_fields%get_field('ls_rain_3d', ls_rain_3d)
     call microphysics_fields%get_field('ls_snow_3d', ls_snow_3d)
@@ -173,7 +176,8 @@ contains
 
     call orography_fields%get_field('sd_orog', sd_orog)
 
-    call initialise_diags_for_mphys(superc_liq, sfwater, sfrain, sfsnow,       &
+    call initialise_diags_for_mphys(superc_liq, superc_rain,                   &
+                                    sfwater, sfrain, sfsnow,                   &
                                     refl_tot, refl_1km)
 
     if (mphys_erosion) then
@@ -199,11 +203,13 @@ contains
                                      dmr_mphys(imr_v),  dmr_mphys(imr_cl),     &
                                      dmr_mphys(imr_ci), dmr_mphys(imr_r),      &
                                      dmr_mphys(imr_g), ls_rain, ls_snow,       &
-                                     lsca_2d, ls_rain_3d, ls_snow_3d,          &
+                                     ls_graup, lsca_2d,                        &
+                                     ls_rain_3d, ls_snow_3d,                   &
                                      autoconv, accretion,                      &
                                      rim_cry, rim_agg,                         &
                                      dtheta_mphys, dcfl_mphys, dcff_mphys,     &
                                      dbcf_mphys, f_arr, superc_liq,            &
+                                     superc_rain,                              &
                                      sfwater, sfrain, sfsnow,                  &
                                      refl_tot, refl_1km ) )
 
@@ -236,11 +242,15 @@ contains
                                      dmr_mphys(imr_v),             &
                                      dmr_mphys(imr_cl),            &
                                      dmr_mphys(imr_ci),            &
+                                     dmr_mphys(imr_r),             &
+                                     dmr_mphys(imr_g),             &
+                                     dmr_mphys(imr_s),             &
                                      dcfl_mphys,                   &
                                      dcff_mphys,                   &
                                      dbcf_mphys,                   &
-                                     superc_liq,                   &
-                                     ls_rain, ls_snow, lsca_2d,    &
+                                     superc_liq, superc_rain,      &
+                                     ls_rain, ls_snow, ls_graup,   &
+                                     lsca_2d,                      &
                                      ls_rain_3d, ls_snow_3d,       &
                                      autoconv, accretion,          &
                                      rim_cry, rim_agg,             &

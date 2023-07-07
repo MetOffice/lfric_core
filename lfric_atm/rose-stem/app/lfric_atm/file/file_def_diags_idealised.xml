@@ -27,6 +27,7 @@
     <field field_ref="microphysics__ls_prec" />
     <field field_ref="microphysics__ls_rain" />
     <field field_ref="microphysics__ls_snow" />
+    <field field_ref="microphysics__ls_graup" />
     <field field_ref="surface__tile_fraction" />
     <field field_ref="surface__tile_heat_flux"/>
     <field field_ref="surface__latent_heat"/>

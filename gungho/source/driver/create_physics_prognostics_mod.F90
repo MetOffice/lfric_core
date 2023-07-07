@@ -56,6 +56,7 @@ module create_physics_prognostics_mod
   use cloud_config_mod,               only : scheme, &
                                              scheme_pc2
   use microphysics_config_mod,        only : microphysics_casim
+
   use jules_surface_config_mod,       only : srf_ex_cnv_gust
   use surface_config_mod,             only : albedo_obs, sea_alb_var_chl
   use spectral_gwd_config_mod,        only : add_cgw
@@ -658,6 +659,10 @@ contains
     call add_physics_field( microphysics_fields, depository, prognostic_fields,&
       adv_fields_last_outer, &
       'lsca_2d',  twod_space, twod=.true. )
+
+    call add_physics_field( microphysics_fields, depository, prognostic_fields,&
+                            adv_fields_last_outer, 'ls_graup',  twod_space,    &
+                            twod=.true. )
 
     ! 3D fields, don't need checkpointing
     call add_physics_field( microphysics_fields, depository, prognostic_fields,&

@@ -30,7 +30,7 @@ private
 
 type, public, extends(kernel_type) :: casim_kernel_type
   private
-  type(arg_type) :: meta_args(32) = (/                                      &
+  type(arg_type) :: meta_args(39) = (/                                      &
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mv_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! ml_wth
        arg_type(GH_FIELD, GH_REAL, GH_READ,  WTHETA),                       & ! mi_wth
@@ -59,10 +59,17 @@ type, public, extends(kernel_type) :: casim_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! dms_wth
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_rain_2d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_snow_2d
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! ls_graup_2d
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! lsca_2d
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! ls_rain_3d
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! ls_snow_3d
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! ls_graup_3d
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! theta_inc
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! cloud_drop_no_conc
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! refl_tot
-       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1)     & ! refl_1km
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1),    & ! refl_1km
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA),                       & ! superc_liq
+       arg_type(GH_FIELD, GH_REAL, GH_WRITE, WTHETA)                        & ! superc_rain
        /)
    integer :: operates_on = CELL_COLUMN
 contains
@@ -110,12 +117,19 @@ contains
 !> @param[in,out] dms_wth             Increment to snow mass mixing ratio
 !> @param[in,out] ls_rain_2d          Large scale rain from twod_fields
 !> @param[in,out] ls_snow_2d          Large scale snow from twod_fields
+!> @param[in,out] ls_graup_2d         Large scale graupel from twod_fields
+!> @param[in,out] lsca_2d             Large scale cloud amount (2d)
+!> @param[in,out] ls_rain_3d          Large scale rain on model layers
+!> @param[in,out] ls_snow_3d          Large scale snow on model layers
+!> @param[in,out] ls_graup_3d         Large scale graupel on model layers
 !> @param[in,out] theta_inc           Increment to theta
 !> @param[in,out] cloud_drop_no_conc  In-cloud drop number for radiation
 !> @param[in,out] refl_tot            Total radar reflectivity for diagnostic
 !!                                     on all levels (dBZ)
 !> @param[in,out] refl_1km            Radar reflectivity (dBZ) at 1km above the
 !!                                     surface
+!> @param[in,out] superc_liq          Supercooled liquid cloud mass mixing ratio
+!> @param[in,out] superc_rain         Supercooled rain mass mixing ratio
 !> @param[in]     ndf_wth             Number of degrees of freedom per cell for
 !!                                     potential temperature space
 !> @param[in]     undf_wth            Number unique of degrees of freedom for
@@ -149,14 +163,19 @@ subroutine casim_code( nlayers,                     &
                        dmv_wth,  dml_wth,  dmi_wth, &
                        dmr_wth,  dmg_wth,  dms_wth, &
                        ls_rain_2d, ls_snow_2d,      &
+                       ls_graup_2d, lsca_2d,        &
+                       ls_rain_3d, ls_snow_3d,      &
+                       ls_graup_3d,                 &
                        theta_inc,                   &
                        cloud_drop_no_conc,          &
                        refl_tot, refl_1km,          &
+                       superc_liq, superc_rain,     &
                        ndf_wth, undf_wth, map_wth,  &
                        ndf_w3,  undf_w3,  map_w3,   &
                        ndf_2d,  undf_2d,  map_2d    )
 
     use constants_mod,              only: r_def, i_def, r_um, i_um
+    use casim_diagnostics_mod,      only: ls_graup_3d_flag
 
     !---------------------------------------
     ! UM modules
@@ -167,6 +186,7 @@ subroutine casim_code( nlayers,                     &
     use atm_fields_bounds_mod,      only: pdims
 
     use planet_constants_mod,       only: p_zero, kappa, planet_radius
+    use water_constants_mod,        only: tm
 
     use micro_main,                 only: shipway_microphysics
     use casim_switches,             only: its, ite, jts, jte, kts, kte,        &
@@ -215,11 +235,20 @@ subroutine casim_code( nlayers,                     &
     real(kind=r_def), intent(inout), dimension(undf_wth) :: dms_wth
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_rain_2d
     real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_snow_2d
+    real(kind=r_def), intent(inout), dimension(undf_2d)  :: ls_graup_2d
+    real(kind=r_def), intent(inout), dimension(undf_2d)  :: lsca_2d
     real(kind=r_def), intent(inout), dimension(undf_wth) :: theta_inc
     real(kind=r_def), intent(inout), dimension(undf_wth) :: cloud_drop_no_conc
 
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: ls_rain_3d
+    real(kind=r_def), intent(inout), dimension(undf_wth) :: ls_snow_3d
+
     real(kind=r_def), pointer, intent(inout) :: refl_tot(:)
     real(kind=r_def), pointer, intent(inout) :: refl_1km(:)
+
+    real(kind=r_def), pointer, intent(inout) :: superc_liq(:)
+    real(kind=r_def), pointer, intent(inout) :: superc_rain(:)
+    real(kind=r_def), pointer, intent(inout) :: ls_graup_3d(:)
 
     integer(kind=i_def), intent(in), dimension(ndf_wth) :: map_wth
     integer(kind=i_def), intent(in), dimension(ndf_w3)  :: map_w3
@@ -260,6 +289,9 @@ subroutine casim_code( nlayers,                     &
 
     ! Local variables for the kernel
     real(r_um), parameter :: alt_1km = 1000.0 ! metres
+
+    real(r_um) :: t_work ! Local working temperature
+
     logical :: l_refl_tot, l_refl_1km
 
     real(r_um), dimension(1,1,nlayers) ::                     &
@@ -268,6 +300,16 @@ subroutine casim_code( nlayers,                     &
     real(r_um), dimension(1,1,0:nlayers) :: r_theta_levels
 
     integer(i_um) :: k
+
+    logical :: supercooled_layer(nlayers)
+
+    !-------------------------------------------------------------------------
+    ! End of Declarations
+    !-------------------------------------------------------------------------
+
+    ! Configure optional diagnostics
+    casdiags % l_graupfall_3d = ls_graup_3d_flag
+
 
     ! Set CDNC for radiation here as we need the start of timestep value
     do k = 0, nlayers
@@ -481,9 +523,23 @@ subroutine casim_code( nlayers,                     &
     ns_mphys( map_wth(1) + 0) = ns_mphys( map_wth(1) + 1)
     ng_mphys( map_wth(1) + 0) = ng_mphys( map_wth(1) + 1)
 
-    ! Copy ls_rain and ls_snow
+    ! Copy ls_rain, ls_snow and ls_graup
     ls_rain_2d(map_2d(1))  = casdiags % SurfaceRainR(1,1)
     ls_snow_2d(map_2d(1))  = casdiags % SurfaceSnowR(1,1)
+    ls_graup_2d(map_2d(1)) = casdiags % SurfaceGraupR(1,1)
+
+    ! Copy 3D precipitation rate quantities
+    do k = 1, nlayers
+      ls_rain_3d(map_wth(1) + k)  = casdiags % rainfall_3d(k,1,1)
+      ls_snow_3d(map_wth(1) + k)  = casdiags % snowonly_3d(k,1,1)
+      if (ls_graup_3d_flag) then
+        ls_graup_3d(map_wth(1) + k) = casdiags % graupfall_3d(k,1,1)
+      end if
+    end do
+
+    ! Copy lsca_2d - like mphys_kernel_mod, use rain fraction
+    ! from lowest model level
+    lsca_2d(map_2d(1)) = cfrain_casim(1,1,1)
 
     if (l_refl_1km) then
       do k = 1, nlayers
@@ -501,6 +557,38 @@ subroutine casim_code( nlayers,                     &
         refl_tot(map_wth(1) + k) = casdiags % dbz_tot(1,1,k)
       end do
     end if
+
+    if (.not. associated(superc_liq, empty_real_data) .or.                     &
+        .not. associated(superc_rain, empty_real_data) ) then
+      do k = 1, nlayers
+        t_work = exner_in_wth(map_wth(1) + k) * theta_in_wth(map_wth(1) + k)
+        if (t_work < tm) then
+          supercooled_layer(k) = .true.
+        else
+          supercooled_layer(k) = .false.
+        end if
+      end do
+
+      if (.not. associated(superc_liq, empty_real_data) ) then
+        do k = 1, nlayers
+          if (supercooled_layer(k)) then
+            superc_liq( map_wth(1) + k ) = ml_wth(map_wth(1) + k)
+          else
+            superc_liq( map_wth(1) + k ) = 0.0_r_um
+          end if
+        end do ! nlayers
+      end if ! not assoc. superc_liq
+
+      if (.not. associated(superc_rain, empty_real_data) ) then
+        do k = 1, nlayers
+          if (supercooled_layer(k)) then
+            superc_rain( map_wth(1) + k ) = mr_wth(map_wth(1) + k)
+          else
+            superc_rain( map_wth(1) + k ) = 0.0_r_um
+          end if
+        end do ! nlayers
+      end if ! not assoc. superc_rain
+    end if ! not assoc. either superc species
 
     ! CASIM deallocate diagnostics
     call deallocate_diagnostic_space()
