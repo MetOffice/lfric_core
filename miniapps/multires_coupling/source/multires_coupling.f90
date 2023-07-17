@@ -45,7 +45,7 @@ program multires_coupling
   dynamics_mesh_modeldb%mpi => global_mpi
   physics_mesh_modeldb%mpi => global_mpi
 
-  call init_comm( program_name )
+  call init_comm( program_name, dynamics_mesh_modeldb%mpi )
   call get_initial_filename( filename )
   call init_config( filename, multires_required_namelists )
   deallocate( filename )
@@ -103,6 +103,6 @@ program multires_coupling
   call final_timers( program_name )
   call final_logger( program_name )
   call final_config()
-  call final_comm()
+  call final_comm( dynamics_mesh_modeldb%mpi )
 
 end program multires_coupling

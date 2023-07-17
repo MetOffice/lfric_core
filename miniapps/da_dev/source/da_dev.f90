@@ -40,7 +40,7 @@ program da_dev
 
   modeldb%mpi => global_mpi
 
-  call init_comm( program_name )
+  call init_comm( program_name, modeldb%mpi )
   call get_initial_filename( filename )
   call init_config( filename, gungho_required_namelists )
   call init_logger( global_mpi%get_comm(), program_name )
@@ -68,6 +68,6 @@ program da_dev
   call final_collections()
   call final_logger( program_name )
   call final_config()
-  call final_comm()
+  call final_comm( modeldb%mpi )
 
 end program da_dev

@@ -39,7 +39,7 @@ program linear_model
 
   modeldb%mpi => global_mpi
 
-  call init_comm( application_name )
+  call init_comm( application_name, modeldb%mpi )
   call get_initial_filename( filename )
   call init_config( filename, gungho_required_namelists )
   deallocate( filename )
@@ -66,6 +66,6 @@ program linear_model
   call final_collections()
   call final_logger( application_name )
   call final_config()
-  call final_comm()
+  call final_comm( modeldb%mpi )
 
 end program linear_model

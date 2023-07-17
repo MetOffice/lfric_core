@@ -41,7 +41,7 @@ program transport
   write(log_scratch_space, '("        i_def kind = ", I0)') kind(1_i_def)
   call log_event( log_scratch_space , log_level_trace )
 
-  call init_comm( program_name )
+  call init_comm( program_name, global_mpi )
   call get_initial_filename( filename )
   call init_config( filename, transport_required_namelists )
   deallocate( filename )
@@ -66,6 +66,6 @@ program transport
   call final_timers( program_name )
   call final_logger( program_name )
   call final_config()
-  call final_comm()
+  call final_comm( global_mpi )
 
 end program transport

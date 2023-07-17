@@ -34,7 +34,7 @@ program gravity_wave
 
   type(model_clock_type), allocatable :: model_clock
 
-  call init_comm( program_name )
+  call init_comm( program_name, global_mpi )
   call get_initial_filename( filename )
   call init_config( filename, gravity_wave_required_namelists )
   deallocate( filename )
@@ -59,6 +59,6 @@ program gravity_wave
   call final_collections()
   call final_logger( program_name )
   call final_config()
-  call final_comm()
+  call final_comm( global_mpi )
 
 end program gravity_wave

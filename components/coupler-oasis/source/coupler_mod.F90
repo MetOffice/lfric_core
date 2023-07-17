@@ -115,26 +115,28 @@ module coupler_mod
 
   !>@brief Initializes OASIS coupler
   !>
-  !> @param [out] comm communicator received from OASIS
+  !> @param [out] comm_out Communicator returned from OASIS to run the model in
+  !> @param [in]  comm_in  Input communicator that OASIS can split
   !
-  subroutine cpl_initialize(comm)
+  subroutine cpl_initialize(comm_out, comm_in)
    implicit none
-   integer(i_def),   INTENT(OUT) :: comm
+   integer(i_def),   intent(out) :: comm_out
+   integer(i_def),   intent(in)  :: comm_in
 #ifdef MCT
    integer(i_def)                :: ierror ! error return by OASIS
-   call oasis_init_comp (il_comp_id, cpl_name, ierror)
+   call oasis_init_comp (il_comp_id, cpl_name, ierror, commworld=comm_in)
 
    if (ierror .NE. prism_ok) then
      call oasis_abort(il_comp_id, trim(cpl_name), 'cpl_initialize')
    endif
 
-   call oasis_get_localcomm ( comm, ierror)
+   call oasis_get_localcomm ( comm_out, ierror)
 
    if (ierror .NE. prism_ok) then
       call oasis_abort(il_comp_id, trim(cpl_name), 'cpl_initialize')
    endif
 #else
-   comm = -1
+   comm_out = -1
    write(log_scratch_space, * ) &
         "cpl_initialize: to use OASIS cpp directive MCT must be set"
    call log_event( log_scratch_space, LOG_LEVEL_ERROR )

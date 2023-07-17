@@ -39,7 +39,7 @@ program lfric_atm
 
   modeldb%mpi => global_mpi
 
-  call init_comm( application_name )
+  call init_comm( application_name, modeldb%mpi )
   call get_initial_filename( filename )
   call init_config( filename, gungho_required_namelists )
   deallocate( filename )
@@ -63,6 +63,6 @@ program lfric_atm
   call final_timers( application_name )
   call final_logger( application_name )
   call final_config()
-  call final_comm()
+  call final_comm( modeldb%mpi )
 
 end program lfric_atm

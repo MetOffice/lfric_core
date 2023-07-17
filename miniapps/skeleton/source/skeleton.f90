@@ -40,7 +40,7 @@ program skeleton
         trim(precision_real)
   call log_event( log_scratch_space, log_level_trace )
 
-  call init_comm("skeleton")
+  call init_comm("skeleton", global_mpi)
   call get_initial_filename( filename )
   call init_config( filename, skeleton_required_namelists )
   deallocate( filename )
@@ -61,6 +61,6 @@ program skeleton
   call final_collections()
   call final_logger( program_name )
   call final_config()
-  call final_comm()
+  call final_comm( global_mpi )
 
 end program skeleton

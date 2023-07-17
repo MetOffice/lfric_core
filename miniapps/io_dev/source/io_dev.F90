@@ -42,7 +42,7 @@ program io_dev
        precision_real
   call log_event( log_scratch_space, log_level_trace )
 
-  call init_comm( "io_dev" )
+  call init_comm( "io_dev", global_mpi )
   call get_initial_filename( filename )
   call init_config( filename, io_dev_required_namelists )
   deallocate( filename )
@@ -68,6 +68,6 @@ program io_dev
   call final_timers( program_name )
   call final_logger( program_name )
   call final_config()
-  call final_comm()
+  call final_comm( global_mpi )
 
 end program io_dev
