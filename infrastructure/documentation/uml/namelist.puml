@@ -7,6 +7,7 @@
 !include look.iuml
 !include utilities/namelist.iuml
 !include utilities/namelist_item.iuml
-!include utilities/keyvalue.iuml
+!include key_value/key_value.iuml
+!include key_value/key_value_collection.iuml
 
 @enduml

@@ -23,13 +23,7 @@ module namelist_mod
                                   LOG_LEVEL_INFO
   use constants_mod,        only: imdi, rmdi, cmdi, str_def, i_def
   use namelist_item_mod,    only: namelist_item_type
-  use keyvalue_mod,         only: keyvalue_type,                                  &
-                                  i32_keyvalue_type,     i64_keyvalue_type,       &
-                                  i32_arr_keyvalue_type, i64_arr_keyvalue_type,   &
-                                  r32_keyvalue_type,     r64_keyvalue_type,       &
-                                  r32_arr_keyvalue_type, r64_arr_keyvalue_type,   &
-                                  logic_keyvalue_type,   logic_arr_keyvalue_type, &
-                                  str_keyvalue_type,     str_arr_keyvalue_type
+
   implicit none
 
   private
@@ -54,14 +48,14 @@ module namelist_mod
     procedure, private :: get_i64_value
     procedure, private :: get_r32_value
     procedure, private :: get_r64_value
-    procedure, private :: get_logic_value
+    procedure, private :: get_logical_value
     procedure, private :: get_str_value
 
     procedure, private :: get_i32_arr_value
     procedure, private :: get_i64_arr_value
     procedure, private :: get_r32_arr_value
     procedure, private :: get_r64_arr_value
-    procedure, private :: get_logic_arr_value
+    procedure, private :: get_logical_arr_value
     procedure, private :: get_str_arr_value
 
     procedure, private :: locate_member
@@ -72,12 +66,12 @@ module namelist_mod
     procedure :: get_profile_name
     procedure :: get_full_name
 
-    generic   :: get_value => get_i32_value,   get_i32_arr_value,   &
-                              get_i64_value,   get_i64_arr_value,   &
-                              get_r32_value,   get_r32_arr_value,   &
-                              get_r64_value,   get_r64_arr_value,   &
-                              get_logic_value, get_logic_arr_value, &
-                              get_str_value,   get_str_arr_value
+    generic   :: get_value => get_i32_value,     get_i32_arr_value,     &
+                              get_i64_value,     get_i64_arr_value,     &
+                              get_r32_value,     get_r32_arr_value,     &
+                              get_r64_value,     get_r64_arr_value,     &
+                              get_logical_value, get_logical_arr_value, &
+                              get_str_value,     get_str_arr_value
 
     procedure :: clear
 
@@ -266,12 +260,12 @@ contains
   end subroutine get_r64_value
 
 
-  ! 2.2e Namelist member getter: Logical
+  ! 2.2e Namelist member getter: logical
   !-------------------------------------------------------
   !> @brief Private subroutine to return a logical.
   !> @param [in]  name  Namelist member name to return data for.
   !> @param [out] value Namelist member data.
-  subroutine get_logic_value( self, name, value )
+  subroutine get_logical_value( self, name, value )
 
     implicit none
 
@@ -284,7 +278,7 @@ contains
     i = self%locate_member( name )
     call self%members(i)%get_value( value )
 
-  end subroutine get_logic_value
+  end subroutine get_logical_value
 
 
   ! 2.2f Namelist member getter: String
@@ -400,12 +394,12 @@ contains
   end subroutine get_r64_arr_value
 
 
-  ! 2.3e Namelist member getter: LOGICAL ARRAY
+  ! 2.3e Namelist member getter: logical array
   !-------------------------------------------------------
-  !> @brief Private subroutine to return a LOGICAL array.
+  !> @brief Private subroutine to return a logical array.
   !> @param [in]  name  Namelist member name to return data for.
   !> @param [out] value Namelist member data.
-  subroutine get_logic_arr_value( self, name, value )
+  subroutine get_logical_arr_value( self, name, value )
 
     implicit none
 
@@ -419,7 +413,7 @@ contains
     i = self%locate_member( name )
     call self%members(i)%get_value( value )
 
-  end subroutine get_logic_arr_value
+  end subroutine get_logical_arr_value
 
 
   ! 2.3f Namelist member getter: STRING ARRAY

@@ -11,7 +11,7 @@ class namelist_mod::namelist_type {
 
   +initialise => namelist_initialise( \n\t<<in>>listname:string<<len=*>>, \n\t<<in>>members:namelist_item_type[:], \n\t<<in,optional>>profile_name:string<<len=*>> )
 
-  +generic:: get_value() => \n\tget_i32_value, get_i32_arr_value,\n\tget_i64_value, get_i64_arr_value,\n\tget_r32_value, get_r32_arr_value,\n\tget_r64_value, get_r64_arr_value,\n\tget_logic_value, get_logic_arr_value,\n\tget_str_value, get_str_arr_value
+  +generic:: get_value() => \n\tget_i32_value, get_i32_arr_value,\n\tget_i64_value, get_i64_arr_value,\n\tget_r32_value, get_r32_arr_value,\n\tget_r64_value, get_r64_arr_value,\n\tget_logical_value, get_logical_arr_value,\n\tget_str_value, get_str_arr_value
 
   +get_listname():     string <<allocatable>>
   +get_profile_name(): string <<allocatable>>
@@ -25,7 +25,7 @@ class namelist_mod::namelist_type {
   -get_r32_value(   <<in>>key:string<<len=*>>, <<out>>value:real    <<kind=real32>> )
   -get_r64_value(   <<in>>key:string<<len=*>>, <<out>>value:real    <<kind=real64>> )
   -get_str_value(   <<in>>key:string<<len=*>>, <<out>>value:string  <<len=*>> )
-  -get_logic_value( <<in>>key:string<<len=*>>, <<out>>value:logical )
+  -get_logical_value( <<in>>key:string<<len=*>>, <<out>>value:logical )
 
 
   -get_i32_arr_value(   <<in>>key:string<<len=*>>, <<out>>value:integer[:] <<kind=int32,allocatable>> )
@@ -33,9 +33,10 @@ class namelist_mod::namelist_type {
   -get_r32_arr_value(   <<in>>key:string<<len=*>>, <<out>>value:real[:]    <<kind=real32,allocatable>> )
   -get_r64_arr_value(   <<in>>key:string<<len=*>>, <<out>>value:real[:]    <<kind=real64,allocatable>> )
   -get_str_arr_value(   <<in>>key:string<<len=*>>, <<out>>value:string[:]  <<len=*,allocatable>> )
-  -get_logic_arr_value( <<in>>key:string<<len=*>>, <<out>>value:logical[:] <<allocatable>> )
+  -get_logical_arr_value( <<in>>key:string<<len=*>>, <<out>>value:logical[:] <<allocatable>> )
 }
 
 linked_list_data_mod::linked_list_data_type <|-- namelist_mod::namelist_type
 namelist_mod::namelist_type o-> "*" namelist_item_mod::namelist_item_type
-namelist_item_mod::namelist_item_type o-> keyvalue_mod::keyvalue_type
+namelist_item_mod::namelist_item_type o-> key_value_mod::key_value_type
+key_value_collection_mod::key_value_collection_type o-> key_value_mod::key_value_type

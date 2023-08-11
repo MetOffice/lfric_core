@@ -150,29 +150,29 @@ contains
     type(namelist_type)      :: test_unit
     type(namelist_item_type) :: members(2)
 
-    logical :: kgo_logic = .true.
-    logical :: kgo_logic_arr(3) = [ .true.,  &
+    logical :: kgo_logical = .true.
+    logical :: kgo_logical_arr(3) = [ .true.,  &
                                     .false., &
                                     .true. ]
 
-    logical :: test_logic
-    logical, allocatable :: test_logic_arr(:)
+    logical :: test_logical
+    logical, allocatable :: test_logical_arr(:)
 
-    call members(1)%initialise( "dog", kgo_logic )
-    call members(2)%initialise( "cat", kgo_logic_arr )
+    call members(1)%initialise( "dog", kgo_logical )
+    call members(2)%initialise( "cat", kgo_logical_arr )
 
     call test_unit%initialise( 'Logicals test', members )
 
-    call test_unit%get_value( "dog",  test_logic )
-    @assertEqual( kgo_logic, test_logic )
+    call test_unit%get_value( "dog",  test_logical )
+    @assertEqual( kgo_logical, test_logical )
 
     ! Use assertTrue as pfunit doesn't like
     ! using assertEqual for logical arrays
-    call test_unit%get_value( "cat",  test_logic_arr )
-    @assertTrue( kgo_logic_arr .eqv. test_logic_arr )
+    call test_unit%get_value( "cat",  test_logical_arr )
+    @assertTrue( kgo_logical_arr .eqv. test_logical_arr )
 
     call test_unit%clear()
-    if ( allocated(test_logic_arr) ) deallocate (test_logic_arr)
+    if ( allocated(test_logical_arr) ) deallocate (test_logical_arr)
 
   end subroutine test_logicals
 

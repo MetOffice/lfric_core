@@ -1,0 +1,137 @@
+' (c) Crown copyright 2023 Met Office. All rights reserved.
+' The file LICENCE, distributed with this code, contains details of the terms
+' under which the code may be used.
+
+'==========================================
+abstract class key_value_mod::key_value_type {
+'==========================================
+  -key: string <<kind=:, allocatable>>
+
+  +initialise => key_value_initialise( <<in>>key:string<<kind=*>> )
+  +get_key => get_key_value_key(): string<<kind=:,allocatable>>
+}
+
+'==========================================
+class key_value_mod::i32_key_value_type {
+'==========================================
+  +value: integer <<kind=int32>>
+  +initialise => init_i32_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:integer<<kind=int32>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::i64_key_value_type {
+'==========================================
+  +value: integer <<kind=int64>>
+  +initialise => init_i64_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:integer<<kind=int64>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::r32_key_value_type {
+'==========================================
+  +value: real <<kind=real32>>
+  +initialise => init_r32_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:real<<kind=real32>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::r64_key_value_type {
+'==========================================
+  +value: real <<kind=real64>>
+  +initialise => init_r64_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:real<<kind=real64>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::logical_key_value_type {
+'==========================================
+  +value: logical
+  +initialise => init_logical_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:logical )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::str_key_value_type {
+'==========================================
+  +value: string
+  +initialise => init_str_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:string<<kind=*>> )
+ 
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::i32_arr_key_value_type {
+'==========================================
+  +value: integer[:] <<kind=int32, allocatable>>
+  +initialise => init_i32_arr_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:integer[:]<<kind=int32>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::i64_arr_key_value_type {
+'==========================================
+  +value: integer[:] <<kind=int64, allocatable>>
+  +initialise => init_i64_arr_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:integer[:]<<kind=int64>> )
+ 
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::r32_arr_key_value_type {
+'==========================================
+  +value: real[:] <<kind=real32, allocatable>>
+  +initialise => init_r32_arr_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:real[:]<<kind=real32>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::r64_arr_key_value_type {
+'==========================================
+  +value: real[:] <<kind=real64, allocatable>>
+  +initialise => init_r64_arr_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:real[:]<<kind=real64>> )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::logical_arr_key_value_type {
+'==========================================
+  +value: logical[:] <<allocatable>>
+  +initialise => init_logical_arr_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:logical[:] )
+
+  +get_key( ... )
+}
+
+'==========================================
+class key_value_mod::str_arr_key_value_type {
+'==========================================
+  +value: string[:]<<kind=str_longlong,allocatable>>
+  +initialise => init_str_arr_key_value(\n\t<<in>>key:string<<kind=*>>,\n\t<<in>>value:string[:]<<kind=*>> )
+
+  +get_key( ... )
+}
+
+
+linked_list_data_mod::linked_list_data_type <|-- key_value_mod::key_value_type
+
+key_value_mod::key_value_type <|-- key_value_mod::i32_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::i64_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::r32_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::r64_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::str_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::logical_key_value_type
+
+key_value_mod::key_value_type <|-- key_value_mod::i32_arr_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::i64_arr_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::r32_arr_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::r64_arr_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::str_arr_key_value_type
+key_value_mod::key_value_type <|-- key_value_mod::logical_arr_key_value_type

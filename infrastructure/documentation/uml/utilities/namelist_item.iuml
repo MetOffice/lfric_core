@@ -5,37 +5,37 @@
 '==========================================
 class namelist_item_mod::namelist_item_type {
 '==========================================
-  -keyvalue_pair: keyvalue_type <<allocatable>>
+  -key_value_pair: key_value_type <<allocatable>>
 
   +get_key(): string <<allocatable>>
 
-  +generic :: initialise() => \n\tinit_i32, init_i64,\n\tinit_i32_arr, init_i64_arr,\n\tinit_r32, init_r64,\n\tinit_r32_arr, init_r64_arr,\n\tinit_logic, init_logic_arr,\n\tinit_str, init_str_arr
+  +generic :: initialise() => \n\tinit_i32, init_i64,\n\tinit_i32_arr, init_i64_arr,\n\tinit_r32, init_r64,\n\tinit_r32_arr, init_r64_arr,\n\tinit_logical, init_logical_arr,\n\tinit_str, init_str_arr
 
-  +generic :: get_value() => \n\tvalue_i32, value_i64,\n\tvalue_i32_arr, value_i64_arr,\n\tvalue_r32, value_r64,\n\tvalue_r32_arr, value_r64_arr,\n\tvalue_logic, value_logic_arr,\n\tvalue_str, value_str_arr
+  +generic :: get_value() => \n\tvalue_i32, value_i64,\n\tvalue_i32_arr, value_i64_arr,\n\tvalue_r32, value_r64,\n\tvalue_r32_arr, value_r64_arr,\n\tvalue_logical, value_logical_arr,\n\tvalue_str, value_str_arr
 
   -init_i32( <<in>>key:string<<len=*>>, <<in>>value:integer<<kind=int32>> )
   -init_i64( <<in>>key:string<<len=*>>, <<in>>value:integer<<kind=int64>> )
   -init_r32( <<in>>key:string<<len=*>>, <<in>>value:real<<kind=real32>> )
   -init_r64( <<in>>key:string<<len=*>>, <<in>>value:real<<kind=real64>> )
-  -init_logic( <<in>>key:string<<len=*>>, <<in>>value:logical )
+  -init_logical( <<in>>key:string<<len=*>>, <<in>>value:logical )
   -init_str( <<in>>key:string<<len=*>>, <<in>>value:string<<len=*>> )
   -init_r32_arr( <<in>>key:string<<len=*>>, <<in>>value:real[:]<<kind=real32>> )
   -init_r64_arr( <<in>>key:string<<len=*>>, <<in>>value:real[:]<<kind=real64>> )
   -init_i32_arr( <<in>>key:string<<len=*>>, <<in>>value:integer[:]<<kind=int32>> )
   -init_i64_arr( <<in>>key:string<<len=*>>, <<in>>value:integer[:]<<kind=int64>> )
-  -init_logic_arr( <<in>>key:string<<len=*>>, <<in>>value:logical[:] )
+  -init_logical_arr( <<in>>key:string<<len=*>>, <<in>>value:logical[:] )
   -init_str_arr( <<in>>key:string<<len=*>>, <<in>>value:string[:]<<len=*>> )
 
   -value_i32( <<out>>value:integer<<kind=int32>> )
   -value_i64( <<out>>value:integer<<kind=int64>> )
   -value_r32( <<out>>value:real<<kind=real32>> )
   -value_r64( <<out>>value:real<<kind=real32>> )
-  -value_logic( <<out>>value:logical )
+  -value_logical( <<out>>value:logical )
   -value_str( <<out>>value:string<<len=*>> )
   -value_i32_arr( <<out>>value:integer[:]<<kind=int32, allocatable>> )
   -value_i64_arr( <<out>>value:integer[:]<<kind=int64, allocatable>> )
   -value_r32_arr( <<out>>value:real[:]<<kind=real32, allocatable>> )
   -value_r64_arr( <<out>>value:real[:]<<kind=int64, allocatable>> )
-  -value_logic_arr( <<out>>value:logical[:]<<allocatable>> )
+  -value_logical_arr( <<out>>value:logical[:]<<allocatable>> )
   -value_str_arr( <<out>>value:string[:]<<len=*,allocatable>> )
 }

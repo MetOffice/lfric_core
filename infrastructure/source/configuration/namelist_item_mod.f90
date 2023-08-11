@@ -6,21 +6,21 @@
 !
 !> @brief   Defines a container object (namelist_item_type) to hold a concrete
 !>          key-value pair object via their allocatable abstract type
-!>          (keyvalue_type).
+!>          (key_value_type).
 !> @details This container is required so that arrays of key-value pair objects
 !>          can be created. Concrete objects of different data-types
 !>          can be contained in a single array of the container object
-!>          (namelist_item_type). The following concrete keyvalue types
+!>          (namelist_item_type). The following concrete key_value types
 !>          are supported in this module.
 !>
-!>          - i32_keyvalue_type,   i32_arr_keyvalue_type
-!>          - i64_keyvalue_type,   i64_arr_keyvalue_type
-!>          - r32_keyvalue_type,   r32_arr_keyvalue_type
-!>          - r64_keyvalue_type,   r64_arr_keyvalue_type
-!>          - logic_keyvalue_type, logic_arr_keyvalue_type
-!>          - str_keyvalue_type,   str_arr_keyvalue_type
+!>          - i32_key_value_type,     i32_arr_key_value_type
+!>          - i64_key_value_type,     i64_arr_key_value_type
+!>          - r32_key_value_type,     r32_arr_key_value_type
+!>          - r64_key_value_type,     r64_arr_key_value_type
+!>          - logical_key_value_type, logical_arr_key_value_type
+!>          - str_key_value_type,     str_arr_key_value_type
 !>
-!>          This container object allows concrete keyvalue types to be
+!>          This container object allows concrete key_value types to be
 !>          initialised and their values retrieved. However, the container
 !>          object (namelist_item_type) does not expose the concrete types
 !>          and so prevents data being altered after initialisation.
@@ -37,13 +37,13 @@ module namelist_item_mod
 
   use constants_mod,  only: imdi, rmdi, cmdi, str_def
   use log_mod,        only: log_event, log_scratch_space, LOG_LEVEL_ERROR
-  use keyvalue_mod,   only: keyvalue_type,                                  &
-                            i32_keyvalue_type,     i64_keyvalue_type,       &
-                            i32_arr_keyvalue_type, i64_arr_keyvalue_type,   &
-                            r32_keyvalue_type,     r64_keyvalue_type,       &
-                            r32_arr_keyvalue_type, r64_arr_keyvalue_type,   &
-                            logic_keyvalue_type,   logic_arr_keyvalue_type, &
-                            str_keyvalue_type,     str_arr_keyvalue_type
+  use key_value_mod,   only: key_value_type,                                   &
+                            i32_key_value_type,     i64_key_value_type,        &
+                            i32_arr_key_value_type, i64_arr_key_value_type,    &
+                            r32_key_value_type,     r64_key_value_type,        &
+                            r32_arr_key_value_type, r64_arr_key_value_type,    &
+                            logical_key_value_type, logical_arr_key_value_type,&
+                            str_key_value_type,     str_arr_key_value_type
   implicit none
 
   private
@@ -57,7 +57,7 @@ module namelist_item_mod
 
     private
 
-    class(keyvalue_type), allocatable :: keyvalue_pair
+    class(key_value_type), allocatable :: key_value_pair
 
   contains
     procedure, private :: init_i32
@@ -68,8 +68,8 @@ module namelist_item_mod
     procedure, private :: init_r64
     procedure, private :: init_r32_arr
     procedure, private :: init_r64_arr
-    procedure, private :: init_logic
-    procedure, private :: init_logic_arr
+    procedure, private :: init_logical
+    procedure, private :: init_logical_arr
     procedure, private :: init_str
     procedure, private :: init_str_arr
 
@@ -81,24 +81,24 @@ module namelist_item_mod
     procedure, private :: value_r64
     procedure, private :: value_r32_arr
     procedure, private :: value_r64_arr
-    procedure, private :: value_logic
-    procedure, private :: value_logic_arr
+    procedure, private :: value_logical
+    procedure, private :: value_logical_arr
     procedure, private :: value_str
     procedure, private :: value_str_arr
 
     procedure :: get_key
 
-    generic   :: get_value  => value_i32,     value_i64,       &
-                               value_i32_arr, value_i64_arr,   &
-                               value_r32,     value_r64,       &
-                               value_r32_arr, value_r64_arr,   &
-                               value_logic,   value_logic_arr, &
+    generic   :: get_value  => value_i32,     value_i64,         &
+                               value_i32_arr, value_i64_arr,     &
+                               value_r32,     value_r64,         &
+                               value_r32_arr, value_r64_arr,     &
+                               value_logical, value_logical_arr, &
                                value_str,     value_str_arr
-    generic   :: initialise => init_i32,      init_i64,        &
-                               init_i32_arr,  init_i64_arr,    &
-                               init_r32,      init_r64,        &
-                               init_r32_arr,  init_r64_arr,    &
-                               init_logic,    init_logic_arr,  &
+    generic   :: initialise => init_i32,      init_i64,          &
+                               init_i32_arr,  init_i64_arr,      &
+                               init_r32,      init_r64,          &
+                               init_r32_arr,  init_r64_arr,      &
+                               init_logical,  init_logical_arr,  &
                                init_str,      init_str_arr
 
   end type namelist_item_type
@@ -108,12 +108,12 @@ contains
 !=========================================
 ! 2.0 Initialisers
 !=========================================
-! Initialisers for concrete keyvalue pair types
+! Initialisers for concrete key_value pair types
 !
 ! 2.1 Initialisers for SCALAR VALUES
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 32-bit integer.
+!>        key_value object for 32-bit integer.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  32-bit integer to assign to the "key"
 subroutine init_i32( self, key, value )
@@ -125,10 +125,10 @@ subroutine init_i32( self, key, value )
   character(*),   intent(in) :: key
   integer(int32), intent(in) :: value
 
-  allocate(i32_keyvalue_type :: self%keyvalue_pair)
+  allocate(i32_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (i32_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i32_key_value_type)
     call clay%initialise( trim(key), value )
   end select
 
@@ -138,7 +138,7 @@ end subroutine init_i32
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 64-bit integer.
+!>        key_value object for 64-bit integer.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  64-bit integer to assign to the "key"
 subroutine init_i64( self, key, value )
@@ -150,10 +150,10 @@ subroutine init_i64( self, key, value )
   character(*),   intent(in) :: key
   integer(int64), intent(in) :: value
 
-  allocate(i64_keyvalue_type :: self%keyvalue_pair)
+  allocate(i64_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (i64_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i64_key_value_type)
     call clay%initialise( trim(key), value )
   end select
 
@@ -163,7 +163,7 @@ end subroutine init_i64
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 32-bit real.
+!>        key_value object for 32-bit real.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  32-bit real to assign to the "key"
 subroutine init_r32( self, key, value )
@@ -175,10 +175,10 @@ subroutine init_r32( self, key, value )
   character(*), intent(in) :: key
   real(real32), intent(in) :: value
 
-  allocate(r32_keyvalue_type :: self%keyvalue_pair)
+  allocate(r32_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (r32_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (r32_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -188,7 +188,7 @@ end subroutine init_r32
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 64-bit real.
+!>        key_value object for 64-bit real.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  64-bit real to assign to the "key"
 subroutine init_r64( self, key, value )
@@ -200,10 +200,10 @@ subroutine init_r64( self, key, value )
   character(*), intent(in) :: key
   real(real64), intent(in) :: value
 
-  allocate(r64_keyvalue_type :: self%keyvalue_pair)
+  allocate(r64_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (r64_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (r64_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -213,10 +213,10 @@ end subroutine init_r64
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for logical.
+!>        key_value object for logical.
 !> @param[in] key    String variable to use as the "key".
-!> @param[in] value  Logical value to assign to the "key"
-subroutine init_logic( self, key, value )
+!> @param[in] value  logical value to assign to the "key"
+subroutine init_logical( self, key, value )
 
   implicit none
 
@@ -225,20 +225,20 @@ subroutine init_logic( self, key, value )
   character(*), intent(in) :: key
   logical,      intent(in) :: value
 
-  allocate(logic_keyvalue_type :: self%keyvalue_pair)
+  allocate(logical_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (logic_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (logical_key_value_type)
     call clay%initialise( key, value )
   end select
 
   return
-end subroutine init_logic
+end subroutine init_logical
 
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for string value.
+!>        key_value object for string value.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  String value to assign to the "key"
 subroutine init_str( self, key, value )
@@ -250,10 +250,10 @@ subroutine init_str( self, key, value )
   character(*), intent(in) :: key
   character(*), intent(in) :: value
 
-  allocate(str_keyvalue_type :: self%keyvalue_pair)
+  allocate(str_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (str_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (str_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -267,7 +267,7 @@ end subroutine init_str
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 32-bit integer array.
+!>        key_value object for 32-bit integer array.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  32-bit integer array to assign to the "key"
 subroutine init_i32_arr( self, key, value )
@@ -279,10 +279,10 @@ subroutine init_i32_arr( self, key, value )
   character(*),   intent(in) :: key
   integer(int32), intent(in) :: value(:)
 
-  allocate(i32_arr_keyvalue_type :: self%keyvalue_pair)
+  allocate(i32_arr_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (i32_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i32_arr_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -292,7 +292,7 @@ end subroutine init_i32_arr
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 64-bit integer array.
+!>        key_value object for 64-bit integer array.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  64-bit integer array to assign to the "key"
 subroutine init_i64_arr( self, key, value )
@@ -304,10 +304,10 @@ subroutine init_i64_arr( self, key, value )
   character(*),   intent(in) :: key
   integer(int64), intent(in) :: value(:)
 
-  allocate(i64_arr_keyvalue_type :: self%keyvalue_pair)
+  allocate(i64_arr_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (i64_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i64_arr_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -317,7 +317,7 @@ end subroutine init_i64_arr
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 32-bit real array.
+!>        key_value object for 32-bit real array.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  32-bit real array to assign to the "key"
 subroutine init_r32_arr( self, key, value )
@@ -329,10 +329,10 @@ subroutine init_r32_arr( self, key, value )
   character(*), intent(in) :: key
   real(real32), intent(in) :: value(:)
 
-  allocate(r32_arr_keyvalue_type :: self%keyvalue_pair)
+  allocate(r32_arr_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (r32_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (r32_arr_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -342,7 +342,7 @@ end subroutine init_r32_arr
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for 64-bit real array.
+!>        key_value object for 64-bit real array.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  64-bit real array to assign to the "key"
 subroutine init_r64_arr( self, key, value )
@@ -354,10 +354,10 @@ subroutine init_r64_arr( self, key, value )
   character(*), intent(in) :: key
   real(real64), intent(in) :: value(:)
 
-  allocate(r64_arr_keyvalue_type :: self%keyvalue_pair)
+  allocate(r64_arr_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (r64_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (r64_arr_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -367,10 +367,10 @@ end subroutine init_r64_arr
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for logical array.
+!>        key_value object for logical array.
 !> @param[in] key    String variable to use as the "key".
-!> @param[in] value  Logical array to assign to the "key"
-subroutine init_logic_arr( self, key, value )
+!> @param[in] value  logical array to assign to the "key"
+subroutine init_logical_arr( self, key, value )
 
   implicit none
 
@@ -379,20 +379,20 @@ subroutine init_logic_arr( self, key, value )
   character(*), intent(in) :: key
   logical,      intent(in) :: value(:)
 
-  allocate(logic_arr_keyvalue_type :: self%keyvalue_pair)
+  allocate(logical_arr_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (logic_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (logical_arr_key_value_type)
     call clay%initialise( key, value )
   end select
 
   return
-end subroutine init_logic_arr
+end subroutine init_logical_arr
 
 
 !===========================================================
 !> @brief Initialises abstract key-value pair to concrete
-!>        keyvalue object for string array.
+!>        key_value object for string array.
 !> @param[in] key    String variable to use as the "key".
 !> @param[in] value  String array to assign to the "key"
 subroutine init_str_arr( self, key, value )
@@ -404,10 +404,10 @@ subroutine init_str_arr( self, key, value )
   character(*), intent(in) :: key
   character(*), intent(in) :: value(:)
 
-  allocate(str_arr_keyvalue_type :: self%keyvalue_pair)
+  allocate(str_arr_key_value_type :: self%key_value_pair)
 
-  select type( clay => self%keyvalue_pair )
-  class is (str_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (str_arr_key_value_type)
     call clay%initialise( key, value )
   end select
 
@@ -420,7 +420,7 @@ end subroutine init_str_arr
 ! 3.0 Getters
 !=========================================
 ! Retrieve data associated with keys for
-! for concrete keyvalue pair types
+! for concrete key_value pair types
 !
 !===========================================================
 ! 3.1 Querys the key string for the object
@@ -437,8 +437,8 @@ function get_key( self ) result( key )
 
   character(:), allocatable :: key
 
-  if (allocated(self%keyvalue_pair)) then
-    key = self%keyvalue_pair%get_key()
+  if (allocated(self%key_value_pair)) then
+    key = self%key_value_pair%get_key()
   else
     allocate( key, source=trim(cmdi) )
   end if
@@ -459,12 +459,12 @@ subroutine value_i32( self, value )
   class(namelist_item_type), intent(in)  :: self
   integer(int32),            intent(out) :: value
 
-  select type( clay => self%keyvalue_pair )
-  class is (i32_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i32_key_value_type)
     value = clay%value
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected i32_keyvalue_type.'
+        'Object is not the expected i32_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -482,12 +482,12 @@ subroutine value_i64( self, value )
   class(namelist_item_type), intent(in)  :: self
   integer(int64),            intent(out) :: value
 
-  select type( clay => self%keyvalue_pair )
-  class is (i64_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i64_key_value_type)
     value = clay%value
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected i64_keyvalue_type.'
+        'Object is not the expected i64_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -505,12 +505,12 @@ subroutine value_r32( self, value )
   class(namelist_item_type), intent(in)  :: self
   real(real32),              intent(out) :: value
 
-  select type (clay => self%keyvalue_pair)
-  class is (r32_keyvalue_type)
+  select type (clay => self%key_value_pair)
+  class is (r32_key_value_type)
     value = clay%value
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected r32_keyvalue_type.'
+        'Object is not the expected r32_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -528,12 +528,12 @@ subroutine value_r64( self, value )
   class(namelist_item_type), intent(in)  :: self
   real(real64),              intent(out) :: value
 
-  select type (clay => self%keyvalue_pair)
-  class is (r64_keyvalue_type)
+  select type (clay => self%key_value_pair)
+  class is (r64_key_value_type)
     value = clay%value
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected r64_keyvalue_type.'
+        'Object is not the expected r64_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -543,25 +543,25 @@ end subroutine value_r64
 
 !===========================================================
 !> @brief Extracts the value held by the concrete type.
-!> @param[out] value  Logical value held in object.
-subroutine value_logic( self, value )
+!> @param[out] value  logical value held in object.
+subroutine value_logical( self, value )
 
   implicit none
 
   class(namelist_item_type), intent(in)  :: self
   logical,                   intent(out) :: value
 
-  select type (clay => self%keyvalue_pair)
-  class is (logic_keyvalue_type)
+  select type (clay => self%key_value_pair)
+  class is (logical_key_value_type)
     value = clay%value
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected logic_keyvalue_type.'
+        'Object is not the expected logical_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
   return
-end subroutine value_logic
+end subroutine value_logical
 
 
 !===========================================================
@@ -574,12 +574,12 @@ subroutine value_str( self, value )
   class(namelist_item_type), intent(in)  :: self
   character(*),              intent(out) :: value
 
-  select type( clay => self%keyvalue_pair )
-  class is (str_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (str_key_value_type)
     value = trim(clay%value)
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected str_keyvalue_type.'
+        'Object is not the expected str_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -599,12 +599,12 @@ subroutine value_i32_arr( self, value )
   class(namelist_item_type),   intent(in)  :: self
   integer(int32), allocatable, intent(out) :: value(:)
 
-  select type( clay => self%keyvalue_pair )
-  class is (i32_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i32_arr_key_value_type)
     allocate(value, source=clay%value)
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected i32_arr_keyvalue_type.'
+        'Object is not the expected i32_arr_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -622,12 +622,12 @@ subroutine value_i64_arr( self, value )
   class(namelist_item_type),   intent(in)  :: self
   integer(int64), allocatable, intent(out) :: value(:)
 
-  select type( clay => self%keyvalue_pair )
-  class is (i64_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (i64_arr_key_value_type)
     allocate(value, source=clay%value)
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected i64_arr_keyvalue_type.'
+        'Object is not the expected i64_arr_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -645,13 +645,13 @@ subroutine value_r32_arr( self, value )
   class(namelist_item_type), intent(in)  :: self
   real(real32), allocatable, intent(out) :: value(:)
 
-  select type( clay => self%keyvalue_pair )
-  class is (r32_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (r32_arr_key_value_type)
     allocate( value(size(clay%value)) )
     value(:) = clay%value(:)
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected r32_arr_keyvalue_type.'
+        'Object is not the expected r32_arr_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -669,13 +669,13 @@ subroutine value_r64_arr( self, value )
   class(namelist_item_type), intent(in)  :: self
   real(real64), allocatable, intent(out) :: value(:)
 
-  select type( clay => self%keyvalue_pair )
-  class is (r64_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (r64_arr_key_value_type)
     allocate( value( size(clay%value)) )
     value(:) = clay%value(:)
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected r64_arr_keyvalue_type.'
+        'Object is not the expected r64_arr_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
@@ -685,26 +685,26 @@ end subroutine value_r64_arr
 
 !===========================================================
 !> @brief Extracts the value held by the concrete type.
-!> @param[out] value  Logical array value held in object.
-subroutine value_logic_arr( self, value )
+!> @param[out] value  logical array value held in object.
+subroutine value_logical_arr( self, value )
 
   implicit none
 
   class(namelist_item_type), intent(in)  :: self
   logical, allocatable,      intent(out) :: value(:)
 
-  select type( clay => self%keyvalue_pair )
-  class is (logic_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (logical_arr_key_value_type)
     allocate( value( size(clay%value)) )
     value(:) = clay%value(:)
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected logic_arr_keyvalue_type.'
+        'Object is not the expected logical_arr_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 
   return
-end subroutine value_logic_arr
+end subroutine value_logical_arr
 
 
 !===========================================================
@@ -730,8 +730,8 @@ subroutine value_str_arr( self, value )
   integer :: arr_len
   integer :: i
 
-  select type( clay => self%keyvalue_pair )
-  class is (str_arr_keyvalue_type)
+  select type( clay => self%key_value_pair )
+  class is (str_arr_key_value_type)
     arr_len = size(clay%value)
     allocate( value(arr_len) )
     do i=1, arr_len
@@ -740,7 +740,7 @@ subroutine value_str_arr( self, value )
 
   class default
     write( log_scratch_space, '(A)' ) &
-        'Object is not the expected str_arr_keyvalue_type.'
+        'Object is not the expected str_arr_key_value_type.'
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end select
 

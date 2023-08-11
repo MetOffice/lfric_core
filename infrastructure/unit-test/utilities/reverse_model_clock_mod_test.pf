@@ -139,7 +139,7 @@ contains
     character(:), allocatable :: string
     character(20) :: buffer
     write( buffer,                                        &
-           '(I0,", ",I0,", ",F5.2)') this%inject_first,   &
+           '(I0,", ",I0,", ",F6.2)') this%inject_first,   &
                                      this%inject_last,    &
                                      this%inject_delta_t
     string = trim(buffer)

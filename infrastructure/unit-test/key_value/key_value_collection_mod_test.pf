@@ -1,0 +1,175 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2023 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the key-value pair collection object
+!>
+module key_value_collection_mod_test
+
+    use, intrinsic :: iso_fortran_env, only : int64, int32, real64, real32
+
+    use constants_mod,                 only : i_def, r_def, l_def, &
+                                              str_longlong, str_def
+    use key_value_collection_mod,      only : key_value_collection_type
+    use key_value_mod, only: i32_key_value_type,       i64_key_value_type,     &
+                           i32_arr_key_value_type,     i64_arr_key_value_type, &
+                           r32_key_value_type,         r64_key_value_type,     &
+                           r32_arr_key_value_type,     r64_arr_key_value_type, &
+                           logical_key_value_type,     str_key_value_type,     &
+                           logical_arr_key_value_type, str_arr_key_value_type
+    use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: key_value_collection_test_type
+    private
+  contains
+    procedure test_all
+  end type key_value_collection_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  @Test
+  subroutine test_all( this )
+
+    implicit none
+
+    class(key_value_collection_test_type), intent(inout) :: this
+
+    type(key_value_collection_type) :: key_value_collection
+
+    type(i32_key_value_type)         :: i32_key_value
+    type(i64_key_value_type)         :: i64_key_value
+    type(r32_key_value_type)         :: r32_key_value
+    type(r64_key_value_type)         :: r64_key_value
+    type(logical_key_value_type)     :: logical_key_value
+    type(str_key_value_type)         :: string_key_value
+    type(i32_arr_key_value_type)     :: i32_arr_key_value
+    type(i64_arr_key_value_type)     :: i64_arr_key_value
+    type(r32_arr_key_value_type)     :: r32_arr_key_value
+    type(r64_arr_key_value_type)     :: r64_arr_key_value
+    type(logical_arr_key_value_type) :: logical_arr_key_value
+    type(str_arr_key_value_type)     :: string_arr_key_value
+
+    integer(int32),          pointer :: i32_val
+    integer(int64),          pointer :: i64_val
+    real(real32),            pointer :: r32_val
+    real(real64),            pointer :: r64_val, r64_val2
+    logical,                 pointer :: logical_val
+    character(str_longlong), pointer :: string_val
+    integer(int32),          pointer :: i32_arr_val(:)
+    integer(int64),          pointer :: i64_arr_val(:)
+    real(real32),            pointer :: r32_arr_val(:)
+    real(real64),            pointer :: r64_arr_val(:)
+    logical,                 pointer :: logical_arr_val(:)
+    character(str_def),      pointer :: string_arr_val(:)
+
+    integer(i_def) :: length, table_length
+    logical(l_def) :: exists
+    character(str_longlong) :: name_str
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+
+    !Create a key-value pair collection
+    call key_value_collection%initialise(name = "key_value_collection", &
+                                         table_len=4)
+
+    !Check the name is as expected
+    name_str = key_value_collection%get_name()
+    @assertEqual("key_value_collection", name_str)
+
+    !Check the table length is as expected
+    table_length = key_value_collection%get_table_len()
+    @assertEqual(4_i_def, table_length)
+
+    !Add all different types of key-value pair to a single collection
+    call i32_key_value%initialise("key_for_int32", 320_int32)
+    call key_value_collection%add_key_value(i32_key_value)
+    call i64_key_value%initialise("key_for_int64", 640_int64)
+    call key_value_collection%add_key_value(i64_key_value)
+    call r32_key_value%initialise("key_for_real32", 3200.0_real32)
+    call key_value_collection%add_key_value(r32_key_value)
+    call r64_key_value%initialise("key_for_real64", 6400.0_real64)
+    call key_value_collection%add_key_value(r64_key_value)
+    call logical_key_value%initialise("key_for_logical", .true.)
+    call key_value_collection%add_key_value(logical_key_value)
+    call string_key_value%initialise("key_for_string", "test_string")
+    call key_value_collection%add_key_value(string_key_value)
+    call i32_arr_key_value%initialise("key_for_int32_arr", [1_int32, 2_int32, 3_int32, 4_int32, 5_int32])
+    call key_value_collection%add_key_value(i32_arr_key_value)
+    call i64_arr_key_value%initialise("key_for_int64_arr", [9_int64, 8_int64, 7_int64, 6_int64])
+    call key_value_collection%add_key_value(i64_arr_key_value)
+    call r32_arr_key_value%initialise("key_for_real32_arr", [0.1_real32, 0.2_real32])
+    call key_value_collection%add_key_value(r32_arr_key_value)
+    call r64_arr_key_value%initialise("key_for_real64_arr", [99.9_real64, 99.8_real64, 99.7_real64])
+    call key_value_collection%add_key_value(r64_arr_key_value)
+    call logical_arr_key_value%initialise("key_for_logical_arr", [.true., .false., .true.])
+    call key_value_collection%add_key_value(logical_arr_key_value)
+    call string_arr_key_value%initialise("key_for_string_arr", ["one", "two"])
+    call key_value_collection%add_key_value(string_arr_key_value)
+
+    ! Extract the value of all keys and check they're correct
+    call key_value_collection%get_value("key_for_int32", i32_val)
+    @assertEqual(320_int32, i32_val)
+    call key_value_collection%get_value("key_for_int64", i64_val)
+    @assertEqual(640_int64, i64_val)
+    call key_value_collection%get_value("key_for_real32", r32_val)
+    @assertEqual(3200_real32, r32_val, real(tol, real32))
+    call key_value_collection%get_value("key_for_real64", r64_val)
+    @assertEqual(6400_real64, r64_val, real(tol, real64))
+    call key_value_collection%get_value("key_for_logical", logical_val)
+    @assertTrue(logical_val)
+    call key_value_collection%get_value("key_for_string", string_val)
+    @assertEqual("test_string", trim(string_val))
+    call key_value_collection%get_value("key_for_int32_arr", i32_arr_val)
+    @assertEqual([1_int32, 2_int32, 3_int32, 4_int32, 5_int32], i32_arr_val)
+    call key_value_collection%get_value("key_for_int64_arr", i64_arr_val)
+    @assertEqual([9_int64, 8_int64, 7_int64, 6_int64], i64_arr_val)
+    call key_value_collection%get_value("key_for_real32_arr", r32_arr_val)
+    @assertEqual([0.1_real32, 0.2_real32], r32_arr_val)
+    call key_value_collection%get_value("key_for_real64_arr", r64_arr_val)
+    @assertEqual([99.9_real64, 99.8_real64, 99.7_real64], r64_arr_val)
+    !No assertEqual for arrays of logicals or strings, so test each element
+    call key_value_collection%get_value("key_for_logical_arr", logical_arr_val)
+    @assertTrue(logical_arr_val(1))
+    @assertFalse(logical_arr_val(2))
+    @assertTrue(logical_arr_val(3))
+    @assertEqual(3, size(logical_arr_val))
+    call key_value_collection%get_value("key_for_string_arr", string_arr_val)
+    @assertEqual("one", string_arr_val(1))
+    @assertEqual("two", string_arr_val(2))
+    @assertEqual(2, size(string_arr_val))
+
+    !Change a value locally, and check the value in the collection is updated
+    r64_val = 12800.0_real64
+    call key_value_collection%get_value("key_for_real64", r64_val2)
+    @assertEqual(12800.0_real64, r64_val2, real(tol, real64))
+
+    !Check length of table
+    length = key_value_collection%get_length()
+    @assertEqual(12_i_def, length)
+
+    !Remove an item from the collection, check it's gone and check length again
+    exists = key_value_collection%key_value_exists("key_for_int32")
+    @assertTrue(exists)
+    call key_value_collection%remove_key_value("key_for_int32")
+    exists = key_value_collection%key_value_exists("key_for_int32")
+    @assertFalse(exists)
+    length = key_value_collection%get_length()
+    @assertEqual(11_i_def, length)
+
+    !Tidy up collection to prevent data bleeding into other tests
+    call key_value_collection%clear()
+
+  end subroutine test_all
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+end module key_value_collection_mod_test
