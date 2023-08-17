@@ -7,6 +7,7 @@
 !> @brief Process ocean and sea ice data coming through the coupler
 
 module process_o2a_algorithm_mod
+  use constants_mod,                 only: i_def, r_def
   use coupler_external_field_mod,    only: set_r_sea_ice_frac_raw
   use field_mod,                     only: field_type
   use field_collection_mod,          only: field_collection_type
@@ -26,10 +27,17 @@ module process_o2a_algorithm_mod
   !> @brief Process ocean and sea ice data coming through the coupler
   !> @param[in] dcpl_rcv field collection of all fields recieved through the coupler
   !> @param[in] depository field collection of all other relevant fields
-  subroutine process_o2a_algorithm(dcpl_rcv,depository)
+  !> @param[in] n_sea_ice_tile Number of sea ice tiles
+  subroutine process_o2a_algorithm(dcpl_rcv,depository,              &
+                                   n_sea_ice_tile, T_freeze_h2o_sea, &
+                                   therm_cond_sice, therm_cond_sice_snow)
    implicit none
    type( field_collection_type ), intent(in)    :: dcpl_rcv
    type( field_collection_type ), intent(in)    :: depository
+   integer(kind=i_def),           intent(in)    :: n_sea_ice_tile
+   real(kind=r_def),              intent(in)    :: T_freeze_h2o_sea
+   real(kind=r_def),              intent(in)    :: therm_cond_sice
+   real(kind=r_def),              intent(in)    :: therm_cond_sice_snow
 
    !local variables
    type( field_type ), pointer        :: sea_surf_temp_ptr => null()
@@ -106,7 +114,11 @@ module process_o2a_algorithm_mod
                                         sea_ice_conductivity_ptr, &
                                         sea_ice_snow_depth_ptr,   &
                                         melt_pond_fraction_ptr,   &
-                                        melt_pond_depth_ptr       &
+                                        melt_pond_depth_ptr,      &
+                                        n_sea_ice_tile,           &
+                                        T_freeze_h2o_sea,         &
+                                        therm_cond_sice,          &
+                                        therm_cond_sice_snow      &
                                       )                           &
               )   ! Close invoke.
 

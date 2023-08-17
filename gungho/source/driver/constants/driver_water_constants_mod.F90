@@ -26,7 +26,8 @@ module driver_water_constants_mod
 !>       a requirement, a resolution for this issue (if any) should be science
 !>       led.
 
-  use constants_mod, only : r_def
+  use constants_mod,         only : r_def
+  use science_constants_mod, only : zero_C_in_K
 
   implicit none
 
@@ -41,7 +42,7 @@ module driver_water_constants_mod
   !> @{
   real(r_def), parameter :: T_freeze_h2o_sea =271.35_r_def
   !< Temperature at which sea water freezes, [K]
-  real(r_def), parameter :: T_freeze_h2o = 273.15_r_def
+  real(r_def), parameter :: T_freeze_h2o = zero_C_in_K
   !< Temperature at which fresh water freezes and ice melts, [K]
   !> @}
 

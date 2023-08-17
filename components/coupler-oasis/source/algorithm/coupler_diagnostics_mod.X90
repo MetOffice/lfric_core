@@ -456,8 +456,12 @@ module coupler_diagnostics_mod
     type( field_type ), pointer :: tile_fraction_ptr       => null()
 
     call depository%get_field('tile_fraction', tile_fraction_ptr)
-    call invoke(convert_to_marine_fraction_type(sea_ice_frac_previous,         &
-                                          sea_frac_previous, tile_fraction_ptr))
+    call invoke(convert_to_marine_fraction_type(sea_ice_frac_previous, &
+                                           sea_frac_previous,          &
+                                           tile_fraction_ptr,          &
+                                           first_sea_ice_tile,         &
+                                           n_sea_ice_tile,             &
+                                           first_sea_tile))
 
   end subroutine save_sea_ice_frac_previous
 

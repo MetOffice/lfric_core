@@ -8,7 +8,8 @@
 
 module lfric_atm_conversions_mod
 
-  use constants_mod, only : r_def
+  use constants_mod,         only : r_def
+  use science_constants_mod, only : zero_C_in_K
 
   implicit none
 
@@ -29,7 +30,7 @@ module lfric_atm_conversions_mod
   !> @}
 
   ! Celsius to Kelvin (Conversion offset)
-  real(r_def), parameter :: zero_degrees_celsius = 273.15_r_def
+  real(r_def), parameter :: zero_degrees_celsius = zero_C_in_K
 
   ! Knots to m/s (Conversion factor)
   real(r_def), parameter :: knots_to_metre_per_second = 1852.0_r_def / &

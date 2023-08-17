@@ -10,16 +10,14 @@ module process_o2a_kernel_mod
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type,              &
                                     GH_FIELD, GH_REAL,     &
+                                    GH_INTEGER,            &
                                     GH_READ, GH_READWRITE, &
+                                    GH_SCALAR,             &
                                     GH_WRITE, ANY_DISCONTINUOUS_SPACE_1, &
                                     ANY_DISCONTINUOUS_SPACE_2, &
                                     CELL_COLUMN
 use constants_mod,           only : r_def, i_def
-use surface_config_mod,      only : therm_cond_sice,       &
-                                    therm_cond_sice_snow
-use jules_control_init_mod,        only : n_sea_ice_tile
-use lfric_atm_conversions_mod,     only: zero_degrees_celsius
-use driver_water_constants_mod, only: T_freeze_h2o_sea
+use science_constants_mod,   only : zero_C_in_K
 
 implicit none
 
@@ -31,7 +29,7 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: process_o2a_kernel_type
   private
-  type(arg_type) :: meta_args(8) = (/                    &
+  type(arg_type) :: meta_args(12) = (/                    &
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1), &
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2), &
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2), &
@@ -39,7 +37,11 @@ type, public, extends(kernel_type) :: process_o2a_kernel_type
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2), &
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2), &
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2), &
-       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2)  &
+       arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_2), &
+       arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                             &
+       arg_type(GH_SCALAR, GH_REAL, GH_READ),                                &
+       arg_type(GH_SCALAR, GH_REAL, GH_READ),                                &
+       arg_type(GH_SCALAR, GH_REAL, GH_READ)                                 &
        /)
   integer :: operates_on = CELL_COLUMN
 contains
@@ -62,6 +64,10 @@ contains
 !! @param[in,out] sea_ice_snow_depth   the amount of snow on sea ice
 !! @param[in,out] melt_pond_fraction   the fraction of melt ponds on the sea ice
 !! @param[in,out] melt_pond_depth      the depth of the melt ponds on the sea ice
+!! @param[in] n_sea_ice_tile Number of sea ice tiles
+!! @param[in] T_freeze_h2o_sea Temperature at which sea water freezes, [K]
+!! @param[in] therm_cond_sice Thermal conductivity of sea-ice (W/m/K)
+!! @param[in] therm_cond_sice_snow Thermal conductivity of snow on zero layer sea-ice (W/m/K)
 !! @param[in] ndf_ocn Number of degrees of freedom per cell for the ocean surface
 !! @param[in] undf_ocn Number of unique degrees of freedom  for the ocean surface
 !! @param[in] map_ocn Dofmap for the cell at the base of the column for the ocean surface
@@ -74,6 +80,10 @@ subroutine process_o2a_code(nlayers, sea_surf_temp,                  &
                               sea_ice_layer_t, sea_ice_conductivity, &
                               sea_ice_snow_depth,                    &
                               melt_pond_fraction, melt_pond_depth,   &
+                              n_sea_ice_tile,                        &
+                              T_freeze_h2o_sea,                      &
+                              therm_cond_sice,                       &
+                              therm_cond_sice_snow,                  &
                               ndf_ocn, undf_ocn, map_ocn,            &
                               ndf_ice, undf_ice, map_ice)
 
@@ -95,6 +105,10 @@ subroutine process_o2a_code(nlayers, sea_surf_temp,                  &
   real(kind=r_def), dimension(undf_ice), intent(inout) :: sea_ice_snow_depth
   real(kind=r_def), dimension(undf_ice), intent(inout) :: melt_pond_fraction
   real(kind=r_def), dimension(undf_ice), intent(inout) :: melt_pond_depth
+  integer(kind=i_def), intent(in) :: n_sea_ice_tile
+  real(kind=r_def), intent(in) :: T_freeze_h2o_sea
+  real(kind=r_def), intent(in) :: therm_cond_sice
+  real(kind=r_def), intent(in) :: therm_cond_sice_snow
 
   ! Parameters
   ! Minimum sea ice thickness allowed through the coupler
@@ -102,7 +116,7 @@ subroutine process_o2a_code(nlayers, sea_surf_temp,                  &
   ! Minimum sea ice fraction allowed through the coupler
   real(kind=r_def), parameter :: aicenmin = 1.0e-02_r_def
   ! Maximum sea ice layer temperature allowed through the coupler
-  real(kind=r_def), parameter :: ti_max = zero_degrees_celsius
+  real(kind=r_def), parameter :: ti_max = zero_C_in_K
   ! Minimum sea ice layer temperature allowed through the coupler
   real(kind=r_def), parameter :: ti_min = 200.0_r_def
 

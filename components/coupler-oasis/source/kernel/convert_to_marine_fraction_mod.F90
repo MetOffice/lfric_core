@@ -9,19 +9,17 @@
 module convert_to_marine_fraction_mod
 
 use kernel_mod,              only : kernel_type
-use argument_mod,            only : arg_type,            &
-                                    GH_REAL,             &
-                                    GH_FIELD,            &
-                                    GH_WRITE, GH_READ,   &
+use argument_mod,            only : arg_type,                  &
+                                    GH_REAL,                   &
+                                    GH_INTEGER,                &
+                                    GH_FIELD,                  &
+                                    GH_SCALAR,                 &
+                                    GH_WRITE, GH_READ,         &
                                     ANY_DISCONTINUOUS_SPACE_1, &
                                     ANY_DISCONTINUOUS_SPACE_2, &
                                     ANY_DISCONTINUOUS_SPACE_3, &
                                     CELL_COLUMN
 use constants_mod,           only : r_def, i_def
-
-use jules_control_init_mod,        only: first_sea_ice_tile,              &
-                                         n_sea_ice_tile,                  &
-                                         first_sea_tile
 
 implicit none
 
@@ -33,10 +31,13 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: convert_to_marine_fraction_type
   private
-  type(arg_type) :: meta_args(3) = (/                    &
+  type(arg_type) :: meta_args(6) = (/                                    &
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1), &
        arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_2), &
-       arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3)  &
+       arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
+       arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                         &
+       arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                         &
+       arg_type(GH_SCALAR, GH_INTEGER, GH_READ)                          &
        /)
   integer :: operates_on = CELL_COLUMN
 contains
@@ -54,7 +55,10 @@ contains
 !! @param[in] nlayers Number of layers
 !! @param[in,out] sea_ice_marine_fraction Output sea ice as a marine fraction (on sea ice categories)
 !! @param[in,out] sea_marine_fraction Output sea area as a marine fraction
-!! @param[in]     tile_fraction   Input tile fractions (on tiles)
+!! @param[in] tile_fraction   Input tile fractions (on tiles)
+!! @param[in] first_sea_ice_tile Index of the first sea ice tile
+!! @param[in] n_sea_ice_tile Number of sea ice tiles
+!! @param[in] first_sea_tile Index of the first sea tile
 !! @param[in] ndf_sea_ice Number of degrees of freedom for sea ice fraction
 !! @param[in] undf_sea_ice Number of unique degrees of freedom for sea ice fraction
 !! @param[in] map_sea_ice Dofmap for sea ice fraction
@@ -68,6 +72,9 @@ contains
 subroutine convert_to_marine_fraction_code(nlayers,                  &
                       sea_ice_marine_fraction, sea_marine_fraction,  &
                       tile_fraction,                                 &
+                      first_sea_ice_tile,                            &
+                      n_sea_ice_tile,                                &
+                      first_sea_tile,                                &
                       ndf_sea_ice, undf_sea_ice, map_sea_ice,        &
                       ndf_sea, undf_sea, map_sea,                    &
                       ndf_tile, undf_tile, map_tile)
@@ -87,7 +94,11 @@ subroutine convert_to_marine_fraction_code(nlayers,                  &
   integer(kind=i_def), intent(in) :: map_tile(ndf_tile)
   real(kind=r_def), intent(inout) :: sea_ice_marine_fraction(undf_sea_ice)
   real(kind=r_def), intent(inout) :: sea_marine_fraction(undf_sea)
-  real(kind=r_def), intent(in) ::    tile_fraction(undf_tile)
+  real(kind=r_def), intent(in)    :: tile_fraction(undf_tile)
+  integer(kind=i_def), intent(in) :: first_sea_ice_tile
+  integer(kind=i_def), intent(in) :: n_sea_ice_tile
+  integer(kind=i_def), intent(in) :: first_sea_tile
+
 
   ! Local variables
   integer(kind=i_def) :: i

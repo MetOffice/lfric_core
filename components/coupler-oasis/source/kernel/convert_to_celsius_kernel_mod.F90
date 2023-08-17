@@ -17,7 +17,7 @@ use argument_mod,            only : arg_type,            &
                                     CELL_COLUMN
 use constants_mod,           only : r_def, i_def
 
-use lfric_atm_conversions_mod,     only : zero_degrees_celsius
+use science_constants_mod,   only : zero_C_in_K
 
 implicit none
 
@@ -77,8 +77,7 @@ subroutine convert_to_celsius_code(nlayers,                     &
   do i = 0, ndata - 1
     do df = 1,ndf
       if (input_field(map(df) + i) > 1.0_r_def) then
-        output_field(map(df) + i) = input_field(map(df) + i) -                 &
-                                                           zero_degrees_celsius
+        output_field(map(df) + i) = input_field(map(df) + i) - zero_C_in_K
       else
         output_field(map(df) + i) = 0.0_r_def
       end if

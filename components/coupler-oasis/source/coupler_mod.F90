@@ -19,6 +19,9 @@ module coupler_mod
                                             namsrcfld, namdstfld, oasis_in,    &
                                             prism_real
 #endif
+  use driver_water_constants_mod,     only: T_freeze_h2o_sea
+  use surface_config_mod,             only: therm_cond_sice, &
+                                            therm_cond_sice_snow
   use field_mod,                      only: field_type, field_proxy_type
   use field_parent_mod,               only: field_parent_type
   use pure_abstract_field_mod,        only: pure_abstract_field_type
@@ -816,7 +819,9 @@ module coupler_mod
 
       ! If exchange is successful then process the data that has
       ! come through the coupler
-      call process_o2a_algorithm(dcpl_rcv, depository)
+      call process_o2a_algorithm(dcpl_rcv, depository,             &
+                                 n_sea_ice_tile, T_freeze_h2o_sea, &
+                                 therm_cond_sice, therm_cond_sice_snow )
 
       ! Update the prognostics
       call iter%initialise(dcpl_rcv)
