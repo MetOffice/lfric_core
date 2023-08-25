@@ -389,8 +389,6 @@ contains
 
     type( jedi_datetime_type ) :: new_datetime
 
-    integer(i_timestep) :: date
-    integer(i_timestep) :: time
     integer(i_timestep) :: seconds
 
     new_datetime%date = self%date
