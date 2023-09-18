@@ -12,7 +12,7 @@ module jedi_lfric_fake_nl_driver_mod
   use constants_mod,            only: str_def
   use driver_model_data_mod,    only: model_data_type
   use driver_time_mod,          only: init_time, get_calendar
-  use driver_mesh_mod,          only: init_mesh, final_mesh
+  use driver_mesh_mod,          only: init_mesh
   use driver_fem_mod,           only: init_fem, final_fem
   use inventory_by_mesh_mod,    only: inventory_by_mesh_type
   use field_mod,                only: field_type
@@ -194,7 +194,6 @@ contains
 #endif
 
     call final_fem()
-    call final_mesh()
 
   end subroutine finalise
 

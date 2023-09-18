@@ -20,7 +20,7 @@ module shallow_water_model_mod
   use driver_fem_mod,                 only: init_fem, final_fem
   use driver_io_mod,                  only: init_io, final_io, &
                                             filelist_populator
-  use driver_mesh_mod,                only: init_mesh, final_mesh
+  use driver_mesh_mod,                only: init_mesh
   use field_mod,                      only: field_type
   use field_parent_mod,               only: write_interface
   use field_collection_mod,           only: field_collection_type
@@ -198,8 +198,6 @@ module shallow_water_model_mod
     !-------------------------------------------------------------------------
     ! Finalise aspects of the grid
     !-------------------------------------------------------------------------
-
-    call final_mesh()
     call final_fem()
 
   end subroutine finalise_infrastructure

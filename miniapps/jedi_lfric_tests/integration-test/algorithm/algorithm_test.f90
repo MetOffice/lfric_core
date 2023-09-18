@@ -20,7 +20,7 @@ program algorithm_test
                                      test_algorithm_initialise, &
                                      test_jedi_lfric_increment_alg
   use driver_collections_mod,  only: init_collections, final_collections
-  use driver_mesh_mod,         only: init_mesh, final_mesh
+  use driver_mesh_mod,         only: init_mesh
   use halo_comms_mod,          only: initialise_halo_comms, &
                                      finalise_halo_comms
   use log_mod,                 only: log_event,          &
@@ -130,7 +130,6 @@ program algorithm_test
   ! Finalise and close down
 
   call test_algorithm_finalise()
-  call final_mesh()
 
   if (allocated(program_name)) deallocate(program_name)
   if (allocated(filename))     deallocate(filename)

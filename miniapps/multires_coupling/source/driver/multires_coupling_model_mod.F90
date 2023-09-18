@@ -16,7 +16,7 @@ module multires_coupling_model_mod
                                          check_any_shifted
   use driver_fem_mod,             only : init_fem, final_fem, &
                                          init_function_space_chains
-  use driver_mesh_mod,            only : init_mesh, final_mesh
+  use driver_mesh_mod,            only : init_mesh
   use driver_io_mod,              only : init_io, final_io, &
                                          filelist_populator
   use conservation_algorithm_mod, only : conservation_algorithm
@@ -510,7 +510,6 @@ contains
     ! Finalise aspects of the grid
     !-------------------------------------------------------------------------
 
-    call final_mesh()
     call final_fem()
 
   end subroutine finalise_infrastructure

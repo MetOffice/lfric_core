@@ -61,7 +61,7 @@ module driver_mesh_mod
   implicit none
 
   private
-  public  :: init_mesh, final_mesh
+  public  :: init_mesh
 
 contains
 
@@ -347,7 +347,6 @@ subroutine init_mesh( local_rank, total_ranks,        &
   ! 6.0 Discard global mesh collection and all meshes in it.
   !     (They should not be used past this point in the code)
   !=================================================================
-  if (allocated(global_mesh_collection)) deallocate(global_mesh_collection)
   if (allocated(prime_extrusion)) deallocate(prime_extrusion)
 
 end subroutine init_mesh
@@ -1324,20 +1323,5 @@ subroutine check_multigrid_partitioning( mesh_name, &
   end if
 
 end subroutine check_multigrid_partitioning
-
-!> @brief  Finalises the mesh_collection.
-subroutine final_mesh()
-
-  use mesh_collection_mod, only: mesh_collection
-
-  implicit none
-
-  if (allocated(mesh_collection)) then
-    call mesh_collection%clear()
-    deallocate(mesh_collection)
-  end if
-
-  return
-end subroutine final_mesh
 
 end module driver_mesh_mod

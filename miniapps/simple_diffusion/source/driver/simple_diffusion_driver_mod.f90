@@ -14,7 +14,7 @@ module simple_diffusion_driver_mod
   use constants_mod,              only : i_def, i_native, str_def, &
                                          r_def, r_second
   use convert_to_upper_mod,       only : convert_to_upper
-  use driver_mesh_mod,            only : init_mesh, final_mesh
+  use driver_mesh_mod,            only : init_mesh
   use driver_modeldb_mod,         only : modeldb_type
   use driver_fem_mod,             only : init_fem, final_fem
   use driver_io_mod,              only : init_io, final_io
@@ -139,7 +139,6 @@ contains
     ! Finalise IO
     call final_io()
     call final_fem()
-    call final_mesh()
 
   end subroutine finalise
 

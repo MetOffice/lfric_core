@@ -16,7 +16,7 @@ module jedi_lfric_tlm_model_mod
                                          init_function_space_chains
   use driver_io_mod,              only : init_io, final_io,  &
                                          filelist_populator
-  use driver_mesh_mod,            only : init_mesh, final_mesh
+  use driver_mesh_mod,            only : init_mesh
   use driver_time_mod,            only : get_calendar
   use check_configuration_mod,    only : get_required_stencil_depth, &
                                          check_any_shifted
@@ -603,7 +603,6 @@ contains
     ! Finalise aspects of the grid
     !-------------------------------------------------------------------------
 
-    call final_mesh()
     call final_fem()
 
   end subroutine finalise_infrastructure

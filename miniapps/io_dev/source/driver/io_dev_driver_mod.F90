@@ -17,7 +17,7 @@ module io_dev_driver_mod
   use constants_mod,              only: i_def, i_native, str_def, &
                                         PRECISION_REAL, r_def, r_second
   use convert_to_upper_mod,       only: convert_to_upper
-  use driver_mesh_mod,            only: init_mesh, final_mesh
+  use driver_mesh_mod,            only: init_mesh
   use driver_fem_mod,             only: init_fem, final_fem
   use driver_io_mod,              only: init_io, final_io, &
                                         filelist_populator, &
@@ -192,7 +192,6 @@ module io_dev_driver_mod
     call finalise_model_data( model_data )
 
     ! Finalise aspects of the grid
-    call final_mesh()
     call final_fem()
 
   end subroutine finalise
