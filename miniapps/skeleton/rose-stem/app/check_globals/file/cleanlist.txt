@@ -1,4 +1,7 @@
-source/skeleton.f90
+# Files should only ever be added or renamed in this file, never removed.
+#
 source/algorithm/skeleton_alg_mod.x90
 source/driver/init_skeleton_mod.F90
+source/driver/skeleton_driver_mod.f90
 source/driver/skeleton_mod.f90
+source/skeleton.f90

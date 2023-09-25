@@ -1,5 +1,8 @@
+# Files should only ever be added or renamed in this file, never removed.
+#
+source/algorithm/process_o2a_algorithm_mod.x90
+source/kernel/convert_to_celsius_kernel_mod.F90
 source/kernel/convert_to_marine_fraction_mod.F90
 source/kernel/process_o2a_kernel_mod.F90
-source/kernel/convert_to_celsius_kernel_mod.F90
 source/kernel/set_reciprocal_mod.F90
-source/algorithm/process_o2a_algorithm_mod.x90
+source/kernel/value_based_mask_kernel_mod.F90

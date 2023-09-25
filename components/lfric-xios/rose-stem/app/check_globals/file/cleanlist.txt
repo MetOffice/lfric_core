@@ -1,12 +1,13 @@
-source/lfric_xios_mock_data_mod.f90
+# Files should only ever be added or renamed in this file, never removed.
+#
 source/lfric_xios_constants_mod.f90
+source/lfric_xios_context_mod.f90
+source/lfric_xios_diag_mod.F90
 source/lfric_xios_driver_mod.f90
 source/lfric_xios_field_mod.f90
-source/lfric_xios_context_mod.f90
-source/lfric_xios_write_mod.F90
-source/lfric_xios_diag_mod.F90
 source/lfric_xios_format_mod.f90
-source/lfric_xios_time_axis_mod.X90
+source/lfric_xios_mock_data_mod.f90
 source/lfric_xios_read_mod.F90
 source/lfric_xios_setup_mod.x90
-source/lfric_xios_file_mod.f90
+source/lfric_xios_time_axis_mod.X90
+source/lfric_xios_write_mod.F90

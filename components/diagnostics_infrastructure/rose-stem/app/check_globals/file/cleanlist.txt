@@ -1,10 +1,12 @@
-source/vertical_dimension_types_mod.f90
-source/non_spatial_dimension_mod.f90
-source/misc_meta_data_mod.f90
-source/field_synonym_mod.f90
+# Files should only ever be added or renamed in this file, never removed.
+#
 source/diagnostics_mod.f90
+source/field_synonym_mod.f90
 source/field_type_enum_mod.F90
-source/fieldspec/io_driver_enum_mod.F90
-source/fieldspec/fieldspec_mod.F90
-source/fieldspec/fieldspec_factory_mod.F90
 source/fieldspec/axisspec_mod.f90
+source/fieldspec/fieldspec_factory_mod.F90
+source/fieldspec/fieldspec_mod.F90
+source/fieldspec/io_driver_enum_mod.F90
+source/misc_meta_data_mod.f90
+source/non_spatial_dimension_mod.f90
+source/vertical_dimension_types_mod.f90

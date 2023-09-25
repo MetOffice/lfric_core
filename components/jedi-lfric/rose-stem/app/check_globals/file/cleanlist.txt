@@ -1,9 +1,11 @@
-source/time/jedi_lfric_duration_mod.f90
-source/time/jedi_lfric_datetime_mod.f90
-source/time/jedi_lfric_datetime_functions_mod.F90
-source/driver/jedi_lfric_comm_mod.F90
-source/driver/io/jedi_lfric_fake_nl_init_mod.x90
-source/driver/io/jedi_lfric_fake_nl_init_files_mod.f90
+# Files should only ever be added or renamed in this file, never removed.
+#
 source/driver/io/jedi_lfric_fake_nl_extrusion_mod.f90
-source/field/zero_model_data_mod.x90
+source/driver/io/jedi_lfric_fake_nl_init_files_mod.f90
+source/driver/io/jedi_lfric_fake_nl_init_mod.x90
+source/driver/jedi_lfric_comm_mod.F90
 source/field/atlas_field_interface_mod.F90
+source/field/zero_model_data_mod.x90
+source/time/jedi_lfric_datetime_functions_mod.F90
+source/time/jedi_lfric_datetime_mod.f90
+source/time/jedi_lfric_duration_mod.f90
