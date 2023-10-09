@@ -1,0 +1,59 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright 2023 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> @brief   Initialisation functionality for fake tlm model_data for testing
+!!
+!> @details Handles init of prognostic fields for fake tlm model_data for
+!>          testing the tlm model
+module jedi_lfric_fake_tlm_init_mod
+
+  use constants_mod,                  only : r_def
+  use driver_model_data_mod,          only : model_data_type
+  use field_mod,                      only : field_type
+  use field_collection_mod,           only : field_collection_type
+  use fs_continuity_mod,              only : W2, W3, Wtheta
+  use log_mod,                        only : log_event, &
+                                             LOG_LEVEL_INFO
+  use mesh_mod,                       only : mesh_type
+  use jedi_lfric_tests_utils_mod,     only : add_real_field
+
+  implicit none
+
+  contains
+
+  !> @brief  Create the fake_tlm model_data
+  !>
+  !> @param[in]    mesh        Mesh to use for field initialisation
+  !> @param[inout] model_data  model_data to store miniapp fields in
+  subroutine create_fake_tlm_model_data( mesh, mesh2d, model_data)
+
+    implicit none
+
+    type(mesh_type), intent(in), pointer   :: mesh
+    type(mesh_type), intent(in), pointer   :: mesh2d
+    type( model_data_type ), intent(inout) :: model_data
+
+    ! Local
+    type( field_collection_type ), pointer :: depository
+
+    ! This is a placeholder method that enables testing of the linear model
+    ! objects and will be removed once we can use linear directory. The full
+    ! set of fields will also include wind u and mixing ratios and also the
+    ! linear states (“ls_”). However, including these fields is enough for the
+    ! initial testing.
+
+    call model_data%add_empty_field_collection("depository")
+    nullify(depository)
+    depository => model_data%get_field_collection("depository")
+
+    ! Create fields and add them to model_data
+    call add_real_field( depository, mesh, Wtheta, "theta" )
+    call add_real_field( depository, mesh, W3,     "rho"   )
+    call add_real_field( depository, mesh, W3,     "exner"  )
+
+  end subroutine create_fake_tlm_model_data
+
+end module jedi_lfric_fake_tlm_init_mod

@@ -16,6 +16,7 @@ module jedi_pseudo_model_config_mod
 
   use constants_mod,           only : i_def, str_def
   use jedi_lfric_datetime_mod, only : jedi_datetime_type
+  use jedi_lfric_duration_mod, only : jedi_duration_type
 
   implicit none
 
@@ -24,10 +25,10 @@ module jedi_pseudo_model_config_mod
 type, public :: jedi_pseudo_model_config_type
 
   !> List of the dates to be read
-  type( jedi_datetime_type ), allocatable :: datetime_states(:)
+  type( jedi_datetime_type ), allocatable :: state_times(:)
 
   !> File prefix for read
-  character(len=str_def)             :: read_file_prefix
+  character(len=str_def)                  :: read_file_prefix
 
 contains
 
@@ -55,17 +56,19 @@ subroutine initialise( self )
   ! Local
   integer( kind=i_def )      :: i, datetime_entries
   type( jedi_datetime_type ) :: next_datetime
+  type( jedi_duration_type ) :: time_step
 
   call next_datetime%init_lfric_calendar_start()
+  call time_step%init( 'P0DT1H0M0S' )
 
-  datetime_entries = 9
-  allocate(self%datetime_states(datetime_entries))
+  datetime_entries = 9_i_def
+  allocate(self%state_times(datetime_entries))
 
-  ! initialise datetime states 1-9 seconds after
+  ! initialise datetime states 1-9 time steps after
   ! lfric calendar_start namelist variable time
   do i = 1, datetime_entries
-    call next_datetime%add_seconds( 3600 )
-    self%datetime_states(i) = next_datetime
+    next_datetime = next_datetime + time_step
+    self%state_times(i) = next_datetime
   end do
 
   self%read_file_prefix="read_"
@@ -80,7 +83,7 @@ subroutine jedi_pseudo_model_config_destructor(self)!
 
   type(jedi_pseudo_model_config_type), intent(inout) :: self
 
-  if ( allocated(self%datetime_states) ) deallocate(self%datetime_states)
+  if ( allocated(self%state_times) ) deallocate(self%state_times)
 
 end subroutine jedi_pseudo_model_config_destructor
 

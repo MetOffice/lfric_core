@@ -4,7 +4,7 @@
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
 
-!> LFRic unit tests jedi_datetime_mod.
+!> LFRic unit tests jedi_lfric_datetime_mod.
 !> LFRic unit tests use pfUnit, a Fortran unit test framework written by NASA.
 !> This particular example tests the result of a matrix vector calculation
 !> using the code from the matrix_vector_kernel_mod in the LFRic science

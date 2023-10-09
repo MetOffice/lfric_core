@@ -16,7 +16,7 @@ module atlas_field_emulator_mod
 
   use, intrinsic :: iso_fortran_env, only : real64
 
-  use constants_mod,                 only : i_def, str_def
+  use constants_mod,                 only : r_def, i_def, str_def
 
   implicit none
 
@@ -41,6 +41,9 @@ module atlas_field_emulator_mod
 
     !> Get a pointer to the field data
     procedure, public :: get_data
+
+    !> Set field data to zero
+    procedure, public :: zero
 
     !> Get the name of the field
     procedure, public :: get_field_name
@@ -90,6 +93,18 @@ function get_data(self) result(data_ptr)
   data_ptr => self % data
 
 end function get_data
+
+!> @brief    set field values to zero
+!>
+subroutine zero(self)
+
+  implicit none
+
+  class( atlas_field_emulator_type ), intent(inout) :: self
+
+  self % data = 0.0_r_def
+
+end subroutine zero
 
 !> @brief    Returns the name of the field
 !>

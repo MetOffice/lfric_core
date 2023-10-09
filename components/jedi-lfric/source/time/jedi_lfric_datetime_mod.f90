@@ -316,7 +316,7 @@ contains
 
     implicit none
 
-    class( jedi_datetime_type ), intent(inout) :: self
+    class( jedi_datetime_type ),    intent(in) :: self
     character(str_def),          intent(inout) :: iso_datetime
 
     integer(i_timestep) :: year

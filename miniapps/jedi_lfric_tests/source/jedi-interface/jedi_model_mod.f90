@@ -6,13 +6,15 @@
 !
 !> @brief A module providing a class than handles the non-linear model
 !>
-!> @details This module includes a class that handles the non-linear models
-!>          time stepping. An included forecast application uses the model
-!>          init, step and final to run a forecast.
-!>
+!> @details This module includes a class that handles the non-linear model
+!>          time stepping. The class includes init, step and final methods.
+!>          These are used by the forecast method also included within the
+!>          class. In JEDI, the forecast method is defined in the OOPS base
+!>          class and the init, step and final are defined in the model
+!>          interface (LFRIC-JEDI). An included forecast application uses the
+!>          model forecast method to propagate the state.
 module jedi_model_mod
 
-  use constants_mod,                 only : i_timestep
   use jedi_lfric_datetime_mod,       only : jedi_datetime_type
   use jedi_lfric_duration_mod,       only : jedi_duration_type
   use jedi_state_mod,                only : jedi_state_type
@@ -27,8 +29,8 @@ module jedi_model_mod
 type, public :: jedi_model_type
   private
 
-  !> The data map between external field data and LFRic fields
-  integer( kind=i_timestep ) :: datetime_duration_dt
+  !> The model time step duration
+  type( jedi_duration_type ) :: time_step
 
 contains
 
@@ -55,15 +57,15 @@ contains
 
 !> @brief    Initialiser for jedi_model_type
 !>
-!> @param [in] datetime_duration_dt The time step duration
-subroutine initialise( self, datetime_duration_dt )
+!> @param [in] time_step The time step duration
+subroutine initialise( self, time_step )
 
   implicit none
 
-  class( jedi_model_type ),   intent(inout) :: self
-  integer( kind=i_timestep ), intent(in)    :: datetime_duration_dt
+  class( jedi_model_type ), intent(inout) :: self
+  type( jedi_duration_type ),  intent(in) :: time_step
 
-  self%datetime_duration_dt = datetime_duration_dt
+  self%time_step = time_step
 
 end subroutine initialise
 
@@ -111,10 +113,9 @@ subroutine model_step(self, state)
   call state%from_model_data()
 
   ! update the state time
-  call state%update_time( self%datetime_duration_dt )
+  call state%update_time( self%time_step )
 
 end subroutine model_step
-
 
 !> @brief    Finalise the model
 !>
@@ -124,7 +125,7 @@ subroutine model_final(self, state)
   implicit none
 
   class( jedi_model_type ), target, intent(in) :: self
-  type( jedi_state_type ),  intent(inout)      :: state
+  type( jedi_state_type ),       intent(inout) :: state
 
 end subroutine model_final
 
@@ -145,35 +146,39 @@ end subroutine jedi_model_destructor
 !> @brief    Run a forecast using the model init, step and final
 !>
 !> @param [inout] state           The state object to propagate
-!> @param [in] datetime_duration  The duration of the forecast
-subroutine forecast(self, state, datetime_duration)
+!> @param [in]    forecast_length The duration of the forecast
+!> @param [inout] post_processor  Post processing object
+subroutine forecast(self, state, forecast_length, post_processor)
+
+  use jedi_post_processor_mod,    only : jedi_post_processor_type
 
   implicit none
 
-  class( jedi_model_type ), target, intent(inout) :: self
-  type( jedi_state_type ),          intent(inout) :: state
-  type( jedi_duration_type ),       intent(in)    :: datetime_duration
+  class( jedi_model_type ),          intent(inout) :: self
+  type( jedi_state_type ),           intent(inout) :: state
+  type( jedi_duration_type ),           intent(in) :: forecast_length
+  class( jedi_post_processor_type ), intent(inout) :: post_processor
 
   ! Local
-  type( jedi_datetime_type ) :: datetime_end
+  type( jedi_datetime_type ) :: end_time
 
-  ! End time
-  datetime_end = state%datetime + datetime_duration
+  ! Get the end time
+  end_time = state%valid_time() + forecast_length
 
+  ! Initialize the model
   call self%model_init( state )
-  ! initialize the post processor
-  ! post.initialize(state, ...);
-  ! In a H(X) the following call would be used to do spatial interpolations
-  ! on the Atlas/dummy field data
-  ! post%process(state)
+  ! Initialize the post processor and call first process
+  call post_processor%pp_init( state )
+  call post_processor%process( state )
 
-  ! loop until date_time_end
-  do while ( datetime_end%is_ahead( state%datetime ) )
+  ! Loop until date_time_end
+  do while ( end_time%is_ahead( state%valid_time() ) )
     call self%model_step( state )
-    ! post%process(state)
+    call post_processor%process( state )
   end do
 
-  ! post.finalize(state);
+  ! Finalize model and post processor
+  call post_processor%pp_final( state )
   call self%model_final( state )
 
 end subroutine forecast

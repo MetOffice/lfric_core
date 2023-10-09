@@ -1,0 +1,101 @@
+!------------------------------------------------------------------------------
+! (C) Crown copyright 2023 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!------------------------------------------------------------------------------
+!> @brief  Contains a method to copy the field data between field collections
+!>
+!> @details A method is included that takes two field collections. An input
+!>          field collection and an output field collection. It uses the
+!>          PSyClone setval_X builtin method to copy the data from the input
+!>          fields into the output fields.
+!>
+module trajectory_copy_fields_mod
+
+  use field_collection_mod,          only : field_collection_type
+  use field_collection_iterator_mod, only : field_collection_iterator_type
+  use field_mod,                     only : field_type
+  use integer_field_mod,             only : integer_field_type
+  use constants_mod,                 only : str_def
+  use log_mod,                       only : log_event,         &
+                                            log_scratch_space, &
+                                            LOG_LEVEL_ERROR
+
+  implicit none
+
+  private
+  public :: trajectory_copy_fields
+
+  contains
+
+  !> @brief Copy fields from one field collection to another
+  !!
+  !> @param [inout] output_fields field collection to copy to
+  !> @param [in]    input_fields  field collection to copy from
+  subroutine trajectory_copy_fields( output_fields, &
+                                     input_fields )
+
+    implicit none
+
+    type(field_collection_type), intent(inout) :: output_fields
+    type(field_collection_type), intent(in)    :: input_fields
+
+
+    ! Real fields
+    type(field_type),         pointer :: out_field_ptr
+    type(field_type),         pointer :: in_field_ptr
+
+    ! Integer fields
+    type(integer_field_type), pointer :: out_field_ptr_int
+    type(integer_field_type), pointer :: in_field_ptr_int
+
+    type(field_collection_iterator_type) :: iterator
+    character(str_def)                   :: name
+
+    ! nullify pointers
+    nullify(out_field_ptr, in_field_ptr)
+    nullify(out_field_ptr_int, in_field_ptr_int)
+
+    call iterator%initialise(input_fields)
+    do
+      if ( .not. iterator%has_next() ) exit
+        select type (listfield => iterator%next())
+          type is (field_type)
+
+            in_field_ptr => listfield
+            name=in_field_ptr%get_name()
+
+            ! Get the required field if available otherwise abort
+            if (output_fields%field_exists(trim(name))) then
+              call output_fields%get_field(name, out_field_ptr)
+            else
+              write(log_scratch_space, '(3A)') "The required real field: ", &
+                trim(name) , ", is not in the output field collection."
+              call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+            endif
+
+            ! Copy in to out field
+            call invoke( setval_X(out_field_ptr, in_field_ptr) )
+
+         type is (integer_field_type)
+
+          in_field_ptr_int => listfield
+          name=in_field_ptr_int%get_name()
+
+          ! Get the required field if available otherwise abort
+          if (output_fields%field_exists(trim(name))) then
+            call output_fields%get_field(name, out_field_ptr_int)
+          else
+            write(log_scratch_space, '(3A)') "The required integer field: ", &
+              trim(name) , ", is not in the output field collection."
+            call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+          endif
+
+          call invoke( int_setval_X(out_field_ptr_int, in_field_ptr_int) )
+
+        end select
+    end do
+
+  end subroutine trajectory_copy_fields
+
+end module trajectory_copy_fields_mod

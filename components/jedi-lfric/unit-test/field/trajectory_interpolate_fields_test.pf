@@ -1,0 +1,460 @@
+!------------------------------------------------------------------------------
+! (C) Crown copyright 2023 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!------------------------------------------------------------------------------
+!> @brief  Test the trajectory_interpolate_fields subroutine
+!!
+module trajectory_interpolate_fields_test
+
+  use constants_mod,                 only : i_def, l_def, str_def, r_def
+  use field_collection_mod,          only : field_collection_type
+  use field_mod,                     only : field_type, field_proxy_type
+  use integer_field_mod,             only : integer_field_type, &
+                                            integer_field_proxy_type
+  use fs_continuity_mod,             only : W3, Wtheta
+  use function_space_collection_mod, only : function_space_collection_type, &
+                                            function_space_collection
+  use halo_routing_collection_mod,   only : halo_routing_collection_type, &
+                                            halo_routing_collection
+  use local_mesh_mod,                only : local_mesh_type
+  use mesh_mod,                      only : mesh_type
+  use mesh_collection_mod,           only : mesh_collection_type, &
+                                            mesh_collection
+  use extrusion_mod,                 only : TWOD
+  use trajectory_interpolate_fields_mod, &
+                                     only : trajectory_interpolate_fields
+
+  use pFUnit_Mod
+
+  implicit none
+
+  private
+  public :: test_trajectory_interpolate_fields_real, test_trajectory_interpolate_fields_int
+
+  @TestCase
+  type, extends(TestCase), public :: trajectory_interpolate_fields_test_type
+    private
+    type(local_mesh_type)         :: unit_test_local_mesh
+    type(mesh_type),      pointer :: mesh => null(), twod_mesh => null()
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure get_local_mesh_ptr
+    procedure create_real_collection
+    procedure create_integer_collection
+    procedure test_trajectory_interpolate_fields_real
+    procedure test_trajectory_interpolate_fields_int
+  end type trajectory_interpolate_fields_test_type
+
+  integer(i_def), parameter    :: element_order = 0
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use mesh_mod, only : mesh_type, PLANE_BI_PERIODIC, PLANE_TWOD_BI_PERIODIC
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(inout) :: this
+    type(local_mesh_type), pointer :: unit_test_local_mesh_ptr => null()
+    type(mesh_type) :: unit_test_mesh, unit_test_mesh_2d
+    integer(i_def)  :: mesh_id
+
+    ! Create top level mesh collection
+    mesh_collection = mesh_collection_type()
+    ! Create top level function space collection
+    function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
+
+    call this%unit_test_local_mesh%initialise()
+    unit_test_local_mesh_ptr => this%get_local_mesh_ptr()
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    unit_test_mesh = mesh_type( PLANE_BI_PERIODIC, unit_test_local_mesh_ptr )
+    mesh_id        = mesh_collection%add_new_mesh( unit_test_mesh )
+    this%mesh     => mesh_collection%get_mesh( mesh_id )
+
+    ! Create the 2D mesh
+    unit_test_mesh_2d = mesh_type( PLANE_TWOD_BI_PERIODIC, unit_test_local_mesh_ptr )
+    mesh_id           = mesh_collection%add_new_mesh( unit_test_mesh_2d )
+    this%twod_mesh   => mesh_collection%get_mesh_variant( this%mesh, TWOD )
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(inout) :: this
+
+    call function_space_collection%clear()
+    call mesh_collection%clear()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  function get_local_mesh_ptr( this ) result(unit_test_local_mesh_ptr)
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(inout), target :: this
+    type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
+
+    unit_test_local_mesh_ptr => this%unit_test_local_mesh
+
+  end function get_local_mesh_ptr
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine create_real_collection( this, field_collection,   &
+                                     variable_names,           &
+                                     variable_function_spaces, &
+                                     variable_is_2d,           &
+                                     variable_initial_value,   &
+                                     field_collection_name )
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(in) :: this
+    type( field_collection_type ),  intent(out) :: field_collection
+    character( len=str_def ),       intent(in) :: variable_names(:)
+    integer( kind=i_def ),          intent(in) :: variable_function_spaces(:)
+    logical( kind=l_def ),          intent(in) :: variable_is_2d(:)
+    real( kind=r_def ),             intent(in) :: variable_initial_value(:)
+    character( len=* ),             intent(in) :: field_collection_name
+
+    ! Local
+    type(mesh_type), pointer        :: mesh
+    type( field_type ), allocatable :: field
+    type( field_proxy_type )        :: field_proxy
+    integer                         :: i
+
+    ! Setup the field_collection
+    call field_collection%initialise( &
+             name = trim(field_collection_name), table_len=100)
+
+    ! Create and add the fields defined in the list of variable names
+    do i=1,size(variable_function_spaces)
+      if (variable_is_2d(i)) then
+        mesh => this%twod_mesh
+      else
+        mesh => this%mesh
+      end if
+
+      allocate(field)
+
+      call field%initialise( &
+             vector_space = function_space_collection%get_fs             &
+                    ( mesh, element_order, variable_function_spaces(i)), &
+             name = variable_names(i) )
+
+      field_proxy = field%get_proxy()
+      field_proxy%data = variable_initial_value(i)
+
+      call field_collection%add_field( field )
+
+      deallocate( field )
+
+    end do
+
+  end subroutine create_real_collection
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine create_integer_collection( this,                     &
+                                        field_collection,         &
+                                        variable_names,           &
+                                        variable_function_spaces, &
+                                        variable_is_2d,           &
+                                        variable_initial_value,   &
+                                        field_collection_name )
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(in) :: this
+    type( field_collection_type ), intent(out) :: field_collection
+    character( len=str_def ),       intent(in) :: variable_names(:)
+    integer( kind=i_def ),          intent(in) :: variable_function_spaces(:)
+    logical( kind=l_def ),          intent(in) :: variable_is_2d(:)
+    integer( kind=i_def ),          intent(in) :: variable_initial_value(:)
+    character( len=* ),             intent(in) :: field_collection_name
+
+    ! Local
+    type(mesh_type), pointer                :: mesh
+    type( integer_field_type ), allocatable :: field
+    type( integer_field_proxy_type )        :: field_proxy
+    integer                                 :: i
+
+    ! Setup the field_collection
+    call field_collection%initialise( &
+            name = trim(field_collection_name), table_len=100)
+
+    ! Create and add the fields defined in the list of variable names
+    do i=1,size(variable_function_spaces)
+      if (variable_is_2d(i)) then
+        mesh => this%twod_mesh
+      else
+        mesh => this%mesh
+      end if
+
+      allocate(field)
+
+      call field%initialise( &
+             vector_space = function_space_collection%get_fs             &
+                    ( mesh, element_order, variable_function_spaces(i)), &
+             name = variable_names(i) )
+
+      field_proxy = field%get_proxy()
+      field_proxy%data = variable_initial_value(i)
+
+      call field_collection%add_field( field )
+
+      deallocate( field )
+
+    end do
+
+  end subroutine create_integer_collection
+
+  !> Test for the trajectory_interpolate_fields subroutine using
+  !> real fields
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_trajectory_interpolate_fields_real( this )
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(inout) :: this
+
+    ! Local
+    type( field_collection_type )    :: t1_field_collection
+    type( field_collection_type )    :: t2_field_collection
+    type( field_collection_type )    :: interp_field_collection
+    type(field_type), pointer        :: field_ptr
+    type( field_proxy_type )         :: field_proxy
+    integer( kind=i_def ), parameter :: nvars = 3_i_def
+    character( len=str_def )         :: variable_names(nvars)
+    integer( kind=i_def )            :: variable_function_spaces(nvars)
+    logical( kind=l_def )            :: variable_is_2d(nvars)
+    real( kind=r_def )               :: variable_initial_value_1(nvars)
+    real( kind=r_def )               :: variable_initial_value_2(nvars)
+    real( kind=r_def )               :: variable_initial_value_interp(nvars)
+    real( kind=r_def )               :: expected_value(nvars)
+    real( kind=r_def )               :: t1_weight
+    real( kind=r_def )               :: t2_weight
+    integer( kind=i_def )            :: i
+
+    ! Define the field information
+    variable_names = (/"rfield1", "rfield2", "rfield3"/)
+    variable_function_spaces = (/W3 , Wtheta, W3/)
+    variable_is_2d = (/.false., .false., .true./)
+
+    variable_initial_value_1 = (/1.0, 2.0, 3.0/)
+    variable_initial_value_2 = (/4.0, 5.0, 6.0/)
+    variable_initial_value_interp = (/0.0, -1.0, 2.0/)
+
+    ! Create collections
+    call this%create_real_collection(                       &
+                  t1_field_collection, variable_names,      &
+                  variable_function_spaces, variable_is_2d, &
+                  variable_initial_value_1, 't1_field_collection')
+    call this%create_real_collection(                       &
+                  t2_field_collection, variable_names,      &
+                  variable_function_spaces, variable_is_2d, &
+                  variable_initial_value_2, 't2_field_collection')
+    call this%create_real_collection(                       &
+                  interp_field_collection, variable_names,  &
+                  variable_function_spaces, variable_is_2d, &
+                  variable_initial_value_interp, 'interp_field_collection')
+
+    ! -- Compare with the initial condition
+    expected_value = (/0.0, -1.0, 2.0/)
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+    ! -- Apply equal weights
+    t1_weight = 0.5
+    t2_weight = 0.5
+    expected_value = (/2.5, 3.5, 4.5/)
+
+    ! Interpolate
+    call trajectory_interpolate_fields( interp_field_collection, &
+                                        t1_field_collection,     &
+                                        t2_field_collection,     &
+                                        t1_weight,               &
+                                        t2_weight )
+    ! Check the interpolated values
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+    ! -- Apply unequal weights
+    t1_weight = 0.75
+    t2_weight = 0.25
+    expected_value = (/1.75, 2.75, 3.75/)
+
+    ! Interpolate
+    call trajectory_interpolate_fields( interp_field_collection, &
+                                        t1_field_collection,     &
+                                        t2_field_collection,     &
+                                        t1_weight,               &
+                                        t2_weight )
+
+    ! Check the interpolated values
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+    ! -- Apply unequal weights
+    t1_weight = 1.0
+    t2_weight = 0.0
+    expected_value = (/1.0, 2.0, 3.0/)
+
+    ! Interpolate
+    call trajectory_interpolate_fields( interp_field_collection, &
+                                        t1_field_collection,     &
+                                        t2_field_collection,     &
+                                        t1_weight,               &
+                                        t2_weight )
+
+    ! Check the interpolated values
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+  end subroutine test_trajectory_interpolate_fields_real
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  !> Test for the trajectory_interpolate_fields subroutine using
+  !> integer fields
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_trajectory_interpolate_fields_int( this )
+
+    implicit none
+
+    class(trajectory_interpolate_fields_test_type), intent(inout) :: this
+
+    ! Local
+    type( field_collection_type )     :: t1_field_collection
+    type( field_collection_type )     :: t2_field_collection
+    type( field_collection_type )     :: interp_field_collection
+    type(integer_field_type), pointer :: field_ptr
+    type( integer_field_proxy_type )  :: field_proxy
+    integer( kind=i_def ), parameter  :: nvars = 3_i_def
+    character( len=str_def )          :: variable_names(nvars)
+    integer( kind=i_def )             :: variable_function_spaces(nvars)
+    logical( kind=l_def )             :: variable_is_2d(nvars)
+    integer( kind=i_def )             :: variable_initial_value_1(nvars)
+    integer( kind=i_def )             :: variable_initial_value_2(nvars)
+    integer( kind=i_def )             :: variable_initial_value_interp(nvars)
+    integer( kind=i_def )             :: expected_value(nvars)
+    real( kind=r_def )                :: t1_weight
+    real( kind=r_def )                :: t2_weight
+    integer( kind=i_def )             :: i
+
+    ! Define the field information
+    variable_names = (/"ifield1", "ifield2", "ifield3"/)
+    variable_function_spaces = (/W3 , Wtheta, W3/)
+    variable_is_2d = (/.false., .false., .true./)
+
+    variable_initial_value_1 = (/1, 2, 3/)
+    variable_initial_value_2 = (/4, 5, 6/)
+    variable_initial_value_interp = (/0, -1, 2/)
+
+    ! Create collections
+    call this%create_integer_collection(                      &
+                    t1_field_collection, variable_names,      &
+                    variable_function_spaces, variable_is_2d, &
+                    variable_initial_value_1, 't1_field_collection')
+    call this%create_integer_collection(                      &
+                    t2_field_collection, variable_names,      &
+                    variable_function_spaces, variable_is_2d, &
+                    variable_initial_value_2, 't2_field_collection')
+    call this%create_integer_collection(                      &
+                    interp_field_collection, variable_names,  &
+                    variable_function_spaces, variable_is_2d, &
+                    variable_initial_value_interp, 'interp_field_collection')
+
+    ! Compare with the initial condition
+    expected_value = (/0, -1, 2/)
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+    ! -- Apply equal weights
+    t1_weight = 0.5
+    t2_weight = 0.5
+    expected_value = (/4, 5, 6/)
+
+    ! Interpolate
+    call trajectory_interpolate_fields( interp_field_collection, &
+                                        t1_field_collection,     &
+                                        t2_field_collection,     &
+                                        t1_weight,               &
+                                        t2_weight )
+    ! Check the interpolated values
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+    ! -- Apply unequal weights
+    t1_weight = 0.75
+    t2_weight = 0.25
+    expected_value = (/1, 2, 3/)
+
+    ! Interpolate
+    call trajectory_interpolate_fields( interp_field_collection, &
+                                        t1_field_collection,     &
+                                        t2_field_collection,     &
+                                        t1_weight,               &
+                                        t2_weight )
+
+    ! Check the interpolated values
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+    ! -- Apply unequal weights
+    t1_weight = 0.25
+    t2_weight = 0.75
+    expected_value = (/4, 5, 6/)
+
+    ! Interpolate
+    call trajectory_interpolate_fields( interp_field_collection, &
+                                        t1_field_collection,     &
+                                        t2_field_collection,     &
+                                        t1_weight,               &
+                                        t2_weight )
+
+    ! Check the interpolated values
+    do i=1,nvars
+      call interp_field_collection%get_field(variable_names(i), field_ptr)
+      field_proxy = field_ptr%get_proxy()
+      @assertEqual(field_proxy%data(1), expected_value(i))
+    enddo
+
+  end subroutine test_trajectory_interpolate_fields_int
+
+end module trajectory_interpolate_fields_test

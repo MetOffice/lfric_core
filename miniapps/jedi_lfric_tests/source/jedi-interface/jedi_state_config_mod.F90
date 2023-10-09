@@ -15,8 +15,7 @@
 module jedi_state_config_mod
 
   use constants_mod,             only : i_def, str_def, l_def
-  use jedi_lfric_tests_field_meta_mod, &
-                                 only : jedi_lfric_field_meta_type
+  use jedi_lfric_field_meta_mod, only : jedi_lfric_field_meta_type
   use fs_continuity_mod,         only : W3, Wtheta
   use jedi_lfric_datetime_mod,   only : jedi_datetime_type
 
@@ -27,12 +26,12 @@ module jedi_state_config_mod
 type, public :: jedi_state_config_type
 
   !> The field meta data
-  type( jedi_lfric_field_meta_type )     :: field_meta_data
+  type( jedi_lfric_field_meta_type )   :: field_meta_data
 
   ! date: '2018-04-14T21:00:00Z'
   ! mpas define the formating for this as:
   ! dateTimeString = '$Y-$M-$D_$h:$m:$s'
-  type( jedi_datetime_type )         :: datetime
+  type( jedi_datetime_type )         :: state_time
   !> File prefix for read
   character( len=str_def )           :: read_file_prefix
   !> A logical that if true indicates that the state should include a
@@ -72,7 +71,7 @@ subroutine initialise( self, use_pseudo_model )
   logical( kind=l_def )    :: variable_is_2d(nvars)
 
   ! Configuration inputs
-  call self%datetime%init_lfric_calendar_start()
+  call self%state_time%init_lfric_calendar_start()
   self%read_file_prefix = "read_"
   self%use_pseudo_model = use_pseudo_model
 

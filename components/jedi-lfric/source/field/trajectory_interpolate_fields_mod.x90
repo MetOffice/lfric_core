@@ -1,0 +1,103 @@
+!------------------------------------------------------------------------------
+! (C) Crown copyright 2023 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!------------------------------------------------------------------------------
+!> @brief  Contains a method to linearly interpolate two field_collections
+!>
+!> @details A method is included that takes two field collections and time
+!>          weights. The weights are precomputed and sum to 1.0. The PSyClone
+!>          builtin method aX_plus_bY is then used to compute a weighted
+!>          average of the fields in the two field collections and puts the
+!>          result in a third field collection that is passed out.
+!>
+module trajectory_interpolate_fields_mod
+
+  use field_collection_mod,          only : field_collection_type
+  use field_collection_iterator_mod, only : field_collection_iterator_type
+  use field_mod,                     only : field_type
+  use integer_field_mod,             only : integer_field_type
+  use constants_mod,                 only : str_def, r_def
+
+  implicit none
+
+  private
+  public :: trajectory_interpolate_fields
+
+  contains
+
+  !> @brief linearly interpolate two field_collections
+  !!
+  !> @param [inout] interp_fields  field collection to store interpolated fields
+  !> @param [in]    t1_fields      field collection at time 1
+  !> @param [in]    t2_fields      field collection at time 2
+  !> @param [in]    t1_weight      weight to apply to fields in t1_fields
+  !> @param [in]    t2_weight      weight to apply to fields in t2_fields
+  subroutine trajectory_interpolate_fields( interp_fields, &
+                                            t1_fields,     &
+                                            t2_fields,     &
+                                            t1_weight,     &
+                                            t2_weight )
+
+    implicit none
+
+    type(field_collection_type), intent(inout) :: interp_fields
+    type(field_collection_type), intent(in)    :: t1_fields
+    type(field_collection_type), intent(in)    :: t2_fields
+    real(r_def), intent(in)                    :: t1_weight
+    real(r_def), intent(in)                    :: t2_weight
+
+    ! Real fields
+    type(field_type),         pointer :: interp_field_ptr
+    type(field_type),         pointer :: t1_field_ptr
+    type(field_type),         pointer :: t2_field_ptr
+
+    ! Integer fields
+    type(integer_field_type), pointer :: interp_field_ptr_int
+    type(integer_field_type), pointer :: field_ptr_int
+
+    type(field_collection_iterator_type) :: iterator
+    character(str_def)                   :: name
+
+    ! Nullify pointers
+    nullify(interp_field_ptr, t1_field_ptr, t2_field_ptr)
+    nullify(interp_field_ptr_int, field_ptr_int)
+
+    call iterator%initialise(interp_fields)
+
+    do
+      if ( .not. iterator%has_next() ) exit
+        select type (listfield => iterator%next())
+          type is (field_type)
+
+            interp_field_ptr => listfield
+            name=interp_field_ptr%get_name()
+            call t1_fields%get_field(name, t1_field_ptr)
+            call t2_fields%get_field(name, t2_field_ptr)
+
+            ! Compute the linear interpolation of the two fields
+            call invoke( aX_plus_bY(interp_field_ptr, &
+                                    t1_weight,        &
+                                    t1_field_ptr,     &
+                                    t2_weight,        &
+                                    t2_field_ptr) )
+
+         type is (integer_field_type)
+
+          ! Do nearest interpolation for integers
+          interp_field_ptr_int => listfield
+          name=interp_field_ptr_int%get_name()
+          if (t1_weight>t2_weight) then
+            call t1_fields%get_field(name, field_ptr_int)
+          else
+            call t2_fields%get_field(name, field_ptr_int)
+          endif
+
+          call invoke(int_setval_X(interp_field_ptr_int, field_ptr_int))
+
+        end select
+    end do
+
+  end subroutine trajectory_interpolate_fields
+
+end module trajectory_interpolate_fields_mod

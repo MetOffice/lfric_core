@@ -18,7 +18,7 @@ module jedi_lfric_tests_io_update_mod
                                               LOG_LEVEL_INFO
   use mesh_mod,                        only : mesh_type
   use jedi_lfric_tests_utils_mod,      only : add_real_field
-  use jedi_lfric_tests_field_meta_mod, only : jedi_lfric_field_meta_type
+  use jedi_lfric_field_meta_mod,       only : jedi_lfric_field_meta_type
   use field_collection_mod,            only : field_collection_type
   use field_collection_iterator_mod,   only : field_collection_iterator_type
   use field_parent_mod,                only : field_parent_type
@@ -51,7 +51,7 @@ module jedi_lfric_tests_io_update_mod
     type(field_collection_type),            intent(inout) :: io_collection
     type(mesh_type), pointer,               intent(in)    :: mesh_3d
     type(mesh_type), pointer,               intent(in)    :: mesh_2d
-    type(jedi_lfric_field_meta_type), intent(in)    :: field_meta_data
+    type(jedi_lfric_field_meta_type),       intent(in)    :: field_meta_data
 
     ! Local
     class(field_parent_type), pointer     :: field_ptr => null()
@@ -105,7 +105,7 @@ module jedi_lfric_tests_io_update_mod
         end if
         call add_real_field( io_collection, mesh,                            &
                              field_meta_data%get_variable_function_space(i), &
-                             field_meta_data%get_variable_name(i))
+                             field_meta_data%get_variable_name(i) )
       end if
     end do
 

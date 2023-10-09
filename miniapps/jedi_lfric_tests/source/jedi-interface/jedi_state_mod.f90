@@ -22,15 +22,14 @@ module jedi_state_mod
   use jedi_geometry_mod,             only : jedi_geometry_type
   use driver_model_data_mod,         only : model_data_type
   use jedi_state_config_mod,         only : jedi_state_config_type
-  use jedi_lfric_tests_field_meta_mod, &
-                                     only : jedi_lfric_field_meta_type
+  use jedi_lfric_field_meta_mod,     only : jedi_lfric_field_meta_type
   use field_collection_mod,          only : field_collection_type
   use log_mod,                       only : log_event,          &
                                             log_scratch_space,  &
                                             LOG_LEVEL_INFO,     &
                                             LOG_LEVEL_ERROR
   use jedi_lfric_fake_nl_driver_mod, only : mesh, twod_mesh
-  use constants_mod,                 only : i_def, i_timestep, l_def
+  use constants_mod,                 only : i_def, l_def, str_def
 
   use jedi_lfric_fake_nl_driver_mod,   only : model_clock
 
@@ -45,15 +44,11 @@ type, public :: jedi_state_type
   type ( atlas_field_emulator_type ), allocatable :: fields(:)
 
   !> An object that stores the field meta-data associated with the fields
-  type( jedi_lfric_field_meta_type )                  :: field_meta_data
+  type( jedi_lfric_field_meta_type )              :: field_meta_data
 
   !> Interface field linking the Atlas emulator fields and LFRic fields in the
   !> model data (to do field copies)
   type( atlas_field_interface_type ), allocatable :: fields_to_model_data(:)
-
-  !> Interface field linking the Atlas emulator fields and LFRic fields in the
-  !> io_collection (to do field copies)
-  type( atlas_field_interface_type ), allocatable :: fields_to_io_collection(:)
 
   !> Model data that stores the model_data fields to propagate
   type( model_data_type ),  public                :: model_data
@@ -64,10 +59,10 @@ type, public :: jedi_state_type
   ! date: '2018-04-14T21:00:00Z'
   ! mpas define the formatting for this as:
   ! dateTimeString = '$Y-$M-$D_$h:$m:$s'
-  type( jedi_datetime_type ), public              :: datetime
+  type( jedi_datetime_type )                      :: state_time
 
   !> The jedi_geometry object
-  type( jedi_geometry_type ), pointer             :: geometry
+  type( jedi_geometry_type ), pointer             :: geometry => null()
 
 contains
 
@@ -83,12 +78,19 @@ contains
   procedure, private :: setup_interface_to_model_data
 
   !> Setup the atlas_field_interface_type that enables copying between Atlas
-  !> field emulators and the LFRic fields in io_collection
-  procedure, private :: setup_interface_to_io_collection
+  !> field emulators and the fields in a LFRic field collection
+  procedure, private :: setup_interface_to_field_collection
 
-  !> Copy the data in the LFRic fields stored in the io_collection to the
-  !> internal Atlas field emulators
-  procedure, private :: from_lfric_io_collection
+  !> Copy the data in the internal Atlas field emulators from the LFRic fields
+  !> stored in the a field_collection
+  procedure, public :: from_lfric_field_collection
+
+  !> Copy the data in the internal Atlas field emulators to the LFRic fields
+  !> stored in the a field_collection
+  procedure, public :: to_lfric_field_collection
+
+  !> Return the curent time
+  procedure, public :: valid_time
 
   !> Read model fields from file into fields
   procedure, public :: read_file
@@ -96,7 +98,10 @@ contains
   !> @todo Write model fields to file from the fields
   !> procedure, public :: write_file
 
-  !> Update the curent datetime
+  !> Create the model_data
+  procedure, public :: create_model_data
+
+  !> Update the curent time
   procedure, public :: update_time
 
   !> Print field
@@ -151,7 +156,7 @@ subroutine state_initialiser_read( self, program_name, geometry, config )
   else
     ! We are not running the non-linear model so read the file directly and
     ! do a copy from io_collection to the fields
-    call self%read_file( config%datetime, config%read_file_prefix )
+    call self%read_file( config%state_time, config%read_file_prefix )
   end if
 
 end subroutine state_initialiser_read
@@ -164,14 +169,13 @@ end subroutine state_initialiser_read
 !>                      information to construct a state
 subroutine state_initialiser( self, geometry, config )
 
-  use jedi_lfric_fake_nl_init_mod, only : create_da_model_data
-  use fs_continuity_mod,               only : W3, Wtheta
+  use fs_continuity_mod,     only : W3, Wtheta
 
   implicit none
 
-  class( jedi_state_type ), intent(inout)        :: self
+  class( jedi_state_type ),        intent(inout) :: self
   type( jedi_geometry_type ), target, intent(in) :: geometry
-  type( jedi_state_config_type ), intent(inout)  :: config
+  type( jedi_state_config_type ),  intent(inout) :: config
 
   ! Local
   integer(i_def) :: n_horizontal
@@ -184,7 +188,7 @@ subroutine state_initialiser( self, geometry, config )
 
   ! Setup
   self%field_meta_data = config%field_meta_data
-  self%datetime = config%datetime
+  self%state_time = config%state_time
   self%geometry => geometry
   n_variables = self%field_meta_data%get_n_variables()
 
@@ -226,8 +230,7 @@ subroutine state_initialiser( self, geometry, config )
 
   ! If running the model, create model data and link to fields .
   if ( .not. config%use_pseudo_model ) then
-    call create_da_model_data( mesh, twod_mesh, self%model_data )
-    call self%setup_interface_to_model_data()
+    call self%create_model_data()
   end if
 
 end subroutine state_initialiser
@@ -251,24 +254,40 @@ subroutine initialise_model_data( self )
 
 end subroutine initialise_model_data
 
-
-!> @brief    A method to update the internal Atlas field emulators
+!> @brief    Returns the current time of the increment
 !>
-!> @param [in] datetime    The data datetime to be read
-!> @param [in] file_prefix Character array that specifies the file to read from
-subroutine read_file( self, datetime, file_prefix )
-
-  use jedi_lfric_tests_io_update_mod, only : update_io_field_collection
-  use lfric_xios_read_mod,            only : read_state
+!> @return   time   The current time of the state
+function valid_time( self ) result(time)
 
   implicit none
 
-  class( jedi_state_type ),   intent(inout) :: self
-  type( jedi_datetime_type ), intent(in)    :: datetime
-  character(len=*),           intent(in)    :: file_prefix
+  class( jedi_state_type ), intent(inout) :: self
+  type( jedi_datetime_type )              :: time
+
+  time = self%state_time
+
+end function valid_time
+
+!> @brief    A method to update the internal Atlas field emulators
+!>
+!> @param [in] read_time   The time to be read
+!> @param [in] file_prefix Character array that specifies the file to read from
+subroutine read_file( self, read_time, file_prefix )
+
+  use jedi_lfric_tests_io_update_mod, only : update_io_field_collection
+  use lfric_xios_read_mod,  only : read_state
+
+  implicit none
+
+  class( jedi_state_type ), intent(inout) :: self
+  type( jedi_datetime_type ),  intent(in) :: read_time
+  character(len=*),            intent(in) :: file_prefix
+
+  ! Local
+  character( len=str_def ), allocatable :: variable_names(:)
 
   ! Set the clock to the desired read time
-  call set_clock(self, datetime)
+  call set_clock(self, read_time)
 
   ! Ensure the io_collection contains the variables defined in the list
   ! stored in the type
@@ -279,7 +298,9 @@ subroutine read_file( self, datetime, file_prefix )
   call read_state( self%io_collection, prefix=file_prefix )
 
   ! Copy model_data fields to the Atlas field emulators
-  call self%from_lfric_io_collection()
+  call self%field_meta_data%get_variable_names(variable_names)
+
+  call self%from_lfric_field_collection(variable_names, self%io_collection)
 
 end subroutine read_file
 
@@ -292,13 +313,30 @@ end subroutine read_file
 ! Local methods to support LFRic-JEDI implementation
 !------------------------------------------------------------------------------
 
+!> @brief    Create an instance of the model_data for jedi_state_type
+!>
+subroutine create_model_data( self )
+
+  use jedi_lfric_fake_nl_init_mod,   only : create_da_model_data
+  use jedi_lfric_fake_nl_driver_mod, only : mesh, twod_mesh
+
+  implicit none
+
+  class( jedi_state_type ), intent(inout) :: self
+
+  ! Create model data and then link the Atlas fields to them
+  call create_da_model_data( mesh, twod_mesh, self%model_data )
+  call self%setup_interface_to_model_data()
+
+end subroutine create_model_data
+
 !> @brief    Setup fields_to_model_data variable that enables copying between
 !>           Atlas field emulators and the LFRic fields in the model_data
 !>
 subroutine setup_interface_to_model_data( self )
 
-  use jedi_lfric_tests_utils_mod,  only: get_model_field
-  use field_mod,                   only: field_type
+  use jedi_lfric_tests_utils_mod, only: get_model_field
+  use field_mod,                  only: field_type
 
   implicit none
 
@@ -311,8 +349,9 @@ subroutine setup_interface_to_model_data( self )
   integer(i_def),   pointer :: horizontal_map_ptr(:)
   integer(i_def)            :: n_variables
 
-  type( field_collection_type ), pointer :: depository => null()
+  type( field_collection_type ), pointer :: depository
 
+  nullify(depository)
   depository => self%model_data%get_field_collection("depository")
 
   n_variables = self%field_meta_data%get_n_variables()
@@ -324,16 +363,14 @@ subroutine setup_interface_to_model_data( self )
   allocate( self%fields_to_model_data( n_variables ) )
 
   ! Link the Atlas emulator fields with lfric fields
+  call self%geometry%get_horizontal_map(horizontal_map_ptr)
   do ivar=1, n_variables
 
     ! Get the required data
     call get_model_field( self%field_meta_data%get_variable_name(ivar), &
-                          depository,                                   &
-                          lfric_field_ptr )
+                          depository, lfric_field_ptr )
 
     atlas_data_ptr => self%fields(ivar)%get_data()
-
-    call self%geometry%get_horizontal_map(horizontal_map_ptr)
 
     call self%fields_to_model_data(ivar)%initialise( atlas_data_ptr,     &
                                                      horizontal_map_ptr, &
@@ -366,18 +403,27 @@ subroutine from_model_data( self )
 
 end subroutine from_model_data
 
-!> @brief    Setup fields_to_io_collection variable that enables copying
+!> @brief    Setup Atlas-LFRic interface_fields that enables copying
 !>           between Atlas field emulators and the LFRic fields in
 !>           io_collection
 !>
-subroutine setup_interface_to_io_collection( self )
+!> @param [inout] interface_fields  The Atlas-LFRic interafce object
+!> @param [in]    variable_names    The name of the fields to setup
+!> @param [inout] field_collection  The field collection to link the Atlas fields to
+subroutine setup_interface_to_field_collection( self, &
+                                                interface_fields, &
+                                                variable_names, &
+                                                field_collection )
 
-  use jedi_lfric_tests_utils_mod,  only: get_model_field
-  use field_mod,                   only: field_type
+  use jedi_lfric_tests_utils_mod, only: get_model_field
+  use field_mod,                  only: field_type
 
   implicit none
 
-  class( jedi_state_type ), intent(inout) :: self
+  class( jedi_state_type ),           intent(inout) :: self
+  type( atlas_field_interface_type ), intent(inout) :: interface_fields(:)
+  character( len=str_def ),              intent(in) :: variable_names(:)
+  type( field_collection_type ),      intent(inout) :: field_collection
 
   ! Local
   integer(i_def)            :: ivar
@@ -385,106 +431,157 @@ subroutine setup_interface_to_io_collection( self )
   real(real64),     pointer :: atlas_data_ptr(:,:)
   integer(i_def),   pointer :: horizontal_map_ptr(:)
   integer(i_def)            :: n_variables
+  logical                   :: all_variables_exists
 
-  n_variables=self%field_meta_data%get_n_variables()
-
-  ! Allocate space for the interface fields
-  if ( allocated(self%fields_to_io_collection) ) then
-    deallocate(self%fields_to_io_collection)
-  end if
-  allocate( self%fields_to_io_collection(n_variables) )
+  ! Check that the state contains all the required fields
+  all_variables_exists = &
+        self%field_meta_data%check_variables_exist( variable_names )
+  if ( .not. all_variables_exists ) then
+    log_scratch_space = &
+        'The Atlas state does not conatin all the required fields.'
+    call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+  endif
 
   ! Link the Atlas emulator fields with lfric fields
+  call self%geometry%get_horizontal_map( horizontal_map_ptr )
+  n_variables=size( variable_names )
   do ivar = 1, n_variables
-    ! Get the required data
-    call get_model_field(self%field_meta_data%get_variable_name(ivar), &
-                         self%io_collection, lfric_field_ptr)
+    ! Get the required data and setup field interface
+    call get_model_field( variable_names(ivar), &
+                          field_collection, lfric_field_ptr )
     atlas_data_ptr => self%fields(ivar)%get_data()
-    call self%geometry%get_horizontal_map(horizontal_map_ptr)
-    call self%fields_to_io_collection(ivar)%initialise( atlas_data_ptr,     &
-                                                        horizontal_map_ptr, &
-                                                        lfric_field_ptr )
+    call interface_fields(ivar)%initialise( atlas_data_ptr,     &
+                                            horizontal_map_ptr, &
+                                            lfric_field_ptr )
   end do
 
-end subroutine setup_interface_to_io_collection
+end subroutine setup_interface_to_field_collection
 
-!> @brief    Copy from model_data to the Atlas field emulators
+!> @brief    Copy from a field_collection to the Atlas field emulators
 !>
-subroutine from_lfric_io_collection( self )
+!>
+!> @param [in]    variable_names    The name of the fields to setup
+!> @param [inout] field_collection  The field collection to copy from
+subroutine from_lfric_field_collection( self, &
+                                        variable_names, &
+                                        field_collection )
 
   implicit none
 
-  class( jedi_state_type ), intent(inout) :: self
+  class( jedi_state_type ),      intent(inout) :: self
+  character( len=str_def ),         intent(in) :: variable_names(:)
+  type( field_collection_type ), intent(inout) :: field_collection
 
   ! Local
   integer(i_def) :: ivar
+  integer(i_def) :: n_variables
+  type( atlas_field_interface_type ), allocatable :: interface_fields(:)
+
+  ! Allocate space for the interface fields
+  n_variables = size(variable_names)
+  allocate( interface_fields(n_variables) )
 
   ! Link internal Atlas field emulators to LFRic fields
-  call self%setup_interface_to_io_collection()
+  call self%setup_interface_to_field_collection( interface_fields, &
+                                                 variable_names, &
+                                                 field_collection )
 
-  ! Copy the LFRic fields in the io_collection to the Atlas field emulators
-  do ivar = 1, size(self%fields_to_io_collection)
-    call self%fields_to_io_collection(ivar)%copy_from_lfric()
+  ! Copy the LFRic fields in the field_collection to the Atlas field emulators
+  do ivar = 1, n_variables
+    call interface_fields(ivar)%copy_from_lfric()
   end do
 
-end subroutine from_lfric_io_collection
+end subroutine from_lfric_field_collection
 
-!> @brief    Update the datetime by a single time-step
+!> @brief    Copy to a field_collection from the Atlas field emulators
 !>
-!> @param [in] seconds  Update the datetime by the specified
-!>                      timestep in seconds
-subroutine update_time( self, seconds )
+!> @param [in]    variable_names    The name of the fields to setup
+!> @param [inout] field_collection  The field collection to copy to
+subroutine to_lfric_field_collection( self, variable_names, field_collection )
+
+  implicit none
+
+  class( jedi_state_type ),      intent(inout) :: self
+  character( len=str_def ),         intent(in) :: variable_names(:)
+  type( field_collection_type ), intent(inout) :: field_collection
+
+  ! Local
+  integer(i_def) :: ivar
+  integer(i_def) :: n_variables
+  type( atlas_field_interface_type ), allocatable :: interface_fields(:)
+
+  ! Allocate space for the interface fields
+  n_variables = size( variable_names )
+  allocate( interface_fields(n_variables) )
+
+  ! Link internal Atlas field emulators to LFRic fields
+  call self%setup_interface_to_field_collection( interface_fields, &
+                                                 variable_names, &
+                                                 field_collection )
+
+  ! Copy the LFRic fields in the field_collection to the Atlas field emulators
+  do ivar = 1, n_variables
+    call interface_fields(ivar)%copy_to_lfric()
+  end do
+
+end subroutine to_lfric_field_collection
+
+!> @brief    Update the state time by a single time-step
+!>
+!> @param [in] time_step  Update the state time by the time_step
+!>                        duration
+subroutine update_time( self, time_step )
 
   implicit none
 
   class( jedi_state_type ), intent(inout) :: self
-  integer(i_timestep),      intent(in)    :: seconds
+  type( jedi_duration_type ),  intent(in) :: time_step
 
-  call self%datetime%add_seconds( seconds )
+  self%state_time = self%state_time + time_step
 
 end subroutine update_time
 
-!> @brief    Set the LFRic clock to the time specified by the input datetime
+!> @brief    Set the LFRic clock to the time specified by the input time
 !>
-!> @param [in] new_datetime  The datetime to be used to update the LFRic clock
-subroutine set_clock( self, new_datetime )
+!> @param [in] new_time  The time to be used to update the LFRic clock
+subroutine set_clock( self, new_time )
 
   use timestepping_config_mod,       only : dt
 
   implicit none
 
   class( jedi_state_type ),   intent(inout) :: self
-  type( jedi_datetime_type ), intent(in)    :: new_datetime
+  type( jedi_datetime_type ), intent(in)    :: new_time
 
-  type( jedi_duration_type ) :: duration
-  integer(i_timestep)        :: timestep
+  type( jedi_duration_type ) :: time_difference
+  type( jedi_duration_type ) :: time_step
 
   logical(l_def) :: clock_stopped
 
-  timestep = int( dt, kind=i_timestep )
+  call time_step%init( int( dt, kind=i_def ) )
 
-  duration = new_datetime - self%datetime
+  time_difference = new_time - self%state_time
 
-  if ( duration == 0 ) then
+  if ( time_difference == 0_i_def ) then
     write ( log_scratch_space, '(A)' ) &
-      "New datetime is the same as the current datetime"
+      "New time is the same as the current state time"
     call log_event( log_scratch_space, LOG_LEVEL_INFO )
-  else if ( duration < 0 ) then
+  else if ( time_difference < 0_i_def ) then
     write ( log_scratch_space, '(A)' ) &
       "The xios clock can not go backwards."
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end if
 
   ! Tick the clock to the required time but first check that the clock is
-  ! running in the case its not being ticked (i.e. datetime==self%datetime).
+  ! running in the case its not being ticked (i.e. new_time==self%state_time).
   ! clock_stopped=.not.clock%is_running() didnt work when I tried it - set to
   ! false initially for now.
 
   clock_stopped = .false.
 
-  do while ( new_datetime%is_ahead( self%datetime ) )
+  do while ( new_time%is_ahead( self%state_time ) )
     clock_stopped = .not. model_clock%tick()
-    call self%datetime%add_seconds( timestep )
+    self%state_time = self%state_time + time_step
   end do
 
   ! Check the clock is still running
@@ -523,12 +620,19 @@ subroutine print_field( self )
   ! Local
   real(real64), pointer :: atlas_data_ptr(:,:)
   integer(i_def)        :: ivar
+  character(str_def)    :: iso_datetime
 
   ! Printing data
+  call log_event( "State print ----", LOG_LEVEL_INFO )
+  call self%state_time%to_string( iso_datetime )
+  write ( log_scratch_space, '(2A)' ) 'Time: ', iso_datetime
+  call log_event( log_scratch_space, LOG_LEVEL_INFO )
   do ivar = 1, self%field_meta_data%get_n_variables()
-    atlas_data_ptr => self%fields (ivar)%get_data()
-    print*, "print_field. ivar = ", ivar, &
-            "atlas_data_ptr(1,1) = ", atlas_data_ptr(1,1)
+    atlas_data_ptr => self%fields(ivar)%get_data()
+    write ( log_scratch_space, '(2A,F20.10)' ) &
+      trim(self%field_meta_data%get_variable_name(ivar)), &
+      ", atlas_data_ptr(1,1) = ", atlas_data_ptr(1,1)
+    call log_event( log_scratch_space, LOG_LEVEL_INFO )
   end do
 
 end subroutine print_field

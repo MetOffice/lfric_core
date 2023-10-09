@@ -28,7 +28,7 @@ type, public :: jedi_pseudo_model_type
   private
 
   !> A date_time list to read
-  type( jedi_datetime_type ), allocatable  :: datetime_states(:)
+  type( jedi_datetime_type ), allocatable  :: state_times(:)
   !> Index for the current state in date_time_states
   integer( kind=i_def )                    :: current_state
   !> The number of states
@@ -72,10 +72,10 @@ subroutine initialise( self, config )
   type( jedi_pseudo_model_config_type ), intent(in)     :: config
 
   ! Setup the pseudo model
-  self%current_state = 1
-  self%n_states = size( config%datetime_states, dim=1 )
-  allocate( self%datetime_states(self%n_states) )
-  self%datetime_states = config%datetime_states
+  self%current_state = 1_i_def
+  self%n_states = size( config%state_times, dim=1 )
+  allocate( self%state_times(self%n_states) )
+  self%state_times = config%state_times
   self%file_prefix = config%read_file_prefix
 
 end subroutine initialise
@@ -103,18 +103,18 @@ subroutine model_step( self, state )
   type( jedi_state_type ),         intent(inout) :: state
 
   ! Local
-  type( jedi_datetime_type ) :: datetime
+  type( jedi_datetime_type ) :: state_time
 
   if ( self%current_state > self%n_states ) then
     write ( log_scratch_space, '(A)' ) "self%current_state>self%n_states."
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   endif
 
-  datetime = self%datetime_states( self%current_state )
-  call state%read_file( datetime, self%file_prefix )
+  state_time = self%state_times( self%current_state )
+  call state%read_file( state_time, self%file_prefix )
 
   ! Iterate the current state
-  self%current_state = self%current_state + 1
+  self%current_state = self%current_state + 1_i_def
 
 end subroutine model_step
 
@@ -138,7 +138,7 @@ subroutine jedi_pseudo_model_destructor( self )
 
   type( jedi_pseudo_model_type ), intent(inout) :: self
 
-  if ( allocated(self%datetime_states) ) deallocate(self%datetime_states)
+  if ( allocated(self%state_times) ) deallocate(self%state_times)
 
 end subroutine jedi_pseudo_model_destructor
 
@@ -149,36 +149,39 @@ end subroutine jedi_pseudo_model_destructor
 !> @brief    Run a forecast using the model init, step and final
 !>
 !> @param [inout] state           The state object to propagate
-!> @param [in] datetime_duration  The duration of the forecast
-subroutine forecast( self, state, datetime_duration )
+!> @param [in]    forecast_length The duration of the forecast
+!> @param [inout] post_processor  Post processing object
+subroutine forecast( self, state, forecast_length, post_processor )
+
+  use jedi_post_processor_mod,    only : jedi_post_processor_type
 
   implicit none
 
-  class( jedi_pseudo_model_type ), intent(inout) :: self
-  type( jedi_state_type ),         intent(inout) :: state
-  type( jedi_duration_type ),      intent(in)    :: datetime_duration
+  class( jedi_pseudo_model_type ),   intent(inout) :: self
+  type( jedi_state_type ),           intent(inout) :: state
+  type( jedi_duration_type ),           intent(in) :: forecast_length
+  class( jedi_post_processor_type ), intent(inout) :: post_processor
 
   ! Local
-  type( jedi_datetime_type ) :: datetime_end
+  type( jedi_datetime_type ) :: end_time
 
   ! End time
-  datetime_end = state%datetime + datetime_duration
+  end_time = state%valid_time() + forecast_length
 
+  ! Initialize the model
   call self%model_init( state )
+  ! Initialize the post processor and call first process
+  call post_processor%pp_init( state )
+  call post_processor%process( state )
 
-  ! initialize the post processor
-  ! post.initialize(state, ...);
-  ! In a H(X) the following call would be used to do spatial interpolations
-  ! on the Atlas/dummy field data
-  ! post%process(state)
-
-  ! loop until date_time_end
-  do while ( datetime_end%is_ahead( state%datetime ) )
+  ! Loop until date_time_end
+  do while ( end_time%is_ahead( state%valid_time() ) )
     call self%model_step( state )
-    ! post%process(state)
+    call post_processor%process( state )
   end do
 
-  ! post.finalize(state);
+  ! Finalize model and post processor
+  call post_processor%pp_final( state )
   call self%model_final( state )
 
 end subroutine forecast

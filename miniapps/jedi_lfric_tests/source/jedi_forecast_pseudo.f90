@@ -15,7 +15,7 @@
 !>
 program jedi_forecast_pseudo
 
-  use constants_mod,           only : PRECISION_REAL, i_native
+  use constants_mod,           only : PRECISION_REAL, i_def, i_native
   use log_mod,                 only : log_event, log_scratch_space, &
                                       LOG_LEVEL_ALWAYS
 
@@ -25,26 +25,27 @@ program jedi_forecast_pseudo
   use cli_mod,                      only : get_initial_filename
 
   ! Jedi emulator objects
-  use jedi_checksum_mod,       only : output_checksum
-  use jedi_lfric_duration_mod, only : jedi_duration_type
-  use jedi_run_mod,            only : jedi_run_type
-  use jedi_geometry_mod,       only : jedi_geometry_type
-  use jedi_state_mod,          only : jedi_state_type
-  use jedi_pseudo_model_mod,   only : jedi_pseudo_model_type
-
+  use jedi_checksum_mod,             only : output_checksum
+  use jedi_lfric_duration_mod,       only : jedi_duration_type
+  use jedi_run_mod,                  only : jedi_run_type
+  use jedi_geometry_mod,             only : jedi_geometry_type
+  use jedi_state_mod,                only : jedi_state_type
+  use jedi_pseudo_model_mod,         only : jedi_pseudo_model_type
+  use jedi_post_processor_empty_mod, only : jedi_post_processor_empty_type
 
   implicit none
 
-  ! Jedi objects
-  type(jedi_geometry_type)     :: jedi_geometry
-  type(jedi_state_type)        :: jedi_state
-  type(jedi_pseudo_model_type) :: jedi_psuedo_model
-  type(jedi_run_type)          :: jedi_run
+  ! Emulator objects
+  type( jedi_geometry_type )             :: jedi_geometry
+  type( jedi_state_type )                :: jedi_state
+  type( jedi_pseudo_model_type )         :: jedi_psuedo_model
+  type( jedi_run_type )                  :: jedi_run
+  type( jedi_post_processor_empty_type ) :: jedi_pp_empty
 
-  ! Emulator configs
+  ! Emulator object configs
   type(jedi_state_config_type)        :: jedi_state_config
   type(jedi_pseudo_model_config_type) :: jedi_pseudo_model_config
-  type(jedi_duration_type)            :: datetime_duration
+  type(jedi_duration_type)            :: forecast_length
 
   ! Local
   character(:), allocatable :: filename
@@ -76,20 +77,20 @@ program jedi_forecast_pseudo
   ! Model config
   call jedi_pseudo_model_config%initialise()
 
-  ! Forecast config - duration of forecast / seconds
-  call datetime_duration%init( 'P0DT6H0M0S' )
+  ! Forecast config - duration of forecast
+  call forecast_length%init('P0DT6H0M0S')
 
-  ! Geometry
+  ! Create geometry
   call jedi_geometry%initialise()
 
-  ! State
+  ! Create state
   call jedi_state%initialise( program_name, jedi_geometry, jedi_state_config )
 
   ! Model
   call jedi_psuedo_model%initialise( jedi_pseudo_model_config )
 
-  ! Run app via model class
-  call jedi_psuedo_model%forecast( jedi_state, datetime_duration )
+  ! Run non-linear model forecast
+  call jedi_psuedo_model%forecast( jedi_state, forecast_length, jedi_pp_empty )
 
   call log_event( 'Finalising ' // program_name // ' ...', LOG_LEVEL_ALWAYS )
   ! To provide KGO

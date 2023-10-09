@@ -38,11 +38,12 @@ module jedi_lfric_fake_nl_init_mod
     type(mesh_type), intent(in), pointer        :: mesh2d
     type( model_data_type ), intent(inout)      :: model_data
 
-    type(field_collection_type), pointer        :: depository => null()
+    type(field_collection_type), pointer        :: depository
 
     call log_event( 'jedi_lfric_tests: Initialising miniapp ...', LOG_LEVEL_INFO )
 
     call model_data%add_empty_field_collection("depository")
+    nullify(depository)
     depository => model_data%get_field_collection("depository")
 
     ! Create fields and add them to model_data

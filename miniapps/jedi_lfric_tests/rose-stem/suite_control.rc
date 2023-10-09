@@ -7,7 +7,8 @@
 {%- set projectDir  = 'jedi_lfric_tests' %}
 {%- set miniappFlag = True %}
 
-{%- set projectApps = ['jedi_lfric_tests', 'jedi_forecast', 'jedi_forecast_pseudo'] %}
+{%- set projectApps = ['jedi_lfric_tests', 'jedi_forecast',
+                       'jedi_forecast_pseudo', 'jedi_tlm_forecast_tl'] %}
 
 {# Default setting to enable xios for all tasks in this suite. Is overrided if #}
 {# 'use_xios' ["True"|"False"] is specified in the specific task directives    #}
@@ -69,9 +70,11 @@
 
 {%- set application_configurations = { 'jedi_lfric_tests' : ['nwp_gal9', 'runge-kutta'],
                                        'jedi_forecast' : ['default', 'no_xios'],
-                                       'jedi_forecast_pseudo' : ['default', 'pseudomodel']} %}
+                                       'jedi_forecast_pseudo' : ['default', 'pseudomodel'],
+                                       'jedi_tlm_forecast_tl' : ['default']} %}
 
-{%- set canned_configurations = ['jedi_lfric_tests', 'jedi_forecast', 'jedi_forecast_pseudo'] %}
+{%- set canned_configurations = ['jedi_lfric_tests', 'jedi_forecast',
+                                 'jedi_forecast_pseudo', 'jedi_tlm_forecast_tl'] %}
 
 {%- set groups = {
 'developer': [
@@ -98,6 +101,9 @@
     'run_application("jedi_forecast_pseudo", "default", resolutions=[("C12",)],
                         env={"nrun":7})',
     'run_application("jedi_forecast_pseudo", "pseudomodel", resolutions=[("C12",)],
+                        env={"nrun":7})',
+    'validate_rose_meta_graph("jedi_tlm_forecast_tl",appName="jedi_tlm_forecast_tl")',
+    'run_application("jedi_tlm_forecast_tl", "default", resolutions=[("C12",)],
                         env={"nrun":7})'],
 'nightly': [
     'null_task_graph()' ]
