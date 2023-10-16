@@ -1,5 +1,0 @@
-# Files should only ever be removed or renamed in this file, never added.
-#
-source/fieldspec/axisspec_collection_mod.F90
-source/fieldspec/fieldspec_collection_mod.F90
-source/fieldspec/fieldspec_xml_parser_mod.f90

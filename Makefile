@@ -15,32 +15,31 @@
 # Operate only on this list of sub-projects. May be overridden from the
 # terminal.
 #
-OPERATE_ON ?= lfric_atm                                  \
-              miniapps/lfric_coupled                     \
-              gungho                                     \
-              infrastructure                             \
-              components/science                         \
-              components/driver                          \
-              components/lfric-xios                      \
-              components/jedi-lfric                      \
-              components/coupler-oasis                   \
-              components/diagnostics_infrastructure      \
-              components/inventory                       \
-              mesh_tools                                 \
-              linear                                     \
-              miniapps/gungho_model                      \
-              miniapps/linear_model                      \
-              miniapps/skeleton                          \
-              miniapps/jedi_lfric_tests                  \
-              miniapps/gravity_wave                      \
-              miniapps/simple_diffusion                  \
-              miniapps/solver_miniapp                    \
-              miniapps/shallow_water                     \
-              miniapps/io_dev                            \
-              miniapps/transport                         \
-              miniapps/multires_coupling                 \
-              um_physics                                 \
-              socrates                                   \
+OPERATE_ON ?= lfric_atm                  \
+              miniapps/lfric_coupled     \
+              gungho                     \
+              infrastructure             \
+              components/science         \
+              components/driver          \
+              components/lfric-xios      \
+              components/jedi-lfric      \
+              components/coupler-oasis   \
+              components/inventory       \
+              mesh_tools                 \
+              linear                     \
+              miniapps/gungho_model      \
+              miniapps/linear_model      \
+              miniapps/skeleton          \
+              miniapps/jedi_lfric_tests  \
+              miniapps/gravity_wave      \
+              miniapps/simple_diffusion  \
+              miniapps/solver_miniapp    \
+              miniapps/shallow_water     \
+              miniapps/io_dev            \
+              miniapps/transport         \
+              miniapps/multires_coupling \
+              um_physics                 \
+              socrates                   \
               lfricinputs
 
 export SUITE_GROUP ?= developer
