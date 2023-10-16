@@ -57,11 +57,10 @@ contains
 
     ! Add dt to all levels of ageofair
     call ones%initialise( vector_space = ageofair%get_function_space() )
-    call invoke(setval_c(ones, 1.0_r_def))
-    call invoke(inc_X_plus_bY(ageofair,dt,ones))
-
-    ! Set levels nearest the surface to be zero in ageofair field
-    call invoke( ageofair_kernel_type(ageofair,ageofair_reset_level) )
+    call invoke( setval_c(ones, 1.0_r_def),       &
+                 inc_X_plus_bY(ageofair,dt,ones), &
+                 ! Set levels nearest the surface to be zero in ageofair field
+                 ageofair_kernel_type(ageofair,ageofair_reset_level) )
 
     if ( subroutine_timers ) call timer( 'ageofair_advection_alg' )
 
