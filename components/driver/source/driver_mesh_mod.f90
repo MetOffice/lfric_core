@@ -11,7 +11,7 @@
 module driver_mesh_mod
 
   use constants_mod,              only: i_def, l_def, r_def, str_def, imdi, &
-                                        i_native, str_max_filename
+                                        str_max_filename
   use extrusion_mod,              only: extrusion_type,              &
                                         uniform_extrusion_type,      &
                                         geometric_extrusion_type,    &
@@ -804,10 +804,10 @@ subroutine create_all_3D_meshes( extrusion,                  &
 
   character(len=str_def) :: mesh_name
 
-  integer(kind=i_native) :: i
+  integer(i_def) :: i
 
-  integer(kind=i_def), parameter :: one_layer = 1_i_def
-  real(kind=r_def),    parameter :: atmos_bottom = 0.0_r_def
+  integer(i_def), parameter :: one_layer = 1_i_def
+  real(r_def),    parameter :: atmos_bottom = 0.0_r_def
 
   ! 1.0 Prime extrusions and 2D meshes
   !===================================================================

@@ -15,7 +15,7 @@
 !>
 program jedi_forecast
 
-  use constants_mod,           only : PRECISION_REAL, i_def, i_native
+  use constants_mod,           only : PRECISION_REAL, i_def, i_timestep
   use log_mod,                 only : log_event, log_scratch_space, &
                                       LOG_LEVEL_ALWAYS
   use field_collection_mod,    only : field_collection_type
@@ -49,7 +49,7 @@ program jedi_forecast
 
   ! Local
   character(:), allocatable      :: filename
-  integer( kind=i_native )       :: model_communicator
+  integer(i_def)                 :: model_communicator
 
   character(*), parameter        :: program_name = "jedi_forecast"
 

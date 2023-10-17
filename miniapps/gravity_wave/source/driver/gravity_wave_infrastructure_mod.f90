@@ -11,7 +11,7 @@ module gravity_wave_infrastructure_mod
   use base_mesh_config_mod,       only : prime_mesh_name
   use calendar_mod,               only : calendar_type
   use check_configuration_mod,    only : get_required_stencil_depth
-  use constants_mod,              only : i_def, i_native, &
+  use constants_mod,              only : i_def,           &
                                          PRECISION_REAL,  &
                                          r_def, r_second, &
                                          l_def, str_def

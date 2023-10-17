@@ -7,7 +7,7 @@
 ! Test the 2D stencil_dofmap representation
 module stencil_twod_dofmap_mod_test
 
-  use constants_mod,            only : i_def, i_native
+  use constants_mod,            only : i_def
   use pFUnit_Mod
   use stencil_2D_dofmap_mod,    only: stencil_2D_dofmap_type, STENCIL_2D_CROSS
   use local_mesh_mod,           only: local_mesh_type

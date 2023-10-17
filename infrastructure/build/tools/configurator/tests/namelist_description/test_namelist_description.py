@@ -176,7 +176,7 @@ class TestNamelistMeta():
 
         uut = description.NamelistDescription('aerial')
         uut.add_usage('esize', module='wibble_mod')
-        uut.add_value('lsize', 'integer', 'native')
+        uut.add_value('lsize', 'integer', 'default')
         uut.add_string('absolute', bounds='5')
         uut.add_value('inlist', 'integer', bounds='lsize')
         uut.add_value('outlist', 'real', bounds='esize')
@@ -253,7 +253,7 @@ class TestNamelistConfigDescription():
         uut = description.NamelistConfigDescription()
         result = self._compile_dictionary(uut.process_config(json_file))
 
-        assert {'fred': {'choices':     ['integer', 'i_native',
+        assert {'fred': {'choices':     ['integer', 'i_def',
                                          'foo', 'bar', 'baz', 'qux'],
                          'filename':    ['character', 'str_max_filename'],
                          'first_thing': ['character', 'str_def'],
@@ -280,7 +280,7 @@ class TestNamelistConfigDescription():
         uut = description.NamelistConfigDescription()
         result = self._compile_dictionary(uut.process_config(json_file))
 
-        assert {'barney': {'stuff': ['integer', 'i_native',
+        assert {'barney': {'stuff': ['integer', 'i_def',
                                      'one', 'two', 'three']}} == result
 
     def test_non_enumeration_no_type(self, tmp_path: Path):

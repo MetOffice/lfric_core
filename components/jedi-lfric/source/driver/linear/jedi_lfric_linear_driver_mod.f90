@@ -10,7 +10,7 @@
 module jedi_lfric_linear_driver_mod
 
   use base_mesh_config_mod,       only : prime_mesh_name
-  use constants_mod,              only : i_def, i_native, imdi, r_def
+  use constants_mod,              only : i_def, imdi, r_def
   use driver_io_mod,              only : get_io_context
   use extrusion_mod,              only : TWOD
   use field_mod,                  only : field_type

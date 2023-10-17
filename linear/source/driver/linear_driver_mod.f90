@@ -8,7 +8,7 @@ module linear_driver_mod
 
   use base_mesh_config_mod,       only : prime_mesh_name
   use calendar_mod,               only : calendar_type
-  use constants_mod,              only : i_def, i_native, r_def, imdi
+  use constants_mod,              only : i_def, r_def, imdi
   use driver_io_mod,              only : get_io_context
   use extrusion_mod,              only : TWOD
   use field_mod,                  only : field_type

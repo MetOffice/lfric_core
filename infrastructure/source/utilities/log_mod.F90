@@ -20,7 +20,7 @@ module log_mod
 
   use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
 
-  use constants_mod,   only : i_native,   &
+  use constants_mod,   only : i_def,      &
                               i_timestep, &
                               str_long,   &
                               str_max_filename
@@ -69,7 +69,7 @@ module log_mod
 
   integer, private :: log_unit_number = 10
   logical, private :: warning_trace = .false.
-  integer(i_native),   private, allocatable :: mpi_communicator
+  integer(i_def),      private, allocatable :: mpi_communicator
   character(len=:),    private, allocatable :: petno
   integer(i_timestep), private, allocatable :: timestep
 
@@ -116,16 +116,16 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: communicator
+    integer(i_def),    intent(in) :: communicator
     character(*),      intent(in) :: file_name
     logical, optional, intent(in) :: trace_on_warnings
 
-    integer(i_native) :: status
-    integer(i_native) :: ilen
+    integer(i_def)                :: status
+    integer(i_def)                :: ilen
     character(len=:), allocatable :: logfilename
-    character(len=12) :: fmt
-    integer(i_native) :: this_rank
-    integer(i_native) :: total_ranks
+    character(len=12)             :: fmt
+    integer(i_def)                :: this_rank
+    integer(i_def)                :: total_ranks
 
     call mpi_comm_size( communicator, total_ranks, ierror=status )
     if (status /= 0) then

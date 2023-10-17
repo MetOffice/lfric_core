@@ -15,7 +15,7 @@
 program cubedsphere_mesh_generator
 
   use cli_mod,             only: get_initial_filename
-  use constants_mod,       only: i_def, l_def, r_def, str_def, i_native, &
+  use constants_mod,       only: i_def, l_def, r_def, str_def, &
                                  cmdi, imdi, emdi, str_max_filename
   use configuration_mod,   only: read_configuration, final_configuration
   use coord_transform_mod, only: rebase_longitude_range
@@ -127,7 +127,7 @@ program cubedsphere_mesh_generator
   real(r_def)        :: set_null_island(2)
   character(str_def) :: lon_str
   character(str_def) :: lat_str
-  integer(i_native)  :: log_level
+  integer(i_def)     :: log_level
 
   ! Variables for output filenames.
   character(str_max_filename) :: output_basename

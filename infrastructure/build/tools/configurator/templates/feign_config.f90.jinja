@@ -21,8 +21,8 @@ module {{modulename}}
   public :: {{ namelists | sort | decorate( 'feign_', '_config' ) | join( ', &\n' + ' '*12 ) }}
 {%- endif %}
 
-  integer(i_native) :: local_rank = -1
-  integer(i_native), parameter :: temporary_unit = 3
+  integer(i_def) :: local_rank = -1
+  integer(i_def), parameter :: temporary_unit = 3
 
 contains
 
@@ -68,10 +68,10 @@ contains
     character(*), parameter :: temp_close_message &
       = "feign_{{name}}_config: Unable to close temporary file"
 
-    integer(i_native)  :: condition
+    integer(i_def)  :: condition
 
 {%- if string_arrays %}
-    integer(i_native)  :: i
+    integer(i_def)  :: i
     character(str_max_filename) :: tmp_str
 {%- endif %}
 

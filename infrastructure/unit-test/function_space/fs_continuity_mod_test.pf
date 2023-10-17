@@ -8,7 +8,7 @@
 !>
 module fs_continuity_mod_test
 
-  use constants_mod,       only: i_native, str_def
+  use constants_mod,       only: i_def, str_def
   use fs_continuity_mod,   only: functionspace_from_name,       &
                                  name_from_functionspace,       &
                                  is_fs_horizontally_continuous, &
@@ -26,7 +26,7 @@ contains
 
     implicit none
 
-    integer(i_native) :: test_functionspace
+    integer(i_def) :: test_functionspace
 
     test_functionspace = W0
     @assertEqual('W0', name_from_functionspace(test_functionspace))

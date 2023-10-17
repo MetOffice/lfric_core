@@ -12,32 +12,32 @@
 !>
 module count_mod
 
-  use constants_mod,      only: i_def, i_native, str_def, str_max_filename, &
+  use constants_mod,      only: i_def, str_def, str_max_filename, &
                                 cmdi
 
   implicit none
   private
 
-  integer(i_native), parameter :: num_counters = 100
+  integer(i_def), parameter :: num_counters = 100
   character(str_max_filename), parameter  :: &
                                          default_counter_suffix = "counter.txt"
 
   type, public :: count_type
     private
     !> number of counters currently in use
-    integer(i_native) :: num_counters_in_use
+    integer(i_def) :: num_counters_in_use
     !> names used to differentiate different counting reporting sections
     character(len=str_def) :: section_name(num_counters)
     !> flag describes whether counting for a section is active or not
     logical :: start_stop(num_counters)
     !> value of the counter  at the start of the counting reporting section
-    integer(i_native) :: start_count(num_counters)
+    integer(i_def) :: start_count(num_counters)
     !> value of the running total of the counter for the counting reporting section
-    integer(i_native) :: total_count(num_counters)
+    integer(i_def) :: total_count(num_counters)
     !> overall name of counter
     character(len=str_def) :: name
     !> counter for any desired purpose
-    integer(i_native) :: overall_counter
+    integer(i_def) :: overall_counter
 
   contains
     !> starts/stops recording a counter for a given section
@@ -80,7 +80,7 @@ contains
     class(count_type), intent(inout)  :: self
     character(len=*), intent(in)  :: cname
 
-    integer(i_native) :: k
+    integer(i_def) :: k
 
     do k = 1, self%num_counters_in_use
        if( cname == self%section_name(k) ) exit
@@ -125,10 +125,10 @@ contains
     implicit none
     class(count_type),           intent(inout) :: self
     character(*),      optional, intent(in)    :: opt_suffix
-    integer(i_native), optional, intent(in)    :: opt_unit
+    integer(i_def),    optional, intent(in)    :: opt_unit
 
     character(str_max_filename) :: suffix
-    integer(i_native)    :: k, unit_no, stat
+    integer(i_def)    :: k, unit_no, stat
 
     ! Check all timers are closed
     do k = 1, self%num_counters_in_use

@@ -19,7 +19,7 @@ module gungho_model_mod
   use check_configuration_mod,    only : get_required_stencil_depth, &
                                          check_any_shifted
   use conservation_algorithm_mod, only : conservation_algorithm
-  use constants_mod,              only : i_def, i_native, r_def, l_def, &
+  use constants_mod,              only : i_def, r_def, l_def, &
                                          PRECISION_REAL, r_second, str_def
   use convert_to_upper_mod,       only : convert_to_upper
   use derived_config_mod,         only : set_derived_config

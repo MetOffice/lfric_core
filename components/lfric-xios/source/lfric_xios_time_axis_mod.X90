@@ -10,7 +10,7 @@
 !>          of how the field should be updated with time.
 module lfric_xios_time_axis_mod
 
-  use constants_mod,        only: i_def, i_native, str_def, str_long, &
+  use constants_mod,        only: i_def, str_def, str_long, &
                                   str_max_filename, r_def, l_def
   use field_mod,            only: field_type, field_proxy_type
   use field_parent_mod,     only: field_parent_type
@@ -243,8 +243,8 @@ contains
                                   (/'seconds', 'days   ', 'hours  ', 'months '/)
     type(xios_duration)           :: ref_time, mean_time, month_duration
     type(xios_date)               :: ref_date
-    integer(i_native),  parameter :: len_date = 18 ! Length of CF date is 18 characters
-    integer(i_native),  parameter :: len_delim = 7 ! Delimiter between unit and
+    integer(i_def),     parameter :: len_date = 18 ! Length of CF date is 18 characters
+    integer(i_def),     parameter :: len_delim = 7 ! Delimiter between unit and
                                                    ! date is 7 characters
 
     ! NetCDF reading variables
@@ -448,7 +448,7 @@ contains
     class(time_axis_type), intent(inout) :: self
 
     type(xios_date) :: model_date
-    integer(i_def) :: i
+    integer(i_def)  :: i
 
     call xios_get_current_date(model_date)
 

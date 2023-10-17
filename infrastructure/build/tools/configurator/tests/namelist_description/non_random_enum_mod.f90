@@ -7,7 +7,7 @@
 !>
 module telly_config_mod
 
-  use constants_mod, only: i_native, &
+  use constants_mod, only: i_def, &
                            str_def
   use log_mod,       only: log_event, log_scratch_space &
                          , LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO
@@ -24,11 +24,11 @@ module telly_config_mod
             telly_multiples_allowed, telly_final, &
             get_telly_nml
 
-  integer(i_native), public, parameter :: tubbies_inky = 3
-  integer(i_native), public, parameter :: tubbies_lala = 1
-  integer(i_native), public, parameter :: tubbies_po = 2
+  integer(i_def), public, parameter :: tubbies_inky = 3
+  integer(i_def), public, parameter :: tubbies_lala = 1
+  integer(i_def), public, parameter :: tubbies_po = 2
 
-  integer(i_native), public, protected :: tubbies = emdi
+  integer(i_def), public, protected :: tubbies = emdi
 
   logical :: nml_loaded = .false.
 
@@ -37,10 +37,10 @@ module telly_config_mod
                                        'lala', &
                                        'po']
 
-  integer(i_native), parameter :: tubbies_value(3) &
-          = [3_i_native, &
-             1_i_native, &
-             2_i_native]
+  integer(i_def), parameter :: tubbies_value(3) &
+          = [3_i_def, &
+             1_i_def, &
+             2_i_def]
 
 contains
 
@@ -50,13 +50,13 @@ contains
   !>
   !> @param[in] key Enumeration key.
   !>
-  integer(i_native) function tubbies_from_key( key )
+  integer(i_def) function tubbies_from_key( key )
 
     implicit none
 
     character(*), intent(in) :: key
 
-    integer(i_native) :: key_index
+    integer(i_def) :: key_index
 
     if (key == unset_key) then
       write( log_scratch_space, '(A)') &
@@ -94,9 +94,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: value
+    integer(i_def), intent(in) :: value
 
-    integer(i_native) :: value_index
+    integer(i_def) :: value_index
 
     value_index = 1
     do
@@ -129,8 +129,8 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
 
     call read_namelist( file_unit, local_rank, &
                         tubbies )
@@ -146,18 +146,18 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    integer(i_def)                :: missing_data
-    integer(i_native), intent(out) :: dummy_tubbies
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    integer(i_def)             :: missing_data
+    integer(i_def), intent(out) :: dummy_tubbies
 
-    integer(i_native) :: buffer_integer_i_native(1)
+    integer(i_def) :: buffer_integer_i_def(1)
 
     character(str_def) :: tubbies
 
     namelist /telly/ tubbies
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 
@@ -174,11 +174,11 @@ contains
 
     end if
 
-    buffer_integer_i_native(1) = dummy_tubbies
+    buffer_integer_i_def(1) = dummy_tubbies
 
-    call global_mpi%broadcast( buffer_integer_i_native, 1, 0 )
+    call global_mpi%broadcast( buffer_integer_i_def, 1, 0 )
 
-    dummy_tubbies = buffer_integer_i_native(1)
+    dummy_tubbies = buffer_integer_i_def(1)
 
 
     nml_loaded = .true.

@@ -7,7 +7,7 @@
 !-------------------------------------------------------------------------------
 module function_space_mod_test
 
-  use constants_mod,         only : i_def, i_native, l_def, r_def, str_long
+  use constants_mod,         only : i_def, l_def, r_def, str_long
   use fs_continuity_mod,     only : W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi, &
                                     W2trace, W2Htrace, W2Vtrace
   use fs_test_data_mod,      only : fs0k0_nodal_coords,         &
@@ -87,12 +87,12 @@ module function_space_mod_test
 
   @testParameter
   type, public, extends(MPITestParameter) :: function_space_parameter_type
-    integer(i_native) :: function_space
-    integer(i_def)    :: element_order
-    integer(i_def)    :: ndof_cell
-    integer(i_def)    :: ndof_glob
-    integer(i_def)    :: dim_space
-    integer(i_def)    :: dim_space_diff
+    integer(i_def) :: function_space
+    integer(i_def) :: element_order
+    integer(i_def) :: ndof_cell
+    integer(i_def) :: ndof_glob
+    integer(i_def) :: dim_space
+    integer(i_def) :: dim_space_diff
   contains
     procedure :: toString
   end type function_space_parameter_type
@@ -100,12 +100,12 @@ module function_space_mod_test
   @TestCase(npes=[1], testParameters={getParameters()}, constructor=test_function_space_constructor)
   type, extends(MPITestCase), public :: test_function_space_type
     private
-    integer(i_native) :: function_space
-    integer(i_def)    :: element_order
-    integer(i_def)    :: ndof_cell
-    integer(i_def)    :: ndof_glob
-    integer(i_def)    :: dim_space
-    integer(i_def)    :: dim_space_diff
+    integer(i_def) :: function_space
+    integer(i_def) :: element_order
+    integer(i_def) :: ndof_cell
+    integer(i_def) :: ndof_glob
+    integer(i_def) :: dim_space
+    integer(i_def) :: dim_space_diff
 
     type(local_mesh_type)    :: unit_test_local_mesh
     integer(i_def)           :: mesh_id

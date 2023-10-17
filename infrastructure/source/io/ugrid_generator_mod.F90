@@ -11,7 +11,7 @@
 module ugrid_generator_mod
 
 use constants_mod,                  only: r_def, i_def, str_def, l_def, &
-                                          str_longlong, i_native
+                                          str_longlong
 use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
 
 implicit none

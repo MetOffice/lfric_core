@@ -7,7 +7,7 @@
 !
 module computed_mod
 
-  use constants_mod, only : i_def, i_native
+  use constants_mod, only : i_def
   use log_mod,       only : log_scratch_space, log_event, LOG_LEVEL_ERROR
   use mpi_mod,       only : global_mpi
 
@@ -16,8 +16,8 @@ module computed_mod
   private
   public :: feign_computed_config
 
-  integer(i_native) :: local_rank = -1
-  integer(i_native), parameter :: temporary_unit = 3
+  integer(i_def) :: local_rank = -1
+  integer(i_def), parameter :: temporary_unit = 3
 
 contains
 
@@ -36,7 +36,7 @@ contains
     character(*), parameter :: temp_close_message &
       = "feign_computed_config: Unable to close temporary file"
 
-    integer(i_native)  :: condition
+    integer(i_def)  :: condition
 
     if (local_rank == -1) then
       local_rank = global_mpi%get_comm_rank()

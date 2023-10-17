@@ -15,7 +15,7 @@
 !>
 program jedi_forecast_pseudo
 
-  use constants_mod,           only : PRECISION_REAL, i_def, i_native
+  use constants_mod,           only : PRECISION_REAL, i_def
   use log_mod,                 only : log_event, log_scratch_space, &
                                       LOG_LEVEL_ALWAYS
 
@@ -49,7 +49,7 @@ program jedi_forecast_pseudo
 
   ! Local
   character(:), allocatable :: filename
-  integer( kind=i_native )  :: model_communicator
+  integer(i_def)            :: model_communicator
   character(*), parameter   :: program_name = "jedi_forecast_pseudo"
 
   call log_event( 'Running ' // program_name // ' ...', LOG_LEVEL_ALWAYS )

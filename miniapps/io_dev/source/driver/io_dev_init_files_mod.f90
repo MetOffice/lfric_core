@@ -8,7 +8,7 @@
 !>          can be passed to the infrastructure
 module io_dev_init_files_mod
 
-  use constants_mod,         only: i_def, i_native, &
+  use constants_mod,         only: i_def, &
                                    str_def, str_max_filename
   use file_mod,              only: file_type, FILE_MODE_READ, &
                                    FILE_MODE_WRITE
@@ -58,7 +58,7 @@ module io_dev_init_files_mod
                                         dump_fname,             &
                                         input_fname
     integer(i_def)                   :: ts_start, ts_end
-    integer(i_native)                :: rc
+    integer(i_def)                   :: rc
 
     ! Get time configuration in integer form
     read(timestep_start,*,iostat=rc)  ts_start

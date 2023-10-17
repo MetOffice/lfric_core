@@ -12,7 +12,7 @@ module local_mesh_mod
 
   use constants_mod,   only: r_def, i_def, i_halo_index,   &
                              l_def, str_def, integer_type, &
-                             i_native, str_longlong,       &
+                             str_longlong,                 &
                              imdi, rmdi, cmdi, emdi,       &
                              degrees_to_radians,           &
                              radians_to_degrees
@@ -34,15 +34,15 @@ module local_mesh_mod
 
   private
 
-  integer(i_native), parameter :: spherical_domain = 601
-  integer(i_native), parameter :: planar_domain    = 602
+  integer(i_def), parameter :: spherical_domain = 601
+  integer(i_def), parameter :: planar_domain    = 602
 
-  integer(i_native), parameter :: non_periodic_domain = 701
-  integer(i_native), parameter :: channel_domain      = 702
-  integer(i_native), parameter :: periodic_domain     = 703
+  integer(i_def), parameter :: non_periodic_domain = 701
+  integer(i_def), parameter :: channel_domain      = 702
+  integer(i_def), parameter :: periodic_domain     = 703
 
-  integer(i_native), parameter :: lon_lat_coords = 801
-  integer(i_native), parameter :: xyz_coords     = 802
+  integer(i_def), parameter :: lon_lat_coords = 801
+  integer(i_def), parameter :: xyz_coords     = 802
 
   type, extends(linked_list_data_type), public :: local_mesh_type
 
@@ -53,11 +53,11 @@ module local_mesh_mod
   ! Tag name of mesh.
     character(str_def) :: mesh_name
   ! Domain surface geometry.
-    integer(i_native)  :: geometry = emdi
+    integer(i_def)     :: geometry = emdi
   ! Domain boundaries topology.
-    integer(i_native)  :: topology = emdi
+    integer(i_def)     :: topology = emdi
   ! Co-ordinate system used to specify node locations.
-    integer(i_native)  :: coord_sys = emdi
+    integer(i_def)     :: coord_sys = emdi
   ! Co-ordinate units along xy-axes.
     character(str_def) :: coord_units_xy(2) = cmdi
   ! Marker id for cells that do not exist for mesh.

@@ -8,7 +8,7 @@
 !!          and formats it so that it can be passed to the infrastructure.
 module shallow_water_setup_io_mod
 
-  use constants_mod,                 only: i_def, i_native, &
+  use constants_mod,                 only: i_def, &
                                            str_def, str_max_filename
   use driver_model_data_mod,         only: model_data_type
   use file_mod,                      only: FILE_MODE_READ, &
@@ -43,7 +43,7 @@ module shallow_water_setup_io_mod
     character(len=str_max_filename) :: checkpoint_write_fname, &
                                        checkpoint_read_fname
     integer(i_def)                  :: ts_start, ts_end
-    integer(i_native)               :: rc
+    integer(i_def)                  :: rc
 
     ! Get time configuration in integer form
     read(timestep_start,*,iostat=rc)  ts_start

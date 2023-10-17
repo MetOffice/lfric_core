@@ -7,7 +7,7 @@
 !
 module enumeration_mod
 
-  use constants_mod, only : i_native
+  use constants_mod, only : i_def
   use log_mod,       only : log_scratch_space, log_event, LOG_LEVEL_ERROR
   use mpi_mod,       only : global_mpi
 
@@ -16,8 +16,8 @@ module enumeration_mod
   private
   public :: feign_enum_config
 
-  integer(i_native) :: local_rank = -1
-  integer(i_native), parameter :: temporary_unit = 3
+  integer(i_def) :: local_rank = -1
+  integer(i_def), parameter :: temporary_unit = 3
 
 contains
 
@@ -31,12 +31,12 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: thing
+    integer(i_def), intent(in) :: thing
 
     character(*), parameter :: temp_close_message &
       = "feign_enum_config: Unable to close temporary file"
 
-    integer(i_native)  :: condition
+    integer(i_def)  :: condition
 
     if (local_rank == -1) then
       local_rank = global_mpi%get_comm_rank()

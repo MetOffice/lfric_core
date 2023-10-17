@@ -6,7 +6,7 @@
 module model_clock_mod_event_test
 
   use clock_mod,       only : clock_type
-  use constants_mod,   only : i_native, i_timestep, r_second
+  use constants_mod,   only : i_def, i_timestep, r_second
   use event_mod,       only : event_type, event_actor_type, event_action
   use model_clock_mod, only : model_clock_type
   use pFUnit_mod,      only : anyExceptions,  &
@@ -28,8 +28,8 @@ module model_clock_mod_event_test
   end type clock_event_test_type
 
   type, extends(event_actor_type) :: dummy_actor_type
-    integer(i_native), public :: indicator = 0
-    integer(i_native), public :: event_step = 0
+    integer(i_def), public :: indicator = 0
+    integer(i_def), public :: event_step = 0
   contains
   end type dummy_actor_type
 
@@ -62,7 +62,7 @@ contains
     procedure(event_action), pointer :: action => null()
     logical                          :: running
 
-    test_unit= model_clock_type( 1_i_native, 10_i_native, &
+    test_unit= model_clock_type( 1_i_def, 10_i_def, &
                                  1.0_r_second, 0.0_r_second )
 
     actor_1 = dummy_actor_type()

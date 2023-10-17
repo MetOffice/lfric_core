@@ -14,7 +14,7 @@ module driver_fem_mod
 
   use chi_transform_mod,              only: init_chi_transforms, &
                                             final_chi_transforms
-  use constants_mod,                  only: i_def, i_native, l_def, str_def
+  use constants_mod,                  only: i_def, l_def, str_def
   use base_mesh_config_mod,           only: geometry, geometry_planar
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
   use finite_element_config_mod,      only: element_order,    &

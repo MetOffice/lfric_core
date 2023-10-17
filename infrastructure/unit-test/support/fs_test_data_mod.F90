@@ -1,6 +1,6 @@
 module fs_test_data_mod
 
-  use constants_mod,     only : i_def, i_native, r_def
+  use constants_mod,     only : i_def, r_def
   use fs_continuity_mod, only : W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi, &
                                 W2trace, W2Vtrace, W2Htrace
 

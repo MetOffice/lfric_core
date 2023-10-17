@@ -10,7 +10,7 @@
 !>
 module mpi_mod
 
-  use constants_mod, only : i_def, i_halo_index, i_native,              &
+  use constants_mod, only : i_def, i_halo_index,                        &
                             l_def, r_double, r_single, str_def,         &
                             real_type, integer_type, logical_type
 #ifdef NO_MPI
@@ -31,7 +31,7 @@ module mpi_mod
     private
 
     !> The mpi communicator
-    integer(i_native) :: comm=-999, comm_size=-999, comm_rank=-999
+    integer(i_def) :: comm=-999, comm_size=-999, comm_rank=-999
     !> Flag marks whether an MPI communicator has been stored
     logical(l_def) :: comm_set = .false.
 
@@ -89,8 +89,8 @@ contains
   !>
   subroutine create_comm(out_comm)
     implicit none
-    integer(i_native), intent(out) :: out_comm
-    integer(i_native) :: ierr
+    integer(i_def), intent(out) :: out_comm
+    integer(i_def) :: ierr
 
 #ifdef NO_MPI
     ! Don't initialise mpi in non-mpi build.
@@ -131,9 +131,9 @@ contains
     use, intrinsic :: iso_fortran_env, only : real128, real64, real32, &
                                               int64, int32, int16, int8
     implicit none
-    integer(i_native), intent(in) :: fortran_type
-    integer(i_native), intent(in) :: fortran_kind
-    integer(i_native)             :: mpi_datatype
+    integer(i_def), intent(in) :: fortran_type
+    integer(i_def), intent(in) :: fortran_kind
+    integer(i_def)             :: mpi_datatype
 
 #ifdef NO_MPI
     ! In a non-mpi build the mpi datatype is meaningless - just return zero
@@ -185,8 +185,8 @@ contains
   subroutine initialise(self, in_comm)
     implicit none
     class(mpi_type), intent(inout) :: self
-    integer(i_native), intent(in)     :: in_comm
-    integer(i_native) :: ierr
+    integer(i_def), intent(in)     :: in_comm
+    integer(i_def) :: ierr
 
     self%comm = in_comm
 #ifdef NO_MPI
@@ -218,7 +218,7 @@ contains
   function get_comm(self) result(communicator)
     implicit none
     class(mpi_type), intent(in) :: self
-    integer(i_native) :: communicator
+    integer(i_def) :: communicator
     communicator = self%comm
   end function get_comm
 

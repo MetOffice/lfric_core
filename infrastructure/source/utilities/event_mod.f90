@@ -9,7 +9,7 @@
 module event_mod
 
   use clock_mod,     only : clock_type
-  use constants_mod, only : i_native
+  use constants_mod, only : i_def
 
   implicit none
 

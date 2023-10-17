@@ -30,7 +30,7 @@ module coupler_mod
   use field_collection_mod,           only: field_collection_type
   use sort_mod,                       only: bubble_sort
   use constants_mod,                  only: i_def, r_def, i_halo_index, l_def, &
-                                            i_native, imdi, rmdi
+                                            imdi, rmdi
   use timestepping_config_mod,        only: dt
   use log_mod,                        only: log_event,       &
                                             LOG_LEVEL_INFO,  &
@@ -828,7 +828,7 @@ module coupler_mod
    type( field_collection_iterator_type)        :: iter
    !flag for processing data that has just been exchanged
    ! (set to 1 once data has been successfully passed through the coupler)
-   integer(i_native)                            :: exchange_flag
+   integer(i_def)                               :: exchange_flag
 
    ! Set defaults
    exchange_flag = 0

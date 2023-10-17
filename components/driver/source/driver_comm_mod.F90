@@ -17,7 +17,7 @@
 !>
 module driver_comm_mod
 
-  use constants_mod,         only: i_native, l_def
+  use constants_mod,         only: i_def, l_def
   use halo_comms_mod,        only: initialise_halo_comms, &
                                    finalise_halo_comms
   use mpi_mod,               only: mpi_type, create_comm, destroy_comm
@@ -54,12 +54,12 @@ contains
 
     implicit none
 
-    character(len=*),                 intent(in)    :: program_name
-    type(mpi_type),                   intent(inout) :: mpi
-    integer(kind=i_native), optional, intent(in)    :: input_comm
+    character(len=*),         intent(in)    :: program_name
+    type(mpi_type),           intent(inout) :: mpi
+    integer(i_def), optional, intent(in)    :: input_comm
 
-    integer(kind=i_native) :: start_communicator = -999
-    integer(kind=i_native) :: model_communicator = -999
+    integer(i_def) :: start_communicator = -999
+    integer(i_def) :: model_communicator = -999
 
     logical :: comm_is_split
 

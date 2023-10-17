@@ -11,7 +11,7 @@
 !
 module global_mesh_collection_mod
 
-  use constants_mod,         only : r_def, i_def, IMDI, i_native, &
+  use constants_mod,         only : r_def, i_def, IMDI,               &
                                     str_max_filename, str_def
   use global_mesh_mod,       only : global_mesh_type
   use linked_list_mod,       only : linked_list_type, linked_list_item_type

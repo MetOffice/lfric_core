@@ -10,7 +10,7 @@
 !>
 module log_mod_parallel_level_test
 
-  use constants_mod, only: i_def, i_native, str_long
+  use constants_mod, only: i_def, str_long
   use log_mod,       only: finalise_logging, initialise_logging, log_event, &
                            log_level_debug, log_level_error,                &
                            log_level_info, log_level_trace,                 &
@@ -35,7 +35,7 @@ module log_mod_parallel_level_test
          log_output_test_info, log_output_test_warning,               &
          setUp, tearDown
 
-  integer(i_native), parameter  :: log_unit = 11
+  integer(i_def), parameter  :: log_unit = 11
 
   @testCase
   type, public, extends(MpiTestCase) :: log_test_type
@@ -72,7 +72,7 @@ contains
     class(log_test_type), intent(inout) :: this
 
     character(str_long) :: filename
-    integer(i_native)   :: status
+    integer(i_def)      :: status
 
     if (this%getNumProcesses() > 1) then
       write( filename, &
@@ -92,7 +92,7 @@ contains
 
     class(log_test_type), intent(inout) :: this
 
-    integer(i_native) :: status
+    integer(i_def) :: status
 
     if (allocated(this%pet_file)) then
       open( log_unit, file=this%pet_file, action='write', iostat=status )
@@ -237,12 +237,12 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: thread
-    integer(i_native), intent(in) :: level
-    character(*),      intent(in) :: expected_tag
+    integer(i_def), intent(in) :: thread
+    integer(i_def), intent(in) :: level
+    character(*),   intent(in) :: expected_tag
 
     ! Must hold 14 digits:
-    integer(i_native), parameter :: i_time = selected_int_kind( 14 )
+    integer(i_def), parameter :: i_time = selected_int_kind( 14 )
 
     integer(i_time)   :: current_stamp
     character(28)     :: current_date_string
@@ -256,7 +256,7 @@ contains
     character(3)      :: found_proc
     character(8)      :: found_tag
     character(80)     :: found_message
-    integer(i_native) :: status
+    integer(i_def)    :: status
     character(40)     :: filename
 
     call date_and_time( date=current_date_string(1:8), &
@@ -431,8 +431,8 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: thread
-    integer(i_native), intent(in) :: level
+    integer(i_def), intent(in) :: thread
+    integer(i_def), intent(in) :: level
 
     character(110)    :: buffer
     character(3)      :: expected_process
@@ -440,7 +440,7 @@ contains
     character(3)      :: process
     character(7)      :: tag
     character(80)     :: message
-    integer(i_native) :: status
+    integer(i_def)    :: status
     character(40)     :: filename
     integer(i_def), allocatable :: levels(:)
     character(22),  allocatable :: messages(:)

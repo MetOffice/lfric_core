@@ -16,7 +16,7 @@ module gen_planar_mod
   use calc_global_cell_map_mod,       only: calc_global_cell_map
   use constants_mod,                  only: r_def, i_def, l_def, str_def, &
                                             str_long, imdi, rmdi, emdi,   &
-                                            str_longlong, i_native,       &
+                                            str_longlong,                 &
                                             radians_to_degrees,           &
                                             degrees_to_radians, PI
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
@@ -77,9 +77,9 @@ module gen_planar_mod
     logical(l_def)     :: generated = .false.
 
     character(str_def) :: mesh_name
-    integer(i_native)  :: geometry
-    integer(i_native)  :: topology
-    integer(i_native)  :: coord_sys = emdi
+    integer(i_def)     :: geometry
+    integer(i_def)     :: topology
+    integer(i_def)     :: coord_sys = emdi
     character(str_def) :: coord_units_x
     character(str_def) :: coord_units_y
     integer(i_def)     :: edge_cells_x
@@ -219,9 +219,9 @@ function gen_planar_constructor( reference_element,          &
   class(reference_element_type), intent(in) :: reference_element
 
   character(str_def), intent(in) :: mesh_name
-  integer(i_native),  intent(in) :: geometry
-  integer(i_native),  intent(in) :: topology
-  integer(i_native),  intent(in) :: coord_sys
+  integer(i_def),     intent(in) :: geometry
+  integer(i_def),     intent(in) :: topology
+  integer(i_def),     intent(in) :: coord_sys
   integer(i_def),     intent(in) :: edge_cells_x, edge_cells_y
   logical(l_def),     intent(in) :: periodic_x, periodic_y
   real(r_def),        intent(in) :: domain_x, domain_y

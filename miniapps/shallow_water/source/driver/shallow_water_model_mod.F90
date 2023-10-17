@@ -13,7 +13,7 @@ module shallow_water_model_mod
   use check_configuration_mod,        only: get_required_stencil_depth
   use checksum_alg_mod,               only: checksum_alg
   use conservation_algorithm_mod,     only: conservation_algorithm
-  use constants_mod,                  only: i_def, i_native, str_def, &
+  use constants_mod,                  only: i_def, str_def, &
                                             PRECISION_REAL, l_def
   use convert_to_upper_mod,           only: convert_to_upper
   use derived_config_mod,             only: set_derived_config

@@ -39,18 +39,18 @@ module {{listname}}_config_mod
 {%- for name in enumerations | sort %}
 {%-   if loop.first %}{{'\n'}}{%- endif %}
 {%-   for key, value in parameters[name].mapping | dictsort %}
-  integer(i_native), public, parameter :: {{name}}_{{key}} = {{value}}
+  integer(i_def), public, parameter :: {{name}}_{{key}} = {{value}}
 {%-   endfor %}
 {%- endfor %}
 
 {%- if arrays %}{{ '\n' }}
-  integer(i_native), parameter, public :: max_array_size = 500
+  integer(i_def), parameter, public :: max_array_size = 500
 {%- endif %}
 
 {%- for name, parameter in parameters | dictsort %}
 {%-   if loop.first %}{{'\n'}}{%- endif %}
 {%-   if parameter.get_configure_type() == 'enumeration' %}
-  integer(i_native), public, protected :: {{parameter.name}} = {{parameter.missing_data_indicator}}
+  integer(i_def), public, protected :: {{parameter.name}} = {{parameter.missing_data_indicator}}
 {%-   elif parameter.get_configure_type() == 'array' %}
 {%-     if parameter.is_immediate_size() %}
   {{parameter.fortran_type.declaration()}}, public, protected :: {{parameter.name}}({{parameter.bounds[0]}}) = {{parameter.missing_data_indicator}}
@@ -88,14 +88,14 @@ module {{listname}}_config_mod
 
 {%- for name in enumerations | sort %}
 {%-   if loop.first %}{{'\n'}}{%- endif %}
-  integer(i_native), parameter :: {{name}}_value({{parameters[name].mapping | length()}}) &
+  integer(i_def), parameter :: {{name}}_value({{parameters[name].mapping | length()}}) &
 {%    set indent = '          = [' %}
 {%-   for key, value in parameters[name].mapping | dictsort %}
 {%-       if not loop.first %}
 {%-         set indent = ' ' * indent | length() -%}
 , &{{'\n'}}
 {%-        endif %}
-{{- indent }}{{ value }}_i_native
+{{- indent }}{{ value }}_i_def
 {%-     endfor %}]
 {%-   endfor %}
 
@@ -109,13 +109,13 @@ contains
   !>
   !> @param[in] key Enumeration key.
   !>
-  integer(i_native) function {{name}}_from_key( key )
+  integer(i_def) function {{name}}_from_key( key )
 
     implicit none
 
     character(*), intent(in) :: key
 
-    integer(i_native) :: key_index
+    integer(i_def) :: key_index
 
     if (key == unset_key) then
       write( log_scratch_space, '(A)') &
@@ -153,9 +153,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: value
+    integer(i_def), intent(in) :: value
 
-    integer(i_native) :: value_index
+    integer(i_def) :: value_index
 
     value_index = 1
     do
@@ -193,9 +193,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     call read_namelist( file_unit, local_rank, scan
 {%- if enumerations -%}
@@ -237,11 +237,11 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 {%- for name in enumerations | sort %}
-    integer(i_native), intent(out) :: dummy_{{name}}
+    integer(i_def), intent(out) :: dummy_{{name}}
 {%- endfor %}
 
     integer(i_def) :: missing_data
@@ -249,7 +249,7 @@ contains
 {%- for ftype, count in lonekindtally|dictsort %}
 {%-   if loop.first %}{{'\n'}}{% endif %}
 {%-   if ftype.intrinsic_type == 'logical' %}
-    integer(i_native) :: buffer_{{ftype.label()}}({{count}})
+    integer(i_def) :: buffer_{{ftype.label()}}({{count}})
 {%-   else %}
     {{ftype.declaration()}} :: buffer_{{ftype.label()}}({{count}})
 {%-   endif %}
@@ -262,7 +262,7 @@ contains
 
     namelist /{{listname}}/ {{namelist|sort|join(', &\n' + ' '*(16+listname|length))}}
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 {%- if arrays %}
@@ -426,8 +426,8 @@ contains
     implicit none
 
 {%- if arrays %}{{'\n'}}
-    integer(i_native) :: condition
-    integer(i_native) :: array_size
+    integer(i_def) :: condition
+    integer(i_def) :: array_size
 {%- endif %}
 
 {%- for name in arrays %}
@@ -436,7 +436,7 @@ contains
     {{parameter.fortran_type.declaration()}}, allocatable :: new_{{name}}(:)
 {%-   endif %}
 {%-   if parameter.is_arbitrary_size() %}
-    integer(i_native) :: index_{{name}}
+    integer(i_def) :: index_{{name}}
 {%-   endif %}
 {%- endfor %}
 {%- if arrays %}{{'\n'}}

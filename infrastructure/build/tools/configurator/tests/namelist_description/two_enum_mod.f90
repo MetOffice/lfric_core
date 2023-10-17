@@ -7,7 +7,7 @@
 !>
 module twoenum_config_mod
 
-  use constants_mod, only: i_native, &
+  use constants_mod, only: i_def, &
                            str_def
   use log_mod,       only: log_event, log_scratch_space &
                          , LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO
@@ -29,15 +29,15 @@ module twoenum_config_mod
             twoenum_multiples_allowed, twoenum_final, &
             get_twoenum_nml
 
-  integer(i_native), public, parameter :: first_one = 1952457118
-  integer(i_native), public, parameter :: first_three = 1813125082
-  integer(i_native), public, parameter :: first_two = 533081353
-  integer(i_native), public, parameter :: second_ay = 1248446338
-  integer(i_native), public, parameter :: second_bee = 144118421
-  integer(i_native), public, parameter :: second_see = 359914450
+  integer(i_def), public, parameter :: first_one = 1952457118
+  integer(i_def), public, parameter :: first_three = 1813125082
+  integer(i_def), public, parameter :: first_two = 533081353
+  integer(i_def), public, parameter :: second_ay = 1248446338
+  integer(i_def), public, parameter :: second_bee = 144118421
+  integer(i_def), public, parameter :: second_see = 359914450
 
-  integer(i_native), public, protected :: first = emdi
-  integer(i_native), public, protected :: second = emdi
+  integer(i_def), public, protected :: first = emdi
+  integer(i_def), public, protected :: second = emdi
 
   character(*), parameter :: listname = 'twoenum'
   character(str_def) :: profile_name = cmdi
@@ -55,14 +55,14 @@ module twoenum_config_mod
                                        'bee', &
                                        'see']
 
-  integer(i_native), parameter :: first_value(3) &
-          = [1952457118_i_native, &
-             1813125082_i_native, &
-             533081353_i_native]
-  integer(i_native), parameter :: second_value(3) &
-          = [1248446338_i_native, &
-             144118421_i_native, &
-             359914450_i_native]
+  integer(i_def), parameter :: first_value(3) &
+          = [1952457118_i_def, &
+             1813125082_i_def, &
+             533081353_i_def]
+  integer(i_def), parameter :: second_value(3) &
+          = [1248446338_i_def, &
+             144118421_i_def, &
+             359914450_i_def]
 
 contains
 
@@ -72,13 +72,13 @@ contains
   !>
   !> @param[in] key Enumeration key.
   !>
-  integer(i_native) function first_from_key( key )
+  integer(i_def) function first_from_key( key )
 
     implicit none
 
     character(*), intent(in) :: key
 
-    integer(i_native) :: key_index
+    integer(i_def) :: key_index
 
     if (key == unset_key) then
       write( log_scratch_space, '(A)') &
@@ -116,9 +116,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: value
+    integer(i_def), intent(in) :: value
 
-    integer(i_native) :: value_index
+    integer(i_def) :: value_index
 
     value_index = 1
     do
@@ -146,13 +146,13 @@ contains
   !>
   !> @param[in] key Enumeration key.
   !>
-  integer(i_native) function second_from_key( key )
+  integer(i_def) function second_from_key( key )
 
     implicit none
 
     character(*), intent(in) :: key
 
-    integer(i_native) :: key_index
+    integer(i_def) :: key_index
 
     if (key == unset_key) then
       write( log_scratch_space, '(A)') &
@@ -190,9 +190,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: value
+    integer(i_def), intent(in) :: value
 
-    integer(i_native) :: value_index
+    integer(i_def) :: value_index
 
     value_index = 1
     do
@@ -228,9 +228,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     call read_namelist( file_unit, local_rank, scan, &
                         first, &
@@ -248,15 +248,15 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
-    integer(i_native), intent(out) :: dummy_first
-    integer(i_native), intent(out) :: dummy_second
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
+    integer(i_def), intent(out) :: dummy_first
+    integer(i_def), intent(out) :: dummy_second
 
     integer(i_def) :: missing_data
 
-    integer(i_native) :: buffer_integer_i_native(2)
+    integer(i_def) :: buffer_integer_i_def(2)
 
     character(str_def) :: first
     character(str_def) :: second
@@ -264,7 +264,7 @@ contains
     namelist /twoenum/ first, &
                        second
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 
@@ -283,13 +283,13 @@ contains
 
     end if
 
-    buffer_integer_i_native(1) = dummy_first
-    buffer_integer_i_native(2) = dummy_second
+    buffer_integer_i_def(1) = dummy_first
+    buffer_integer_i_def(2) = dummy_second
 
-    call global_mpi%broadcast( buffer_integer_i_native, 2, 0 )
+    call global_mpi%broadcast( buffer_integer_i_def, 2, 0 )
 
-    dummy_first = buffer_integer_i_native(1)
-    dummy_second = buffer_integer_i_native(2)
+    dummy_first = buffer_integer_i_def(1)
+    dummy_second = buffer_integer_i_def(2)
 
 
     if (scan) then

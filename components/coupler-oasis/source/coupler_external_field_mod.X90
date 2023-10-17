@@ -22,7 +22,7 @@ module coupler_external_field_mod
                                       oasis_recvd, oasis_recvout, oasis_out
 #endif
   use abstract_external_field_mod, only: abstract_external_field_type
-  use constants_mod,            only: i_def, r_def, l_def, imdi, i_native
+  use constants_mod,            only: i_def, r_def, l_def, imdi
   use coupler_diagnostics_mod,  only: acc_step, ice_sheet_mass
   use field_mod,                only: field_type, field_proxy_type
   use field_collection_mod,     only: field_collection_type
@@ -127,7 +127,7 @@ end type  coupler_external_field_type
   implicit none
 
   class(coupler_external_field_type), intent(inout) :: self
-  integer(i_native), intent(out), optional :: return_code
+  integer(i_def), intent(out), optional :: return_code
 
 #ifdef MCT
   ! Field from which the data will be sent
@@ -304,7 +304,7 @@ end type  coupler_external_field_type
   implicit none
 
   class(coupler_external_field_type), intent(inout) :: self
-  integer(i_native), intent(out), optional :: return_code
+  integer(i_def), intent(out), optional :: return_code
 
 #ifdef MCT
   ! Field into which the data will be received

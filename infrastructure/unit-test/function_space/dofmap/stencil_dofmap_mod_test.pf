@@ -8,7 +8,7 @@
 !
 module stencil_dofmap_mod_test
 
-  use constants_mod,   only : i_def, i_native
+  use constants_mod,   only : i_def
   use pFUnit_Mod
   use stencil_dofmap_mod,  only: stencil_dofmap_type, STENCIL_POINT, &
                                                       STENCIL_1DX,   &
@@ -36,9 +36,9 @@ module stencil_dofmap_mod_test
 
   type, extends(ParameterizedTestCase) :: stencil_dofmap_test_type
     private
-    integer(i_native), public :: stencil
-    integer(i_def),    public :: st_extent
-    integer(i_def),    public :: st_expected_size
+    integer(i_def), public :: stencil
+    integer(i_def), public :: st_extent
+    integer(i_def), public :: st_expected_size
 
     integer(i_def),    public        :: mesh_id
     type(master_dofmap_type),public  :: master_dofmap
@@ -55,9 +55,9 @@ module stencil_dofmap_mod_test
 
   @testParameter
   type, public, extends(AbstractTestParameter) :: stencil_parameter_type
-    integer(i_native), public :: stencil
-    integer(i_def),    public :: st_extent
-    integer(i_def),    public :: st_expected_size
+    integer(i_def), public :: stencil
+    integer(i_def), public :: st_extent
+    integer(i_def), public :: st_expected_size
   contains
     procedure :: toString => parameter_to_string
   end type stencil_parameter_type

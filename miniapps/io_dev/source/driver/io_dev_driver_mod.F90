@@ -14,7 +14,7 @@ module io_dev_driver_mod
   use calendar_mod,               only: calendar_type
   use checksum_alg_mod,           only: checksum_alg
   use clock_mod,                  only: clock_type
-  use constants_mod,              only: i_def, i_native, str_def, &
+  use constants_mod,              only: i_def, str_def, &
                                         PRECISION_REAL, r_def, r_second
   use convert_to_upper_mod,       only: convert_to_upper
   use driver_mesh_mod,            only: init_mesh

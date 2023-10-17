@@ -168,7 +168,7 @@ class _Enumeration(_Property):
         """
         super().__init__(name,
                          FortranType.instance('integer',
-                                              'i_native',
+                                              'i_def',
                                               'I0'))
 
         self.mapping = keyDictionary
@@ -197,7 +197,6 @@ class _Scalar(_Property):
                        'logical':   {'default': 'l_def',
                                      'native':  'l_native'},
                        'integer':   {'default': 'i_def',
-                                     'native':  'i_native',
                                      'short':   'i_short',
                                      'medium':  'i_medium',
                                      'long':    'i_long'},
@@ -501,7 +500,7 @@ class NamelistDescription:
                        + self._listname + ')')
             raise NamelistDescriptionException(message)
 
-        all_kinds = set(['i_native'])
+        all_kinds = set(['i_def'])
         lone_kind_index = {}
         lone_kind_tally: Dict[FortranType, int] = collections.defaultdict(int)
         namelist = []

@@ -10,7 +10,7 @@ module gravity_wave_driver_mod
 
   use base_mesh_config_mod,           only: prime_mesh_name
   use calendar_mod,                   only: calendar_type
-  use constants_mod,                  only: i_def, i_native, r_def
+  use constants_mod,                  only: i_def, r_def
   use gravity_wave_infrastructure_mod,only: initialise_infrastructure, &
                                             finalise_infrastructure
   use create_gravity_wave_prognostics_mod, &

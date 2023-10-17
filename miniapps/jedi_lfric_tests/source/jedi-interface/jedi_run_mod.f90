@@ -10,7 +10,7 @@
 !
 module jedi_run_mod
 
-  use constants_mod, only : i_native, str_def
+  use constants_mod, only : i_def, str_def
 
   implicit none
 
@@ -51,10 +51,10 @@ subroutine initialise( self, program_name, out_communicator )
 
   class( jedi_run_type ), intent(inout) :: self
   character(len=*), intent(in)          :: program_name
-  integer(i_native), intent(out)        :: out_communicator
+  integer(i_def), intent(out)           :: out_communicator
 
   ! Local
-  integer(i_native) :: world_communicator
+  integer(i_def) :: world_communicator
 
   self%jedi_run_name = program_name
 
@@ -84,8 +84,8 @@ subroutine initialise_infrastructure( self, filename, model_communicator )
   implicit none
 
   class( jedi_run_type ), intent(inout) :: self
-  character(len=*), intent(in)          :: filename
-  integer(i_native), intent(in)         :: model_communicator
+  character(len=*),       intent(in)    :: filename
+  integer(i_def),         intent(in)    :: model_communicator
 
   ! Initialise the model communicator to setup global_mpi
   call init_internal_comm( model_communicator )

@@ -11,7 +11,7 @@ module halo_comms_mod_test
 
   use, intrinsic :: iso_fortran_env,  only : real32, real64, int32
 
-  use constants_mod,                  only : i_def, i_halo_index, i_native, &
+  use constants_mod,                  only : i_def, i_halo_index, &
                                              r_def, integer_type, real_type
   use halo_comms_mod,                 only : initialise_halo_comms, &
                                              finalise_halo_comms, &
@@ -206,7 +206,7 @@ contains
 
     class(halo_comms_test_type), intent(inout) :: this
 
-    integer(i_native) :: proc_num
+    integer(i_def) :: proc_num
 
     type(halo_routing_type),pointer :: halo_routing
     integer(i_halo_index) :: global_dof_id(7)

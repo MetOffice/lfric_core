@@ -8,7 +8,7 @@
 !>
 module local_mesh_mod_test
 
-  use constants_mod,              only: i_def, i_native, r_def, l_def,  &
+  use constants_mod,              only: i_def, r_def, l_def,            &
                                         str_max_filename, str_longlong, &
                                         str_def, radians_to_degrees
   use global_mesh_collection_mod, only: global_mesh_collection_type, &
@@ -92,7 +92,7 @@ contains
 
     class(local_mesh_test_type), intent( inout ) :: this
 
-    integer(i_native) :: num_processes
+    integer(i_def) :: num_processes
     character(len = str_max_filename) :: filename
     character(str_def) :: mesh_name
     integer(i_def) :: npanels
@@ -536,7 +536,7 @@ contains
     type(local_mesh_map_type), pointer :: mesh_map => null()
 
     ! Counters
-    integer(i_native) :: i, j, k
+    integer(i_def) :: i, j, k
 
     !-------------------------------------------------------------
     ! Expected load data

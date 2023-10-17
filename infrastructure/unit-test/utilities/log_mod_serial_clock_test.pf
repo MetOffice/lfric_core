@@ -10,7 +10,7 @@
 !>
 module log_mod_serial_clock_test
 
-  use constants_mod, only : i_native, i_timestep
+  use constants_mod, only : i_def, i_timestep
   use log_mod,       only : finalise_logging,     &
                             initialise_logging,   &
                             log_event,            &
@@ -62,7 +62,7 @@ contains
 
     implicit none
 
-    integer(i_native)   :: condition
+    integer(i_def)      :: condition
     character(8)        :: info_tag, alert_tag
     character(80)       :: info_message, alert_message
     character(1)        :: info_field, alert_field

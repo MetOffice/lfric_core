@@ -8,7 +8,7 @@
 
 module file_manager
 
-  use constants_mod,  only: i_native
+  use constants_mod,  only: i_def
   use io_utility_mod, only: claim_io_unit, release_io_unit
 
   implicit none
@@ -20,9 +20,9 @@ contains
   subroutine assign_file_unit(filename, iunit, handler)
 
     implicit none
-    character(*),      intent(in)  :: filename
-    integer(i_native), intent(out) :: iunit
-    character(*),      intent(in)  :: handler
+    character(*),   intent(in)  :: filename
+    integer(i_def), intent(out) :: iunit
+    character(*),   intent(in)  :: handler
 
     iunit = claim_io_unit()
 
@@ -31,10 +31,10 @@ contains
   subroutine release_file_unit(iunit, handler)
 
     implicit none
-    integer(i_native), intent(in) :: iunit
-    character(*),      intent(in) :: handler
+    integer(i_def), intent(in) :: iunit
+    character(*),   intent(in) :: handler
 
-    integer(i_native) :: dummy_iunit
+    integer(i_def) :: dummy_iunit
 
     call release_io_unit(dummy_iunit)
 

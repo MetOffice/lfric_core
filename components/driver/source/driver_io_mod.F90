@@ -12,7 +12,7 @@ module driver_io_mod
 
   use base_mesh_config_mod,    only: prime_mesh_name
   use calendar_mod,            only: calendar_type
-  use constants_mod,           only: i_native, str_def, i_def
+  use constants_mod,           only: str_def, i_def
   use driver_model_data_mod,   only: model_data_type
   use empty_io_context_mod,    only: empty_io_context_type
   use field_mod,               only: field_type
@@ -75,7 +75,7 @@ contains
     implicit none
 
     character(*),                     intent(in)    :: id
-    integer(i_native),                intent(in)    :: communicator
+    integer(i_def),                   intent(in)    :: communicator
     type(inventory_by_mesh_type),     intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),     intent(in)    :: panel_id_inventory
     type(model_clock_type),           intent(inout) :: model_clock
@@ -86,7 +86,7 @@ contains
     character(len=str_def), optional, intent(in)    :: alt_mesh_names(:)
     procedure(callback_clock_arg), optional         :: before_close
 
-    integer(i_native) :: rc
+    integer(i_def) :: rc
     procedure(callback_clock_arg), pointer :: before_close_ptr => null()
 
     ! Allocate IO context type based on model configuration
@@ -154,7 +154,7 @@ contains
 
     class(io_context_type), allocatable, intent(inout) :: io_context
     character(*),                        intent(in)    :: id
-    integer(i_native),                   intent(in)    :: communicator
+    integer(i_def),                      intent(in)    :: communicator
     type(inventory_by_mesh_type),        intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),        intent(in)    :: panel_id_inventory
     type(model_clock_type),              intent(inout) :: model_clock

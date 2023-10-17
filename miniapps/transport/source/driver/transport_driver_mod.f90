@@ -13,7 +13,7 @@ module transport_driver_mod
   use checksum_alg_mod,                 only: checksum_alg
   use check_configuration_mod,          only: get_required_stencil_depth
   use configuration_mod,                only: final_configuration
-  use constants_mod,                    only: i_def, i_native, l_def, &
+  use constants_mod,                    only: i_def, l_def, &
                                               r_def, r_second, str_def
   use driver_fem_mod,                   only: init_fem
   use driver_io_mod,                    only: init_io, final_io

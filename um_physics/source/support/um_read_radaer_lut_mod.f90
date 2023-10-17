@@ -30,7 +30,7 @@ contains
   subroutine um_read_radaer_lut( filename, aerosol_band, wavelength_band )
 
     use constants_mod,                only:                                    &
-        str_long, i_native, i_def, r_um, i_um
+        str_long, i_def, r_um, i_um
 
     use errormessagelength_mod,       only:                                    &
         errormessagelength
@@ -71,8 +71,8 @@ contains
 
     integer(i_def) :: icode
 
-    integer(i_native) :: status
-    integer(i_native) :: unit_number = -1
+    integer(i_def) :: status
+    integer(i_def) :: unit_number = -1
     character(len=str_long) :: message
     character(len=errormessagelength) :: cmessage
 

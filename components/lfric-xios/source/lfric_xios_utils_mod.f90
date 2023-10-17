@@ -7,7 +7,7 @@
 !>
 module lfric_xios_utils_mod
 
-    use constants_mod,  only : i_def, i_native, r_def
+    use constants_mod,  only : i_def, r_def
     use mesh_mod,       only : mesh_type
     use xios,           only : xios_date,                       &
                                xios_get_time_origin,            &
@@ -20,7 +20,7 @@ module lfric_xios_utils_mod
     public :: parse_date_as_xios, seconds_from_date, &
               set_prime_io_mesh, prime_io_mesh_is
 
-    integer(kind=i_def), private, allocatable :: prime_io_mesh_ids(:)
+    integer(i_def), private, allocatable :: prime_io_mesh_ids(:)
 
     contains
 
@@ -33,9 +33,9 @@ module lfric_xios_utils_mod
     !>
     function parse_date_as_xios( date_str ) result( date_obj )
       implicit none
-      character(*), intent(in)      :: date_str
-      type(xios_date)               :: date_obj
-      integer(i_native)             :: y, mo, d, h, mi, s, size
+      character(*), intent(in) :: date_str
+      type(xios_date)          :: date_obj
+      integer(i_def)           :: y, mo, d, h, mi, s, size
 
       size = len(date_str)
 

@@ -12,7 +12,7 @@
 !>
 module mesh_colouring_mod
 
-  use constants_mod,           only : i_def, i_native, l_def
+  use constants_mod,           only : i_def, l_def
   use local_mesh_mod,          only : local_mesh_type
   use log_mod,                 only : log_event, LOG_LEVEL_ERROR,   &
                                                  LOG_LEVEL_DEBUG,   &
@@ -172,7 +172,7 @@ contains
     integer(i_def) :: cells_per_colour(MAXCOLS)
 
     ! Stores error status from allocate statement
-    integer(i_native) :: astat
+    integer(i_def) :: astat
 
     ! Array holding the colour of each cell.
     integer(i_def), allocatable :: colour_map(:)
@@ -365,7 +365,7 @@ contains
 
     ! Local Variables
     ! Stores error status from allocate statement
-    integer(i_native) :: astat
+    integer(i_def) :: astat
 
     ! Array holding the colour of each cell
     integer(kind=i_def), allocatable :: colour_map(:)

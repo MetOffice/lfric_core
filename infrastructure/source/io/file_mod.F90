@@ -10,7 +10,7 @@
 !-------------------------------------------------------------------------------
 module file_mod
 
-  use constants_mod,        only: i_native
+  use constants_mod,        only: i_def
   use linked_list_data_mod, only: linked_list_data_type
 
 implicit none
@@ -73,10 +73,10 @@ abstract interface
 end interface
 
 ! IO Mode enumerations
-integer(kind=i_native), public, parameter :: FILE_OP_OPEN    = 485
-integer(kind=i_native), public, parameter :: FILE_OP_CREATE  = 653
-integer(kind=i_native), public, parameter :: FILE_MODE_READ  = 971
-integer(kind=i_native), public, parameter :: FILE_MODE_WRITE = 248
+integer(kind=i_def), public, parameter :: FILE_OP_OPEN    = 485
+integer(kind=i_def), public, parameter :: FILE_OP_CREATE  = 653
+integer(kind=i_def), public, parameter :: FILE_MODE_READ  = 971
+integer(kind=i_def), public, parameter :: FILE_MODE_WRITE = 248
 
 contains
 

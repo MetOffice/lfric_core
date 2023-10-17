@@ -10,7 +10,7 @@
 !>
 module gungho_setup_io_mod
 
-  use constants_mod,             only: i_def, i_native, str_def, &
+  use constants_mod,             only: i_def, str_def, &
                                        str_max_filename
   use driver_model_data_mod,     only: model_data_type
   use file_mod,                  only: FILE_MODE_READ, &
@@ -159,7 +159,7 @@ module gungho_setup_io_mod
     character(len=str_max_filename) :: orography_ancil_directory
 #endif
     integer(i_def)                  :: ts_start, ts_end
-    integer(i_native)               :: rc
+    integer(i_def)                  :: rc
     integer(i_def)                  :: i
 
     ! Only proceed if XIOS is being used for I/O

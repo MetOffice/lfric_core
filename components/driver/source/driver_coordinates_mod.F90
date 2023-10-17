@@ -13,7 +13,7 @@ module driver_coordinates_mod
                                        topology,                &
                                        topology_fully_periodic, &
                                        topology_non_periodic
-  use constants_mod,             only: r_def, i_def, i_native, l_def, &
+  use constants_mod,             only: r_def, i_def, l_def, &
                                        radians_to_degrees
   use log_mod,                   only: log_event, LOG_LEVEL_ERROR
   use planet_config_mod,         only: scaled_radius
@@ -66,8 +66,8 @@ contains
     type( field_type ),  intent( inout )        :: panel_id
     type( mesh_type  ),  intent( in ),  pointer :: mesh
 
-    integer(kind=i_def),                pointer :: map(:,:)          => null()
-    integer(kind=i_def),                pointer :: map_pid(:,:)      => null()
+    integer(i_def),                     pointer :: map(:,:)          => null()
+    integer(i_def),                     pointer :: map_pid(:,:)      => null()
     real(kind=r_def),                   pointer :: dof_coords(:,:)   => null()
     class(reference_element_type),      pointer :: reference_element => null()
 
@@ -82,13 +82,13 @@ contains
     real(kind=r_def), allocatable :: dz(:)  ! dz(nlayers) array
     real(kind=r_def), allocatable :: vertex_coords(:,:)
 
-    integer(kind=i_def) :: cell
-    integer(kind=i_def) :: undf, ndf, nlayers
-    integer(kind=i_def) :: undf_pid, ndf_pid, nlayers_pid
-    integer(kind=i_def) :: nverts
+    integer(i_def) :: cell
+    integer(i_def) :: undf, ndf, nlayers
+    integer(i_def) :: undf_pid, ndf_pid, nlayers_pid
+    integer(i_def) :: nverts
 
-    integer(kind=i_native) :: alloc_error
-    integer(kind=i_def)    :: depth
+    integer(i_def) :: alloc_error
+    integer(i_def) :: depth
 
     ! Break encapsulation and get the proxy.
     chi_proxy(1) = chi(1)%get_proxy()

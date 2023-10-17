@@ -12,7 +12,7 @@
 
 module fs_continuity_mod
 
-  use constants_mod, only : i_native, l_native, str_short
+  use constants_mod, only : i_def, l_native, str_short
   use log_mod, only : log_event, log_scratch_space, log_level_error
 
   implicit none
@@ -26,23 +26,23 @@ module fs_continuity_mod
   !-------------------------------------------------------------------------------
   ! Module parameters
   !-------------------------------------------------------------------------------
-  integer(i_native), public, parameter :: W0        = 173
-  integer(i_native), public, parameter :: W1        = 194
-  integer(i_native), public, parameter :: W2        = 889
-  integer(i_native), public, parameter :: W2V       = 857
-  integer(i_native), public, parameter :: W2H       = 884
-  integer(i_native), public, parameter :: W2broken  = 211
-  integer(i_native), public, parameter :: W2trace   = 213
-  integer(i_native), public, parameter :: W2Vtrace  = 666
-  integer(i_native), public, parameter :: W2Htrace  = 777
-  integer(i_native), public, parameter :: W3        = 424
-  integer(i_native), public, parameter :: Wtheta    = 274
-  integer(i_native), public, parameter :: Wchi      = 869
+  integer(i_def), public, parameter :: W0        = 173
+  integer(i_def), public, parameter :: W1        = 194
+  integer(i_def), public, parameter :: W2        = 889
+  integer(i_def), public, parameter :: W2V       = 857
+  integer(i_def), public, parameter :: W2H       = 884
+  integer(i_def), public, parameter :: W2broken  = 211
+  integer(i_def), public, parameter :: W2trace   = 213
+  integer(i_def), public, parameter :: W2Vtrace  = 666
+  integer(i_def), public, parameter :: W2Htrace  = 777
+  integer(i_def), public, parameter :: W3        = 424
+  integer(i_def), public, parameter :: Wtheta    = 274
+  integer(i_def), public, parameter :: Wchi      = 869
 
-  integer(i_native), private, parameter :: num_fs   = 12
+  integer(i_def), private, parameter :: num_fs   = 12
 
-  integer(i_native), private, parameter :: fs_enumerator(num_fs, 3) = &
-         transpose(reshape( [                                         &
+  integer(i_def), private, parameter :: fs_enumerator(num_fs, 3) = &
+         transpose(reshape( [                                      &
 !             enumerator    horizontally    vertically
 !                           continuous      continuous
               W0,           1,              1, &
@@ -86,11 +86,11 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: fs
+    integer(i_def), intent(in) :: fs
 
     character(str_short) :: name_from_functionspace
 
-    integer(i_native) :: fs_index
+    integer(i_def) :: fs_index
 
     fs_index = 1
     do
@@ -119,8 +119,8 @@ contains
     implicit none
 
     character(*), intent(in) :: name
-    integer(i_native)        :: functionspace_from_name
-    integer(i_native)        :: fs_index
+    integer(i_def)           :: functionspace_from_name
+    integer(i_def)           :: fs_index
 
     fs_index = 1
     do
@@ -147,10 +147,10 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: fs
+    integer(i_def), intent(in) :: fs
     logical(l_native) :: continuous
 
-    integer(i_native) :: fs_index
+    integer(i_def) :: fs_index
 
     continuous = .false.
     fs_index = 1
@@ -179,10 +179,10 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: fs
+    integer(i_def), intent(in) :: fs
     logical(l_native) :: continuous
 
-    integer(i_native) :: fs_index
+    integer(i_def) :: fs_index
 
     continuous = .false.
     fs_index = 1

@@ -11,7 +11,7 @@
 !>
 module jedi_lfric_field_meta_mod
 
-  use constants_mod,   only : i_def, str_def, l_def, i_native
+  use constants_mod,   only : i_def, str_def, l_def
   use log_mod,         only : log_event, log_scratch_space, LOG_LEVEL_ERROR
 
   implicit none
@@ -90,7 +90,7 @@ subroutine initialise( self, variable_names, variable_function_spaces, &
 
   class( jedi_lfric_field_meta_type ), intent(inout) :: self
   character(*), intent(in)                           :: variable_names(:)
-  integer(kind=i_native), intent(in)                 :: variable_function_spaces(:)
+  integer(kind=i_def), intent(in)                    :: variable_function_spaces(:)
   logical(kind=l_def), intent(in)                    :: variable_is_2d(:)
 
   ! Get and check the size of the input data is consistent

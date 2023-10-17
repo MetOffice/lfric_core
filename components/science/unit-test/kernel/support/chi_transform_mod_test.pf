@@ -8,7 +8,7 @@ module chi_transform_mod_test
 
   use pFUnit_Mod
   use, intrinsic :: iso_fortran_env, only : real64
-  use constants_mod,             only : r_def, i_def, i_native, PI, str_long
+  use constants_mod,             only : r_def, i_def, PI, str_long
 
 
   implicit none
@@ -18,15 +18,15 @@ module chi_transform_mod_test
 
   @testParameter
   type, public, extends(AbstractTestParameter) :: chi_parameters_type
-    integer(i_native) :: source_coord_system
-    integer(i_native) :: target_coord_system
-    integer(i_def)    :: panel_id
-    real(r_def)       :: source_chi_1
-    real(r_def)       :: source_chi_2
-    real(r_def)       :: source_chi_3
-    real(r_def)       :: target_chi_1
-    real(r_def)       :: target_chi_2
-    real(r_def)       :: target_chi_3
+    integer(i_def) :: source_coord_system
+    integer(i_def) :: target_coord_system
+    integer(i_def) :: panel_id
+    real(r_def)    :: source_chi_1
+    real(r_def)    :: source_chi_2
+    real(r_def)    :: source_chi_3
+    real(r_def)    :: target_chi_1
+    real(r_def)    :: target_chi_2
+    real(r_def)    :: target_chi_3
   contains
     procedure :: toString
   end type chi_parameters_type
@@ -34,15 +34,15 @@ module chi_transform_mod_test
   @TestCase(testParameters={get_chi_parameters()}, constructor=test_chi_constructor)
   type, extends(ParameterizedTestCase) :: chi_transform_mod_test_type
     private
-    integer(i_native) :: source_coord_system
-    integer(i_native) :: target_coord_system
-    integer(i_def)    :: panel_id
-    real(r_def)       :: source_chi_1
-    real(r_def)       :: source_chi_2
-    real(r_def)       :: source_chi_3
-    real(r_def)       :: target_chi_1
-    real(r_def)       :: target_chi_2
-    real(r_def)       :: target_chi_3
+    integer(i_def) :: source_coord_system
+    integer(i_def) :: target_coord_system
+    integer(i_def) :: panel_id
+    real(r_def)    :: source_chi_1
+    real(r_def)    :: source_chi_2
+    real(r_def)    :: source_chi_3
+    real(r_def)    :: target_chi_1
+    real(r_def)    :: target_chi_2
+    real(r_def)    :: target_chi_3
   contains
     procedure setUp
     procedure tearDown
@@ -51,10 +51,10 @@ module chi_transform_mod_test
 
   ! Add my own parameters for the different coordinate system cases
   ! This is done here because it is before the feign_config is initialised
-  integer(i_native), parameter :: ABH     = 1
-  integer(i_native), parameter :: LLH     = 2
-  integer(i_native), parameter :: XYZ     = 3
-  integer(i_native), parameter :: R2XYZ   = 4
+  integer(i_def), parameter :: ABH     = 1
+  integer(i_def), parameter :: LLH     = 2
+  integer(i_def), parameter :: XYZ     = 3
+  integer(i_def), parameter :: R2XYZ   = 4
 
   real(r_def), parameter :: planet_radius = 14_r_def
   real(r_def), parameter :: scaling       = 1.0_r_def
@@ -204,7 +204,7 @@ contains
 
     class(chi_transform_mod_test_type), intent(inout) :: this
 
-    integer(i_native) :: coord_system
+    integer(i_def) :: coord_system
 
     select case ( this%source_coord_system )
     case ( XYZ )

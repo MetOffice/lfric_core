@@ -7,7 +7,7 @@
 !>
 module log_mod_parallel_clock_test
 
-  use constants_mod, only : i_native, i_timestep
+  use constants_mod, only : i_def, i_timestep
   use log_mod,       only : finalise_logging,     &
                             initialise_logging,   &
                             log_event,            &
@@ -62,13 +62,13 @@ contains
 
     integer, parameter  :: log_unit = 11
 
-    integer(i_native)   :: condition
+    integer(i_def)      :: condition
     character(40)       :: filename
     character(8)        :: level_tag
     character(80)       :: message
     character(2)        :: proc_tag, step_tag
     integer(i_timestep) :: step
-    integer(i_native)   :: proc_rank
+    integer(i_def)      :: proc_rank
 
     character(*), parameter :: name = 'log_mod_parallel_clock_test'
 

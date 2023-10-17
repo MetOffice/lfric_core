@@ -28,19 +28,19 @@ contains
 
   end subroutine test_constants_r_native
 
-  !> Test to ensure that integer type i_native is the same kind as a default integer
+  !> Test to ensure that integer type i_def is the same kind as a default integer
   !>
   @test
-  subroutine test_constants_i_native( )
-    use constants_mod, only : i_native
+  subroutine test_constants_i_def( )
+    use constants_mod, only : i_def
     implicit none
 
-    integer (kind=i_native) :: val_native
-    integer                 :: val_default
+    integer (kind=i_def) :: val_native
+    integer              :: val_default
 
     @assertEqual(kind(val_native), kind(val_default))
 
-  end subroutine test_constants_i_native
+  end subroutine test_constants_i_def
 
   !> Test to ensure that logical type l_native is the same kind as a default logical
   !>

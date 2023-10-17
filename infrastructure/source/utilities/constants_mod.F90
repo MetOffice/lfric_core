@@ -19,7 +19,7 @@ module constants_mod
 
   public :: c_def, c_native,                                             &
             dp_native,                                                   &
-            i_byte, i_def, i_halo_index, i_long, i_medium, i_native,     &
+            i_byte, i_def, i_halo_index, i_long, i_medium,               &
             i_timestep, i_um, i_ncdf,                                    &
             l_def, l_native,                                             &
             r_def, r_double, r_ncdf, r_native, r_second, r_single, r_um, &
@@ -110,15 +110,11 @@ module constants_mod
 
   !> @name Set up default kinds for integers.
   !> @{
-  ! A native integer used to compute kind of native integer.
-  integer, parameter :: i_val = huge(i_val)
-
   integer, parameter :: i_byte       = int8        !< Explicit byte integer.
   integer, parameter :: i_def        = int32       !< Default integer kind for application.
   integer, parameter :: i_halo_index = int64       !< Integer kind for the index used in halo swapping
   integer, parameter :: i_long       = int64       !< Explicit long integer.
   integer, parameter :: i_medium     = int32       !< Explicit midsize integer.
-  integer, parameter :: i_native     = kind(i_val) !< Native kind for integer.
   integer, parameter :: i_ncdf       = int32       !< Default int kind used in netcdf get and put.
   integer, parameter :: i_short      = int16       !< Explicit short integer.
   integer, parameter :: i_timestep   = int32       !< Kind for timestep counts.
@@ -191,7 +187,7 @@ module constants_mod
   integer  (i_def),     parameter :: IMDI  = -32768           !< Value for integer numbers
   character(str_short), parameter :: CMDI  = 'unset'          !< Value for characters
   character(str_short), parameter :: UNSET_KEY  = CMDI        !< Chararater value for namelist enumerations
-  integer  (i_native),  parameter :: EMDI  = -1_i_native      !< Integer value for namelist enumerations
+  integer  (i_def),     parameter :: EMDI  = -1_i_def         !< Integer value for namelist enumerations
   !> @}
 
 end module constants_mod

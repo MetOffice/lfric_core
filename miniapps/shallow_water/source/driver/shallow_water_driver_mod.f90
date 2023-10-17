@@ -10,7 +10,7 @@ module shallow_water_driver_mod
 
   use base_mesh_config_mod,          only: prime_mesh_name
   use calendar_mod,                  only: calendar_type
-  use constants_mod,                 only: i_def, i_native, imdi, r_def
+  use constants_mod,                 only: i_def, imdi, r_def
   use field_mod,                     only: field_type
   use field_collection_mod,          only: field_collection_type
   use io_config_mod,                 only: write_diag,           &

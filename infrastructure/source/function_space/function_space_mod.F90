@@ -14,7 +14,7 @@
 !
 module function_space_mod
 
-  use constants_mod,        only : i_def, i_native, i_halo_index, l_def, r_def
+  use constants_mod,        only : i_def, i_halo_index, l_def, r_def
   use mesh_mod,             only : mesh_type
   use master_dofmap_mod,    only : master_dofmap_type
   use stencil_dofmap_helper_functions_mod,                                     &
@@ -123,8 +123,8 @@ module function_space_mod
     !> @name Arrays needed for on the fly basis evaluations
     integer(i_def), allocatable :: basis_order(:,:)
     integer(i_def), allocatable :: basis_index(:,:)
-    real(r_def), allocatable :: basis_vector(:,:)
-    real(r_def), allocatable :: basis_x(:,:,:)
+    real(r_def),    allocatable :: basis_vector(:,:)
+    real(r_def),    allocatable :: basis_x(:,:,:)
     !> @}
 
     !> A one dimensional, allocatable array which holds a unique global index
@@ -401,7 +401,7 @@ contains
 
     integer(i_def),           intent(in) :: mesh_id
     integer(i_def),           intent(in) :: element_order
-    integer(i_native),        intent(in) :: lfric_fs
+    integer(i_def),           intent(in) :: lfric_fs
     integer(i_def), optional, intent(in) :: ndata
     logical(l_def), optional, intent(in) :: ndata_first
 

@@ -11,7 +11,7 @@ module tl_test_driver_mod
 
   use base_mesh_config_mod,       only : prime_mesh_name
   use calendar_mod,               only : calendar_type
-  use constants_mod,              only : i_def, i_native, imdi, r_def
+  use constants_mod,              only : i_def, imdi, r_def
   use extrusion_mod,              only : TWOD
   use gungho_model_mod,           only : initialise_infrastructure, &
                                          initialise_model,          &

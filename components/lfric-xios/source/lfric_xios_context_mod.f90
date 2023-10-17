@@ -9,7 +9,7 @@ module lfric_xios_context_mod
 
   use calendar_mod,         only : calendar_type
   use clock_mod,            only : clock_type
-  use constants_mod,        only : i_native, &
+  use constants_mod,        only : i_def, &
                                    r_second, &
                                    l_def
   use field_mod,            only : field_type
@@ -85,7 +85,7 @@ contains
 
     class(lfric_xios_context_type), intent(inout) :: this
     character(*),                   intent(in)    :: id
-    integer(i_native),              intent(in)    :: communicator
+    integer(i_def),                 intent(in)    :: communicator
     class(field_type),              intent(in)    :: chi(:)
     class(field_type),              intent(in)    :: panel_id
     type(model_clock_type),         intent(inout) :: model_clock

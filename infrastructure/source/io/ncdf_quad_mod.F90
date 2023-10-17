@@ -10,7 +10,7 @@ module ncdf_quad_mod
 
 use constants_mod,  only: r_def, i_def, l_def, str_def, str_long,         &
                           str_longlong, str_max_filename, r_ncdf, i_ncdf, &
-                          i_native, rmdi, imdi, cmdi
+                          rmdi, imdi, cmdi
 
 use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
 use global_mesh_map_mod,            only: global_mesh_map_type
@@ -2520,12 +2520,12 @@ subroutine read_map( self,             &
 
   character(*), parameter :: routine = 'read_map'
 
-  integer(i_native) :: mesh_map_id
-  integer(i_native) :: source_cells_id
-  integer(i_native) :: target_cells_per_source_cell_id
-  integer(i_native) :: target_cells_per_source_x_id
-  integer(i_native) :: target_cells_per_source_y_id
-  integer(i_native) :: ierr
+  integer(i_def) :: mesh_map_id
+  integer(i_def) :: source_cells_id
+  integer(i_def) :: target_cells_per_source_cell_id
+  integer(i_def) :: target_cells_per_source_x_id
+  integer(i_def) :: target_cells_per_source_y_id
+  integer(i_def) :: ierr
 
   integer(i_def) :: source_ncells
   integer(i_def) :: target_cells_per_source_x

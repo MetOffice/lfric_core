@@ -52,7 +52,7 @@ class NamelistFeigner:
         :param module_file: Filename to create.
         """
         enumerations = collections.defaultdict(list)
-        kinds = set(['i_native'])
+        kinds = set(['i_def'])
         namelists: List[str] = []
         parameters: Dict[str, List[_Property]] = {}
         character_arrays = None

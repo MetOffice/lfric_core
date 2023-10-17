@@ -16,7 +16,7 @@ module gen_lbc_mod
 
   use constants_mod,                  only: r_def, i_def, l_def, str_def,   &
                                             str_longlong, imdi, rmdi, emdi, &
-                                            i_native, radians_to_degrees
+                                            radians_to_degrees
   use gen_planar_mod,                 only: gen_planar_type
   use global_mesh_map_mod,            only: global_mesh_map_type
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
@@ -209,9 +209,9 @@ module gen_lbc_mod
 
     character(str_def) :: mesh_name
 
-    integer(i_native)  :: geometry  = emdi
-    integer(i_native)  :: topology  = emdi
-    integer(i_native)  :: coord_sys = emdi
+    integer(i_def)     :: geometry  = emdi
+    integer(i_def)     :: topology  = emdi
+    integer(i_def)     :: coord_sys = emdi
     character(str_def) :: coord_units_x
     character(str_def) :: coord_units_y
 

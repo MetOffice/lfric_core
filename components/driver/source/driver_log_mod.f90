@@ -1,6 +1,6 @@
 module driver_log_mod
 
-use constants_mod,        only: i_native
+use constants_mod,        only: i_def
 use convert_to_upper_mod, only: convert_to_upper
 use log_mod,              only: log_event,          &
                                 log_set_level,      &
@@ -37,10 +37,10 @@ subroutine init_logger(communicator, program_name)
 
   implicit none
 
-  character(len=*),  intent(in) :: program_name
-  integer(i_native), intent(in) :: communicator
+  character(len=*), intent(in) :: program_name
+  integer(i_def),   intent(in) :: communicator
 
-  integer(i_native) :: log_level
+  integer(i_def) :: log_level
 
   call initialise_logging( communicator, program_name )
 

@@ -111,8 +111,8 @@ class TestFeigner:
         everything.add_computed('yarn', 'real',
                                 'fish * wibble / 180.0_r_def',
                                 'default')
-        everything.add_value('tail', 'integer', 'native')
-        everything.add_value('school', 'integer', configure_kind='native',
+        everything.add_value('tail', 'integer', 'default')
+        everything.add_value('school', 'integer', configure_kind='default',
                              bounds='2')
         everything.add_value('hanger', 'integer', configure_kind='default',
                              bounds='tail')
@@ -141,7 +141,7 @@ class TestFeigner:
         secondfile = namelist.NamelistDescription('second')
         secondfile.add_value('fish', 'real')
         secondfile.add_enumeration('yarn', enumerators=['fuzzy', 'colourful'])
-        secondfile.add_value('tail', 'integer', 'native')
+        secondfile.add_value('tail', 'integer', 'default')
 
         output_file = tmp_path / 'multifile_mod.f90'
         uut = feigner.NamelistFeigner('multifile_mod')

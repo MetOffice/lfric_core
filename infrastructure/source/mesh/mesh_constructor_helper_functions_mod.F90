@@ -7,7 +7,7 @@
 !>
 module mesh_constructor_helper_functions_mod
 
-use constants_mod,  only: i_def, i_native, r_def, pi, l_def
+use constants_mod,  only: i_def, r_def, pi, l_def
 use log_mod,        only: log_event, log_scratch_space, &
                           log_level, LOG_LEVEL_DEBUG
 

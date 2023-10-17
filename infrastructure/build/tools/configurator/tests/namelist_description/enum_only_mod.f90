@@ -7,7 +7,7 @@
 !>
 module enum_config_mod
 
-  use constants_mod, only: i_native, &
+  use constants_mod, only: i_def, &
                            str_def
   use log_mod,       only: log_event, log_scratch_space &
                          , LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO
@@ -28,11 +28,11 @@ module enum_config_mod
             enum_multiples_allowed, enum_final, &
             get_enum_nml
 
-  integer(i_native), public, parameter :: value_one = 1695414371
-  integer(i_native), public, parameter :: value_three = 839906103
-  integer(i_native), public, parameter :: value_two = 246150388
+  integer(i_def), public, parameter :: value_one = 1695414371
+  integer(i_def), public, parameter :: value_three = 839906103
+  integer(i_def), public, parameter :: value_two = 246150388
 
-  integer(i_native), public, protected :: value = emdi
+  integer(i_def), public, protected :: value = emdi
 
   character(*), parameter :: listname = 'enum'
   character(str_def) :: profile_name = cmdi
@@ -46,10 +46,10 @@ module enum_config_mod
                                        'three', &
                                        'two']
 
-  integer(i_native), parameter :: value_value(3) &
-          = [1695414371_i_native, &
-             839906103_i_native, &
-             246150388_i_native]
+  integer(i_def), parameter :: value_value(3) &
+          = [1695414371_i_def, &
+             839906103_i_def, &
+             246150388_i_def]
 
 contains
 
@@ -59,13 +59,13 @@ contains
   !>
   !> @param[in] key Enumeration key.
   !>
-  integer(i_native) function value_from_key( key )
+  integer(i_def) function value_from_key( key )
 
     implicit none
 
     character(*), intent(in) :: key
 
-    integer(i_native) :: key_index
+    integer(i_def) :: key_index
 
     if (key == unset_key) then
       write( log_scratch_space, '(A)') &
@@ -103,9 +103,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: value
+    integer(i_def), intent(in) :: value
 
-    integer(i_native) :: value_index
+    integer(i_def) :: value_index
 
     value_index = 1
     do
@@ -141,9 +141,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     call read_namelist( file_unit, local_rank, scan, &
                         value )
@@ -159,20 +159,20 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
-    integer(i_native), intent(out) :: dummy_value
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
+    integer(i_def), intent(out) :: dummy_value
 
     integer(i_def) :: missing_data
 
-    integer(i_native) :: buffer_integer_i_native(1)
+    integer(i_def) :: buffer_integer_i_def(1)
 
     character(str_def) :: value
 
     namelist /enum/ value
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 
@@ -189,11 +189,11 @@ contains
 
     end if
 
-    buffer_integer_i_native(1) = dummy_value
+    buffer_integer_i_def(1) = dummy_value
 
-    call global_mpi%broadcast( buffer_integer_i_native, 1, 0 )
+    call global_mpi%broadcast( buffer_integer_i_def, 1, 0 )
 
-    dummy_value = buffer_integer_i_native(1)
+    dummy_value = buffer_integer_i_def(1)
 
 
     if (scan) then

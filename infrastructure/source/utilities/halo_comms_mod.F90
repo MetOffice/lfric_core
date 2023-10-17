@@ -13,7 +13,7 @@ module halo_comms_mod
 
   use, intrinsic :: iso_fortran_env, only : real32, real64, int32
 
-  use constants_mod,         only: i_def, i_halo_index, i_native
+  use constants_mod,         only: i_def, i_halo_index
   use linked_list_data_mod,  only: linked_list_data_type
   use log_mod,               only: log_event, LOG_LEVEL_ERROR
   use mpi_mod,               only: global_mpi, get_mpi_datatype
@@ -296,7 +296,7 @@ end function get_redist
 !>
 subroutine initialise_halo_comms(comm)
   implicit none
-  integer(i_native), intent(in) :: comm
+  integer(i_def), intent(in) :: comm
 
 #ifdef NO_MPI
   ! Don't initialise YAXT in non-mpi build.

@@ -24,7 +24,7 @@ module linear_state_trajectory_mod
                                             LOG_LEVEL_INFO,     &
                                             LOG_LEVEL_ERROR
   use constants_mod,                 only : i_def, l_def, str_def, &
-                                            r_def, i_native, imdi, rmdi
+                                            r_def, imdi, rmdi
   use field_collection_mod,          only : field_collection_type
   use fs_continuity_mod,             only : W3, Wtheta, W2
   use mesh_mod,                      only : mesh_type
@@ -61,7 +61,7 @@ type, public :: linear_state_trajectory_type
   character( len=str_def ), allocatable      :: variable_names(:)
 
   !> A list of function_spaces for each variable
-  integer( kind=i_native ), allocatable      :: variable_function_spaces(:)
+  integer( kind=i_def ), allocatable         :: variable_function_spaces(:)
 
   !> A linear state instance to store time-interpolated fields
   type( field_collection_type )              :: interpolated_linear_state

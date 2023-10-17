@@ -7,7 +7,7 @@
 !>
 module log_mod_serial_level_test
 
-  use constants_mod, only: i_def, i_native, str_long
+  use constants_mod, only: i_def, str_long
   use log_mod,       only: finalise_logging, initialise_logging, log_event, &
                            log_level_debug, log_level_error,                &
                            log_level_info, log_level_trace,                 &
@@ -33,7 +33,7 @@ module log_mod_serial_level_test
 
   @TestParameter
   type, public, extends(AbstractTestParameter) :: level_parameter_type
-    integer(i_native), public :: level
+    integer(i_def), public :: level
     character( 8 ), public :: expected_tag
   contains
     procedure :: toString
@@ -41,7 +41,7 @@ module log_mod_serial_level_test
 
   @testCase(testParameters={getParameters()}, constructor=log_test_constructor)
   type, public, extends(ParameterizedTestCase) :: log_test_type
-    integer(i_native) :: level
+    integer(i_def) :: level
     character( 8 ) :: expected_tag
   contains
     procedure :: log_output_test
@@ -142,8 +142,8 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: level
-    character(*),      intent(in) :: expected_tag
+    integer(i_def), intent(in) :: level
+    character(*),   intent(in) :: expected_tag
 
     integer(i_def), parameter :: date_kind = selected_int_kind( 14 )
 
@@ -157,7 +157,7 @@ contains
     integer(i_def)            :: found_zone
     character(8)              :: found_tag
     character(80)             :: found_message
-    integer(i_native)         :: status
+    integer(i_def)            :: status
 
     open( INFO_UNIT, status='scratch', action='readwrite', iostat=status )
     @assertEqual( 0, status )
@@ -241,7 +241,7 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: level
+    integer(i_def), intent(in) :: level
 
     integer(i_def), parameter :: number_of_levels = 4
 
@@ -251,7 +251,7 @@ contains
     character(  8 )   :: info_tag, alert_tag
     character( 80 )   :: info_message, alert_message
     integer(i_def)    :: info_status, alert_status
-    integer(i_native) :: condition
+    integer(i_def)    :: condition
 
     levels  = [ LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, &
                 LOG_LEVEL_INFO, LOG_LEVEL_WARNING ]

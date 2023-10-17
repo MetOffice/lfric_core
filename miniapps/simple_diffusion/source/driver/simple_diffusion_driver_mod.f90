@@ -11,7 +11,7 @@ module simple_diffusion_driver_mod
   use base_mesh_config_mod,       only : prime_mesh_name
   use calendar_mod,               only : calendar_type
   use checksum_alg_mod,           only : checksum_alg
-  use constants_mod,              only : i_def, i_native, str_def, &
+  use constants_mod,              only : i_def, str_def, &
                                          r_def, r_second
   use convert_to_upper_mod,       only : convert_to_upper
   use driver_mesh_mod,            only : init_mesh

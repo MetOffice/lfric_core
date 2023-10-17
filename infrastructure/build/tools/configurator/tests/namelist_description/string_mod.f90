@@ -7,7 +7,7 @@
 !>
 module mirth_config_mod
 
-  use constants_mod, only: i_native, &
+  use constants_mod, only: i_def, &
                            str_def
   use log_mod,       only: log_event, log_scratch_space &
                          , LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO
@@ -28,7 +28,7 @@ module mirth_config_mod
             mirth_multiples_allowed, mirth_final, &
             get_mirth_nml
 
-  integer(i_native), parameter, public :: max_array_size = 500
+  integer(i_def), parameter, public :: max_array_size = 500
 
   character(str_def), public, protected, allocatable :: chortle(:)
   character(str_def), public, protected :: chuckle = cmdi
@@ -58,9 +58,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     call read_namelist( file_unit, local_rank, scan )
 
@@ -74,9 +74,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     integer(i_def) :: missing_data
 
@@ -87,7 +87,7 @@ contains
                      guffaw, &
                      hysterics
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 
@@ -180,10 +180,10 @@ contains
 
     implicit none
 
-    integer(i_native) :: condition
-    integer(i_native) :: array_size
+    integer(i_def) :: condition
+    integer(i_def) :: array_size
     character(str_def), allocatable :: new_hysterics(:)
-    integer(i_native) :: index_hysterics
+    integer(i_def) :: index_hysterics
     character(str_def), allocatable :: new_chortle(:)
 
     condition  = 0

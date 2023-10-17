@@ -24,7 +24,7 @@ program jedi_lfric_tests
   use driver_log_mod,         only: init_logger, final_logger
   use gungho_modeldb_mod,     only: modeldb_type
   use driver_time_mod,        only: init_time
-  use constants_mod,          only: i_native
+  use constants_mod,          only: i_def
   use log_mod,                only: log_event, log_level_trace
   use mpi_mod,                only: global_mpi
 

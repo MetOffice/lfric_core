@@ -18,7 +18,7 @@
 !>
 module domain_mod
 
-  use constants_mod, only: r_def, l_def, str_def, i_native
+  use constants_mod, only: r_def, l_def, str_def, i_def
   use log_mod,       only: log_event, log_scratch_space, &
                            LOG_LEVEL_ERROR, LOG_LEVEL_DEBUG
 
@@ -121,7 +121,7 @@ contains
     implicit none
 
     class(domain_type), intent(in) :: self
-    integer(i_native),  intent(in) :: axis
+    integer(i_def),     intent(in) :: axis
 
     real(r_def) :: axis_min_coordinate
 
@@ -167,7 +167,7 @@ contains
     implicit none
 
     class(domain_type), intent(in) :: self
-    integer(i_native),  intent(in) :: axis
+    integer(i_def),     intent(in) :: axis
 
     real(r_def) :: axis_max_coordinate
 
@@ -214,7 +214,7 @@ contains
     implicit none
 
     class(domain_type), intent(in) :: self
-    integer(i_native),  intent(in) :: axis
+    integer(i_def),     intent(in) :: axis
 
     real(r_def) :: axis_min_coordinate
 
@@ -261,7 +261,7 @@ contains
     implicit none
 
     class(domain_type), intent(in) :: self
-    integer(i_native),  intent(in) :: axis
+    integer(i_def),     intent(in) :: axis
 
     real(r_def) :: axis_max_coordinate
 

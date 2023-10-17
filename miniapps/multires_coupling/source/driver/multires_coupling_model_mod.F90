@@ -20,7 +20,7 @@ module multires_coupling_model_mod
   use driver_io_mod,              only : init_io, final_io, &
                                          filelist_populator
   use conservation_algorithm_mod, only : conservation_algorithm
-  use constants_mod,              only : i_def, i_native,          &
+  use constants_mod,              only : i_def, &
                                          PRECISION_REAL, r_second, &
                                          str_def, r_def, l_def
   use convert_to_upper_mod,       only : convert_to_upper

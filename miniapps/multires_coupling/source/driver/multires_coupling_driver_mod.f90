@@ -13,7 +13,7 @@
 module multires_coupling_driver_mod
 
   use calendar_mod,                             only : calendar_type
-  use constants_mod,                            only : i_def, i_native, &
+  use constants_mod,                            only : i_def, &
                                                        r_def, str_def, imdi
   use gungho_modeldb_mod,                       only : modeldb_type
   use gungho_step_mod,                          only : gungho_step

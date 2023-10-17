@@ -8,7 +8,6 @@
 module aerial_config_mod
 
   use constants_mod, only: i_def, &
-                           i_native, &
                            r_def, &
                            str_def
   use log_mod,       only: log_event, log_scratch_space &
@@ -30,11 +29,11 @@ module aerial_config_mod
             aerial_multiples_allowed, aerial_final, &
             get_aerial_nml
 
-  integer(i_native), parameter, public :: max_array_size = 500
+  integer(i_def), parameter, public :: max_array_size = 500
 
   character(str_def), public, protected :: absolute(5) = cmdi
   integer(i_def), public, protected, allocatable :: inlist(:)
-  integer(i_native), public, protected :: lsize = imdi
+  integer(i_def), public, protected :: lsize = imdi
   real(r_def), public, protected, allocatable :: outlist(:)
   integer(i_def), public, protected, allocatable :: unknown(:)
 
@@ -61,9 +60,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     call read_namelist( file_unit, local_rank, scan )
 
@@ -77,13 +76,13 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     integer(i_def) :: missing_data
 
-    integer(i_native) :: buffer_integer_i_native(1)
+    integer(i_def) :: buffer_integer_i_def(1)
 
     namelist /aerial/ absolute, &
                       inlist, &
@@ -91,7 +90,7 @@ contains
                       outlist, &
                       unknown
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 
@@ -132,11 +131,11 @@ contains
 
     end if
 
-    buffer_integer_i_native(1) = lsize
+    buffer_integer_i_def(1) = lsize
 
-    call global_mpi%broadcast( buffer_integer_i_native, 1, 0 )
+    call global_mpi%broadcast( buffer_integer_i_def, 1, 0 )
 
-    lsize = buffer_integer_i_native(1)
+    lsize = buffer_integer_i_def(1)
 
 
     call global_mpi%broadcast( absolute, size(absolute, 1)*str_def, 0 )
@@ -196,12 +195,12 @@ contains
 
     implicit none
 
-    integer(i_native) :: condition
-    integer(i_native) :: array_size
+    integer(i_def) :: condition
+    integer(i_def) :: array_size
     integer(i_def), allocatable :: new_inlist(:)
     real(r_def), allocatable :: new_outlist(:)
     integer(i_def), allocatable :: new_unknown(:)
-    integer(i_native) :: index_unknown
+    integer(i_def) :: index_unknown
 
     condition  = 0
     array_size = 0

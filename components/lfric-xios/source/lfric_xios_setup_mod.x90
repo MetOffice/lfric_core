@@ -10,8 +10,8 @@ module lfric_xios_setup_mod
 
   use calendar_mod,                  only: calendar_type
   use clock_mod,                     only: clock_type
-  use constants_mod,                 only: i_def, i_halo_index, i_native,     &
-                                           i_timestep, r_def, l_def, str_def, &
+  use constants_mod,                 only: i_def, i_halo_index, i_timestep, &
+                                           r_def, l_def, str_def,           &
                                            radians_to_degrees
   use domain_mod,                    only: domain_type
   use lfric_xios_constants_mod,      only: dp_xios
@@ -225,9 +225,9 @@ contains
 
     ! Checkpoint domain parameters
     character(len=str_def)            :: domain_name, domain_fs_name
-    integer(kind=i_native), parameter :: domain_function_spaces(5) &
+    integer(kind=i_def),    parameter :: domain_function_spaces(5) &
                                           = (/W0, W1, W2, W3, Wtheta/)
-    integer(kind=i_native) :: fs_index
+    integer(kind=i_def) :: fs_index
 
     ! Variables needed to compute output domain coordinates in lat-long
     type( field_type ) :: sample_chi(3)
@@ -666,9 +666,9 @@ contains
     implicit none
 
     ! Arguments
-    integer(kind=i_native),        intent(in) :: fs_id
+    integer(kind=i_def),           intent(in) :: fs_id
     character(len=*),              intent(in) :: domain_name
-    type(mesh_type), pointer,      intent(in) :: mesh
+    type(mesh_type),     pointer,  intent(in) :: mesh
     type(field_type),              intent(in) :: chi(3)
     logical(kind=l_def),           intent(in) :: use_index
     integer(kind=i_def), optional, intent(in) :: k_order
@@ -852,12 +852,12 @@ contains
 
     character(len=*),           intent(in)    :: domain_id
     type(mesh_type), pointer,   intent(in)    :: mesh
-    integer(kind=i_native),     intent(in)    :: fs_id
+    integer(kind=i_def),        intent(in)    :: fs_id
     type(field_type),           intent(in)    :: chi(:)
     real(dp_xios), allocatable, intent(inout) :: lat_bounds(:,:)
     real(dp_xios), allocatable, intent(inout) :: lon_bounds(:,:)
     character(len=*),           intent(in)    :: mesh_name
-    integer(kind=i_native),     intent(in)    :: nverts
+    integer(kind=i_def),        intent(in)    :: nverts
 
     type(function_space_type), pointer :: domain_fs   => null()
 
@@ -1047,7 +1047,7 @@ contains
 
     character(len=*),         intent(in) :: axis_id
     type(mesh_type), pointer, intent(in) :: mesh
-    integer(kind=i_native),   intent(in) :: fs_id
+    integer(kind=i_def),      intent(in) :: fs_id
 
     type(function_space_type), pointer :: domain_fs => null()
     real(dp_xios), allocatable         :: dp_levels(:)

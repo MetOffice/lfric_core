@@ -10,7 +10,7 @@ module driver_time_mod
 
   use calendar_mod,            only: calendar_type
   use clock_mod,               only: clock_type
-  use constants_mod,           only: i_native
+  use constants_mod,           only: i_def
   use log_mod,                 only: log_event, log_level_error
   use model_clock_mod,         only: model_clock_type
   use step_calendar_mod,       only: step_calendar_type
@@ -37,7 +37,7 @@ contains
 
     type(model_clock_type), allocatable, intent(out) :: clock
 
-    integer(i_native) :: rc
+    integer(i_def) :: rc
 
     ! Choice of calendar here
     if (.not. allocated(calendar)) then

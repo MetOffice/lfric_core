@@ -7,7 +7,7 @@
 !
 module everything_mod
 
-  use constants_mod, only : i_def, i_native, l_def, r_def, str_max_filename
+  use constants_mod, only : i_def, l_def, r_def, str_max_filename
   use log_mod,       only : log_scratch_space, log_event, LOG_LEVEL_ERROR
   use mpi_mod,       only : global_mpi
 
@@ -16,8 +16,8 @@ module everything_mod
   private
   public :: feign_everything_config
 
-  integer(i_native) :: local_rank = -1
-  integer(i_native), parameter :: temporary_unit = 3
+  integer(i_def) :: local_rank = -1
+  integer(i_def), parameter :: temporary_unit = 3
 
 contains
 
@@ -39,19 +39,19 @@ contains
     implicit none
 
     character(*), intent(in) :: cake
-    integer(i_native), intent(in) :: teapot
+    integer(i_def), intent(in) :: teapot
     logical(l_def), intent(in) :: cheese
     real(r_def), intent(in) :: fish
-    integer(i_native), intent(in) :: tail
-    integer(i_native), intent(in) :: school(:)
+    integer(i_def), intent(in) :: tail
+    integer(i_def), intent(in) :: school(:)
     integer(i_def), intent(in) :: hanger(:)
     character(*), intent(in) :: knife(:)
 
     character(*), parameter :: temp_close_message &
       = "feign_everything_config: Unable to close temporary file"
 
-    integer(i_native)  :: condition
-    integer(i_native)  :: i
+    integer(i_def)  :: condition
+    integer(i_def)  :: i
     character(str_max_filename) :: tmp_str
     character(str_def) :: fmt_str
 

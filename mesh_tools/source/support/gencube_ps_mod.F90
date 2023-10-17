@@ -27,7 +27,7 @@ module gencube_ps_mod
 
   use calc_global_cell_map_mod,       only: calc_global_cell_map
   use constants_mod,                  only: r_def, i_def, str_def, l_def,     &
-                                            i_native, str_long, str_longlong, &
+                                            str_long, str_longlong,           &
                                             PI, radians_to_degrees,           &
                                             degrees_to_radians, rmdi, imdi,   &
                                             emdi
@@ -82,9 +82,9 @@ module gencube_ps_mod
     private
 
     character(str_def) :: mesh_name
-    integer(i_native)  :: geometry  = geometry_spherical
-    integer(i_native)  :: topology  = topology_periodic
-    integer(i_native)  :: coord_sys = emdi
+    integer(i_def)     :: geometry  = geometry_spherical
+    integer(i_def)     :: topology  = topology_periodic
+    integer(i_def)     :: coord_sys = emdi
     character(str_def) :: coord_units_x
     character(str_def) :: coord_units_y
     integer(i_def)     :: edge_cells

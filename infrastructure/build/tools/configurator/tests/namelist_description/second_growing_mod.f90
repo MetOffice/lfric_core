@@ -8,7 +8,6 @@
 module test_config_mod
 
   use constants_mod, only: i_def, &
-                           i_native, &
                            r_def
   use log_mod,       only: log_event, log_scratch_space &
                          , LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO
@@ -54,9 +53,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     call read_namelist( file_unit, local_rank, scan )
 
@@ -70,9 +69,9 @@ contains
 
     implicit none
 
-    integer(i_native), intent(in) :: file_unit
-    integer(i_native), intent(in) :: local_rank
-    logical,           intent(in) :: scan
+    integer(i_def), intent(in) :: file_unit
+    integer(i_def), intent(in) :: local_rank
+    logical,        intent(in) :: scan
 
     integer(i_def) :: missing_data
 
@@ -82,7 +81,7 @@ contains
     namelist /test/ bar, &
                     foo
 
-    integer(i_native) :: condition
+    integer(i_def) :: condition
 
     missing_data = 0
 

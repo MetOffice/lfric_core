@@ -16,7 +16,7 @@
 !  found in #3803.
 module jedi_lfric_comm_mod
 
-  use constants_mod,         only: i_native
+  use constants_mod,         only: i_def
   use halo_comms_mod,        only: initialise_halo_comms, &
                                    finalise_halo_comms
   use mpi_mod,               only: global_mpi
@@ -45,9 +45,9 @@ contains
 
     implicit none
 
-    character(len=*),       intent(in)    :: program_name
-    integer(kind=i_native), intent(in)    :: world_comm
-    integer(kind=i_native), intent(out)   :: output_comm
+    character(len=*),  intent(in)    :: program_name
+    integer(i_def),    intent(in)    :: world_comm
+    integer(i_def),    intent(out)   :: output_comm
 
     ! Local
     logical :: comm_is_split
@@ -73,7 +73,7 @@ contains
 
     implicit none
 
-    integer(kind=i_native), intent(in) :: model_communicator
+    integer(i_def), intent(in) :: model_communicator
 
     ! Store the MPI communicator for later use
     call global_mpi%initialise( model_communicator )

@@ -14,7 +14,7 @@ module global_mesh_mod
   use constants_mod,                  only: r_def, i_def, str_max_filename, &
                                             str_def, degrees_to_radians,    &
                                             rmdi, imdi,                     &
-                                            cmdi, l_def, i_native, emdi,    &
+                                            cmdi, l_def, emdi,              &
                                             str_longlong
 
   use global_mesh_map_mod,            only: global_mesh_map_type
@@ -28,15 +28,15 @@ module global_mesh_mod
 
   private
 
-  integer(i_native), parameter :: spherical_domain = 301
-  integer(i_native), parameter :: planar_domain    = 302
+  integer(i_def), parameter :: spherical_domain = 301
+  integer(i_def), parameter :: planar_domain    = 302
 
-  integer(i_native), parameter :: non_periodic_domain = 401
-  integer(i_native), parameter :: channel_domain      = 402
-  integer(i_native), parameter :: periodic_domain     = 403
+  integer(i_def), parameter :: non_periodic_domain = 401
+  integer(i_def), parameter :: channel_domain      = 402
+  integer(i_def), parameter :: periodic_domain     = 403
 
-  integer(i_native), parameter :: lon_lat_coords = 501
-  integer(i_native), parameter :: xyz_coords     = 502
+  integer(i_def), parameter :: lon_lat_coords = 501
+  integer(i_def), parameter :: xyz_coords     = 502
 
 
   type, extends(linked_list_data_type), public :: global_mesh_type
@@ -54,13 +54,13 @@ module global_mesh_mod
     logical(l_def) :: global_model = .false.
 
   ! Domain surface geometry.
-    integer(i_native) :: geometry = emdi
+    integer(i_def) :: geometry = emdi
 
   ! Domain boundaries topology.
-    integer(i_native) :: topology = emdi
+    integer(i_def) :: topology = emdi
 
   ! Co-ordinate system used to specify node locations.
-    integer(i_native) :: coord_sys = emdi
+    integer(i_def) :: coord_sys = emdi
 
   ! Units used internal to this object.
     character(str_def) :: coord_units_xy(2) = cmdi

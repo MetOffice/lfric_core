@@ -22,7 +22,7 @@ module atlas_field_interface_mod
   use abstract_external_field_mod,   only : abstract_external_field_type
   use field_mod,                     only : field_type, field_proxy_type
   use fs_continuity_mod,             only : W3, Wtheta, name_from_functionspace
-  use constants_mod,                 only : i_def, str_def, l_def, i_native
+  use constants_mod,                 only : i_def, str_def, l_def
 
   implicit none
 
@@ -32,29 +32,29 @@ type, extends(abstract_external_field_type), public :: atlas_field_interface_typ
   private
 
   !> The 64-bit floating point values of the field
-  real( kind=real64 ), pointer   :: atlas_data(:,:)
+  real( kind=real64 ), pointer :: atlas_data(:,:)
   !> Map that defines the order of the horizontal points in
   !> the atlas data to collumns in the LFRic field data
-  integer( kind=i_def ), pointer :: map_horizontal(:)
+  integer(i_def),      pointer :: map_horizontal(:)
   !> the name of the atlas field
-  character( len=str_def )       :: atlas_name
+  character( len=str_def )     :: atlas_name
   !> is true if the surface point in the LFRic field is not present in the
   !> atlas field
-  logical( kind=l_def )          :: missing_surface_level
+  logical( kind=l_def )        :: missing_surface_level
   !> number of vertical points in the atlas data
-  integer( kind=i_def )          :: n_vertical
+  integer(i_def)               :: n_vertical
   !> number of horizontal points in the atlas data
-  integer( kind=i_def )          :: n_horizontal
+  integer(i_def)               :: n_horizontal
   !> vertical start index for the LFRic data
-  integer( kind=i_def )          :: lfric_kstart
+  integer(i_def)               :: lfric_kstart
   !> number of vertical points in the LFRic data
-  integer( kind=i_def )          :: n_vertical_lfric
+  integer(i_def)               :: n_vertical_lfric
   !> vertical start index for the atlas data
-  integer( kind=i_def )          :: atlas_kstart
+  integer(i_def)               :: atlas_kstart
   !> vertical end index for the atlas data
-  integer( kind=i_def )          :: atlas_kend
+  integer(i_def)               :: atlas_kend
   !> vertical fill direction for the atlas data
-  integer( kind=i_def )          :: atlas_kdirection
+  integer(i_def)               :: atlas_kdirection
 
 contains
 
@@ -99,21 +99,21 @@ subroutine field_initialiser( self, atlas_data_ptr, map_horizontal_ptr, &
   implicit none
 
   class( atlas_field_interface_type ), intent(inout) :: self
-  real( kind=real64 ), pointer, intent(in)           :: atlas_data_ptr(:,:)
-  integer( kind=i_def ), pointer, intent(in)         :: map_horizontal_ptr(:)
-  type(field_type), pointer, intent(in)              :: lfric_field_ptr
-  character( len=* ), optional, intent(in)           :: atlas_name
-  logical( kind=l_def ), optional, intent(in)        :: missing_surface_level
-  logical( kind=l_def ), optional, intent(in)        :: fill_direction_up
+  real( kind=real64 ),   pointer,  intent(in) :: atlas_data_ptr(:,:)
+  integer(i_def),        pointer,  intent(in) :: map_horizontal_ptr(:)
+  type(field_type),      pointer,  intent(in) :: lfric_field_ptr
+  character( len=* ),    optional, intent(in) :: atlas_name
+  logical( kind=l_def ), optional, intent(in) :: missing_surface_level
+  logical( kind=l_def ), optional, intent(in) :: fill_direction_up
 
   ! locals
-  logical( kind=l_def ), allocatable          :: check_map(:)
-  integer( kind=i_def )                       :: ij
-  integer( kind=i_def )                       :: fs_enumerator
-  integer( kind=i_def )                       :: n_horizontal_lfric
-  integer( kind=i_def )                       :: n_vertical_lfric
-  type( field_proxy_type )                    :: field_proxy
-  logical( kind=l_def )                       :: fill_direction_up_local
+  logical( kind=l_def ), allocatable :: check_map(:)
+  integer(i_def)                     :: ij
+  integer(i_def)                     :: fs_enumerator
+  integer(i_def)                     :: n_horizontal_lfric
+  integer(i_def)                     :: n_vertical_lfric
+  type( field_proxy_type )           :: field_proxy
+  logical( kind=l_def )              :: fill_direction_up_local
 
   ! Initialise the abstract parent
   call self%abstract_external_field_initialiser( lfric_field_ptr )
@@ -244,17 +244,17 @@ subroutine copy_from_lfric(self, return_code)
   implicit none
 
   class( atlas_field_interface_type ), intent(inout) :: self
-  integer(i_native), intent(out), optional :: return_code
+  integer(i_def), intent(out), optional :: return_code
 
   type( field_type ), pointer :: lfric_field_ptr
   type( field_proxy_type )    :: field_proxy
-  integer( kind=i_def )       :: lfric_kstart
-  integer( kind=i_def )       :: lfric_ij
-  integer( kind=i_def )       :: atlas_ij
-  integer( kind=i_def )       :: atlas_kstart
-  integer( kind=i_def )       :: atlas_kend
-  integer( kind=i_def )       :: atlas_kdirection
-  integer( kind=i_def )       :: n_vertical_lfric
+  integer(i_def)              :: lfric_kstart
+  integer(i_def)              :: lfric_ij
+  integer(i_def)              :: atlas_ij
+  integer(i_def)              :: atlas_kstart
+  integer(i_def)              :: atlas_kend
+  integer(i_def)              :: atlas_kdirection
+  integer(i_def)              :: n_vertical_lfric
 
   lfric_field_ptr => self%get_lfric_field_ptr()
   field_proxy = lfric_field_ptr%get_proxy()
@@ -282,17 +282,17 @@ subroutine copy_to_lfric( self, return_code )
   implicit none
 
   class( atlas_field_interface_type ), intent(inout) :: self
-  integer(i_native), intent(out), optional :: return_code
+  integer(i_def),              intent(out), optional :: return_code
 
   type( field_type ), pointer :: lfric_field_ptr
   type( field_proxy_type )    :: field_proxy
-  integer( kind=i_def )       :: lfric_kstart
-  integer( kind=i_def )       :: lfric_ij
-  integer( kind=i_def )       :: atlas_ij
-  integer( kind=i_def )       :: atlas_kstart
-  integer( kind=i_def )       :: atlas_kend
-  integer( kind=i_def )       :: atlas_kdirection
-  integer( kind=i_def )       :: n_vertical_lfric
+  integer(i_def)              :: lfric_kstart
+  integer(i_def)              :: lfric_ij
+  integer(i_def)              :: atlas_ij
+  integer(i_def)              :: atlas_kstart
+  integer(i_def)              :: atlas_kend
+  integer(i_def)              :: atlas_kdirection
+  integer(i_def)              :: n_vertical_lfric
 
   lfric_field_ptr => self%get_lfric_field_ptr()
   field_proxy = lfric_field_ptr%get_proxy()

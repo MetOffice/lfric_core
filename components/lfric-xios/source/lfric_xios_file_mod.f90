@@ -9,7 +9,7 @@
 module lfric_xios_file_mod
 
   use, intrinsic :: iso_fortran_env, only: real64
-  use constants_mod,                 only: i_native, l_def, str_def,        &
+  use constants_mod,                 only: i_def, l_def, str_def,        &
                                            str_max_filename, RMDI, IMDI
   use field_mod,                     only: field_type
   use field_parent_mod,              only: field_parent_type
@@ -66,11 +66,11 @@ type, public, extends(file_type) :: lfric_xios_file_type
   !> The path to the file
   character(str_max_filename) :: path
   !> The I/O mode of open file (read or write)
-  integer(i_native)           :: io_mode
+  integer(i_def)              :: io_mode
   !> How the contents of the file evolve with time
-  integer(i_native)           :: operation
+  integer(i_def)              :: operation
   !> The file frequency in timesteps
-  integer(i_native)           :: freq_ts = undef_freq
+  integer(i_def)              :: freq_ts = undef_freq
   !> @todo field_group is slated for removal, it is a leftover placeholder
   !!       needed to make checkpointing work for lfric_atm/gungho, but once
   !!       they are upgraded to use the "fields_in_file" API this can be removed.
@@ -111,8 +111,8 @@ interface lfric_xios_file_type
   module procedure lfric_xios_file_constructor
 end interface
 
-integer(i_native), public, parameter :: OPERATION_ONCE       = 1938
-integer(i_native), public, parameter :: OPERATION_TIMESERIES = 3406
+integer(i_def), public, parameter :: OPERATION_ONCE       = 1938
+integer(i_def), public, parameter :: OPERATION_TIMESERIES = 3406
 
 contains
 
@@ -124,7 +124,7 @@ contains
 subroutine register_diagnostics_file(xios_id, freq_ts, is_main, always_on_sampling)
   implicit none
   character(len=*),  intent(in) :: xios_id
-  integer(i_native), intent(in) :: freq_ts
+  integer(i_def),    intent(in) :: freq_ts
   logical(l_def),    intent(in) :: is_main
   logical(l_def),    intent(in) :: always_on_sampling
   type(xios_duration) :: ts
@@ -195,9 +195,9 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
   type(lfric_xios_file_type)  :: self
   character(len=*),            intent(in) :: file_name
   character(len=*),            intent(in) :: xios_id
-  integer(i_native),           intent(in) :: io_mode
-  integer(i_native), optional, intent(in) :: freq
-  integer(i_native), optional, intent(in) :: operation
+  integer(i_def),              intent(in) :: io_mode
+  integer(i_def),    optional, intent(in) :: freq
+  integer(i_def),    optional, intent(in) :: operation
   character(len=*),  optional, intent(in) :: field_group_id
   type(field_collection_type), &
                      optional, intent(in) :: fields_in_file
@@ -207,7 +207,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
   type(field_collection_iterator_type) :: iter
   class(field_parent_type), pointer    :: fld => null()
 
-  integer(i_native) :: field_index
+  integer(i_def) :: field_index
 
   self%path = file_name
 
@@ -308,7 +308,7 @@ subroutine register_with_context(self)
   type(xios_duration)    :: timestep_duration
   type(xios_date)        :: start_date
 
-  integer(i_native) :: i
+  integer(i_def) :: i
 
   call log_event( "Registering XIOS file ["//trim(self%xios_id)//"]", &
                   log_level_trace )
@@ -431,7 +431,7 @@ subroutine recv_fields(self)
   class(lfric_xios_file_type),  intent(inout) :: self
 
   type(xios_date)   :: model_date
-  integer(i_native) :: i
+  integer(i_def)    :: i
 
   ! Don't do any operations if file is closed
   if (self%is_closed) return
@@ -474,7 +474,7 @@ subroutine send_fields(self)
   class(lfric_xios_file_type),  intent(inout) :: self
 
   type(xios_date)   :: model_date
-  integer(i_native) :: i
+  integer(i_def)    :: i
 
   ! Do not do any operations if file is closed
   if (self%is_closed) return

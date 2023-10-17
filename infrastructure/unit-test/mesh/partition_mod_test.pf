@@ -8,7 +8,7 @@
 !>
 module partition_mod_test
 
-  use constants_mod,              only: r_def, i_def, i_native, str_max_filename, &
+  use constants_mod,              only: r_def, i_def, str_max_filename, &
                                         str_def
   use global_mesh_mod,            only: global_mesh_type
   use global_mesh_collection_mod, only: global_mesh_collection_type, &
@@ -120,7 +120,7 @@ contains
     integer(i_def) :: num_cells_ghost
 
     integer(i_def) :: global_mesh_id
-    integer(i_native) :: num_processes
+    integer(i_def) :: num_processes
 
     character(len = str_max_filename) :: filename
 
@@ -259,7 +259,7 @@ contains
     integer(i_def) :: num_cells_ghost
 
     integer(i_def) :: global_mesh_id
-    integer(i_native) :: num_processes
+    integer(i_def) :: num_processes
 
     character(len = str_max_filename) :: filename
 
@@ -399,7 +399,7 @@ contains
     integer(i_def) :: num_cells_ghost
 
     integer(i_def) :: global_mesh_id
-    integer(i_native) :: num_processes
+    integer(i_def) :: num_processes
 
     character(len = str_max_filename) :: filename
 
@@ -539,7 +539,7 @@ contains
     integer(i_def) :: num_cells_ghost
 
     integer(i_def) :: global_mesh_id
-    integer(i_native) :: num_processes
+    integer(i_def) :: num_processes
 
     character(len = str_max_filename) :: filename
 

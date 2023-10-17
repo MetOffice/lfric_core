@@ -9,7 +9,7 @@
 !>
 module lfric_xios_process_output_mod
 
-  use constants_mod,              only: i_native, r_def, str_def
+  use constants_mod,              only: i_def, r_def, str_def
   use file_mod,                   only: FILE_MODE_WRITE,     &
                                         FILE_OP_OPEN
   use io_config_mod,              only: file_convention,       &
@@ -142,7 +142,7 @@ subroutine format_time(output_file)
   character(:), allocatable         :: time_var_name, time_dim_name
   real(r_def), allocatable          :: time_data(:), fp(:)
   real(r_def)                       :: frt(1)
-  integer(i_native)                 :: i
+  integer(i_def)                    :: i
 
   ! Set time variable and dimension names
   time_var_name = "time"
@@ -208,7 +208,7 @@ subroutine fix_planar_coordinates(file_ncdf)
                                                           "Mesh2d_edge_y", &
                                                           "Mesh2d_face_x", &
                                                           "Mesh2d_face_y"  ]
-  integer(i_native)           :: i
+  integer(i_def)              :: i
 
   ! Modify coordinate fields to correctly represent output from model
   do i = 1, size(coord_field_names)

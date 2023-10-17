@@ -14,7 +14,7 @@
 !>
 module mesh_mod
 
-  use constants_mod,         only : i_def, i_native, r_def, l_def, str_def, &
+  use constants_mod,         only : i_def, r_def, l_def, str_def, &
                                     pi, imdi
   use domain_mod,            only : domain_type
   use extrusion_mod,         only : extrusion_type

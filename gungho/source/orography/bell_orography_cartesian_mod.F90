@@ -26,7 +26,7 @@
 !-------------------------------------------------------------------------------
 module bell_orography_cartesian_mod
 
-  use constants_mod,          only : r_def, i_def, i_native
+  use constants_mod,          only : r_def, i_def
   use analytic_orography_mod, only : analytic_orography_type
   use orography_bell_cartesian_config_mod, only : direction_x, &
                                                   direction_y, &
@@ -50,7 +50,7 @@ module bell_orography_cartesian_mod
     real(kind=r_def)    :: half_width_y
     real(kind=r_def)    :: x_centre
     real(kind=r_def)    :: y_centre
-    integer(kind=i_def) :: direction
+    integer(i_def)      :: direction
 
   contains
 
@@ -96,7 +96,7 @@ contains
                                        half_width_y,    &
                                        x_centre,        &
                                        y_centre
-    integer(kind=i_native), intent(in) :: direction
+    integer(i_def),      intent(in) :: direction
 
     ! Assign values
     self%mountain_height = mountain_height

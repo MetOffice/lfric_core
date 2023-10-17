@@ -8,7 +8,7 @@
 !>
 module lfric_xios_driver_mod
 
-  use constants_mod, only: i_native
+  use constants_mod, only: i_def
   use mod_wait,      only: init_wait
   use xios,          only: xios_initialize, xios_finalize
 
@@ -24,9 +24,9 @@ contains
 
     implicit none
 
-    character(len=*),       intent(in)    :: model_name
-    integer(kind=i_native), intent(inout) :: model_communicator
-    logical,                intent(in)    :: comm_has_been_split
+    character(len=*), intent(in)    :: model_name
+    integer(i_def),   intent(inout) :: model_communicator
+    logical,          intent(in)    :: comm_has_been_split
 
     if (comm_has_been_split) then
       call xios_initialize( model_name, local_comm=model_communicator )
