@@ -424,6 +424,7 @@
 	<field id="init_soil_moisture" name="soil_moisture" long_name="soil_moisture" unit="kg m-2" domain_ref="face" axis_ref="soil_levels"/>
 	<field id="init_unfrozen_soil_moisture" name="unfrozen_soil_moisture" long_name="unfrozen_soil_moisture" unit="kg m-2" domain_ref="face" axis_ref="soil_levels"/>
 	<field id="init_soil_temperature" name="soil_temperature" long_name="soil_temperature" unit="K" domain_ref="face" axis_ref="soil_levels"/>
+	<field id="init_area_at_msl" name="cell_area" long_name="grid_cell_area" standard_name="grid_cell_area" unit="m2" domain_ref="face"/>
       </field_group>
 
     </field_definition>

@@ -23,6 +23,7 @@ module gungho_diagnostics_driver_mod
                                         write_hydbal_diagnostic,     &
                                         write_vorticity_diagnostic,  &
                                         write_pv_diagnostic
+  use initialise_diagnostics_mod,only : diagnostic_to_be_sampled
   use field_collection_iterator_mod, &
                                  only : field_collection_iterator_type
   use field_collection_mod,      only : field_collection_type
@@ -37,7 +38,8 @@ module gungho_diagnostics_driver_mod
   use initialization_config_mod, only : ls_option,          &
                                         ls_option_analytic, &
                                         ls_option_file
-  use lfric_xios_write_mod,      only : write_field_edge
+  use lfric_xios_write_mod,      only : write_field_edge, &
+                                        write_field_single_face
   use mesh_mod,                  only : mesh_type
   use moist_dyn_mod,             only : num_moist_factors
   use mr_indices_mod,            only : nummr, mr_names
@@ -47,6 +49,7 @@ module gungho_diagnostics_driver_mod
   use io_config_mod,             only: subroutine_timers, use_xios_io, write_fluxes
   use timer_mod,                 only: timer
   use transport_config_mod,      only: transport_ageofair
+  use physical_op_constants_mod, only: get_da_msl_proj
 
 #ifdef UM_PHYSICS
   use pmsl_alg_mod,              only : pmsl_alg
@@ -106,6 +109,7 @@ contains
     type( field_type), pointer :: w_in_wth => null()
     type( field_type), pointer :: ageofair => null()
     type( field_type), pointer :: exner_in_wth => null()
+    type( field_type), pointer :: dA => null()
 
     ! Iterator for field collection
     type(field_collection_iterator_type)  :: iterator
@@ -164,6 +168,15 @@ contains
       call write_scalar_diagnostic('ageofair', ageofair, &
                                    modeldb%clock, mesh, nodal_output_on_w3)
     end if
+
+    ! Write out grid_cell area at initialisation only
+    if ( use_physics .and. use_xios_io .and. modeldb%clock%is_initialisation() &
+         .and. diagnostic_to_be_sampled("init_area_at_msl") ) then
+      dA => get_da_msl_proj(twod_mesh%get_id())
+      tmp_write_ptr => write_field_single_face
+      call dA%set_write_behaviour(tmp_write_ptr)
+      call dA%write_field("init_area_at_msl")
+    endif
 
     ! Vector fields
     if (use_physics .and. use_xios_io .and. .not. write_fluxes) then
