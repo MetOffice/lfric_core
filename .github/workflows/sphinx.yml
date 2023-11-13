@@ -31,11 +31,15 @@ jobs:
       run: |
         cd documentation
         make html
-        tar --directory build/html -cf "${{ runner.temp }}/artifact.tar" .
+    - id: permissions
+      run: |
+        chmod -c -R +rX "documentation/build/html/"
+    - id: archive
+      run: |
+        tar --directory documentation/build/html -cvf "${{ runner.temp }}/artefact.tar" .
     - id: deployment
       uses: actions/upload-pages-artifact@v2
       with:
         name: github-pages
-        path: ${{ runner.temp }}/artifact.tar
+        path: ${{ runner.temp }}/artefact.tar
         retention-days: 1
-        if-no-files-found: error
