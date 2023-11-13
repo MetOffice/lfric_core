@@ -1,18 +1,17 @@
-.. LFRic Core documentation master file, created by
-   sphinx-quickstart on Fri Nov 10 09:19:18 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. ------------------------------------------------------------------------------
+     (c) Crown copyright 2023 Met Office. All rights reserved.
+     The file LICENCE, distributed with this code, contains details of the terms
+     under which the code may be used.
+   ------------------------------------------------------------------------------
 
-Welcome to LFRic Core's documentation!
-======================================
+LFRic Core documentation!
+===========================
 
 .. toctree:: 
    :maxdepth: 1
    :caption: Contents:
    
    pages/main
-
-
 
 Indices and tables
 ==================

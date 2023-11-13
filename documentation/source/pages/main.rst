@@ -1,33 +1,21 @@
+.. ------------------------------------------------------------------------------
+     (c) Crown copyright 2023 Met Office. All rights reserved.
+     The file LICENCE, distributed with this code, contains details of the terms
+     under which the code may be used.
+   ------------------------------------------------------------------------------
+
 ##################
-The Main Page
+Introduction
 ##################
+.. index::
+   Introduction
 
-This is the main page on which the intro to the documentation lives.
+The LFRic Core project aims to develop a software infrastructure primarily to support the development of a replacement for the Unified Model but also to provide a common library that underpins a range of modelling requirements and related tools. The LFRic Core Project is being led by the `Core Capability Development Team <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science IT group.
 
-******************
-A heading
-******************
-Some text to fill in a gap
+Development of the LFRic infrastructure and the new atmosphere model are being done within the Momentum Partnership. Key initial aims for the new model are as follows:
 
-.. tip::
-    A tip for you
+- The model will be scientifically as good as the UM atmosphere.
+- The model will scale better on future exascale platforms.
+- The infrastructure will be flexible enough to support future evolutions of the science.
 
-.. code-block:: Fortran
-
-    subroutine test(field)
-        type(field), intent(inout) :: field
-        
-        field = 2
-    end subroutine
-    
-.. image:: images/fieldordering.svg
-    :width: 800
-    
-
-.. sidebar:: Topic Title
-    
-    Some information about a topic.
-    
-.. math::
-
-    \partial/\partial t = \nabla x
+Active users and users at the Met Office are requested to work from the head of main. New external users should contact us for advice on how to get going.
