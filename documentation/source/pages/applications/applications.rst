@@ -4,18 +4,9 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-LFRic Core documentation!
-===========================
+##################
+Applications
+##################
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
-
-   pages/main
-   pages/applications/applications
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
+.. include:: skeleton.rst
+.. include:: simple_diffusion.rst

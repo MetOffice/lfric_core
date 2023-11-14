@@ -4,18 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-LFRic Core documentation!
-===========================
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
-
-   pages/main
-   pages/applications/applications
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
+******************
+Skeleton
+******************
+This is a very simple application that uses the minimum of the infrastructure source. It runs as only a single core application with no MPI.
