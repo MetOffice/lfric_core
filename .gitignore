@@ -36,3 +36,6 @@ documentation/build
 
 # Jetbrains
 .idea
+
+# vscode
+.vscode
