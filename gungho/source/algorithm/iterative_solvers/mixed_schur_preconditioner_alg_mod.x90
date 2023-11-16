@@ -510,6 +510,7 @@ contains
 
     use matrix_vector_kernel_mod,        only: matrix_vector_kernel_type
     use dg_matrix_vector_kernel_mod,     only: dg_matrix_vector_kernel_type
+    use dg_inc_matrix_vector_kernel_mod, only: dg_inc_matrix_vector_kernel_type
     use operator_mod,                    only: r_solver_operator_type
     use enforce_bc_kernel_mod,           only: enforce_bc_kernel_type
     use timestepping_config_mod,         only: tau_r, dt

@@ -249,6 +249,7 @@ contains
   !> @param[in] moist_dyn Moisture arrays for dynamics
   subroutine hydrostatic_balance(exner, rho, theta, u, moist_dyn)
 
+    use enforce_bc_kernel_mod,             only : enforce_bc_kernel_type
     use hydrostatic_eos_exner_kernel_mod,  only : hydrostatic_eos_exner_kernel_type
     use hydrostatic_coriolis_kernel_mod,   only : hydrostatic_coriolis_kernel_type
     use moist_dyn_mod,                     only : num_moist_factors
