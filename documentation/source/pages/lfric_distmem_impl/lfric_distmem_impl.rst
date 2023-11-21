@@ -178,9 +178,9 @@ sizes of stencil operations, so all those sets of cells must be held
 contiguously in their array. The cells, therefore, are ordered as
 follows:
 
--  Inner :math:`n+1` cells
+-  Inner n+1 cells
 
--  Inner :math:`n` cells ...
+-  Inner n cells ...
 
 -  Inner 1 cells
 
@@ -188,11 +188,11 @@ follows:
 
 -  Halo 1 cells ...
 
--  Halo :math:`n-1` cells
+-  Halo n-1 cells
 
--  Halo :math:`n` cells
+-  Halo n cells
 
--  Halo :math:`n+1` cells
+-  Halo n+1 cells
 
 In the above, a halo cell refers to a cell that is outside the local
 domain, but is still required to perform calculations on the local
@@ -386,7 +386,7 @@ The difficulty, here, is making sure the global cell index of the owning
 cell is correct. As mentioned above, the owning cell is the cell with
 the highest global cell index that shares a dof. The global index can be
 calculated locally on each partition easily for interior cells, but any
-dof on the boundary (i.e. at the edge of the outermost halo) can't
+dof on the boundary (i.e. at the edge of the outermost halo) can't
 know the cell index of all the cells that surround it (as they are not
 all known to the local partition). An extra halo known as the "ghost"
 halo is added only for the purpose of assigning ownership of these edge
@@ -421,7 +421,7 @@ data:
 -  ``field_proxy%halo_exchange_finish( depth )``
 
    | ``depth`` (in) The depth to which the halos have been exchanged.
-   | Wait (i.e. block) until the transfer of data in a halo exchange
+   | Wait (i.e. block) until the transfer of data in a halo exchange
      (which has been initiated by a call to ``halo_exchange_start``) has
      completed.
 
