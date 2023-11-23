@@ -123,18 +123,18 @@ The LFRic Infrastructure incorporates the following:
 -  APIs to supporting infrastructure such as that for diagnostic output,
    clocks and calendars, and for log messages.
 
+.. _psykal:
 .. figure:: images/psykalWithFlow.svg
    :alt: Schematic of the LFRic design recommendation illustrating the
    PSyKAl design for the science "single model" code, the driver layer
    and supporting infrastructure.
-   :name: fig:psykal
 
    Schematic of the LFRic design recommendation illustrating the PSyKAl
    design for the science "single model" code, the driver layer and
    supporting infrastructure.
 
-At the core of the LFRic design is the 3-layered PSyKAl design shown in
-Figure `1 <#fig:psykal>`__. The separation of concerns between
+At the core of the LFRic design is the 3-layered PSyKAl design shown
+in :ref:`Figure 1 <psykal>`. The separation of concerns between
 scientific code and parallel code is delivered by separating the
 "Parallel Systems", or **PSy Layer** code from the higher-level
 scientific "Algorithm" code which operates on global data from lower
