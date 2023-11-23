@@ -123,9 +123,19 @@ The LFRic Infrastructure incorporates the following:
 -  APIs to supporting infrastructure such as that for diagnostic output,
    clocks and calendars, and for log messages.
 
+.. figure:: psykalWithFlow
+   :alt: Schematic of the LFRic design recommendation illustrating the
+   PSyKAl design for the science "single model" code, the driver layer
+   and supporting infrastructure.
+   :name: fig:psykal
+
+   Schematic of the LFRic design recommendation illustrating the PSyKAl
+   design for the science "single model" code, the driver layer and
+   supporting infrastructure.
+
 At the core of the LFRic design is the 3-layered PSyKAl design shown in
-Figure `[fig:psykal] <#fig:psykal>`__. The separation of concerns
-between scientific code and parallel code is delivered by separating the
+Figure `1 <#fig:psykal>`__. The separation of concerns between
+scientific code and parallel code is delivered by separating the
 "Parallel Systems", or **PSy Layer** code from the higher-level
 scientific "Algorithm" code which operates on global data from lower
 level "kernel" code which operates on small chunks of the global data.
@@ -154,16 +164,41 @@ applications is referred to (for historical reasons) as the Dynamo0.3
 API. This API is documented in a section of the general PSyclone
 documentation :raw-latex:`\cite{psyclone}`.
 
+.. figure:: w2_w3_vert_3d
+   :alt: An illustration of two fields on the same mesh. The mesh has
+   three cells in the horizontal and four vertical levels. On the left
+   data points are on each face of the cell and on the right the data
+   points are in the centre of the cell. In both cases, points are
+   numbered consecutively in the vertical. The numbering scheme for the
+   field on the left takes into account hidden faces between and behind
+   the cells. For example, the four faces between the left and middle
+   column of the left-hand figure could be numbered 5 to 8. The five
+   faces on the bottom and top of the cells in the column of on the
+   right would be numbered 51 to 55, but only the top face, 55, can be
+   seen.
+   :name: fig:Mesh
+
+   An illustration of two fields on the same mesh. The mesh has three
+   cells in the horizontal and four vertical levels. On the left data
+   points are on each face of the cell and on the right the data points
+   are in the centre of the cell. In both cases, points are numbered
+   consecutively in the vertical. The numbering scheme for the field on
+   the left takes into account hidden faces between and behind the
+   cells. For example, the four faces between the left and middle column
+   of the left-hand figure could be numbered 5 to 8. The five faces on
+   the bottom and top of the cells in the column of on the right would
+   be numbered 51 to 55, but only the top face, 55, can be seen.
+
 In support of the GungHo finite element method, the LFRic Infrastructure
 can be used to create fields whose innermost index comprises data points
-in vertical columns. Figure `[fig:Mesh] <#fig:Mesh>`__ illustrates
-numbering of data points for two types of fields.
+in vertical columns. Figure `2 <#fig:Mesh>`__ illustrates numbering of
+data points for two types of fields.
 
 While the finite element and finite difference methods are not the same
 some useful analogies can be made. The right-hand
-Figure `[fig:Mesh] <#fig:Mesh>`__ could be used to store fields such as
-density which are situated on half-levels in the Charney-Phillips grid.
-The left-hand field could be used for storing both staggered horizontal
+Figure `2 <#fig:Mesh>`__ could be used to store fields such as density
+which are situated on half-levels in the Charney-Phillips grid. The
+left-hand field could be used for storing both staggered horizontal
 winds as in the Arakawa C-grid, and vertical wind fields as in the
 Charney-Phillips grid :raw-latex:`\cite{umdp15}`.
 
@@ -172,8 +207,7 @@ over cells at the surface, passing references to all the data points on
 this cell into the kernel. The kernel can loop over the individual cells
 of the column by incrementing each of the data point references to
 access the data for each subsequent cell. A worked example based on
-Figure `[fig:Mesh] <#fig:Mesh>`__ is given in
-Section `[sec:dofs] <#sec:dofs>`__.
+Figure `2 <#fig:Mesh>`__ is given in Section `[sec:dofs] <#sec:dofs>`__.
 
 The LFRic infrastructure supports distributed memory domain
 decomposition of fields. Field data accessed by the PSy layer is a
@@ -323,9 +357,9 @@ Definition of Meshes and mesh entities
 A **mesh** is a formal description of a grid used by a model, and
 comprises locations of points (referred to as vertices or nodes) and
 connectivity between points. An LFRic application reads in a 2D mesh
-from a file. Figure `[fig:cubesphere2x2] <#fig:cubesphere2x2>`__ shows
-the connectivity of a 2D mesh representing the surface of a cube
-comprising 6 faces each with 2 by 2 faces.
+from a file. Figure `3 <#fig:cubesphere2x2>`__ shows the connectivity of
+a 2D mesh representing the surface of a cube comprising 6 faces each
+with 2 by 2 faces.
 
 LFRic computes a 3D mesh from the 2D mesh by extruding the 2D cells into
 vertical columns of 3D cells, thereby constructing a set of connected
@@ -352,6 +386,19 @@ and vertices) that enclose the volume. Neigbouring cells can share the
 faces, edges and vertices. For example, immediate neighbours of a
 cubed-sphere mesh share a face, four edges and four vertices.
 
+.. figure:: cubesphere_2x2
+   :alt: Representation of a 2D cubed-sphere mesh, with numbering of
+   cells, edges and vertices. Note that some vertices and edges are
+   duplicated within the diagram. Duplicated vertices are given the same
+   number. For duplicated edges, only one of the representations is
+   numbered.
+   :name: fig:cubesphere2x2
+
+   Representation of a 2D cubed-sphere mesh, with numbering of cells,
+   edges and vertices. Note that some vertices and edges are duplicated
+   within the diagram. Duplicated vertices are given the same number.
+   For duplicated edges, only one of the representations is numbered.
+
 Dofs, dof-maps and function spaces[sec:dofs]
 --------------------------------------------
 
@@ -372,7 +419,7 @@ as:
 
 Here, :math:`n` is the number of basis functions, :math:`\sigma_n` are
 the basis functions, :math:`x_n` are the values of the degrees of
-freedom. Figure `3 <#fig:basis_function>`__ illustrates how field values
+freedom. Figure `6 <#fig:basis_function>`__ illustrates how field values
 are computed from the dofs and function spaces for a simple
 one-dimensional field with three basis functions. A characteristic of a
 set of basis functions is that at the location of each dof, the basis
@@ -462,7 +509,7 @@ cells that share that face, edge or vertex. Where dofs are shared
 between cells, the field is continuous across the boundary between the
 cells because the value of the field at the dof is the value of the dof
 itself. As illustrated in Figure a) of
-Figure `5 <#fig:differentContinuity1D>`__, when approaching the dof
+Figure `8 <#fig:differentContinuity1D>`__, when approaching the dof
 location from each side of the boundary between the cells, the value of
 the field tends towards the same dof value.
 
@@ -564,17 +611,17 @@ The illustrative examples given so far considered 1-dimensional and
 2-dimensional fields and function spaces. GungHo, however, uses
 3-dimensional function spaces that require dofs in the full
 3-dimensional space of the cell as illustrated by
-Figure `[fig:Mesh] <#fig:Mesh>`__, and used in the following example.
+Figure `2 <#fig:Mesh>`__, and used in the following example.
 
-In the left-hand diagram of Figure `[fig:Mesh] <#fig:Mesh>`__, each cell
-has 6 dofs: one per cell face, including some shared with another cell.
-Each dof is related to one of 6 basis functions in this function space.
-The dof-map for the whole field is a 2D array containing a row of 6 dof
+In the left-hand diagram of Figure `2 <#fig:Mesh>`__, each cell has 6
+dofs: one per cell face, including some shared with another cell. Each
+dof is related to one of 6 basis functions in this function space. The
+dof-map for the whole field is a 2D array containing a row of 6 dof
 addresses for each cell at the base of each column:
 
 .. math::
 
-   dofmap\_face = \left\{ \begin{array}{cccccc} 
+   dofmap\_face = \left\{ \begin{array}{cccccc}
    1 & 5 & 9 & 13 & 17 & 18 \\
    22 & 26 & 30 & 5 & 34 & 35 \\
    39 & 43 & 47 & 26 & 51 & 52 \\
@@ -585,7 +632,7 @@ cell, is simpler:
 
 .. math::
 
-   dofmap\_volume = \left\{ \begin{array}{c} 
+   dofmap\_volume = \left\{ \begin{array}{c}
    1 \\
    5 \\
    9 \\
@@ -607,17 +654,16 @@ implementation in much more detail using code snippets from the current
 LFRic codebase. Here, a simpler implementation of the PSyKAl
 architecture is shown for a kernel operating on fields on the two
 function spaces whose dof locations are represented in
-Figure `[fig:Mesh] <#fig:Mesh>`__: a field with data on faces,
-``face_data``, and a field with data within the cell volume,
-``volume_data``. Among other arguments, the kernel subroutine interface
-could look like this:
+Figure `2 <#fig:Mesh>`__: a field with data on faces, ``face_data``, and
+a field with data within the cell volume, ``volume_data``. Among other
+arguments, the kernel subroutine interface could look like this:
 
 ::
 
        subroutine my_kernel_code(nlayers,                       &
          face_data, volume_data...                              &
          dofs_per_cell_face,   total_face_dofs,  dofmap_face    &
-         dofs_per_cell_volume, total_volume_out, dofmap_volume, & 
+         dofs_per_cell_volume, total_volume_out, dofmap_volume, &
          ...)
 
 The kernel arguments include the number of layers, the full data for all
@@ -633,13 +679,12 @@ For such a kernel, the PSy layer code could look something like this:
      do cell = 1, ncells
        call my_kernel_code(nlayers, face_data(:), volume_data(:)...     &
            dofs_per_cell_face,total_face_dofs,dofmap_face(:,cell)       &
-           dofs_per_cell_volume, total_volume_out, dofmap_volume(:,cell) 
+           dofs_per_cell_volume, total_volume_out, dofmap_volume(:,cell)
                     )
      end do
 
-For the function spaces and mesh illustrated in
-Figure `[fig:Mesh] <#fig:Mesh>`__ the array sizes and dof-map variables
-would be set as follows
+For the function spaces and mesh illustrated in Figure `2 <#fig:Mesh>`__
+the array sizes and dof-map variables would be set as follows
 
 ::
 
@@ -692,8 +737,8 @@ vertical column), and over both dof-maps.
 In the first call to the kernel (``cell = 1``), the first iteration of
 the loop over layers (``k = 0``) uses the raw dof-map addresses from the
 input field which address the dofs in the bottom left cell of the mesh
-represented in Figure `[fig:Mesh] <#fig:Mesh>`__: dof number 1 for the
-input array and dofs 1, 5, 9, 13, 17 and 18 for the output array.
+represented in Figure `2 <#fig:Mesh>`__: dof number 1 for the input
+array and dofs 1, 5, 9, 13, 17 and 18 for the output array.
 
 In the second iteration of the outer kernel loop, with ``k = 1``, the
 kernel adds 1 to all the dof-map addresses. Doing this gets references
@@ -758,123 +803,123 @@ of the function space type, the mesh (which defines the horizontal
 domain and number of vertical levels) and the order of the basis
 functions.
 
-Figure `13 <#fig:k0k1w0-w3>`__, includes a representation of the dof
+Figure `16 <#fig:k0k1w0-w3>`__, includes a representation of the dof
 locations in a single cell for the four function spaces
 :math:`\mathbb{W}_{0}` to :math:`\mathbb{W}_{3}` at lowest and next
-higher order. Note that Figure `13 <#fig:k0k1w0-w3>`__ e) and
-Figure `13 <#fig:k0k1w0-w3>`__ g) can be mapped to the two fields shown
-in Figure `[fig:Mesh] <#fig:Mesh>`__.
+higher order. Note that Figure `16 <#fig:k0k1w0-w3>`__ e) and
+Figure `16 <#fig:k0k1w0-w3>`__ g) can be mapped to the two fields shown
+in Figure `2 <#fig:Mesh>`__.
 
 .. figure:: k0_W0_dofs
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k1_W0_dofs
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k0_W1_dofs
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k1_W1_dofs_circ
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k0_W2_dofs
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k1_W2_dofs_circ
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k0_W3_dofs
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: k1_W3_dofs
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
    :name: fig:k0k1w0-w3
 
    Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
-   of dof location -- see Figure `15 <#fig:cornerk1w1w2>`__ for an
+   of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
 .. figure:: corner_W1
@@ -914,16 +959,16 @@ the loop ranges and halo swaps required in the PSy layer, the fact that
 continuity is unchanged means that the code does not have to be
 regenerated to run the model at a different order.
 
-As in Figure `5 <#fig:differentContinuity1D>`__, the dof locations shown
-in Figure `13 <#fig:k0k1w0-w3>`__ g) are slightly offset from the corner
+As in Figure `8 <#fig:differentContinuity1D>`__, the dof locations shown
+in Figure `16 <#fig:k0k1w0-w3>`__ g) are slightly offset from the corner
 to illustrate that the :math:`\mathbb{W}_{3}` function space is
 discontinuous at higher order as well as at lowest order. It
 distinguishes the function space from the lowest order
-:math:`\mathbb{W}_{0}` function space in Figure `13 <#fig:k0k1w0-w3>`__
-a) which is continuous. Figure `15 <#fig:cornerk1w1w2>`__ shows similar
+:math:`\mathbb{W}_{0}` function space in Figure `16 <#fig:k0k1w0-w3>`__
+a) which is continuous. Figure `18 <#fig:cornerk1w1w2>`__ shows similar
 subtleties for the higher order version of the :math:`\mathbb{W}_{1}`
 and :math:`\mathbb{W}_{2}` field. For example, one of the upwards
-pointing (red) arrows in Figure `15 <#fig:cornerk1w1w2>`__ a) is on the
+pointing (red) arrows in Figure `18 <#fig:cornerk1w1w2>`__ a) is on the
 left-most edge of the cell and two of them are on the cell face near to
 the cell edge. This means the upwards component of the vector field
 represented by this function space is continuous with horizontally
@@ -1147,7 +1192,7 @@ based on the above metadata. See the PSyclone documentation for details.
 
        subroutine compute_total_aam_code(                            &
                                          nlayers,                    &
-                                         aam, u, rho,                & 
+                                         aam, u, rho,                &
                                          chi_1, chi_2, chi_3,        &
                                          ndf_w3, undf_w3, map_w3,    &
                                          w3_basis,                   &
@@ -1172,7 +1217,7 @@ associated with the cell at the bottom layer of one of the columns. The
 raw map data addresses the bottom-layer cell. Maps for successive cells
 going upwards in the column are obtained by successively incrementing
 all the dof addresses in the original map as can be seen by examining
-the dof numbering in Figure `[fig:Mesh] <#fig:Mesh>`__.
+the dof numbering in Figure `2 <#fig:Mesh>`__.
 
 The PSy layer code
 ------------------
@@ -1272,7 +1317,7 @@ above are as follows:
    function spaces of the input fields and the coordinate fields. For
    example, this number would be 6 for a lowest order
    :math:`\mathbb{W}_{2}` field illustrated in
-   Figure `13 <#fig:k0k1w0-w3>`__ e). In the example code in
+   Figure `16 <#fig:k0k1w0-w3>`__ e). In the example code in
    Section `[sec:dofs] <#sec:dofs>`__ we used the more meaningful
    variable name ``dofs_per_cell``.
 
@@ -1661,9 +1706,8 @@ field which is held in another collection.
 While any algorithm can create a local field collection for its own
 purposes, within the LFRic atmosphere fields are organised in a number
 of key field collections, illustrated in
-Figure `[fig:field_collections] <#fig:field_collections>`__, which are
-set up in the initialisation stage and kept in scope throughout the
-model run:
+Figure `19 <#fig:field_collections>`__, which are set up in the
+initialisation stage and kept in scope throughout the model run:
 
 -  The top-level driver of the model defines a field collection called
    the Depository during initialisation. The Depository contains all the
@@ -1688,6 +1732,38 @@ ability to loop through all fields in a collection, for example to apply
 the same operation to each field in turn. Within a collection, all
 fields are required to have a unique name which acts as the key to
 obtain the field.
+
+.. figure:: field_collections
+   :alt: Representation of some field collections as used in the LFRic
+   atmosphere implementation. Each blue line represents a single field
+   collection. Multiple stacked ovals represent several related fields
+   within a field collection that may be referenced by another field
+   collection. Each field collection is represented as a single variable
+   so can be passed around the model without needing a long argument
+   list. In the LFRic atmosphere, the depository field collection holds
+   all "physics" fields passed into the top-level of the model. Other
+   field collections contain pointers to the fields in the depository.
+   The prognostic field collection comprises fields that need to be
+   written to the model's checkpoint dump. The "rad" and "soil" field
+   collections hold pointers to a subset of fields relating to radiation
+   and soil, meaning the interface to, say, Socrates, does not need to
+   list a lot of individual fields.
+   :name: fig:field_collections
+
+   Representation of some field collections as used in the LFRic
+   atmosphere implementation. Each blue line represents a single field
+   collection. Multiple stacked ovals represent several related fields
+   within a field collection that may be referenced by another field
+   collection. Each field collection is represented as a single variable
+   so can be passed around the model without needing a long argument
+   list. In the LFRic atmosphere, the depository field collection holds
+   all "physics" fields passed into the top-level of the model. Other
+   field collections contain pointers to the fields in the depository.
+   The prognostic field collection comprises fields that need to be
+   written to the model's checkpoint dump. The "rad" and "soil" field
+   collections hold pointers to a subset of fields relating to radiation
+   and soil, meaning the interface to, say, Socrates, does not need to
+   list a lot of individual fields.
 
 Start dumps and Checkpoint/restart
 ----------------------------------
