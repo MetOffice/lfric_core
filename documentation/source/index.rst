@@ -18,6 +18,7 @@ LFRic Core documentation!
    pages/main
    pages/applications/applications
 
+   pages/lfric_datamodel/lfric_datamodel.rst
    pages/lfric_distmem_impl/lfric_distmem_impl.rst
 
 Indices and tables
