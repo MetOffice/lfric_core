@@ -125,13 +125,10 @@ The LFRic Infrastructure incorporates the following:
 
 .. _psykal:
 .. figure:: images/psykalWithFlow.svg
-   :alt: Schematic of the LFRic design recommendation illustrating the
-   PSyKAl design for the science "single model" code, the driver layer
-   and supporting infrastructure.
 
-   Schematic of the LFRic design recommendation illustrating the PSyKAl
-   design for the science "single model" code, the driver layer and
-   supporting infrastructure.
+   Figure 1: Schematic of the LFRic design recommendation illustrating
+   the PSyKAl design for the science "single model" code, the driver
+   layer and supporting infrastructure.
 
 At the core of the LFRic design is the 3-layered PSyKAl design shown
 in :ref:`Figure 1 <psykal>`. The separation of concerns between
