@@ -123,7 +123,7 @@ The LFRic Infrastructure incorporates the following:
 -  APIs to supporting infrastructure such as that for diagnostic output,
    clocks and calendars, and for log messages.
 
-.. figure:: psykalWithFlow
+.. figure:: images/psykalWithFlow.svg
    :alt: Schematic of the LFRic design recommendation illustrating the
    PSyKAl design for the science "single model" code, the driver layer
    and supporting infrastructure.
