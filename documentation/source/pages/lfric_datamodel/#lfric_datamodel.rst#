@@ -285,7 +285,7 @@ documented here.
    covers the same geographical domain, but the resolution of the lower
    meshes is an integer multiple of the higher resolution mesh such
    that, for example, each cell in the lower resolution mesh contains
-   :math:`2 \times 2` or :math:`3 \times 3` cells of the higher
+   :math:`2 * 2` or :math:`3 * 3` cells of the higher
    resolution mesh. The hierarchy supports multigrid solvers, and will
    enable easier transformation of data between different science
    schemes running at different resolutions.
