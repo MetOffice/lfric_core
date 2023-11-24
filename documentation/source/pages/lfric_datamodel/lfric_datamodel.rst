@@ -161,39 +161,28 @@ applications is referred to (for historical reasons) as the Dynamo0.3
 API. This API is documented in a section of the general PSyclone
 documentation :raw-latex:`\cite{psyclone}`.
 
-.. figure:: w2_w3_vert_3d
-   :alt: An illustration of two fields on the same mesh. The mesh has
-   three cells in the horizontal and four vertical levels. On the left
-   data points are on each face of the cell and on the right the data
-   points are in the centre of the cell. In both cases, points are
-   numbered consecutively in the vertical. The numbering scheme for the
-   field on the left takes into account hidden faces between and behind
-   the cells. For example, the four faces between the left and middle
-   column of the left-hand figure could be numbered 5 to 8. The five
-   faces on the bottom and top of the cells in the column of on the
-   right would be numbered 51 to 55, but only the top face, 55, can be
-   seen.
-   :name: fig:Mesh
+.. figure:: images/w2_w3_vert_3d.svg
 
-   An illustration of two fields on the same mesh. The mesh has three
-   cells in the horizontal and four vertical levels. On the left data
-   points are on each face of the cell and on the right the data points
-   are in the centre of the cell. In both cases, points are numbered
-   consecutively in the vertical. The numbering scheme for the field on
-   the left takes into account hidden faces between and behind the
-   cells. For example, the four faces between the left and middle column
-   of the left-hand figure could be numbered 5 to 8. The five faces on
-   the bottom and top of the cells in the column of on the right would
-   be numbered 51 to 55, but only the top face, 55, can be seen.
+   Figure 2: An illustration of two fields on the same mesh. The mesh
+   has three cells in the horizontal and four vertical levels. On the
+   left data points are on each face of the cell and on the right the
+   data points are in the centre of the cell. In both cases, points
+   are numbered consecutively in the vertical. The numbering scheme
+   for the field on the left takes into account hidden faces between
+   and behind the cells. For example, the four faces between the left
+   and middle column of the left-hand figure could be numbered 5
+   to 8. The five faces on the bottom and top of the cells in the
+   column of on the right would be numbered 51 to 55, but only the top
+   face, 55, can be seen.
 
 In support of the GungHo finite element method, the LFRic Infrastructure
 can be used to create fields whose innermost index comprises data points
-in vertical columns. Figure `2 <#fig:Mesh>`__ illustrates numbering of
+in vertical columns. Figure 2 illustrates numbering of
 data points for two types of fields.
 
 While the finite element and finite difference methods are not the same
-some useful analogies can be made. The right-hand
-Figure `2 <#fig:Mesh>`__ could be used to store fields such as density
+some useful analogies can be made. The field in the right-hand
+figure could be used to store fields such as density
 which are situated on half-levels in the Charney-Phillips grid. The
 left-hand field could be used for storing both staggered horizontal
 winds as in the Arakawa C-grid, and vertical wind fields as in the
@@ -383,13 +372,7 @@ and vertices) that enclose the volume. Neigbouring cells can share the
 faces, edges and vertices. For example, immediate neighbours of a
 cubed-sphere mesh share a face, four edges and four vertices.
 
-.. figure:: cubesphere_2x2
-   :alt: Representation of a 2D cubed-sphere mesh, with numbering of
-   cells, edges and vertices. Note that some vertices and edges are
-   duplicated within the diagram. Duplicated vertices are given the same
-   number. For duplicated edges, only one of the representations is
-   numbered.
-   :name: fig:cubesphere2x2
+.. figure:: images/cubesphere_2x2.svg
 
    Representation of a 2D cubed-sphere mesh, with numbering of cells,
    edges and vertices. Note that some vertices and edges are duplicated
@@ -429,7 +412,20 @@ same number of dofs in the same locations. A different field may have a
 different function space and therefore a different set of basis
 functions, and dofs at different locations.
 
-.. figure:: basisOrder2
+.. figure:: images/basisOrder2.svg
+
+   Figure a) shows a set of basis functions (labelled A, B and C) for a
+   1D function space within a single cell that spans 0 to 1 on the
+   horizontal axis. The dashed vertical lines marks the centre of the
+   cell and the right-hand border of the cell. Figure b) shows the
+   nominal location of three degrees of freedom (dofs). Multiplying each
+   basis function in figure a) by the value of its related dof in Figure
+   b) and summing the result gives a total displayed by Figure c). Note
+   that the sum intersects all three dofs. This is because each dof
+   location is located where its related function is 1 and the other two
+   functions are zero.
+
+.. figure:: images/basisOrder2_dofs
    :alt: Figure a) shows a set of basis functions (labelled A, B and C)
    for a 1D function space within a single cell that spans 0 to 1 on the
    horizontal axis. The dashed vertical lines marks the centre of the
@@ -453,31 +449,7 @@ functions, and dofs at different locations.
    location is located where its related function is 1 and the other two
    functions are zero.
 
-.. figure:: basisOrder2_dofs
-   :alt: Figure a) shows a set of basis functions (labelled A, B and C)
-   for a 1D function space within a single cell that spans 0 to 1 on the
-   horizontal axis. The dashed vertical lines marks the centre of the
-   cell and the right-hand border of the cell. Figure b) shows the
-   nominal location of three degrees of freedom (dofs). Multiplying each
-   basis function in figure a) by the value of its related dof in Figure
-   b) and summing the result gives a total displayed by Figure c). Note
-   that the sum intersects all three dofs. This is because each dof
-   location is located where its related function is 1 and the other two
-   functions are zero.
-   :name: fig:basis_function
-
-   Figure a) shows a set of basis functions (labelled A, B and C) for a
-   1D function space within a single cell that spans 0 to 1 on the
-   horizontal axis. The dashed vertical lines marks the centre of the
-   cell and the right-hand border of the cell. Figure b) shows the
-   nominal location of three degrees of freedom (dofs). Multiplying each
-   basis function in figure a) by the value of its related dof in Figure
-   b) and summing the result gives a total displayed by Figure c). Note
-   that the sum intersects all three dofs. This is because each dof
-   location is located where its related function is 1 and the other two
-   functions are zero.
-
-.. figure:: basisOrder2_field
+.. figure:: images/basisOrder2_field.svg
    :alt: Figure a) shows a set of basis functions (labelled A, B and C)
    for a 1D function space within a single cell that spans 0 to 1 on the
    horizontal axis. The dashed vertical lines marks the centre of the
@@ -538,7 +510,7 @@ spaces are continuous and which are discontinuous in the horizontal. The
 continuity of each of the available function spaces is explicitly
 declared in the Dynamo0.3 API.
 
-.. figure:: CG2_2D
+.. figure:: images/CG2_2D.svg
    :alt: A continuous and a discontinuous one-dimensional field, showing
    locations of dofs for each field. The vertical dashed line marks cell
    boundaries. The continuous field is described by dofs shared between
@@ -560,7 +532,7 @@ declared in the Dynamo0.3 API.
    the diagram this is represented by placing the dots slightly away
    from the cell edge mark.
 
-.. figure:: DG2_2D
+.. figure:: images/DG2_2D.svg
    :alt: A continuous and a discontinuous one-dimensional field, showing
    locations of dofs for each field. The vertical dashed line marks cell
    boundaries. The continuous field is described by dofs shared between
@@ -807,7 +779,7 @@ higher order. Note that Figure `16 <#fig:k0k1w0-w3>`__ e) and
 Figure `16 <#fig:k0k1w0-w3>`__ g) can be mapped to the two fields shown
 in Figure `2 <#fig:Mesh>`__.
 
-.. figure:: k0_W0_dofs
+.. figure:: images/k0_W0_dofs.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -821,7 +793,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k1_W0_dofs
+.. figure:: images/k1_W0_dofs.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -835,7 +807,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k0_W1_dofs
+.. figure:: images/k0_W1_dofs.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -849,7 +821,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k1_W1_dofs_circ
+.. figure:: images/k1_W1_dofs_circ.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -863,7 +835,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k0_W2_dofs
+.. figure:: images/k0_W2_dofs.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -877,7 +849,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k1_W2_dofs_circ
+.. figure:: images/k1_W2_dofs_circ.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -891,7 +863,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k0_W3_dofs
+.. figure:: images/k0_W3_dofs.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -905,7 +877,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: k1_W3_dofs
+.. figure:: images/k1_W3_dofs.svg
    :alt: Locations of dofs for spaces :math:`\mathbb{W}_0` to
    :math:`\mathbb{W}_3` for lowest order in left column, and next lowest
    in right. These images are not precise enough to show the subtleties
@@ -919,7 +891,7 @@ in Figure `2 <#fig:Mesh>`__.
    of dof location -- see Figure `18 <#fig:cornerk1w1w2>`__ for an
    expanded view of dofs under the faint circles in d) and f)
 
-.. figure:: corner_W1
+.. figure:: images/corner_W1.svg
    :alt: Details of the locations of dofs for the spaces
    :math:`\mathbb{W}_1` and :math:`\mathbb{W}_2, k = 1`. The faint boxes
    and lines are, in reality, infinitesimally small but are drawn to
@@ -931,7 +903,7 @@ in Figure `2 <#fig:Mesh>`__.
    reality, infinitesimally small but are drawn to allow the mesh entity
    on which the dofs actually sit on to be seen
 
-.. figure:: corner_W2
+.. figure:: images/corner_W2.svg
    :alt: Details of the locations of dofs for the spaces
    :math:`\mathbb{W}_1` and :math:`\mathbb{W}_2, k = 1`. The faint boxes
    and lines are, in reality, infinitesimally small but are drawn to
@@ -1730,7 +1702,7 @@ the same operation to each field in turn. Within a collection, all
 fields are required to have a unique name which acts as the key to
 obtain the field.
 
-.. figure:: field_collections
+.. figure:: images/field_collections.svg
    :alt: Representation of some field collections as used in the LFRic
    atmosphere implementation. Each blue line represents a single field
    collection. Multiple stacked ovals represent several related fields
