@@ -8,16 +8,12 @@ LFRic Core documentation!
 ===========================
 
 .. toctree::
-   :hidden:
-   :caption: Table of Contents:
-
-.. toctree::
-   :maxdepth: 1
    :caption: Contents:
+   :maxdepth: 2
 
    pages/main
    pages/applications/applications
-
+   pages/tools/index
    pages/lfric_distmem_impl/lfric_distmem_impl.rst
 
 Indices and tables
