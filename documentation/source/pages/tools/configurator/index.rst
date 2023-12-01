@@ -14,7 +14,7 @@ produces Fortran source to manage the namelists produced from that metadata.
 Usage
 ~~~~~
 
-The Configurator consists three commands which may be found in
+The Configurator consists of three commands which may be found in
 ``infrastructure/build/tools`` and a separate tool :ref:`Rose Picker` which
 converts the extended Rose metadata file into a JSON file.
 
@@ -40,8 +40,8 @@ The ``PATH`` is that of the resulting generated source file. Finally the
 namelists expected to appear in the file are presented as a space separated
 list of ``NAMELIST`` names.
 
-The final tool generates a module which may be used for testing which fakes
-the loading of a namelist in order to control the test environment::
+The final command generates a module which which fakes the loading of a
+namelist. This is useful for controlling a test environment::
 
     GenerateFeigns [-help] [-version] [-output PATH] PATH
 

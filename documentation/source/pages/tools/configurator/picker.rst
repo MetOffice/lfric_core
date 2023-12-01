@@ -28,9 +28,10 @@ As ever, usage information is available using ``-help``.
 The location where generated files are placed is provided by ``-directory`` and
 defaults to the current working directory.
 
-When a metadata file "includes" others they will be searched for in the
-directories specified by ``-include_dirs``. May be specified multiple times for
-multiple directories.
+Metadata files which use the "include" directive to import additional files
+require those additional files to be located. They will be searched for in the
+directories specified by ``-include_dirs``. This argument may be specified
+multiple times, once for each directories.
 
 The final ``PATH`` is that of the metadata file.
 
