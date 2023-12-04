@@ -68,7 +68,7 @@ in memory:
    the data owned by the partition comes first, followed by increasingly
    deep halo data.
 
-For full details of the data model supported by the LFRic infrastructure see the Data Model documentation :ref:`[1] <references>`. 
+For full details of the data model supported by the LFRic infrastructure see the Data Model documentation :ref:`[1] <references>`.
 
 Parallel implementation
 =======================
@@ -164,6 +164,8 @@ Computation within the science parts of the code is performed by
 iterating over cells. The order of the computation is determined by
 order the cells appear in the partition object, so it should be defined
 to support our chosen iteration strategy.
+
+.. _overlap comms compute:
 
 Overlapping Communications with Compute
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
