@@ -250,6 +250,8 @@ parallel:
 -  A globally consistent index for each dof needs to be provided, so
    that halo dofs can be correctly associated with their owned dof.
 
+.. _dofmap generation:
+
 Generating the dofmap to support halo exchanges
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
