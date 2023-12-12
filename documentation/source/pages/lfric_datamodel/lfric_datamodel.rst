@@ -1,6 +1,7 @@
 Introduction to the LFRic Infrastructure
 ========================================
 
+
 This section of the documentation provides an overview of the LFRic
 Infrastructure, and how to use it to write code for earth system
 modelling applications. The LFRic Infrastructure comprises Fortran
@@ -59,6 +60,7 @@ contribute new science to existing models. Having explained the high
 level architecture, the document describes the broad structure of a
 :ref:`typical LFRic-based application <section apps>`. Code examples
 derived from LFRic atmosphere model illustrate the descriptions.
+
 
 .. _section concepts:
 
@@ -972,7 +974,7 @@ follows:
      end type
 
 While the metadata code is correct Fortran, its only purpose
-is to describe the interface to PSyclone, and it does not otherwise do
+s to describe the interface to PSyclone, and it does not otherwise do
 anything at run-time. By storing metadata in such Fortran constructs, we
 benefit from compiler checks to help spot invalid metadata.
 
