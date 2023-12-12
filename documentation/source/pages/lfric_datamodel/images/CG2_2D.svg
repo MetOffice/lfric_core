@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1079.7283"
+   height="476.69699"
+   viewBox="17 134 595.68494 257.40933"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="CG2_2D.svg">
+  <metadata
+     id="metadata72">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs70">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 265.74802 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="1098.4252 : 265.74802 : 1"
+       inkscape:persp3d-origin="549.21259 : 177.16534 : 1"
+       id="perspective74" />
+    <inkscape:perspective
+       id="perspective2851"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2851-3"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2851-7"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1283"
+     inkscape:window-height="872"
+     id="namedview68"
+     showgrid="false"
+     inkscape:zoom="1.2559055"
+     inkscape:cx="536.38123"
+     inkscape:cy="244.26239"
+     inkscape:window-x="629"
+     inkscape:window-y="22"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <g
+     id="g4"
+     transform="translate(-7.0790444,-23.348898)">
+    <line
+       style="fill:none;stroke:#000000;stroke-width:2"
+       x1="65"
+       y1="386"
+       x2="616.52802"
+       y2="386"
+       id="line6" />
+    <polyline
+       style="fill:none;stroke:#000000;stroke-width:2"
+       points="608.764,391 618.764,386 608.764,381 "
+       id="polyline8" />
+  </g>
+  <g
+     id="g10"
+     transform="translate(-7.0790444,-23.348898)">
+    <line
+       style="fill:none;stroke:#000000;stroke-width:2"
+       x1="65"
+       y1="387"
+       x2="65"
+       y2="157.472"
+       id="line12" />
+    <polyline
+       style="fill:none;stroke:#000000;stroke-width:2"
+       points="70,165.236 65,155.236 60,165.236 "
+       id="polyline14" />
+  </g>
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="16.920956"
+     y="232.65111"
+     id="text16">
+    <tspan
+       x="16.920956"
+       y="232.65111"
+       id="tspan18">T</tspan>
+  </text>
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="554.82098"
+     y="391.0011"
+     id="text20">
+    <tspan
+       x="554.82098"
+       y="391.0011"
+       id="tspan22">X</tspan>
+  </text>
+  <line
+     style="fill:none;stroke:#000000;stroke-width:2;stroke-dasharray:4"
+     x1="198.92096"
+     y1="362.65109"
+     x2="198.92096"
+     y2="134.65111"
+     id="line24" />
+  <line
+     style="fill:none;stroke:#000000;stroke-width:2;stroke-dasharray:4"
+     x1="335.92096"
+     y1="362.65109"
+     x2="336.87097"
+     y2="133.3011"
+     id="line26" />
+  <line
+     style="fill:none;stroke:#000000;stroke-width:2;stroke-dasharray:4"
+     x1="478.82095"
+     y1="361.95108"
+     x2="478.82095"
+     y2="133.95111"
+     id="line28" />
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="192.77097"
+     y="391.65109"
+     id="text30">
+    <tspan
+       x="192.77097"
+       y="391.65109"
+       id="tspan32">2</tspan>
+  </text>
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="52.770954"
+     y="391.65109"
+     id="text34">
+    <tspan
+       x="52.770954"
+       y="391.65109"
+       id="tspan36">1</tspan>
+  </text>
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="471.77097"
+     y="393.65109"
+     id="text38">
+    <tspan
+       x="471.77097"
+       y="393.65109"
+       id="tspan40">4</tspan>
+  </text>
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="329.77097"
+     y="393.65109"
+     id="text42">
+    <tspan
+       x="329.77097"
+       y="393.65109"
+       id="tspan44">3</tspan>
+  </text>
+  <g
+     id="g46"
+     transform="translate(-7.0790444,-23.348898)">
+    <line
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-dasharray:8"
+       x1="70.472"
+       y1="343.03201"
+       x2="200.528"
+       y2="343.96799"
+       id="line48" />
+    <polyline
+       style="fill:none;stroke:#000000;stroke-width:2"
+       points="78.2717,338.088 68.236,343.016 78.1998,348.088 "
+       id="polyline50" />
+    <polyline
+       style="fill:none;stroke:#000000;stroke-width:2"
+       points="192.728,348.912 202.764,343.984 192.8,338.912 "
+       id="polyline52" />
+  </g>
+  <text
+     style="font-size:16.18829918px;font-style:normal;font-weight:700;text-anchor:start;fill:#000000;font-family:sanserif"
+     x="120.72095"
+     y="308.30109"
+     id="text54">
+    <tspan
+       x="120.72095"
+       y="308.30109"
+       id="tspan56">r</tspan>
+  </text>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:2"
+     d="m 59.920956,278.6511 c 238.000004,-254.999998 210.000004,254 422.000004,-123"
+     id="path58" />
+  <ellipse
+     style="fill:#000000"
+     cx="68.007103"
+     cy="301.008"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse60"
+     sodipodi:cx="68.007103"
+     sodipodi:cy="301.008"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(-9.7147472,-21.152479)" />
+  <ellipse
+     style="fill:#000000"
+     cx="205.80701"
+     cy="228.80701"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse62"
+     sodipodi:cx="205.80701"
+     sodipodi:cy="228.80701"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(-7.0790444,-23.348898)" />
+  <ellipse
+     style="fill:#000000"
+     cx="343.608"
+     cy="322.608"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse64"
+     sodipodi:cx="343.608"
+     sodipodi:cy="322.608"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(-7.0790444,-23.348898)" />
+  <ellipse
+     style="fill:#000000"
+     cx="486.40799"
+     cy="184.407"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse66"
+     sodipodi:cx="486.40799"
+     sodipodi:cy="184.407"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(-7.0790444,-24.666749)" />
+  <ellipse
+     style="fill:#000000"
+     cx="205.80701"
+     cy="228.80701"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse62-6"
+     sodipodi:cx="205.80701"
+     sodipodi:cy="228.80701"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(-77.228919,-8.1228306)" />
+  <ellipse
+     style="fill:#000000"
+     cx="205.80701"
+     cy="228.80701"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse62-65"
+     sodipodi:cx="205.80701"
+     sodipodi:cy="228.80701"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(63.341892,23.505603)" />
+  <ellipse
+     style="fill:#000000"
+     cx="205.80701"
+     cy="228.80701"
+     rx="4.9499998"
+     ry="4.9499998"
+     id="ellipse62-4"
+     sodipodi:cx="205.80701"
+     sodipodi:cy="228.80701"
+     sodipodi:rx="4.9499998"
+     sodipodi:ry="4.9499998"
+     transform="translate(204.35199,32.291279)" />
+</svg>

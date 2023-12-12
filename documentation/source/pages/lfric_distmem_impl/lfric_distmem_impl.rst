@@ -167,6 +167,8 @@ iterating over cells. The order of the computation is determined by
 order the cells appear in the partition object, so it should be defined
 to support our chosen iteration strategy.
 
+.. _overlap comms compute:
+
 Overlapping Communications with Compute
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -249,6 +251,8 @@ parallel:
 
 -  A globally consistent index for each dof needs to be provided, so
    that halo dofs can be correctly associated with their owned dof.
+
+.. _dofmap generation:
 
 Generating the dofmap to support halo exchanges
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
