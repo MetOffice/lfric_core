@@ -130,6 +130,7 @@ subroutine create_model_data( modeldb,      &
 
     type(field_mapper_type), target :: field_mapper
 
+    type(field_collection_type), pointer :: depository => null()
     type(field_collection_type), pointer :: moisture_fields => null()
     type(field_array_type)               :: mr_array_local
     type(field_array_type), pointer      :: mr_array => null()
@@ -182,9 +183,11 @@ subroutine create_model_data( modeldb,      &
     call ls_mr_array_local%initialise(nummr, name="ls_mr")
     call moisture_fields%add_field(ls_mr_array_local)
 
+    depository => modeldb%fields%get_field_collection("depository")
+
     ! Create gungho prognostics and auxilliary (diagnostic) fields
     call create_gungho_prognostics( mesh,                             &
-                                    modeldb%model_data%depository,            &
+                                    depository,                               &
                                     modeldb%model_data%prognostic_fields,     &
                                     modeldb%model_data%diagnostic_fields,     &
                                     modeldb%model_data%adv_tracer_all_outer,  &
@@ -196,7 +199,7 @@ subroutine create_model_data( modeldb,      &
 
     if (limited_area) call create_lbc_fields( &
       mesh,                                   &
-      modeldb%model_data%depository,          &
+      depository,                             &
       modeldb%model_data%prognostic_fields,   &
       modeldb%model_data%lbc_fields,          &
       modeldb%model_axes%lbc_times_list       &
@@ -204,7 +207,7 @@ subroutine create_model_data( modeldb,      &
 
     ! Create prognostics used by physics
     if (use_physics) then
-      call field_mapper%init( modeldb%model_data%depository,            &
+      call field_mapper%init( depository,                               &
                               modeldb%model_data%prognostic_fields,     &
                               modeldb%model_data%adv_tracer_all_outer,  &
                               modeldb%model_data%adv_tracer_last_outer, &
@@ -233,13 +236,13 @@ subroutine create_model_data( modeldb,      &
         case ( init_option_fd_start_dump )
           call create_fd_prognostics(mesh, twod_mesh,       &
                                      modeldb%model_data%fd_fields,  &
-                                     modeldb%model_data%depository)
+                                     depository)
       end select
 
       ! Create and populate collection of fields to be read from ancillary files
       select case ( ancil_choice )
         case ( ancil_option_fixed, ancil_option_updating )
-          call create_fd_ancils( modeldb%model_data%depository,   &
+          call create_fd_ancils( depository,                      &
                                  modeldb%model_data%ancil_fields, &
                                  mesh, twod_mesh ,                &
                                  aerosol_mesh,                    &
@@ -273,6 +276,8 @@ subroutine create_model_data( modeldb,      &
     type( field_type ), pointer :: accumulated_fluxes    => null()
     type( field_type ), pointer :: ageofair => null()
 
+    type( field_collection_type ), pointer :: depository => null()
+
     real(r_def), pointer :: temperature_correction_rate
     real(r_def), pointer :: total_dry_mass
     real(r_def), pointer :: total_energy_previous
@@ -286,6 +291,8 @@ subroutine create_model_data( modeldb,      &
 
     regrid_operation => map_scalar_field
 #endif
+
+    depository => modeldb%fields%get_field_collection("depository")
 
     call modeldb%values%get_value( 'temperature_correction_rate', &
                                    temperature_correction_rate )
@@ -467,23 +474,23 @@ subroutine create_model_data( modeldb,      &
             ! Free up any prognostics not required
             if (init_option == init_option_fd_start_dump) then
               call modeldb%model_data%fd_fields%remove_field("can_water_in")
-              call modeldb%model_data%depository%remove_field("can_water_in")
+              call depository%remove_field("can_water_in")
               call modeldb%model_data%fd_fields%remove_field("land_tile_temp")
-              call modeldb%model_data%depository%remove_field("land_tile_temp")
+              call depository%remove_field("land_tile_temp")
               call modeldb%model_data%fd_fields%remove_field("tstar_sea_ice")
-              call modeldb%model_data%depository%remove_field("tstar_sea_ice")
+              call depository%remove_field("tstar_sea_ice")
               call modeldb%model_data%fd_fields%remove_field("tile_snow_mass_in")
-              call modeldb%model_data%depository%remove_field("tile_snow_mass_in")
+              call depository%remove_field("tile_snow_mass_in")
               call modeldb%model_data%fd_fields%remove_field("n_snow_layers_in")
-              call modeldb%model_data%depository%remove_field("n_snow_layers_in")
+              call depository%remove_field("n_snow_layers_in")
               call modeldb%model_data%fd_fields%remove_field("snow_depth_in")
-              call modeldb%model_data%depository%remove_field("snow_depth_in")
+              call depository%remove_field("snow_depth_in")
               call modeldb%model_data%fd_fields%remove_field("tile_snow_rgrain_in")
-              call modeldb%model_data%depository%remove_field("tile_snow_rgrain_in")
+              call depository%remove_field("tile_snow_rgrain_in")
               call modeldb%model_data%fd_fields%remove_field("snow_under_canopy_in")
-              call modeldb%model_data%depository%remove_field("snow_under_canopy_in")
+              call depository%remove_field("snow_under_canopy_in")
               call modeldb%model_data%fd_fields%remove_field("snowpack_density_in")
-              call modeldb%model_data%depository%remove_field("snowpack_density_in")
+              call depository%remove_field("snowpack_density_in")
             end if
 
           end if
@@ -491,11 +498,11 @@ subroutine create_model_data( modeldb,      &
           ! Free up any ancils which are no longer needed
           if (prognostic_init_choice == init_option_fd_start_dump) then
             call modeldb%model_data%ancil_fields%remove_field("land_area_fraction")
-            call modeldb%model_data%depository%remove_field("land_area_fraction")
+            call depository%remove_field("land_area_fraction")
             call modeldb%model_data%ancil_fields%remove_field("land_tile_fraction")
-            call modeldb%model_data%depository%remove_field("land_tile_fraction")
+            call depository%remove_field("land_tile_fraction")
             call modeldb%model_data%ancil_fields%remove_field("stdev_topog_index")
-            call modeldb%model_data%depository%remove_field("stdev_topog_index")
+            call depository%remove_field("stdev_topog_index")
           end if
 #endif
         case default
@@ -586,11 +593,13 @@ subroutine create_model_data( modeldb,      &
 
       type(modeldb_type), intent(inout) :: modeldb
 
+      type(field_collection_type), pointer :: depository => null()
       type(field_collection_type), pointer :: moisture_fields => null()
 
+      depository => modeldb%fields%get_field_collection("depository")
 
       ! Clear all the fields in each field collection
-      call modeldb%model_data%depository%clear()
+      call depository%clear()
       call modeldb%model_data%prognostic_fields%clear()
       call modeldb%model_data%diagnostic_fields%clear()
       call modeldb%model_data%adv_tracer_last_outer%clear()

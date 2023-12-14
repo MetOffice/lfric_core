@@ -20,10 +20,6 @@ module gungho_model_data_mod
 
     private
 
-    !> Stores all the fields used by the model - the remaining collections store
-    !> pointers to the data in the depository.
-    type( field_collection_type ), public :: depository
-
     !> @name Fields needed to time-step the model.
     !> @{
 

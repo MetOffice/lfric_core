@@ -94,7 +94,7 @@ contains
     logical(l_def),   parameter :: interp_flag=.true.
     character(len=*), parameter :: axis_id="ls_axis"
 
-    depository => modeldb%model_data%depository
+    depository => modeldb%fields%get_field_collection("depository")
     prognostics => modeldb%model_data%prognostic_fields
     ls_times_list => modeldb%model_axes%ls_times_list
     ls_fields => modeldb%model_data%ls_fields

@@ -49,7 +49,6 @@ module gungho_model_mod
   use geometric_constants_mod,    only : get_chi_inventory, get_panel_id_inventory
   use gungho_extrusion_mod,       only : create_extrusion
   use gungho_modeldb_mod,         only : modeldb_type
-  use gungho_model_data_mod,      only : model_data_type
   use gungho_setup_io_mod,        only : init_gungho_files
   use gungho_transport_control_alg_mod, &
                                   only : gungho_transport_control_alg_final
@@ -81,7 +80,6 @@ module gungho_model_mod
   use model_clock_mod,            only : model_clock_type
   use moisture_conservation_alg_mod, &
                                   only : moisture_conservation_alg
-  use mpi_mod,                    only : mpi_type
   use namelist_collection_mod,    only : namelist_collection_type
   use mr_indices_mod,             only : nummr
   use rk_alg_timestep_mod,        only : rk_alg_init, &
@@ -276,14 +274,11 @@ contains
   !> @brief Initialises the infrastructure and sets up constants used by the
   !>        model.
   !>
-  !> @param [in,out] model_data   The working data set for the model run
-  !> @param [out]    model_clock  Time within the model
-  !> @param [in]     mpi          Communication object
+  !> @param [in,out] modeldb   The working data set for the model run
+  !> @param [in]     calendar  Calendar object
   !>
-  subroutine initialise_infrastructure( model_data,  &
-                                        model_clock, &
-                                        calendar,    &
-                                        mpi )
+  subroutine initialise_infrastructure( modeldb,  &
+                                        calendar )
 
     use logging_config_mod, only: key_from_run_log_level, &
                                   RUN_LOG_LEVEL_ERROR,    &
@@ -294,15 +289,8 @@ contains
 
     implicit none
 
-    ! @todo I think the communication object aught to work as intent(in) but
-    !       there seems to be an issue with Intel 19 which means (inout) is
-    !       needed.
-    !
-    class(mpi_type), intent(inout) :: mpi
-
-    type(model_data_type),   intent(inout) :: model_data
-    class(model_clock_type), intent(inout) :: model_clock
-    class(calendar_type),    intent(in)    :: calendar
+    type(modeldb_type),   intent(inout) :: modeldb
+    class(calendar_type), intent(in)    :: calendar
 
     character(len=*), parameter :: io_context_name = "gungho_atm"
 
@@ -320,6 +308,10 @@ contains
     class(extrusion_type), allocatable :: extrusion
 
     type(field_type),     pointer :: chi(:) => null()
+
+#ifdef COUPLED
+    type( field_collection_type ), pointer :: depository => null()
+#endif
 
     type(inventory_by_mesh_type), pointer :: chi_inventory => null()
     type(inventory_by_mesh_type), pointer :: panel_id_inventory => null()
@@ -479,11 +471,11 @@ contains
     allocate( extrusion, source=create_extrusion() )
 
     ! Create the mesh
-    call init_mesh( mpi%get_comm_rank(), mpi%get_comm_size(),               &
-                    base_mesh_names,                                        &
-                    shifted_mesh_names      = shifted_mesh_names,           &
-                    double_level_mesh_names = double_level_mesh_names,      &
-                    required_stencil_depth  = get_required_stencil_depth(), &
+    call init_mesh( modeldb%mpi%get_comm_rank(), modeldb%mpi%get_comm_size(), &
+                    base_mesh_names,                                          &
+                    shifted_mesh_names      = shifted_mesh_names,             &
+                    double_level_mesh_names = double_level_mesh_names,        &
+                    required_stencil_depth  = get_required_stencil_depth(),   &
                     input_extrusion         = extrusion )
 
     chi_inventory => get_chi_inventory()
@@ -508,13 +500,14 @@ contains
     if( l_esm_couple ) then
        call log_event("Initialising coupler", LOG_LEVEL_INFO)
        ! Add fields used in coupling
-       call cpl_fields( mesh, twod_mesh, model_data%depository, &
-                        model_data%prognostic_fields )
+       depository => modeldb%fields%get_field_collection("depository")
+       call cpl_fields( mesh, twod_mesh, depository, &
+                        modeldb%model_data%prognostic_fields )
        ! Define coupling interface
-       call model_data%cpl_snd%initialise(name="cpl_snd")
-       call model_data%cpl_rcv%initialise(name="cpl_rcv")
-       call cpl_define( twod_mesh, chi, model_data%depository, &
-                        model_data%cpl_snd, model_data%cpl_rcv )
+       call modeldb%model_data%cpl_snd%initialise(name="cpl_snd")
+       call modeldb%model_data%cpl_rcv%initialise(name="cpl_rcv")
+       call cpl_define( twod_mesh, chi, depository, &
+                        modeldb%model_data%cpl_snd, modeldb%model_data%cpl_rcv )
 
     endif
 #endif
@@ -523,7 +516,7 @@ contains
     ! Initialise aspects of output
     !-------------------------------------------------------------------------
 
-    call basic_initialisations( model_clock )
+    call basic_initialisations( modeldb%clock )
 
     call log_event("Initialising I/O context", LOG_LEVEL_INFO)
 
@@ -541,18 +534,18 @@ contains
         end if
       end do
 
-      call init_io( io_context_name, mpi%get_comm(),   &
-                    chi_inventory, panel_id_inventory, &
-                    model_clock, calendar,             &
-                    populate_filelist=files_init_ptr,  &
-                    alt_mesh_names=extra_io_mesh_names,&
+      call init_io( io_context_name, modeldb%mpi%get_comm(), &
+                    chi_inventory, panel_id_inventory,       &
+                    modeldb%clock, calendar,                 &
+                    populate_filelist=files_init_ptr,        &
+                    alt_mesh_names=extra_io_mesh_names,      &
                     before_close=before_context_close )
 
     else
-      call init_io( io_context_name, mpi%get_comm(),   &
-                    chi_inventory, panel_id_inventory, &
-                    model_clock, calendar,             &
-                    populate_filelist=files_init_ptr,  &
+      call init_io( io_context_name, modeldb%mpi%get_comm(), &
+                    chi_inventory, panel_id_inventory,       &
+                    modeldb%clock, calendar,                 &
+                    populate_filelist=files_init_ptr,        &
                     before_close=before_context_close )
     end if
 
@@ -589,7 +582,7 @@ contains
     call create_runtime_constants( mesh_collection,    &
                                    chi_inventory,      &
                                    panel_id_inventory, &
-                                   model_clock,        &
+                                   modeldb%clock,      &
                                    create_rdef_div_operators )
 #ifdef UM_PHYSICS
     if ( use_physics ) then
@@ -599,9 +592,9 @@ contains
 
       if (radiation == radiation_socrates) then
         ! Initialisation for the Socrates radiation scheme
-        call illuminate_alg( model_data%radiation_fields, &
-                             model_clock%get_step(),      &
-                             model_clock%get_seconds_per_step())
+        call illuminate_alg( modeldb%model_data%radiation_fields, &
+                             modeldb%clock%get_step(),            &
+                             modeldb%clock%get_seconds_per_step())
       end if
       ! Initialisation of UM variables related to the mesh
       call um_domain_init(mesh)

@@ -15,6 +15,7 @@ module gungho_driver_mod
   use derived_config_mod,         only : l_esm_couple
   use driver_io_mod,              only : get_io_context
   use extrusion_mod,              only : TWOD
+  use field_collection_mod,       only : field_collection_type
   use gungho_diagnostics_driver_mod, &
                                   only : gungho_diagnostics_driver
   use gungho_init_fields_mod,     only : create_model_data, &
@@ -90,10 +91,8 @@ contains
     type(mesh_type),        pointer :: aerosol_twod_mesh => null()
 
     ! Initialise infrastructure and setup constants
-    call initialise_infrastructure( modeldb%model_data, &
-                                    modeldb%clock,      &
-                                    calendar,           &
-                                    modeldb%mpi )
+    call initialise_infrastructure( modeldb, &
+                                    calendar )
 
     ! Get primary and 2D meshes for initialising model data
     mesh => mesh_collection%get_mesh(prime_mesh_name)
@@ -162,6 +161,11 @@ contains
 
     type(mesh_type), pointer :: mesh      => null()
     type(mesh_type), pointer :: twod_mesh => null()
+
+#ifdef COUPLED
+    type( field_collection_type ), pointer :: depository => null()
+#endif
+
 #ifdef UM_PHYSICS
     procedure(regridder), pointer :: regrid_operation => null()
 
@@ -178,16 +182,18 @@ contains
              '(A, I0)') 'Coupling timestep: ', modeldb%clock%get_step() - 1
        call log_event( log_scratch_space, LOG_LEVEL_INFO )
 
-       call save_sea_ice_frac_previous(modeldb%model_data%depository)
+       depository => modeldb%fields%get_field_collection("depository")
+
+       call save_sea_ice_frac_previous(depository)
 
        ! Receive all incoming (ocean/seaice fields) from the coupler
        call cpl_rcv( modeldb%model_data%cpl_rcv,    &
-                     modeldb%model_data%depository, &
+                     depository, &
                      modeldb%clock )
 
        ! Send all outgoing (ocean/seaice driving fields) to the coupler
        call cpl_snd( modeldb%model_data%cpl_snd,    &
-                     modeldb%model_data%depository, &
+                     depository, &
                      modeldb%clock )
 
     endif
@@ -252,12 +258,15 @@ contains
     type(modeldb_type), intent(inout) :: modeldb
 
 #ifdef COUPLED
+    type( field_collection_type ), pointer :: depository => null()
+
     if (l_esm_couple) then
+       depository => modeldb%fields%get_field_collection("depository")
        ! Ensure coupling fields are updated at the end of a cycle to ensure the values
        ! stored in and recovered from checkpoint dumps are correct and reproducible
        ! when (re)starting subsequent runs!
        call cpl_fld_update(modeldb%model_data%cpl_snd,    &
-                           modeldb%model_data%depository, &
+                           depository,                    &
                            modeldb%clock)
     endif
 #endif

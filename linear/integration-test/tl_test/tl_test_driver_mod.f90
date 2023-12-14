@@ -90,10 +90,8 @@ contains
 
     ! Initialise infrastructure and setup constants
     !
-    call initialise_infrastructure( modeldb%model_data, &
-                                    modeldb%clock,      &
-                                    calendar,           &
-                                    modeldb%mpi )
+    call initialise_infrastructure( modeldb, &
+                                    calendar )
 
     ! Get primary and 2D meshes for initialising model data
     mesh => mesh_collection%get_mesh(prime_mesh_name)

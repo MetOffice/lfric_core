@@ -84,6 +84,9 @@ contains
     type( mesh_type ),      pointer :: aerosol_mesh      => null()
     type( mesh_type ),      pointer :: aerosol_twod_mesh => null()
 
+    type( field_collection_type ), pointer :: depository => null()
+
+    depository => modeldb%fields%get_field_collection("depository")
 
     call modeldb%values%add_key_value( 'temperature_correction_rate', &
                                        0.0_r_def )
@@ -91,10 +94,8 @@ contains
     call modeldb%values%add_key_value( 'total_energy_previous', 0.0_r_def )
 
     ! Initialise infrastructure and setup constants
-    call initialise_infrastructure( modeldb%model_data, &
-                                    modeldb%clock,      &
-                                    calendar,           &
-                                    modeldb%mpi )
+    call initialise_infrastructure( modeldb, &
+                                    calendar )
 
     ! Get primary and 2D meshes for initialising model data
     mesh => mesh_collection%get_mesh(prime_mesh_name)
@@ -124,7 +125,7 @@ contains
     if ( init_option == init_option_fd_start_dump ) then
       call create_tl_prognostics( mesh, twod_mesh,              &
                                   modeldb%model_data%fd_fields, &
-                                  modeldb%model_data%depository)
+                                  depository)
     end if
 
     ! Instantiate the linearisation state
