@@ -1,7 +1,7 @@
 <!-- Main axis definitions -->
-<axis_definition>
-  <axis id="vert_axis_half_levels" name="half_levels"/>
-  <axis id="vert_axis_full_levels" name="full_levels"/>
+<axis_definition comment="to be sized by the model">
+  <axis id="vert_axis_half_levels" name="half_levels" comment="for dofs in center of 3D cells"/>
+  <axis id="vert_axis_full_levels" name="full_levels" comment="for dofs at top and bottom of 3D cells"/>
   <axis id="land_tiles" name="land_tiles" />
   <axis id="surface_tiles" name="surface_tiles" />
   <axis id="snow_layers_and_tiles" name="snow_layers_and_tiles" />

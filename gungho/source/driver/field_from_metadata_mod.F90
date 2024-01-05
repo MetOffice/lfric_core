@@ -32,14 +32,38 @@ module field_from_metadata_mod
 
 contains
 
+  !> @brief Derive field status for prognostic and diagnostic fields
+  !> @param[in, optional] empty            Create empty field?
+  !> @param[in, optional] diag_status      Diagnostic enabling status
+  !> @return                               Field status
+  function combined_status(empty, diag_status) result(status)
+    implicit none
+
+    logical(l_def),         intent(in) :: empty
+    character(*), optional, intent(in) :: diag_status
+
+    character(:), allocatable :: status
+
+    if (present(diag_status)) then
+      status = trim(diag_status)
+    else
+      if (empty) then
+        status = 'Empty'
+      else
+        status = 'Progno'
+      end if
+    end if
+  end function combined_status
+
   !> @brief Initialise a field from XIOS metadata.
   !> @param[out]          field            Field to initialise
   !> @param[in]           xios_id          XIOS id of field
   !> @param[in, optional] empty            Create empty field?
   !> @param[in, optional] force_mesh       Override derived mesh
   !> @param[in, optional] force_rad_levels Override derived radiation levels
+  !> @param[in, optional] diag_status      Diagnostic enabling status
   subroutine init_real_field_from_metadata(field, xios_id,                    &
-    empty, force_mesh, force_rad_levels)
+    empty, force_mesh, force_rad_levels, diag_status)
 
     implicit none
 
@@ -48,16 +72,21 @@ contains
     logical(l_def), optional,           intent(in)  :: empty
     type(mesh_type), pointer, optional, intent(in)  :: force_mesh
     integer(kind=i_def), optional,      intent(in)  :: force_rad_levels
+    character(*), optional,             intent(in)  :: diag_status
 
     character(str_def), parameter :: routine_name = 'init_real_field_from_metadata'
 
     logical(l_def)                      :: make_empty
+    character(:), allocatable           :: status
     type(function_space_type),  pointer :: vector_space => null()
 
     make_empty = .false.
     if (present(empty)) make_empty = empty
 
-    vector_space => space_from_metadata(xios_id, force_mesh, force_rad_levels)
+    status = trim(combined_status(make_empty, diag_status))
+
+    vector_space =>                                                           &
+      space_from_metadata(xios_id, status, force_mesh, force_rad_levels)
 
     if (make_empty) then
       call field%initialise(                                                  &
@@ -87,8 +116,9 @@ contains
   !> @param[in, optional] empty            Create empty field?
   !> @param[in, optional] force_mesh       Override derived mesh
   !> @param[in, optional] force_rad_levels Override derived radiation levels
+  !> @param[in, optional] diag_status      Diagnostic enabling status
   subroutine init_integer_field_from_metadata(field, xios_id,                 &
-    empty, force_mesh, force_rad_levels)
+    empty, force_mesh, force_rad_levels, diag_status)
 
     implicit none
 
@@ -97,16 +127,21 @@ contains
     logical(l_def), optional,           intent(in)  :: empty
     type(mesh_type), pointer, optional, intent(in)  :: force_mesh
     integer(kind=i_def), optional,      intent(in)  :: force_rad_levels
+    character(*), optional,             intent(in)  :: diag_status
 
     character(str_def), parameter :: routine_name = 'init_field_from_metadata'
 
     logical(l_def)                      :: make_empty
+    character(str_def)                  :: status
     type(function_space_type),  pointer :: vector_space => null()
 
     make_empty = .false.
     if (present(empty)) make_empty = empty
 
-    vector_space => space_from_metadata(xios_id, force_mesh, force_rad_levels)
+    status = combined_status(make_empty, diag_status)
+
+    vector_space                                                              &
+      => space_from_metadata(xios_id, status, force_mesh, force_rad_levels)
 
     if (make_empty) then
       call field%initialise(                                                  &

@@ -6,16 +6,22 @@
   <!-- In this version we have ONE context  -->
   <context id = "gungho_atm">
 
-    <!-- Include axis definitions -->
-    <axis_definition src="./axis_def_main.xml"/>
+    <!-- Include variable definitions -->
+    <variable_definition src="$METADATA/variable_def_main.xml"/>
 
+    <!-- Include axis definitions -->
+    <axis_definition src="$METADATA/axis_def_main.xml"/>
+
+    <!-- Include domain definitions -->
+    <domain_definition src="$METADATA/domain_def_main.xml"/>
+    
     <!-- Include grid definitions -->
-    <grid_definition src="./grid_def_main.xml"/>
+    <grid_definition src="$METADATA/grid_def_main.xml"/>
 
     <!-- Include field definitions -->
-    <field_definition src="$SOURCE_ROOT/lfric_atm/metadata/lfric_dictionary.xml"/>
-    <field_definition src="./field_def_diags.xml"/>
-    <field_definition src="./field_def_initial_diags.xml"/>
+    <field_definition src="$METADATA/lfric_dictionary.xml"/>
+    <field_definition src="$METADATA/field_def_diags.xml"/>
+    <field_definition src="$METADATA/field_def_initial_diags.xml"/>
 
     <!-- Include file definitions -->
     <file_definition src="./file_def_check_restart.xml"/>

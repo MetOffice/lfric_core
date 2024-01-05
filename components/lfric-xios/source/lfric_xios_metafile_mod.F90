@@ -10,7 +10,8 @@ module lfric_xios_metafile_mod
   use constants_mod,                 only: str_def, i_def, l_def
   use log_mod,                       only: log_event,                         &
                                            log_level_error,                   &
-                                           log_level_info
+                                           log_level_info,                    &
+                                           log_level_warning
   use xios,                          only: xios_file,                         &
                                            xios_field,                        &
                                            xios_get_handle,                   &
@@ -112,12 +113,14 @@ contains
   !> @param[in] dict_field_id  XIOS id of dictionary field to be copied
   !> @param[in] prefix         ID prefix to be used, .e.g, "checkpoint_"
   !> @param[in] operation      XIOS field operation, e.g., "once"
-  subroutine add_field(metafile, dict_field_id, prefix, operation)
+  !> @param[in] id_as_name     Use dictionary field ID as field name?
+  subroutine add_field(metafile, dict_field_id, prefix, operation, id_as_name)
     implicit none
     type(metafile_type), intent(in) :: metafile
     character(*), intent(in) :: dict_field_id
     character(*), intent(in) :: prefix
     character(*), intent(in) :: operation
+    logical(l_def), optional, intent(in) :: id_as_name
 
     character(20), parameter :: lfric_dict = 'lfric_dictionary'
     integer(i_def), parameter :: dflt_prec = 8
@@ -130,6 +133,7 @@ contains
     character(str_def) :: domain_ref
     character(str_def) :: axis_ref
     integer(i_def)     :: prec
+    logical(l_def)     :: use_id_as_name
 
     call metafile%get_handle(file)
 
@@ -141,12 +145,21 @@ contains
     else
       ! new style - add field to checkpoint file
       call xios_add_child(file, field, field_id)
-
-      if (.not. field_is_valid(field_id))                                     &
+      if (.not. field_is_valid(field_id)) &
         call log_event('internal error: added field invalid', log_level_error)
 
       ! copy name and precision from dictionary field
-      field_name = dict_field_id ! correct for checkpointing
+
+      use_id_as_name = .false.
+      if (present(id_as_name)) use_id_as_name = id_as_name
+      if (use_id_as_name) then
+        field_name = dict_field_id ! correct for checkpointing
+      else
+        call xios_get_field_attr(dict_field_id, name=field_name)
+        if (field_name /= dict_field_id) &
+          call log_event('AHS - mismatch: ' // trim(field_name) // ' vs ' // trim(dict_field_id), log_level_warning)
+      end if
+
       prec = get_field_precision(dict_field_id, dflt_prec, lfric_dict)
 
       call xios_set_attr(field, name=field_name, prec=prec, operation=operation)

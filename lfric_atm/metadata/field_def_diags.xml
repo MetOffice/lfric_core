@@ -1,6 +1,6 @@
 <field_definition>
 <!-- Main diagnostic group -->
-<field_group id="diagnostic_fields" prec="8" freq_op="1ts" operation="instant" enabled=".TRUE." >
+<field_group id="diagnostic_fields" prec="8" operation="instant" enabled=".TRUE." >
   <field id="theta" name="theta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" />
   <field id="theta_in_w3" name="theta_in_w3" long_name="air_potential_temperature_at_cell_centres" unit="K" grid_ref="half_level_face_grid" />
   <field id="m_v" name="m_v" long_name="vapour_mixing_ratio" unit="kg kg-1" grid_ref="full_level_face_grid" />
@@ -769,7 +769,7 @@
 </field_group>
 
 <!-- Integer diagnostic group -->
-<field_group id="diag_int_fields" prec="2" freq_op="1ts" operation="instant" enabled=".TRUE." >
+<field_group id="diag_int_fields" prec="2" operation="instant" enabled=".TRUE." >
   <field id="turbulence__cumulus" name="cumulus" long_name="cumulus_convection_indicator" unit="1" domain_ref="face" />
   <field id="turbulence__bl_type_ind" name="bl_type_ind" long_name="boundary_layer_type_indicator" unit="1" domain_ref="face" axis_ref="boundary_layer_types"/>
   <field id="turbulence__ntml" name="ntml" long_name="number_of_turbulent_mixing_levels" unit="1" domain_ref="face" />

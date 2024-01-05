@@ -2,7 +2,7 @@
 
   <!-- Initial fields to actually output by default -->
   <file id="lfric_initial" name="lfric_initial" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
-    <field_group operation="once" freq_op="1ts">
+    <field_group operation="once" >
       <field field_ref="init_theta" />
       <field field_ref="init_m_v" />
       <field field_ref="init_m_cl" />

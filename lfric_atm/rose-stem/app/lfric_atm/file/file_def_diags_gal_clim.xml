@@ -53,8 +53,10 @@
       <field field_ref="radiation__sw_down_surf" />
       <field field_ref="radiation__lw_up_toa" />
       <field field_ref="radiation__lw_down_surf" />
-      <field field_ref="radiation__sw_aer_optical_depth_rts" freq_offset="-1ts"/>
-      <field field_ref="radiation__lw_aer_optical_depth_rts" freq_offset="-1ts"/>
+      <field_group id="diag_rts_fields" freq_op="1ts" freq_offset="-1ts" comment="fields only valid on radiation timesteps">
+        <field field_ref="radiation__sw_aer_optical_depth_rts" />
+        <field field_ref="radiation__lw_aer_optical_depth_rts" />
+      </field_group>
       <field field_ref="processed__tot_col_wetplusdry_mass" />
       <field field_ref="processed__tot_col_int_energy" />
       <field field_ref="processed__tot_col_pot_energy" />

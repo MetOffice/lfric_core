@@ -31,6 +31,7 @@ module gungho_model_mod
   use field_parent_mod,           only : write_interface
   use field_collection_mod,       only : field_collection_type
   use field_spec_mod,             only : field_spec_type, processor_type
+  use lfric_xios_diag_mod,        only : set_variable
   use create_gungho_prognostics_mod, &
                                   only : enable_gungho_prognostics
   use boundaries_config_mod,      only : limited_area
@@ -126,7 +127,6 @@ module gungho_model_mod
   use stochastic_physics_config_mod, only : use_spt, use_skeb
 #endif
 
-
   implicit none
 
   private
@@ -188,9 +188,11 @@ contains
 
     if (spec%ckp) then
       if (checkpoint_write) &
-        call add_field(self%ckp_out, spec%name, ckp_out_prefix, operation)
+        call add_field(self%ckp_out, spec%name, ckp_out_prefix, operation, &
+          id_as_name=.true.)
       if (checkpoint_read .or. init_option == init_option_checkpoint_dump) &
-        call add_field(self%ckp_inp, spec%name, ckp_inp_prefix, operation)
+        call add_field(self%ckp_inp, spec%name, ckp_inp_prefix, operation, &
+          id_as_name=.true.)
     end if
 
   end subroutine persistor_apply
@@ -202,7 +204,8 @@ contains
     ! empty
   end subroutine persistor_destructor
 
-  !> @brief Enable active state fields for checkpointing; sync xios axis dimensions
+  !> @brief Enable active state fields for checkpointing; sync xios axis dimensions;
+  !>        set up scaled diagnostics fields
   !> @param[in] clock        The clock providing access to time information
   subroutine before_context_close(clock)
     use multidata_field_dimensions_mod, only: sync_multidata_field_dimensions
@@ -212,6 +215,10 @@ contains
     class(clock_type), intent(in) :: clock
 
     type(persistor_type) :: persistor
+
+    real(r_second) :: DT
+    DT = clock%get_seconds_per_step()
+    call set_variable("DT", DT, tolerant=.true.)
 
     call enable_gungho_prognostics()
     if (limited_area) call enable_lbc_fields()

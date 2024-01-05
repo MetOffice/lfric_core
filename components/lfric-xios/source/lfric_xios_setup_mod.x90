@@ -35,7 +35,7 @@ module lfric_xios_setup_mod
   use lfric_xios_utils_mod,          only: set_prime_io_mesh, parse_date_as_xios
   use linked_list_mod,               only: linked_list_type, linked_list_item_type
   use log_mod,                       only: log_event, log_level_error, &
-                                           log_level_warning
+                                           log_level_warning, log_level_info
   use mesh_mod,                      only: mesh_type
   use mesh_collection_mod,           only: mesh_collection
   use model_clock_mod,               only: model_clock_type
@@ -1000,10 +1000,10 @@ contains
     call xios_get_handle("domain_definition", domain_definition)
     if (xios_is_valid_domain(trim(domain_id))) then
       call log_event( "XIOS domain ['"//trim(domain_id)//"'] is already " // &
-                      "registered. The same domain cannot be registered " // &
-                      "more than once", log_level_error )
+                      "registered.", log_level_info)
+    else
+      call xios_add_child(domain_definition, new_domain, trim(domain_id))
     end if
-    call xios_add_child(domain_definition, new_domain, trim(domain_id))
 
     ! Pass domain attibutes to XIOS
     call xios_set_domain_attr( trim(domain_id), ni_glo=global_undf, &

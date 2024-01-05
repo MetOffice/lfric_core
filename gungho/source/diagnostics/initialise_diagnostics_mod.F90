@@ -8,7 +8,7 @@
 
 module initialise_diagnostics_mod
 
-  use constants_mod,                   only: i_def, l_def
+  use constants_mod,                   only: i_def, l_def, str_def
   use field_mod,                       only: field_type
   use mesh_mod,                        only: mesh_type
   use lfric_xios_diag_mod,             only: field_is_active
@@ -20,6 +20,14 @@ module initialise_diagnostics_mod
   implicit none
 
   private
+
+  ! field status indicators
+  character(str_def), parameter :: activated                                  &
+    = 'Activated'     ! needed as a dependency
+  character(str_def), parameter :: enabled                                    &
+    = 'Enabled'       ! dynamically enabled, will be sampled
+  character(str_def), parameter :: disabled                                   &
+    = 'Disabled'      ! dynamically disabledm will not be sampled
 
   public :: init_diagnostic_field, diagnostic_to_be_sampled
 
@@ -69,6 +77,7 @@ contains
     logical(kind=l_def) :: is_activated
     logical(kind=l_def) :: sampling_on
     logical(kind=l_def) :: active
+    character(str_def)  :: status
 
     procedure(write_interface), pointer :: write_behaviour => null()
 
@@ -84,12 +93,18 @@ contains
     end if
     if (is_activated) then
       active = .true.
+      status = activated
     else
       active = sampling_on
+      if (active) then
+        status = enabled
+      else
+        status = disabled
+      end if
     end if
 
     call init_field_from_metadata( &
-      field, unique_id, .not. active, force_mesh, force_rad_levels)
+      field, unique_id, .not. active, force_mesh, force_rad_levels, status)
 
     if (active) then
       write_behaviour => write_field_generic

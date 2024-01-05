@@ -8,7 +8,8 @@
 
 module lfric_xios_diag_mod
 
-  use constants_mod,                  only: l_def, i_def, str_def
+  use, intrinsic :: iso_fortran_env,  only: real64
+  use constants_mod,                  only: l_def, i_def, str_def, r_def
 #ifdef UNIT_TEST
   use lfric_xios_mock_mod,            only:                                   &
                                         xios_is_valid_file,                   &
@@ -40,7 +41,8 @@ module lfric_xios_diag_mod
                                         xios_zoom_axis,                       &
                                         xios_is_valid_zoom_axis,              &
                                         xios_get_handle,                      &
-                                        xios_set_attr
+                                        xios_set_attr,                        &
+                                        xios_setvar
 #endif
 
   use log_mod,                         only:                                  &
@@ -67,7 +69,8 @@ module lfric_xios_diag_mod
     get_field_axis_ref,                                                        &
     get_axis_dimension,                                                        &
     set_axis_dimension,                                                        &
-    set_zoom_axis_attr
+    set_zoom_axis_attr,                                                        &
+    set_variable
 
 contains
 
@@ -180,7 +183,7 @@ contains
   function field_is_active(unique_id, at_current_timestep) result(active)
     implicit none
     character(*), intent(in) :: unique_id
-    logical(l_def) :: at_current_timestep
+    logical(l_def), intent(in) :: at_current_timestep
     logical(l_def) :: active
     if (.not. xios_is_valid_field(unique_id)) then
       write(log_scratch_space, '(A, A)')                                      &
@@ -324,5 +327,35 @@ contains
     end if
 #endif
   end subroutine set_zoom_axis_attr
+
+  !> @brief Set the value of a real XIOS variable
+  !> @param[in]    unique_id    XIOS id of the variable
+  !> @param[in]    value        Value to be set
+  !> @param[in]    tolerant     Tolerate missing variable?
+  subroutine set_variable(unique_id, value, tolerant)
+    implicit none
+    character(*), intent(in) :: unique_id
+    real(real64), intent(in) :: value
+    logical(l_def), optional, intent(in) :: tolerant
+#ifndef UNIT_TEST
+    ! The XIOS call was ifdef'ed out to avoid having to write a mocking
+    ! version of the XIOS routine called. Such a mocking version would
+    ! currently add little value. Note that the error handling could not
+    ! be tested, because it is not possible to regain control after logging
+    ! an error, cf. ticket #3887.
+    logical(l_def) :: strict
+    integer(i_def) :: level
+    strict = .true.
+    if (present(tolerant)) strict = .not. tolerant
+    if (.not. xios_setvar(unique_id, value)) then
+      if (strict) then
+        level = log_level_error
+      else
+        level = log_level_warning
+      end if
+      call log_event('Failed to set variable ' // unique_id, level)
+    end if
+#endif
+  end subroutine set_variable
 
 end module lfric_xios_diag_mod

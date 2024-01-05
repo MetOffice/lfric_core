@@ -193,16 +193,18 @@ contains
   end function get_field_tile_id
 
   !> @brief Space discovery from metadata for field given by XIOS id
-  !> @param[in]           xios_id        XIOS id of field
+  !> @param[in]           xios_id          XIOS id of field
+  !> @param[in]           status           Field status (logging only)
   !> @param[in, optional] force_mesh       Override derived mesh
   !> @param[in, optional] force_rad_levels Override derived radiation levels
-  !> @return              function space returned
+  !> @return                               Function space returned
   function space_from_metadata(                                               &
-        xios_id, force_mesh, force_rad_levels) result(vector_space)
+        xios_id, status, force_mesh, force_rad_levels) result(vector_space)
 
     implicit none
 
     character(*),                       intent(in)  :: xios_id
+    character(*),                       intent(in)  :: status
     type(mesh_type), pointer, optional, intent(in)  :: force_mesh
     integer(kind=i_def), optional,      intent(in)  :: force_rad_levels
 
@@ -293,13 +295,12 @@ contains
       fsenum,                                                                 &
       ndata)
 #ifndef UNIT_TEST
-    write(log_scratch_space,'(A, A, A, A, A, I2, A, A, A, A, A, I5)')         &
-      'field: ', trim(xios_id),                                               &
-      ', mesh: ', trim(this_mesh%get_mesh_name()),                            &
-      ', order: ', order,                                                     &
-      ', fs: ', trim(name_from_functionspace(fsenum)),                        &
-      ', flavour: ', trim(flavour),                                           &
-      ', ndata: ', ndata
+    write(log_scratch_space,                                                  &
+       '("field: ", A, ", ", A, '                                             &
+       // '", mesh: ", A, ", order: ", I2, '                                  &
+       // '", fs: ", A, ", flavour: ", A, ", ndata: ", I5)')                  &
+      trim(xios_id), trim(status), trim(this_mesh%get_mesh_name()), order,    &
+      trim(name_from_functionspace(fsenum)), trim(flavour), ndata
     call log_event(log_scratch_space, log_level_debug)
 #endif
     ! paranoia

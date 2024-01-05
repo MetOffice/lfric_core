@@ -114,6 +114,7 @@
         [[[environment]]]
             SOURCE_ROOT = $CYLC_SUITE_SHARE_DIR/source
             OUTPUT_ROOT = $CYLC_SUITE_SHARE_DIR/output
+            METADATA    = $SOURCE_ROOT/lfric_atm/metadata
             PYTHONPATH  = $CYLC_SUITE_RUN_DIR/lib/python
             PATH        = $PATH:$PYTHONPATH/bin
 
