@@ -65,8 +65,7 @@ real(kind=r_def)            :: exner_surf
 
 exner_surf = (surface_pressure / p_zero) ** kappa
 
-if ( geometry == geometry_spherical .and. &
-     topology == topology_fully_periodic ) then  ! SPHERICAL DOMAIN
+if ( geometry == geometry_spherical ) then  ! SPHERICAL DOMAIN
   call xyz2llr(x(1),x(2),x(3),lon,lat,r)
   z = r - scaled_radius
 
