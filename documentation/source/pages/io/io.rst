@@ -4,24 +4,13 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-LFRic Core documentation!
-===========================
+IO
+==
+
+This section describes the various methods of performing IO provided by LFRic Core.
 
 .. toctree::
    :caption: Contents:
-   :maxdepth: 2
+   :maxdepth: 1
 
-   pages/main
-   pages/applications/applications
-
-   pages/tools/index
-   pages/io/io
-
-   pages/lfric_datamodel/lfric_datamodel.rst
-   pages/lfric_distmem_impl/lfric_distmem_impl.rst
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
+   io_standards

@@ -6,7 +6,6 @@ project = 'LFRic Core'
 author = 'Core Capability Development Team'
 release = '0.1.0'
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -19,7 +18,6 @@ extensions = [
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -51,3 +49,11 @@ html_static_path = ['_static']
 # Custom CSS override file.
 html_style = 'css/custom.css'
 
+# Provides the Edit on GitHub link in the generated docs.
+html_context = {
+    "display_github": True,
+    "github_user": "MetOffice",
+    "github_repo": "lfric_core",
+    "github_version": "main",
+    "conf_py_path": "/documentation/source/"
+}
