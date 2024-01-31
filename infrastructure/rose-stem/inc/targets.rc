@@ -83,7 +83,7 @@
             },
             'plot' : ['module load scitools/production-os45-1'],
             'reveal' : ['module list 2>&1', 'export'],
-            'tech' : ['module load environment/lfric/common/12'],
+            'tech' : ['module load environment/lfric/common/14'],
             'run'  : ['ulimit -s unlimited'],
         },
         'teardown' : {
