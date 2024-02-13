@@ -4,6 +4,8 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
+.. _section introduction to lfric infrastructure:
+
 Introduction to the LFRic Infrastructure
 ========================================
 
