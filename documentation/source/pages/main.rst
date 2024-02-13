@@ -55,11 +55,12 @@ depend upon.
 
 While the `introduction <section introduction to lfric
 infrastructure>` provides all that is needed for the simplest LFRic
-application, more realistic applications commonly need more complex
-data structures to manage large numbers of fields, and control flow
-and IO to manage the running and output of a numerical model. An
-overview of `LFRic application <section lfric application design>`
-introduces key aspects of LFRic core that support this requirement.
+application, more realistic model applications commonly need more
+complex data structures to manage large numbers of fields, and control
+flow and IO to manage the running and output of a numerical model. An
+overview of aspects of an `LFRic model structure <section model
+application structure>` introduces key aspects of LFRic core that
+support these requirements.
 
 Separate documentation exists for each application and component
 developed within the LFRic core repository, describing the role of the
@@ -108,8 +109,12 @@ infrastructure, including, potentially, `LFRic components <section
 components overview>`. The application will follow the ``PSyKAl``
 architecture, described in the next section, to give the required
 separation of concerns between the algorithmic descriptions of
-high-level scientific processes and the lower-level processing that
-models these processes.
+high-level scientific processes and the lower-level computation that
+implements these processes.
+
+Applications can call model components, for example, to run an
+atmosphere model. Applications can also be utilities; for example, to
+regrid data passed from one model configuration to another.
 
 The LFRic core repository includes just a few applications that are
 used for training, testing or development of new features. The
@@ -146,10 +151,11 @@ as the Momentum atmosphere model, other data structures exist:
 Components
 ----------
 
-Components are self-contained packages of code delivering
-infrastructure support or a library of functionality. Components may
-be dependent on LFRic infrastructure, but LFRic infrastructure should
-never depend on a component.
+The components directory contains packages of code delivering
+self-contained infrastructure support or libraries of
+functionality. Components may be dependent on LFRic infrastructure,
+but LFRic infrastructure should never depend on a
+component. Components may call out to other independent libraries.
 
 Some examples of components held in LFRic core can illustrate their
 role:
@@ -159,15 +165,18 @@ role:
   the dependency between LFRic applications and the IO infrastructure,
   assuming that in the future, support for other IO packages may be
   required.
-- The ``inventory`` component supports applications that need to
-  create key-value pair datasets based on a bespoke key.
+- The ``inventory`` component is a self-contained component which
+  supports applications that need to create key-value pair datasets
+  based on a bespoke key.
 - The ``driver`` component provides data structures and code that can
   be used to construct applications in a common way, for example to
   impose the `init`, `step`, `finalise` paradigm that is common for
   numerical modelling systems. The benefits of using a particular part
   of the driver component can be reduced develpment and maintenance
-  cost. However, use of bespoke driver code for non-standard
-  application requirements is not forbidden.
+  cost. However, it is possible to pick and choose useful parts of the
+  driver component; bespoke driver code can be used for application
+  requirements that are not supported.
 
 An application repository may choose to create components for holding
-commonly-used science algorithms.
+commonly-used science algorithms or interface code for calling out to
+external science libraries.
