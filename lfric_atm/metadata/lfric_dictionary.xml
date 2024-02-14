@@ -230,6 +230,9 @@
   <field id="screen_temperature" name="screen_temperature" long_name="screen_temperature_on_tiles" unit="K" domain_ref="face" axis_ref="surface_tiles" />
   <field id="time_since_transition" name="time_since_transition" long_name="time_since_decoupled_screen_transition" unit="s" domain_ref="face" />
   <field id="canopy_water" name="canopy_water" long_name="canopy_water_content_on_tiles" unit="kg m-2" domain_ref="face" axis_ref="surface_tiles" />
+  <field id="urbwrr" name="urbwrr" long_name="Urban width repeating ratio" unit="1" domain_ref="face" />
+  <field id="urbhwr" name="urbhwr" long_name="Urban height-to-width ratio" unit="1" domain_ref="face" />
+  <field id="urbhgt" name="urbhgt" long_name="Urban building height" unit="m" domain_ref="face" />
   <field id="albedo_obs_scaling" name="albedo_obs_scaling" long_name="albedo_obs_scaling" unit="1" domain_ref="face" axis_ref="land_tile_rad_band" />
   <field id="sea_ice_thickness" name="sea_ice_thickness" long_name="sea_ice_thickness" unit="m" domain_ref="face" axis_ref="sea_ice_categories" />
   <field id="sea_ice_temperature" name="sea_ice_temperature" long_name="sea_ice_bulk_temperature" unit="K" domain_ref="face" axis_ref="sea_ice_categories" />

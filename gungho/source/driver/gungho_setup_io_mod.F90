@@ -78,6 +78,7 @@ module gungho_setup_io_mod
                                        soil_rough_ancil_path,     &
                                        sst_ancil_path,            &
                                        surface_frac_ancil_path,   &
+                                       urban_ancil_path,          &
                                        start_dump_filename,       &
                                        start_dump_directory,      &
                                        iau_path,                  &
@@ -119,7 +120,7 @@ module gungho_setup_io_mod
                                        timestep_end
   use derived_config_mod,        only: l_esm_couple
 #ifdef UM_PHYSICS
-  use jules_surface_config_mod,  only: l_vary_z0m_soil
+  use jules_surface_config_mod,  only: l_vary_z0m_soil, l_urban2t
   use surface_config_mod,        only: sea_alb_var_chl, albedo_obs
   use aerosol_config_mod,        only: glomap_mode,               &
                                        glomap_mode_climatology,   &
@@ -261,6 +262,15 @@ module gungho_setup_io_mod
         call files_list%insert_item( lfric_xios_file_type( ancil_fname,        &
                                                          xios_id="surface_frac_ancil", &
                                                          io_mode=FILE_MODE_READ ) )
+
+        if (l_urban2t) then
+          ! Set urban ancil filename from namelist
+          write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                                   trim(urban_ancil_path)
+          call files_list%insert_item( lfric_xios_file_type( ancil_fname,        &
+                                                           xios_id="urban_ancil", &
+                                                           io_mode=FILE_MODE_READ ) )
+        end if
 
         ! Set soil ancil filename from namelist
         write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &

@@ -64,7 +64,8 @@ module create_physics_prognostics_mod
                                              scheme_pc2
   use microphysics_config_mod,        only : microphysics_casim
 
-  use jules_surface_config_mod,       only : srf_ex_cnv_gust, l_vary_z0m_soil
+  use jules_surface_config_mod,       only : srf_ex_cnv_gust, l_vary_z0m_soil,  &
+                                             l_urban2t
   use surface_config_mod,             only : albedo_obs, sea_alb_var_chl
   use spectral_gwd_config_mod,        only : add_cgw
   use microphysics_config_mod,        only : turb_gen_mixph
@@ -781,15 +782,20 @@ contains
     call processor%apply(make_spec('z0m', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('ustar', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('wspd10m', main%surface, W3, twod=.true.))
-    call processor%apply(make_spec('urbwrr', main%surface, W3, twod=.true.))
-    call processor%apply(make_spec('urbhwr', main%surface, W3, twod=.true.))
-    call processor%apply(make_spec('urbhgt', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('urbdisp', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('urbztm', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('urbalbwl', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('urbalbrd', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('urbemisw', main%surface, W3, twod=.true.))
     call processor%apply(make_spec('urbemisr', main%surface, W3, twod=.true.))
+
+    ! 2D fields, need checkpointing for urban-2-tile schemes
+    call processor%apply(make_spec('urbwrr', main%surface, twod=.true., &
+                                   ckp=l_urban2t))
+    call processor%apply(make_spec('urbhwr', main%surface, twod=.true., &
+                                   ckp=l_urban2t))
+    call processor%apply(make_spec('urbhgt', main%surface, twod=.true., &
+                                   ckp=l_urban2t))
 
     ! Space for variables required for regridding to cell faces
     ! vector_space => function_space_collection%get_fs(twod_mesh, 0, W2,

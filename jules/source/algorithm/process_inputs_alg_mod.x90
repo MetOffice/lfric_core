@@ -83,8 +83,6 @@ contains
     type( field_type ), pointer :: urbhgt            => null()
     type( field_type ), pointer :: urbztm            => null()
     type( field_type ), pointer :: urbdisp           => null()
-    type( field_type ), pointer :: urbemisw          => null()
-    type( field_type ), pointer :: urbemisr          => null()
 
     type( field_type ), pointer :: soil_moist_sat    => null()
     type( field_type ), pointer :: soil_moist_wilt   => null()
@@ -165,14 +163,13 @@ contains
       end if
       call surface_fields%get_field('tile_temperature', tile_temperature)
 
-      if ( l_urban2t ) then
+      if ( l_urban2t .and. (init_option == init_option_fd_start_dump .and. &
+         .not. checkpoint_read) ) then
         call surface_fields%get_field('urbwrr', urbwrr)
         call surface_fields%get_field('urbhwr', urbhwr)
         call surface_fields%get_field('urbhgt', urbhgt)
         call surface_fields%get_field('urbztm', urbztm)
         call surface_fields%get_field('urbdisp', urbdisp)
-        call surface_fields%get_field('urbemisw', urbemisw)
-        call surface_fields%get_field('urbemisr', urbemisr)
       end if
 
       if (init_option == init_option_fd_start_dump .and. &
@@ -243,7 +240,8 @@ contains
                                            first_sea_tile, n_sea_tile ))
 
       ! Urban fields (contained in surface fields)
-      if ( l_urban2t ) then
+      if ( l_urban2t .and. (init_option == init_option_fd_start_dump .and.     &
+         .not. checkpoint_read) ) then
         call invoke(process_urban_kernel_type( urbwrr, urbhwr, urbhgt,         &
                                              urbztm, urbdisp ))
       end if

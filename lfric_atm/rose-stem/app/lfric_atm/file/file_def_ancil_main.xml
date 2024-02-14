@@ -36,6 +36,12 @@
     <field id="soil_roughness" name="surface_roughness_length" long_name="soil_surface_roughness_length" unit="m" operation="once" domain_ref="face"/>
   </file>
 
+  <file id="urban_ancil" name="urban_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="false" enabled=".FALSE.">
+    <field id="urbwrr" name="urbwrr" long_name="Urban width repeating ratio" unit="1" operation="once" domain_ref="face"/>
+    <field id="urbhwr" name="urbhwr" long_name="Urban height-to-width ratio" unit="1" operation="once" domain_ref="face"/>
+    <field id="urbhgt" name="urbhgt" long_name="Urban building height" unit="1" operation="once" domain_ref="face"/>
+  </file>
+
   <file id="plant_func_ancil" name="plant_func_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
     <field id="plant_func_time" name="time" unit="hours" operation="once" axis_ref="monthly_climatology"/>
     <field id="canopy_height_data" name="canopy_height" long_name="canopy_height" unit="1" operation="once" grid_ref="pft_monthly_grid"/>

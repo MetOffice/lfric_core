@@ -169,20 +169,13 @@ contains
                               time_axis=pft_time_axis)
     call ancil_times_list%insert_item(pft_time_axis)
 
-    if ( l_urban2t ) then
+    if ( l_urban2t .and. (init_option == init_option_fd_start_dump .and. &
+         .not. checkpoint_read) ) then
       call setup_ancil_field("urbwrr", depository, ancil_fields, &
                                 mesh, twod_mesh, twod=.true.)
       call setup_ancil_field("urbhwr", depository, ancil_fields, &
                                 mesh, twod_mesh, twod=.true.)
       call setup_ancil_field("urbhgt", depository, ancil_fields, &
-                                mesh, twod_mesh, twod=.true.)
-      call setup_ancil_field("urbalbwl", depository, ancil_fields, &
-                                mesh, twod_mesh, twod=.true.)
-      call setup_ancil_field("urbalbrd", depository, ancil_fields, &
-                                mesh, twod_mesh, twod=.true.)
-      call setup_ancil_field("urbemisw", depository, ancil_fields, &
-                                mesh, twod_mesh, twod=.true.)
-      call setup_ancil_field("urbemisr", depository, ancil_fields, &
                                 mesh, twod_mesh, twod=.true.)
     endif
 
