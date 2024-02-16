@@ -39,7 +39,7 @@ how to get going.
 Guide to the documentation
 ==========================
 
-For initial orientation, a `quick overview <section repository
+For initial orientation, a :ref:`quick overview <section repository
 contents>` of the main contents of the LFRic core repository is
 given. While LFRic core does include some small LFRic applications,
 one should be aware that major applications, including the Momentum
@@ -105,7 +105,7 @@ Applications
 ------------
 
 An LFRic application is an application that depends on the LFRic core
-infrastructure, including, potentially, `LFRic components <section
+infrastructure, including, potentially, :ref:`LFRic components <section
 components overview>`. The application will follow the ``PSyKAl``
 architecture, described in the next section, to give the required
 separation of concerns between the algorithmic descriptions of
@@ -120,15 +120,55 @@ The LFRic core repository includes just a few applications that are
 used for training, testing or development of new features. The
 Momentum atmosphere model exists as an application called `lfric_atm`
 in a separate FCM repository alongside several other applications,
-libraries of science code and science `components <section components
+libraries of science code and science :ref:`components <section components
 overview>`
+
+.. _section psykal overview:
 
 The PSyKAl Architecture
 -----------------------
 
-The PSyKAl architecture describes the architecture of the core of a
-scientific model...TODO: two to three summary paragraphs and the
-picture.
+The LFRic infrastructure has been written to support a separation of
+concerns between scientific and technical code, aiming to support
+**portable performance**, where scientific models can be ported to new
+machines and configurations with a small amount of work. A key part of
+delivering such capability is the use of a tool called **PSyclone** to
+generate technical code to manage parallelism and optimisation of the
+scientific codes. PSyclone can enable the same science code to be
+built and run with platform-specific technical code that can enable an
+application ported to a new platform more easily, or may allow
+different optimisation choices to be applied to the same model running
+on the same platform but with different configuration options.
+
+To delivering such capability PSyclone and the LFRic infrastructure
+have been developed together. The LFRic Infrastructure is designed to
+support scientific models written according to a software architecture
+called **PSyKAl** that stands for the three-layers of a science model
+design: High-level scientific Algorithms at the top, low-level
+scientific Kernels at the bottom and the PSyclone-generated Parallel
+Systems, or **PSy layer**, code in the middle.
+
+The LFRic Infrastructure provides a parallel data model which at its
+core supports storage and manipulation of model fields governed by
+strict rules. The algorithms represent the basic mathematics of the
+model operating on full fields only. The kernels implement individual
+operations on a chunk of the model field data. Each kernel must be
+written to the PSyKAl standard, which requires comprehensive metadata
+descriptions of its input variables and of its basic structure. The
+metadata enables PSyclone to generate the appropriate PSy layer code
+that breaks up the field into appropriate chunks and calls the kernel
+with each chunk.
+
+As well as generating code to call kernels, PSyclone can use the
+metadata to identify dependencies between kernels, can compute
+appropriate loop bounds that take account of halos used in distributed
+memory deployments, can insert halo swap calls at appropriate
+points, and can apply shared memory optimisations, for example, to
+parallelise the kernel calls.
+
+A more :ref:`comprehensive description <section psykal and datamodel>` can
+be found that details how the LFRic infrastructure and PSyclone work
+together.
 
 Application data structures
 ---------------------------
@@ -137,6 +177,10 @@ The PSyKAl architecture describes how individual fields are used
 within a scientific model. To support more complex applications such
 as the Momentum atmosphere model, other data structures exist:
 
+- Fields can be stored in linked-list structures called field
+  collections, meaning that complex algorithms that take a lot of
+  fields (including optional fields) can have more compact argument
+  lists of field collections rather than very long lists of fields.
 - The ``modeldb`` data structure aims to fully-encapsulate all the
   data required to run a model such that it would be possible to run
   two such models in the same executable without conflict.

@@ -12,12 +12,14 @@ LFRic Core documentation!
    :maxdepth: 2
 
    pages/main
-   pages/applications/model_structure
-   pages/applications/applications
-
+   pages/applications/application_structure
    pages/lfric_datamodel/lfric_datamodel
 
+   pages/meshes/index
    pages/tools/index
+
+   pages/applications/applications
+
    pages/io/io
 
    pages/lfric_distmem_impl/lfric_distmem_impl.rst
