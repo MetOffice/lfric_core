@@ -57,3 +57,8 @@ html_context = {
     "github_version": "main",
     "conf_py_path": "/documentation/source/"
 }
+
+# Enable numbered references to e.g. figures.
+#
+numfig = True
+

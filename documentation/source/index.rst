@@ -12,6 +12,7 @@ LFRic Core documentation!
    :maxdepth: 2
 
    pages/main
+   pages/infrastructure/index
    pages/applications/applications
 
    pages/tools/index
