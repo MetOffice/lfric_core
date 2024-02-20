@@ -10,36 +10,49 @@ Application Structure
 =====================
 
 An LFRic application is defined as an executable that runs one, or
-possibly more, LFRic models. This section describes the structure of a
-simple application that runs just one LFRic model.
+possibly more, LFRic models. Here, we distinguish the model from the
+application: the model is the core science code that could, in
+principle, be used in different applications.
 
-Here, we envisage an application that configures, sets up and calls
-the model to integrate field data on model meshes over multiple
-time-steps, reads input data, outputs diagnostics, and needs to
-checkpoint progress.
+This section describes the structure of a simple application that runs
+just one LFRic model. The Momentum atmosphere running without coupling
+to an ocean model or to data assimilation systems would be an example
+of such an application.
 
-Furthermore, it is assumed that the model uses the standard features
-provided by LFRic core.
+Here, we envisage an application that reads configuration information,
+reads input data, sets up and calls the model to integrate field data
+on model meshes over multiple time-steps, outputs diagnostics, and
+outputs checkpoint dumps.
+
+The application and the model relies on LFRic infrastructure that
+comprises the core code for managing model data, but may also use one
+or more :ref:`LFRic components <section lfric components`. LFRic
+components are self-contained packages of technical or scientific
+code.
 
 TODO: Add a diagram that illustrates a simplified calling tree.
 
 Running the Model
 -----------------
 
-The application will call the model via a driver layer. The driver
-layer may be standard or bespoke. It comprises an initialise, step
-and finalise stage. These stages need to be executed in sequence to
-progress the model.
+The application will call the model via the model's driver layer. The
+:ref:`driver layer <section driver layer overview>` comprises an
+initialise, step and finalise stage. The stages may be based on the
+LFRic :ref:`driver component <section driver component>` code. Where
+the component does not meet all of a model's requirement some or all
+of their code may be bespoke. The application will call the stages of
+the driver layer in sequence to progress the model.
 
 Prior to calling the initialise stage, data structures shared by each
-stage of the model need to be set up. An LFRic component provides a
-:ref:`modeldb <section modeldb overview>` data structure that aims to store
-all the data needed to run the model. Properly encapsulating all the
-data allows applications to run two or more models side by side, or to
-run ensembles of the same model side by side.
+stage of the model need to be set up. The LFRic driver layer component
+provides a :ref:`modeldb <section modeldb overview>` data structure
+that aims to store all the data needed to run the model. Properly
+encapsulating all the data allows applications to run two or more
+models side by side, or to run ensembles of the same model side by
+side.
 
 For a model that uses `modeldb`, some aspects of the data structures
-held in `modeldb` must be configured prior to calling the
+held in `modeldb` must be configured prior to calling the driver layer
 initialisation. Examples include setting up the configuration,
 defining the model name and setting the MPI communicator. Configuring
 these aspects before calling initialisation can allow multiple
@@ -47,18 +60,20 @@ instances of the model to be run alongside each other either
 concurrently or sequentially.
 
 Evolution of the model is driven by calling the model driver step the
-required number of times, potentially controlled by ticks of the
+required number of times, typically controlled by ticks of the
 :ref:`model clock <section model clock>` held in `modeldb`.
 
 Once all steps are executed, the model finalise stage is called after
 which processes instantiated by the application prior to
 initialisation can be finalised.
 
+.. _section driver component overview
+
 The driver layer
 ----------------
 
-The LFRic infrastructure provides a `driver` component containing code
-that can be used when constructing the application driver layer.
+This section briefly describes the role of the initialise, step and
+finalise stage of a model driver layer.
 
 Driver Initialise
 ~~~~~~~~~~~~~~~~~
@@ -133,25 +148,22 @@ stage.
 Data in a model
 ---------------
 
-Initially, the LFRic field is probably the most important LFRic data
-structure to get to know: understanding the role of the field is
-critical to understanding LFRic, but the details can be deferred to
-the section describing the :ref:`use of PSyclone and the LFRic data
-model<section psyclone and the lfric data model>`. For now, it is
-sufficient to understand that an LFRic field is a data structure that,
-among other things, holds data representing a physical quantity such
-as winds, temperature, or density, over the domain of a model mesh.
+In many models, "fields" are simple arrays of data representing some
+physical quantity across the domain of the model. The :ref:`LFRic
+field <section field>` is much more complex. Understanding the role of
+the field is critical to understanding LFRic, but the details are
+deferred to the section describing the :ref:`use of PSyclone and the
+LFRic data model<section psyclone and the lfric data model>`. For now,
+the distinction between LFRic fields and the simpler fields of other
+models will mostly be ignored so as to focus on the broader model
+structure.
 
 A complex model such as the Momentum atmosphere requires hundreds of
-fields. To simplify the model design, more data structures than just
-fields are provided by the LFRIc infrastructure. This section briefly
-summarises other data structures that are available, with links to the
-more in-depth documentation.
-
-In addition to fields, :ref:`field collections <section field
-collections>` can store arbitrarily-large numbers of fields or field
-pointers that can be accessed by name. The Momentum atmosphere has
-several field collections for each of several major science
+fields. To simplify the model design, the LFRic infrastructure
+supports :ref:`field collections <section field collections>`. A field
+collection can store arbitrarily-large numbers of fields that can be
+accessed by name. The Momentum atmosphere has several field
+collections holding fields for each of several major science
 components. Use of field collections makes the API of higher-level
 science algorithms more manageable by hiding both the large number of
 fields and the fact that some fields are not required for all model
@@ -170,18 +182,21 @@ store native fortran types such as real or integer variables and
 arrays. More complex abstract or concrete types can also be stored.
 
 The `modeldb` object defined in the `driver` component provides the
-ability to store  range of different data structures in addition to
-fields. A list of the main data structures declared in `modeldb` is
-given here. For more details on how to use these data structures see
-the :ref:`modeldb <section modeldb>` documentation.
+ability to store all of the above data structures. A list of the main
+data structures declared in `modeldb` is given here. For more details
+on how to use these data structures see the :ref:`modeldb <section
+modeldb>` documentation.
 
- - **field** Stores fields and field collections as key-value pairs.
- - **configuration** As described above, stores the model
-   configuration: input values, science options, switches and so
-   forth.
- - **values** A key-value data structure described above that can
-   store any type or class.
+ - **field**: an object that can store fields and field collections
+   which can be accessed by name.
+ - **configuration** An instance of the configuration object described
+   above, which stores the model configuration: input values, science
+   options, switches and so forth.
+ - **values** An instance of the key-value data structure described
+   above that can store any type or class which can be accessed by
+   name.
  - **mpi** Stores an object that can be used to perform MPI tasks.
+ - **clock** and **calendar** objects can track model time.
 
 While all algorithms in an LFRic model will rely on fields, to retain
 a degree of separation between the model and the infrastructure it is
@@ -206,5 +221,14 @@ The work of the initialisation and step processes of the model will be
 managed by a set of algorithm and kernel modules. Broadly speaking,
 algorithms are higher-level subroutines that deal only with full
 fields, and kernels are lower level subroutines that implement the
-computation. The structure of algorithms and kernels is governed by
-the :ref:`PSyKAl design <section psykal>`.
+computation.
+
+Within LFRic, the PSyKAl architecture governs the relationship between
+algorithms and kernels. The implementation of the PSyKAl design lies
+at the heart both of the concepts of the separation of concerns that
+LFRic aims to support and the portable performance goals that LFRic
+aims to deliver.
+
+The structure of algorithms and kernels is the subject of the major
+section describing the :ref:`LFRic data model and its use of PSyclone
+<section psykal and datamodel>`.

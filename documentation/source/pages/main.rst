@@ -43,32 +43,30 @@ For initial orientation, a :ref:`quick overview <section repository
 contents>` of the main contents of the LFRic core repository is
 given. While LFRic core does include some small LFRic applications,
 one should be aware that major applications, including the Momentum
-atmosphere model, are developed in other repositories and will have
-additional application-specific documentation.
+atmosphere model application, are developed in other repositories and
+will have their own application-specific documentation.
+
+Before giving an overview of the core infrastructure, an overview of
+the `structure of a typical LFRic application <section model
+application structure>` is given. It briefly references several LFRic
+infrastructure capabilities. These capabilities are then described in
+later sections.
 
 Any developer of the LFRic core or an LFRic application should have a
 good understanding of the underlying principles behind LFRic and the
-core data model and model architecture. An `introduction <section
-introduction to lfric infrastructure>` describes key aspects of LFRic
-and of PSyclone, the code autogeneration tool that LFRic applications
-depend upon.
+core data model and model architecture. The `LFRic data model and
+PSyclone <section psykal and datamodel>` documentation describes key
+aspects of LFRic and of PSyclone, the code autogeneration tool that
+LFRic applications depend upon.
 
-While the `introduction <section introduction to lfric
-infrastructure>` provides all that is needed for the simplest LFRic
-application, more realistic model applications commonly need more
-complex data structures to manage large numbers of fields, and control
-flow and IO to manage the running and output of a numerical model. An
-overview of aspects of an `LFRic model structure <section model
-application structure>` introduces key aspects of LFRic core that
-support these requirements.
-
-Separate documentation exists for each application and component
-developed within the LFRic core repository, describing the role of the
-application and including pointers to the features of the LFRic core
-that it depends upon or tests.
+The `Application Documentation <section applications>` provides links
+to documentation for each application developed within the LFRic core
+repository, describing the role of the application and including
+pointers to the features of the LFRic core that it depends upon or
+tests.
 
 Some technical features required by applications have been implemented
-as LFRic "components". Each of these is described.
+as LFRic "components". Each of these is described. TODO Add the section.
 
 Several technical sections are given on major technical topics
 including the distributed memory strategy and implementation, the

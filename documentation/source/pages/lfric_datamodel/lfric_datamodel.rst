@@ -30,7 +30,7 @@ comprehensive `PSyclone documentation
 
 A key aspect of the **Momentum Atmosphere model**, for which LFRic was
 initially developed, is its use of the GungHo dynamical core which
-uses a mixed finite element scheme. The data model of the LFRic
+is a mixed finite element scheme. The data model of the LFRic
 Infrastructure supports both the mixed finite element scheme of the
 GungHo dynamical core and the more traditional finite difference
 schemes of many physics codes. GungHo has been developed to run on

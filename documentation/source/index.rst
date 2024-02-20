@@ -13,8 +13,10 @@ LFRic Core documentation!
 
    pages/main
    pages/applications/application_structure
-   pages/lfric_datamodel/lfric_datamodel
 
+   pages/lfric_datamodel/lfric_datamodel
+   pages/lfric_datamodel/advanced_structures
+   pages/components/index
    pages/meshes/index
    pages/tools/index
 
