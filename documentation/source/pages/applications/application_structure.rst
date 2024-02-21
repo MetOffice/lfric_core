@@ -148,13 +148,15 @@ stage.
 Data in a model
 ---------------
 
-In many models, "fields" are simple arrays of data representing some
-physical quantity across the domain of the model. The :ref:`LFRic
-field <section field>` is much more complex. Understanding the role of
-the field is critical to understanding LFRic, but the details are
-deferred to the section describing the :ref:`use of PSyclone and the
-LFRic data model<section psyclone and the lfric data model>`. For now,
-the distinction between LFRic fields and the simpler fields of other
+In many other model infrastructures, "fields" refer to simple arrays
+of data representing some physical quantity across the domain of the
+model. Fields in LFRic are created as :ref:`LFRic field_type <section
+field>` Fortran types, which encapsulate information about the field
+alongside the data. Understanding the role of the `field_type` is
+critical to understanding LFRic, but the details are deferred to the
+section describing the :ref:`use of PSyclone and the LFRic data
+model<section psyclone and the lfric data model>`. For now, the
+distinction between LFRic fields and the simpler fields of other
 models will mostly be ignored so as to focus on the broader model
 structure.
 
@@ -187,8 +189,8 @@ data structures declared in `modeldb` is given here. For more details
 on how to use these data structures see the :ref:`modeldb <section
 modeldb>` documentation.
 
- - **field**: an object that can store fields and field collections
-   which can be accessed by name.
+ - **field**: an object that can store fields and field collections. A
+   field or field collection can be accessed from `field` by name.
  - **configuration** An instance of the configuration object described
    above, which stores the model configuration: input values, science
    options, switches and so forth.
@@ -217,11 +219,12 @@ different function spaces.
 Algorithms and Kernels
 ----------------------
 
-The work of the initialisation and step processes of the model will be
-managed by a set of algorithm and kernel modules. Broadly speaking,
-algorithms are higher-level subroutines that deal only with full
-fields, and kernels are lower level subroutines that implement the
-computation.
+The algorithms and kernels are the core parts of the scientific code
+of a model. The work of the initialisation and step processes of the
+model will be managed by a set of algorithm and kernel
+modules. Broadly speaking, algorithms are higher-level subroutines
+that deal only with full fields, and kernels are lower level
+subroutines that implement the computation of the data in a field.
 
 Within LFRic, the PSyKAl architecture governs the relationship between
 algorithms and kernels. The implementation of the PSyKAl design lies

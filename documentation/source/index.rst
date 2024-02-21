@@ -26,6 +26,8 @@ LFRic Core documentation!
 
    pages/lfric_distmem_impl/lfric_distmem_impl.rst
 
+   pages/API/index
+
 Indices and tables
 ==================
 
