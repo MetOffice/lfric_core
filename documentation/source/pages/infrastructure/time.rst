@@ -11,7 +11,7 @@ Not all models you come to write will need to consider the passage of time but
 most will. The LFRic infrastructure provides a number of classes to help with
 this.
 
-The core is `model_clock_type` which implements a clock that tracks time steps.
+The core is `model_clock_type` which implements a clock which tracks time steps.
 It is initialised with a start and end step and provides a method to advance or
 ``tick()`` through the intermediate steps.
 
@@ -49,6 +49,9 @@ The "Running" phase exists between the first and last time step of the run.
 The ``is_running()`` method will return "true" during this period but not after
 the clock has stepped past the last time step of the run.
 
+For conveniently creating time step loops the ``tick()`` method returns the new
+value of ``is_running()`` when it is called.
+
 Spinning Up
 -----------
 
@@ -58,8 +61,26 @@ clock.
 
 ``is_spinning_up()`` tells you when you are in the spin-up period but often more
 useful is the ``get_spinup_fraction()`` method which returns a real value between
-0 and 1 indicating progress through the spin up period. Zero being the start and
-one at the end and thereafter.
+0.0 and 1.0 indicating progress through the spin up period. Zero being the
+start and one at the end and thereafter.
+
+Simple Usage Example
+~~~~~~~~~~~~~~~~~~~~
+
+To illustrate use of the clock here is a simple example:
+
+.. code-block:: fortran
+
+    type(model_clock_type) :: clock
+
+    clock = model_clock_type( first=1_i_timestep,            &
+                              last=5_i_timestep,             &
+                              seconds_per_step=1.2_r_second, &
+                              spinup_period=3.0_r_second )
+
+    do while (clock%tick())
+        ! Do some science
+    end do
 
 Tick Events
 ~~~~~~~~~~~
