@@ -6,9 +6,8 @@
 
 .. _section applications:
 
-##################
 Application documentation
-##################
+#########################
 
 The LFRic core repository includes a small number of applications that
 are used for training, testing or as development test-beds. Each

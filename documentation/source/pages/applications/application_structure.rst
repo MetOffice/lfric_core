@@ -67,7 +67,7 @@ Once all steps are executed, the model finalise stage is called after
 which processes instantiated by the application prior to
 initialisation can be finalised.
 
-.. _section driver component overview
+.. _section driver component overview:
 
 The driver layer
 ----------------
