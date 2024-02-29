@@ -72,42 +72,16 @@ document-latex: ALWAYS
 ##############################################################################
 # Unit tests
 #
-unit-tests/%: export ADDITIONAL_EXTRACTION                           \
-                  = $(ROOT_DIR)/infrastructure/source                \
-                    $(ROOT_DIR)/components/driver/source             \
-                    $(ROOT_DIR)/components/science/source            \
-                    $(ROOT_DIR)/components/inventory/source          \
-                    $(ROOT_DIR)/gungho/source                        \
-                    $(ROOT_DIR)/components/science/unit-test/support \
-                    $(ROOT_DIR)/components/lfric-xios/source
-unit-tests/%: export BIN_DIR      ?= $(PROJECT_DIR)/test
-unit-tests/%: export META_FILE_DIR = rose-meta/lfric-adjoint/HEAD
-unit-tests/%: export PROGRAMS      = adjoint_unit_tests
-unit-tests/%: export PROJECT       = adjoint
-unit-tests/%: export SOURCE_DIR    = source
-unit-tests/%: export TEST_DIR      = unit-test
-unit-tests/%: export WORKING_DIR  := $(WORKING_DIR)/unit-tests
+unit-tests:
+	$(call MESSAGE,Testing,"There are no unit tests.")
 
-unit-tests: unit-tests/run
 
 ##############################################################################
 # Integration tests
 #
-integration-tests/%: export ADDITIONAL_EXTRACTION =              \
-                         $(ROOT_DIR)/infrastructure/source       \
-                         $(ROOT_DIR)/components/driver/source    \
-                         $(ROOT_DIR)/components/science/source   \
-                         $(ROOT_DIR)/components/inventory/source \
-                         $(ROOT_DIR)/gungho/source               \
-                         $(ROOT_DIR)/components/lfric-xios/source
-integration-tests/%: export BIN_DIR      ?= $(PROJECT_DIR)/test
-integration-tests/%: export CXX_LINK      = true
-integration-tests/%: export META_FILE_DIR = rose-meta/lfric-adjoint/HEAD
-integration-tests/%: export PROJECT       = adjoint
-integration-tests/%: export SOURCE_DIR    = source
-integration-tests/%: export TEST_DIR      = integration-test
-integration-tests/%: export WORKING_DIR  := $(WORKING_DIR)/integration-tests
-integration-tests: integration-tests/run
+integration-tests:
+	$(call MESSAGE,Testing,"There are no integration tests.")
+
 
 ##############################################################################
 # System tests
