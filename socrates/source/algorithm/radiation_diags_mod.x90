@@ -255,6 +255,15 @@ subroutine output_diags_for_radiation( dtheta_rad, &
   sw_up_tile, aer_mix_ratio, &
   aer_sw_absorption, aer_sw_scattering, aer_sw_asymmetry, &
   aer_lw_absorption, aer_lw_scattering, aer_lw_asymmetry, &
+  pressure_in_wth, temperature_in_wth, d_mass, rho_in_wth, &
+  t_layer_boundaries, m_v, ozone, &
+  tile_fraction, tile_temperature, tile_lw_albedo, &
+  tile_sw_diffuse_albedo, tile_sw_direct_albedo, &
+  radiative_cloud_fraction, liquid_fraction, frozen_fraction, &
+  mcl, mci, n_ice, cloud_drop_no_conc, &
+  radiative_conv_fraction, conv_liquid_fraction, conv_frozen_fraction, &
+  conv_liquid_mmr, conv_frozen_mmr, sigma_mc, &
+  layer_heat_capacity, sulphuric, &
   lw_up_surf, sw_up_surf, lw_up_toa, sw_up_toa, sw_direct_toa, &
   sw_direct_rts, sw_down_rts, sw_up_rts, lw_down_rts, lw_up_rts, &
   cloud_cover_rts, cloud_fraction_rts, cloud_droplet_re_rts, &
@@ -290,8 +299,16 @@ subroutine output_diags_for_radiation( dtheta_rad, &
     stellar_irradiance_rts, orographic_correction_rts, &
     sw_up_tile, aer_mix_ratio, &
     aer_sw_absorption, aer_sw_scattering, aer_sw_asymmetry, &
-    aer_lw_absorption, aer_lw_scattering, aer_lw_asymmetry
-
+    aer_lw_absorption, aer_lw_scattering, aer_lw_asymmetry, &
+    pressure_in_wth, temperature_in_wth, d_mass, rho_in_wth, &
+    t_layer_boundaries, m_v, ozone, &
+    tile_fraction, tile_temperature, tile_lw_albedo, &
+    tile_sw_diffuse_albedo, tile_sw_direct_albedo, &
+    radiative_cloud_fraction, liquid_fraction, frozen_fraction, &
+    mcl, mci, n_ice, cloud_drop_no_conc, &
+    radiative_conv_fraction, conv_liquid_fraction, conv_frozen_fraction, &
+    conv_liquid_mmr, conv_frozen_mmr, sigma_mc, &
+    layer_heat_capacity, sulphuric
 
   ! Diagnostic fields that are always required by the kernels
   type( field_type ), intent(in) :: &
@@ -367,7 +384,7 @@ subroutine output_diags_for_radiation( dtheta_rad, &
   call sw_up_tile%write_field('radiation__sw_up_tile')
 
   if (diagnostic_to_be_sampled('radiation__aer_mix_ratio')) &
-       call aer_sw_absorption%write_field('radiation__aer_mix_ratio')
+       call aer_mix_ratio%write_field('radiation__aer_mix_ratio')
   if (diagnostic_to_be_sampled('radiation__aer_sw_abs')) &
        call aer_sw_absorption%write_field('radiation__aer_sw_abs')
   if (diagnostic_to_be_sampled('radiation__aer_sw_sca')) &
@@ -380,6 +397,37 @@ subroutine output_diags_for_radiation( dtheta_rad, &
        call aer_lw_scattering%write_field('radiation__aer_lw_sca')
   if (diagnostic_to_be_sampled('radiation__aer_lw_asy')) &
        call aer_lw_asymmetry%write_field('radiation__aer_lw_asy')
+
+  call pressure_in_wth%write_field('radiation__pressure_in_layers_radinput')
+  call temperature_in_wth%write_field('radiation__temperature_in_layers_radinput')
+  call d_mass%write_field('radiation__dry_mass_in_layers_radinput')
+  call rho_in_wth%write_field('radiation__dry_density_in_layers_radinput')
+  call t_layer_boundaries%write_field('radiation__t_layer_boundaries_radinput')
+  call m_v%write_field('radiation__h2o_mmr_radinput')
+  call ozone%write_field('radiation__o3_mmr_radinput')
+  call tile_fraction%write_field('radiation__tile_fraction_radinput')
+  call tile_temperature%write_field('radiation__tile_temperature_radinput')
+  call tile_lw_albedo%write_field('radiation__tile_lw_albedo_radinput')
+  call tile_sw_diffuse_albedo%write_field('radiation__tile_sw_diffuse_albedo_radinput')
+  call tile_sw_direct_albedo%write_field('radiation__tile_sw_direct_albedo_radinput')
+
+  call radiative_cloud_fraction%write_field('radiation__radiative_cloud_fraction_radinput')
+  call liquid_fraction%write_field('radiation__liquid_fraction_radinput')
+  call frozen_fraction%write_field('radiation__frozen_fraction_radinput')
+  call mcl%write_field('radiation__liquid_mmr_radinput')
+  call mci%write_field('radiation__frozen_mmr_radinput')
+  call n_ice%write_field('radiation__ice_no_conc_radinput')
+  call cloud_drop_no_conc%write_field('radiation__cloud_drop_no_conc_radinput')
+  call radiative_conv_fraction%write_field('radiation__radiative_conv_fraction_radinput')
+  call conv_liquid_fraction%write_field('radiation__conv_liquid_fraction_radinput')
+  call conv_frozen_fraction%write_field('radiation__conv_frozen_fraction_radinput')
+  call conv_liquid_mmr%write_field('radiation__conv_liquid_mmr_radinput')
+  call conv_frozen_mmr%write_field('radiation__conv_frozen_mmr_radinput')
+  call sigma_mc%write_field('radiation__sigma_condensate_radinput')
+
+  call layer_heat_capacity%write_field('radiation__layer_heat_capacity_radinput')
+
+  call sulphuric%write_field('radiation__sulphuric_aerosol_radinput')
 
   ! Diagnostic fields that are always required by the kernels
   call lw_up_surf%write_field()
@@ -462,7 +510,7 @@ subroutine output_diags_for_radiation( dtheta_rad, &
   if ( ice_cloud_frac_rts_flag ) call ice_cloud_frac_rts%write_field()
   if ( ice_conv_frac_rts_flag ) call ice_conv_frac_rts%write_field()
   if ( liq_cloud_mmr_rts_flag ) call liq_cloud_mmr_rts%write_field()
-  if ( liq_conv_mmr_rts_flag )call liq_conv_mmr_rts%write_field()
+  if ( liq_conv_mmr_rts_flag ) call liq_conv_mmr_rts%write_field()
   if ( ice_cloud_mmr_rts_flag ) call ice_cloud_mmr_rts%write_field()
   if ( ice_conv_mmr_rts_flag ) call ice_conv_mmr_rts%write_field()
 

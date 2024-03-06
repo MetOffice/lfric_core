@@ -672,6 +672,34 @@
   <field id="radiation__aer_lw_abs" name="aer_lw_abs" long_name="aer_lw_absorption" unit="m2/kg" grid_ref="full_level_face_grid_lw_bands_aero_modes" /> 
   <field id="radiation__aer_lw_sca" name="aer_lw_sca" long_name="aer_lw_scattering" unit="m2/kg" grid_ref="full_level_face_grid_lw_bands_aero_modes" /> 
   <field id="radiation__aer_lw_asy"  name="aer_lw_asy"  long_name="aer_lw_asymmetry" unit="1" grid_ref="full_level_face_grid_lw_bands_aero_modes" /> 
+  <!-- radiation diagnostics: inputs to radiation on radiation timesteps -->
+  <field id="radiation__pressure_in_layers_radinput" name="pressure_in_layers_radinput" long_name="pressure_in_radiation_layers" unit="Pa" grid_ref="full_level_face_grid" />
+  <field id="radiation__temperature_in_layers_radinput" name="temperature_in_layers_radinput" long_name="temperature_in_radiation_layers" unit="K" grid_ref="full_level_face_grid" />
+  <field id="radiation__dry_mass_in_layers_radinput" name="dry_mass_in_layers_radinput" long_name="dry_mass_in_radiation_layers" unit="kg m-2" grid_ref="full_level_face_grid" />
+  <field id="radiation__dry_density_in_layers_radinput" name="dry_density_in_layers_radinput" long_name="dry_density_in_radiation_layers" unit="kg m-3" grid_ref="full_level_face_grid" />
+  <field id="radiation__t_layer_boundaries_radinput" name="t_layer_boundaries_radinput" long_name="temperature_at radiation_layer_boundaries" unit="K" grid_ref="full_level_face_grid" />
+  <field id="radiation__h2o_mmr_radinput" name="h2o_mmr_radinput" long_name="water_vapour_mass_mixing_ratio_in_radiation_layers" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__o3_mmr_radinput" name="o3_mmr_radinput" long_name="ozone_mass_mixing_ratio_in_radiation_layers" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__tile_fraction_radinput" name="tile_fraction_radinput" long_name="surface_tile_fraction_in_radiation" unit="1" domain_ref="face" axis_ref="surface_tiles" />
+  <field id="radiation__tile_temperature_radinput" name="tile_temperature_radinput" long_name="surface_tile_temperature_in_radiation" unit="K" domain_ref="face" axis_ref="surface_tiles" />
+  <field id="radiation__tile_lw_albedo_radinput" name="tile_lw_albedo_radinput" long_name="surface_tile_lw_albedo_in_radiation" unit="1" domain_ref="face" axis_ref="lw_bands_surface_tiles" />
+  <field id="radiation__tile_sw_diffuse_albedo_radinput" name="tile_sw_diffuse_albedo_radinput" long_name="surface_tile_sw_diffuse_albedo_in_radiation" unit="1" domain_ref="face" axis_ref="sw_bands_surface_tiles" />
+  <field id="radiation__tile_sw_direct_albedo_radinput" name="tile_sw_direct_albedo_radinput" long_name="surface_tile_sw_direct_albedo_in_radiation" unit="1" domain_ref="face" axis_ref="sw_bands_surface_tiles" />
+  <field id="radiation__radiative_cloud_fraction_radinput" name="radiative_cloud_fraction_radinput" long_name="radiative_cloud_fraction_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__liquid_fraction_radinput" name="liquid_fraction_radinput" long_name="cloud_liquid_fraction_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__frozen_fraction_radinput" name="frozen_fraction_radinput" long_name="cloud_frozen_fraction_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__liquid_mmr_radinput" name="liquid_mmr_radinput" long_name="cloud_liquid_mass_mixing_ratio_in_radiation_layers" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__frozen_mmr_radinput" name="frozen_mmr_radinput" long_name="cloud_frozen_mass_mixing_ratio_in_radiation_layers" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__ice_no_conc_radinput" name="ice_no_conc_radinput" long_name="ice_crystal_number_concentration_in_radiation_layers" unit="m-3" grid_ref="full_level_face_grid" />
+  <field id="radiation__cloud_drop_no_conc_radinput" name="cloud_drop_no_conc_radinput" long_name="cloud_droplet_number_concentration_in_radiation_layers" unit="m-3" grid_ref="full_level_face_grid" />
+  <field id="radiation__radiative_conv_fraction_radinput" name="radiative_conv_fraction_radinput" long_name="radiative_convective_cloud_fraction_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__conv_liquid_fraction_radinput" name="conv_liquid_fraction_radinput" long_name="convective_cloud_liquid_fraction_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__conv_frozen_fraction_radinput" name="conv_frozen_fraction_radinput" long_name="convective_cloud_frozen_fraction_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__conv_liquid_mmr_radinput" name="conv_liquid_mmr_radinput" long_name="convective_cloud_liquid_mass_mixing_ratio_in_radiation_layers" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__conv_frozen_mmr_radinput" name="conv_frozen_mmr_radinput" long_name="convective_cloud_frozen_mass_mixing_ratio_in_radiation_layers" unit="kg kg-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__sigma_condensate_radinput" name="sigma_condensate_radinput" long_name="relative_standard_deviation_of_condensate_mmr_in_radiation_layers" unit="1" grid_ref="full_level_face_grid" />
+  <field id="radiation__layer_heat_capacity_radinput" name="layer_heat_capacity_radinput" long_name="heat_capacity_of_total_mass_in_radiation_layers" unit="J m-2 K-1" grid_ref="full_level_face_grid" />
+  <field id="radiation__sulphuric_aerosol_radinput" name="sulphuric_aerosol_radinput" long_name="sulphuric_aerosol_mass_mixing_ratio_in_radiation_layers" unit="m2/kg" grid_ref="full_level_face_grid" />
   <!-- COSP diagnostics -->
   <field id="cosp__sunlit_mask" name="sunlit_mask" long_name="sunlit_mask" unit="1" domain_ref="face" />
   <field id="cosp__calipso_low_cloud" name="calipso_low_cloud" long_name="calipso_low_cloud" unit="1" domain_ref="face" />

@@ -29,7 +29,9 @@ use io_config_mod,           only: subroutine_timers
 use timer_mod,               only: timer
 use log_mod,                 only: log_event, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO
 use log_field_alg_mod,       only: log_field_alg
+use lfric_xios_write_mod,    only: write_field_generic
 use mesh_mod,                only: mesh_type
+use field_parent_mod,        only: write_interface
 use empty_data_mod,          only: empty_real_data
 use planet_config_mod,       only: p_zero, kappa, gravity, cp
 use microphysics_config_mod, only: microphysics_casim
@@ -62,20 +64,20 @@ contains
 !> @param[in]     surface_fields           Fields for surface scheme
 !> @param[in]     rad_this_tstep           Flag for radiation timestep
 !> @param[in]     rad_inc_this_tstep       Flag for radiation increment timestep
-!> @param[in]     tile_sw_direct_albedo    Tile SW direct albedos
-!> @param[in]     tile_sw_diffuse_albedo   Tile SW diffuse albedos
+!> @param[in,out] tile_sw_direct_albedo    Tile SW direct albedos
+!> @param[in,out] tile_sw_diffuse_albedo   Tile SW diffuse albedos
 !> @param[in]     tile_swinc_direct_albedo  Tile SWINC direct albedos
 !> @param[in]     tile_swinc_diffuse_albedo Tile SWINC diffuse albedos
-!> @param[in]     tile_lw_albedo           Tile LW albedos (1 - emissivity)
+!> @param[in,out] tile_lw_albedo           Tile LW albedos (1 - emissivity)
 !> @param[in]     tile_lwinc_albedo        Tile LWINC albedos (1 - emissivity)
 !> @param[in]     rand_seed                Random seed field for cloud generator
 !> @param[in]     n_cloud_layer            Number of cloud layers
-!> @param[in]     radiative_cloud_fraction Large scale cloud fraction
-!> @param[in]     radiative_conv_fraction  Convective cloud fraction
-!> @param[in]     conv_liquid_fraction     Convective liquid cloud fraction
-!> @param[in]     conv_frozen_fraction     Convective frozen cloud fraction
-!> @param[in]     conv_liquid_mmr          Convective liquid gridbox MMR
-!> @param[in]     conv_frozen_mmr          Convective frozen gridbox MMR
+!> @param[in,out] radiative_cloud_fraction Large scale cloud fraction
+!> @param[in,out] radiative_conv_fraction  Convective cloud fraction
+!> @param[in,out] conv_liquid_fraction     Convective liquid cloud fraction
+!> @param[in,out] conv_frozen_fraction     Convective frozen cloud fraction
+!> @param[in,out] conv_liquid_mmr          Convective liquid gridbox MMR
+!> @param[in,out] conv_frozen_mmr          Convective frozen gridbox MMR
 
 subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
                          pressure_in_wth, temperature_in_wth,                 &
@@ -96,20 +98,20 @@ subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
   type( field_type ), intent( in ) :: theta, exner, mr(nummr)
   type( field_type ), intent( in ) :: moist_dyn(num_moist_factors)
   type( field_type ), intent( in ) :: pressure_in_wth, temperature_in_wth
-  type( field_type ), intent( in ) :: tile_sw_direct_albedo
-  type( field_type ), intent( in ) :: tile_sw_diffuse_albedo
+  type( field_type ), intent( inout ) :: tile_sw_direct_albedo
+  type( field_type ), intent( inout ) :: tile_sw_diffuse_albedo
   type( field_type ), intent( in ) :: tile_swinc_direct_albedo
   type( field_type ), intent( in ) :: tile_swinc_diffuse_albedo
-  type( field_type ), intent( in ) :: tile_lw_albedo
+  type( field_type ), intent( inout ) :: tile_lw_albedo
   type( field_type ), intent( in ) :: tile_lwinc_albedo
   type( integer_field_type ), intent( in ) :: rand_seed
   type( integer_field_type ), intent( in ) :: n_cloud_layer
-  type( field_type ), intent( in ) :: radiative_cloud_fraction
-  type( field_type ), intent( in ) :: radiative_conv_fraction
-  type( field_type ), intent( in ) :: conv_liquid_fraction
-  type( field_type ), intent( in ) :: conv_frozen_fraction
-  type( field_type ), intent( in ) :: conv_liquid_mmr
-  type( field_type ), intent( in ) :: conv_frozen_mmr
+  type( field_type ), intent( inout ) :: radiative_cloud_fraction
+  type( field_type ), intent( inout ) :: radiative_conv_fraction
+  type( field_type ), intent( inout ) :: conv_liquid_fraction
+  type( field_type ), intent( inout ) :: conv_frozen_fraction
+  type( field_type ), intent( inout ) :: conv_liquid_mmr
+  type( field_type ), intent( inout ) :: conv_frozen_mmr
   type( field_collection_type ), intent(in) :: derived_fields
   type( field_collection_type ), intent(inout) :: radiation_fields
   type( field_collection_type ), intent(in) :: cloud_fields
@@ -125,6 +127,8 @@ subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
 
   type( function_space_type ), pointer :: flux_space => null()
   type( function_space_type ), pointer :: wtheta_space => null()
+
+  procedure(write_interface), pointer :: write_diag_behaviour => null()
 
   ! Unpacked fields from collections
   type( field_type ), pointer :: tile_fraction       => null()
@@ -319,6 +323,17 @@ subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
   flux_space => function_space_collection%get_fs(twod_mesh, 0, W3, n_levs)
   wtheta_space => function_space_collection%get_fs( mesh, 0, Wtheta )
 
+  write_diag_behaviour => write_field_generic
+  call tile_lw_albedo%set_write_behaviour(write_diag_behaviour)
+  call tile_sw_diffuse_albedo%set_write_behaviour(write_diag_behaviour)
+  call tile_sw_direct_albedo%set_write_behaviour(write_diag_behaviour)
+  call radiative_cloud_fraction%set_write_behaviour(write_diag_behaviour)
+  call radiative_conv_fraction%set_write_behaviour(write_diag_behaviour)
+  call conv_liquid_fraction%set_write_behaviour(write_diag_behaviour)
+  call conv_frozen_fraction%set_write_behaviour(write_diag_behaviour)
+  call conv_liquid_mmr%set_write_behaviour(write_diag_behaviour)
+  call conv_frozen_mmr%set_write_behaviour(write_diag_behaviour)
+
   ! ------------------------------------
   ! Initialise the radiation diagnostics
   ! ------------------------------------
@@ -351,6 +366,11 @@ subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
                            wtheta_space, name = "layer_heat_capacity")
     call t_layer_boundaries%initialise(flux_space, name = "t_layer_boundaries")
 
+    write_diag_behaviour => write_field_generic
+    call d_mass%set_write_behaviour(write_diag_behaviour)
+    call layer_heat_capacity%set_write_behaviour(write_diag_behaviour)
+    call t_layer_boundaries%set_write_behaviour(write_diag_behaviour)
+
     call invoke( set_thermodynamic_kernel_type( &
                    exner, exner_in_wth, theta, theta_in_w3, rho_in_wth, &
                    dz_in_wth, temperature_in_wth, moist_dyn(total_mass), &
@@ -378,6 +398,17 @@ subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
         "layer_heat_capacity", override_data=empty_real_data )
     call t_layer_boundaries%initialise( flux_space, name = &
         "t_layer_boundaries", override_data=empty_real_data )
+    call mr_ice%initialise( wtheta_space, name = &
+        "mr_ice", override_data=empty_real_data )
+    call n_ice%initialise( wtheta_space, name = &
+        "n_ice", override_data=empty_real_data )
+
+    write_diag_behaviour => write_field_generic
+    call d_mass%set_write_behaviour(write_diag_behaviour)
+    call layer_heat_capacity%set_write_behaviour(write_diag_behaviour)
+    call t_layer_boundaries%set_write_behaviour(write_diag_behaviour)
+    call mr_ice%set_write_behaviour(write_diag_behaviour)
+    call n_ice%set_write_behaviour(write_diag_behaviour)
 
   end if
 
@@ -577,6 +608,15 @@ subroutine radiation_alg(dtheta_rad, theta, exner, mr, moist_dyn,             &
       sw_up_tile, aer_mix_ratio, &
       aer_sw_absorption, aer_sw_scattering, aer_sw_asymmetry, &
       aer_lw_absorption, aer_lw_scattering, aer_lw_asymmetry, &
+      pressure_in_wth, temperature_in_wth, d_mass, rho_in_wth, &
+      t_layer_boundaries, mr(imr_v), ozone, &
+      tile_fraction, tile_temperature, tile_lw_albedo, &
+      tile_sw_diffuse_albedo, tile_sw_direct_albedo, &
+      radiative_cloud_fraction, liquid_fraction, frozen_fraction, &
+      mr(imr_cl), mr_ice, n_ice, cloud_drop_no_conc, &
+      radiative_conv_fraction, conv_liquid_fraction, conv_frozen_fraction, &
+      conv_liquid_mmr, conv_frozen_mmr, sigma_mc, &
+      layer_heat_capacity, sulphuric, &
       lw_up_surf, sw_up_surf, lw_up_toa, sw_up_toa, sw_direct_toa, &
       sw_direct_rts, sw_down_rts, sw_up_rts, lw_down_rts, lw_up_rts, &
       cloud_cover_rts, cloud_fraction_rts, cloud_droplet_re_rts, &

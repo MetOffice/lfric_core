@@ -21,7 +21,7 @@ module multidata_field_dimensions_mod
 #ifdef UM_PHYSICS
       !                   1         2         3
       !          123456789012345678901234567890
-      character(30), parameter :: multidata_items(25) = &
+      character(30), parameter :: multidata_items(27) = &
             [character(30) ::                           &
                 'plant_func_types',                     &
                 'sea_ice_categories',                   &
@@ -47,7 +47,9 @@ module multidata_field_dimensions_mod
                 'horizon_angles',                       &
                 'horizon_aspects',                      &
                 'sw_bands',                             &
-                'lw_bands'                              &
+                'lw_bands',                             &
+                'sw_bands_surface_tiles',               &
+                'lw_bands_surface_tiles'                &
       ]
 #endif
 
@@ -166,6 +168,10 @@ end subroutine sync_multidata_field_dimensions
             dim = n_sw_band
       case ('lw_bands')
             dim = n_lw_band
+      case ('lw_bands_surface_tiles')
+            dim = n_lw_band*n_surf_tile
+      case ('sw_bands_surface_tiles')
+            dim = n_sw_band*n_surf_tile
       case ('cloud_subcols')
             dim = n_subcol_gen
       case ('isccp_ctp_tau_bins')

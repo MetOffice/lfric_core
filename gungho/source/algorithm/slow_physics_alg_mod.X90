@@ -17,7 +17,9 @@ module slow_physics_alg_mod
                                        cv_scheme_gregory_rowntree
   use constants_mod,             only: i_def, r_def, l_def
   use log_mod,                   only: LOG_LEVEL_INFO
+  use lfric_xios_write_mod,      only: write_field_generic
   use mesh_mod,                  only: mesh_type
+  use field_parent_mod,          only: write_interface
   use mixing_config_mod,         only: leonard_term
   use print_field_stats_alg_mod, only: print_field_stats_alg
   use physics_config_mod,        only: microphysics_placement,         &
@@ -265,6 +267,8 @@ contains
     ! pointers to vector spaces
     type(function_space_type), pointer :: vector_space => null()
 
+    procedure(write_interface), pointer :: write_diag_behaviour => null()
+
     ! Temporary fields to unpack from field collection
     type( field_type ), pointer :: departure_exner_wth => null()
 #endif
@@ -346,6 +350,12 @@ contains
       call pressure_in_wth%initialise( vector_space=theta%get_function_space() )
       call temperature_in_wth%initialise( &
                                        vector_space=theta%get_function_space() )
+
+      ! Set the write behaviour for pressure_in_wth and temperature_in_wth here
+      write_diag_behaviour => write_field_generic
+      call pressure_in_wth%set_write_behaviour(write_diag_behaviour)
+      call temperature_in_wth%set_write_behaviour(write_diag_behaviour)
+
       inv_kappa = 1.0_r_def/kappa
       call invoke( &
         setval_X(pressure_in_wth, exner_in_wth), &

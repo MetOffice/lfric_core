@@ -28,6 +28,8 @@
   <axis id="cloud_subcols" name="cloud_subcols" />
   <axis id="sw_bands" name="sw_bands" />
   <axis id="lw_bands" name="lw_bands" />
+  <axis id="sw_bands_surface_tiles" name="sw_bands_surface_tiles" />
+  <axis id="lw_bands_surface_tiles" name="lw_bands_surface_tiles" />
 
 <!-- Zoom filters -->
   <axis id="surface_tiles_sea_zoom" axis_ref="surface_tiles">
