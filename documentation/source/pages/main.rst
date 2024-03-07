@@ -10,7 +10,7 @@ Introduction
 .. index::
    Introduction
 
-The LFRic Core project aims to develop a software infrastructure primarily to support the development of a replacement for the Unified Model but also to provide a common library that underpins a range of modelling requirements and related tools. The LFRic Core Project is being led by the `Core Capability Development Team <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science IT group.
+The `LFRic Core <https://github.com/MetOffice/lfric_core>`_ project aims to develop a software infrastructure primarily to support the development of a replacement for the Unified Model but also to provide a common library that underpins a range of modelling requirements and related tools. The LFRic Core Project is being led by the `Core Capability Development Team <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science IT group.
 
 Development of the LFRic infrastructure and the new atmosphere model are being done within the Momentum Partnership. Key initial aims for the new model are as follows:
 

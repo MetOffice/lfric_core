@@ -1,3 +1,9 @@
+.. -----------------------------------------------------------------------------
+     (c) Crown copyright 2024 Met Office. All rights reserved.
+     The file LICENCE, distributed with this code, contains details of the terms
+     under which the code may be used.
+   -----------------------------------------------------------------------------
+
 Configuration Metadata File Extensions
 ======================================
 
@@ -27,7 +33,7 @@ An example showing both of these::
     [namelist:instance]
     duplicate = .true.
     instance_key_member = index
-    
+
     [namelist:instance=index]
     ...
 

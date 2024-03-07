@@ -4,14 +4,14 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-Tools
-=====
+Infrastructure
+==============
 
-LFRic Core includes a number of executables which are not science applications
-but rather tools used in either build, by the developer or both.
+The heart of LFRic Core is the infrastructure. This underlies everything else and
+provides the basic building blocks of a model.
 
 .. toctree::
    :caption: Contents:
    :maxdepth: 1
 
-   configurator/index
+   time

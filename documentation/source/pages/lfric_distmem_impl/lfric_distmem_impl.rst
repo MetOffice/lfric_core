@@ -1,3 +1,9 @@
+.. -----------------------------------------------------------------------------
+     (c) Crown copyright 2024 Met Office. All rights reserved.
+     The file LICENCE, distributed with this code, contains details of the terms
+     under which the code may be used.
+   -----------------------------------------------------------------------------
+
 Distributed Memory Documentation
 ################################
 
@@ -69,7 +75,7 @@ in memory:
    deep halo data.
 
 For full details of the data model supported by the LFRic infrastructure
-see the LFRic design documentation [LFRic_Design]_. 
+see the LFRic design documentation [LFRic_Design]_.
 
 Parallel implementation
 =======================

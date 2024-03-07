@@ -4,14 +4,13 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-Tools
-=====
+IO
+==
 
-LFRic Core includes a number of executables which are not science applications
-but rather tools used in either build, by the developer or both.
+This section describes the various methods of performing IO provided by LFRic Core.
 
 .. toctree::
    :caption: Contents:
    :maxdepth: 1
 
-   configurator/index
+   io_standards
