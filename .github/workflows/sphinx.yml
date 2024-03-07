@@ -20,7 +20,7 @@ jobs:
       with:
         ref: main
     - id: setup_environment
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.12
     - id: finesse_environment
