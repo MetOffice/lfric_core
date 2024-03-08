@@ -4,18 +4,16 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section components:
+.. _section technical articles:
 
-Components
-----------
+Technical Articles
+------------------
 
-LFRic Core includes a number of components each of which are packages
-of code that deliver a particular functionality or provide a set of
-related capabilities.
+This section includes some techical articles covering different
+aspects of the LFRic core infrastructure
 
 .. toctree::
    :caption: Contents:
    :maxdepth: 1
 
-   lfric_xios
-   driver_layer
+   lfric_distmem_impl

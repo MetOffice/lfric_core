@@ -22,11 +22,22 @@ LFRic Core documentation!
    pages/lfric_datamodel/advanced_structures
 
 .. toctree::
-   :caption: Components and tools
+   :caption: Meshes
+   :maxdepth: 2
+
+   pages/meshes/index
+
+.. toctree::
+   :caption: Components
    :maxdepth: 2
 
    pages/components/index
-   pages/meshes/index
+
+.. toctree::
+   :caption: Build and test system
+   :maxdepth: 2
+
+   pages/build_and_test/index
    pages/tools/index
 
 .. toctree::
@@ -45,7 +56,7 @@ LFRic Core documentation!
    :caption: Technical Articles
    :maxdepth: 2
 
-   pages/lfric_distmem_impl/lfric_distmem_impl.rst
+   pages/technical_articles/index
 
 .. toctree::
    :caption: API Documentation

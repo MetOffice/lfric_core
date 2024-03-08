@@ -11,67 +11,83 @@ Introduction
    Introduction
 
 The `LFRic Core <https://github.com/MetOffice/lfric_core>`_ project
-aims to develop a software infrastructure primarily to support the
-development of a replacement for the Unified Model but also to provide
-a common library that underpins a range of modelling requirements and
-related tools. The LFRic Core Project is being led by the `Core
-Capability Development Team
+develops a software infrastructure whose prime requirement is to
+support the development of the Momentum atmosphere model, to replace
+the Met Office Unified Model. LFRic core is also being developed to
+provide a common library that underpins a range of other earth system
+modelling requirements and related support tools. The LFRic Core
+Project is being led by the `Core Capability Development Team
 <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science
-IT group.
+IT group at the Met Office.
 
-Development of the LFRic infrastructure and the new atmosphere model
-are being done within the Momentum Partnership. Key initial aims for
-the new model are as follows:
+Development of the LFRic core infrastructure and the new atmosphere
+model are being done within the Momentum Partnership. The Momentum
+atmosphere application is developed in a separate repository
+accessible to Met Office partners. Key initial aims for the Momentum
+atmosphere model are as follows:
 
 - The model will be scientifically as good as the UM atmosphere.
 - The model will scale better on future exascale platforms.
 - The infrastructure will be flexible enough to support future
   evolutions of the science.
 
-Broadly speaking, the LFRic core aims to support similar earth system
-modelling requirements. The detailed requirements documentation will
-describe the current and intended capabilities in greater detail.
-
-Active users and users at the Met Office are requested to work from
-the head of main. New external users should contact us for advice on
-how to get going.
+LFRic core has a role to deliver for all of these aims: it has been
+written to support the GungHo mixed finite element scheme that is key
+to delivering the scientific performance of the Momentum atmosphere
+model when running on the cubed-sphere grid that will be used for
+global simulations; it is written with scalability and performance in
+mind, particularly by being developed alongside the PSyclone Domain
+Specific Language (DSL) tool; it follows modern software engineering
+practices that aims to separate concerns between scientific and
+technical aspects of the code.
 
 Guide to the documentation
 ==========================
 
 For initial orientation, a :ref:`quick overview <section repository
 contents>` of the main contents of the LFRic core repository is
-given. While LFRic core does include some small LFRic applications,
-one should be aware that major applications, including the Momentum
-atmosphere model application, are developed in other repositories and
-will have their own application-specific documentation.
+given. As noted, the Momentum atmosphere model, and related
+applications, are developed in separate repositories. The LFRic core
+repository does include some small LFRic applications for
+demonstrating features or for developing and testing particular
+capabilities.
 
 Before giving an overview of the core infrastructure, an overview of
-the `structure of a typical LFRic application <section model
+the :ref:`structure of a typical LFRic application <section
 application structure>` is given. It briefly references several LFRic
-infrastructure capabilities. These capabilities are then described in
-later sections.
+core capabilities. These capabilities are then described in later
+sections.
 
 Any developer of the LFRic core or an LFRic application should have a
 good understanding of the underlying principles behind LFRic and the
 core data model, and the scientific model architecture known as
-**PSyKAl**. The `LFRic data model and PSyclone <section psykal and
-datamodel>` documentation describes key aspects of LFRic and of
+**PSyKAl**. The :ref:`LFRic data model and PSyclone <section psykal
+and datamodel>` documentation describes key aspects of LFRic and of
 PSyclone, the code autogeneration tool that LFRic applications depend
 upon.
 
-The `Application Documentation <section applications>` provides links
-to documentation for each application developed within the LFRic core
-repository, describing the role of the application and including
+The :ref:`Application Documentation section<section applications>` provides
+links to documentation for each application developed within the LFRic
+core repository, describing the role of the application and including
 pointers to the features of the LFRic core that it depends upon or
 tests.
 
-Some technical features required by applications have been implemented
-as LFRic "components". Each of these is described. TODO Add the section.
+The :ref:`Meshes section<section meshes and tools>` describes the
+LFRic mesh generator and LFRic meshes, including discussion of mesh
+partitioning, mesh hierarchies and mesh maps, the LFRic mesh
+generator.
 
-Several technical sections are given on major technical topics
-including the distributed memory strategy and implementation, the
-clock and calendar.
+The :ref:`Components section <section components>` describes
+components which are code libraries delivering specific capabilities
+required by some LFRic applications.
+
+The :ref:`build and test system section <section build and test>` describes
+the build and test system, and includes descriptions of the tools that
+underpin it.
+
+The :ref:`Technical Articles section <section technical articles>`
+includes articles on several topics including the distributed memory
+strategy and implementation, the clock and calendar.
 
 Finally, detailed API documentation is given for the LFRic
 infrastructure and each LFRic component.

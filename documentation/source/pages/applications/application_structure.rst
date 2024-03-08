@@ -26,7 +26,7 @@ outputs checkpoint dumps.
 
 The application and the model relies on LFRic infrastructure that
 comprises the core code for managing model data, but may also use one
-or more :ref:`LFRic components <section lfric components`. LFRic
+or more :ref:`LFRic components <section components>`. LFRic
 components are self-contained packages of technical or scientific
 code.
 
@@ -67,13 +67,16 @@ Once all steps are executed, the model finalise stage is called after
 which processes instantiated by the application prior to
 initialisation can be finalised.
 
-.. _section driver component overview:
+.. _section driver layer overview:
 
 The driver layer
 ----------------
 
 This section briefly describes the role of the initialise, step and
-finalise stage of a model driver layer.
+finalise stage of a model driver layer. As many apps will share common
+ways of driving the models they use, a :ref:`Driver layer component
+<section driver layer component>` has been created that contains
+standard modules that can be used to help construct an application.
 
 Driver Initialise
 ~~~~~~~~~~~~~~~~~
@@ -216,22 +219,37 @@ type onto another type. Its use is relevant to the GungHo mixed finite
 element formulation where there is a need to map fields between
 different function spaces.
 
-Algorithms and Kernels
-----------------------
+Algorithms, Kernels and the PSy layer
+-------------------------------------
 
-The algorithms and kernels are the core parts of the scientific code
-of a model. The work of the initialisation and step processes of the
-model will be managed by a set of algorithm and kernel
-modules. Broadly speaking, algorithms are higher-level subroutines
-that deal only with full fields, and kernels are lower level
-subroutines that implement the computation of the data in a field.
+The architecure of an LFRic science model follows the PSyKAl design
+which stands for PSy (Parallel Systems) layer, Kernels and ALgorithms
+that form the core parts of the scientific code of a model. Broadly
+speaking, algorithms are higher-level subroutines that deal only with
+full fields. The data in fields is encapsulated and cannot directly be
+accessed within an algorithm. Kernels are lower level subroutines that
+have access to the data in fields passed by the algorithm and
+implement the actual computations of the data requested by the
+algorithm.
 
-Within LFRic, the PSyKAl architecture governs the relationship between
-algorithms and kernels. The implementation of the PSyKAl design lies
-at the heart both of the concepts of the separation of concerns that
-LFRic aims to support and the portable performance goals that LFRic
-aims to deliver.
+The PSy layer sits between algorithms and kernels. It breaks open
+fields and feeds their data to kernels. The PSy layer gets its name
+from the fact that shared-memory parallelism can be applied at this
+level; for example, applying OpenMP loops over calls to the kernel
+with different chunks of the field data.
 
-The structure of algorithms and kernels is the subject of the major
-section describing the :ref:`LFRic data model and its use of PSyclone
-<section psykal and datamodel>`.
+PSyclone
+--------
+
+The implementation of the PSyKAl design lies at the heart both of the
+concepts of the separation of concerns that LFRic aims to support and
+the portable performance goals that LFRic aims to deliver.
+
+Critically, these goals are supported by the PSyclone application
+which autogenerates the PSy layer code using information and metadata
+parsed from algorithms and kernels and applying optional
+transformations to optimise the code.
+
+The structure of algorithms and kernels, and the use of PSyclone is
+the subject of the major section describing the :ref:`LFRic data model
+and its use of PSyclone <section psykal and datamodel>`.

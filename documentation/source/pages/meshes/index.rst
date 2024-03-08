@@ -4,8 +4,10 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-Meshes
-======
+.. _section meshes and tools:
+
+Meshes and mesh tools
+=====================
 
 LFRic relies on fields defined on formal meshes.
 

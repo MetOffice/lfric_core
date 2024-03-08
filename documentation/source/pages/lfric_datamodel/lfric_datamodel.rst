@@ -9,23 +9,19 @@
 The LFRic data model and PSyclone
 =================================
 
-PSyclone was introduced in an :ref:`earlier introduction <section
-psykal overview>`, including a brief summary of the PSyKAl design
-which delivers a separation of concerns between algorithms and kernels
-written by scientists, and technical parallel code that may need to be
-specific to the platform or the model configuration. In that section,
-the close symbiosis between LFRic and PSyclone was noted, where
-PSyclone depends on the metadata in LFRic model kernels to enable it
-to construct the correct PSy layer code and to apply optimisations
-correctly.
+The following sections of documentation describe how LFRic and
+PSyclone work together to support the separation of concerns between
+scientific and technical code and to deliver portable performance
+needed to ensure models can be ported and maintained on a variety of
+computer architectures.
 
-The following sections of the documentation will describe how LFRic
-and PSyclone work together using progressively more complex examples
-to deliver a more complete understanding of the current LFRic data
-model and the design of LFRic models as well as giving a deeper
-understanding of the design strategy. The documentation here will not
-describe all PSyclone's capabilities, which are provided in separate
-comprehensive `PSyclone documentation
+The document begins with illustrative examples before moving on to
+more complex examples based on real LFRic code. The aim is to deliver
+a more complete understanding of the current LFRic data model and the
+design of LFRic models as well as giving a deeper understanding of the
+design strategy. The documentation here will not describe all
+PSyclone's capabilities, which are provided in separate comprehensive
+`PSyclone documentation
 <https://psyclone.readthedocs.io/en/stable/index.html>`_.
 
 A key aspect of the **Momentum Atmosphere model**, for which LFRic was
