@@ -51,8 +51,8 @@ encapsulating all the data allows applications to run two or more
 models side by side, or to run ensembles of the same model side by
 side.
 
-For a model that uses `modeldb`, some aspects of the data structures
-held in `modeldb` must be configured prior to calling the driver layer
+For a model that uses ``modeldb``, some aspects of the data structures
+held in ``modeldb`` must be configured prior to calling the driver layer
 initialisation. Examples include setting up the configuration,
 defining the model name and setting the MPI communicator. Configuring
 these aspects before calling initialisation can allow multiple
@@ -61,7 +61,7 @@ concurrently or sequentially.
 
 Evolution of the model is driven by calling the model driver step the
 required number of times, typically controlled by ticks of the
-:ref:`model clock <section model clock>` held in `modeldb`.
+:ref:`model clock <section model clock>` held in ``modeldb``.
 
 Once all steps are executed, the model finalise stage is called after
 which processes instantiated by the application prior to
@@ -81,12 +81,12 @@ standard modules that can be used to help construct an application.
 Driver Initialise
 ~~~~~~~~~~~~~~~~~
 
-The driver `initialisation` stage can roughly be divided between
-initialising the infrastructure of the model, such as meshes,
+The `driver initialise` stage of an application can roughly be divided
+between initialising the infrastructure of the model, such as meshes,
 coordinates, clocks and calendars, and initialising the initial model
-state, including the reading initial data. The model initialisation
-will provide procedures for the processes required to complete the
-initialisation; separating these processes into multiple procedures
+state, including the reading initial data. The model provides
+procedures that the driver initialise calls to complete the
+initialisation. Separating these processes into multiple procedures
 gives applications flexibility in setting up models, for example,
 optimising setup where several models use the same or similar meshes.
 
@@ -106,7 +106,7 @@ that are used by the model.
 Driver Step
 ~~~~~~~~~~~
 
-The driver `step` stage will execute a single time-step of the model
+The `driver step` stage will execute a single time-step of the model
 starting at the input date and lasting for a period defined by a
 time-step length.  The driver step is responsible for calling the
 model step that integrates the model data forward one time-step, but
@@ -117,7 +117,7 @@ dumps.
 Driver Finalise
 ~~~~~~~~~~~~~~~
 
-The `finalise` stage will undertake any necessary finalisation
+The `driver finalise` stage will undertake any necessary finalisation
 processes, noting that much of the model data may go out of scope as
 soon as the driver layer finalise has completed.
 
@@ -130,7 +130,7 @@ initialise, step and finalise stages.
 Model Initialise
 ~~~~~~~~~~~~~~~~
 
-As noted above, the initialise stage may be broken into several
+As noted above, the `model initialise` stage may be broken into several
 separate procedures to allow for flexibility in application design.
 
 On completion of initialisation, the internal model data structures
@@ -151,17 +151,19 @@ stage.
 Data in a model
 ---------------
 
-In many other model infrastructures, "fields" refer to simple arrays
-of data representing some physical quantity across the domain of the
-model. Fields in LFRic are created as :ref:`LFRic field_type <section
-field>` Fortran types, which encapsulate information about the field
-alongside the data. Understanding the role of the `field_type` is
-critical to understanding LFRic, but the details are deferred to the
-section describing the :ref:`use of PSyclone and the LFRic data
-model<section psyclone and the lfric data model>`. For now, the
-distinction between LFRic fields and the simpler fields of other
-models will mostly be ignored so as to focus on the broader model
-structure.
+In many other model infrastructures, "fields" refer to simple native
+Fortran arrays of data representing some physical quantity over the
+spatial domain of the model. In contrast, fields in LFRic are created
+as :ref:`LFRic field_type <section field>` Fortran
+derived-types. Alongside the data representing the field's physical
+quantity, the field type encapsulate other information about the
+field, and provides functions for accessing information about the
+field. Understanding the role of the `field_type` is critical to
+understanding LFRic, but the details are deferred to the section
+describing the :ref:`use of PSyclone and the LFRic data model<section
+psyclone and the lfric data model>`. For now, the distinction between
+LFRic fields and the simpler fields of other models will mostly be
+ignored so as to focus on the broader model structure.
 
 A complex model such as the Momentum atmosphere requires hundreds of
 fields. To simplify the model design, the LFRic infrastructure

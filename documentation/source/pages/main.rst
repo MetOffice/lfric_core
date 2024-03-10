@@ -12,11 +12,10 @@ Introduction
 
 The `LFRic Core <https://github.com/MetOffice/lfric_core>`_ project
 develops a software infrastructure whose prime requirement is to
-support the development of the Momentum atmosphere model, to replace
-the Met Office Unified Model. LFRic core is also being developed to
-provide a common library that underpins a range of other earth system
-modelling requirements and related support tools. The LFRic Core
-Project is being led by the `Core Capability Development Team
+support the development of the Momentum atmosphere model. The LFRic
+core software also underpins a range of other earth system modelling
+requirements and related support tools. The LFRic core development is
+led by the `Core Capability Development Team
 <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science
 IT group at the Met Office.
 
@@ -49,8 +48,8 @@ contents>` of the main contents of the LFRic core repository is
 given. As noted, the Momentum atmosphere model, and related
 applications, are developed in separate repositories. The LFRic core
 repository does include some small LFRic applications for
-demonstrating features or for developing and testing particular
-capabilities.
+training purposes or for developing and testing particular
+technical capabilities.
 
 Before giving an overview of the core infrastructure, an overview of
 the :ref:`structure of a typical LFRic application <section
