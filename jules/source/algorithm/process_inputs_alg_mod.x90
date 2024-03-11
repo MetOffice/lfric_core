@@ -13,7 +13,8 @@ module process_inputs_alg_mod
   use constants_mod,        only : i_def
 
   use initialization_config_mod,  only: sst_source, sst_source_start_dump, &
-                                        init_option, init_option_fd_start_dump
+                                        init_option, init_option_fd_start_dump, &
+                                        snow_source, snow_source_surf
   use io_config_mod,              only: checkpoint_read
   use section_choice_config_mod,  only: surface, surface_jules, &
                                         radiation, radiation_socrates
@@ -25,6 +26,7 @@ module process_inputs_alg_mod
   use process_soil_kernel_mod,    only: process_soil_kernel_type
   use process_snow_kernel_mod,    only: process_snow_kernel_type
   use process_urban_kernel_mod,   only: process_urban_kernel_type
+  use jules_snow_mod,             only: nsmax
   use jules_control_init_mod,     only: n_land_tile, &
                                         first_sea_tile, n_sea_tile, &
                                         first_sea_ice_tile, n_sea_ice_tile
@@ -117,7 +119,6 @@ contains
     type( field_type ), pointer :: snow_depth_in        => null()
     type( field_type ), pointer :: snow_under_canopy_in => null()
     type( field_type ), pointer :: snowpack_density_in  => null()
-
     type( field_type ), pointer :: grad_x_orog    => null()
     type( field_type ), pointer :: grad_y_orog    => null()
     type( field_type ), pointer :: slope_angle    => null()
@@ -130,7 +131,6 @@ contains
     type( field_type ), pointer :: latitude  => null()
 
     integer( i_def ) :: n_horizon_angle, n_horizon_layer
-
 
     if (surface == surface_jules) then
 
@@ -191,8 +191,8 @@ contains
         call soil_fields%get_field('frozen_soil_moisture', frozen_soil_moisture)
       end if
 
-      if (init_option == init_option_fd_start_dump .and. &
-           .not. checkpoint_read) then
+      if ( (init_option == init_option_fd_start_dump .and. &
+           .not. checkpoint_read) .or. (snow_source == snow_source_surf)) then
         ! need to add .or. use_surf_analysis here
         call snow_fields%get_field('tile_snow_mass', tile_snow_mass)
         call snow_fields%get_field('tile_snow_rgrain', tile_snow_rgrain)
@@ -205,12 +205,23 @@ contains
         call snow_fields%get_field('snow_layer_liq_mass', snow_layer_liq_mass)
         call snow_fields%get_field('snow_layer_temp', snow_layer_temp)
         call snow_fields%get_field('snow_layer_rgrain', snow_layer_rgrain)
-        call fd_fields%get_field('tile_snow_mass_in', tile_snow_mass_in)
-        call fd_fields%get_field('tile_snow_rgrain_in', tile_snow_rgrain_in)
-        call fd_fields%get_field('n_snow_layers_in', n_snow_layers_in)
-        call fd_fields%get_field('snow_depth_in', snow_depth_in)
-        call fd_fields%get_field('snow_under_canopy_in', snow_under_canopy_in)
-        call fd_fields%get_field('snowpack_density_in', snowpack_density_in)
+        call soil_fields%get_field('soil_temperature', soil_temperature)
+
+        if (snow_source == snow_source_surf) then
+          call ancil_fields%get_field('tile_snow_rgrain_in', tile_snow_rgrain_in)
+          call ancil_fields%get_field('tile_snow_mass_in', tile_snow_mass_in)
+          call ancil_fields%get_field('snow_under_canopy_in', snow_under_canopy_in)
+          call ancil_fields%get_field('snow_depth_in', snow_depth_in)
+          call ancil_fields%get_field('snowpack_density_in', snowpack_density_in)
+          call ancil_fields%get_field('n_snow_layers_in', n_snow_layers_in)
+        else
+          call fd_fields%get_field('tile_snow_mass_in', tile_snow_mass_in)
+          call fd_fields%get_field('tile_snow_rgrain_in', tile_snow_rgrain_in)
+          call fd_fields%get_field('n_snow_layers_in', n_snow_layers_in)
+          call fd_fields%get_field('snow_depth_in', snow_depth_in)
+          call fd_fields%get_field('snow_under_canopy_in', snow_under_canopy_in)
+          call fd_fields%get_field('snowpack_density_in', snowpack_density_in)
+        end if
       end if
 
       twod_mesh => sea_ice_thickness%get_mesh()
@@ -267,33 +278,31 @@ contains
       end if
 
       ! Snow fields
-      if (init_option == init_option_fd_start_dump .and. &
-           .not. checkpoint_read) then
-        ! need to add .or. use_surf_analysis here
+      if ((init_option == init_option_fd_start_dump .and. &
+           .not. checkpoint_read) .or. snow_source == snow_source_surf) then
         ! These only need processing when cold-starting from the UM
         call invoke(multi_insert_kernel_type(tile_snow_mass, tile_snow_mass_in,&
-                                           1, n_land_tile),                   &
-                  int_multi_insert_kernel_type(n_snow_layers,n_snow_layers_in,&
-                                               1, n_land_tile),               &
-                  multi_insert_kernel_type(snow_depth, snow_depth_in,         &
-                                           1, n_land_tile),                   &
-                  multi_insert_kernel_type(tile_snow_rgrain,                  &
-                                         tile_snow_rgrain_in, 1, n_land_tile),&
-                  multi_insert_kernel_type(snow_under_canopy,                 &
-                                        snow_under_canopy_in, 1, n_land_tile),&
-                  multi_insert_kernel_type(snowpack_density,                  &
-                                         snowpack_density_in, 1, n_land_tile),&
-                  process_snow_kernel_type(tile_snow_mass, n_snow_layers,     &
-                                          snow_under_canopy, snowpack_density,&
-                                          snow_depth, snow_layer_thickness,   &
-                                          snow_layer_ice_mass,                &
-                                          snow_layer_liq_mass,                &
-                                          snow_layer_temp, snow_layer_rgrain, &
-                                          soil_temperature) )
+                                              1, n_land_tile),                   &
+                      int_multi_insert_kernel_type(n_snow_layers,n_snow_layers_in,&
+                                                   1, n_land_tile),               &
+                      multi_insert_kernel_type(snow_depth, snow_depth_in,         &
+                                               1, n_land_tile),                   &
+                      multi_insert_kernel_type(tile_snow_rgrain,                  &
+                                             tile_snow_rgrain_in, 1, n_land_tile),&
+                      multi_insert_kernel_type(snow_under_canopy,                 &
+                                            snow_under_canopy_in, 1, n_land_tile),&
+                      multi_insert_kernel_type(snowpack_density,                  &
+                                             snowpack_density_in, 1, n_land_tile), &
+                      process_snow_kernel_type(tile_snow_mass, n_snow_layers,      &
+                                               snow_under_canopy, snowpack_density,&
+                                               snow_depth, snow_layer_thickness,   &
+                                               snow_layer_ice_mass,                &
+                                               snow_layer_liq_mass,                &
+                                               snow_layer_temp, snow_layer_rgrain, &
+                                               soil_temperature) )
       end if
 
     end if
-
 
     if (radiation == radiation_socrates .and. &
         topography /= topography_flat .and. &

@@ -72,6 +72,7 @@ module gungho_setup_io_mod
                                        plant_func_ancil_path,     &
                                        sea_ancil_path,            &
                                        sea_ice_ancil_path,        &
+                                       snow_analysis_ancil_path,  &
                                        soil_ancil_path,           &
                                        soil_dust_ancil_path,      &
                                        emiss_murk_ancil_path,     &
@@ -103,7 +104,9 @@ module gungho_setup_io_mod
                                        sst_source,                &
                                        sst_source_start_dump,     &
                                        coarse_aerosol_ancil,      &
-                                       coarse_orography_ancil
+                                       coarse_orography_ancil,    &
+                                       snow_source,               &
+                                       snow_source_surf
   use io_config_mod,             only: use_xios_io,               &
                                        diagnostic_frequency,      &
                                        checkpoint_write,          &
@@ -322,10 +325,26 @@ module gungho_setup_io_mod
            .not. checkpoint_read) then
         ! need to add .or. use_surf_analysis here
 
+        if (snow_source == snow_source_surf ) then
+          if (snow_analysis_ancil_path(1:1) == '/') then
+            write(ancil_fname,'(A)') trim(snow_analysis_ancil_path)
+          else
+            write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                                     trim(snow_analysis_ancil_path)
+          end if
+          call files_list%insert_item( lfric_xios_file_type( ancil_fname, &
+                                          xios_id="snow_analysis_ancil",  &
+                                          io_mode=FILE_MODE_READ ) )
+        end if
+
         ! Set sea surface temperature ancil filename from namelist
         if (sst_source /= sst_source_start_dump) then
-          write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
-                                   trim(sst_ancil_path)
+          if (sst_ancil_path(1:1) == '/') then
+            write(ancil_fname,'(A)') trim(sst_ancil_path)
+          else
+            write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                                    trim(sst_ancil_path)
+          end if
           call files_list%insert_item( lfric_xios_file_type( ancil_fname,      &
                                                          xios_id="sst_ancil", &
                                                          io_mode=FILE_MODE_READ ) )
@@ -333,8 +352,12 @@ module gungho_setup_io_mod
 
         ! Set sea ice ancil filename from namelist
         if (.not. l_esm_couple) then
-          write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
-                                   trim(sea_ice_ancil_path)
+          if (sea_ice_ancil_path(1:1) == '/') then
+            write(ancil_fname,'(A)') trim(sea_ice_ancil_path)
+          else
+            write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
+                                    trim(sea_ice_ancil_path)
+          end if
           call files_list%insert_item( lfric_xios_file_type( ancil_fname,      &
                                                          xios_id="sea_ice_ancil", &
                                                          io_mode=FILE_MODE_READ ) )

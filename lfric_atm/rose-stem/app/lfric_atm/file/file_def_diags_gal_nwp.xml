@@ -30,6 +30,14 @@
       <field field_ref="surface__latent_heat"/>
       <field field_ref="surface__tile_moisture_flux"/>
       <field field_ref="snow__grid_snow_mass" />
+      <field field_ref="snow__snow_depth"/>
+      <field field_ref="snow__tile_snow_rgrain"/>
+      <field field_ref="snow__snow_layer_temp"/>
+      <field field_ref="snow__snow_layer_thickness"/>
+      <field field_ref="snow__snow_layer_ice_mass"/>
+      <field field_ref="snow__snow_layer_liq_mass"/>
+      <field field_ref="snow__snow_layer_rgrain"/>
+      <field field_ref="surface__sea_ice_fraction"/>
       <field field_ref="soil__soil_moisture_content" />
       <field field_ref="turbulence__zh" />
       <field field_ref="radiation__sw_up_toa" />

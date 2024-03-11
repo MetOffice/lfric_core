@@ -32,6 +32,13 @@ lw_temperature_incr = ['lw_temperature_incr', -2, 1]
 sw_heating_rate = ['sw_heating_rate', 0,    7e-5]
 trop_level      = ['trop_level', 20, 50]
 grid_snow_mass  = ['grid_snow_mass',0,1000]
+snow_depth  = ['snow_depth',0,10]
+tile_snow_rgrain = ['tile_snow_rgrain', 50, 1150]
+snow_layer_temp = ['snow_layer_temp', 200, 273.15]
+snow_layer_thickness = ['snow_layer_thickness', 0, 0.1]
+snow_layer_ice_mass = ['snow_layer_ice_mass', 0, 30]
+snow_layer_liq_mass = ['snow_layer_liq_mass', 0, 2]
+snow_layer_rgrain = ['snow_layer_rgrain', 50, 1150]
 total_prec      = ['total_prec',0,1e-3]
 ls_prec         = ['ls_prec',0,1e-3]
 sw_direct_toa   = ['sw_direct_toa', 0, 1450]
@@ -130,6 +137,10 @@ def do_plot(datapath, plotfield, plotpath='.', plotlevel=0):
         lfric = lfric[-1, 0, plotlevel]
     elif lfric.ndim == 3:
         lfric = lfric[-1, plotlevel]
+    elif lfric.ndim == 27:
+        lfric = lfric[-1, 0, plotlevel]
+    elif lfric.ndim == 11:
+        lfric = lfric[-1, 0, plotlevel]
     else:
         lfric = lfric[-1]
 
@@ -156,8 +167,10 @@ def do_plot(datapath, plotfield, plotpath='.', plotlevel=0):
                                 +', max = '+str(field_max) )
     plt.xlim([np.min(x_coord), np.max(x_coord)])
     plt.ylim([np.min(y_coord), np.max(y_coord)])
-
-    plt.savefig(plotpath+'/'+plotfield[varname]+'.png', bbox_inches='tight')
+    if plotlevel != 0:
+        plt.savefig(plotpath+'/'+plotfield[varname]+'_'+str(plotlevel)+'.png', bbox_inches='tight')
+    else:
+        plt.savefig(plotpath+'/'+plotfield[varname]+'.png', bbox_inches='tight')
 
 
 if __name__ == "__main__":

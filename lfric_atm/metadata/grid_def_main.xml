@@ -98,4 +98,18 @@
     <axis axis_ref="monthly_climatology"/>
     <axis axis_ref="lw_bands"/>
   </grid>
+
+  <!-- for SURF ancillary style files -->
+  <grid id="one_time_snow_layer_tile_grid">
+    <domain domain_ref="face"/>
+    <axis axis_ref="snow_layers_and_tiles"/>
+    <axis axis_ref="one_time_axis"/>
+  </grid>
+  <grid id="one_time_tile_grid">
+    <domain domain_ref="face"/>
+    <axis axis_ref="land_tiles"/>
+    <axis axis_ref="one_time_axis"/>
+  </grid>
+
+
 </grid_definition>

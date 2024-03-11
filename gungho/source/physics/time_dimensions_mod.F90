@@ -128,6 +128,9 @@ module time_dimensions_mod
 
     if (file == cmdi) then
       status = .false.
+    else if (file(1:1) == '/') then
+      tdim = get_netcdf_time_dim(trim(file) // '.nc')
+      status = .true.
     else
       tdim = get_netcdf_time_dim(trim(dir) // '/' // trim(file) // '.nc')
       status = .true.

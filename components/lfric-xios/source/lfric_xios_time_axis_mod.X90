@@ -133,7 +133,9 @@ contains
   !> @param[in] interp_flag  Flag determining if time_axis fields are linearly
   !>                         interpolated before being passed to the model data
   !> @param[in] pop_freq     The data population frequency of the time axis
-  subroutine initialise( self, name, file_id, yearly, interp_flag, pop_freq )
+  !> @param[in] window_size  Optional to indicate the size of the time window for non-interpolated files
+  subroutine initialise( self, name, file_id, yearly, interp_flag, pop_freq, &
+                         window_size)
 
     implicit none
 
@@ -143,6 +145,7 @@ contains
     logical(l_def), optional,     intent(in)    :: yearly
     logical(l_def), optional,     intent(in)    :: interp_flag
     character(*),   optional,     intent(in)    :: pop_freq
+    integer(i_def), optional,     intent(in)    :: window_size
 
     ! Name the object
     self%name = name
@@ -188,6 +191,7 @@ contains
       ! Default to smallest update frequency xios can handle
       self%population_frequency = xios_duration(0,0,0,0,0,1)
     end if
+    if ( present(window_size) ) self%window_size = window_size
 
   end subroutine initialise
 
@@ -449,6 +453,8 @@ contains
 
     type(xios_date) :: model_date
     integer(i_def)  :: i
+    type(xios_date) :: model_date_minus_1
+    type (xios_duration) :: one_day
 
     call xios_get_current_date(model_date)
 
@@ -476,16 +482,36 @@ contains
                       LOG_LEVEL_ERROR)
 
     else
-      ! Cycle through data to find correct time window
-      do i = 1, size(self%time_data)
-        if ( self%time_data(1) <= model_date .and. &
-              model_date < self%time_data(2) ) then
-          return
+      if (size(self%time_data) == 1) then
+        ! Check the time is within a 24 hour window of model date.
+        ! This is until we can understand time bounds/validity time
+        one_day = xios_duration(0,0,1,0,0,0)
+        model_date_minus_1 = model_date - one_day
+        if ((model_date_minus_1 <= self%time_data(1)) .AND. (self%time_data(1) <= model_date)) then
+            return
         else
-          call self%shift_forward()
-        end if
-      end do
+          ! something's gone wrong
+          write(log_scratch_space, "(2(A), 3(I4, ' '), 2(I2.2, :, ':'), (A), 3(I4, ' '), 2(I2.2, :, ':'))") &
+                                  "Single time axis ", self%name, &
+                                  self%time_data%year, self%time_data%month, &
+                                  self % time_data%day,  self%time_data%hour, self%time_data%minute, &
+                                  " not within 24 hours of model start ", &
+                                  model_date%year, model_date%month, model_date%day, &
+                                  model_date%hour, model_date%minute
 
+          call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+        end if
+      else
+        ! Cycle through data to find correct time window
+        do i = 1, size(self%time_data)
+          if ( self%time_data(1) <= model_date .and. &
+                model_date < self%time_data(2) ) then
+            return
+          else
+            call self%shift_forward()
+          end if
+        end do
+      end if
       ! If we're still going something's gone wrong
       call log_event("Model start date out of bounds for time axis "// &
                       self%name, LOG_LEVEL_ERROR)
