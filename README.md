@@ -1,5 +1,6 @@
 LFRic Core
 ==========
+[![Docs](https://github.com/MetOffice/lfric_core/actions/workflows/sphinx.yml/badge.svg?branch=main)](https://github.com/MetOffice/lfric_core/actions/workflows/sphinx.yml)
 
 Location for LFRic infrastructure documentation. Once the great repository split
 has occurred the actual source code may join it.
