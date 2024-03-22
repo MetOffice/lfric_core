@@ -9,26 +9,22 @@
 Application Structure
 =====================
 
-An LFRic application is defined as an executable that runs one, or
-possibly more, LFRic models. Here, we distinguish the model from the
-application: the model is the core science code that could, in
-principle, be used in different applications.
+The LFRic software includes core software for creating and using model
+fields and :ref:`LFRic component <section components>` software that
+is intended to support the creation of different model applications
+that all have a similar structure. This section describes a typical
+LFRic application that runs a single scientific model: the model is
+the core science code that could, in principle, be used in different
+applications, whereas the application is all the code used to compile
+a single executable.
 
-This section describes the structure of a simple application that runs
-just one LFRic model. The Momentum atmosphere running without coupling
-to an ocean model or to data assimilation systems would be an example
-of such an application.
-
-Here, we envisage an application that reads configuration information,
-reads input data, sets up and calls the model to integrate field data
-on model meshes over multiple time-steps, outputs diagnostics, and
-outputs checkpoint dumps.
-
-The application and the model relies on LFRic infrastructure that
-comprises the core code for managing model data, but may also use one
-or more :ref:`LFRic components <section components>`. LFRic
-components are self-contained packages of technical or scientific
-code.
+The Momentum atmosphere application, running without coupling to an
+ocean model or to data assimilation systems, is an example of such an
+application as it depends on several LFRic components. It reads
+configuration information, reads input data, sets up and calls the
+atmosphere model code to integrate field data on model meshes over
+multiple time-steps, outputs diagnostics, and outputs checkpoint
+dumps.
 
 TODO: Add a diagram that illustrates a simplified calling tree.
 
