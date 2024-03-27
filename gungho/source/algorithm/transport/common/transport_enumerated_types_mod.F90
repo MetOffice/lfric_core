@@ -41,12 +41,14 @@ module transport_enumerated_types_mod
   integer(kind=i_def), parameter :: horizontal_monotone_koren    = 3_i_def
   integer(kind=i_def), parameter :: horizontal_monotone_strict   = 4_i_def
   integer(kind=i_def), parameter :: horizontal_monotone_relaxed  = 5_i_def
+  integer(kind=i_def), parameter :: horizontal_monotone_positive = 6_i_def
 
   integer(kind=i_def), parameter :: vertical_monotone_none     = 1_i_def
   integer(kind=i_def), parameter :: vertical_monotone_clipping = 2_i_def
   integer(kind=i_def), parameter :: vertical_monotone_koren    = 3_i_def
   integer(kind=i_def), parameter :: vertical_monotone_strict   = 4_i_def
   integer(kind=i_def), parameter :: vertical_monotone_relaxed  = 5_i_def
+  integer(kind=i_def), parameter :: vertical_monotone_positive = 6_i_def
 
   integer(kind=i_def), parameter :: vertical_monotone_order_constant = 1_i_def
   integer(kind=i_def), parameter :: vertical_monotone_order_linear   = 2_i_def

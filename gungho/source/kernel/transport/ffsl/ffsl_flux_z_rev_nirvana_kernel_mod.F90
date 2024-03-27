@@ -27,7 +27,8 @@ use fs_continuity_mod,              only : W3, W2v
 use constants_mod,                  only : r_tran, i_def, l_def, EPS_R_TRAN
 use kernel_mod,                     only : kernel_type
 use transport_enumerated_types_mod, only : vertical_monotone_relaxed, &
-                                           vertical_monotone_strict
+                                           vertical_monotone_strict,  &
+                                           vertical_monotone_positive
 
 implicit none
 
@@ -100,6 +101,7 @@ subroutine ffsl_flux_z_rev_nirvana_code( nlayers,   &
   use subgrid_vertical_support_mod, only: vertical_ppm_recon,                  &
                                           vertical_ppm_mono_relax,             &
                                           vertical_ppm_mono_strict,            &
+                                          vertical_ppm_positive,               &
                                           second_order_vertical_edge
 
   implicit none
@@ -239,6 +241,12 @@ subroutine ffsl_flux_z_rev_nirvana_code( nlayers,   &
                                    field(w3_idx + dep_cell_idx), &
                                    edge_value(dep_cell_idx),     &
                                    edge_value(dep_cell_idx + 1))
+
+    case ( vertical_monotone_positive )
+      call vertical_ppm_positive(reconstruction, frac_dist,    &
+                                 field(w3_idx + dep_cell_idx), &
+                                 edge_value(dep_cell_idx),     &
+                                 edge_value(dep_cell_idx + 1))
 
     end select
 

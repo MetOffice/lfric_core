@@ -9,9 +9,10 @@
 module subgrid_horizontal_support_mod_test
 
   use constants_mod,                  only: i_def, l_def, r_tran
-  use transport_enumerated_types_mod, only: horizontal_monotone_none,   &
-                                            horizontal_monotone_strict, &
-                                            horizontal_monotone_relaxed
+  use transport_enumerated_types_mod, only: horizontal_monotone_none,    &
+                                            horizontal_monotone_strict,  &
+                                            horizontal_monotone_relaxed, &
+                                            horizontal_monotone_positive
 
   implicit none
 
@@ -75,6 +76,14 @@ contains
 
     ! Relaxed monotonicity
     monotone = horizontal_monotone_relaxed
+    answer = 10.0_r_tran
+
+    edge_value = fourth_order_horizontal_edge(rho,monotone)
+
+    @assertEqual(answer, edge_value, tol)
+
+    ! Positivity
+    monotone = horizontal_monotone_positive
     answer = 10.75_r_tran
 
     edge_value = fourth_order_horizontal_edge(rho,monotone)

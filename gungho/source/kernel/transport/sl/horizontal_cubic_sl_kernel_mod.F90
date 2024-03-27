@@ -22,7 +22,9 @@ module horizontal_cubic_sl_kernel_mod
                                  STENCIL, CROSS, GH_INTEGER, &
                                  ANY_DISCONTINUOUS_SPACE_1
   use constants_mod,      only : r_tran, i_def, r_def
-  use transport_enumerated_types_mod, only : horizontal_monotone_strict
+  use transport_enumerated_types_mod, only : horizontal_monotone_strict,   &
+                                             horizontal_monotone_relaxed,  &
+                                             horizontal_monotone_positive
   use fs_continuity_mod,  only : W2h
   use kernel_mod,         only : kernel_type
 
@@ -298,6 +300,18 @@ contains
 
         ! Monotone
         if (monotone == horizontal_monotone_strict) then
+          ! Get neighbouring field bounds
+          qx_min = min( field_y(stencil_map_y(1,sten_idx_lo) + k), &
+                        field_y(stencil_map_y(1,sten_idx_hi) + k) )
+          qx_max = max( field_y(stencil_map_y(1,sten_idx_lo) + k), &
+                        field_y(stencil_map_y(1,sten_idx_hi) + k) )
+          qy_min = min( field_x(stencil_map_x(1,sten_idy_lo) + k), &
+                        field_x(stencil_map_x(1,sten_idy_hi) + k) )
+          qy_max = max( field_x(stencil_map_x(1,sten_idy_lo) + k), &
+                        field_x(stencil_map_x(1,sten_idy_hi) + k) )
+          field_out_x = min( qx_max, max( field_out_x, qx_min ) )
+          field_out_y = min( qy_max, max( field_out_y, qy_min ) )
+        else if (monotone == horizontal_monotone_relaxed) then
           ! Get stencil bounds
           qx_min = min( field_y(stencil_map_y(1,sten_idx_lo_m) + k), field_y(stencil_map_y(1,sten_idx_lo) + k), &
                         field_y(stencil_map_y(1,sten_idx_hi) + k), field_y(stencil_map_y(1,sten_idx_hi_p) + k) )
@@ -309,6 +323,10 @@ contains
                         field_x(stencil_map_x(1,sten_idy_hi) + k), field_x(stencil_map_x(1,sten_idy_hi_p) + k) )
           field_out_x = min( qx_max, max( field_out_x, qx_min ) )
           field_out_y = min( qy_max, max( field_out_y, qy_min ) )
+        else if (monotone == horizontal_monotone_positive) then
+          ! Make sure field out is positive
+          field_out_x = max( field_out_x, 0.0_r_tran )
+          field_out_y = max( field_out_y, 0.0_r_tran )
         end if
 
         ! Get increment

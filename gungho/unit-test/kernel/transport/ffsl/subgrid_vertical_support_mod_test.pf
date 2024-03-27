@@ -246,11 +246,11 @@ contains
   !------------------------------------------------------------------
 
   @test
-  subroutine fourth_order_vertical_mono_strict_test()
+  subroutine fourth_order_vertical_mono_test()
     use pFUnit_Mod
     use, intrinsic :: iso_fortran_env,  only: real64
     use subgrid_vertical_support_mod,   only: fourth_order_vertical_edge, &
-                                              fourth_order_vertical_mono_strict
+                                              fourth_order_vertical_mono
 
     implicit none
 
@@ -291,73 +291,15 @@ contains
                                       edge_to_do, &
                                       edge_value)
 
-      call fourth_order_vertical_mono_strict(rho,        &
-                                             edge_to_do, &
-                                             edge_value)
-
-      @assertEqual(answer(edge_to_do+1), edge_value, tol)
-
-    end do
-
-  end subroutine fourth_order_vertical_mono_strict_test
-
-  !------------------------------------------------------------------
-
-  @test
-  subroutine fourth_order_vertical_mono_relax_test()
-    use pFUnit_Mod
-    use, intrinsic :: iso_fortran_env,  only: real64
-    use subgrid_vertical_support_mod,   only: fourth_order_vertical_edge, &
-                                              fourth_order_vertical_mono_relax
-
-    implicit none
-
-    real(kind=r_tran)   :: rho(1:4), dz(1:4), edge_value, tol
-    real(kind=r_tran)   :: answer(1:5)
-    integer(kind=i_def) :: edge_to_do
-
-    ! Set tolerance
-    if ( r_tran == real64 ) then
-      tol = 1.0e-12_r_tran
-    else
-      tol = 1.0e-6_r_tran
-    end if
-
-    ! Unlimited fourth order edge tested above, so just test monotonicity
-    ! using a uniform grid with a non-linear function
-    dz(1)  = 1.0_r_tran
-    dz(2)  = 1.0_r_tran
-    dz(3)  = 1.0_r_tran
-    dz(4)  = 1.0_r_tran
-    rho(1) = 0.0_r_tran
-    rho(2) = 10.0_r_tran
-    rho(3) = 8.0_r_tran
-    rho(4) = 2.0_r_tran
-
-    answer(1) = 0.0_r_tran
-    answer(2) = 23.0_r_tran/3.0_r_tran
-    answer(3) = 31.0_r_tran/3.0_r_tran
-    answer(4) = 5.0_r_tran
-    answer(5) = 2.0_r_tran
-
-    ! Loop over all edges on the rho stencil
-    do edge_to_do = 0, 4
-
-      edge_value = 0.0_r_tran
-      call fourth_order_vertical_edge(rho,        &
-                                      dz,         &
+      call fourth_order_vertical_mono(rho,        &
                                       edge_to_do, &
                                       edge_value)
 
-      call fourth_order_vertical_mono_relax(rho,        &
-                                            edge_to_do, &
-                                            edge_value)
-
       @assertEqual(answer(edge_to_do+1), edge_value, tol)
 
     end do
 
-  end subroutine fourth_order_vertical_mono_relax_test
+  end subroutine fourth_order_vertical_mono_test
 
   !------------------------------------------------------------------
 
@@ -509,12 +451,64 @@ contains
 
     call vertical_nirvana_mono_relax(recon,      &
                                      dep_pt,     &
-                                     rho)
+                                     rho,        &
+                                     grad_below, &
+                                     grad_above, &
+                                     dz)
 
     @assertEqual(answer, recon, tol)
 
-
   end subroutine vertical_nirvana_mono_relax_test
+
+  !------------------------------------------------------------------
+
+  @test
+  subroutine vertical_nirvana_positive_test()
+    use pFUnit_Mod
+    use, intrinsic :: iso_fortran_env,  only: real64
+    use subgrid_vertical_support_mod,   only: vertical_nirvana_recon, &
+                                              vertical_nirvana_positive
+
+    implicit none
+
+    real(kind=r_tran)   :: rho, dz, tol
+    real(kind=r_tran)   :: answer, grad_above, grad_below
+    real(kind=r_tran)   :: recon, dep_pt
+
+    ! Set tolerance and set unit grid space
+    if ( r_tran == real64 ) then
+      tol = 1.0e-12_r_tran
+    else
+      tol = 1.0e-6_r_tran
+    end if
+    dz  = 1.0_r_tran
+
+    ! Test a non-linear function with positivity
+    rho        = 0.1_r_tran
+    grad_below = -4.0_r_tran
+    grad_above = 0.0_r_tran
+    dep_pt     = 0.1_r_tran
+
+    ! Without positivity the recon=-0.56, with positivty the
+    ! recon should revert to the rho value of 0.1
+    answer = 0.1_r_tran
+    call vertical_nirvana_recon(recon,      &
+                                dep_pt,     &
+                                rho,        &
+                                grad_below, &
+                                grad_above, &
+                                dz)
+
+    call vertical_nirvana_positive(recon,      &
+                                   dep_pt,     &
+                                   rho,        &
+                                   grad_below, &
+                                   grad_above, &
+                                   dz)
+
+    @assertEqual(answer, recon, tol)
+
+  end subroutine vertical_nirvana_positive_test
 
   !------------------------------------------------------------------
 
@@ -658,6 +652,53 @@ contains
     @assertEqual(answer, recon, tol)
 
   end subroutine vertical_ppm_mono_relax_test
+
+  !------------------------------------------------------------------
+
+  @test
+  subroutine vertical_ppm_positive_test()
+    use pFUnit_Mod
+    use, intrinsic :: iso_fortran_env,  only: real64
+    use subgrid_vertical_support_mod,   only: vertical_ppm_recon, &
+                                              vertical_ppm_positive
+
+    implicit none
+
+    real(kind=r_tran)   :: rho, rho_L, rho_R, tol
+    real(kind=r_tran)   :: answer, recon, dep_pt
+
+    ! Set tolerance
+    if ( r_tran == real64 ) then
+      tol = 1.0e-12_r_tran
+    else
+      tol = 1.0e-6_r_tran
+    end if
+
+    ! Test a non-linear function with positivity
+    rho_L    = 1.0_r_tran
+    rho_R    = 1.0_r_tran
+    rho      = 0.1_r_tran
+    dep_pt   = 0.1_r_tran
+
+    ! Without positivity the recon=0.7480, with positivty the
+    ! recon should revert to the rho value of 0.1
+    answer = 0.1_r_tran
+
+    call vertical_ppm_recon(recon,  &
+                            dep_pt, &
+                            rho,    &
+                            rho_L,  &
+                            rho_R)
+
+    call vertical_ppm_positive(recon,  &
+                               dep_pt, &
+                               rho,    &
+                               rho_L,  &
+                               rho_R)
+
+    @assertEqual(answer, recon, tol)
+
+  end subroutine vertical_ppm_positive_test
 
   !------------------------------------------------------------------
 

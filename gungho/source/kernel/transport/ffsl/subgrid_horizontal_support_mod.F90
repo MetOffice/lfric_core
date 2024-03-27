@@ -11,6 +11,7 @@ module subgrid_horizontal_support_mod
 use constants_mod,                  only: i_def, r_tran, l_def, EPS_R_TRAN
 use transport_enumerated_types_mod, only: horizontal_monotone_strict,   &
                                           horizontal_monotone_relaxed,  &
+                                          horizontal_monotone_positive, &
                                           horizontal_monotone_none
 
 implicit none
@@ -54,31 +55,25 @@ contains
     integer(kind=i_def), intent(in) :: monotone
 
     real(kind=r_tran) :: density_at_edge
-    real(kind=r_tran) :: t1, t2, t3, tmax, tmin
+    real(kind=r_tran) :: t1, tmax, tmin
 
     ! As the cell widths are assumed to be constant the edge value reduces to that given in
     ! Colella and Woodward, JCP, 54, 1984, equation (1.9)
     density_at_edge = (7.0_r_tran/12.0_r_tran) * (density(2)+density(3)) &
                      -(1.0_r_tran/12.0_r_tran) * (density(1)+density(4))
 
-    if ( monotone == horizontal_monotone_strict ) then
-      ! Strict monotonicity
+    if ( monotone == horizontal_monotone_strict .OR. &
+         monotone == horizontal_monotone_relaxed ) then
+      ! Limit edge value to be bounded by neighbouring values
       t1 = ( density_at_edge - density(2) )*( density(3) - density_at_edge )
       if ( t1 < 0.0_r_tran ) then
          tmin = min(density(3),density(2))
          tmax = max(density(3),density(2))
          density_at_edge = min( tmax, max(density_at_edge,tmin) )
       end if
-    else if ( monotone == horizontal_monotone_relaxed ) then
-      ! Relaxed monotonicity
-      t1 = ( density_at_edge - density(2) )*( density(3) - density_at_edge )
-      t2 = ( density(2) - density(1) )*( density(4) - density(3) )
-      t3 = ( density_at_edge - density(2) )*( density(2) - density(1) )
-      if ( t1 < 0.0_r_tran .AND. ( t2 >= 0.0_r_tran .OR. t3 <= 0.0_r_tran ) ) then
-         tmin = min(density(3),density(2))
-         tmax = max(density(3),density(2))
-         density_at_edge = min( tmax, max(density_at_edge,tmin) )
-      end if
+    else if ( monotone == horizontal_monotone_positive ) then
+      ! Positivity - ensure edge value is positive
+      density_at_edge = max(density_at_edge,0.0_r_tran)
     end if
 
   end function fourth_order_horizontal_edge
@@ -112,7 +107,7 @@ contains
     real(kind=r_tran) :: edge_left
     real(kind=r_tran) :: edge_right
     real(kind=r_tran) :: cm, cc, cp
-    real(kind=r_tran) :: t1, t2, t3
+    real(kind=r_tran) :: t1, t2, t3, aa, bb
 
     ! Get PPM edge values
     edge_left = fourth_order_horizontal_edge(field(1:4),monotone)
@@ -138,6 +133,7 @@ contains
       t1 = (2.0_r_tran*edge_left + edge_right - 3.0_r_tran*field(3)) &
            / (3.0_r_tran*edge_left + 3.0_r_tran*edge_right - 6.0_r_tran*field(3) + EPS_R_TRAN)
       if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+        ! If subgrid reconstruction has extrema in the cell then revert to constant reconstruction
         recon = field(3)
       end if
     else if ( monotone == horizontal_monotone_relaxed ) then
@@ -145,11 +141,14 @@ contains
       t1 = (2.0_r_tran*edge_left + edge_right - 3.0_r_tran*field(3)) &
            / (3.0_r_tran*edge_left + 3.0_r_tran*edge_right - 6.0_r_tran*field(3) + EPS_R_TRAN)
       if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+        ! If subgrid reconstruction has extrema in the cell then check smoothness of field
         t2 = (edge_right - field(3))*(field(3) - edge_left)
         t3 = abs(field(3) - edge_left) - abs(edge_right - field(3))
         if ( t2 < 0.0_r_tran ) then
+          ! Revert to constant reconstruction
           recon = field(3)
         else
+          ! Ensure subgrid reconstruction is bounded by edge values
           if ( t3 < 0.0_r_tran ) then
             if (dep >= 0.0_r_tran) then
               cp = 0.0_r_tran
@@ -172,6 +171,20 @@ contains
             end if
           end if
           recon = cm*edge_left + cc*field(3) + cp*edge_right
+        end if
+      end if
+    else if ( monotone == horizontal_monotone_positive ) then
+      ! Positive definite limiter
+      aa = -4.0_r_tran*edge_left - 2.0_r_tran*edge_right + 6.0_r_tran*field(3)
+      bb = 3.0_r_tran*edge_left + 3.0_r_tran*edge_right - 6.0_r_tran*field(3)
+      ! Find stationary point of parabolic subgrid reconstruction
+      t1 = -0.5_r_tran*aa / (bb + EPS_R_TRAN)
+      if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+        ! If stationary point lies within the grid cell and makes the subgrid reconstruction
+        ! negative, we revert to constant reconstruction
+        t2 = edge_left + aa * t1 + bb * t1 * t1
+        if ( t2 .le. 0.0_r_tran ) then
+          recon = field(3)
         end if
       end if
     end if
@@ -203,7 +216,8 @@ contains
     integer(kind=i_def), intent(in)  :: monotone
 
     real(kind=r_tran) :: cm, cc, cp
-    real(kind=r_tran) :: p0, p1, pmin0, pmin1, pmax0, pmax1, t1, t2, t3
+    real(kind=r_tran) :: p0, p1, pmin0, pmin1, pmax0, pmax1
+    real(kind=r_tran) :: q0, q1, t1, t2, t3
     real(kind=r_tran), parameter :: sixth = 1.0_r_tran/6.0_r_tran
 
     ! Compute reconstruction weights based on sign of fractional departure distance
@@ -223,11 +237,14 @@ contains
     ! Apply monotonicity if needed
     if ( monotone == horizontal_monotone_strict ) then
       ! Strict monotonicity
+      ! Find stationary point of the parabolic subgrid reconstruction
       t1 = -0.5_r_tran*( field(2)-field(1) ) / &
            ( (field(1)-2.0_r_tran*field(2)+field(3))/2.0_r_tran + EPS_R_TRAN )
       if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+        ! If subgrid reconstruction has extrema in the cell then revert to constant reconstruction
         recon = field(2)
       else
+        ! Compute edge values of the parabolic subgrid reconstruction
         p0 = (-field(3) + 5.0_r_tran * field(2) + 2.0_r_tran * field(1)) * sixth
         p1 = (2.0_r_tran*field(3) + 5.0_r_tran * field(2) -  field(1)) * sixth
         pmin0 = min( field(1), field(2))
@@ -235,21 +252,36 @@ contains
         pmin1 = min( field(3), field(2))
         pmax1 = max( field(3), field(2))
         if ( p0 .gt. pmax0 .OR. p0 .lt. pmin0 .OR. p1 .gt. pmax1 .OR. p1 .lt. pmin1) then
+          ! If edge values exceed neighbouring field values then revert to constant reconstruction
           recon = field(2)
         end if
       end if
     else if ( monotone == horizontal_monotone_relaxed ) then
       ! Relaxed monotonicity
+      ! Find stationary point of the parabolic subgrid reconstruction
       t1 = -0.5_r_tran*( field(2)-field(1) ) / &
            ( (field(1)-2.0_r_tran*field(2)+field(3))*0.5_r_tran + EPS_R_TRAN )
-      if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
-        p0 = 0.5_r_tran*(field(1)+field(2))
-        p1 = 0.5_r_tran*(field(2)+field(3))
-        t2 = (p1-field(2)) * (field(2)-p0)
-        t3 = abs(field(2)-p0) - abs(p1-field(2))
+      ! Compute edge values of the parabolic subgrid reconstruction
+      p0 = (-field(3) + 5.0_r_tran * field(2) + 2.0_r_tran * field(1)) / 6.0_r_tran
+      p1 = (2.0_r_tran*field(3) + 5.0_r_tran * field(2) -  field(1)) / 6.0_r_tran
+      pmin0 = min( field(1), field(2))
+      pmax0 = max( field(1), field(2))
+      pmin1 = min( field(3), field(2))
+      pmax1 = max( field(3), field(2))
+      ! Check if stationary point lies within the cell, or if edge values exceed
+      ! neighbouring field values
+      if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran .OR. &
+             p0 .ge. pmax0 .OR. p0 .le. pmin0 .OR. p1 .ge. pmax1 .OR. p1 .le. pmin1) then
+        ! Check smoothness of field
+        q0 = 0.5_r_tran*(field(1)+field(2))
+        q1 = 0.5_r_tran*(field(2)+field(3))
+        t2 = (q1-field(2)) * (field(2)-q0)
+        t3 = abs(field(2)-q0) - abs(q1-field(2))
         if (t2 < 0.0_r_tran) then
+          ! Revert to constant reconstruction
           recon = field(2)
         else
+          ! Ensure subgrid reconstruction is bounded by edge values
           if (t3 < 0.0_r_tran) then
             if (dep >= 0.0_r_tran) then
               cp = 0.0_r_tran
@@ -271,7 +303,28 @@ contains
               cm = 0.0_r_tran
             end if
           end if
-          recon = cm*p0 + cc*field(2) + cp*p1
+          recon = cm*q0 + cc*field(2) + cp*q1
+        end if
+      end if
+    else if ( monotone == horizontal_monotone_positive ) then
+      ! Positive definite limiter finds the stationary point of parabolic subgrid reconstruction
+      t1 = -0.5_r_tran*( field(2)-field(1) ) / &
+           ( (field(1)-2.0_r_tran*field(2)+field(3))/2.0_r_tran + EPS_R_TRAN )
+      if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+        ! If stationary point lies within the grid cell and makes the subgrid reconstruction
+        ! negative, we revert to constant reconstruction
+        t2 = (-field(3) + 5.0_r_tran*field(2) + 2.0_r_tran*field(1))/6.0_r_tran + &
+             (field(2) - field(1)) * t1 + 0.5_r_tran*(field(3) - 2.0_r_tran*field(2) + field(1))  * t1 * t1
+        if ( t2 < 0.0_r_tran ) then
+          recon = field(2)
+        end if
+      else
+        ! If the end points of the parabolic subgrid reconstruction are negative
+        ! we revert to constant reconstruction
+        p0 = (-field(3) + 5.0_r_tran * field(2) + 2.0_r_tran * field(1)) / 6.0_r_tran
+        p1 = (2.0_r_tran*field(3) + 5.0_r_tran * field(2) -  field(1)) / 6.0_r_tran
+        if ( p0 .le. 0.0_r_tran .OR. p1 .le. 0.0_r_tran ) then
+          recon = field(2)
         end if
       end if
     end if

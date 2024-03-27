@@ -25,10 +25,7 @@ module ffsl_vert_alg_mod
                                               equation_form_conservative, &
                                               equation_form_consistent,   &
                                               splitting_strang_vhv,       &
-                                              direction_v,                &
-                                              vertical_monotone_none,     &
-                                              vertical_monotone_strict,   &
-                                              vertical_monotone_relaxed
+                                              direction_v
   use transport_metadata_mod,           only: transport_metadata_type
   use transport_runtime_alg_mod,        only: transport_runtime_type
   use transport_runtime_collection_mod, only: get_transport_runtime

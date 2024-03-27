@@ -22,12 +22,13 @@ public :: fourth_order_vertical_edge
 public :: vertical_nirvana_recon
 public :: vertical_ppm_recon
 ! Monotonic limiters
-public :: fourth_order_vertical_mono_strict
-public :: fourth_order_vertical_mono_relax
+public :: fourth_order_vertical_mono
 public :: vertical_nirvana_mono_strict
 public :: vertical_nirvana_mono_relax
+public :: vertical_nirvana_positive
 public :: vertical_ppm_mono_strict
 public :: vertical_ppm_mono_relax
+public :: vertical_ppm_positive
 
 contains
 
@@ -225,8 +226,8 @@ contains
   !!                          For dep>0 the recon lives above the cell
   !!                          For dep<0 the recon lives below the cell
   !! @param[in]   field       Field value of the cell
-  !! @param[out]  grad_below  Estimate of gradient at bottom edge
-  !! @param[out]  grad_above  Estimate of gradient at top edge
+  !! @param[in]   grad_below  Estimate of gradient at bottom edge
+  !! @param[in]   grad_above  Estimate of gradient at top edge
   !! @param[in]   dz          Height of cell
   !----------------------------------------------------------------------------
   subroutine vertical_nirvana_recon(recon,      &
@@ -279,8 +280,8 @@ contains
   !!                          For dep>0 the recon lives above the cell
   !!                          For dep<0 the recon lives below the cell
   !! @param[in]   field       Field values in the cell
-  !! @param[out]  edge_below  Estimate of edge value below the cell
-  !! @param[out]  edge_above  Estimate of edge value above the cell
+  !! @param[in]   edge_below  Estimate of edge value below the cell
+  !! @param[in]   edge_above  Estimate of edge value above the cell
   !----------------------------------------------------------------------------
   subroutine vertical_ppm_recon(recon,      &
                                 dep,        &
@@ -321,18 +322,18 @@ contains
   ! ========================================================================== !
 
   !----------------------------------------------------------------------------
-  !> @brief Applies strict monotonicity to a 4th-order edge reconstruction.
-  !> @param[in]   rho        Density values of four cells which have the ordering
-  !!                         | 1 | 2 | 3 | 4 |
-  !> @param[in]   edge_to_do Tells routine which edge to do based on
-  !!                         cells       | 1 | 2 | 3 | 4 |
-  !!                         with edges  0   1   2   3   4
-  !> @param[out]  edge_below The edge value located below layer k
-  !!                         (layer k corresponds to cell 3 index above)
+  !> @brief Applies monotonicity to a 4th-order edge reconstruction.
+  !> @param[in]    rho        Density values of four cells which have the ordering
+  !!                          | 1 | 2 | 3 | 4 |
+  !> @param[in]    edge_to_do Tells routine which edge to do based on
+  !!                          cells       | 1 | 2 | 3 | 4 |
+  !!                          with edges  0   1   2   3   4
+  !> @param[inout] edge_below The edge value located below layer k
+  !!                          (layer k corresponds to cell 3 index above)
   !----------------------------------------------------------------------------
-  subroutine fourth_order_vertical_mono_strict(rho,        &
-                                               edge_to_do, &
-                                               edge_below)
+  subroutine fourth_order_vertical_mono(rho,        &
+                                        edge_to_do, &
+                                        edge_below)
 
     implicit none
 
@@ -356,71 +357,19 @@ contains
       edge_below = min( max( rho(4), rho(3) ), max( edge_below, min( rho(4), rho(3) ) ) )
     end if
 
-  end subroutine fourth_order_vertical_mono_strict
-
-  !----------------------------------------------------------------------------
-  !> @brief Applies relaxed monotonicity to a 4th-order edge reconstruction.
-  !> @details Uses a fourth-order interpolation to find the vertical cell edge
-  !!          values of rho. The vertical grid spacing is used to compute the
-  !!          mass, and a high-order polynomial is fit through the cumulative
-  !!          mass points. This polynomial is differentiated and evaluated
-  !!          at the height of the cell edge, to give the cell edge value.
-  !!          Relaxed monotonicity constraints are then applied.
-  !!
-  !> @param[in]   rho        Density values of four cells which have the ordering
-  !!                         | 1 | 2 | 3 | 4 |
-  !> @param[in]   edge_to_do Tells routine which edge to do based on
-  !!                         cells       | 1 | 2 | 3 | 4 |
-  !!                         with edges  0   1   2   3   4
-  !> @param[out]  edge_below The edge value located below layer k
-  !!                         (layer k corresponds to cell 3 index above)
-  !----------------------------------------------------------------------------
-  subroutine fourth_order_vertical_mono_relax(rho,        &
-                                              edge_to_do, &
-                                              edge_below)
-
-    implicit none
-
-    real(kind=r_tran),    intent(in)    :: rho(1:4)
-    integer(kind=i_def),  intent(in)    :: edge_to_do
-    real(kind=r_tran),    intent(inout) :: edge_below
-
-    real(kind=r_tran) :: t1, t2, t3, tmin, tmax
-
-    ! Relaxed Monotonicity
-    if ( edge_to_do > 0_i_def .AND. edge_to_do < 4_i_def) then
-      t1 = ( edge_below - rho(edge_to_do) )*( rho(edge_to_do+1) - edge_below )
-      if ( edge_to_do == 2_i_def ) then
-        t2 = ( rho(edge_to_do) - rho(edge_to_do-1) )*( rho(edge_to_do+2) - rho(edge_to_do+1) )
-        t3 = ( edge_below - rho(edge_to_do) )*( rho(edge_to_do) - rho(edge_to_do-1) )
-      else
-        t2 = 1.0_r_tran
-        t3 = -1.0_r_tran
-      end if
-      if ( t1 < 0.0_r_tran .AND. ( t2 >= 0.0_r_tran .OR. t3 <= 0.0_r_tran ) ) then
-        tmin = min(rho(edge_to_do+1),rho(edge_to_do))
-        tmax = max(rho(edge_to_do+1),rho(edge_to_do))
-        edge_below = min( tmax, max(edge_below,tmin) )
-      end if
-    else if ( edge_to_do == 0_i_def ) then
-      edge_below = min( max( rho(2), rho(1) ), max( edge_below, min( rho(2), rho(1) ) ) )
-    else if ( edge_to_do == 4_i_def ) then
-      edge_below = min( max( rho(4), rho(3) ), max( edge_below, min( rho(4), rho(3) ) ) )
-    end if
-
-  end subroutine fourth_order_vertical_mono_relax
+  end subroutine fourth_order_vertical_mono
 
   !----------------------------------------------------------------------------
   !> @brief  Applies a strict monotonic limiter to a Nirvana reconstruction.
   !!
-  !! @param[out]  recon       The Nirvana reconstruction
-  !! @param[in]   field       Field values of three cells which have the ordering
-  !!                          | 1 | 2 | 3 |. Cells 1 and 3 are only used for monotonicity
-  !! @param[out]  grad_below  Estimate of gradient at z = 0 of cell 2, i.e.
-  !!                          at the edge between cells 1 and 2
-  !! @param[in]   grad_above  Estimate of gradient at z = 1 of cell 2, i.e.
-  !!                          at the edge between cells 2 and 3
-  !! @param[in]   dz          Height of cell 2
+  !! @param[inout] recon       The Nirvana reconstruction
+  !! @param[in]    field       Field values of three cells which have the ordering
+  !!                           | 1 | 2 | 3 |. Cells 1 and 3 are only used for monotonicity
+  !! @param[in]    grad_below  Estimate of gradient at z = 0 of cell 2, i.e.
+  !!                           at the edge between cells 1 and 2
+  !! @param[in]    grad_above  Estimate of gradient at z = 1 of cell 2, i.e.
+  !!                           at the edge between cells 2 and 3
+  !! @param[in]    dz          Height of cell 2
   !----------------------------------------------------------------------------
   subroutine vertical_nirvana_mono_strict(recon,      &
                                           field,      &
@@ -463,16 +412,24 @@ contains
   !----------------------------------------------------------------------------
   !> @brief  Applies a relaxed monotonic limiter to a Nirvana reconstruction.
   !!
-  !! @param[out]  recon       The Nirvana reconstruction
-  !! @param[in]   dep         The fractional departure distance for the reconstruction point.
-  !!                          For dep>0 the recon lives between cells 2 and 3
-  !!                          For dep<0 the recon lives between cells 1 and 2
-  !! @param[in]   field       Field values of three cells which have the ordering
-  !!                          | 1 | 2 | 3 |. Cells 1 and 3 are only used for monotonicity
+  !! @param[inout] recon       The Nirvana reconstruction
+  !! @param[in]    dep         The fractional departure distance for the reconstruction point.
+  !!                           For dep>0 the recon lives between cells 2 and 3
+  !!                           For dep<0 the recon lives between cells 1 and 2
+  !! @param[in]    field       Field values of three cells which have the ordering
+  !!                           | 1 | 2 | 3 |. Cells 1 and 3 are only used for monotonicity
+  !! @param[in]    grad_below  Estimate of gradient at z = 0 of cell 2, i.e.
+  !!                           at the edge between cells 1 and 2
+  !! @param[in]    grad_above  Estimate of gradient at z = 1 of cell 2, i.e.
+  !!                           at the edge between cells 2 and 3
+  !! @param[in]    dz          Height of cell 2
   !----------------------------------------------------------------------------
   subroutine vertical_nirvana_mono_relax(recon,      &
                                          dep,        &
-                                         field)
+                                         field,      &
+                                         grad_below, &
+                                         grad_above, &
+                                         dz)
 
     implicit none
 
@@ -480,53 +437,122 @@ contains
     real(kind=r_tran),   intent(inout) :: recon
     real(kind=r_tran),   intent(in)    :: dep
     real(kind=r_tran),   intent(in)    :: field(1:3)
+    real(kind=r_tran),   intent(in)    :: dz
+    real(kind=r_tran),   intent(in)    :: grad_below
+    real(kind=r_tran),   intent(in)    :: grad_above
 
     ! Internal variables
     real(kind=r_tran) :: cm, cc, cp
-    real(kind=r_tran) :: p0, p1, t1, t2, t3
+    real(kind=r_tran) :: edge_below, edge_above, t1, t2, t3
+    real(kind=r_tran) :: p0, p1, pmin0, pmax0, pmin1, pmax1
 
     ! Relaxed monotonicity
     t1 = -0.5_r_tran*( field(2)-field(1) ) / &
          ( (field(1)-2.0_r_tran*field(2)+field(3))*0.5_r_tran + EPS_R_TRAN )
-    if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
-      p0 = 0.5_r_tran*(field(1)+field(2))
-      p1 = 0.5_r_tran*(field(2)+field(3))
-      t2 = (p1-field(2)) * (field(2)-p0)
-      t3 = abs(field(2)-p0) - abs(p1-field(2))
+    ! Compute edge values of the parabolic subgrid reconstruction
+    p0 = field(2) - grad_below*dz / 3.0_r_tran - grad_above*dz / 6.0_r_tran
+    p1 = field(2) + grad_above*dz / 3.0_r_tran + grad_below*dz / 6.0_r_tran
+    pmin0 = min( field(1), field(2))
+    pmax0 = max( field(1), field(2))
+    pmin1 = min( field(3), field(2))
+    pmax1 = max( field(3), field(2))
+    ! Check if stationary point lies within the cell, or if edge values exceed
+    ! neighbouring field values
+    if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran .OR. &
+           p0 .gt. pmax0 .OR. p0 .lt. pmin0 .OR. p1 .gt. pmax1 .OR. p1 .lt. pmin1) then
+      ! Linear interpolation for edge values
+      edge_below = 0.5_r_tran*(field(1)+field(2))
+      edge_above = 0.5_r_tran*(field(2)+field(3))
+      t2 = (edge_above-field(2)) * (field(2)-edge_below)
+      t3 = abs(field(2)-edge_below) - abs(edge_above-field(2))
       if (t2 < 0.0_r_tran) then
+        ! Revert to constant reconstruction
         recon = field(2)
       else if (t3 < 0.0_r_tran .and. dep >= 0.0_r_tran) then
+        ! Ensure subgrid reconstruction is bounded by edge values
         cp = 0.0_r_tran
         cc = 3.0_r_tran - 3.0_r_tran*dep + dep**2
         cm = -2.0_r_tran + 3.0_r_tran*dep - dep**2
-        recon = cm*p0 + cc*field(2) + cp*p1
+        recon = cm*edge_below + cc*field(2) + cp*edge_above
       else if (t3 < 0.0_r_tran) then
         cp = 0.0_r_tran
         cc = dep**2
         cm = 1.0_r_tran - dep**2
-        recon = cm*p0 + cc*field(2) + cp*p1
+        recon = cm*edge_below + cc*field(2) + cp*edge_above
       else if (dep >= 0.0_r_tran) then
         cp = 1.0_r_tran - dep**2
         cc = dep**2
         cm = 0.0_r_tran
-        recon = cm*p0 + cc*field(2) + cp*p1
+        recon = cm*edge_below + cc*field(2) + cp*edge_above
       else
         cp = -2.0_r_tran - 3.0_r_tran*dep - dep**2
         cc = 3.0_r_tran + 3.0_r_tran*dep + dep**2
         cm = 0.0_r_tran
-        recon = cm*p0 + cc*field(2) + cp*p1
+        recon = cm*edge_below + cc*field(2) + cp*edge_above
       end if
     end if
 
   end subroutine vertical_nirvana_mono_relax
 
   !----------------------------------------------------------------------------
+  !> @brief  Applies a positive limiter to a Nirvana reconstruction.
+  !!
+  !! @param[inout] recon       The Nirvana reconstruction
+  !! @param[in]    dep         The fractional departure distance for the reconstruction point
+  !! @param[in]    field       Field value of the cell upwind of the reconstruction
+  !! @param[in]    grad_below  Estimate of gradient above cell
+  !! @param[in]    grad_above  Estimate of gradient below cell
+  !! @param[in]    dz          Height of cell
+  !----------------------------------------------------------------------------
+  subroutine vertical_nirvana_positive(recon,      &
+                                       dep,        &
+                                       field,      &
+                                       grad_below, &
+                                       grad_above, &
+                                       dz)
+
+    implicit none
+
+    ! Arguments
+    real(kind=r_tran),   intent(inout) :: recon
+    real(kind=r_tran),   intent(in)    :: dep
+    real(kind=r_tran),   intent(in)    :: field
+    real(kind=r_tran),   intent(in)    :: dz
+    real(kind=r_tran),   intent(in)    :: grad_below
+    real(kind=r_tran),   intent(in)    :: grad_above
+
+    ! Internal variables
+    real(kind=r_tran) :: p0, p1, t1, t2
+
+    ! Positive definite limiter finds the stationary point of parabolic subgrid reconstruction
+    t1 = (grad_below*dz)/(grad_above*dz-grad_below*dz + EPS_R_TRAN)
+    if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+      ! If stationary point lies within the grid cell and makes the subgrid reconstruction
+      ! negative, we revert to constant reconstruction
+      t2 = (field - (grad_below*dz)/2.0_r_tran - (grad_above*dz - grad_below*dz)/3.0_r_tran) + &
+           (grad_below*dz) * t1 + (grad_above*dz - grad_below*dz)  * t1 * t1
+      if ( t2 < 0.0_r_tran ) then
+        recon = field
+      end if
+    else
+      ! If the end points of the parabolic subgrid reconstruction are negative
+      ! we revert to constant reconstruction
+      p0 = field - grad_below*dz / 3.0_r_tran - grad_above*dz / 6.0_r_tran
+      p1 = field + grad_above*dz / 3.0_r_tran + grad_below*dz / 6.0_r_tran
+      if ( p0 .lt. 0.0_r_tran .OR. p1 .lt. 0.0_r_tran) then
+        recon = field
+      end if
+    end if
+
+  end subroutine vertical_nirvana_positive
+
+  !----------------------------------------------------------------------------
   !> @brief  Applies a strict limiter to a PPM reconstruction.
   !!
-  !! @param[out]  recon       The PPM reconstruction
-  !! @param[in]   field       Field values in the cell
-  !! @param[out]  edge_below  Estimate of edge value below the cell
-  !! @param[out]  edge_above  Estimate of edge value above the cell
+  !! @param[inout] recon       The PPM reconstruction
+  !! @param[in]    field       Field values in the cell
+  !! @param[in]    edge_below  Estimate of edge value below the cell
+  !! @param[in]    edge_above  Estimate of edge value above the cell
   !----------------------------------------------------------------------------
   subroutine vertical_ppm_mono_strict(recon,      &
                                       field,      &
@@ -548,6 +574,7 @@ contains
     t1 = (2.0_r_tran*edge_below + edge_above - 3.0_r_tran*field) &
          / (3.0_r_tran*edge_below + 3.0_r_tran*edge_above - 6.0_r_tran*field + EPS_R_TRAN)
     if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+      ! If subgrid reconstruction has extrema in the cell then revert to constant reconstruction
       recon = field
     end if
 
@@ -556,13 +583,13 @@ contains
   !----------------------------------------------------------------------------
   !> @brief  Applies a relaxed limiter to a vertical PPM reconstruction.
   !!
-  !! @param[out]  recon       The PPM reconstruction
-  !! @param[in]   dep         The fractional departure distance for the reconstruction point.
-  !!                          For dep>0 the recon lives above the cell
-  !!                          For dep<0 the recon lives below the cell
-  !! @param[in]   field       Field values in the cell
-  !! @param[out]  edge_below  Estimate of edge value below the cell
-  !! @param[out]  edge_above  Estimate of edge value above the cell
+  !! @param[inout] recon       The PPM reconstruction
+  !! @param[in]    dep         The fractional departure distance for the reconstruction point.
+  !!                           For dep>0 the recon lives above the cell
+  !!                           For dep<0 the recon lives below the cell
+  !! @param[in]    field       Field values in the cell
+  !! @param[in]    edge_below  Estimate of edge value below the cell
+  !! @param[in]    edge_above  Estimate of edge value above the cell
   !----------------------------------------------------------------------------
   subroutine vertical_ppm_mono_relax(recon,      &
                                      dep,        &
@@ -587,11 +614,14 @@ contains
     t1 = (2.0_r_tran*edge_below + edge_above - 3.0_r_tran*field) &
          / (3.0_r_tran*edge_below + 3.0_r_tran*edge_above - 6.0_r_tran*field + EPS_R_TRAN)
     if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+      ! If subgrid reconstruction has extrema in the cell then check smoothness of field
       t2 = (edge_above - field)*(field - edge_below)
       t3 = abs(field - edge_below) - abs(edge_above - field)
       if ( t2 < 0.0_r_tran ) then
+        ! Revert to constant reconstruction
         recon = field
       else if ( t3 < 0.0_r_tran .and. dep >= 0.0_r_tran ) then
+        ! Ensure subgrid reconstruction is bounded by edge values
         cp = 0.0_r_tran
         cc = 3.0_r_tran - 3.0_r_tran*dep + dep**2
         cm = -2.0_r_tran + 3.0_r_tran*dep - dep**2
@@ -615,5 +645,50 @@ contains
     end if
 
   end subroutine vertical_ppm_mono_relax
+
+  !----------------------------------------------------------------------------
+  !> @brief  Applies a positive limiter to a vertical PPM reconstruction.
+  !!
+  !! @param[inout] recon       The PPM reconstruction
+  !! @param[in]    dep         The fractional departure distance for the reconstruction point.
+  !!                           For dep>0 the recon lives above the cell
+  !!                           For dep<0 the recon lives below the cell
+  !! @param[in]    field       Field values in the cell
+  !! @param[in]    edge_below  Estimate of edge value below the cell
+  !! @param[in]    edge_above  Estimate of edge value above the cell
+  !----------------------------------------------------------------------------
+  subroutine vertical_ppm_positive(recon,      &
+                                   dep,        &
+                                   field,      &
+                                   edge_below, &
+                                   edge_above)
+
+    implicit none
+
+    ! Arguments
+    real(kind=r_tran),   intent(inout) :: recon
+    real(kind=r_tran),   intent(in)    :: dep
+    real(kind=r_tran),   intent(in)    :: field
+    real(kind=r_tran),   intent(in)    :: edge_below
+    real(kind=r_tran),   intent(in)    :: edge_above
+
+    ! Internal variables
+    real(kind=r_tran) :: t1, t2, aa, bb
+
+    ! Positive definite limiter
+    aa = -4.0_r_tran*edge_below - 2.0_r_tran*edge_above + 6.0_r_tran*field
+    bb = 3.0_r_tran*edge_below + 3.0_r_tran*edge_above - 6.0_r_tran*field
+    ! Find stationary point of parabolic subgrid reconstruction
+    t1 = -0.5_r_tran*aa/(bb+EPS_R_TRAN)
+    if ( ( t1 + EPS_R_TRAN ) * ( 1.0_r_tran + EPS_R_TRAN - t1 ) > 0.0_r_tran ) then
+      ! If stationary point lies within the grid cell and makes the subgrid reconstruction
+      ! negative, we revert to constant reconstruction
+      t2 = edge_below + aa * t1 + bb  * t1 * t1
+      if ( t2 < 0.0_r_tran ) then
+        recon = field
+      end if
+    end if
+
+  end subroutine vertical_ppm_positive
 
 end module subgrid_vertical_support_mod

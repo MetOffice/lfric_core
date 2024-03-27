@@ -30,7 +30,8 @@ use fs_continuity_mod,              only : W3, W2v
 use constants_mod,                  only : r_tran, i_def, l_def, EPS_R_TRAN
 use kernel_mod,                     only : kernel_type
 use transport_enumerated_types_mod, only : vertical_monotone_relaxed, &
-                                           vertical_monotone_strict
+                                           vertical_monotone_strict,  &
+                                           vertical_monotone_positive
 
 implicit none
 
@@ -103,9 +104,9 @@ subroutine ffsl_flux_z_ppm_code( nlayers,   &
   use subgrid_vertical_support_mod, only: vertical_ppm_recon,                  &
                                           vertical_ppm_mono_relax,             &
                                           vertical_ppm_mono_strict,            &
+                                          vertical_ppm_positive,               &
                                           fourth_order_vertical_edge,          &
-                                          fourth_order_vertical_mono_strict,   &
-                                          fourth_order_vertical_mono_relax
+                                          fourth_order_vertical_mono
 
   implicit none
 
@@ -221,57 +222,36 @@ subroutine ffsl_flux_z_ppm_code( nlayers,   &
   ! ========================================================================== !
   ! Loop again through edge reconstructions to limit them
   select case ( monotone )
-  case ( vertical_monotone_strict )
+  case ( vertical_monotone_strict, vertical_monotone_relaxed )
     local_edge_idx = 0
-    call fourth_order_vertical_mono_strict(field(w3_idx : w3_idx+3),           &
-                                           local_edge_idx, edge_value(0))
+    call fourth_order_vertical_mono(field(w3_idx : w3_idx+3),                  &
+                                    local_edge_idx, edge_value(0))
 
     local_edge_idx = 1
-    call fourth_order_vertical_mono_strict(field(w3_idx : w3_idx+3),           &
-                                           local_edge_idx, edge_value(1))
+    call fourth_order_vertical_mono(field(w3_idx : w3_idx+3),                  &
+                                    local_edge_idx, edge_value(1))
 
     local_edge_idx = 2
     do k = 2, nlayers - 2
       ! Perform edge reconstruction --------------------------------------------
-      call fourth_order_vertical_mono_strict(field(w3_idx+k-2 : w3_idx+k+1),   &
-                                             local_edge_idx, edge_value(k))
+      call fourth_order_vertical_mono(field(w3_idx+k-2 : w3_idx+k+1),          &
+                                      local_edge_idx, edge_value(k))
     end do
 
     local_edge_idx = 3
     k = nlayers - 1
-    call fourth_order_vertical_mono_strict(field(w3_idx+k-3 : w3_idx+k),       &
-                                           local_edge_idx, edge_value(k))
+    call fourth_order_vertical_mono(field(w3_idx+k-3 : w3_idx+k),              &
+                                    local_edge_idx, edge_value(k))
 
     local_edge_idx = 4
     k = nlayers
-    call fourth_order_vertical_mono_strict(field(w3_idx+k-4 : w3_idx+k-1),     &
-                                           local_edge_idx, edge_value(k))
+    call fourth_order_vertical_mono(field(w3_idx+k-4 : w3_idx+k-1),            &
+                                    local_edge_idx, edge_value(k))
 
-  case ( vertical_monotone_relaxed )
-    local_edge_idx = 0
-    call fourth_order_vertical_mono_relax(field(w3_idx : w3_idx+3),            &
-                                          local_edge_idx, edge_value(0))
-
-    local_edge_idx = 1
-    call fourth_order_vertical_mono_relax(field(w3_idx : w3_idx+3),            &
-                                          local_edge_idx, edge_value(1))
-
-    local_edge_idx = 2
-    do k = 2, nlayers - 2
-      ! Perform edge reconstruction --------------------------------------------
-      call fourth_order_vertical_mono_relax(field(w3_idx+k-2 : w3_idx+k+1),    &
-                                            local_edge_idx, edge_value(k))
+  case ( vertical_monotone_positive )
+    do k = 0, nlayers
+      edge_value(k) = max(edge_value(k),0.0_r_tran)
     end do
-
-    local_edge_idx = 3
-    k = nlayers - 1
-    call fourth_order_vertical_mono_relax(field(w3_idx+k-3 : w3_idx+k),        &
-                                          local_edge_idx, edge_value(k))
-
-    local_edge_idx = 4
-    k = nlayers
-    call fourth_order_vertical_mono_relax(field(w3_idx+k-4 : w3_idx+k-1),      &
-                                          local_edge_idx, edge_value(k))
 
   end select
 
@@ -327,6 +307,12 @@ subroutine ffsl_flux_z_ppm_code( nlayers,   &
                                    field(w3_idx + dep_cell_idx), &
                                    edge_value(dep_cell_idx),     &
                                    edge_value(dep_cell_idx + 1))
+
+    case ( vertical_monotone_positive )
+      call vertical_ppm_positive(reconstruction, frac_dist,    &
+                                 field(w3_idx + dep_cell_idx), &
+                                 edge_value(dep_cell_idx),     &
+                                 edge_value(dep_cell_idx + 1))
 
     end select
 

@@ -27,7 +27,8 @@ use fs_continuity_mod,              only : W3, W2v
 use constants_mod,                  only : r_tran, i_def, l_def, EPS_R_TRAN
 use kernel_mod,                     only : kernel_type
 use transport_enumerated_types_mod, only : vertical_monotone_relaxed, &
-                                           vertical_monotone_strict
+                                           vertical_monotone_strict,  &
+                                           vertical_monotone_positive
 
 implicit none
 
@@ -96,6 +97,7 @@ subroutine ffsl_flux_z_nirvana_code( nlayers,   &
   use subgrid_vertical_support_mod, only: vertical_nirvana_recon,              &
                                           vertical_nirvana_mono_relax,         &
                                           vertical_nirvana_mono_strict,        &
+                                          vertical_nirvana_positive,           &
                                           second_order_vertical_gradient
 
   implicit none
@@ -209,8 +211,18 @@ subroutine ffsl_flux_z_nirvana_code( nlayers,   &
       field_mono_stencil(1) = field(w3_idx + lower_cell)
       field_mono_stencil(2) = field(w3_idx + dep_cell_idx)
       field_mono_stencil(3) = field(w3_idx + higher_cell)
-      call vertical_nirvana_mono_relax(reconstruction, frac_dist,    &
-                                       field_mono_stencil)
+      call vertical_nirvana_mono_relax(reconstruction, frac_dist,       &
+                                       field_mono_stencil,              &
+                                       edge_gradient(dep_cell_idx),     &
+                                       edge_gradient(dep_cell_idx + 1), &
+                                       dz(w3_idx + dep_cell_idx))
+
+    case ( vertical_monotone_positive )
+      call vertical_nirvana_positive(reconstruction, frac_dist,       &
+                                     field(w3_idx + dep_cell_idx),    &
+                                     edge_gradient(dep_cell_idx),     &
+                                     edge_gradient(dep_cell_idx + 1), &
+                                     dz(w3_idx + dep_cell_idx))
 
     end select
 
