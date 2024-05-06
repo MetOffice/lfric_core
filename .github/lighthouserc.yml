@@ -1,0 +1,14 @@
+ci:
+  collect:
+    staticDistDir: "./docs/_build/html"
+    staticDirFileDiscoveryDepth: 5
+    maxAutodiscoverUrls: 0 #test all files
+    # skip these Sphinx/PyData Theme files
+    autodiscoverUrlBlocklist: ["search.html", "genindex.html", "_static/webpack-macros.html"]
+    settings:
+      onlyCategories: ["accessibility"]
+  upload:
+    target: "temporary-public-storage"
+  assert:
+    assertions:
+      categories:accessibility: ["error", {"minScore": 1}]
