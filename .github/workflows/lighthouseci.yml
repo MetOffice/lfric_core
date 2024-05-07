@@ -12,11 +12,11 @@ jobs:
           python-version: '3.x'
       - name: Install Sphinx packages
         run: |
-          pip install sphinx sphinx-design pydata-sphinx-theme \
-                      myst-parser linkify-it-py
+          python3 -m pip install --upgrade pip
+          python3 -m pip install sphinx sphinx_rtd_theme
       - name: build docs
         run: |
-          cd docs
+          cd documentation
           make clean html
           cd ../
       - name: Use Node.js 20.x

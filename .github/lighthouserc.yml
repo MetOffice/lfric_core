@@ -1,6 +1,6 @@
 ci:
   collect:
-    staticDistDir: "./docs/_build/html"
+    staticDistDir: "./documentation/_build/html"
     staticDirFileDiscoveryDepth: 5
     maxAutodiscoverUrls: 0 #test all files
     # skip these Sphinx/PyData Theme files
