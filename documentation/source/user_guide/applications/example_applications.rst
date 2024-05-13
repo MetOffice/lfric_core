@@ -4,13 +4,6 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-API Documentation
-#################
+Example Applications
+====================
 
-.. include:: meshes.rst
-.. include:: function_spaces.rst
-.. include:: fields.rst
-.. include:: field_collections.rst
-.. include:: operators.rst
-.. include:: quadrature.rst
-.. include:: linked_list.rst

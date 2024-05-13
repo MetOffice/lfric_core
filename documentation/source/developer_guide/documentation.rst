@@ -4,13 +4,3 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-Overview of other first-order data structures used in LFRic models.
-
-Field collections
------------------
-
-Multidata fields
-----------------
-
-Mixed Precision Support
------------------------
