@@ -15,7 +15,6 @@ module lfric_xios_read_mod
   use constants_mod,            only: i_def, l_def, str_def, r_def, rmdi, &
                                       LARGE_REAL_NEGATIVE
   use lfric_xios_constants_mod, only: dp_xios
-  use io_value_mod,             only: io_value_type
   use field_mod,                only: field_type, field_proxy_type
   use field_real32_mod,         only: field_real32_type, field_real32_proxy_type
   use field_real64_mod,         only: field_real64_type, field_real64_proxy_type
@@ -42,22 +41,19 @@ module lfric_xios_read_mod
                                       xios_get_domain_attr, &
                                       xios_get_axis_attr,   &
                                       xios_get_field_attr,  &
-                                      xios_is_valid_field,  &
                                       lfric_xios_mock_pull_in
 #else
   use lfric_xios_mock_mod,      only: lfric_xios_mock_pull_in
   use xios,                     only: xios_recv_field,      &
                                       xios_get_domain_attr, &
                                       xios_get_axis_attr,   &
-                                      xios_get_field_attr,  &
-                                      xios_is_valid_field
+                                      xios_get_field_attr
 #endif
 
   implicit none
 
   private
   public :: checkpoint_read_xios,    &
-            checkpoint_read_value,   &
             read_field_generic,      &
             read_state,              &
             read_checkpoint,         &
@@ -104,27 +100,6 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
   end select
 
 end subroutine checkpoint_read_xios
-
-!> @brief Read the data from an XIOS checkpoint file into the io_value
-!> @param[in,out] io_value The io_value to read data into
-!>
-subroutine checkpoint_read_value(io_value)
-  class(io_value_type), intent(inout) :: io_value
-  character(str_def) :: restart_id
-  integer(i_def)     :: array_dims
-
-  restart_id = "restart_" // trim(io_value%io_id)
-  array_dims = size(io_value%data)
-
-  if ( xios_is_valid_field(trim(restart_id)) ) then
-    call xios_recv_field( trim(restart_id), &
-                          io_value%data(1:array_dims) )
-  else
-    call log_event( 'No XIOS field with id="'//trim(restart_id)//'" is defined', &
-                    LOG_LEVEL_ERROR )
-  end if
-
-end subroutine checkpoint_read_value
 
 !>  @brief    Post-processing after reading field data
 !>  @details  Performs a halo swap if necessary

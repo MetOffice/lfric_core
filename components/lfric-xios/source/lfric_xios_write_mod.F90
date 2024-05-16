@@ -13,7 +13,6 @@ module lfric_xios_write_mod
   use constants_mod,        only: i_def, l_def, str_def, str_max_filename
   use lfric_xios_constants_mod, &
                             only: dp_xios, xios_max_int
-  use io_value_mod,         only: io_value_type
   use field_real32_mod,     only: field_real32_type, field_real32_proxy_type
   use field_real64_mod,     only: field_real64_type, field_real64_proxy_type
   use field_parent_mod,     only: field_parent_proxy_type
@@ -37,14 +36,12 @@ module lfric_xios_write_mod
   use lfric_xios_mock_mod,  only: xios_send_field,      &
                                   xios_get_domain_attr, &
                                   xios_get_axis_attr,   &
-                                  xios_is_valid_field,  &
                                   lfric_xios_mock_pull_in
 #else
   use lfric_xios_mock_mod,  only: lfric_xios_mock_pull_in
   use xios,                 only: xios_send_field,      &
                                   xios_get_domain_attr, &
-                                  xios_get_axis_attr,   &
-                                  xios_is_valid_field
+                                  xios_get_axis_attr
 #endif
 
   implicit none
@@ -52,32 +49,10 @@ module lfric_xios_write_mod
   private
   public :: checkpoint_write_xios,    &
             write_field_generic,      &
-            checkpoint_write_value,   &
-            write_value_generic,      &
             write_state,              &
             write_checkpoint
 
 contains
-
-!> @brief Write io_value data via XIOS
-!> @details This routine assumes there is a XIOS field defined
-!>          with a field id the same as the io_value id
-!> @param[in,out] io_value The io_value to write data from
-!>
-subroutine write_value_generic(io_value)
-  class(io_value_type), intent(inout) :: io_value
-  integer(i_def) :: array_dims
-
-  array_dims = size(io_value%data)
-  if ( xios_is_valid_field(trim(io_value%io_id)) ) then
-    call xios_send_field( trim(io_value%io_id), &
-                          reshape(io_value%data, (/ 1, array_dims /)) )
-  else
-    call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
-                    LOG_LEVEL_ERROR )
-  end if
-
-end subroutine write_value_generic
 
 !>  @brief  Write field data to UGRIDs via XIOS
 !>
@@ -127,28 +102,6 @@ subroutine write_field_generic(field_name, field_proxy)
   deallocate(xios_data)
 
 end subroutine write_field_generic
-
-!> @brief Checkpoint an io_value with XIOS
-!> @details This routine assumes there is an XIOS field
-!>          with the "checkpoint_" prefix
-!> @param[in,out] io_value The io_value to write data from
-!>
-subroutine checkpoint_write_value(io_value)
-  class(io_value_type), intent(inout) :: io_value
-  character(str_def) :: checkpoint_id
-  integer(i_def)     :: array_dims
-
-  checkpoint_id = "checkpoint_" // trim(io_value%io_id)
-  array_dims = size(io_value%data)
-  if ( xios_is_valid_field(trim(checkpoint_id)) ) then
-    call xios_send_field( trim(checkpoint_id), &
-                          reshape(io_value%data, (/ 1, array_dims /)) )
-  else
-    call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
-                    LOG_LEVEL_ERROR )
-  end if
-
-end subroutine checkpoint_write_value
 
 !>  @brief    I/O handler for writing an XIOS netcdf checkpoint
 !>  @details  Note this routine accepts a filename but doesn't use it - this is
