@@ -8,7 +8,7 @@
 Glossary
 ##################
 .. glossary::
-  DataModel
+  Data Model
     LFRic core infrastructure which provides the framework for working with data objects supporting LFRic ScienceModel(s).
 
   Global Mesh
@@ -18,10 +18,10 @@ Glossary
     Mapping between 2D-mesh cell IDs from source-to-target meshes. The mapping lists the cell IDs (local to the target mesh) that geographically overlap a given cell id in the source mesh (ID local to the source mesh).
 
   LFRic application
-    Top level program executable. An application is not part of LFRic core, though will employ the LFRic core DataModel to work with the ScienceModel(s) accessed by the application.
+    A program that uses the LFRic infrastructure.
 
   Local Mesh
-    An object describing a 2D-mesh which encompasses a sub-section (partition) of a Global Mesh. The local mesh object contains related mesh information similar to that of a Global Mesh. In addition, it also stores partition information unique to it's intended process rank.
+    An object describing a 2D-mesh which encompasses a sub-section (partition) of a Global Mesh. The Local Mesh object contains related mesh information similar to that of a Global Mesh. In addition, it also stores partition information unique to its intended process rank.
 
   Mesh
     An object describing a 3D-mesh which encompasses a sub-section (partition) of the Global Mesh. A mesh object is derived from the corresponding Local Mesh object for a given process rank and an extrusion object configured by an LFRic application.
@@ -29,8 +29,8 @@ Glossary
   Model Domain
     The geographical domain extents to which an LFRic application is configured, *e.g.* GCM, LAM.
 
-  ScienceModel
-     Model representing a real world scientific process(es).
+  Science Model
+     A library of code that simulates a particular science process, *e.g.* a radiation or land surface model. **Note:** An LFRic application may be written to access any number of Science Models.
 
 
 
