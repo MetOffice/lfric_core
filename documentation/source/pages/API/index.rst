@@ -4,14 +4,13 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section applications:
+API Documentation
+#################
 
-Application documentation
-#########################
-
-The LFRic core repository includes a small number of applications that
-are used for training, testing or as development test-beds. Each
-application is summarised here:
-
-.. include:: skeleton.rst
-.. include:: simple_diffusion.rst
+.. include:: meshes.rst
+.. include:: function_spaces.rst
+.. include:: fields.rst
+.. include:: field_collections.rst
+.. include:: operators.rst
+.. include:: quadrature.rst
+.. include:: linked_list.rst
