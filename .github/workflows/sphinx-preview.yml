@@ -1,4 +1,4 @@
-name: Deploy Docs
+name: Preview Sphinx Docs
 
 on:
   pull_request_target:
