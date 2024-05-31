@@ -84,7 +84,6 @@ Specific Language (DSL) tool; it follows modern software engineering
 practices that aims to separate concerns between scientific and
 technical aspects of the code.
 
-
 .. toctree::
     :maxdepth: 1
     :hidden:
