@@ -93,3 +93,15 @@ technical aspects of the code.
     user_guide/index
     developer_guide/index
     API/index
+
+.. toctree::
+   :caption: Glossary
+   :maxdepth: 2
+
+   pages/glossary
+
+
+Indices and tables
+==================
+* :ref:`genindex`
+* :ref:`search`
