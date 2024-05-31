@@ -3,9 +3,10 @@
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    -----------------------------------------------------------------------------
+.. _time:
 
-Model Time
-==========
+Time
+====
 
 Not all models you come to write will need to consider the passage of time but
 most will. The LFRic infrastructure provides a number of classes to help with

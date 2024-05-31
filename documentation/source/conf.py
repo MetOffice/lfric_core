@@ -51,6 +51,11 @@ html_theme_options = {
             "name": "GitHub",
             "url": "https://github.com/MetOffice/vernier",
             "icon": "fa-brands fa-github"
+        },
+        {
+            "name": "GitHub Discussions",
+            "url": "https://github.com/MetOffice/lfric_core/discussions",
+            "icon": "far fa-comments",
         }
     ],
     "logo": {

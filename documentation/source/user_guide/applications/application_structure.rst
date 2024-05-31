@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section application structure:
+.. _application_structure:
 
 Application Structure
 =====================
@@ -57,7 +57,7 @@ concurrently or sequentially.
 
 Evolution of the model is driven by calling the model driver step the
 required number of times, typically controlled by ticks of the
-:ref:`model clock <section model clock>` held in ``modeldb``.
+:ref:`model clock <model_time>` held in ``modeldb``.
 
 Once all steps are executed, the model finalise stage is called after
 which processes instantiated by the application prior to
