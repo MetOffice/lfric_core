@@ -1,9 +1,12 @@
 # Configuration file for the Sphinx documentation builder.
 #
+# -- imports -----------------------------------------------------------------
+import os
 # -- Project information -----------------------------------------------------
 
 project = 'LFRic Core'
 author = 'Core Capability Development Team'
+copyright = '2024 Met Office. All rights reserved'
 release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
@@ -12,42 +15,67 @@ release = '0.1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx_rtd_theme',
-    'sphinx.ext.mathjax',
+    'sphinx_sitemap',
+    'sphinx_design'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
+# html_title = "LFRic Core"
+
+# Generate the sitemap info, this will need updating when we have versioned docs
+html_baseurl = os.environ.get("SPHINX_HTML_BASE_URL", "https://metoffice.github.io/lfric_core")
+sitemap_locales = [None]
+sitemap_url_scheme = "{link}"
+
+# Hide the link which shows the rst markup
+html_show_sourcelink = False
 
 html_theme_options = {
-    'analytics_anonymize_ip': False,
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-    'vcs_pageview_mode': '',
-    # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
+    "navigation_with_keys": True,
+    "use_edit_page_button": True,
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_align": "content",
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/MetOffice/vernier",
+            "icon": "fa-brands fa-github"
+        },
+        {
+            "name": "GitHub Discussions",
+            "url": "https://github.com/MetOffice/lfric_core/discussions",
+            "icon": "far fa-comments",
+        }
+    ],
+    "logo": {
+        "text": "LFRic Core",
+        "image_light": "_static/MO_SQUARE_black_mono_for_light_backg_RBG.png",
+        "image_dark": "_static/MO_SQUARE_for_dark_backg_RBG.png",
+    },
+    "secondary_sidebar_items": {
+        "**/*": ["page-toc", "edit-this-page", "show-glossary"],
+        "index": [],
+    },
+    "footer_start": ["crown-copyright"],
+    "footer_center": ["sphinx-version"],
+    "footer_end": ["theme-version"],
+    "primary_sidebar_end": []
 }
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
-# Custom CSS override file.
-html_style = 'css/custom.css'
+html_sidebars = {
+    "index": []
+}
 
 # Provides the Edit on GitHub link in the generated docs.
 html_context = {

@@ -4,6 +4,10 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
+:html_theme.sidebar_secondary.remove: true
+
+.. _glossary_of_terms:
+
 ##################
 Glossary
 ##################

@@ -3,9 +3,10 @@
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    -----------------------------------------------------------------------------
+.. _API_index:
 
-API Documentation
-#################
+LFRic Core API
+##############
 
 .. include:: meshes.rst
 .. include:: function_spaces.rst

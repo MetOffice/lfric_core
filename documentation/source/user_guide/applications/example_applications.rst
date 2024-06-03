@@ -4,14 +4,15 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section applications:
+Example Applications
+====================
+There are a few example applications contained within the LFRic Core source.
+These are used as both examples of the general form an LFRic based application
+should take and also as development tools for specific functionality and testing.
 
-Application documentation
-#########################
 
-The LFRic core repository includes a small number of applications that
-are used for training, testing or as development test-beds. Each
-application is summarised here:
+.. toctree::
+    :maxdepth: 1
+    :glob:
 
-.. include:: skeleton.rst
-.. include:: simple_diffusion.rst
+    example_applications/*

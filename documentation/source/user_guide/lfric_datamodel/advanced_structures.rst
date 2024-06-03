@@ -4,14 +4,16 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-Infrastructure
-==============
+Advanced Data Structures
+========================
 
-The heart of LFRic Core is the infrastructure. This underlies everything else and
-provides the basic building blocks of a model.
+Overview of other first-order data structures used in LFRic models.
 
-.. toctree::
-   :caption: Contents:
-   :maxdepth: 1
+Field collections
+-----------------
 
-   time
+Multidata fields
+----------------
+
+Mixed Precision Support
+-----------------------
