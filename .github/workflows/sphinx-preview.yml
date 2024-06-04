@@ -1,6 +1,7 @@
 name: Preview Sphinx Docs
 
 on:
+  workflow_dispatch:
   pull_request_target:
     branches: [main] # branch to trigger deployment
 
