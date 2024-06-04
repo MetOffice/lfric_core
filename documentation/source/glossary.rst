@@ -5,6 +5,7 @@
    ------------------------------------------------------------------------------
 
 :html_theme.sidebar_secondary.remove: true
+:orphan:
 
 .. _glossary_of_terms:
 
