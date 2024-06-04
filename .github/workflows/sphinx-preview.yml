@@ -29,7 +29,7 @@ jobs:
     - id: finesse_environment
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install sphinx sphinx_rtd_theme
+        python3 -m pip install sphinx pydata-sphinx-theme sphinx-sitemap
     - id: sphinx
       run: |
         cd documentation
