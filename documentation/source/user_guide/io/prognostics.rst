@@ -11,24 +11,25 @@ Prognostic Fields
 
 A typical earth system model will run several different science
 components in each time-step, passing fields between different science
-component as it runs. Some fields will be passed from the end of one
+components as it runs. Some fields will be passed from the end of one
 time-step to the start of the next. The LFRic infrastructure provides
-mechanisms to allocate all these fields in one place, and ensure they
-can all be passed to the right science components and, if required, be
+mechanisms to allocate all these fields in one place, to ensure each
+can be passed to the right science components and, if required, be
 written to and read from checkpoint dumps. As these fields exist in
 the model state throughout the run they are commonly referred to as
 prognostic fields, though the definition here may differ from other
 definitions of prognostic fields that refer more strictly to the key
 physical quantities describing the system being modelled.
 
-Where supported, the application field set up in an LFRic application
-can be integrated with the IO subsystem such that there is a single
-source of truth that describes both the representation of the field in
-the model and its representation in model output files. For example,
-the Momentum(R) atmosphere model uses the field definition in the XIOS
-``iodef.xml`` file to determine the type of model field to create.
+Where supported, the initialisation of a prognostic field in an LFRic
+application can be integrated with the set-up of the IO subsystem such
+that there is a single source of truth that describes both the
+representation of the field in the model and its representation in
+model output files. For example, the Momentum\ :sup:`®` atmosphere model uses
+the field definition in the XIOS ``iodef.xml`` file to determine the
+type of model prognostic field to create.
 
-.. note:: Illustrative examples
+.. topic:: Illustrative examples
 
    #. Fields such as wind, potential temperature, density and moisture
       are physical quantities at the core of the numerical simulation
@@ -56,9 +57,9 @@ Overview
 A typical LFRic model is implemented with an initialise stage, a run
 stage (which executes a single time-step) and a finalise stage. The
 model can use a model database structure referred to as ``modeldb``
-that holds the model state and other data.
+to hold the model state and other data.
 
-Prognostic fields can be initialised during the initialise phase and
+Prognostic fields can be initialised during the initialise stage and
 stored in ``modeldb``. As well as storing individual fields,
 ``modeldb`` can also store field collections. A field collection is a
 Fortran derived type that can store several fields or pointers to
@@ -89,16 +90,17 @@ needs to be determined:
 Each of the above processes can be written as hard-wired
 code. Alternatively, some aspects can be based on sources of metadata
 so as to automate the process and to reduce the risk of error. For
-example, the Momentum(r) atmosphere makes use of metadata provided as
+example, the Momentum\ :sup:`®` atmosphere makes use of metadata provided as
 part of its integration to the XIOS library to determin the form of
 field to be initialised.
 
 During the time-step running stage of the model, field collections and
 fields set up at initialisation time can be extracted from the
 ``modeldb``. The following code extracts a field from a field
-collection held by ``modeldb``.
+collection held by ``modeldb`` using its text label.
 
-..
+::
+
     ! Get the main data structure from the model database
     model_data => modeldb%model_data
     ! Get a pointer to the radiation field collection
@@ -115,10 +117,10 @@ collection containing all the fields that need to be checkpointed, a
 function can use the iterator to loop through the field collection's
 contents, writing each field out to the checkpoint dump.
 
-Example: The Momentum Model
----------------------------
+Example: The Momentum\ :sup:`®` Model
+-------------------------------------
 
-In the Momentum(R) atmosphere model, all fields that the model may
+In the Momentum\ :sup:`®` atmosphere model, all fields that the model may
 read or write, including all prognostic fields, are registered in an
 ``iodef.xml`` file which is the file recognised by the XIOS IO
 library.
@@ -129,7 +131,7 @@ within the model, the formal name of the field (such as the CF name),
 the units and information about the XIOS domain used to describe the
 format of the data in the input or output file.
 
-In the Momentum(R) atmosphere model, a routine called
+In the Momentum\ :sup:`®` atmosphere model, a routine called
 `create_physics_prognostics` includes the code for creating most of
 the prognostic fields, including dealing with the steps described in
 the preceding section.
@@ -160,7 +162,7 @@ to the dedicated field collection used by the checkpoint routine.
     call processor%apply(make_spec('albedo_obs_nir', main%radiation,            &
         ckp=checkpoint_flag))
 
-.. note:: A note on the processor apply method
+.. topic:: The processor apply method
 
    Due to the way XIOS operates, Momentum's
    ``create_physics_prognostics`` routine is called twice. The first
@@ -188,5 +190,6 @@ to the dedicated field collection used by the checkpoint routine.
    required field collections.
 
 During the finalise stage of a model, a procedure in the
-``lfric-xios`` component can be called and passed the field collection
-containing the fields that need to be checkpointed.
+:ref:`lfric-xios component <section lfric xios>` can be called and
+passed the field collection containing the fields that need to be
+checkpointed.

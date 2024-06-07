@@ -15,3 +15,4 @@ This section describes the various methods of performing IO provided by LFRic Co
 
    io_standards
    prognostics
+   diagnostics
