@@ -14,3 +14,4 @@ This section describes the various methods of performing IO provided by LFRic Co
    :maxdepth: 1
 
    io_standards
+   prognostics
