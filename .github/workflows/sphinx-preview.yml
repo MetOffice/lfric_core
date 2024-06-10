@@ -1,24 +1,28 @@
-name: Deploy Docs
+name: Preview Sphinx Docs
 
 on:
-  push:
+  workflow_dispatch:
+  pull_request_target:
     branches: [main] # branch to trigger deployment
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages-preview @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: false
 jobs:
   pages:
     runs-on: ubuntu-22.04
     environment:
-      name: github-pages
+      name: 'Pages Preview'
       # url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+
     steps:
     - id: extract
       uses: actions/checkout@v4
-      with:
-        ref: main
     - id: setup_environment
       uses: actions/setup-python@v5
       with:
@@ -45,3 +49,5 @@ jobs:
       uses: actions/configure-pages@v4
     - id: deploy
       uses: actions/deploy-pages@v4
+      with:
+        preview: 'true'
