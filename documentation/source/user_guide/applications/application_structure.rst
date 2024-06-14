@@ -26,7 +26,14 @@ atmosphere model code to integrate field data on model meshes over
 multiple time-steps, outputs diagnostics, and outputs checkpoint
 dumps.
 
-TODO: Add a diagram that illustrates a simplified calling tree.
+.. _application_schematic:
+.. figure:: images/application_schematic.svg
+
+   Schematic of an application that runs a single science model. The
+   application program calls the init, step and final stages of the
+   driver layer which in turn call the init, run and final stages of
+   the model.
+
 
 Running the Model
 -----------------
