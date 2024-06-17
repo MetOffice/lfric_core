@@ -18,56 +18,71 @@ the core science code that could, in principle, be used in different
 applications, whereas the application is all the code used to compile
 a single executable.
 
-The Momentum atmosphere application, running without coupling to an
-ocean model or to data assimilation systems, is an example of such an
-application as it depends on several LFRic components. It reads
-configuration information, reads input data, sets up and calls the
-atmosphere model code to integrate field data on model meshes over
-multiple time-steps, outputs diagnostics, and outputs checkpoint
-dumps.
+The LFRic code repository includes the ``simple_diffusion``
+application which demonstrates some aspects of a single-model LFRic
+application. The Momentum\ :sup:`®` atmosphere application, maintained
+separately, is another example but is much more complex. Both
+applications read configuration information, can read input data, set
+up and call the science model code to integrate field data on model
+meshes over multiple time-steps, output diagnostics, and output
+checkpoint dumps. The ``simple_diffusion`` application is used for
+training purposes and is designed to be as simple as possible while
+demonstrating some key aspects of a scientific model. In comparison,
+the Momentum\ :sup:`®` atmosphere application supports many more
+technical configuration options such as the ability to run with mixed
+precision and mixed resolution components, and includes code that
+couples to the NEMO ocean model.
 
 .. _application_schematic:
 .. figure:: images/application_schematic.svg
 
    Schematic of an application that runs a single science model. The
    application program calls the init, step and final stages of the
-   driver layer which in turn call the init, run and final stages of
-   the model.
+   driver layer to set up data structures and infrastructure data
+   (such as mesh coordinate information) required by the model. Each
+   stage calls the respective init, step and final stages of the model
+   which read, integrate and write the scientific data.
 
 
 Running the Model
 -----------------
 
-The application will call the model via the model's driver layer. The
-:ref:`driver layer <section driver layer overview>` comprises an
-initialise, step and finalise stage. The stages may be based on the
-LFRic :ref:`driver component <section driver component>` code. Where
-the component does not meet all of a model's requirement some or all
-of their code may be bespoke. The application will call the stages of
-the driver layer in sequence to progress the model.
+The top-level program calls each of the application driver layer
+procedures. The :ref:`driver layer <section driver layer overview>`
+comprises an initialise, step and finalise procedure. Each procedure
+of the driver layer calls the initialise, step and finalise procedures
+of the model.
 
-Prior to calling the initialise stage, data structures shared by each
-stage of the model need to be set up. The LFRic driver layer component
-provides a :ref:`modeldb <section modeldb overview>` data structure
-that aims to store all the data needed to run the model. Properly
-encapsulating all the data allows applications to run two or more
-models side by side, or to run ensembles of the same model side by
-side.
+The application driver layer procedures may be based on the LFRic
+:ref:`driver component <section driver component>` code which aim to
+support common requirements of running a typical science model in a
+single-model application. Where the component does not meet all of an
+application's requirement, for example, when the application is
+coupling two models together, some or all of the driver layer code may
+be bespoke.
 
-For a model that uses ``modeldb``, some aspects of the data structures
-held in ``modeldb`` must be configured prior to calling the driver layer
-initialisation. Examples include setting up the configuration,
-defining the model name and setting the MPI communicator. Configuring
-these aspects before calling initialisation can allow multiple
-instances of the model to be run alongside each other either
-concurrently or sequentially.
+Prior to calling the driver initialise stage, data structures shared
+by each stage of the model need to be set up. The LFRic driver layer
+component provides a :ref:`modeldb <section modeldb overview>` data
+structure that aims to store all the data needed to run a
+model. Properly encapsulating all the data allows applications to
+create multiple ``modeldb`` data structures to run two or more models
+side by side, or to run ensembles of the same model side by side.
 
-Evolution of the model is driven by calling the model driver step the
-required number of times, typically controlled by ticks of the
-:ref:`model clock <model_time>` held in ``modeldb``.
+When a model uses ``modeldb`` certain information must be set up prior
+to calling the driver layer initialisation. Examples include setting
+up the configuration from the namelist inputs, defining the model name
+and setting the MPI communicator. This behaviour is intended to
+support the capability for the model to be run in an ensemble context,
+or alongside another model, where the models run sequentially or
+concurrently.
 
-Once all steps are executed, the model finalise stage is called after
-which processes instantiated by the application prior to
+Evolution of the model is driven by calling the application driver
+step the required number of times, typically controlled by ticks of
+the :ref:`model clock <model_time>` held in ``modeldb``.
+
+Once all steps are executed, the application finalise stage is called
+after which processes instantiated by the application prior to
 initialisation can be finalised.
 
 .. _section driver layer overview:
@@ -76,10 +91,11 @@ The driver layer
 ----------------
 
 This section briefly describes the role of the initialise, step and
-finalise stage of a model driver layer. As many apps will share common
-ways of driving the models they use, a :ref:`Driver layer component
-<section driver layer component>` has been created that contains
-standard modules that can be used to help construct an application.
+finalise stage of a simple application driver layer. As many
+applications will share common ways of driving the models they use, a
+:ref:`Driver layer component <section driver layer component>` has
+been created that contains standard modules that can be used to help
+construct an application.
 
 Driver Initialise
 ~~~~~~~~~~~~~~~~~
@@ -90,18 +106,16 @@ coordinates, clocks and calendars, and initialising the initial model
 state, including the reading initial data. The model provides
 procedures that the driver initialise calls to complete the
 initialisation. Separating these processes into multiple procedures
-gives applications flexibility in setting up models, for example,
-optimising setup where several models use the same or similar meshes.
+gives applications flexibility in setting up models. For example,
+where several models use the same or similar meshes, an application
+can ensure each mesh only needs to be read once.
 
-The model infrastructure typically comprises information about meshes
-and coordinates that are fixed throughout the model run, as well as
-some fixed data. The model state comprises fields and data that evolve
-as the model runs. Data held in the model state needs to be
-initialised, either from input data or by computing or choosing
+The model infrastructure data typically comprises information about
+meshes and coordinates that are fixed throughout the model run, as
+well as some fixed data. The model state comprises fields and data
+that evolve as the model runs. Data held in the model state needs to
+be initialised, either from input data or by computing or choosing
 values.
-
-Two similar models running within the same application may share some
-constant data.
 
 The driver initialisation may also initialise scientific components
 that are used by the model.
@@ -114,8 +128,8 @@ starting at the input date and lasting for a period defined by a
 time-step length.  The driver step is responsible for calling the
 model step that integrates the model data forward one time-step, but
 will also be responsible for managing infrastructure such as reading
-input data, and writing some diagnostic data and writing checkpoint
-dumps.
+input data from ancillary files or from a coupler, writing some
+diagnostic data and writing checkpoint dumps.
 
 Driver Finalise
 ~~~~~~~~~~~~~~~
@@ -168,16 +182,16 @@ psyclone and the lfric data model>`. For now, the distinction between
 LFRic fields and the simpler fields of other models will mostly be
 ignored so as to focus on the broader model structure.
 
-A complex model such as the Momentum atmosphere requires hundreds of
-fields. To simplify the model design, the LFRic infrastructure
-supports :ref:`field collections <section field collections>`. A field
-collection can store arbitrarily-large numbers of fields that can be
-accessed by name. The Momentum atmosphere has several field
-collections holding fields for each of several major science
-components. Use of field collections makes the API of higher-level
-science algorithms more manageable by hiding both the large number of
-fields and the fact that some fields are not required for all model
-configurations.
+A complex model such as the Momentum\ :sup:`®` atmosphere requires
+hundreds of fields. To simplify the model design, the LFRic
+infrastructure supports :ref:`field collections <section field
+collections>`. A field collection can store arbitrarily-large numbers
+of fields that can be accessed by name. The Momentum\ :sup:`®`
+atmosphere has several field collections holding fields for each of
+several major science components. Use of field collections makes the
+API of higher-level science algorithms more manageable by hiding both
+the large number of fields and the fact that some fields are not
+required for all model configurations.
 
 A :ref:`configuration object <section configuration object>` stores
 the model configuration derived from the input namelist, such as input
