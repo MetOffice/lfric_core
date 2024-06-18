@@ -21,7 +21,7 @@ that vulnerability.
 
 Each external field is, in fact, a mapping between an LFRic field and a
 non-LFRic field. It contains any encapsulation breakage within itself, thus
-preventing the guts of fields from being exposed.
+preventing the internal data of fields from being exposed.
 
 .. figure:: images/external_field_class.svg
 
