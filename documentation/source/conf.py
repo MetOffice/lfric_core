@@ -49,7 +49,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/MetOffice/vernier",
+            "url": "https://github.com/MetOffice/lfric_core",
             "icon": "fa-brands fa-github"
         },
         {
