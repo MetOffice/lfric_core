@@ -17,7 +17,7 @@ maintainability.
 
 Transforming field data for an external user must, by definition, compromise
 that protection. The concept of external fields exists to minimise the scope of
-that vulnerability
+that vulnerability.
 
 Each external field is, in fact, a mapping between an LFRic field and a
 non-LFRic field. It contains any encapsulation breakage within itself, thus
