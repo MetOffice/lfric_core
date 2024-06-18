@@ -49,7 +49,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/MetOffice/vernier",
+            "url": "https://github.com/MetOffice/lfric_core",
             "icon": "fa-brands fa-github"
         },
         {
@@ -83,7 +83,7 @@ html_context = {
     "github_user": "MetOffice",
     "github_repo": "lfric_core",
     "github_version": "main",
-    "conf_py_path": "/documentation/source/"
+    "doc_path": "documentation/source"
 }
 
 # Enable numbered references to e.g. figures.
