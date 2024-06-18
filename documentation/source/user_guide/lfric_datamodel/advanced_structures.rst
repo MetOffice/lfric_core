@@ -9,6 +9,11 @@ Advanced Data Structures
 
 Overview of other first-order data structures used in LFRic models.
 
+.. toctree::
+   :maxdepth: 1
+
+   external_field
+
 Field collections
 -----------------
 

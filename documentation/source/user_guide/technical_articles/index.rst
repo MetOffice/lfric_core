@@ -17,4 +17,3 @@ aspects of the LFRic core infrastructure
    :maxdepth: 1
 
    lfric_distmem_impl
-   external_field
