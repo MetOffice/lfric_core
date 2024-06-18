@@ -6,8 +6,236 @@
 
 .. _section diagnostics:
 
-Diagnostic Fields
-=================
+Diagnostics
+===========
+
+Diagnostics are outputs from a model used to analyse the scientific
+progress of its run. Commonly, a model has the capability to compute
+very many diagnostics, but a user can choose just a subset of them to
+output.
+
+The LFRic infrastructure provides a framework for adding diagnostics
+to a model. Currently, the framework is usually interfaced to the XIOS
+library. In principle, a different output library could be used.
+
+LFRic diagnostic support
+------------------------
+
+The LFRic infrastructure aims to support the follow principles for
+outputting diagnostics:
+
+#. Any field can be output as a diagnostic.
+#. Each diagnostic output in a time-step should be uniquely
+   identifiable.
+#. A field can be output from anywhere within the time-step.
+#. The model should not have to compute a diagnostic if it has not
+   been requested.
+
+The LFRic infrastructure supports these principles in the following way.
+
+#. Each LFRic field has a generic output method that can be overloaded
+   with a function to send the field name and data to the chosen
+   output library.
+#. Each field can be given a string name which can be the diagnostic
+   name.
+#. As the output method is a method of the field, it can be called
+   from anywhere where the field is in scope.
+
+The LFRic infrastructure cannot enforce the principle that each output
+in a time-step is unique; the model design must ensure uniqueness. If
+two fields are output that have the same name and the same time-step,
+then the underlying output system cannot disambiguate them.
+
+Writing out a diagnostic
+------------------------
+
+To output a field to a diagnostic, the field must be associated with
+an output function. The following associateds the LFRic field
+``my_diagnostic_field`` with the procedure ``my_diagnostic_method``.
+
+.. code-block:: fortran
+
+   use field_parent_mod,                only: write_interface
+   use my_diagnostic_system_mod,        only: my_diagnostic_method
+   ! <snip>
+
+   procedure(write_interface), pointer :: write_behaviour
+
+   write_behaviour => my_diagnostic_method
+   call my_diagnostic_field%set_write_behaviour(write_behaviour)
+
+Once the diagnostic field has been computed, the write procedure is
+called to send it to the diagnostic system.
+
+.. code-block:: fortran
+
+   call my_diagnostic_field%write_field('my_diagnostic_field_name')
+
+If the string is not supplied, the name of the field will be used.
+
+The ``write_field`` method ``my_diagnostic_method`` will be called
+with the name of the field and the field proxy. The field proxy holds
+pointers to the data and to other information about the field. The
+information is used to work out how to send the data to the output
+system supported by the method.
+
+.. _section optional diagnostics:
+
+Optional diagnostics
+--------------------
+
+If a diagnostic is not requested and is not otherwise used by the
+model, then to save memory and time it is beneficial to avoid
+initialising the field or computing the data.
+
+The code assumes that the ``write_behaviour`` has been defined
+previously.
+
+.. code-block:: fortran
+
+   type(field_type) :: my_diagnostic_field
+   type(function_space_type), pointer :: vector_space
+
+   if (my_diagnostic_flag) then
+     ! Diagnostic has been requested
+     vector_space => function_space_collection%get_fs( mesh, element_order, W3 )
+     call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name')
+     call my_diagnostic_field%set_write_behaviour(write_behaviour)
+
+     call invoke(compute_my_diagnostic_type(my_diagnostic_field))
+
+     call my_diagnostic_field%write_field()
+  end if
+
+Sometimes, a complex science kernel may compute diagnostics alongside
+computing prognostic fields, such that the kernel is always called
+even when the diagnostics are not requested. When algorithms call
+kernels the PSy layer code requires that all fields are
+initialised. To save memory, the LFRic infrastructure allows fields to
+be initialised without any field data. The following example
+illustrates the approach:
+
+.. code-block:: fortran
+
+   use empty_data, only, : empty_real_data
+
+   ! Function space for the diagnostic field
+   vector_space => function_space_collection%get_fs( mesh, element_order, W3 )
+   if (my_diagnostic_flag) then
+     ! Diagnostic has been requested
+     call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name')
+     call my_diagnostic_field%set_write_behaviour(write_behaviour)
+   else
+     ! Diagnostic is not required
+     call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name' &
+                                         override_data = empty_real_data)
+   end if
+
+   call invoke(big_science_kernel_type([lots of fields], my_diagnostic_field))
+
+   if (my_diagnostic_flag) then
+     call my_diagnostic_field%write_field()
+   end if
+
+Any array can be used to override the field data. The above example
+uses an array from a module with one element from a module. Because
+the array is in a module, the kernel can use it to check whether a
+field has been properly initialised, and can avoid computing fields
+that are not.
+
+.. code-block:: fortran
+
+   subroutine big_science_kernel_type([lots of fields], my_diagnostic_data)
+     use empty_data, only, : empty_real_data
+
+     ! <snip>
+
+     if ( .not. associated(my_diagnostic_data, empty_real_data) ) then
+       ! Field is properly allocated so will be computed
+       call compute_my_diagnostic(my_diagnostic_data)
+     end if
+
+This approach saves having to pass an extra logical into the kernel.
+
+Diagnostics from existing fields
+--------------------------------
+
+For reasons described above, the same field `name` should not be
+written out as a diagnostic twice in one time-step, but the same
+`field` can be written out as a diagnostic as long as a different name
+is used in each case.
+
+This may occur when interim values of a field need to be written out
+from different parts of the model.
+
+In the code examples above, it is implicitly assumed that the
+underlying function uses the field name to identify the field. But the
+``write_field`` method takes a field name as an optional argument,
+which can override the field name.
+
+To illustrate, the following code block illustrates a situation where
+one might want to output a diagnostic from the same field before and
+after a kernel has processed it:
+
+.. code-block:: fortran
+
+   subroutine science_algorithm(my_diagnostic_field)
+
+     type(field_type), intent(inout) :: my_diagnostic_field
+
+     call my_diagnostic_field%write_field('my_diagnostic_at_start')
+
+     call invoke(compute_my_diagnostic_type(my_diagnostic_field))
+
+     call my_diagnostic_field%write_field('my_diagnostic_at_end')
+
+   end subroutine science_algorithm
+
+
+Enhanced approach
+-----------------
+
+The above code examples demonstrate the LFRic diagnostic system using
+simple examples where fields are initialised and named with hard-wired
+choices. The LFRic infrastructure includes an interface to the XIOS
+system, and features of this system can enable diagnostic-writing code
+to be simplified from the perspective of a science model developer.
+
+For example, the diagnostic configuration supplied to XIOS by a model
+run provides information about which diagnostics are requested on
+which time-steps, and what the output format of the diagnostics will
+be.
+
+Knowledge about which time-step a diagnostic is output can be used to
+set the ``my_diagnostic_flag`` used in the :ref:`Optional
+Diagnostics<section optional diagnostics>` section above.
+
+Knowledge about the function space that the field lives on can be
+inferred from the output format of the diagnostic.
+
+These two aspects can be combined into a single generic function,
+illustrated by a rewrite of the second code example in the
+:ref:`Optional Diagnostics<section optional diagnostics>` section, as follows:
+
+.. code-block:: fortran
+
+   my_diagnostic_flag = init_diag(my_diagnostic_field, 'my_diagnostic_name')
+
+   call invoke(big_science_kernel_type([lots of fields], my_diagnostic_field))
+
+   if (my_diagnostic_flag) then
+     call my_diagnostic_field%write_field()
+   end if
+
+Such a function has been written to support the LFRic atmosphere. See
+the LFRic atmosphere documentation for more details.
+
+
+
+[DELETE BELOW???]
+
+
+
 
 A diagnostic field is a field used for sending data for output to a
 file. Depending on the construction of an application, a user can
