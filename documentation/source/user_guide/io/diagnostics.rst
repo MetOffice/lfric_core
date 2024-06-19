@@ -9,14 +9,16 @@
 Diagnostics
 ===========
 
-Diagnostics are outputs from a model used to analyse the scientific
-progress of its run. Commonly, a model has the capability to compute
-very many diagnostics, but a user can choose just a subset of them to
+Diagnostics are outputs from a model application used to analyse the
+scientific progress of its run. Commonly, a model can compute very
+many diagnostics, but a user can choose just a subset of them to
 output.
 
-The LFRic infrastructure provides a framework for adding diagnostics
-to a model. Currently, the framework is usually interfaced to the XIOS
-library. In principle, a different output library could be used.
+The LFRic infrastructure provides a framework for linking the model to
+a diagnostic processing system. Currently, LFRic applications usually
+send the diagnostic data to the XIOS library. In principle, a
+different output library could be used without making changes to a
+model.
 
 LFRic diagnostic support
 ------------------------
@@ -25,71 +27,80 @@ The LFRic infrastructure aims to support the follow principles for
 outputting diagnostics:
 
 #. Any field can be output as a diagnostic.
-#. Each diagnostic output in a time-step should be uniquely
-   identifiable.
-#. A field can be output from anywhere within the time-step.
+#. A field can be output from anywhere within the model code.
 #. The model should not have to compute a diagnostic if it has not
    been requested.
+#. It should be possible to choose a different diagnostic processing
+   system without significant changes to a model.
 
 The LFRic infrastructure supports these principles in the following way.
 
-#. Each LFRic field has a generic output method that can be overloaded
-   with a function to send the field name and data to the chosen
-   output library.
-#. Each field can be given a string name which can be the diagnostic
-   name.
+#. Each LFRic field has a single generic output method.
 #. As the output method is a method of the field, it can be called
    from anywhere where the field is in scope.
-
-The LFRic infrastructure cannot enforce the principle that each output
-in a time-step is unique; the model design must ensure uniqueness. If
-two fields are output that have the same name and the same time-step,
-then the underlying output system cannot disambiguate them.
+#. The output method of fields calls a procedure pointer, permitting
+   an application to choose which diagnostic processing application to
+   use for each diagnostic. Details on creating output methods are
+   found in the :ref:`write_interface procedures <section write
+   interface procedures>` section.
 
 Writing out a diagnostic
-------------------------
+++++++++++++++++++++++++
 
-To output a field to a diagnostic, the field must be associated with
-an output function. The following associateds the LFRic field
-``my_diagnostic_field`` with the procedure ``my_diagnostic_method``.
+An LFRic field has a ``write_field`` method which sends the field to
+the diagnostic system via a ``write_interface`` procedure. The
+``write_interface`` can be chosen by the application. Its role is to
+package the data from the field and send it to the chosen diagnostic
+output system or library.
+
+The following links the write method of a particular LFRic field
+``my_diagnostic_field`` with a ``write_interface`` procedure called
+``send_diagnostic`` which would link to a particular diagnostic
+system.
 
 .. code-block:: fortran
 
    use field_parent_mod,                only: write_interface
-   use my_diagnostic_system_mod,        only: my_diagnostic_method
+   use send_diagnostic_mod,             only: send_diagnostic
    ! <snip>
 
    procedure(write_interface), pointer :: write_behaviour
 
-   write_behaviour => my_diagnostic_method
+   write_behaviour => send_diagnostic
    call my_diagnostic_field%set_write_behaviour(write_behaviour)
 
-Once the diagnostic field has been computed, the write procedure is
-called to send it to the diagnostic system.
+Once the diagnostic field has been computed, the ``write_field``
+method is called, triggering the sending of the field to the chosen
+diagnostic system:
 
 .. code-block:: fortran
 
    call my_diagnostic_field%write_field('my_diagnostic_field_name')
 
-If the string is not supplied, the name of the field will be used.
+The ``write_field`` method calls ``send_diagnostic`` with the name of
+the field and the :ref:`field proxy <section field proxy>`. The field
+proxy holds pointers to the data and to other information about the
+field. The field proxy information should be sufficient for
+``send_diagnostic`` to work out how to pass the diagnostic data to the
+diagnostic processing library it links to.
 
-The ``write_field`` method ``my_diagnostic_method`` will be called
-with the name of the field and the field proxy. The field proxy holds
-pointers to the data and to other information about the field. The
-information is used to work out how to send the data to the output
-system supported by the method.
+The field name is an optional argument of ``write_field``: if a string
+is not supplied, the name of the field will be used.
 
 .. _section optional diagnostics:
 
 Optional diagnostics
---------------------
+++++++++++++++++++++
 
 If a diagnostic is not requested and is not otherwise used by the
 model, then to save memory and time it is beneficial to avoid
 initialising the field or computing the data.
 
-The code assumes that the ``write_behaviour`` has been defined
-previously.
+The code assumes that ``write_behaviour`` has already been assigned to
+a ``write_interface``.
+
+The first example avoids any code relating to the field if the
+diagnostic is not required:
 
 .. code-block:: fortran
 
@@ -107,13 +118,18 @@ previously.
      call my_diagnostic_field%write_field()
   end if
 
-Sometimes, a complex science kernel may compute diagnostics alongside
-computing prognostic fields, such that the kernel is always called
-even when the diagnostics are not requested. When algorithms call
-kernels the PSy layer code requires that all fields are
-initialised. To save memory, the LFRic infrastructure allows fields to
-be initialised without any field data. The following example
-illustrates the approach:
+In the second example, it is not possible to avoid calling code that
+references the diagnostic when it is not requested. This scenario can
+occur when a complex science kernel computes diagnostics alongside
+computing prognostic fields.
+
+When algorithms call kernels, the PSy layer code requires that all
+fields are initialised as its code will access metadata about the
+fields being passed through. To save memory, the LFRic infrastructure
+allows fields to be initialised without any field data, meaning that
+the field takes up a minimal amount of memory while the PSy layer can
+access the field information without causing a segmentation fault. The
+following example illustrates the approach:
 
 .. code-block:: fortran
 
@@ -137,11 +153,13 @@ illustrates the approach:
      call my_diagnostic_field%write_field()
    end if
 
-Any array can be used to override the field data. The above example
-uses an array from a module with one element from a module. Because
-the array is in a module, the kernel can use it to check whether a
-field has been properly initialised, and can avoid computing fields
-that are not.
+When a field is initialised with override data, then the override data
+array takes the place of the field data array, and no memory is
+allocated to hold any field data, thus saving memory.
+
+The above example uses an array from a module. Because the array is in
+a module, the kernel can use it to check whether a field has been
+properly initialised, and can avoid computing fields that are not.
 
 .. code-block:: fortran
 
@@ -158,7 +176,7 @@ that are not.
 This approach saves having to pass an extra logical into the kernel.
 
 Diagnostics from existing fields
---------------------------------
+++++++++++++++++++++++++++++++++
 
 For reasons described above, the same field `name` should not be
 written out as a diagnostic twice in one time-step, but the same
@@ -193,7 +211,7 @@ after a kernel has processed it:
 
 
 Enhanced approach
------------------
++++++++++++++++++
 
 The above code examples demonstrate the LFRic diagnostic system using
 simple examples where fields are initialised and named with hard-wired
@@ -230,122 +248,57 @@ illustrated by a rewrite of the second code example in the
 Such a function has been written to support the LFRic atmosphere. See
 the LFRic atmosphere documentation for more details.
 
+.. _section write interface procedures:
+
+write_interface procedures
+++++++++++++++++++++++++++
+
+The ``write_interface`` procedure acts as the interface between LFRic
+and a diagnostic system. Its abstract interface is defined as follows.
 
 
-[DELETE BELOW???]
+.. code-block:: fortran
 
+   subroutine write_interface(field_name, field_proxy)
+     import field_parent_proxy_type
+     character(len=*), optional,      intent(in) :: field_name
+     class(field_parent_proxy_type ), intent(in) :: field_proxy
+   end subroutine write_interface
 
+Sending a field to a diagnostic processing system involves sending
+various pieces of information about the field. The diagnostic name and
+the data are clearly required, but also the size and dimensions of the
+field may be required. Furthermore, the data order of the data in the
+field may not be the same as the data order expected by the diagnostic
+system, so the data may need to be reordered in some way.
 
+Providing the ``write_interface`` with the field proxy provides it
+with access to all information about the field, which should be
+sufficient to pass it on to a diagnostic system.
 
-A diagnostic field is a field used for sending data for output to a
-file. Depending on the construction of an application, a user can
-often select which diagnostics need to be output, and can choose times
-to output the diagnostics. To save compute resources, the LFRic
-infrastructure supports the capability to initialise fields and
-compute diagnostics only if they are required on a given
-time-step.
-
-Diagnostic values are often computed local to a science routine. Therefore, as
-long as the diagnostic output system can support output of diagnostics
-from anywhere in the code, the diagnostic field to hold the value can
-be allocated locally. The benefit of allocating a field locally is
-that the application does not need to hold so many diagnostic fields
-in memory at the same time.
-
-In an ideal world, if a diagnostic is not requested (and if it is not
-also required as a by-product of computing another diagnostic that is
-requested) then it should neither be initialised nor be computed.
-Code referencing the diagnostic should not be visited when running the
-configuration. However, some scientific routines have APIs containing
-a mix of diagnostics and prognostics, or a number of diagnostics where
-it may be that only some are requested. Therefore, the model must be
-able to correctly run code that references, but does not compute,
-diagnostics that are not required.
-
-Diagnostic fields computed by Kernels
--------------------------------------
-
-Assuming an algorithm has correct logic it is possible to avoid
-initialising a field for a diagnostic that has not been requested,
-then avoid computing or outputting it. It is even possible, if not
-recommended, to pass an uninitialised field to another algorithm as
-long as the algorithm being called also avoids computing the
-field. However, it is not possible to pass an uninitialised field to a
-kernel: all fields must be initialised before passing to a kernel as
-the PSy layer code inserted between the algorithm and kernel will
-attempt to dereference information from the field.
-
-Therefore, if a kernel that computes an optional diagnostic must be
-called (either to evolve the model or to compute other optional
-diagnostics) then all the diagnostic fields passed to the kernel must
-be initialised.
-
-To support memory efficiency, LFRic supports initialisation of a field
-without allocating an associated data field.
-
-::
-
-    use empty_data_mod, only :: empty_array
-
-    type(function_space_type), pointer :: vector_space
-    type(field_type), pointer :: mandatory_diagnostic
-    type(field_type), pointer :: optional_diagnostic
-
-    ! Get pointer to function space required for the diagnostic field
-    vector_space => function_space_collection%get_fs( twod_mesh, 0, W3, 1)
-    ! Initialise the diagnostic fields
-    call mandatory_diagnostic%initialise(vector_space)
-
-    if (optional_diagnostic_requested) then
-      call optional_diagnostic%initialise(vector_space)
-    else
-      ! Intialise the diagnostic without a data array
-      call optional_diagnostic%initialise(vector_space, &
-                                          override_data = empty_data )
-    end if
-
-    call invoke( compute_diagnostics_type( mandatory_diagnostic, &
-                                           optional_diagnostic )
-
-Instead of passing a pointer to a field array to the kernel, the PSy
-layer code will pass a pointer to the empty data array (an array with
-one element should be used as arrays with zero elements behave
-unpredictably). Therefore, the kernel must not attempt to write to it!
-If the ``empty_data`` module used by the algorithm is also used by the
-kernel, then it is easy to add a check to the kernel code to see
-whether the data array is to be computed:
-
-::
-
-    module compute_diagnostic_kernel_mod
-    use empty_data_mod, only : empty_data
-
-    <snip>
-
-    if ( .not. associated(optional_diagnostic_data, empty_data) ) then
-      ! Compute optional diagnostic
-      <snip>
-    end if
-
-Alternatively, identical logical tests can be used in the algorithm
-and the kernel to prevent diagnostics being computed when they are
-initialised with dummy data.
 
 Example: XIOS integration
 -------------------------
 
-Several LFRic applications use the XIOS library by integrating to the
-:ref:`lfric-xios component <section lfric xios>`. For
-diagnostic fields supported by the ``lfric_xios`` component it is
-possible to infer the field type from the XIOS metadata, and to
-query XIOS to determine whether a diagnostic is required for a given
-time-step.
+Several LFRic applications use the XIOS library as a diagnostic
+processing system by integrating to the :ref:`lfric_xios component
+<section lfric xios>`. See the `diagnostics documentation
+<https://metoffice.github.io/simulation-systems/WorkingPractices/Diagnostics/lfric_diagnostics.html>`_
+in the lfric_apps repository for more usage examples.
+
+Initialising fields for lfric_xios
+++++++++++++++++++++++++++++++++++
+
+For diagnostic fields supported by the ``lfric_xios`` component it is
+possible to infer the field type (its function space) from the XIOS
+metadata, and to query XIOS to determine whether a diagnostic is
+required for a given time-step.
 
 For the Momentum(R) atmosphere, an ``init_diag`` procedure has been
-written to support initialisation of diagnostics. To add, compute and
-output a new diagnostic, one can write the following:
+written to support initialisation of diagnostics. To add and compute a
+new diagnostic, one can write the following:
 
-::
+.. code-block:: fortran
 
     type(field_type), allocatable :: optional_diagnostic
     logical(l_def)                :: optional_diagnostic_flag
@@ -355,21 +308,34 @@ output a new diagnostic, one can write the following:
 
     if (optional_diagnostic_flag) then
       ! Compute diagnostic
-      <snip>
+      !<snip>
     end if
+
+Writing fields for lfric_xios
++++++++++++++++++++++++++++++
+
+As the field type of a field can be inferred from its metadata, so can
+the method required to send the field to the XIOS library. Therefore,
+all diagnostic fields that use the ``lfric_xios`` component are
+assigned the same ``write_interface``: the ``init_diag`` contains:
+
+.. code-block:: fortran
+
+   write_behaviour => write_field_generic
+   call field%set_write_behaviour(write_behaviour)
+
+After the diagnostic is computed, the``write_field`` method is called,
+but only if the diagnostic flag was set to ``.true.``.
+
+.. code-block:: fortran
 
     if (optional_diagnostic_flag) then
-      call optional_diagnostic%write_field('optional_diagnostic_id')
+      call optional_diagnostic%write_field()
     end if
 
-Where a field is not required for a given time-step, the ``init_diag``
-procedure will initialise it with an empty data array as described
-above.
-
-The ``init_diag`` procedure should support many applications that use
-the same meshes and physics spaces as used by the Momentum atmosphere,
-with some modifications to support different types of multidata fields.
-
-Clearly, for a large algorithm that computes a lot of diagnostics
-alongside other processing, the initialise and writing processes can
-be modularised into separate procedures.
+As with the previous example, the ``write_field`` procedure calls
+``write_field_generic`` with the field name and the field proxy. The
+``write_field_generic`` procedure reformats the data based on the
+field properties. For example, XIOS has been configured to expect
+data in level-first data order whereas LFRic fields are column-first
+data order, so the procedure reorders the data appropriately.
