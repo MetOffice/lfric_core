@@ -51,7 +51,7 @@ module driver_mesh_mod
   use local_mesh_collection_mod,  only: local_mesh_collection
 
   ! Configuration modules
-  use finite_element_config_mod, only: cellshape_quadrilateral
+  use finite_element_config_mod, only: CELLSHAPE_QUADRILATERAL
 
   implicit none
 
@@ -157,7 +157,7 @@ subroutine init_mesh( configuration,           &
   end if
 
   ! Currently only quad elements are fully functional
-  if (cellshape /= cellshape_quadrilateral) then
+  if (cellshape /= CELLSHAPE_QUADRILATERAL) then
     call log_event( "Reference_element must be QUAD for now...", &
                     LOG_LEVEL_ERROR )
   end if

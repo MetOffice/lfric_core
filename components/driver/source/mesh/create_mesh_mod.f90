@@ -26,9 +26,9 @@ module create_mesh_mod
   use mesh_collection_mod,        only: mesh_collection
 
   ! Configuration modules
-  use extrusion_config_mod, only: method_uniform,   &
-                                  method_geometric, &
-                                  method_quadratic
+  use extrusion_config_mod, only: METHOD_UNIFORM,   &
+                                  METHOD_GEOMETRIC, &
+                                  METHOD_QUADRATIC
 
   implicit none
 
@@ -64,15 +64,15 @@ function create_extrusion( extrusion_method, &
   if (allocated(new)) deallocate(new)
 
   select case (extrusion_method)
-    case (method_uniform)
+    case (METHOD_UNIFORM)
       allocate( new, source=uniform_extrusion_type(        &
                                 domain_bottom, domain_top, &
                                 n_layers, extrusion_id ) )
-    case (method_quadratic)
+    case (METHOD_QUADRATIC)
       allocate( new, source=quadratic_extrusion_type(      &
                                 domain_bottom, domain_top, &
                                 n_layers, extrusion_id ) )
-    case (method_geometric)
+    case (METHOD_GEOMETRIC)
       allocate( new, source=geometric_extrusion_type(      &
                                 domain_bottom, domain_top, &
                                 n_layers, extrusion_id ) )

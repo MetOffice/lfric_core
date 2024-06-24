@@ -51,7 +51,7 @@ program skeleton
                     modeldb%configuration )
   call init_logger( modeldb%mpi%get_comm(), program_name )
   call init_collections()
-  call init_time( modeldb%clock, modeldb%calendar )
+  call init_time( modeldb )
   deallocate( filename )
 
   ! Create the depository field collection and place it in modeldb
@@ -69,7 +69,7 @@ program skeleton
   call log_event( 'Finalising ' // program_name // ' ...', log_level_trace )
   call finalise( program_name, modeldb )
 
-  call final_time( modeldb%clock, modeldb%calendar )
+  call final_time( modeldb )
   call final_collections()
   call final_logger( program_name )
   call final_config()
