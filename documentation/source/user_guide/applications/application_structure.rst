@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _application_structure:
+.. _section application structure:
 
 Application Structure
 =====================
