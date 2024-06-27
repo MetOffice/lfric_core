@@ -9,8 +9,6 @@
 Prognostic Fields
 =================
 
-Change 1
-
 In an earth system model, the fields that exist throughout a model run
 are often referred to as the "prognostic fields". For some such
 fields, it is essential that they exist during the whole run as they
