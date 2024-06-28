@@ -22,15 +22,12 @@ creating and managing the model prognostic state for applications
 aligned with the :ref:`standard LFRic model application structure
 <section application structure>`. In such applications, fields are
 created and initialised during the initialisation phase and stored in
-the ``modeldb`` data structure. For a large model with many prognostic
-fields, :ref:`field collections <section field collection>` can be
-used to hold many fields.
+the ``modeldb`` data structure either as fields or within :ref:`field
+collections <section field collection>`.
 
-In the time-step phase of the model, fields and field collections are
+In the time-step phase of the model, field collections and fields are
 extracted from ``modeldb`` and passed to science code through the
-argument list. Packaging fields in field collections is a useful way
-of keeping argument lists manageable when a procedure takes a large
-number of fields as arguments.
+argument list.
 
 The following figure expands on the figure found in the
 :ref:`application structure section <section application structure>`
@@ -63,36 +60,29 @@ prognostic fields.
       time-step boundary then it will also need to be written to a
       checkpoint file.
 
-Overview
---------
+Detailed recommendations
+------------------------
 
-It is recommended that LFRic models are implemented with an initialise
-stage, a run stage (which executes a single time-step) and a finalise
-stage. The infrastructure provides a model database structure called
-``modeldb`` which can hold the model state and other data through all
-three stages.
+For a simple model with a few prognostic fields, adding them directly
+to ``modeldb`` may be appropriate. For a complex model with very many
+prognostic fields and several science components, use of field
+collections can reduce the size of argument lists to science routines
+that require a lot of fields.
 
-For such models, prognostic fields are initialised during the
-initialise stage and stored in ``modeldb``. As well as storing
-individual fields, ``modeldb`` can also store :ref:`field collections
-<section field collection>`. Use of field collections permits large
-numbers of fields to be passed down a calling tree within a single
-argument. Fields can be added to a field collection dynamically,
-meaning the contents of the field collection can depend on the
-run-time configuration of the model.
+Fields can be referenced by more than one field collection, meaning
+two sections of code can share the same field even if they do not use
+the same field collection.
 
-Some prognostic fields need to be written to, and then read from,
-checkpoint dumps if a long run is to be broken into shorter segments.
-As fields can be referenced by more than one field collection, storing
-all fields required for checkpointing in a dedicated field collection
-can simplify the process of writing a checkpoint dump.
-
-Note, that the actual field can only be included in one field
-collection. Other field collections can include a pointer to the same
-field. To simplify matters, it is recommended that all of the actual
-prognostic fields are added to a single large ``depository`` field
-collection, and that other field collections hold pointers to the
-prognostic fields they need.
+Note: to reference a field in more than one field collection it is
+stored as an actual field in just one of the collections and all other
+field collections store a pointer to the field. To simplify the
+decision making about which of several field collections should hold
+the actual field, it is recommended that all the actual prognostic
+fields are added to a single large ``depository`` field collection,
+and that all other field collections hold pointers to the fields they
+need. While the ``depository`` field collection maintains the fields
+in scope through the run, it is not otherwise referred to in the
+model.
 
 In summary, in the initialisation phase, for each field, the following
 steps are recommended.
@@ -102,8 +92,10 @@ steps are recommended.
  #. To pass each field to the science sections that need it, a pointer
     to the field is added to relevant field collections passed down
     the calling tree to the science code.
- #. If the field needs to be checkpointed, a pointer to the field is
-    added to a field dedicated to holding checkpoint/restart fields.
+ #. Field collections can be dedicated to technical requirements
+    too. For example, if the field needs to be checkpointed, a pointer
+    to the field can be added to a field dedicated to holding
+    checkpoint/restart fields.
  #. The field should be initialised with the appropriate mesh and
     function space according to the model configuration.
 
@@ -112,147 +104,184 @@ fields set up at initialisation time can be extracted from the
 ``modeldb`` and passed into the relevant scientific algorithms and
 kernels.
 
-.. note::
+Code illustration
++++++++++++++++++
 
-   Each of the above processes can be written as hard-wired code,
-   initialising each field in turn, and adding it to each field
-   collection required.
+The following code snippets illustrate examples of creating fields,
+and adding them to field collections.
 
-    .. code-block:: fortran
+At the start of the initialisation process, field collections are
+added to ``modeldb``
 
-       type(field_collection) :: depository, conv_field, checkpoint_fields
-       type(field_type)          :: rain
-       type(field_type), pointer :: fld_ptr
-       class(pure_abstract_field_type), pointer :: tmp_ptr
+.. code-block:: fortran
 
-       ! Get the field collections from the modeldb
-       depository => modeldb%fields%get_field_collection("depository")
-       conv_fields => modeldb%fields%get_field_collection("conv_fields")
-       checkpoint_fields => modeldb%fields%get_field_collection( &
+   call modeldb%fields%add_empty_field_collection("depository")
+   call modeldb%fields%add_empty_field_collection("conv_fields")
+   call modeldb%fields%add_empty_field_collection("checkpoint_fields")
+
+The field collections are then accessed:
+
+.. code-block:: fortran
+
+   type(field_collection) :: depository, conv_field, checkpoint_fields
+   type(field_type)          :: rain
+
+   ! Get the field collections from the modeldb
+   depository => modeldb%fields%get_field_collection("depository")
+   conv_fields => modeldb%fields%get_field_collection("conv_fields")
+   checkpoint_fields => modeldb%fields%get_field_collection( &
                                              "checkpoint_fields")
 
-       ! rain is a 2D field
-       vector_space => function_space_collection%get_fs( mesh2d, &
+
+Having obtained the field collections, fields need to be added to
+them. The following adds a ``rain`` field to the convection
+scheme. The ``rain`` field is a cell-centred single-layer field in the
+model, so is represented by the :math:`\mathbb{W}_{3}` function space
+on the 2-dimensional mesh.
+
+A couple of temporary pointers are needed to enable the field to be
+added to more than one field collection.
+
+.. code-block:: fortran
+
+   type(field_type), pointer :: fld_ptr
+   class(pure_abstract_field_type), pointer :: tmp_ptr
+
+   ! rain is a 2D field on the W3 function space
+   function_space => function_space_collection%get_fs( mesh2d, &
                                               element_order, W3 )
-       call rain%initialise(vector_space, name='rain')
+   call rain%initialise(function_space, name='rain')
 
-       ! Add field to depository, then get a pointer to the field
-       call depository%add_field(rain)
-       call depository%get_field(rain, field_ptr)
+   ! Add actual field to depository
+   call depository%add_field(rain)
 
-       ! Abstract class needed to support all possible field types
-       tmp_ptr => field_ptr
-       ! Add field pointer to the radiation collection
-       call conv_field%add_reference_to_field(tmp_ptr)
+   ! Get a pointer to the field
+   call depository%get_field(rain, field_ptr)
 
-       ! If convection scheme is in use,  checkpoint this field
-       call checkpoint_fields%add_reference_to_field(tmp_ptr)
+   ! Use an abstract field pointer, as field collections can hold any field type
+   tmp_ptr => field_ptr
 
-   Alternatively, some aspects of the process can be based on sources
-   of metadata so as to automate the process and to reduce the risk of
-   error. For example, the Momentum\ :sup:`®` atmosphere makes use of
-   metadata provided as part of its integration to the XIOS library to
-   determine which type of field should be initialised. The use of
-   metadata ensures that the type of field created matches up with the
-   type of field being written out if the field is output to a
-   checkpoint file or as a diagnostic.
+   ! Add the field pointer to the radiation collection
+   call conv_fields%add_reference_to_field(tmp_ptr)
 
-Once all the model steps are completed, a checkpoint dump may need to
-be written to enable the simulation to be extended in a separate run
-of the application. The field_collection object supports an iterator
-that allows a function to loop through all the fields in a field
-collection. If a checkpoint field collection exists, it can be passed
-to a procedure that goes through the collection writing out each field.
+   ! If convection scheme is in use,  checkpoint this field
+   if (convection == convection_um) then
+     call checkpoint_fields%add_reference_to_field(tmp_ptr)
+   end if
+
+Now that the fields are in the field collections and the field
+collections are in ``modeldb`` they can be accessed from anywhere in
+the model. For example:
+
+.. code-block:: fortran
+
+   subroutine step(modeldb)
+
+     type(field_collection_type), pointer :: conv_fields
+     type(field_type), pointer :: rain
+
+     conv_fields => modeldb%fields%get_field_collection("conv_fields")
+     call conv_fields%get_field('rain',rain)
+
+     call convection_science(rain,...
+
+During the finalise stage of a model, a procedure in the
+:ref:`lfric_xios component <section lfric xios>` can be called and
+passed the field collection containing the fields that need to be
+checkpointed. After the fields are checkpointed, the collections can
+be cleared.
+
+.. code-block:: fortran
+
+   use lfric_xios_write_mod, only : write_checkpoint
+
+   depository => modeldb%fields%get_field_collection("depository")
+   conv_fields => modeldb%fields%get_field_collection("conv_fields")
+   checkpoint_fields => modeldb%fields%get_field_collection("checkpoint_fields")
+
+   call write_checkpoint( checkpoint_fields, modeldb%clock, filename )
+
+   call depository%clear()
+   call conv_fields%clear()
+   call checkpoint_fields%clear()
+
+The code to initialise fields and add them to field collections is
+quite verbose, but a lot of it is repeated almost identically for each
+field. Generic functions can therefore be written to simplify the
+code, particularly for models that have many prognostic fields. The
+next section describes how the Momentum\ :sup:`®` atmosphere model has
+modularised some of the functionality both to simplify code and reduce
+the potential for errors.
 
 Example: The Momentum\ :sup:`®` Model
 -------------------------------------
 
 In the Momentum\ :sup:`®` atmosphere model, the set-up of the
 prognostics field is based on metadata written in the XIOS
-``iodef.xml`` file. All possible prognostic fields are recorded here.
-The record includes a string ID for the field, the formal name of the
-field (such as the CF name), the units and information about the XIOS
-domain used to describe the format of the data in the input or output
-file.
+``iodef.xml`` file. The XIOS metadata describes the output form of the
+field from which the model form (the function space) of the field can
+be inferred. The Momentum\ :sup:`®` atmosphere model prognostic code
+can use this metadata to simplify the prognostic initialisation code.
 
 In the Momentum\ :sup:`®` atmosphere model, a routine called
 ``create_physics_prognostics`` includes the code for creating most of
-the prognostic fields, including dealing with the steps described in
-the preceding section. The ``create_physics_prognostics`` is
-responsible for determining whether each potential prognostic field is
-required by the model, which scientific field collection it needs to
-be added to and whether it should be checkpointed.
+the prognostic fields, including dealing with some of the steps
+described in the preceding section.
 
-A function is then called which both initialises the field and adds it
-to the appropriate set of field collections.
+The following code initialises a field called ``albedo_obs_vis``, adds
+it to the ``depository`` field collection, adds a pointer to it to the
+radiation field collection and, depending on the model configuration,
+to the checkpoint field collection. Other than checking whether the
+field needs to be checkpointed and which field collection to add the
+field to, much of the code is hidden in the ``apply`` function.
 
-For example, the following will add two fields to the radiation field
-collection. If certain logical conditions are met, the field will also
-be marked for checkpointing: a pointer to the field will also be added
-to the dedicated field collection used by the checkpoint routine.
+.. code-block:: fortran
 
-::
+   if (surface == surface_jules .and. albedo_obs) then
+     checkpoint_flag = .true.
+   else
+     checkpoint_flag = .false.
+   end if
+   call processor%apply(make_spec('albedo_obs_vis', main%radiation, &
+                                  ckp=checkpoint_flag))
 
-    if (surface == surface_jules .and. albedo_obs) then
-      checkpoint_flag = .true.
-    else
-      checkpoint_flag = .false.
-    end if
-    call processor%apply(make_spec('albedo_obs_vis', main%radiation, &
-        ckp=checkpoint_flag))
-    call processor%apply(make_spec('albedo_obs_nir', main%radiation, &
-        ckp=checkpoint_flag))
+While the ``apply`` function used for the Momentum\ :sup:`®` model is
+somewhat bespoke, its capabilities are generic and could be adaptable
+to other model requirements including models that do not use XIOS.
 
-.. topic:: The processor apply method
+.. topic:: The apply method
 
    Due to the way XIOS operates, Momentum's
    ``create_physics_prognostics`` routine is called twice. The first
-   call and the second call use different ``processor`` types to
-   ``apply`` different methods on each call. XIOS defines what are
-   known as contexts to support a particular set of input or output
-   requests. The first call is required to set up an XIOS "context"
-   which involves XIOS reading the ``iodef.xml`` file. Once the
-   context is set up, the model can use XIOS to query the field
-   definitions that were read into the context from the ``iodef.xml``
-   file.
+   call and the second call use different ``processor`` types each of
+   which have different ``apply`` methods.
 
-   The field reference in the ``iodef.xml`` is sufficient to enable
-   XIOS to register a field for potential diagnostic output, but
-   additional work is required by the model to register fields for
-   writing or reading via the checkpoint-restart system. The first
-   call to ``create_physics_prognostics``, done early in the model
-   initialisation phase, sets up of XIOS context, allowing the
-   ``apply`` method to registers fields required for checkpointing
-   with the context.
+   Applications that use XIOS define what are known as XIOS
+   "contexts". A context supports a particular set of input or output
+   requests. The first call to ``create_physics_prognostics`` defines
+   an XIOS context for all the prognostics, which involves XIOS
+   reading each of the prognostic field definitions from the
+   ``iodef.xml`` file. Once the first call to
+   ``create_physics_prognostics`` has been made, the context is
+   "closed" meaning it is available for use by the application but can
+   no longer be configured.
 
-   Only once the XIOS context has been set up can the model read field
-   definitions read from the ``iodef.xml`` file. These definitions are
-   used to correctly initialise each field. In the second call to
-   ``create_physics_prognostics``, a different ``processor%apply``
-   method queries XIOS to find out the XIOS domain a field is on. The
-   XIOS domain uniquely determines the particular internal model field
-   type. For example, a field defined on the ``half_level_face_grid``
-   in the ``iodef.xml`` file lives on the :math:`\mathbb{W}_{3}`
-   function space within the model whereas a field on the
-   ``half_level_edge_grid`` is on the :math:`\mathbb{W}_{2h}` function
-   space. The ``apply`` routine initialises the field and adds it to
-   the required field collections.
+   The application can access information from the ``iodef.xml`` via
+   XIOS, but only after it the context is closed. That is the reason
+   for the second call to ``create_physics_prognostics``. In the
+   second call, a different ``apply`` method is used. This ``apply``
+   method calls XIOS to access the information from the ``iodef.xml``
+   file and uses the information to initialise the field to the
+   required function space.
 
-   In addition to the requested field collection, fields to be written
-   to or read from checkpoint files may be included in a second
-   checkpoint field collection. Fields can be included in more than
-   one field collection by including the actual field in one
-   collection and pointers to the field in other collections.  For
-   consistency and simplicity, Momentum's ``apply`` method always adds
-   fields to the requested collection and the checkpoint collection as
-   pointers. The actual field is held in another field collection
-   called the ``depository``. The ``depository`` just acts as a
-   central hold-all for fields that need to remain in scope throughout
-   the model run: while it exists in ``modeldb``, it is not intended
-   to be used within the model.
-
-During the finalise stage of a model, a procedure in the
-:ref:`lfric-xios component <section lfric xios>` can be called and
-passed the field collection containing the fields that need to be
-checkpointed. After the fields are checkpointed, the collections can
-be cleared and the fields can go out of scope.
+   For example, a field whose ``iodef.xml`` definition has
+   ``grid_ref="half_level_face_grid"`` lives on the
+   :math:`\mathbb{W}_{3}` function space within the model whereas a
+   field with ``grid_ref="half_level_edge_grid"`` is on the
+   :math:`\mathbb{W}_{2h}` function space. In addition to initialising
+   the field, the ``apply`` routine will add it to the required field
+   collection: the field will always be added to the ``depository``
+   collection, will be added to the field collection passed to the
+   ``apply`` method in the call from ``create_physics_prognostics``,
+   and will add it to the checkpoint field collection if the
+   checkpoint argument is set to true.
