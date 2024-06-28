@@ -124,12 +124,10 @@ occur when a complex science kernel computes diagnostics alongside
 computing prognostic fields.
 
 When algorithms call kernels, the PSy layer code requires that all
-fields are initialised as its code will access metadata about the
-fields being passed through. To save memory, the LFRic infrastructure
+fields are initialised. To save memory, the LFRic infrastructure
 allows fields to be initialised without any field data, meaning that
-the field takes up a minimal amount of memory while the PSy layer can
-access the field information without causing a segmentation fault. The
-following example illustrates the approach:
+the field takes up a minimal amount of memory. The following example
+illustrates the approach:
 
 .. code-block:: fortran
 
@@ -157,9 +155,11 @@ When a field is initialised with override data, then the override data
 array takes the place of the field data array, and no memory is
 allocated to hold any field data, thus saving memory.
 
-The above example uses an array from a module. Because the array is in
-a module, the kernel can use it to check whether a field has been
-properly initialised, and can avoid computing fields that are not.
+The above example uses an array from a module. This allows the kernel
+to use the same module, which enables it to check whether fields being
+passed in are pointing to the override data array. If a field is
+pointing to the override array then it does not need to be, and should
+not be, computed:
 
 .. code-block:: fortran
 
