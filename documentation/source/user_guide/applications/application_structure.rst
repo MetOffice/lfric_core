@@ -37,11 +37,11 @@ couples to the NEMO ocean model.
 .. figure:: images/application_schematic.svg
 
    Schematic of an application that runs a single science model. The
-   application program calls the init, step and final stages of the
-   driver layer to set up data structures and infrastructure data
+   application program calls the ``init``, ``step`` and ``final`` stages of
+   the driver layer to set up data structures and infrastructure data
    (such as mesh coordinate information) required by the model. Each
-   stage calls the respective init, step and final stages of the model
-   which read, integrate and write the scientific data.
+   stage calls the respective ``init``, ``step`` and ``final`` stages of the
+   model which read, integrate and write the scientific data.
 
 
 Running the Model
@@ -69,7 +69,7 @@ model. Properly encapsulating all the data allows applications to
 create multiple ``modeldb`` data structures to run two or more models
 side by side, or to run ensembles of the same model side by side.
 
-When a model uses ``modeldb`` certain information must be set up prior
+When a model uses ``modeldb``, certain information must be set up prior
 to calling the driver layer initialisation. Examples include setting
 up the configuration from the namelist inputs, defining the model name
 and setting the MPI communicator. This behaviour is intended to
@@ -101,14 +101,16 @@ Driver Initialise
 ~~~~~~~~~~~~~~~~~
 
 The `driver initialise` stage of an application can roughly be divided
-between initialising the infrastructure of the model, such as meshes,
-coordinates, clocks and calendars, and initialising the initial model
-state, including the reading initial data. The model provides
-procedures that the driver initialise calls to complete the
-initialisation. Separating these processes into multiple procedures
-gives applications flexibility in setting up models. For example,
-where several models use the same or similar meshes, an application
-can ensure each mesh only needs to be read once.
+between initialising the infrastructure of the model (including
+infrastructure data about meshes, coordinates, clocks and calendars)
+and initialising the initial model data that represents the current
+state of the model (reading dumps and ancillary files). Some of the
+driver initialise work involves calls to procedures provided by the
+model. The processes required for initialising the application are
+separated into multiple model procedures to give applications
+flexibility in setting up models. For example, where several models
+use the same or similar meshes, an application can ensure each mesh
+needs to be read only once.
 
 The model infrastructure data typically comprises information about
 meshes and coordinates that are fixed throughout the model run, as
