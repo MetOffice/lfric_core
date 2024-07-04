@@ -1,3 +1,11 @@
+.. ------------------------------------------------------------------------------
+     (c) Crown copyright 2024 Met Office. All rights reserved.
+     The file LICENCE, distributed with this code, contains details of the terms
+     under which the code may be used.
+   ------------------------------------------------------------------------------
+
+.. _section external field:
+
 Introducing External Field
 ==========================
 
@@ -30,7 +38,7 @@ preventing the internal data of fields from being exposed.
     another type of field.
 
 Although the class diagram above shows a mapping between two field classes
-there is no reason why the exeternal field need be an actual object. In the
+there is no reason why the external field need be an actual object. In the
 case of coupling through OASIS the external "field" is, in fact, a call to the
 transmit or receive functions of OASIS.
 
