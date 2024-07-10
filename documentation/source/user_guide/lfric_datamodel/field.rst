@@ -14,7 +14,11 @@ design supports the LFRic separation concern by preventing direct
 access to the data. Model manipulation of data should only be done by
 passing the field to a kernel or PSyclone built-in.
 
-[TODO Grab stuff from the lfric data model to flesh this out].
+The data held by a field represents one of a number of :ref:`function
+spaces <section function space>. The function space describes the
+layout of data points on each 3-dimensional cell. A single field can
+represent 32-bit real, 64-bit real or integer data, and can hold more
+than one quantity of same function space and data type.
 
 Initialising new fields
 =======================
@@ -86,19 +90,17 @@ The field_proxy object
 
 The data held in a field is private meaning it cannot be accessed
 using field methods. Clearly the data does need to be accessed
-somewhere in the code: the field proxy provides the methods for doing
-so. But the field proxy object must be used with care to maintain the
-integrity of the application's data.
-
-
+somewhere in the code, and the field proxy provides the methods for
+doing so. The field proxy object must be used with care to maintain
+the integrity of the application's data.
 
 Keeping the data private within the field is a way of enforcing the
-PSyKAl design that underpins key LFRic applications. Critically, the
-application needs to understand when and how data is modified so that
-it can implement strategies correctly for applying redundant
-computation into halos and calling halo swaps. If data is meddled with
-outside of the PSyKAl design then errors may be introduced into the
-application.
+PSyKAl design that underpins key LFRic applications. The application
+needs to monitor the status of halos - whether or not they are "dirty"
+or out of date with the corresponding owned data points on the
+neighbouring ranks. PSyclone generates code that does this monitoring
+correctly. If additional code is using and modifying data without
+PSyclone's knowledge, the data can become inconsistent.
 
 The field proxy object may be used in the following limited
 circumstances:
@@ -129,3 +131,90 @@ Data can be accessed using the proxy as follows:
 
    wind_field_proxy = wind_field%get_proxy()
    wind_field_data => wind_field_proxy%data
+
+.. attention:: The field_pointer_type
+
+   The ``field_pointer_type`` is a type only used in the
+   infrastructure, but as described in the :ref:`mixed precision
+   <section mixed precision field>`, an application has to define its
+   ``field_pointer_type`` options consistently.
+
+   Like any Fortran object, one can declare a field as an actual field
+   (optionally, as a target for a pointer) or as a field pointer:
+
+   .. code-block:: fortran
+
+      type(field_type), target       :: actual_field
+      type(field_type), pointer      :: pointer_to_field
+
+   However, as discussed in the :ref:`field collection documentation
+   <section field collection>`, a field collection can hold a combination
+   of fields and field pointers.
+
+   When looping through the contents of a field collection, a ``select
+   type`` statement is needed in the LFRic infrastructure code to
+   disambiguate between all field types `and` between actual fields
+   and pointer fields.
+
+.. _section mixed precision field
+
+Mixed precision fields
+======================
+
+Underpinning the ``field_type`` object referenced in a lot of code
+examples is either a 32-bit or a 64-bit field. The precision choice
+can be made at build-time by setting compile def ``RDEF_PRECISION`` to
+32 or 64. See the ``field_mod`` module for how this is done.
+
+.. code-block fortran
+
+   module field_mod
+
+   #if (RDEF_PRECISION == 32)
+   use field_real32_mod, only: field_type         => field_real32_type, &
+                               field_proxy_type   => field_real32_proxy_type, &
+                               field_pointer_type => field_real32_pointer_type
+   #else
+   use field_real64_mod, only: field_type         => field_real64_type, &
+                               field_proxy_type   => field_real64_proxy_type, &
+                               field_pointer_type => field_real64_pointer_type
+   #endif
+
+   implicit none
+   private
+
+   public :: field_type, &
+             field_proxy_type, &
+             field_pointer_type
+
+   end module field_mod
+
+The choice of compile def will point ``field_type`` fields to one of
+two concrete implementations of the field object:
+``field_real32_type`` or ``field_real64_type``. Similarly, there are
+32-bit and 64-bit versions of the ``field_proxy_type`` and the
+``field_pointer_type``.
+
+The choice made at build-time applies to all ``field_type``
+variables.
+
+Where an application requires a combination of 32-bit and 64-bit
+fields an application can define additional field types that are
+controlled by separate compile defs. This can be done by taking a copy
+of the ``field_mod`` module and changing the name of the public
+types. Then, in the following, each of the fields can be either 32-bit
+or 64-bit depending on the choice made at compile time:
+
+.. code-block fortran
+
+   type(field_type)            :: wind_field
+   type(r_tran_field_type)     :: dry_mass
+   type(r_solver_field_type)   :: theta_advection_term
+
+Integer fields
+==============
+
+The infrastructure supports 32-bit integer fields:
+``integer_field_type``.
+
+Currently, there is no support for mixed precision integers.

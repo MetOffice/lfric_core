@@ -11,4 +11,4 @@ LFRic Data Model
    :maxdepth: 2
 
    lfric_datamodel
-   advanced_structures
+   data_structures
