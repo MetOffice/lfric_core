@@ -276,12 +276,12 @@ to other model requirements including models that do not use XIOS.
 
    For example, a field whose ``iodef.xml`` definition has
    ``grid_ref="half_level_face_grid"`` lives on the
-   :math:`\mathbb{W}_{3}` function space within the model whereas a
+   :math:`\mathbb{W}_{3}` function space within the model, whereas a
    field with ``grid_ref="half_level_edge_grid"`` is on the
    :math:`\mathbb{W}_{2h}` function space. In addition to initialising
-   the field, the ``apply`` routine will add it to the required field
-   collection: the field will always be added to the ``depository``
-   collection, will be added to the field collection passed to the
-   ``apply`` method in the call from ``create_physics_prognostics``,
-   and will add it to the checkpoint field collection if the
-   checkpoint argument is set to true.
+   the field, the ``apply`` routine will add it to one or more field 
+   collections. In the call above, the ``albedo_obs_vis`` field
+   is added to the ``radiation`` field collection and, depending on the
+   checkpoint flag setting, to the ``checkpoint_fields`` field collection. 
+   Additionally, like all other prognostic fields, it is added to the 
+   ``depository`` field collection.
