@@ -23,7 +23,7 @@ model.
 LFRic diagnostic support
 ------------------------
 
-The LFRic infrastructure aims to support the follow principles for
+The LFRic infrastructure aims to support the following principles for
 outputting diagnostics:
 
 #. Any field can be output as a diagnostic.
@@ -191,7 +191,7 @@ underlying function uses the field name to identify the field. But the
 ``write_field`` method takes a field name as an optional argument,
 which can override the field name.
 
-To illustrate, the following code block illustrates a situation where
+The following code block illustrates a situation where
 one might want to output a diagnostic from the same field before and
 after a kernel has processed it:
 
@@ -213,7 +213,7 @@ after a kernel has processed it:
 Enhanced approach
 +++++++++++++++++
 
-The above code examples demonstrate the LFRic diagnostic system using
+The above code demonstrate the LFRic diagnostic system using
 simple examples where fields are initialised and named with hard-wired
 choices. The LFRic infrastructure includes an interface to the XIOS
 system, and features of this system can enable diagnostic-writing code
