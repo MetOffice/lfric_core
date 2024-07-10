@@ -84,24 +84,43 @@ function space halo.
 The field_proxy object
 ----------------------
 
-Do not use the field proxy object unless you know what you are doing!
-This section is provided for information only. Refer to developer
-documentation if you think you need to use the field proxy object.
+The data held in a field is private meaning it cannot be accessed
+using field methods. Clearly the data does need to be accessed
+somewhere in the code: the field proxy provides the methods for doing
+so. But the field proxy object must be used with care to maintain the
+integrity of the application's data.
 
-The data in a field object is private. It means the data cannot be
-accessed directly from the field object. So an algorithm cannot alter
-data in a field without using an ``invoke`` call to apply a built-in
-or a kernel to the field.
 
-PSyclone-generated code and other infrastructure code can use the
-field proxy to access the data using the ``field_proxy`` object.
 
-Do not use the field proxy object to tamper with data in the algorithm
-layer. The field proxy object is provided only for use by
-infrastructure code and PSyclone-generated code.
+Keeping the data private within the field is a way of enforcing the
+PSyKAl design that underpins key LFRic applications. Critically, the
+application needs to understand when and how data is modified so that
+it can implement strategies correctly for applying redundant
+computation into halos and calling halo swaps. If data is meddled with
+outside of the PSyKAl design then errors may be introduced into the
+application.
 
-A field has a field proxy object. Data can be accessed using the proxy
-as follows:
+The field proxy object may be used in the following limited
+circumstances:
+
+ #. For writing PSyKAl-lite code. PSyKAl-lite code represents
+    hand-written PSy layer code where PSyclone does not support your
+    requirement. The PSy layer does access field information using the
+    field proxy.
+ #. For writing an :ref:`external field <section external field>`
+    interface to copy data between the LFRic application and another
+    application.
+ #. For debugging purposes, or within unit or integration tests.
+
+If the field proxy is to be used, a good understanding of the
+:ref:`distributed memory design <section distributed memory>` is
+required so that code maintains the integrity of the data and its
+halos. For example, if the data is updated in such a way that the
+halos may be inconsistent with data on neighbouring partitions, then
+either a halo swap needs to be performed or the halos needs to be
+marked as dirty.
+
+Data can be accessed using the proxy as follows:
 
 .. code-block:: fortran
 

@@ -4,6 +4,8 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
+.. _section distributed memory:
+
 Distributed Memory Documentation
 ################################
 
