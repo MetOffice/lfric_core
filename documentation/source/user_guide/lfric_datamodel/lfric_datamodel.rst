@@ -771,6 +771,41 @@ the above figures.
    illustrating that basis functions are continuous normal to the
    faces.
 
+A brief description of dof-locations for lowest order versions of all
+supported function space types is given in the following table:
+
+
++-----------------------------------+-----------------------------------------+
+|  Function space type              |  Dof location on mesh entities          |
++===================================+=========================================+
+|  :math:`\mathbb{W}_{0}`           |  Vertices                               |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{1}`           |  Edges                                  |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2}`           |  Faces                                  |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{3}`           |  Cell volume                            |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{theta}`       |  Top and bottom faces                   |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2V}`          |  Top and bottom faces                   |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2H}`          |  Side faces                             |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{w2broken}`    |  Cell volume, nominally on faces        |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{w2Hbroken}`   |  Cell volume, nominally on side faces   |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{W2trace}`     |     |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{W2Vtrace}`    |     |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{W2Htrace}`    |     |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{Wchi}`        |  Cell volume, nominally on vertices     |
++-----------------------------------+-----------------------------------------+
+
+
 A kernel can be written to operate on fields of different order, and the
 GungHo dynamics kernels are written this way. Running GungHo at higher
 order is more expensive per kernel call, but the results should be more

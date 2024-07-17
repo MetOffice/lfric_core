@@ -9,19 +9,19 @@
 LFRic Fields
 ------------
 
-This section provides an overview of fields and how they should be
-initialised and used in an application.
+This section provides an overview of the different variations of
+fields and how they should be initialised and used in an application.
 
 An LFRic field holds data over the horizontal domain of a mesh. Its
 design supports the LFRic separation concern by preventing direct
 access to the data. Model manipulation of data should only be done by
 passing the field to a kernel or PSyclone built-in.
 
-The data held by a field represents one of a number of :ref:`function
-spaces <section function space>`. The function space describes the
-layout of data points on each 3-dimensional cell. A field can
-represent 32-bit real, 64-bit real or integer data, and can hold more
-than one set of data of same function space and data type.
+While the type of an LFRic field definds the type (real or integer)
+and kind (32-bit or 64-bit) of data, all other aspects of the data
+depend on the choice of :ref:`function space <section function space>`
+used to initialise the field, including the layout of data points on
+each 3-dimensional cell.
 
 Initialising new fields
 =======================
@@ -30,7 +30,9 @@ To create a field, first construct a :ref:`function space <section
 function space>` and a 3-dimensional mesh (note that a 3D mesh with a
 single level may be referred to in the code as a 2-dimensional
 mesh). The code for creating a new field based on an existing mesh
-``mesh_id`` and function space ``W2`` is:
+``mesh_id`` and function space ``W2`` is as follows. In this and other
+examples, ``field_type`` can refer either to a 64-bit or a 32-bit
+field depending on compile-time choices.
 
 .. code-block:: fortran
 
@@ -43,24 +45,25 @@ mesh). The code for creating a new field based on an existing mesh
    ! Create a field to hold wind data
    call wind_field%initialise(vector_space, name = "wind")
 
-The name is an optional argument. A name would be required if passing
-the field to other parts of the infrastructure. For example, fields
-added to field collections would require a name so that they can be
-referenced later.
+The ``name`` argument is optional, and not required for fields that
+are created and used for temporary purposes. Names would be required
+where fields are passed to other parts of the infrastructure or added
+to :ref:`field collections <section field collection>`.
 
 Once created, a field can be passed to a call to an ``invoke`` for
 processing by a kernel or a PSyclone built-in.
 
-A field can be constructed from another field as follows.
+A field can be initialised by constructing it from another field as
+follows.
 
 .. code-block:: fortran
 
    call wind_field%copy_field_properties(new_field, name = "wind_copy")
 
 This call initialises the new field with the same mesh and function
-space, but it does not initialise the data. If no name argument is
-supplied, the new field will be unnamed rather than adopting the name
-of the original field.
+space as ``wind_field``, but it does not copy the ``wind_field``
+data. If no name argument is supplied, the new field will be unnamed
+rather than adopting the name of the original field.
 
 .. warning::
 
@@ -69,9 +72,9 @@ of the original field.
    name suggests, any such copy would be done serially and would not
    take advantage of any shared memory parallelism. Therefore, use of
    ``copy_field_serial`` is not advised. If the data needs to be
-   copied, then the ``setval_x`` built-in can be invoked after the
-   field is initialised. Initialising new fields with ``setval_x``
-   allows PSyclone to optimise the copy.
+   copied, then use the ``setval_x`` built-in after the field is
+   initialised. Initialising new fields with ``setval_x`` allows
+   PSyclone to optimise the copy.
 
    .. code-block:: fortran
 
@@ -95,17 +98,18 @@ The field_proxy object
 
 The data held in a field is private, meaning it cannot be accessed
 using field methods. Clearly, the data does need to be accessed
-somewhere in the code and the field proxy provides the methods for
+somewhere in the code, and the field proxy provides the methods for
 doing so. The field proxy object must be used with care to maintain
 the integrity of the application's data.
 
 Keeping the data private within the field is a way of enforcing the
-PSyKAl design that underpins key LFRic applications. The application
-needs to monitor the status of halos: whether or not they are "dirty"
-or out of date with the corresponding owned data points on the
-neighbouring ranks. PSyclone generates code that does this monitoring
-correctly. If additional code is using and modifying data without
-PSyclone's knowledge, the data can become inconsistent.
+:ref:`PSyKAl design<section concepts> that underpins key LFRic
+applications. The application needs to monitor the status of halos:
+whether or not they are "dirty": out of date with the corresponding
+owned data points on the neighbouring ranks. PSyclone generates code
+that ensures the halo state remains consistent. If additional code is
+modifying data without PSyclone's knowledge, the data will become
+inconsistent.
 
 The field proxy object may be used by application writers in the
 following limited circumstances:
@@ -215,12 +219,27 @@ Integer fields
 ==============
 
 The infrastructure supports 32-bit integer fields:
-``integer_field_type``. There creation and usage is essentially the
+``integer_field_type``. Their creation and usage is essentially the
 same as for real fields. One key difference is that real fields and
-integer fields have their own set of PSyclone built-ins.
+integer fields have their own set of `PSyclone built-in operations
+<https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#built-in-operations-on-integer-valued-fields>`_.
 
 Currently, there is no known requirement for 64-bit integer fields, so
-a 64-bit integer field has not been made available.
+a 64-bit integer field is not supported.
+
+.. _section multidata field:
+
+Column-first and layer-first fields
+===================================
+
+A function space definition affects the order of the data in a
+field. By default, data in a field is ordered column-first - often
+referred to as `k-first`. Optionally, a function space can be
+constructed such that field data is ordered layer-first - often
+referred to as `i-first`.
+
+The data order of a field has to match with the data order expected by
+a kernel.
 
 Multidata fields
 ================
@@ -255,10 +274,10 @@ passed into a kernel. Within the kernel, data on each point in the
 mesh is contiguous in memory.
 
 To illustrate, the following kernel code loops over the field types
-within the inner-most loop, where the kernel is called to operate on a
-single column of the mesh.
+within the inner-most loop, where the kernel is called to operate on
+single column of the mesh on a column-ordered field.
 
-The ``map(dof))`` reference points to the data point for one of the
+The ``map(dof)`` reference points to the data point for one of the
 dofs of the cell at the first level of the 3D mesh. For each level
 up, the code steps ``nfield_types`` points.
 
