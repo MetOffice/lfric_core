@@ -16,14 +16,6 @@ documentation.
    :maxdepth: 1
 
    field
+   function_space
    field_collection
    external_field
-
-Field collections
------------------
-
-Multidata fields
-----------------
-
-Mixed Precision Support
------------------------
