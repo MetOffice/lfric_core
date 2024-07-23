@@ -778,31 +778,36 @@ supported function space types is given in the following table:
 +-----------------------------------+-----------------------------------------+
 |  Function space type              |  Dof location on mesh entities          |
 +===================================+=========================================+
-|  :math:`\mathbb{W}_{0}`           |  Vertices                               |
+|  :math:`\mathbb{W}_{0}`           |  Vertices scalar                        |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{1}`           |  Edges                                  |
+|  :math:`\mathbb{W}_{1}`           |  Edges vector                           |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{2}`           |  Faces                                  |
+|  :math:`\mathbb{W}_{2}`           |  Faces vector                           |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{3}`           |  Cell volume                            |
+|  :math:`\mathbb{W}_{3}`           |  Cell volume scalar                     |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{theta}`       |  Top and bottom faces                   |
+|  :math:`\mathbb{W}_{theta}`       |  Scalar on top and bottom faces         |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{2V}`          |  Top and bottom faces                   |
+|  :math:`\mathbb{W}_{2V}`          |  Vector on top and bottom faces         |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{2H}`          |  Side faces                             |
+|  :math:`\mathbb{W}_{2H}`          |  Side faces vector                      |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{w2broken}`    |  Cell volume, nominally on faces        |
+|  :math:`\mathbb{W}_{w2broken}`    |  Cell volume vector                     |
+|                                   |  Nominally on faces                     |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{w2Hbroken}`   |  Cell volume, nominally on side faces   |
+|  :math:`\mathbb{W}_{2Hbroken}`    |  Cell volume vector                     |
+|                                   |  Nominally on side faces                |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{W2trace}`     |     |
+|  :math:`\mathbb{W}_{2trace}`      |  Cell volume vector                     |
+|                                   |  Nominally on faces                     |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{W2Vtrace}`    |     |
+|  :math:`\mathbb{W}_{2Vtrace}`     |  Cell volume scalar                     |
+|                                   |  Nominally on top and bottom faces      |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{W2Htrace}`    |     |
+|  :math:`\mathbb{W}_{2Htrace}`     |  Cell volume vector                     |
+|                                   |  Nominally on side faces                |
 +-----------------------------------+-----------------------------------------+
-|  :math:`\mathbb{W}_{Wchi}`        |  Cell volume, nominally on vertices     |
+|  :math:`\mathbb{W}_{chi}`         |  Cell volume, nominally on vertices     |
 +-----------------------------------+-----------------------------------------+
 
 
