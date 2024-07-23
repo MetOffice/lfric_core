@@ -15,12 +15,13 @@ introduction into :ref:`LFRic function spaces<section function space
 intro>` describes the mapping in more detail. This section is focused
 on how to create and use function spaces based on function space types
 supported by the infrastructure. If new fundamental function space
-types are required, refer to the developer documentation.
+types are required, expert advice will be needed.
 
 Initialising an LFRic function space is a prerequisite to initialising
 a field: field initialisation allocates the correct amount of data to
-represent data for the function space type on all the cells of the
-mesh.
+represent degrees of freedom (dofs) for the function space type on all
+the cells of the mesh that was used to create the LFRic function
+space.
 
 A new LFRic function space is initialised as follows:
 
@@ -31,16 +32,20 @@ A new LFRic function space is initialised as follows:
    ! Get a reference to a lowest order W2 function space
    vector_space => function_space_collection%get_fs(mesh_id, element_order, fs_type)
 
-The ``mesh_id`` identifies the 3D mesh that the function space must
-cover. The ``element_order`` is typically ``0`` for lowest order or
-``1`` for next-to-lowest order. The ``fs_type`` refers to one of a
-number of available function space types. A `high-level description
+The ``mesh_id`` identifies the 3D mesh that the LFRic function space
+must cover. The ``element_order`` is typically ``0`` for lowest order
+or ``1`` for next-to-lowest order. The GungHo dynamical core is tested
+with both of these settings whereas the Momentum atmosphere model runs
+with lowest order function spaces.
+
+The ``fs_type`` refers to one of a number of available function space
+types. A `high-level description
 <https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#supported-function-spaces>`_
 of supported function spaces can be found in the PSyclone
 documentation. Refer to GungHo documentation for a comprehensive
 description of each function space.
 
-The function space constructor can take two optional arguments:
+The function space constructor can take two other optional arguments:
 
 #. Specifying an integer ``ndata`` allows the creation of
    :ref:`multidata fields<section multidata field>` with ``ndata`` dofs
@@ -49,37 +54,59 @@ The function space constructor can take two optional arguments:
    with data ordered layer-by-layer instead of column-by-column.
 
 Quadrature rules
-----------------
+================
 
-Quadrature rules define how function space basis functions will be
-integrated when kernels are called. This section does not describe the
-mathematical process of using quadrature rules to apply basis
-functions. Suffice to say, the infrastructure includes a number of
-different quadrature rule objects. An appropriate rule is selected
-from the ones supported by the infrastructure. A quadrature type is
-called with the rule. Using the rule, the quadrature type calculates
-weights for a defined set of points in a reference cell.
+This section summarises how quadrature rules are applied to model date
+without attempting to describe the details of the mathematical
+processes.
 
-PSyclone will generate the code that calls the chosen quadrature type
-to compute the basis functions at the required set of points defined
-by the type, applying the weights defined by the quadrature rule.
+As described in the overview of :ref:`LFRic function spaces<section
+function space intro>`, function spaces include sets of `basis
+functions` that are used, along with dofs, to describe a field
+throughout a cell. But to manage the cost of running kernels, the
+function spaces are computed at only a selection of locations in the
+cell.
 
-A kernel can request quadrature for several function spaces and for
-either or both basis functions or differential basis functions.
+Simply put, the infrastructure supports quadrature `rules`, which
+define `how` function space basis functions are integrated, and
+quadrature `types` that define a list of locations in a cell `where`
+the rules will be computed. The choice of rule and location governs
+the accuracy of the method but also influences the cost (more points
+require more compute time).
 
-For example, the following creates a type based on a Gaussian
-rule. The ``quadrature_xyoz_type`` function defines a set of points in
-the cell based on the rule and the number ``nqp`` passed to the
-function.
+A finite element kernel includes metadata that describes which
+quadrature `type` is appropriate. Prior to calling the kernel, the
+algorithm initialises the quadrature type with arguments that include
+a quadrature rule:
 
 .. code-block:: fortran
 
    type( quadrature_rule_gaussian_type ) :: quadrature_rule
+   type( quadrature_xyoz_type )          :: qr
 
    qr = quadrature_xyoz_type(nqp, quadrature_rule)
 
-The rule ``qr`` can be passed to a kernel whose metadata defines that it
-accepts this form of quadrature rule:
+Here, the `nqp` argument is an integer that is used to define the
+number and location of the points in a reference cell at which to
+compute the quadrature.
+
+PSyclone will generate the code that calls the computation method of
+the chosen quadrature type. The computation method uses the quadrature
+rule to compute the basis functions at the required set of points
+defined by the type, returning an array of numbers representing the
+evaluated basis functions.
+
+As well as defining the relevant quadrature type, a kernel will
+request quadrature for one or more function spaces and for either or
+both basis functions or differential basis functions.
+
+For example, the following kernel requires both basis and differential
+basis functions to be computed for the argument associated with the
+``ANY_SPACE_9`` field, differential basis functions for the ``W0``
+field and basis functions for the ``W1`` and ``W3`` fields. The
+quadrature type is ``quadrature_XYoZ``. This type contains points and
+weights stored in 2D (xy represents the horizontal direction) and 1D
+(z represents the vertical direction).
 
 .. code-block:: fortran
 
@@ -100,11 +127,31 @@ accepts this form of quadrature rule:
       procedure, nopass :: compute_total_pv_code
    end type
 
-Prior to calling the kernel, PSy layer code will compute the basis and
-differential basis functions for each of the function spaces defined
-in the ``meta_funcs`` type, and pass the values to the kernels.
+The subroutine argument list includes arguments alligned to each of
+these components. Namely, the five arguments suffixed ``_basis`` or
+``_diff_basis`` and the last four arguments that describe,
+respectively, the number of pointes in the horizontal and vertical
+direction and the weights in the horizontal and vertical direction.
 
-The following rules are supported:
+.. code-block:: fortran
+
+subroutine compute_total_pv_code(                                            &
+                     nlayers,                                                &
+                     pv,                                                     &
+                     xi,                                                     &
+                     theta,                                                  &
+                     rho,                                                    &
+                     chi1, chi2, chi3, panel_id,                             &
+                     omega, f_lat,                                           &
+                     ndf_w3, undf_w3, map_w3,    w3_basis,                   &
+                     ndf_w1, undf_w1, map_w1,    w1_basis,                   &
+                     ndf_w0, undf_w0, map_w0,    w0_diff_basis,              &
+                     ndf_chi, undf_chi, map_chi, chi_basis, chi_diff_basis,  &
+                     ndf_pid, undf_pid, map_pid,                             &
+                     nqp_h, nqp_v, wqp_h, wqp_v )
+
+
+The following quadrature rules are supported by the infrastructure:
 
 +---------------------+--------------------------------------+
 | Rule name           | Object                               |
@@ -116,7 +163,7 @@ The following rules are supported:
 | Newton-Cotes        | quadrature_rule_newton_cotes_type    |
 +---------------------+--------------------------------------+
 
-Functions defining locations within a cell include
+Functions defining locations within a cell include:
 
 +-----------------------+--------------------------------------+
 | Object name           | Location description                 |
