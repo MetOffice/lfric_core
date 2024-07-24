@@ -29,7 +29,7 @@ a list of field collections.
 The table length defines the length of a hash table that stores linked
 lists of fields. A number roughly the order of the number of fields in
 the table should be acceptable. The table length defaults to 100 which
-should be acceptable for even small field collections.
+should be acceptable even for small field collections.
 
 The following illustrates two instantiated fields being added to a
 collection. One of the fields is a pointer:
@@ -75,7 +75,7 @@ would not be used in isolation, but is described here for
 completeness.
 
 The following function gets the first and second linked list item in
-the list:
+the list (assuming there are at least two items):
 
 .. code-block:: fortran
 
@@ -119,7 +119,7 @@ the fields in a field collection. For example:
    do
 
    if ( .not.iter%has_next() ) exit
-     fld => iter%next()
+     field => iter%next()
 
      ! Select type to disambiguate different field types
      select type(field)

@@ -40,4 +40,5 @@ object and must be accessed using a proxy object.
 The principle of operator proxies is largely the same as for field
 proxies. But while there are limited circumstances where a developer
 `may` need to access field data outside of the PSy layer, the
-likelihood of doing this for operators is minuscule.
+likelihood of doing this for operators is minuscule. For this reason,
+this section on user documentation will not go into further details.

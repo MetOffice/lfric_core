@@ -13,7 +13,7 @@ This section provides an overview of the different variations of
 fields and how they should be initialised and used in an application.
 
 An LFRic field holds data over the horizontal domain of a mesh. Its
-design supports the LFRic separation concern by preventing direct
+design supports the LFRic separation of concerns by preventing direct
 access to the data. Model manipulation of data should only be done by
 passing the field to a kernel or PSyclone built-in.
 
@@ -47,8 +47,9 @@ field depending on compile-time choices.
 
 The ``name`` argument is optional, and not required for fields that
 are created and used for temporary purposes. Names would be required
-where fields are passed to other parts of the infrastructure or added
-to :ref:`field collections <section field collection>`.
+where fields need to be recognised by other parts of the
+infrastructure such as when they are added to :ref:`field collections
+<section field collection>`.
 
 Once created, a field can be passed to a call to an ``invoke`` for
 processing by a kernel or a PSyclone built-in.
@@ -105,13 +106,12 @@ field data will be initialised to IEEE signalling ``NaN`` values.
 Testing applications with numerical checking compile options is
 strongly recommended as inadequate initialisation of data has
 intermittent, compiler-dependent and platform-dependent effects. For
-example, in some situations, uninitialised fields may by default be
-set to zero whereas in others they may be set to invalid
-numbers.
+example, sometimes uninitialised fields may by default be set to zero,
+whereas in others they may be set to invalid numbers.
 
 The method for initialising fields to ``NaN`` is worth summarising as
 its behaviour is compiler-dependent. When a field is initialised, the
-code runs the following IEEE procedure that returns ``.true`` if
+code runs the following IEEE procedure that returns ``.true.`` if
 numerical checking compile options are applied:
 
 .. code-block:: fortran
@@ -124,7 +124,7 @@ If ``.true.``, the following value is assigned to real fields:
 
    signalling_value = ieee_value(type_variable, IEEE_SIGNALING_NAN)
 
-Note that for integer fields, the signalling value is set to a
+Note that for 32-bit integer fields, the signalling value is set to a
 negative ``huge`` 32-bit value.
 
 As noted, the behaviour is compiler-dependent. Behaviour is correct
@@ -267,8 +267,6 @@ integer fields have their own set of `PSyclone built-in operations
 Currently, there is no known requirement for 64-bit integer fields, so
 a 64-bit integer field is not supported.
 
-.. _section multidata field:
-
 Column-first and layer-first fields
 ===================================
 
@@ -280,6 +278,8 @@ referred to as `i-first`.
 
 The data order of a field has to match with the data order expected by
 a kernel.
+
+.. _section multidata field:
 
 Multidata fields
 ================
