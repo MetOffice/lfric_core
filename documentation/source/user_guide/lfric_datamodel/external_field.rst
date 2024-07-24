@@ -6,13 +6,13 @@
 
 .. _section external field:
 
-Introducing External Field
-==========================
+External fields
+===============
 
 The LFRic infrastructure provides field objects which hold field data in a form
 useful to the infrastucture. Other models, libraries and tooling will hold
 field data in a different form, useful to their needs. Sometimes it is
-necessary to transfer data between these incompatible representations when
+necessary to transfer data between these different representations when
 linking models together.
 
 The mechanism on offer to handle these occasions is the "External field."
@@ -20,9 +20,10 @@ The mechanism on offer to handle these occasions is the "External field."
 Design
 ~~~~~~
 
-The infrastructure goes to some lengths to protect the raw field data from
-interference. This provides a lot of value in the form of reliability and
-maintainability.
+The :ref:`LFRic field section <section field>` described how the
+infrastructure goes to some lengths to protect the raw field data from
+interference. This provides a lot of value in the form of reliability
+and maintainability.
 
 Transforming field data for an external user must, by definition, compromise
 that protection. The concept of external fields exists to minimise the scope of

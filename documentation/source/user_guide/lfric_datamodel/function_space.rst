@@ -6,7 +6,7 @@
 
 .. _section function space:
 
-LFRic Function spaces
+LFRic function spaces
 ---------------------
 
 LFRic function spaces map data points and finite element basis

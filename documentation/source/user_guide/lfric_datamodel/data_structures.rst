@@ -17,5 +17,7 @@ documentation.
 
    field
    function_space
+   operator
+   scalar
    field_collection
    external_field

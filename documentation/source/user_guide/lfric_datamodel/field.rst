@@ -6,7 +6,7 @@
 
 .. _section field:
 
-LFRic Fields
+LFRic fields
 ------------
 
 This section provides an overview of the different variations of
@@ -93,6 +93,46 @@ same halo depth. Optionally, a smaller halo depth can be requested:
 The function will fail if the requested halo depth is larger than the
 function space halo.
 
+Initialisation of field data
+============================
+
+It should be assumed that field data is not initialised to any
+particular value when a field is initialised. However, if an
+application is compiled with options that apply numerical checking of
+results (checking for ``NaN`` values or invalid real numbers) the
+field data will be initialised to IEEE signalling ``NaN`` values.
+
+Testing applications with numerical checking compile options is
+strongly recommended as inadequate initialisation of data has
+intermittent, compiler-dependent and platform-dependent effects. For
+example, in some situations, uninitialised fields may by default be
+set to zero whereas in others they may be set to invalid
+numbers.
+
+The method for initialising fields to ``NaN`` is worth summarising as
+its behaviour is compiler-dependent. When a field is initialised, the
+code runs the following IEEE procedure that returns ``.true`` if
+numerical checking compile options are applied:
+
+.. code-block:: fortran
+
+   call ieee_get_halting_mode(IEEE_INVALID, halt_mode)
+
+If ``.true.``, the following value is assigned to real fields:
+
+.. code-block:: fortran
+
+   signalling_value = ieee_value(type_variable, IEEE_SIGNALING_NAN)
+
+Note that for integer fields, the signalling value is set to a
+negative ``huge`` 32-bit value.
+
+As noted, the behaviour is compiler-dependent. Behaviour is correct
+for the Intel compiler. For the Gnu compiler, while IEEE routines are
+used to obtain a signalling ``NaN`` value, the Gnu compiler
+implementation receives a quiet ``NaN`` value that does not cause
+failures when used.
+
 The field_proxy object
 ----------------------
 
@@ -103,7 +143,7 @@ doing so. The field proxy object must be used with care to maintain
 the integrity of the application's data.
 
 Keeping the data private within the field is a way of enforcing the
-:ref:`PSyKAl design<section concepts> that underpins key LFRic
+:ref:`PSyKAl design<section concepts>` that underpins key LFRic
 applications. The application needs to monitor the status of halos:
 whether or not they are "dirty": out of date with the corresponding
 owned data points on the neighbouring ranks. PSyclone generates code
