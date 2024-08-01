@@ -12,3 +12,4 @@ LFRic Data Model
 
    lfric_datamodel
    advanced_structures
+   modeldb
