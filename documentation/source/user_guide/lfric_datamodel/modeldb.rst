@@ -109,12 +109,12 @@ This returns a pointer the the value held in the collection. Any subsequent math
 Configuration
 ~~~~~~~~~~~~~
 
-See configuration documentation???
+This is a copy of the configuration that has been read in from namelists for the particular instance of the model. See the configuration documentation (TBA) for more details.
 
 I/O contexts
 ~~~~~~~~~~~~
 
-An I/O context is used to describe how and when data are read from or written to disk. Different groups of data can be read/written in different ways, so there is a requirement to hold a number of I/O contexts. The modeldb object contains an item called ``io_contexts`` for this purpose. It is simply a collection of io_contexts.
+An I/O context is used to describe how, when and where data are read from or written to disk. Different groups of data can be read/written in different circumstances, so there is a requirement to hold a number of I/O contexts. The modeldb object contains an item called ``io_contexts`` for this purpose. It is simply a collection of the different io_contexts that are required.
 
 To put an I/O context into the collection
 -----------------------------------------
