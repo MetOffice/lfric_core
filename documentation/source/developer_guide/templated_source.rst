@@ -8,7 +8,7 @@ Templated Fortran Source
 ========================
 
 Where Fortran modules are needed which are identical except for minor changes
-such as type and "kind" they are not stored as source but as templated source
+such as "type" and "kind" they are not stored as source but as templated source
 which is used to generate the source.
 
 Template Files
