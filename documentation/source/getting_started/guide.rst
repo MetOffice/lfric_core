@@ -25,9 +25,10 @@ applications for training purposes or for developing and testing particular
 technical capabilities.
 
 Before giving an overview of the core infrastructure, an overview of
-the :ref:`structure of a typical LFRic application <application_structure>` is
-given. It briefly references several LFRic core capabilities. These capabilities
-are then described in later sections.
+the :ref:`structure of a typical LFRic application <section
+application structure>` is given. It briefly references several LFRic
+core capabilities. These capabilities are then described in later
+sections.
 
 Any developer of the LFRic core or an LFRic application should have a
 good understanding of the underlying principles behind LFRic and the
