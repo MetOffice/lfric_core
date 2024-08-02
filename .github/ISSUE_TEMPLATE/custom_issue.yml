@@ -3,8 +3,6 @@ description: Submit a generic issue to help improve LFRic Core
 title: "[Custom Issue]: "
 labels: ["enhancement"]
 projects: ["MetOffice/208"]
-assignees:
-  - MetOffice/core-capability-development
 body:
   - type: markdown
     attributes:

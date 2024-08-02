@@ -3,8 +3,6 @@ description: Report an issue with the LFRic Core documentation
 title: "[Documentation]: "
 labels: ["documentation"]
 projects: ["MetOffice/208"]
-assignees:
-  - MetOffice/core-capability-development
 body:
   - type: markdown
     attributes:
