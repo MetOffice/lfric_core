@@ -11,7 +11,7 @@ Modeldb
 Introduction
 ============
 
-It is required that the LFRic code be able to run more than one instance of a "model" from the same executable. For example you might want to run a linear model and its adjoint in the same executable. Or you might want to run a number of members of an ensemble simultaneously from the same executable.
+It is required that the LFRic code be able to run more than one instance of a "model" from the same executable. For example, you might want to run a linear model and its adjoint in the same executable. Or you might want to run a number of members of an ensemble simultaneously from the same executable.
 
 In order to make this possible, multiple versions of the scientific and technical state of the model need to be held. This data will include:
 
@@ -104,7 +104,7 @@ To get a value out
 
   call modeldb%values%get_value("my_value", my_value)
 
-This returns a pointer the the value held in the collection. Any subsequent maths performed on what is returned (the pointer) will change the value held in the collection. They both refer to the same location in memory.
+This returns a pointer to the value held in the collection. Any subsequent maths performed on what is returned (the pointer) will change the value held in the collection. They both refer to the same location in memory.
 
 Configuration
 ~~~~~~~~~~~~~
