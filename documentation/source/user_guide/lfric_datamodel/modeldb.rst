@@ -114,4 +114,26 @@ See configuration documentation???
 I/O contexts
 ~~~~~~~~~~~~
 
-?
+An I/O context is used to describe how and when data are read from or written to disk. Different groups of data can be read/written in different ways, so there is a requirement to hold a number of I/O contexts. The modeldb object contains an item called ``io_contexts`` for this purpose. It is simply a collection of io_contexts.
+
+To put an I/O context into the collection
+-----------------------------------------
+::
+
+  type( lfric_xios_context_type )        :: my_io_context
+  
+  call modeldb%io_contexts%add_context(my_io_context)
+
+This will put a copy of ``io_context`` into the collection. If you want to use the version held in the collection, you will need to retrieve a pointer to it from the collection.
+
+To get an I/O context out of the collection
+-------------------------------------------
+
+Assuming the context, ``my_io_context``, has the name "my_io_context", use:
+::
+
+  type( lfric_xios_context_type )        :: my_io_context
+  
+  call modeldb%io_contexts%get_io_context("my_io_context", my_io_context)
+
+This returns a pointer to the actual I/O context held in the collection.
