@@ -2,6 +2,8 @@
 #
 # -- imports -----------------------------------------------------------------
 import os
+import plotly.io as pio
+pio.renderers.default = 'sphinx_gallery'
 # -- Project information -----------------------------------------------------
 
 project = 'LFRic Core'
@@ -16,7 +18,8 @@ release = '0.1.0'
 # ones.
 extensions = [
     'sphinx_sitemap',
-    'sphinx_design'
+    'sphinx_design',
+    'sphinx_gallery.gen_gallery',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -24,6 +27,8 @@ templates_path = ['_templates']
 
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+
+exclude_patterns = ["plots/*"]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -90,3 +95,9 @@ html_context = {
 #
 numfig = True
 
+# Sphinx-Gallery
+sphinx_gallery_conf = {
+    'examples_dirs': ['plots/function_spaces'],
+    'gallery_dirs': ['plot_gallery/function_spaces'],
+    'filename_pattern': 'plot_',
+}
