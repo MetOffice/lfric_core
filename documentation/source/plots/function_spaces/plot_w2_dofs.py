@@ -1,3 +1,5 @@
+# (C) British Crown Copyright 2024, Met Office.
+# Please see LICENSE for license details.
 """
 W2 Function space
 =====================
