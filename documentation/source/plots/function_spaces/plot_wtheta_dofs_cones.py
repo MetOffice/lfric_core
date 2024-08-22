@@ -56,7 +56,7 @@ def add_cube(fig):
                 ),
             )
         )
-        
+
 
 # create figure with the cube
 fig = go.Figure()
@@ -74,16 +74,15 @@ LIGHTBLUE = f"rgba(100, 100, 255, 1)"
 CONE_LENGTH = 0.2
 CONE_SIZEREF = 1
 for i in range(len(dof_x)):
-    
     u, v, w = (0, 0, 0)
-    
+
     bottom_cone_tip_x = dof_x[i]
     top_cone_tip_x = dof_x[i]
     bottom_cone_tip_y = dof_y[i]
     top_cone_tip_y = dof_y[i]
     bottom_cone_tip_z = dof_z[i]
     top_cone_tip_z = dof_z[i]
-    
+
     if dof_x[i] == dof_y[i]:
         # z
         w = 1
@@ -99,7 +98,7 @@ for i in range(len(dof_x)):
         u = 1
         bottom_cone_tip_x = dof_x[i] - CONE_LENGTH
         top_cone_tip_x = dof_x[i] + CONE_LENGTH
-    
+
     fig.add_trace(
         go.Cone(
             x=[bottom_cone_tip_x],
@@ -114,9 +113,10 @@ for i in range(len(dof_x)):
             sizemode="scaled",
             sizeref=CONE_SIZEREF,
             cmax=0,
-            cmin=-1*CONE_LENGTH,
+            cmin=-1 * CONE_LENGTH,
             lighting_diffuse=0.3,
-        ))
+        )
+    )
     fig.add_trace(
         go.Cone(
             x=[top_cone_tip_x],
@@ -130,7 +130,7 @@ for i in range(len(dof_x)):
             showscale=False,
             sizemode="scaled",
             sizeref=CONE_SIZEREF,
-            cmax=1*CONE_LENGTH,
+            cmax=1 * CONE_LENGTH,
             cmin=0,
             lighting_diffuse=0.3,
         )

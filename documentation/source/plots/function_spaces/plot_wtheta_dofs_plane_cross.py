@@ -56,7 +56,7 @@ def add_cube(fig):
                 ),
             )
         )
-        
+
 
 # create figure with the cube
 fig = go.Figure()
@@ -84,7 +84,7 @@ for i in range(len(dof_x)):
         l1_end_x = dof_x[i] - LINE_LENGTH / 2
         l1_end_y = dof_y[i] - LINE_LENGTH / 2
         l1_end_z = dof_z[i]
-        
+
         # negative diagonal
         l2_start_x = dof_x[i] - LINE_LENGTH / 2
         l2_start_y = dof_y[i] + LINE_LENGTH / 2
@@ -101,7 +101,7 @@ for i in range(len(dof_x)):
         l1_end_x = dof_x[i] - LINE_LENGTH / 2
         l1_end_y = dof_y[i]
         l1_end_z = dof_z[i] - LINE_LENGTH / 2
-        
+
         # negative diagonal
         l2_start_x = dof_x[i] - LINE_LENGTH / 2
         l2_start_y = dof_y[i]
@@ -118,7 +118,7 @@ for i in range(len(dof_x)):
         l1_end_x = dof_x[i]
         l1_end_y = dof_y[i] - LINE_LENGTH / 2
         l1_end_z = dof_z[i] - LINE_LENGTH / 2
-        
+
         # negative diagonal
         l2_start_x = dof_x[i]
         l2_start_y = dof_y[i] + LINE_LENGTH / 2
@@ -126,7 +126,7 @@ for i in range(len(dof_x)):
         l2_end_x = dof_x[i]
         l2_end_y = dof_y[i] - LINE_LENGTH / 2
         l2_end_z = dof_z[i] + LINE_LENGTH / 2
-        
+
     fig.add_trace(
         go.Scatter3d(
             x=[l1_start_x, l1_end_x],

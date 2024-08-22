@@ -56,7 +56,7 @@ def add_cube(fig):
                 ),
             )
         )
-        
+
 
 # create figure with the cube
 fig = go.Figure()
@@ -64,8 +64,8 @@ add_cube(fig)
 fig.update_traces(line={"width": 10})
 
 # add the dofs
-R = 0.08 # sphere radius
-theta, phi = np.mgrid[0:2*np.pi:100j, 0:2*np.pi:100j]
+R = 0.08  # sphere radius
+theta, phi = np.mgrid[0 : 2 * np.pi : 100j, 0 : 2 * np.pi : 100j]
 
 dof_x = [0.5, 0.5]
 dof_y = [0.5, 0.5]
@@ -73,10 +73,10 @@ dof_z = [0.0, 1.0]
 dof_names = ["dof 1", "dof 2"]
 
 for i in range(len(dof_x)):
-    x = dof_x[i] + R*np.sin(theta)*np.cos(phi)
-    y = dof_y[i] + R*np.sin(theta)*np.sin(phi)
-    z = dof_z[i] + R*np.cos(theta)
-    
+    x = dof_x[i] + R * np.sin(theta) * np.cos(phi)
+    y = dof_y[i] + R * np.sin(theta) * np.sin(phi)
+    z = dof_z[i] + R * np.cos(theta)
+
     if dof_x[i] == dof_y[i]:
         # z
         z = np.full_like(z, dof_z[i])
@@ -86,17 +86,19 @@ for i in range(len(dof_x)):
     if dof_z[i] == dof_y[i]:
         # x
         x = np.full_like(x, dof_x[i])
-        
+
     fig.add_trace(
-        go.Surface(x=x,
-                   y=y,
-                   z=z,showscale=False,
-                   colorscale="Blues_r",
-                   surfacecolor=np.ones(z.shape),
-                   cmax=100,
-                   cmin=1,
-        
-    ))
+        go.Surface(
+            x=x,
+            y=y,
+            z=z,
+            showscale=False,
+            colorscale="Blues_r",
+            surfacecolor=np.ones(z.shape),
+            cmax=100,
+            cmin=1,
+        )
+    )
 
 
 # add any shaded planes

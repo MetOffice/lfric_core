@@ -56,7 +56,7 @@ def add_cube(fig):
                 ),
             )
         )
-        
+
 
 # create figure with the cube
 fig = go.Figure()
@@ -64,8 +64,8 @@ add_cube(fig)
 fig.update_traces(line={"width": 10})
 
 # add the dofs
-R = 0.08 # sphere radius
-theta, phi = np.mgrid[0:2*np.pi:100j, 0:2*np.pi:100j]
+R = 0.08  # sphere radius
+theta, phi = np.mgrid[0 : 2 * np.pi : 100j, 0 : 2 * np.pi : 100j]
 
 dof_x = [0.5, 0.5]
 dof_y = [0.5, 0.5]
@@ -74,15 +74,17 @@ dof_names = ["dof 1", "dof 2"]
 
 for i in range(len(dof_x)):
     fig.add_trace(
-        go.Surface(x=dof_x[i] + R*np.sin(theta)*np.cos(phi),
-                   y=dof_y[i] + R*np.sin(theta)*np.sin(phi),
-                   z=dof_z[i] + R*np.cos(theta),showscale=False,
-                   colorscale="Blues_r",
-                   surfacecolor=R*np.cos(theta),
-                   cmax=R*2,
-                   cmin=-R,
-        
-    ))
+        go.Surface(
+            x=dof_x[i] + R * np.sin(theta) * np.cos(phi),
+            y=dof_y[i] + R * np.sin(theta) * np.sin(phi),
+            z=dof_z[i] + R * np.cos(theta),
+            showscale=False,
+            colorscale="Blues_r",
+            surfacecolor=R * np.cos(theta),
+            cmax=R * 2,
+            cmin=-R,
+        )
+    )
 
 
 # add any shaded planes
