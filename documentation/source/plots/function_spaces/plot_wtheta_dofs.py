@@ -10,7 +10,7 @@ Plot showing the dof locations for the lowest order Wtheta Function space.
 import plotly.graph_objects as go
 import numpy as np
 
-# sphinx_gallery_thumbnail_path = '_static/fs_thumbnails/wtheta_k0.png'
+# sphinx_gallery_thumbnail_path = '_static/fs_thumbnails/wtheta_k0.svg'
 
 
 CUBE_EDGE_COLOUR = "darkgrey"
@@ -127,5 +127,10 @@ fig.update_layout(
     margin=dict(l=50, r=50, b=50, t=50, pad=4),
     paper_bgcolor="rgba(250, 249, 246, 0.9)",
 )
+
+# Local only
 # fig.show() # to test changes locally
-fig  # correct output for sphinx-gallery
+# fig.write_image("source/_static/fs_thumbnails/wtheta_k0.svg")  # for the thumbnail
+
+# Correct output for sphinx-gallery
+fig
