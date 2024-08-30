@@ -61,6 +61,7 @@
     "xc40_performance": [],
     }) %}
 
+{% include "site/meto/groups/group_driver.cylc" %}
 {% include "site/meto/groups/group_infrastructure.cylc" %}
 {% include "site/meto/groups/group_skeleton.cylc" %}
 
