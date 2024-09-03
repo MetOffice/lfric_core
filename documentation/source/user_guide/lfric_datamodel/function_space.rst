@@ -50,13 +50,13 @@ The function space constructor can take two other optional arguments:
 #. Specifying an integer ``ndata`` allows the creation of
    :ref:`multidata fields<section multidata field>` with ``ndata`` dofs
    per dof location. The default value is `1`.
-#. Spacifying ``ndata_first = .true.`` allows creation of fields that
-   with data ordered layer-by-layer instead of column-by-column.
+#. Spacifying ``ndata_first = .true.`` allows creation of fields with
+   data ordered layer-by-layer instead of column-by-column.
 
 Quadrature rules
 ================
 
-This section summarises how quadrature rules are applied to model date
+This section summarises how quadrature rules are applied to model data
 without attempting to describe the details of the mathematical
 processes.
 

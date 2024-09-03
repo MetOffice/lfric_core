@@ -73,9 +73,10 @@ rather than adopting the name of the original field.
    name suggests, any such copy would be done serially and would not
    take advantage of any shared memory parallelism. Therefore, use of
    ``copy_field_serial`` is not advised. If the data needs to be
-   copied, then use the ``setval_x`` built-in after the field is
-   initialised. Initialising new fields with ``setval_x`` allows
-   PSyclone to optimise the copy.
+   copied, then use the ``setval_x`` `built-in
+   <https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#setting-to-a-value>`_
+   after the field is initialised. Initialising new fields with
+   ``setval_x`` allows PSyclone to optimise the copy.
 
    .. code-block:: fortran
 
@@ -109,29 +110,39 @@ intermittent, compiler-dependent and platform-dependent effects. For
 example, sometimes uninitialised fields may by default be set to zero,
 whereas in others they may be set to invalid numbers.
 
-The method for initialising fields to ``NaN`` is worth summarising as
-its behaviour is compiler-dependent. When a field is initialised, the
-code runs the following IEEE procedure that returns ``.true.`` if
-numerical checking compile options are applied:
+.. warning::
 
-.. code-block:: fortran
+   It should be noted that current versions of the Gnu compiler (up to
+   the current latest version 14) incorrectly assign "quiet" ``NaN``
+   values which means that this recommended method of testing is
+   inadequate: unlike signalling ``NaN`` values, quiet ``NaN`` values
+   do not cause floating point exceptions when operated on.
 
-   call ieee_get_halting_mode(IEEE_INVALID, halt_mode)
+   The method for initialising fields to ``NaN`` is worth summarising
+   so that the behaviour of other compilers can be tested for correct
+   behaviour once they start being used.
 
-If ``.true.``, the following value is assigned to real fields:
+   When a field is initialised, the code runs the following IEEE
+   procedure that returns ``.true.`` if numerical checking compile
+   options are applied:
 
-.. code-block:: fortran
+   .. code-block:: fortran
 
-   signalling_value = ieee_value(type_variable, IEEE_SIGNALING_NAN)
+      call ieee_get_halting_mode(IEEE_INVALID, halt_mode)
+
+   If ``.true.``, the following value is assigned to real fields:
+
+   .. code-block:: fortran
+
+      signalling_value = ieee_value(type_variable, IEEE_SIGNALING_NAN)
+
+   As stated above, the Gnu version of the ``ieee_value`` routine
+   incorrectly returns the value relating to ``IEEE_QUIET_NAN``.
 
 Note that for 32-bit integer fields, the signalling value is set to a
-negative ``huge`` 32-bit value.
-
-As noted, the behaviour is compiler-dependent. Behaviour is correct
-for the Intel compiler. For the Gnu compiler, while IEEE routines are
-used to obtain a signalling ``NaN`` value, the Gnu compiler
-implementation receives a quiet ``NaN`` value that does not cause
-failures when used.
+negative ``huge`` 32-bit value: there is no such thing as an integer
+``NaN`` value, so setting an unrealistic value that might cause
+failures is the best that can be done.
 
 The field_proxy object
 ----------------------
