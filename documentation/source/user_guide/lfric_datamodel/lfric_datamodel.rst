@@ -77,7 +77,7 @@ The LFRic Infrastructure incorporates the following:
    :width: 80%
 
    **The PSyKAl Design**: Schematic of the LFRic design recommendation
-   illustrating the PSyKAl design for the science "single model" code,
+   illustrating the PSyKAl design for the science "Model" code,
    the driver layer and supporting infrastructure.
 
 At the core of the LFRic design is the 3-layered :ref:`PSyKAl design
@@ -701,7 +701,7 @@ of the function space type, the mesh (which defines the horizontal
 domain and number of vertical levels) and the order of the basis
 functions.
 
-The following eight figures show dof locations for four of the main
+The following figures show dof locations for four of the main
 function spaces at lowest order and at next lowest order:
 :math:`\mathbb{W}_0`, :math:`\mathbb{W}_1`, :math:`\mathbb{W}_2`, and
 :math:`\mathbb{W}_3`,
@@ -711,82 +711,100 @@ function spaces at lowest order and at next lowest order:
     .. tab-item:: ​ :math:`\mathbb{W}_0` ​
        :name: k0_w0_dofs
 
-       .. figure:: images/k0_W0_dofs.svg
-          :width: 60%
+       .. grid:: 2
 
-          Locations of dofs for spaces :math:`\mathbb{W}_0` for lowest
-          order. The field is continuous so each dof is shared with up to 8
-          neighbouring cells.
+            .. grid-item::
 
-       .. figure:: images/k1_W0_dofs.svg
-          :width: 60%
+               .. figure:: images/k0_W0_dofs.svg
 
-          Locations of dofs for spaces :math:`\mathbb{W}_0` for next lowest
-          order. The field is fully continuous so dofs are shared with all
-          neighbouring cells.
+                  Locations of dofs for spaces :math:`\mathbb{W}_0` for lowest
+                  order. The field is continuous so each dof is shared with up to 8
+                  neighbouring cells.
+
+            .. grid-item::
+
+               .. figure:: images/k1_W0_dofs.svg
+
+                  Locations of dofs for spaces :math:`\mathbb{W}_0` for next lowest
+                  order. The field is fully continuous so dofs are shared with all
+                  neighbouring cells.
 
     .. tab-item:: ​ :math:`\mathbb{W}_1` ​
        :name: w1_dofs
 
-       .. figure:: images/k0_W1_dofs.svg
-          :width: 60%
+       .. grid:: 2
 
-          Locations of dofs for spaces :math:`\mathbb{W}_1` for lowest
-          order. Individual basis functions are continuous normal to the
-          edges, but discontinuous parallel to the edges.
+            .. grid-item::
 
-       .. figure:: images/k1_W1_dofs_circ.svg
-          :width: 60%
+               .. figure:: images/k0_W1_dofs.svg
 
-          Locations of dofs for spaces :math:`\mathbb{W}_1` at next lowest in
-          right. The image is not precise enough to show the subtleties of
-          continuity as represented by the nominal dof location -- an
-          expanded view of the circled corner dofs can be seen below.
+                  Locations of dofs for spaces :math:`\mathbb{W}_1` for lowest
+                  order. Individual basis functions are continuous normal to the
+                  edges, but discontinuous parallel to the edges.
 
-       .. figure:: images/corner_W1.svg
-          :width: 60%
+            .. grid-item::
 
-          **Expanded view of** :math:`\mathbb{W}_1` at next lowest order showing the
-          details of the locations of dofs.
+               .. figure:: images/k1_W1_dofs_circ.svg
+
+                  Locations of dofs for spaces :math:`\mathbb{W}_1` at next lowest in
+                  right. The image is not precise enough to show the subtleties of
+                  continuity as represented by the nominal dof location -- an
+                  expanded view of the circled corner dofs can be seen below.
+
+            .. grid-item::
+
+               .. figure:: images/corner_W1.svg
+
+                  **Expanded view of** :math:`\mathbb{W}_1` at next lowest order showing the
+                  details of the locations of dofs.
 
     .. tab-item:: ​ :math:`\mathbb{W}_2` ​
        :name: k0_w2_dofs
 
-       .. figure:: images/k0_W2_dofs.svg
-          :width: 60%
+       .. grid:: 2
 
-          Locations of dofs for spaces :math:`\mathbb{W}_2` for lowest order.
+            .. grid-item::
 
-       .. figure:: images/k1_W2_dofs_circ.svg
-          :width: 60%
+               .. figure:: images/k0_W2_dofs.svg
 
-          Locations of dofs for spaces :math:`\mathbb{W}_2` for next lowest
-          order. The expanded view below illustrates the dof
-          locations of the corner dofs in more detail.
+                  Locations of dofs for spaces :math:`\mathbb{W}_2` for lowest order.
 
-       .. figure:: images/corner_W2.svg
-          :width: 60%
+            .. grid-item::
 
-          **Expanded view of** :math:`\mathbb{W}_2` at next lowest order showing the
-          details of the locations of dofs. Dofs are located on faces
-          illustrating that basis functions are continuous normal to the
-          faces.
+               .. figure:: images/k1_W2_dofs_circ.svg
+
+                  Locations of dofs for spaces :math:`\mathbb{W}_2` for next lowest
+                  order. The expanded view below illustrates the dof
+                  locations of the corner dofs in more detail.
+
+            .. grid-item::
+
+               .. figure:: images/corner_W2.svg
+
+                  **Expanded view of** :math:`\mathbb{W}_2` at next lowest order showing the
+                  details of the locations of dofs. Dofs are located on faces
+                  illustrating that basis functions are continuous normal to the
+                  faces.
 
     .. tab-item:: ​ :math:`\mathbb{W}_3` ​
        :name: w3_dofs
 
-       .. figure:: images/k0_W3_dofs.svg
-          :width: 60%
+       .. grid:: 2
 
-          Locations of dofs for spaces :math:`\mathbb{W}_3` for lowest order.
+            .. grid-item::
 
-       .. figure:: images/k1_W3_dofs.svg
-          :width: 60%
+               .. figure:: images/k0_W3_dofs.svg
 
-          Locations of dofs for spaces :math:`\mathbb{W}_3` for next lowest
-          order. The dofs are shown slightly offset from the corners to
-          illustrate that the field is discontinuous: each of the 8 cells
-          that share a vertex have their own dof at the same location.
+                  Locations of dofs for spaces :math:`\mathbb{W}_3` for lowest order.
+
+            .. grid-item::
+
+               .. figure:: images/k1_W3_dofs.svg
+
+                  Locations of dofs for spaces :math:`\mathbb{W}_3` for next lowest
+                  order. The dofs are shown slightly offset from the corners to
+                  illustrate that the field is discontinuous: each of the 8 cells
+                  that share a vertex have their own dof at the same location.
 
 A kernel can be written to operate on fields of different order, and the
 GungHo dynamics kernels are written this way. Running GungHo at higher
