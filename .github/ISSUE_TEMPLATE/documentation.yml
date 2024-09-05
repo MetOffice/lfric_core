@@ -2,7 +2,6 @@ name: Documentation
 description: Report an issue with the LFRic Core documentation
 title: "[Documentation]: "
 labels: ["documentation"]
-projects: ["MetOffice/208"]
 body:
   - type: markdown
     attributes:
