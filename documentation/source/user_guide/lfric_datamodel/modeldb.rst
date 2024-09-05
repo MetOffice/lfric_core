@@ -11,23 +11,27 @@ Modeldb
 Introduction
 ============
 
-It is required that the LFRic code be able to run more than one instance of a "model" from the same executable. For example, you might want to run a linear model and its adjoint in the same executable. Or you might want to run a number of members of an ensemble simultaneously from the same executable.
+The modeldb class is a data structure that is designed to encapsulate all the data required to describe both the scientific and technical state of a model.
 
-In order to make this possible, multiple versions of the scientific and technical state of the model need to be held. This data will include:
+The modeldb class can hold:
 
 * Model field data such as all the standard field collections (e.g. the depository, prognostics and diagnostics) along with all the other model specific field collections and field bundles.
-* Other model data such as single values or arrays
+* Other model data such as single values, arrays or objects
 * Configuration that is read in from namelists
 * Clock/calendar objects
 * MPI communicator
 * I/O information
 
-This data is held in a structure called "modeldb"
+There is a requirement that the LFRic code be able to run more than one instance of a "model" from the same executable. For example, you might want to run a linear model and its adjoint in the same executable. Or you might want to run a number of members of an ensemble simultaneously from the same executable. In order to make this possible, multiple versions of the model state can be stored in multiple copies of modeldb.
 
 How to use
 ==========
 
-Items like clock and calendar and the object holding MPI information can be accessed directly from modeldb: ``modeldb%clock``, ``modeldb%calendar`` and ``modeldb%mpi``, but the modeldb object can also hold fields and other values. 
+The modeldb class contains a collection of field collections. Fields can be stored in field collections, then these field collections stored in modeldb.
+
+Other values, such as single values, arrays or even objects can be stored in a collection of key-value pairs that is stored with modeldb
+
+Items common to all models like clock and calendar and MPI information can be accessed directly from modeldb
 
 Fields
 ~~~~~~
@@ -38,7 +42,8 @@ To put a new collection into "fields"
 -------------------------------------
 
 To add a collection to ``modeldb%fields`` use:
-::
+
+.. code-block:: fortran
 
   call modeldb%fields%add_empty_field_collection("my_collection", table_len = 100)
 
@@ -46,7 +51,7 @@ where ``"my_collection"`` is the name of the field collection you want adding an
 
 To put a field into one of the collections
 ------------------------------------------
-::
+.. code-block:: fortran
 
   type( field_collection_type ), pointer :: my_collection
   type( field_type ),                    :: my_field
@@ -60,7 +65,8 @@ To get a field out
 ------------------
 
 Assuming the field, ``my_field``, has the name "my_field", use:
-::
+
+.. code-block:: fortran
 
   type( field_collection_type ), pointer :: my_collection
   type( field_type ),            pointer :: my_field
@@ -85,9 +91,11 @@ The modeldb object contains an item called ``values``. This is a collection of k
 
 (the definitions used here for the variable "kinds" are from the intrinsic module ``iso_fortran_env``)
 
+The final item on the list ("any Fortran object") makes the collection of values very powerful. Anything from the object that encapsulates a time-stepping algorith to the object that stores all the atmosphere-ocean coupling information can be stored in modeldb.
+
 To put a value in
 -----------------
-::
+.. code-block:: fortran
 
   real(real64) :: my_value
 
@@ -98,7 +106,7 @@ Again, this will put a copy of the value into the collection
 
 To get a value out
 ------------------
-::
+.. code-block:: fortran
 
   real(real64), pointer :: my_value
 
@@ -118,7 +126,7 @@ An I/O context is used to describe how, when and where data are read from or wri
 
 To put an I/O context into the collection
 -----------------------------------------
-::
+.. code-block:: fortran
 
   type( lfric_xios_context_type )        :: my_io_context
   
@@ -130,7 +138,8 @@ To get an I/O context out of the collection
 -------------------------------------------
 
 Assuming the context, ``my_io_context``, has the name "my_io_context", use:
-::
+
+.. code-block:: fortran
 
   type( lfric_xios_context_type )        :: my_io_context
   
