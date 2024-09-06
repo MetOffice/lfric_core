@@ -7,4 +7,9 @@
 
 Developer Guide
 ===============
-place holder
+
+.. toctree::
+   :maxdepth: 2
+
+   templated_source
+   build_system/library_import
