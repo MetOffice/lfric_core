@@ -806,6 +806,46 @@ function spaces at lowest order and at next lowest order:
                   illustrate that the field is discontinuous: each of the 8 cells
                   that share a vertex have their own dof at the same location.
 
+A brief description of dof-locations for lowest order versions of all
+supported function space types is given in the following table:
+
+
++-----------------------------------+-----------------------------------------+
+|  Function space type              |  Dof location on mesh entities          |
++===================================+=========================================+
+|  :math:`\mathbb{W}_{0}`           |  Vertices scalar                        |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{1}`           |  Edges vector                           |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2}`           |  Faces vector                           |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{3}`           |  Cell volume scalar                     |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{theta}`       |  Scalar on top and bottom faces         |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2V}`          |  Vector on top and bottom faces         |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2H}`          |  Side faces vector                      |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{w2broken}`    |  Cell volume vector                     |
+|                                   |  Nominally on faces                     |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2Hbroken}`    |  Cell volume vector                     |
+|                                   |  Nominally on side faces                |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2trace}`      |  Cell volume vector                     |
+|                                   |  Nominally on faces                     |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2Vtrace}`     |  Cell volume scalar                     |
+|                                   |  Nominally on top and bottom faces      |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{2Htrace}`     |  Cell volume vector                     |
+|                                   |  Nominally on side faces                |
++-----------------------------------+-----------------------------------------+
+|  :math:`\mathbb{W}_{chi}`         |  Cell volume, nominally on vertices     |
++-----------------------------------+-----------------------------------------+
+
+
 A kernel can be written to operate on fields of different order, and the
 GungHo dynamics kernels are written this way. Running GungHo at higher
 order is more expensive per kernel call, but the results should be more
