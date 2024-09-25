@@ -16,7 +16,7 @@ release = '0.1.0'
 # ones.
 extensions = [
     'sphinx_sitemap',
-    'sphinx_design',
+    'sphinx_design'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
