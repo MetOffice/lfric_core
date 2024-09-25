@@ -24,9 +24,3 @@ html[data-theme="dark"] {
         color: var(--pst-color-link-hover);
     }
 }
-
-/* Sphinx-gallery hide the download note at the top of a page */
-div.sphx-glr-download-link-note {
-    height: 0px;
-    visibility: hidden;
-}
