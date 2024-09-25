@@ -34,10 +34,6 @@
 # Sphinx
 documentation/build
 
-# Sphinx-gallery
-documentation/source/sg_execution_times.rst
-documentation/source/plot_gallery
-
 # Jetbrains
 .idea
 

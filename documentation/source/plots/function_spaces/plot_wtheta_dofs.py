@@ -5,13 +5,11 @@ Wtheta Function space
 =====================
 
 Plot showing the dof locations for the lowest order Wtheta Function space.
+With crosses on the correct plane.
 """
 
 import plotly.graph_objects as go
 import numpy as np
-
-# sphinx_gallery_thumbnail_path = '_static/fs_thumbnails/wtheta_k0.svg'
-
 
 CUBE_EDGE_COLOUR = "darkgrey"
 
@@ -63,30 +61,91 @@ add_cube(fig)
 fig.update_traces(line={"width": 10})
 
 # add the dofs
-DOF_OPACITY = 0.75
-
 dof_x = [0.5, 0.5]
 dof_y = [0.5, 0.5]
 dof_z = [0.0, 1.0]
+dof_planes = ["z", "z"]
 dof_names = ["dof 1", "dof 2"]
 
+LINE_LENGTH = 0.2
+CROSS_OPACITY = 0.8
+BLUE = f"rgba(0, 0, 255, {CROSS_OPACITY})"
+
 for i in range(len(dof_x)):
+    if dof_planes[i] == "z":
+        # z
+        # positive diagonal
+        l1_start_x = dof_x[i] + LINE_LENGTH / 2
+        l1_start_y = dof_y[i] + LINE_LENGTH / 2
+        l1_start_z = dof_z[i]
+        l1_end_x = dof_x[i] - LINE_LENGTH / 2
+        l1_end_y = dof_y[i] - LINE_LENGTH / 2
+        l1_end_z = dof_z[i]
+
+        # negative diagonal
+        l2_start_x = dof_x[i] - LINE_LENGTH / 2
+        l2_start_y = dof_y[i] + LINE_LENGTH / 2
+        l2_start_z = dof_z[i]
+        l2_end_x = dof_x[i] + LINE_LENGTH / 2
+        l2_end_y = dof_y[i] - LINE_LENGTH / 2
+        l2_end_z = dof_z[i]
+    if dof_planes[i] == "y":
+        # y
+        # positive diagonal
+        l1_start_x = dof_x[i] + LINE_LENGTH / 2
+        l1_start_y = dof_y[i]
+        l1_start_z = dof_z[i] + LINE_LENGTH / 2
+        l1_end_x = dof_x[i] - LINE_LENGTH / 2
+        l1_end_y = dof_y[i]
+        l1_end_z = dof_z[i] - LINE_LENGTH / 2
+
+        # negative diagonal
+        l2_start_x = dof_x[i] - LINE_LENGTH / 2
+        l2_start_y = dof_y[i]
+        l2_start_z = dof_z[i] + LINE_LENGTH / 2
+        l2_end_x = dof_x[i] + LINE_LENGTH / 2
+        l2_end_y = dof_y[i]
+        l2_end_z = dof_z[i] - LINE_LENGTH / 2
+    if dof_planes[i] == "x":
+        # x
+        # positive diagonal
+        l1_start_x = dof_x[i]
+        l1_start_y = dof_y[i] + LINE_LENGTH / 2
+        l1_start_z = dof_z[i] + LINE_LENGTH / 2
+        l1_end_x = dof_x[i]
+        l1_end_y = dof_y[i] - LINE_LENGTH / 2
+        l1_end_z = dof_z[i] - LINE_LENGTH / 2
+
+        # negative diagonal
+        l2_start_x = dof_x[i]
+        l2_start_y = dof_y[i] + LINE_LENGTH / 2
+        l2_start_z = dof_z[i] - LINE_LENGTH / 2
+        l2_end_x = dof_x[i]
+        l2_end_y = dof_y[i] - LINE_LENGTH / 2
+        l2_end_z = dof_z[i] + LINE_LENGTH / 2
+
     fig.add_trace(
         go.Scatter3d(
-            x=[dof_x[i]],
-            y=[dof_y[i]],
-            z=[dof_z[i]],
-            mode="markers",
-            marker=dict(
-                symbol="x",
-                color=np.zeros(1),
-                colorscale="picnic",
-                cmin=0,  # the cmin and cmax make sure only the start colour of the map is used
-                cmax=10000,
-                opacity=DOF_OPACITY,
+            x=[l1_start_x, l1_end_x],
+            y=[l1_start_y, l1_end_y],
+            z=[l1_start_z, l1_end_z],
+            mode="lines",
+            line=dict(
+                color=BLUE,
+                width=10,
             ),
-            name=dof_names[i],
-            surfaceaxis=1,
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=[l2_start_x, l2_end_x],
+            y=[l2_start_y, l2_end_y],
+            z=[l2_start_z, l2_end_z],
+            mode="lines",
+            line=dict(
+                color=BLUE,
+                width=10,
+            ),
         )
     )
 
@@ -128,9 +187,6 @@ fig.update_layout(
     paper_bgcolor="rgba(250, 249, 246, 0.9)",
 )
 
-# Local only
-# fig.show() # to test changes locally
-# fig.write_image("source/_static/fs_thumbnails/wtheta_k0.svg")  # for the thumbnail
-
-# Correct output for sphinx-gallery
-fig
+fig.show()
+output_html_path=r"./html/plot_wtheta_dofs.html"
+fig.write_html(output_html_path, include_plotlyjs=False, full_html=False)
