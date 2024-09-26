@@ -149,6 +149,13 @@ fig.add_trace(
     )
 )
 
+# turn off hover tooltips
+fig.update_traces(hoverinfo="skip", hovertemplate=None)
+
+fig.update_scenes(
+    xaxis_showspikes=False, yaxis_showspikes=False, zaxis_showspikes=False
+)
+
 # turn off legend, axis and show
 fig.update_layout(
     showlegend=False,
@@ -169,5 +176,5 @@ fig.update_layout(
 )
 
 fig.show()
-output_html_path=r"./html/plot_w2_dofs.html"
+output_html_path = r"./html/plot_w2_dofs.html"
 fig.write_html(output_html_path, include_plotlyjs=False, full_html=False)

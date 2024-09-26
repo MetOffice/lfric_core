@@ -1,10 +1,10 @@
 # (C) British Crown Copyright 2024, Met Office.
 # Please see LICENSE for license details.
 """
-Wtheta Function space
+W1 Function space
 =====================
 
-Plot showing the dof locations for the lowest order Wtheta Function space.
+Plot showing the dof locations for the lowest order W1 Function space.
 """
 
 import plotly.graph_objects as go
@@ -45,6 +45,7 @@ def add_cube(fig):
                 y=edge[1][1],
                 z=edge[1][2],
                 mode="lines",
+                hoverinfo="none",
                 hovertext=edge[0],
                 name=edge[0],
                 line=dict(
@@ -54,97 +55,96 @@ def add_cube(fig):
         )
 
 
-# create figure with the cube
 fig = go.Figure()
 add_cube(fig)
-fig.update_traces(line={"width": 10})
+fig.update_traces(line={"width": 5})
 
-# add the dofs
-dof_x = [0.5, 0.5]
-dof_y = [0.5, 0.5]
-dof_z = [0.0, 1.0]
-dof_planes = ["z", "z"]
-dof_names = ["dof 1", "dof 2"]
+# add the vectors - made up of a line and a cone
+LINE_LENGTH = 0.3
+CONE_LENGTH = 0.05
+FULL_LENGTH = LINE_LENGTH + CONE_LENGTH
+CONE_SIZEREF = 3
+VECTOR_OPACITY = 1
 
-LINE_LENGTH = 0.2
-CROSS_OPACITY = 0.8
-BLUE = f"rgba(0, 0, 255, {CROSS_OPACITY})"
+# (x, y, z), (u, v, w)
+# (x, y, z) start coordinates for end of arrow
+# (u, v, w) vector for the arrow
+vectors = [
+    [(0, 0, 0.5), (0, 0, 1)],  # red up
+    [(1, 0, 0.5), (0, 0, 1)],
+    [(0, 1, 0.5), (0, 0, 1)],
+    [(1, 1, 0.5), (0, 0, 1)],
+    [(0, 0.5, 0), (0, -1, 0)],  # blue left
+    [(0, 0.5, 1), (0, -1, 0)],
+    [(1, 0.5, 0), (0, 1, 0)],  # blue right
+    [(1, 0.5, 1), (0, 1, 0)],
+    [(0.5, 0, 0), (1, 0, 0)],  # green out
+    [(0.5, 0, 1), (1, 0, 0)],
+    [(0.5, 1, 0), (-1, 0, 0)],  # green in
+    [(0.5, 1, 1), (-1, 0, 0)],
+]
 
-for i in range(len(dof_x)):
-    if dof_planes[i] == "z":
-        # z
-        # positive diagonal
-        l1_start_x = dof_x[i] + LINE_LENGTH / 2
-        l1_start_y = dof_y[i] + LINE_LENGTH / 2
-        l1_start_z = dof_z[i]
-        l1_end_x = dof_x[i] - LINE_LENGTH / 2
-        l1_end_y = dof_y[i] - LINE_LENGTH / 2
-        l1_end_z = dof_z[i]
+BLUE = f"rgba(0, 0, 255, {VECTOR_OPACITY})"
+GREEN = f"rgba(0, 128, 0, {VECTOR_OPACITY})"
+RED = f"rgba(255, 0, 0, {VECTOR_OPACITY})"
+vector_colours = [
+    RED,
+    RED,
+    RED,
+    RED,
+    BLUE,
+    BLUE,
+    BLUE,
+    BLUE,
+    GREEN,
+    GREEN,
+    GREEN,
+    GREEN,
+]
 
-        # negative diagonal
-        l2_start_x = dof_x[i] - LINE_LENGTH / 2
-        l2_start_y = dof_y[i] + LINE_LENGTH / 2
-        l2_start_z = dof_z[i]
-        l2_end_x = dof_x[i] + LINE_LENGTH / 2
-        l2_end_y = dof_y[i] - LINE_LENGTH / 2
-        l2_end_z = dof_z[i]
-    if dof_planes[i] == "y":
-        # y
-        # positive diagonal
-        l1_start_x = dof_x[i] + LINE_LENGTH / 2
-        l1_start_y = dof_y[i]
-        l1_start_z = dof_z[i] + LINE_LENGTH / 2
-        l1_end_x = dof_x[i] - LINE_LENGTH / 2
-        l1_end_y = dof_y[i]
-        l1_end_z = dof_z[i] - LINE_LENGTH / 2
+for i in range(len(vectors)):
+    vector = vectors[i]
+    x, y, z = vector[0]
+    u, v, w = vector[1]
 
-        # negative diagonal
-        l2_start_x = dof_x[i] - LINE_LENGTH / 2
-        l2_start_y = dof_y[i]
-        l2_start_z = dof_z[i] + LINE_LENGTH / 2
-        l2_end_x = dof_x[i] + LINE_LENGTH / 2
-        l2_end_y = dof_y[i]
-        l2_end_z = dof_z[i] - LINE_LENGTH / 2
-    if dof_planes[i] == "x":
-        # x
-        # positive diagonal
-        l1_start_x = dof_x[i]
-        l1_start_y = dof_y[i] + LINE_LENGTH / 2
-        l1_start_z = dof_z[i] + LINE_LENGTH / 2
-        l1_end_x = dof_x[i]
-        l1_end_y = dof_y[i] - LINE_LENGTH / 2
-        l1_end_z = dof_z[i] - LINE_LENGTH / 2
+    x = x - u * FULL_LENGTH / 2
+    y = y - v * FULL_LENGTH / 2
+    z = z - w * FULL_LENGTH / 2
 
-        # negative diagonal
-        l2_start_x = dof_x[i]
-        l2_start_y = dof_y[i] + LINE_LENGTH / 2
-        l2_start_z = dof_z[i] - LINE_LENGTH / 2
-        l2_end_x = dof_x[i]
-        l2_end_y = dof_y[i] - LINE_LENGTH / 2
-        l2_end_z = dof_z[i] + LINE_LENGTH / 2
+    line_end_x = x + u * LINE_LENGTH
+    line_end_y = y + v * LINE_LENGTH
+    line_end_z = z + w * LINE_LENGTH
+
+    cone_tip_x = line_end_x + u * CONE_LENGTH
+    cone_tip_y = line_end_y + v * CONE_LENGTH
+    cone_tip_z = line_end_z + w * CONE_LENGTH
 
     fig.add_trace(
         go.Scatter3d(
-            x=[l1_start_x, l1_end_x],
-            y=[l1_start_y, l1_end_y],
-            z=[l1_start_z, l1_end_z],
+            x=[x, line_end_x],
+            y=[y, line_end_y],
+            z=[z, line_end_z],
             mode="lines",
             line=dict(
-                color=BLUE,
+                color=vector_colours[i],
                 width=10,
             ),
+            name="dof",
         )
     )
     fig.add_trace(
-        go.Scatter3d(
-            x=[l2_start_x, l2_end_x],
-            y=[l2_start_y, l2_end_y],
-            z=[l2_start_z, l2_end_z],
-            mode="lines",
-            line=dict(
-                color=BLUE,
-                width=10,
-            ),
+        go.Cone(
+            x=[cone_tip_x],
+            y=[cone_tip_y],
+            z=[cone_tip_z],
+            u=[u * CONE_LENGTH],
+            v=[v * CONE_LENGTH],
+            w=[w * CONE_LENGTH],
+            anchor="tip",
+            colorscale=[[0, vector_colours[i]], [1, vector_colours[i]]],
+            name="dof",
+            showscale=False,
+            sizeref=CONE_SIZEREF,
         )
     )
 
@@ -182,17 +182,22 @@ fig.update_scenes(
 # turn off legend, axis and show
 fig.update_layout(
     showlegend=False,
+    hovermode=False,
     scene_camera_eye=dict(x=-1.2, y=1.8, z=0.8),
     scene=dict(
-        xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False)
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        zaxis=dict(visible=False),
+        aspectmode="manual",
+        aspectratio=go.layout.scene.Aspectratio(x=1.4, y=1.4, z=1.4),
     ),
     autosize=False,
     width=700,
     height=500,
     margin=dict(l=50, r=50, b=50, t=50, pad=4),
-    paper_bgcolor="rgba(250, 249, 246, 0.9)",
+    paper_bgcolor="rgba(250, 249, 246, 0.9)",  # off white
 )
 
 fig.show()
-output_html_path = r"./html/plot_wtheta_dofs.html"
+output_html_path = r"./html/plot_w1_dofs.html"
 fig.write_html(output_html_path, include_plotlyjs=False, full_html=False)

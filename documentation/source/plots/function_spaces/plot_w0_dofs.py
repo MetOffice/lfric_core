@@ -1,10 +1,10 @@
 # (C) British Crown Copyright 2024, Met Office.
 # Please see LICENSE for license details.
 """
-Wtheta Function space
+W0 Function space
 =====================
 
-Plot showing the dof locations for the lowest order Wtheta Function space.
+Plot showing the dof locations for the lowest order W0 Function space.
 """
 
 import plotly.graph_objects as go
@@ -60,68 +60,43 @@ add_cube(fig)
 fig.update_traces(line={"width": 10})
 
 # add the dofs
-dof_x = [0.5, 0.5]
-dof_y = [0.5, 0.5]
-dof_z = [0.0, 1.0]
-dof_planes = ["z", "z"]
+dof_x = [0, 1, 1, 0, 0, 1, 1, 0]
+dof_y = [0, 0, 1, 1, 0, 0, 1, 1]
+dof_z = [0, 0, 0, 0, 1, 1, 1, 1]
 dof_names = ["dof 1", "dof 2"]
 
-LINE_LENGTH = 0.2
-CROSS_OPACITY = 0.8
+LINE_LENGTH = 0.1
+CROSS_OPACITY = 0.5
 BLUE = f"rgba(0, 0, 255, {CROSS_OPACITY})"
 
 for i in range(len(dof_x)):
-    if dof_planes[i] == "z":
-        # z
-        # positive diagonal
-        l1_start_x = dof_x[i] + LINE_LENGTH / 2
-        l1_start_y = dof_y[i] + LINE_LENGTH / 2
-        l1_start_z = dof_z[i]
-        l1_end_x = dof_x[i] - LINE_LENGTH / 2
-        l1_end_y = dof_y[i] - LINE_LENGTH / 2
-        l1_end_z = dof_z[i]
+    l1_start_x = dof_x[i] + LINE_LENGTH / 2
+    l1_start_y = dof_y[i] + LINE_LENGTH / 2
+    l1_start_z = dof_z[i] + LINE_LENGTH / 2
+    l1_end_x = dof_x[i] - LINE_LENGTH / 2
+    l1_end_y = dof_y[i] - LINE_LENGTH / 2
+    l1_end_z = dof_z[i] - LINE_LENGTH / 2
 
-        # negative diagonal
-        l2_start_x = dof_x[i] - LINE_LENGTH / 2
-        l2_start_y = dof_y[i] + LINE_LENGTH / 2
-        l2_start_z = dof_z[i]
-        l2_end_x = dof_x[i] + LINE_LENGTH / 2
-        l2_end_y = dof_y[i] - LINE_LENGTH / 2
-        l2_end_z = dof_z[i]
-    if dof_planes[i] == "y":
-        # y
-        # positive diagonal
-        l1_start_x = dof_x[i] + LINE_LENGTH / 2
-        l1_start_y = dof_y[i]
-        l1_start_z = dof_z[i] + LINE_LENGTH / 2
-        l1_end_x = dof_x[i] - LINE_LENGTH / 2
-        l1_end_y = dof_y[i]
-        l1_end_z = dof_z[i] - LINE_LENGTH / 2
+    l2_start_x = dof_x[i] - LINE_LENGTH / 2
+    l2_start_y = dof_y[i] + LINE_LENGTH / 2
+    l2_start_z = dof_z[i] + LINE_LENGTH / 2
+    l2_end_x = dof_x[i] + LINE_LENGTH / 2
+    l2_end_y = dof_y[i] - LINE_LENGTH / 2
+    l2_end_z = dof_z[i] - LINE_LENGTH / 2
 
-        # negative diagonal
-        l2_start_x = dof_x[i] - LINE_LENGTH / 2
-        l2_start_y = dof_y[i]
-        l2_start_z = dof_z[i] + LINE_LENGTH / 2
-        l2_end_x = dof_x[i] + LINE_LENGTH / 2
-        l2_end_y = dof_y[i]
-        l2_end_z = dof_z[i] - LINE_LENGTH / 2
-    if dof_planes[i] == "x":
-        # x
-        # positive diagonal
-        l1_start_x = dof_x[i]
-        l1_start_y = dof_y[i] + LINE_LENGTH / 2
-        l1_start_z = dof_z[i] + LINE_LENGTH / 2
-        l1_end_x = dof_x[i]
-        l1_end_y = dof_y[i] - LINE_LENGTH / 2
-        l1_end_z = dof_z[i] - LINE_LENGTH / 2
+    l3_start_x = dof_x[i] + LINE_LENGTH / 2
+    l3_start_y = dof_y[i] - LINE_LENGTH / 2
+    l3_start_z = dof_z[i] + LINE_LENGTH / 2
+    l3_end_x = dof_x[i] - LINE_LENGTH / 2
+    l3_end_y = dof_y[i] + LINE_LENGTH / 2
+    l3_end_z = dof_z[i] - LINE_LENGTH / 2
 
-        # negative diagonal
-        l2_start_x = dof_x[i]
-        l2_start_y = dof_y[i] + LINE_LENGTH / 2
-        l2_start_z = dof_z[i] - LINE_LENGTH / 2
-        l2_end_x = dof_x[i]
-        l2_end_y = dof_y[i] - LINE_LENGTH / 2
-        l2_end_z = dof_z[i] + LINE_LENGTH / 2
+    l4_start_x = dof_x[i] - LINE_LENGTH / 2
+    l4_start_y = dof_y[i] - LINE_LENGTH / 2
+    l4_start_z = dof_z[i] + LINE_LENGTH / 2
+    l4_end_x = dof_x[i] + LINE_LENGTH / 2
+    l4_end_y = dof_y[i] + LINE_LENGTH / 2
+    l4_end_z = dof_z[i] - LINE_LENGTH / 2
 
     fig.add_trace(
         go.Scatter3d(
@@ -140,6 +115,30 @@ for i in range(len(dof_x)):
             x=[l2_start_x, l2_end_x],
             y=[l2_start_y, l2_end_y],
             z=[l2_start_z, l2_end_z],
+            mode="lines",
+            line=dict(
+                color=BLUE,
+                width=10,
+            ),
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=[l3_start_x, l3_end_x],
+            y=[l3_start_y, l3_end_y],
+            z=[l3_start_z, l3_end_z],
+            mode="lines",
+            line=dict(
+                color=BLUE,
+                width=10,
+            ),
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=[l4_start_x, l4_end_x],
+            y=[l4_start_y, l4_end_y],
+            z=[l4_start_z, l4_end_z],
             mode="lines",
             line=dict(
                 color=BLUE,
@@ -194,5 +193,5 @@ fig.update_layout(
 )
 
 fig.show()
-output_html_path = r"./html/plot_wtheta_dofs.html"
+output_html_path = r"./html/plot_w0_dofs.html"
 fig.write_html(output_html_path, include_plotlyjs=False, full_html=False)

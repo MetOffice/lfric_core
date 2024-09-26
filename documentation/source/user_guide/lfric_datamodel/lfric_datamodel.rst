@@ -702,109 +702,130 @@ domain and number of vertical levels) and the order of the basis
 functions.
 
 The following figures show dof locations for four of the main
-function spaces at lowest order and at next lowest order:
+function spaces at the lowest order:
+:math:`\mathbb{W}_0`, :math:`\mathbb{W}_1`, :math:`\mathbb{W}_2`, and
+:math:`\mathbb{W}_3`. Vectors are shown as arrows, dofs are drawn differently
+to distinguish if they lie on a plane of the cell.
+
+.. tab-set::
+    :sync-group: category
+
+    .. tab-item:: ​ :math:`\mathbb{W}_0` ​
+        :name: k0_w0_dofs
+        :sync: w0
+
+        .. raw:: html
+            :file: ../../plots/function_spaces/html/plot_w0_dofs.html
+
+    .. tab-item:: ​ :math:`\mathbb{W}_1` ​
+        :name: k0_w1_dofs
+        :sync: w1
+
+        .. raw:: html
+            :file: ../../plots/function_spaces/html/plot_w1_dofs.html
+
+    .. tab-item:: ​ :math:`\mathbb{W}_2` ​
+        :name: k0_w2_dofs
+        :sync: w2
+
+        .. raw:: html
+            :file: ../../plots/function_spaces/html/plot_w2_dofs.html
+
+    .. tab-item:: ​ :math:`\mathbb{W}_3` ​
+        :name: k0_w3_dofs
+        :sync: w3
+
+        .. raw:: html
+            :file: ../../plots/function_spaces/html/plot_w3_dofs.html
+
+    .. tab-item:: ​ :math:`\mathbb{W}_{theta}` ​
+        :name: k0_wtheta_dofs
+        :sync: wtheta
+
+        .. raw:: html
+            :file: ../../plots/function_spaces/html/plot_wtheta_dofs.html
+
+The following figures show dof locations for four of the main
+function spaces at the next lowest order:
 :math:`\mathbb{W}_0`, :math:`\mathbb{W}_1`, :math:`\mathbb{W}_2`, and
 :math:`\mathbb{W}_3`,
 
 .. tab-set::
+    :sync-group: category
 
     .. tab-item:: ​ :math:`\mathbb{W}_0` ​
-       :name: k0_w0_dofs
+       :name: k1_w0_dofs
+       :sync: w0
 
-       .. grid:: 2
-
-            .. grid-item::
-
-               .. figure:: images/k0_W0_dofs.svg
-
-                  Locations of dofs for spaces :math:`\mathbb{W}_0` for lowest
-                  order. The field is continuous so each dof is shared with up to 8
-                  neighbouring cells.
+       .. grid:: 1
 
             .. grid-item::
 
-               .. figure:: images/k1_W0_dofs.svg
+                .. figure:: images/k1_W0_dofs.svg
 
-                  Locations of dofs for spaces :math:`\mathbb{W}_0` for next lowest
-                  order. The field is fully continuous so dofs are shared with all
-                  neighbouring cells.
+                Locations of dofs for spaces :math:`\mathbb{W}_0` for next lowest
+                order. The field is fully continuous so dofs are shared with all
+                neighbouring cells.
 
     .. tab-item:: ​ :math:`\mathbb{W}_1` ​
-       :name: w1_dofs
+       :name: k1_w1_dofs
+       :sync: w1
 
        .. grid:: 2
 
             .. grid-item::
 
-               .. figure:: images/k0_W1_dofs.svg
+                .. figure:: images/k1_W1_dofs_circ.svg
 
-                  Locations of dofs for spaces :math:`\mathbb{W}_1` for lowest
-                  order. Individual basis functions are continuous normal to the
-                  edges, but discontinuous parallel to the edges.
-
-            .. grid-item::
-
-               .. figure:: images/k1_W1_dofs_circ.svg
-
-                  Locations of dofs for spaces :math:`\mathbb{W}_1` at next lowest in
-                  right. The image is not precise enough to show the subtleties of
-                  continuity as represented by the nominal dof location -- an
-                  expanded view of the circled corner dofs can be seen below.
+                Locations of dofs for spaces :math:`\mathbb{W}_1` at next lowest in
+                right. The image is not precise enough to show the subtleties of
+                continuity as represented by the nominal dof location -- an
+                expanded view of the circled corner dofs can be seen below.
 
             .. grid-item::
 
-               .. figure:: images/corner_W1.svg
+                .. figure:: images/corner_W1.svg
 
-                  **Expanded view of** :math:`\mathbb{W}_1` at next lowest order showing the
-                  details of the locations of dofs.
+                **Expanded view of** :math:`\mathbb{W}_1` at next lowest order showing the
+                details of the locations of dofs.
 
     .. tab-item:: ​ :math:`\mathbb{W}_2` ​
-       :name: k0_w2_dofs
+       :name: k1_w2_dofs
+       :sync: w2
 
        .. grid:: 2
-
-            .. grid-item::
-
-               .. figure:: images/k0_W2_dofs.svg
-
-                  Locations of dofs for spaces :math:`\mathbb{W}_2` for lowest order.
 
             .. grid-item::
 
                .. figure:: images/k1_W2_dofs_circ.svg
 
-                  Locations of dofs for spaces :math:`\mathbb{W}_2` for next lowest
-                  order. The expanded view below illustrates the dof
-                  locations of the corner dofs in more detail.
+                Locations of dofs for spaces :math:`\mathbb{W}_2` for next lowest
+                order. The expanded view below illustrates the dof
+                locations of the corner dofs in more detail.
 
             .. grid-item::
 
                .. figure:: images/corner_W2.svg
 
-                  **Expanded view of** :math:`\mathbb{W}_2` at next lowest order showing the
-                  details of the locations of dofs. Dofs are located on faces
-                  illustrating that basis functions are continuous normal to the
-                  faces.
+                **Expanded view of** :math:`\mathbb{W}_2` at next lowest order showing the
+                details of the locations of dofs. Dofs are located on faces
+                illustrating that basis functions are continuous normal to the
+                faces.
 
     .. tab-item:: ​ :math:`\mathbb{W}_3` ​
-       :name: w3_dofs
+       :name: k1_w3_dofs
+       :sync: w3
 
-       .. grid:: 2
-
-            .. grid-item::
-
-               .. figure:: images/k0_W3_dofs.svg
-
-                  Locations of dofs for spaces :math:`\mathbb{W}_3` for lowest order.
+       .. grid:: 1
 
             .. grid-item::
 
-               .. figure:: images/k1_W3_dofs.svg
+                .. figure:: images/k1_W3_dofs.svg
 
-                  Locations of dofs for spaces :math:`\mathbb{W}_3` for next lowest
-                  order. The dofs are shown slightly offset from the corners to
-                  illustrate that the field is discontinuous: each of the 8 cells
-                  that share a vertex have their own dof at the same location.
+                Locations of dofs for spaces :math:`\mathbb{W}_3` for next lowest
+                order. The dofs are shown slightly offset from the corners to
+                illustrate that the field is discontinuous: each of the 8 cells
+                that share a vertex have their own dof at the same location.
 
 A brief description of dof-locations for lowest order versions of all
 supported function space types is given in the following table:
@@ -870,18 +891,6 @@ distinguishes the function space from :ref:`the lowest order <k0_w0_dofs>`
 expanded images of the function space corners show similar
 subtleties for the higher order versions of the :math:`\mathbb{W}_{1}`
 and :math:`\mathbb{W}_{2}` function spaces.
-
-.. tab-set::
-
-   .. tab-item:: W2
-
-      .. raw:: html
-         :file: ../../plots/function_spaces/html/plot_w2_dofs.html
-
-   .. tab-item:: Wtheta
-
-      .. raw:: html
-         :file: ../../plots/function_spaces/html/plot_wtheta_dofs.html
 
 .. _section psykal:
 
