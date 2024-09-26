@@ -796,15 +796,17 @@ distinguishes the function space from :ref:`the lowest order <k0_w0_dofs>`
 subtleties for the higher order versions of the :math:`\mathbb{W}_{1}`
 and :math:`\mathbb{W}_{2}` function spaces.
 
-Explore the W2 function space interactively:
+.. tab-set::
 
-.. raw:: html
-   :file: ../../plots/function_spaces/html/plot_w2_dofs.html
+   .. tab-item:: W2
 
-Explore the Wtheta function space interactively:
+      .. raw:: html
+         :file: ../../plots/function_spaces/html/plot_w2_dofs.html
 
-.. raw:: html
-   :file: ../../plots/function_spaces/html/plot_wtheta_dofs.html
+   .. tab-item:: Wtheta
+
+      .. raw:: html
+         :file: ../../plots/function_spaces/html/plot_wtheta_dofs.html
 
 .. _section psykal:
 
