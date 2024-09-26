@@ -4,14 +4,20 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _lfric_datamodel_index:
+Data Structures
+===============
 
-LFRic Data Model
-================
+This section provides an overview of the data structures supported by
+the LFRic infrastructure, focusing on their usage within an LFRic
+application. In-depth descriptions can be found in the developer
+documentation.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   lfric_datamodel
-   data_structures
-   modeldb
+   field
+   function_space
+   operator
+   scalar
+   field_collection
+   external_field

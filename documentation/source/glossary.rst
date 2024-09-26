@@ -34,6 +34,9 @@ Glossary
   Model Domain
     The geographical domain extents to which an LFRic application is configured, *e.g.* GCM, LAM.
 
+  Modeldb
+    An object that encapsulates all the data required to describe both the scientific and technical state of a model.
+
   Science Model
      A library of code that simulates a particular science process, *e.g.* a radiation or land surface model. **Note:** An LFRic application may be written to access any number of Science Models.
 
