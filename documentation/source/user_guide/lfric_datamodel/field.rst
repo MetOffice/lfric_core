@@ -262,9 +262,7 @@ in the following code can be either 32-bit or 64-bit:
 
    Field collections support the ability to access an individual named
    field and also the ability to iterate over all the fields in the
-   field collection. Support of iterators, however, is only available
-   for fields with the default precision as defined in the
-   ``field_mod`` module.
+   field collection.
 
 Integer fields
 ==============
