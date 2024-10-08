@@ -111,8 +111,11 @@ depending on which generator program is used or are triggered by settings in the
     Number of cells along edge of mesh panel. Only the first n-entries given be :ref:`n_meshes<n_meshes>` are used. 
 * ``smooth_passes``:``<integer>``
     Number of interations of smoothing function applied to mesh node locations. This has most impact at the corners of the cube topology.
-* ``stretch_factor``:``<real>``
-    Input factor using in Schmit transform. This will reduce the size of the `top` or `bottom` panels of the cubed-sphere while maintaining the same connectivity. This has the effect of a localised increase in resolution over a panel in a cubed-sphere without increasing the overall number of cells in the mesh.
+* ``equatorial_latitude``:``<real>``
+    Real world latitude (degrees) of Cubed-Sphere mesh equator after applying Schmit transform.
+    The `top`(or `bottom`) panels of the cubed-sphere are reduced in size while maintaining the
+    same connectivity. This has the effect of a localised increase in resolution over a panel of
+    the cubed-sphere without increasing the overall number of cells in the mesh.
 
 &planar_mesh(Planar)
   Control namelist for Planar mesh generation.
