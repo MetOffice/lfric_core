@@ -1,0 +1,26 @@
+.. -----------------------------------------------------------------------------
+     (c) Crown copyright 2024 Met Office. All rights reserved.
+     The file LICENCE, distributed with this code, contains details of the terms
+     under which the code may be used.
+   -----------------------------------------------------------------------------
+
+.. _section Quick start:
+
+******************************
+Quick Start
+******************************
+
+Two separate mesh generators are provided to produce either Planar or Cubed-sphere meshes.
+The usage is the same for both generators.
+
+    | >> <generator program> <configuration file>
+
+where <generator program> = [planar_mesh_generator|cubedsphere_mesh_generator].  This command will return a single file containing requested mesh topologies with extents covering the full model domain (global meshes). These global meshes will require an additional processing (partitioning) after loading from file.
+
+For pre-partitioned meshes the command should be run in parallel.
+
+    | >> mpiexec -n <number of processes> <generator program> <configuration file>
+
+This command will return multiple files (1 per partition) each containing a portion of the requested mesh topologies with extents of a local partition + halos (local meshes). Addtional information related to the partition and the global mesh parent is included in each file. This removes the need for runtime mesh partitioning, reducing it to a load operation of a partitioned file on a given process rank.
+
+.. note:: The number of processes specified on the command line should match the total number of partitions requested in the configuration file.
