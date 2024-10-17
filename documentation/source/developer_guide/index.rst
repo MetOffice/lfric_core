@@ -11,5 +11,6 @@ Developer Guide
 .. toctree::
    :maxdepth: 2
 
+   sphinx_style/documentation_style_guide
    templated_source
    build_system/library_import
