@@ -11,6 +11,7 @@
                                                "lfric_xios",
                                                "mesh",
                                                "science",
+                                               "simple_diffusion",
                                                "skeleton"]}) %}
 
 {% do site_vars.update({"site_platforms": ["spice",

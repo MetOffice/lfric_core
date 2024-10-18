@@ -73,6 +73,7 @@
             DESTINATION_DIRECTORY = {{destination_dir}}
             CORE_ROOT_DIR         = $SOURCE_ROOT
             SOURCE_DIRECTORY      = $SOURCE_ROOT/{{task_values["application_dir"]}}
+            METADATA              = $SOURCE_ROOT/{{task_values["application_dir"]}}/metadata
             BIN_DIR               = {{bin_dir}}
             LIB_DIR               = {{lib_dir}}
             MOD_DIR               = {{mod_dir}}
@@ -103,7 +104,6 @@
             XIOS_SERVER_RANKS     = {{task_values["xios_server_ranks"]}}
             xios_nodes            = {{task_values["xios_nodes"]}}
             mpi_parts_xios        = {{task_values["mpi_parts_xios"]}}
-
 
 {# Set any directives using macros imported in generate_runtime for this platform #}
         [[[directives]]]

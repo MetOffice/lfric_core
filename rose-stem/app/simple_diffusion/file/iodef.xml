@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation>
+
+  <context id = "simple_diffusion">
+
+   <axis_definition src="$METADATA/axis_dictionary.xml"/>
+
+   <grid_definition src="$METADATA/grid_dictionary.xml"/>
+
+   <field_definition src="$METADATA/field_dictionary.xml"/>
+
+   <file_definition
+      type="one_file"
+      time_counter="none">
+
+     <file id="lfric_diag" name="simple_diffusion_diag" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+       <field field_ref="diffusion_field"/>
+     </file>
+
+    </file_definition>
+
+  </context>
+
+  <context id = "xios">
+    <variable_definition>
+      <variable_group id = "buffer">
+        <variable id = "optimal_buffer_size" type = "string" >performance</variable>
+        <variable id = "buffer_factor_size" type = "double" >1.0</variable>
+      </variable_group>
+
+      <variable_group id = "parameters" >
+        <variable id = "using_server" type = "bool" >true</variable>
+        <variable id = "info_level" type = "int" >50</variable>
+        <variable id = "print_file" type="bool">true</variable>
+      </variable_group>
+    </variable_definition>
+  </context>
+
+</simulation>

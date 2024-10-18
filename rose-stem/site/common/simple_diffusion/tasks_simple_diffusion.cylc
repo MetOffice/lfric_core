@@ -1,0 +1,51 @@
+{# ########################################################################### #}
+{# (c) Crown copyright 2024 Met Office. All rights reserved. #}
+{# The file LICENCE, distributed with this code, contains details of the terms #}
+{# under which the code may be used. #}
+{# ########################################################################### #}
+{% do LOG.debug("Entered site/common/simple_diffusion/tasks_simple_diffusion.cylc") %}
+
+{% if task_ns.conf_name == "default-C24" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["default"],
+        "resolution": "C24",
+    }) %}
+
+{% elif task_ns.conf_name == "unit_tests" %}
+
+    {% do task_dict.update({
+        "placeholder": true,
+    }) %}
+
+{% elif task_ns.conf_name == "canned" %}
+
+    {% do task_dict.update({
+        "app_name": "canned_test",
+        "kgo_checks": [],
+    }) %}
+
+{% elif task.startswith("build") %}
+
+    {% do task_dict.update({
+        "placeholder": true,
+    }) %}
+
+{% endif %}
+
+{# Set default values for Simple Diffusion tasks #}
+{% if task_dict %}
+    {% do task_dict.update({"application_dir": "applications/simple_diffusion"}) %}
+    {% if "app_name" not in task_dict %}
+        {% do task_dict.update({"app_name": "simple_diffusion"}) %}
+    {% endif %}
+    {% if "kgo_checks" not in task_dict %}
+        {% do task_dict.update({"kgo_checks": ["checksum"]}) %}
+    {% endif %}
+    {% if task_ns.compiler == 'gnu' %}
+        {# Don't check checksums for GNU #}
+        {% do task_dict.update({"kgo_checks": []}) %}
+    {% endif %}
+{% endif %}
+
+{% do LOG.debug("Finished in site/common/simple_diffusion/tasks_simple_diffusion.cylc") %}
