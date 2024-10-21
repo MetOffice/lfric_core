@@ -19,7 +19,46 @@ Copyright
 ---------
 
 Include a copy of the standard Copyright text in all files (with an
-appropriate year):
+appropriate year).
+
+Purposes of each section
+------------------------
+
+There are four main sections to the documentation: "Getting Started",
+"User Guide", "Developer Guide" and "LFRic Core API".
+
+Getting Started
+~~~~~~~~~~~~~~~
+
+The :ref:`Getting Started <getting_started_index>` section provides an
+overview of the code repository and the documentation.
+
+At the time of writing, the User Guide is in the process of being
+written, but the other sections are at a very early stage of
+development.
+
+User Guide
+~~~~~~~~~~
+
+The :ref:`User Guide <user_guide_index>` section is for developers of
+LFRic applications. It provides an introduction to the structure of a
+typical model application, an overview of the LFRic data model, and
+usage examples for key aspects of the LFRic infrastructure.
+
+Developer Guide
+~~~~~~~~~~~~~~~
+
+The :ref:`Developer Guide <developer_guide_index>` section is for
+developers of the core LFRic code. It describes coding and
+documentation standards, gives detailed technical overviews of
+aspects of the infrastructure and components, and describes the build
+system including the use of templated code and code generation.
+
+LFRic Core API
+~~~~~~~~~~~~~~
+
+The :ref:`LFRic Core API <API_index>` section describes the technical
+API for LFRic core software.
 
 Text Formatting
 ---------------
@@ -53,9 +92,9 @@ writers can easily reference them.
 
 Sphinx can automatically infer links to headings from the title of the
 heading. Do not rely on this feature as heading titles can change
-regularly.  When a document needs to refer to a heading elsewhere in
-the documentation, provide an explict link preceding the section
-header:
+regularly. Therefore, when a document needs to refer to a heading
+elsewhere in the documentation, provide an explicit link preceding the
+section header:
 
 ::
 
@@ -63,6 +102,11 @@ header:
 
     Style Guide for LFRic Core Sphinx Documentation
     ===============================================
+
+Anticipate the need for other issues to refer to sections by including
+links to documentation that is likely to be referenced, even if no
+text has a link yet.
+
 
 Code snippets
 -------------
