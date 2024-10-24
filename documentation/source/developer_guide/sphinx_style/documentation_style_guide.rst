@@ -51,8 +51,9 @@ Developer Guide
 The :ref:`Developer Guide <developer_guide_index>` section is for
 developers of the core LFRic code. It describes coding and
 documentation standards, gives detailed technical overviews of
-aspects of the infrastructure and components, and describes the build
-system including the use of templated code and code generation.
+aspects of the infrastructure and components, describes the build
+system including the use of templated code and code generation, and
+describes the testing strategy.
 
 LFRic Core API
 ~~~~~~~~~~~~~~
@@ -72,17 +73,19 @@ Headings
 
 Headings used in restructured text documents have no defined order
 other than the order within a file. LFRic core will use the following
-hierarchy.
+hierarchy (based on Sphinx recommendations) for most moderately-sized
+files:
 
--  '#' with overline, for parts
--  '*' with overline, for chapters
 -  '=' for sections
 -  '-' for subsections
 -  '^' for subsubsections
 -  '"' for paragraphs
 
-Not all levels of the hierarchy need to be used in a file: many files
-will start at the "sections" level of this hierarchy.
+If a file is large, and it is necessary to go to a deeper level of
+headings, one or both of the following can be used before the above.
+
+-  '#' with overline, for parts
+-  '*' with overline, for chapters
 
 Links
 -----
@@ -90,11 +93,12 @@ Links
 Include links to key headings and to figures so other documentation
 writers can easily reference them.
 
-Sphinx can automatically infer links to headings from the title of the
-heading. Do not rely on this feature as heading titles can change
-regularly. Therefore, when a document needs to refer to a heading
-elsewhere in the documentation, provide an explicit link preceding the
-section header:
+While Sphinx can automatically infer links to headings from the title
+of the heading, do not rely on this feature as heading titles can
+change regularly.
+
+When a document needs to refer to a heading elsewhere in the
+documentation, provide an explicit link preceding the section header:
 
 ::
 
@@ -106,7 +110,6 @@ section header:
 Anticipate the need for other issues to refer to sections by including
 links to documentation that is likely to be referenced, even if no
 text has a link yet.
-
 
 Code snippets
 -------------
@@ -130,9 +133,9 @@ Fortran code:
      call my_collection%get_field("my_field", field)
 
 
-Note that the above example may include some default Sphinx
-highlighting. The expected rendering of the above text using the
-Fortran style is as follows:
+Note that rendering of the above example may include some default
+Sphinx highlighting. When using the Fortran style, the expected
+rendering of the above text is as follows:
 
 .. code-block:: fortran
 
