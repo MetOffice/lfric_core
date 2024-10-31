@@ -10,7 +10,7 @@ Style Guide for LFRic Core Sphinx Documentation
 ===============================================
 
 Documentation of LFRic Core is written using restructured text and is
-typically rendered by Sphinx.
+rendered by Sphinx, typically into html.
 
 This section recommends practices to be followed to ensure the
 documentation follows a consistent style.
@@ -21,21 +21,33 @@ Copyright
 Include a copy of the standard Copyright text in all files (with an
 appropriate year).
 
+.. code-block:: rst
+
+  ------------------------------------------------------------------------------
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
+  ------------------------------------------------------------------------------
+
 Purposes of each section
 ------------------------
 
 There are four main sections to the documentation: "Getting Started",
 "User Guide", "Developer Guide" and "LFRic Core API".
 
+At the time of writing, the User Guide is in the process of being
+written, but the other sections are at a very early stage of
+development, so a summary of the purpose of each section is given
+here.
+
 Getting Started
 ~~~~~~~~~~~~~~~
 
-The :ref:`Getting Started <getting_started_index>` section provides an
-overview of the code repository and the documentation.
-
-At the time of writing, the User Guide is in the process of being
-written, but the other sections are at a very early stage of
-development.
+The :ref:`Getting Started <getting_started_index>` section should
+contain the most important information for someone who has never used
+LFRic Core before, details on how to get started building the included
+applications, the general layout of the repository and its contents as
+well as any more detailed tutorials.
 
 User Guide
 ~~~~~~~~~~
@@ -71,9 +83,8 @@ there is an exceptional reason.
 Headings
 --------
 
-Headings used in restructured text documents have no defined order
-other than the order within a file. LFRic core will use the following
-hierarchy (based on Sphinx recommendations) for most moderately-sized
+LFRic core documentation will use the following hierarchy for marking
+headings (based on Sphinx recommendations) for most moderately-sized
 files:
 
 -  '=' for sections
@@ -87,29 +98,33 @@ headings, one or both of the following can be used before the above.
 -  '#' with overline, for parts
 -  '*' with overline, for chapters
 
+.. caution::
+
+    Headings used in restructured text documents have no defined order
+    other than the order of occurrence within a file. Be sure to check
+    the order adheres to the working practices.
+
 Links
 -----
 
-Include links to key headings and to figures so other documentation
-writers can easily reference them.
+Include a reference label to allow other text to include links to
+headings and to figures. Add the reference label before a heading as
+in the following example:
 
-While Sphinx can automatically infer links to headings from the title
-of the heading, do not rely on this feature as heading titles can
-change regularly.
-
-When a document needs to refer to a heading elsewhere in the
-documentation, provide an explicit link preceding the section header:
-
-::
+.. code-block:: rst
 
     .. _sphinx style guide:
 
     Style Guide for LFRic Core Sphinx Documentation
     ===============================================
 
-Anticipate the need for other issues to refer to sections by including
-links to documentation that is likely to be referenced, even if no
-text has a link yet.
+While Sphinx can automatically infer links to headings from the title
+of the heading, do not rely on this feature as heading titles can
+change regularly.
+
+It is acceptable to add a reference to a heading or figure even when
+no other text currently refers to it as it makes it easier should a
+future writer want to add a link to the item.
 
 Code snippets
 -------------
@@ -132,10 +147,9 @@ Fortran code:
      collection => modeldb%fields%get_field_collection("my_collection")
      call my_collection%get_field("my_field", field)
 
-
-Note that rendering of the above example may include some default
-Sphinx highlighting. When using the Fortran style, the expected
-rendering of the above text is as follows:
+Note that Spinx may have applied some default highlighting to the
+above text. But, when using the Fortran style, the expected rendering
+of the above text is as follows:
 
 .. code-block:: fortran
 
