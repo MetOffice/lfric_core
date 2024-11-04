@@ -40,6 +40,11 @@ or ``1`` for next-to-lowest order. The GungHo dynamical core is tested
 with both of these settings whereas the Momentum\ :sup:`®` atmosphere
 model runs with lowest order function spaces.
 
+The ``element_order_h`` and ``element_order_v`` options are ordered horizontal order 
+first, and vertical order second. This is the convention adopted throughout
+the code, so functions will always take the horizontal version of an entity,
+then the vertical version, and finally the next entity / argument.
+
 The ``fs_type`` refers to one of a number of available function space
 types. A `high-level description
 <https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#supported-function-spaces>`_
