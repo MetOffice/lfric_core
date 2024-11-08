@@ -3,6 +3,7 @@
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    ------------------------------------------------------------------------------
+
 .. _developer_guide_index:
 
 Developer Guide
@@ -15,7 +16,7 @@ Developer Guide
    build_system/library_import
 
 
-Contributors
+Contributing
 ------------
 
 .. toctree::
