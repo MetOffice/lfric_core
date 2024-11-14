@@ -36,5 +36,4 @@ body:
     attributes:
       label: Further details of the issue.
       description: Please give a detailed description of the issue to help with development including any requirements and links to additional literature.
-      render: shell
 
