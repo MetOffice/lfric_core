@@ -285,7 +285,7 @@ using compiler DEFs to be 32-bit, 64-bit or 128-bit. Integer values of
 Within the code base will be seen declarations
 and code such as the following:
 
-::
+.. code-block:: fortran
 
        use constants_mod,          only: i_def, r_def
    ...
@@ -538,7 +538,7 @@ with data on faces, ``face_data``, and a field with data within the
 cell volume, ``volume_data``. Among other arguments, the kernel
 subroutine interface could look like this:
 
-::
+.. code-block:: fortran
 
        subroutine my_kernel_code(nlayers,                       &
          face_data, volume_data...                              &
@@ -554,7 +554,7 @@ be modified is the field on faces.
 
 For such a kernel, the PSy layer code could look something like this:
 
-::
+.. code-block:: fortran
 
      do cell = 1, ncells
        call my_kernel_code(nlayers, face_data(:), volume_data(:)...     &
@@ -566,7 +566,7 @@ For such a kernel, the PSy layer code could look something like this:
 For the function spaces and mesh illustrated in the :ref:`figure <w2_w3_vert_3d>`
 the array sizes and dof-map variables would be set as follows
 
-::
+.. code-block:: fortran
 
     dofs_per_cell_face   = 6
     dofs_per_cell_volume = 1
@@ -587,7 +587,7 @@ the array sizes and dof-map variables would be set as follows
 Within the kernel, the data and dof-map arrays would be declared in this
 way:
 
-::
+.. code-block:: fortran
 
      ! Declare the input arrays using the input array sizes
      integer(kind=i_def), intent(in)  :: dofmap_face(dofs_per_cell_face)
@@ -600,7 +600,7 @@ field of cell volume data. The loop over columns is managed by the PSy
 layer, so the kernel needs to loop over layers (each cell in the
 vertical column), and over both dof-maps.
 
-::
+.. code-block:: fortran
 
      ! Loop over all layers
      do k = 0, nlayers - 1
@@ -946,7 +946,7 @@ is a call to a kernel to compute a field of angular momentum values
 referenced by the ``compute_total_aam_kernel_type`` argument. The second
 is a summation of these values to return the total angular momentum.
 
-::
+.. code-block:: fortran
 
          ! Compute Total Axial Angular Momentum
          call invoke( name = "compute_axial_momentum",                   &
@@ -978,7 +978,7 @@ combined arguments of all the original kernels and built-ins of the
 original ``invoke`` call. Note that arguments such as ``aam`` that
 appear in more than one kernel or built-in are not repeated:
 
-::
+.. code-block:: fortran
 
       call invoke_compute_axial_momentum(aam, u, rho, chi, total_aam, qr)
 
@@ -1010,7 +1010,7 @@ extends an LFRic ``kernel_type`` base class. The kernel metadata from
 the angular momentum kernel referenced by the above ``invoke`` is as
 follows:
 
-::
+.. code-block:: fortran
 
      type, public, extends(kernel_type) :: compute_total_aam_kernel_type
        private
@@ -1090,7 +1090,7 @@ which will generate the following subroutine call and all the argument
 declarations based on the above metadata. See the PSyclone
 documentation for details.
 
-::
+.. code-block:: fortran
 
        subroutine compute_total_aam_code(                            &
                                          nlayers,                    &
@@ -1291,14 +1291,14 @@ PSy layer subroutine interface call will be named after the ``name``
 argument, prefixed by ``invoke``, and will take all the arguments of the
 kernels and built-ins that were referenced:
 
-::
+.. code-block:: fortran
 
       subroutine invoke_compute_axial_momentum(aam, u, rho, chi, total_aam, qr)
 
 For the four field arguments it first obtains the related proxy objects
 that are used to access all the data about the field.
 
-::
+.. code-block:: fortran
 
          ! Initialise field and/or operator proxies
          aam_proxy = aam%get_proxy()
@@ -1313,7 +1313,7 @@ object. Currently, PSyclone assumes that all LFRic fields have the same
 number of layers. The number of layers is obtained from the first field
 that appeared in the ``invoke`` call:
 
-::
+.. code-block:: fortran
 
          ! Initialise number of layers
           nlayers = aam_proxy%vspace%get_nlayers()
@@ -1322,7 +1322,7 @@ The mesh object provides access to information about cells within the
 mesh for the local partition. For this ``invoke``, all fields have the
 same mesh:
 
-::
+.. code-block:: fortran
 
          ! Create a mesh object
          mesh => aam_proxy%vspace%get_mesh()
@@ -1333,7 +1333,7 @@ the same :math:`\mathbb{W}_{3}` function space. The following calls
 return pointers to 2D arrays providing a cell dof-map for every cell of
 the first level of each field.
 
-::
+.. code-block:: fortran
 
          ! Look-up dof-maps for each function space
          map_w2  => u_proxy%vspace%get_whole_dofmap()
@@ -1346,7 +1346,7 @@ As we pass the whole of the field data into the kernel, we also extract
 partition). To illustrate, the code for extracting these values for just
 one of the function spaces is shown here.
 
-::
+.. code-block:: fortran
 
          ! Initialise number of DoFs for w3
          ndf_w3 = mass_proxy%vspace%get_ndf()
@@ -1361,7 +1361,7 @@ argument. If you are not familiar with the finite element method, the
 details do not matter, but as an example, the code generated by PSyclone
 for computing one set of basis functions is shown.
 
-::
+.. code-block:: fortran
 
          ! Look-up quadrature variables
          qr_proxy = qr%get_quadrature_proxy()
@@ -1382,7 +1382,7 @@ call the kernel. But finally, we need to find the range of cells to
 call the kernel with. In this case, the kernel will loop over the
 domain of cells owned by the MPI rank:
 
-::
+.. code-block:: fortran
 
          loop0_start = 1
          loop0_stop = aam_proxy%vspace%get_last_edge_cell()
@@ -1396,7 +1396,7 @@ PSyclone uses the loop-range values to generate a loop over cells to
 call the kernel. The final set of information from the proxy is the
 actual field data which are referenced directly from the proxy.
 
-::
+.. code-block:: fortran
 
          ! Call kernels and communication routines
          do cell=loop0_start,loop0_stop
@@ -1415,7 +1415,7 @@ As loop range for this kernel excludes the halo cells, after the loop
 has completed, the halo region of the output field is now out of
 date. PSyclone signals this by marking the halo as "dirty":
 
-::
+.. code-block:: fortran
 
          ! Set halos dirty/clean for fields modified in the above loop
          call aam_proxy%set_dirty()
@@ -1427,7 +1427,7 @@ would insert the following code into the PSy layer to ensure that the
 the halos are updated prior to the kernel call (in this case, to the
 depth of one halo cell):
 
-::
+.. code-block:: fortran
 
          if (aam_proxy%is_dirty(depth=1)) then
            call aam_proxy%halo_exchange(depth=1)
@@ -1446,7 +1446,7 @@ exclude some dofs attached to owned cells whose ownership has been
 given to (or "annexed" by) another partition. See :ref:`here <dofmap
 generation>` for details on owned and annexed dofs.
 
-::
+.. code-block:: fortran
 
          use scalar_mod, only: scalar_type
          <snip>
