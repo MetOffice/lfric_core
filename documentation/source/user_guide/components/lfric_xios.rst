@@ -7,7 +7,7 @@
 .. _section lfric xios:
 
 LFRic-XIOS
-----------
+==========
 
 The LFRic-XIOS component provides an API for LFRic applications that
 use the XIOS IO system.

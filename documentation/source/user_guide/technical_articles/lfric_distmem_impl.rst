@@ -93,13 +93,27 @@ with any cell-based partitioning, it could be shared by more than one
 partition. The solution is to represent those dofs on both partitions
 (with the necessary surrounding data in "halos" of cells around each
 partition). The calculations for the duplicated dofs is then performed
-on each partition. :ref:`Figure 1 <partitioning>` shows how this technique works for the case where the dofs located on
+on each partition. :ref:`Figure 1 <partitioning>` shows how this
+technique works for the case where the dofs located on
 vertices are calculated from dofs located in the cell volume.
 
 .. _partitioning:
 .. figure:: images/partitioning.svg
 
-   Figure 1: Partitioning method shown here for a 1-d line of cells. a) The domain is partitioned along a cell boundary. If the calculation of dofs on vertices (dots) in some way depends on the dofs in the volume of the cells surrounding them (crosses), then the calculation of the vertex dofs at the edge of a partition (i.e. Vert34 and Vert35) will be difficult, as they depend on the volume dof from the other partition. b) The solution is to introduce halos at the boundaries and halo exchange the dofs in the volume of the cells, then the calculation of the vertex dofs at the edge of the partition will now be correct. There will be redundant calculation - both partitions calculate the values for Vert34 and Vert35. The dofs at the outer edges of the of the halo will be incorrect, but if required, these can be corrected with a halo exchange of the vertex dofs.
+   Figure 1: Partitioning method shown here for a 1-d line of
+   cells. a) The domain is partitioned along a cell boundary. If the
+   calculation of dofs on vertices (dots) in some way depends on the
+   dofs in the volume of the cells surrounding them (crosses), then
+   the calculation of the vertex dofs at the edge of a partition
+   (i.e. Vert34 and Vert35) will be difficult, as they depend on the
+   volume dof from the other partition. b) The solution is to
+   introduce halos at the boundaries and halo exchange the dofs in the
+   volume of the cells, then the calculation of the vertex dofs at the
+   edge of the partition will now be correct. There will be redundant
+   calculation - both partitions calculate the values for Vert34 and
+   Vert35. The dofs at the outer edges of the of the halo will be
+   incorrect, but if required, these can be corrected with a halo
+   exchange of the vertex dofs.
 
 If the value at a particular dof depends on other dofs from a stencil
 bigger than one cell, then deeper halos will be required, but the
@@ -178,7 +192,7 @@ to support our chosen iteration strategy.
 .. _overlap comms compute:
 
 Overlapping Communications with Compute
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A potential iteration strategy involves iterating over all cells that
 aren't affected by halo swaps at the same time as performing the
@@ -263,7 +277,7 @@ parallel:
 .. _dofmap generation:
 
 Generating the dofmap to support halo exchanges
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to be able to exchange halo data, the dofs have to be ordered
 so that the columns of dofs that need to be exchanged are held
@@ -272,7 +286,8 @@ three categories: "Owned dofs" (these are dofs that are on owned cells
 and are actually owned by the local rank), "Annexed dofs" (these are
 dofs that are on owned cells but are actually owned by another rank that
 shares them) and finally "Halo dofs" (these are dofs on halo cells, that
-are owned by other ranks). :ref:`Figure 3 <dofownership>` describes the three types of dof.
+are owned by other ranks). :ref:`Figure 3 <dofownership>` describes
+the three types of dof.
 
 Ownership of dofs that are shared between cells follows the ownership of
 the entity they lie on (see the global mesh object, above) and ownership
@@ -282,7 +297,12 @@ partition) with the highest global cell id.
 .. _dofownership:
 .. figure:: images/DofOwnership.svg
 
-   Figure 3: Examples of the three different types of dof. Four partitions, P0-P3, of a distributed, lowest order W0 field are shown. Only the halo cells for partition P1 are shown - other halos are omitted from the diagram for clarity. The cells within each partition are shown with their global cell id. Each dof in P1 is shown as a dot.
+   Figure 3: Examples of the three different types of dof. Four
+   partitions, P0-P3, of a distributed, lowest order W0 field are
+   shown. Only the halo cells for partition P1 are shown - other halos
+   are omitted from the diagram for clarity. The cells within each
+   partition are shown with their global cell id. Each dof in P1 is
+   shown as a dot.
 
 Because columns of dofs are held contiguously, the ordering of field
 data can be done by considering the bottom level of dofs only: the dofs
@@ -358,10 +378,19 @@ appear contiguously at the end of the field data :ref:`Figure 4d
 .. _dofmap:
 .. figure:: images/dofmap.svg
 
-   Figure 4: The ordering of data in a field data array. a) The order of data shown in detail for Cell number 1, only (the dofs for other cells follow similar ordering). b) The order of data once all the cells have been looped over. Owned and annexed dofs can only appear on owned cells and halo dofs can only appear on Halo cells. Dofs that are shared between cells appear with the first cell processed that shares them. c) Once all cells have been processed the order of annexed and halo dof indices are flipped and the dof indices are placed after the owned dofs. d) The final ordering of dofs in the field array.
+   Figure 4: The ordering of data in a field data array. a) The order
+   of data shown in detail for Cell number 1, only (the dofs for other
+   cells follow similar ordering). b) The order of data once all the
+   cells have been looped over. Owned and annexed dofs can only appear
+   on owned cells and halo dofs can only appear on Halo cells. Dofs
+   that are shared between cells appear with the first cell processed
+   that shares them. c) Once all cells have been processed the order
+   of annexed and halo dof indices are flipped and the dof indices are
+   placed after the owned dofs. d) The final ordering of dofs in the
+   field array.
 
 Generating a unique global dof index
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each dof must be given a global index so it can be uniquely identified.
 If four partitions share a dof, each partition knows how to find the

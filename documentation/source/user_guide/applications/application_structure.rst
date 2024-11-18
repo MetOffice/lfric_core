@@ -98,7 +98,7 @@ been created that contains standard modules that can be used to help
 construct an application.
 
 Driver Initialise
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 The `driver initialise` stage of an application can roughly be divided
 between initialising the infrastructure of the model (including
@@ -123,7 +123,7 @@ The driver initialisation may also initialise scientific components
 that are used by the model.
 
 Driver Step
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 The `driver step` stage will execute a single time-step of the model
 starting at the input date and lasting for a period defined by a
@@ -134,7 +134,7 @@ input data from ancillary files or from a coupler, writing some
 diagnostic data and writing checkpoint dumps.
 
 Driver Finalise
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 The `driver finalise` stage will undertake any necessary finalisation
 processes, noting that much of the model data may go out of scope as
@@ -147,7 +147,7 @@ Mirroring the structure of the driver layer, the model layer will have
 initialise, step and finalise stages.
 
 Model Initialise
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 As noted above, the `model initialise` stage may be broken into several
 separate procedures to allow for flexibility in application design.
@@ -156,13 +156,13 @@ On completion of initialisation, the internal model data structures
 should be fully-set up in readiness to run a model timestep.
 
 Model Step
-~~~~~~~~~~
+^^^^^^^^^^
 
 The model step will evolve the model prognostics forward by one
 timestep.
 
 Model Finalise
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 The finalise stage will finalise any objects created in the initial
 stage.
@@ -232,7 +232,7 @@ can be extracted from `modeldb` and passed to the algorithm through
 the subroutine API.
 
 Operators
-~~~~~~~~~
+^^^^^^^^^
 
 A brief mention of operators is sufficient in this document: an
 operator is a data structure that can be used to map a field of one

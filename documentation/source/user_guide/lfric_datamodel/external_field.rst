@@ -18,7 +18,7 @@ linking models together.
 The mechanism on offer to handle these occasions is the "External field."
 
 Design
-~~~~~~
+^^^^^^
 
 The :ref:`LFRic field section <section field>` described how the
 infrastructure goes to some lengths to protect the raw field data from
@@ -44,7 +44,7 @@ case of coupling through OASIS the external "field" is, in fact, a call to the
 transmit or receive functions of OASIS.
 
 Implementing an External Field
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Developing a new external field should not be too hard. The most complicated
 part is working out how the external field data is presented.

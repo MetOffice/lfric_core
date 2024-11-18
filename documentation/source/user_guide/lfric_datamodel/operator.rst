@@ -7,7 +7,7 @@
 .. _section operator:
 
 LFRic operators
----------------
+===============
 
 An LFRic operator is a data structure that maps fields from one
 function space to another. Like fields, operators for 64-bit and
@@ -31,7 +31,7 @@ Operators can be copied by using the ``deep_copy`` method:
 All application of operators to fields is done by kernel.
 
 Operator proxies
-================
+----------------
 
 Like fields, to impose the separation of concerns between algorithms
 and kernels, the data in an operator is hidden from the operator

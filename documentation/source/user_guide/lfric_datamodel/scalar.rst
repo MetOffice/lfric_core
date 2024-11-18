@@ -7,7 +7,7 @@
 .. _section scalar:
 
 LFRic scalars
--------------
+=============
 
 An LFRic scalar is a data structure that holds a scalar value but is
 aware of the distributed memory domain decomposition.

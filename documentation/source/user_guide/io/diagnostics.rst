@@ -45,7 +45,7 @@ The LFRic infrastructure supports these principles in the following way.
    interface procedures>` section.
 
 Writing out a diagnostic
-++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 An LFRic field has a ``write_field`` method which sends the field to
 the diagnostic system via a ``write_interface`` procedure. The
@@ -90,7 +90,7 @@ is not supplied, the name of the field will be used.
 .. _section optional diagnostics:
 
 Optional diagnostics
-++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^
 
 If a diagnostic is not requested and is not otherwise used by the
 model, then to save memory and time it is beneficial to avoid
@@ -176,7 +176,7 @@ not be, computed:
 This approach saves having to pass an extra logical into the kernel.
 
 Diagnostics from existing fields
-++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For reasons described above, the same field `name` should not be
 written out as a diagnostic twice in one time-step, but the same
@@ -211,7 +211,7 @@ after a kernel has processed it:
 
 
 Enhanced approach
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 The above code demonstrate the LFRic diagnostic system using
 simple examples where fields are initialised and named with hard-wired
@@ -251,7 +251,7 @@ the LFRic atmosphere documentation for more details.
 .. _section write interface procedures:
 
 write_interface procedures
-++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``write_interface`` procedure acts as the interface between LFRic
 and a diagnostic system. Its abstract interface is defined as follows.
@@ -287,7 +287,7 @@ processing system by integrating to the :ref:`lfric_xios component
 in the lfric_apps repository for more usage examples.
 
 Initialising fields for lfric_xios
-++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For diagnostic fields supported by the ``lfric_xios`` component it is
 possible to infer the field type (its function space) from the XIOS
@@ -312,7 +312,7 @@ new diagnostic, one can write the following:
     end if
 
 Writing fields for lfric_xios
-+++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As the field type of a field can be inferred from its metadata, so can
 the method required to send the field to the XIOS library. Therefore,

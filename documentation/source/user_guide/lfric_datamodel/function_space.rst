@@ -7,7 +7,7 @@
 .. _section function space:
 
 LFRic function spaces
----------------------
+=====================
 
 LFRic function spaces map data points and finite element basis
 functions onto a domain represented by a 3D mesh. A high level
@@ -54,7 +54,7 @@ The function space constructor can take two other optional arguments:
    data ordered layer-by-layer instead of column-by-column.
 
 Quadrature rules
-================
+----------------
 
 This section summarises how quadrature rules are applied to model data
 without attempting to describe the details of the mathematical

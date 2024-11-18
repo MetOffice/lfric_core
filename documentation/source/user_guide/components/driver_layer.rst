@@ -7,7 +7,7 @@
 .. _section driver component:
 
 Driver Component
-----------------
+================
 
 The driver component contains some standard modules that can be used
 to construct the driver layer of an application. Applications can use

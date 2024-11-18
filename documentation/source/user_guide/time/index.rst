@@ -20,7 +20,7 @@ When a run must be broken down into parts the start of each part follows the
 end of the previous part. Figure :numref:`clock_phase_summary` shows this.
 
 Clock Phases
-~~~~~~~~~~~~
+------------
 
 The clock tracks a number of phases of operation and makes information about
 these available through boolean signals. These are summarised in figure
@@ -34,7 +34,7 @@ these available through boolean signals. These are summarised in figure
    Diagram illustrating phases of clock operation.
 
 Initialising
-------------
+^^^^^^^^^^^^
 
 The "initialising" phase exists as a notional time step 0, before stepping
 begins. Note that there is no actual step 0, if the clock is queried it will
@@ -44,7 +44,7 @@ This phase exists mostly for infrastructure purposes so science developers are
 unlikely to need it.
 
 Running
--------
+^^^^^^^
 
 The "Running" phase exists between the first and last time step of the run.
 The ``is_running()`` method will return "true" during this period but not after
@@ -54,7 +54,7 @@ For conveniently creating time step loops the ``tick()`` method returns the new
 value of ``is_running()`` when it is called.
 
 Spinning Up
------------
+^^^^^^^^^^^
 
 This phase represents the science concept of bringing the model up from start
 to a stable state. It is controlled by the science code but managed by the
@@ -66,7 +66,7 @@ useful is the ``get_spinup_fraction()`` method which returns a real value betwee
 start and one at the end and thereafter.
 
 Simple Usage Example
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 To illustrate use of the clock here is a simple example:
 
@@ -84,7 +84,7 @@ To illustrate use of the clock here is a simple example:
     end do
 
 Tick Events
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 The clock manages its own internal state on each tick but through use of
 callback procedures it can also trigger user events. These are used by the I/O
@@ -93,13 +93,13 @@ system in order to dump checkpoints but they may be used by any infrastructure.
 Event handlers are registered using ``add_event()``.
 
 Future Work
-~~~~~~~~~~~
+-----------
 
 The model clock is still in development and is missing some necessary and some
 desirable features.
 
 The Nature of Time
-------------------
+^^^^^^^^^^^^^^^^^^
 
 One of the goals of the model clock is that it never has to deal with human
 concepts of time. These are messy social constructs without much physical
@@ -123,7 +123,7 @@ that there must be some kind of calendar able to convert human dates into this
 pair of second values.
 
 Periodic Signalling
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 Not everything in a model occurs every time step. It is not uncommon for an
 event, such as calculating radiation, to occur every :math:`n` steps.
@@ -137,7 +137,7 @@ signalling by providing the periodicity. They will be given a handle which may
 then be used each time step to ask the clock if the signal is raised.
 
 Span Signalling
----------------
+^^^^^^^^^^^^^^^
 
 With periodic signalling in place it is an obvious hop to using it to
 generalise the "spin-up" period into a generic period signalling mechanism.

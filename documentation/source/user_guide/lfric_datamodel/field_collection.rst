@@ -7,7 +7,7 @@
 .. _section field collection:
 
 Field collections
------------------
+=================
 
 A field collection is an object that can store several fields or
 pointers to fields.
@@ -102,7 +102,7 @@ collection.
 .. _section field collection iterator:
 
 Field collection iterator
-=========================
+-------------------------
 
 The field collection iterator supports the ability to loop through all
 the fields in a field collection. For example:

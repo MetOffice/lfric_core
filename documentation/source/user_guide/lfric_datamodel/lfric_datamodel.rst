@@ -49,7 +49,7 @@ Key Concepts and Requirements
 -----------------------------
 
 Overview of the architecture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To meet the needs for more flexible parallel deployment of codes on
 future HPC architectures, LFRic has implemented a library [1]_ of
@@ -165,7 +165,7 @@ so as to remove a halo swap that would otherwise be required to run
 the next kernel.
 
 Requirements summary
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 The following lists some of the major requirements that need to be met
 by the LFRic Infrastructure, including requirements relating to the
@@ -260,7 +260,7 @@ documented here.
 -  Support for interfacing to external model couplers such as OASIS.
 
 Class diagrams
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 The LFRic infrastructure uses object-oriented features of Fortran to
 implement much of its design. Where appropriate, UML class diagrams have
@@ -269,7 +269,7 @@ be found in the ``uml`` directory of the LFRic documentation. The
 diagrams can be rendered using a tool called ``plantuml``.
 
 Mixed precision support
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 LFRic supports mixed-precision applications. Therefore it is important
 to consistently apply the correct kinds to variables and literal
@@ -298,7 +298,7 @@ the alternative ``real(0.125, r_def)`` is not guaranteed to give the
 same result.
 
 Definition of Meshes and mesh entities
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A **mesh** is a formal description of a grid used by a model, and
 comprises locations of points (referred to as vertices or nodes) and
@@ -346,7 +346,7 @@ cubed-sphere mesh share a face, four edges and four vertices.
 .. _section dofs:
 
 Dofs, dof-maps and function spaces
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The LFRic Infrastructure supports finite difference (FD), finite volume
 (FV) and finite element methods (FEM). Simply put, in FV and FEM, the
@@ -464,7 +464,7 @@ such fields do not have basis functions, for simplicity this document
 will use the "dof" term to describe data points in these fields too.
 
 Looping over columns of dofs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To compute changes to a finite element field within a cell, a kernel
 will need to operate on all of the dofs in the cell. In a regular mesh
@@ -527,7 +527,7 @@ data in a vertical column of cells.
 .. _section simplePsy:
 
 A simplified kernel and PSy layer example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before providing a :ref:`real example <section psykal>` of PSyKAl code
 from the code-base of a real LFRic application, a simpler
@@ -708,7 +708,7 @@ function spaces at lowest order and at next lowest order:
 
 .. tab-set::
 
-    .. tab-item:: ​ :math:`\mathbb{W}_0` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_0`
        :name: k0_w0_dofs
 
        .. grid:: 2
@@ -729,7 +729,7 @@ function spaces at lowest order and at next lowest order:
                   order. The field is fully continuous so dofs are shared with all
                   neighbouring cells.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_1` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_1`
        :name: w1_dofs
 
        .. grid:: 2
@@ -758,7 +758,7 @@ function spaces at lowest order and at next lowest order:
                   **Expanded view of** :math:`\mathbb{W}_1` at next lowest order showing the
                   details of the locations of dofs.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_2` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_2`
        :name: k0_w2_dofs
 
        .. grid:: 2
@@ -786,7 +786,7 @@ function spaces at lowest order and at next lowest order:
                   illustrating that basis functions are continuous normal to the
                   faces.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_3` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_3`
        :name: w3_dofs
 
        .. grid:: 2
@@ -911,7 +911,7 @@ model data. LFRic models use the PSyclone tool to generate PSy layer
 code to interface between the algorithm and kernel code.
 
 Algorithm Code
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 Algorithms are Fortran subroutines. One algorithm can call one or more
 other algorithms so providing support for a sensible organisation of
@@ -986,7 +986,7 @@ kernel. Therefore, before the PSy layer code is described, we first
 describe key aspects of a kernel.
 
 Kernels
-~~~~~~~
+^^^^^^^
 
 Kernels are written by scientists and software engineers to operate on a
 subset of a field each time they are called. In the example below, the
@@ -1124,7 +1124,7 @@ The PSy layer code
 ------------------
 
 PSyclone overview
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 This section provides a brief overview of the general operation and
 use of PSyclone, before describing in more detail the PSy layer code
@@ -1189,7 +1189,7 @@ dependency between kernels is respected.
 .. _section psy example:
 
 PSy layer code generation example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We now return to the example ``invoke`` call described above to
 illustrate the basic operation of PSyclone using snippets of PSy layer

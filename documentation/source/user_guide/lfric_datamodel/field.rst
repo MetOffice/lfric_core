@@ -7,7 +7,7 @@
 .. _section field:
 
 LFRic fields
-------------
+============
 
 This section provides an overview of the different variations of
 fields and how they should be initialised and used in an application.
@@ -24,7 +24,7 @@ used to initialise the field, including the layout of data points on
 each 3-dimensional cell.
 
 Initialising new fields
-=======================
+-----------------------
 
 To create a field, first construct a :ref:`function space <section
 function space>` and a 3-dimensional mesh (note that a 3D mesh with a
@@ -96,7 +96,7 @@ The function will fail if the requested halo depth is larger than the
 function space halo.
 
 Initialisation of field data
-============================
+----------------------------
 
 It should be assumed that field data is not initialised to any
 particular value when a field is initialised. However, if an
@@ -145,7 +145,7 @@ negative ``huge`` 32-bit value: there is no such thing as an integer
 failures is the best that can be done.
 
 The field_proxy object
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 The data held in a field is private, meaning it cannot be accessed
 using field methods. Clearly, the data does need to be accessed
@@ -198,7 +198,7 @@ Data can be accessed using the proxy as follows:
 .. _section mixed precision field:
 
 Mixed precision fields
-======================
+----------------------
 
 The ``field_type`` object referenced in a lot of code examples found
 in the documentation is either a 32-bit or a 64-bit field. The choice
@@ -265,7 +265,7 @@ in the following code can be either 32-bit or 64-bit:
    field collection.
 
 Integer fields
-==============
+--------------
 
 The infrastructure supports 32-bit integer fields:
 ``integer_field_type``. Their creation and usage is essentially the
@@ -277,7 +277,7 @@ Currently, there is no known requirement for 64-bit integer fields, so
 a 64-bit integer field is not supported.
 
 Column-first and layer-first fields
-===================================
+-----------------------------------
 
 A function space definition affects the order of the data in a
 field. By default, data in a field is ordered column-first - often
@@ -291,7 +291,7 @@ a kernel.
 .. _section multidata field:
 
 Multidata fields
-================
+----------------
 
 Multidata fields hold more than one quantity on the same mesh and
 function space. The number and list of quantities is defined by the

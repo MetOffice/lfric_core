@@ -7,7 +7,7 @@
 .. _section technical articles:
 
 Technical Articles
-------------------
+==================
 
 This section includes some techical articles covering different
 aspects of the LFRic core infrastructure

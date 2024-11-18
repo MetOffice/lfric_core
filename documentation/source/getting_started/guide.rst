@@ -6,7 +6,7 @@
 .. _guide_to_documentation:
 
 Guide to the documentation
---------------------------
+==========================
 The LFRic Core documentation is split into a number of main sections, this
 :ref:`Getting Started <getting_started_index>` section contains information on
 the dependencies required to run any LFRic based applications including those
