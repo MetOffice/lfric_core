@@ -4,7 +4,7 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _section field collection:
+.. _field collection:
 
 Field collections
 =================
@@ -68,7 +68,7 @@ the field being requested.
    call my_field_collection%get_field("my_field_name", my_field)
 
 The field collection object stores fields in a linked list. A separate
-:ref:`field collection iterator<section field collection iterator>`
+:ref:`field collection iterator<field collection iterator>`
 object uses the ``get_next_item`` function of the field collection to
 step through field collections. Most likely, the ``get_next_item``
 would not be used in isolation, but is described here for
@@ -99,7 +99,7 @@ table; ``get_name`` returns the field collection name.
 Finally, the ``clear`` function removes all items from the field
 collection.
 
-.. _section field collection iterator:
+.. _field collection iterator:
 
 Field collection iterator
 -------------------------

@@ -4,7 +4,7 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _section external field:
+.. _external field:
 
 External fields
 ===============
@@ -20,7 +20,7 @@ The mechanism on offer to handle these occasions is the "External field."
 Design
 ^^^^^^
 
-The :ref:`LFRic field section <section field>` described how the
+The :ref:`LFRic field section <field>` described how the
 infrastructure goes to some lengths to protect the raw field data from
 interference. This provides a lot of value in the form of reliability
 and maintainability.

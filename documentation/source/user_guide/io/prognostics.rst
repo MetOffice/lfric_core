@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section prognostics:
+.. _prognostics:
 
 Prognostic Fields
 =================
@@ -20,17 +20,17 @@ by reading in data from file.
 The LFRic infrastructure provides support and recommendations for
 creating and managing the model prognostic state for applications
 aligned with the :ref:`standard LFRic model application structure
-<section application structure>`. In such applications, fields are
+<application structure>`. In such applications, fields are
 created and initialised during the initialisation phase and stored in
 the ``modeldb`` data structure either as fields or within :ref:`field
-collections <section field collection>`.
+collections <field collection>`.
 
 In the time-step phase of the model, field collections and fields are
 extracted from ``modeldb`` and passed to science code through the
 argument list.
 
 The following figure expands on the figure found in the
-:ref:`application structure section <section application structure>`
+:ref:`application structure section <application structure>`
 to illustrate the role of each stage of a model in creating and using
 prognostic fields.
 
@@ -186,7 +186,7 @@ the model. For example:
      call convection_science(rain,...
 
 During the finalise stage of a model, a procedure in the
-:ref:`lfric_xios component <section lfric xios>` can be called and
+:ref:`lfric_xios component <lfric xios component>` can be called and
 passed the field collection containing the fields that need to be
 checkpointed. After the fields are checkpointed, the collections can
 be cleared.

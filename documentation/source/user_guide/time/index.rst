@@ -3,7 +3,7 @@
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    -----------------------------------------------------------------------------
-.. _time:
+.. _model time:
 
 Time
 ====

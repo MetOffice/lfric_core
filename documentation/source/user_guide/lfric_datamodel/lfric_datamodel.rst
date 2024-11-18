@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section psykal and datamodel:
+.. _psykal and datamodel:
 
 The LFRic data model and PSyclone
 =================================
@@ -35,15 +35,15 @@ Infrastructure needs to support a range of generalised unstructured
 meshes.
 
 The structure of the next few sections is as follows: The :ref:`Key
-Concepts and Requirements <section concepts>` section lists the key
+Concepts and Requirements <lfric concepts>` section lists the key
 requirements of the LFRic model that motivate the design, and defines
-some terms. An :ref:`overview of the PSyKAl design <section psykal>`
+some terms. An :ref:`overview of the PSyKAl design <psykal overview>`
 follows, describing the PSyKAl architecture of the core science code
 within the model, and illustrating how scientists will typically
 contribute new science to existing models. Code examples derived from
 LFRic atmosphere model illustrate the descriptions.
 
-.. _section concepts:
+.. _lfric concepts:
 
 Key Concepts and Requirements
 -----------------------------
@@ -147,7 +147,7 @@ over cells at the surface, passing references to all the data points on
 this cell into the kernel. The kernel can loop over the individual cells
 of the column by incrementing each of the data point references to
 access the data for each subsequent cell. A worked example based on
-the above figure is given :ref:`in a later section <section dofs>`.
+the above figure is given :ref:`in a later section <dofs>`.
 
 The LFRic infrastructure supports distributed memory domain
 decomposition of fields. Field data accessed by the PSy layer is a
@@ -343,7 +343,7 @@ cubed-sphere mesh share a face, four edges and four vertices.
    given the same number.  For duplicated edges, only one of the
    representations is numbered.
 
-.. _section dofs:
+.. _dofs:
 
 Dofs, dof-maps and function spaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -477,7 +477,7 @@ through in this way. Instead, for each type of field, look-up
 tables are created that can be used to reference all dofs in each
 cell. These look-up tables are referred to as **dof-maps**.
 
-As noted in the section introducing :ref:`key concepts <section
+As noted in the section introducing :ref:`key concepts <lfric
 concepts>`, LFRic stores dof-maps for the lowest cell of the 3D mesh
 as the dof-maps for the cells in the next layer can be computed by
 incrementing the dof-map addresses. The ability to infer the dofmaps
@@ -519,17 +519,17 @@ cell, is simpler:
 A kernel can be called with a reference to the dof-map arrays for each
 of the lines in the two dof-maps, and so can operate on the bottom
 cell and the column of data above it. As discussed :ref:`earlier
-<section concepts>` the kernel is called via the PSy
+<lfric concepts>` the kernel is called via the PSy
 layer code which calls the kernel many times with different chunks of
 the global data, and for a kernel, the appropriate chunk is all the
 data in a vertical column of cells.
 
-.. _section simplePsy:
+.. _simplePsy:
 
 A simplified kernel and PSy layer example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before providing a :ref:`real example <section psykal>` of PSyKAl code
+Before providing a :ref:`real example <psykal overview>` of PSyKAl code
 from the code-base of a real LFRic application, a simpler
 implementation of the PSyKAl architecture is shown for a kernel using
 two fields both of the function spaces as illustrated in the figure
@@ -647,7 +647,7 @@ them) such kernels must compute the same value for the dof for either
 cell, so ensuring the results are not dependent on the order in which
 cells are computed.
 
-.. _section function space intro:
+.. _function space intro:
 
 LFRic Function spaces and element order
 ---------------------------------------
@@ -658,7 +658,7 @@ the function space is a concept in the finite element method whereby
 data and basis functions can define a field that spacially varies
 within an individual cell, and this was illustrated for individual
 cells in the previous section on :ref:`dof-maps and function spaces
-<section dofs>`. The implementation of the function space object in
+<dofs>`. The implementation of the function space object in
 LFRic goes further than this as it maps all of the data to the whole
 three-dimensional mesh.
 
@@ -705,6 +705,8 @@ The following figures show dof locations for four of the main
 function spaces at lowest order and at next lowest order:
 :math:`\mathbb{W}_0`, :math:`\mathbb{W}_1`, :math:`\mathbb{W}_2`, and
 :math:`\mathbb{W}_3`,
+
+.. _dof locations:
 
 .. tab-set::
 
@@ -860,24 +862,24 @@ continuity is unchanged means that the code does not have to be
 regenerated to run the model at a different order.
 
 As in the :ref:`illustration of the one-dimensional discontinuous
-field <dg2_2d>`, the dof locations shown
-in the :ref:`higher order <k1_w3_dofs>` :math:`\mathbb{W}_{3}`
-function space are slightly offset from the corner
-to illustrate that the :math:`\mathbb{W}_{3}` function space is
-discontinuous at higher order as well as at lowest order. It
-distinguishes the function space from :ref:`the lowest order <k0_w0_dofs>`
-:math:`\mathbb{W}_{0}` function space which is continuous. The
-expanded images of the function space corners show similar
-subtleties for the higher order versions of the :math:`\mathbb{W}_{1}`
-and :math:`\mathbb{W}_{2}` function spaces.
+field <dg2_2d>`, the dof locations shown in :ref:`the dof location
+figure <dof locations>` for the higher order :math:`\mathbb{W}_{3}`
+function space are slightly offset from the corner to illustrate that
+the :math:`\mathbb{W}_{3}` function space is discontinuous at higher
+order as well as at lowest order. It distinguishes the function space
+from :ref:`the lowest order <k0_w0_dofs>` :math:`\mathbb{W}_{0}`
+function space which is continuous. The expanded images of the
+function space corners show similar subtleties for the higher order
+versions of the :math:`\mathbb{W}_{1}` and :math:`\mathbb{W}_{2}`
+function spaces.
 
-.. _section psykal:
+.. _psykal overview:
 
 Overview of the PSyKAl design
 -----------------------------
 
-The section describing an :ref:`overview of the architecture <section
-simplePsy>` introduced the kernel API and illustrative PSy layer
+The section describing an :ref:`overview of the architecture
+<simplePsy>` introduced the kernel API and illustrative PSy layer
 code. This section briefly describes the implementation of the full
 PSyKAl design using real code snippets taken from the GungHo dynamics
 implementation, including snippets of code that was generated by
@@ -1081,7 +1083,7 @@ coordinate field representing the fixed coordinates of the mesh.
 The subroutine interface for the kernel is as follows. It has many
 more arguments than the original ``invoke`` call, and each argument
 will be described when the :ref:`PSy layer code generation example
-<section psy example>` is introduced.  All of the arguments and the
+<psy example>` is introduced.  All of the arguments and the
 order of the arguments derive entirely from the kernel metadata. In
 fact, the PSyclone toolset includes a stub generator ``genkernelstub``
 which will generate the following subroutine call and all the argument
@@ -1186,7 +1188,7 @@ optimisation scripts seek to reorganise the order in which kernels are
 executed, PSyclone applies dependency analysis to ensure any data
 dependency between kernels is respected.
 
-.. _section psy example:
+.. _psy example:
 
 PSy layer code generation example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1222,13 +1224,13 @@ above are as follows:
    function spaces of the input fields and the coordinate fields. For
    example, this number would be 6 for a :ref:`lowest order <k0_w2_dofs>`
    :math:`\mathbb{W}_{2}` field. In the :ref:`simplified kernel example
-   <section simplePsy>` given previously, the more meaningful
+   <simplePsy>` given previously, the more meaningful
    variable name ``dofs_per_cell`` was used.
 
 ``undf_chi, undf_w2, undf_w3``
    are the dimensions of the whole field data array for fields on each
    function space. In the :ref:`simplified kernel example
-   <section simplePsy>` given previously, the more meaningful
+   <simplePsy>` given previously, the more meaningful
    variable name ``total_dofs`` was used. The ``u`` stands for "unique": where
    dofs are shared between cells, the total "unique" number of dofs is
    not a multiple of ``ndf`` and the number of cells.

@@ -4,14 +4,14 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _section function space:
+.. _function space:
 
 LFRic function spaces
 =====================
 
 LFRic function spaces map data points and finite element basis
 functions onto a domain represented by a 3D mesh. A high level
-introduction into :ref:`LFRic function spaces<section function space
+introduction into :ref:`LFRic function spaces<function space
 intro>` describes the mapping in more detail. This section is focused
 on how to create and use function spaces based on function space types
 supported by the infrastructure. If new fundamental function space
@@ -48,7 +48,7 @@ description of each function space.
 The function space constructor can take two other optional arguments:
 
 #. Specifying an integer ``ndata`` allows the creation of
-   :ref:`multidata fields<section multidata field>` with ``ndata`` dofs
+   :ref:`multidata fields<multidata field>` with ``ndata`` dofs
    per dof location. The default value is `1`.
 #. Spacifying ``ndata_first = .true.`` allows creation of fields with
    data ordered layer-by-layer instead of column-by-column.
@@ -60,8 +60,8 @@ This section summarises how quadrature rules are applied to model data
 without attempting to describe the details of the mathematical
 processes.
 
-As described in the overview of :ref:`LFRic function spaces<section
-function space intro>`, a function space includes a set of `basis
+As described in the overview of :ref:`LFRic function spaces<function
+space intro>`, a function space includes a set of `basis
 functions` that are used, along with dofs, to describe a field
 throughout a cell. To manage the cost of running kernels, the
 function spaces are computed at only a selection of locations in the

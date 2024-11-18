@@ -4,7 +4,7 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _section operator:
+.. _operator:
 
 LFRic operators
 ===============

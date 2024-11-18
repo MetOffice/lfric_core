@@ -4,13 +4,13 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section application structure:
+.. _application structure:
 
 Application Structure
 =====================
 
 The LFRic software includes core software for creating and using model
-fields and :ref:`LFRic component <section components>` software that
+fields and :ref:`LFRic component <components>` software that
 is intended to support the creation of different model applications
 that all have a similar structure. This section describes a typical
 LFRic application that runs a single scientific model: the model is
@@ -48,13 +48,13 @@ Running the Model
 -----------------
 
 The top-level program calls each of the application driver layer
-procedures. The :ref:`driver layer <section driver layer overview>`
+procedures. The :ref:`driver layer <driver layer overview>`
 comprises an initialise, step and finalise procedure. Each procedure
 of the driver layer calls the initialise, step and finalise procedures
 of the model.
 
 The application driver layer procedures may be based on the LFRic
-:ref:`driver component <section driver component>` code which aim to
+:ref:`driver component <driver component>` code which aim to
 support common requirements of running a typical science model in a
 single-model application. Where the component does not meet all of an
 application's requirement, for example, when the application is
@@ -63,7 +63,7 @@ be bespoke.
 
 Prior to calling the driver initialise stage, data structures shared
 by each stage of the model need to be set up. The LFRic driver layer
-component provides a :ref:`modeldb <section modeldb overview>` data
+component provides a :ref:`modeldb <modeldb>` data
 structure that aims to store all the data needed to run a
 model. Properly encapsulating all the data allows applications to
 create multiple ``modeldb`` data structures to run two or more models
@@ -79,13 +79,13 @@ concurrently.
 
 Evolution of the model is driven by calling the application driver
 step the required number of times, typically controlled by ticks of
-the :ref:`model clock <model_time>` held in ``modeldb``.
+the :ref:`model clock <model time>` held in ``modeldb``.
 
 Once all steps are executed, the application finalise stage is called
 after which processes instantiated by the application prior to
 initialisation can be finalised.
 
-.. _section driver layer overview:
+.. _driver layer overview:
 
 The driver layer
 ----------------
@@ -93,7 +93,7 @@ The driver layer
 This section briefly describes the role of the initialise, step and
 finalise stage of a simple application driver layer. As many
 applications will share common ways of driving the models they use, a
-:ref:`Driver layer component <section driver layer component>` has
+:ref:`Driver component <driver component>` has
 been created that contains standard modules that can be used to help
 construct an application.
 
@@ -173,21 +173,21 @@ Data in a model
 In many other model infrastructures, "fields" refer to simple native
 Fortran arrays of data representing some physical quantity over the
 spatial domain of the model. In contrast, fields in LFRic are created
-as :ref:`LFRic field_type <section field>` Fortran
-derived-types. Alongside the data representing the field's physical
-quantity, the field type encapsulate other information about the
-field, and provides functions for accessing information about the
-field. Understanding the role of the `field_type` is critical to
-understanding LFRic, but the details are deferred to the section
-describing the :ref:`use of PSyclone and the LFRic data model<section
-psyclone and the lfric data model>`. For now, the distinction between
-LFRic fields and the simpler fields of other models will mostly be
-ignored so as to focus on the broader model structure.
+as :ref:`LFRic field_type <field>` Fortran derived-types. Alongside
+the data representing the field's physical quantity, the field type
+encapsulate other information about the field, and provides functions
+for accessing information about the field. Understanding the role of
+the `field_type` is critical to understanding LFRic, but the details
+are deferred to the section describing the :ref:`use of PSyclone and
+the LFRic data model<psykal and datamodel>`. For now, the
+distinction between LFRic fields and the simpler fields of other
+models will mostly be ignored so as to focus on the broader model
+structure.
 
 A complex model such as the Momentum\ :sup:`®` atmosphere requires
 hundreds of fields. To simplify the model design, the LFRic
-infrastructure supports :ref:`field collections <section field
-collections>`. A field collection can store arbitrarily-large numbers
+infrastructure supports :ref:`field collections <field
+collection>`. A field collection can store arbitrarily-large numbers
 of fields that can be accessed by name. The Momentum\ :sup:`®`
 atmosphere has several field collections holding fields for each of
 several major science components. Use of field collections makes the
@@ -195,13 +195,13 @@ API of higher-level science algorithms more manageable by hiding both
 the large number of fields and the fact that some fields are not
 required for all model configurations.
 
-A :ref:`configuration object <section configuration object>` stores
+A :ref:`configuration object <configuration object>` stores
 the model configuration derived from the input namelist, such as input
 values for real variables, science options and switches. Settings can
 be accessed by a name based on the namelist name and the variable
 name.
 
-A :ref:`key-value <section keyvalue pair object>` data structure exist
+A :ref:`key-value <keyvalue pair object>` data structure exist
 that stores an arbitrary number of key-value pairs where the value can
 be an object of any type. At a basic level, this data structure can
 store native fortran types such as real or integer variables and
@@ -210,8 +210,8 @@ arrays. More complex abstract or concrete types can also be stored.
 The `modeldb` object defined in the `driver` component provides the
 ability to store all of the above data structures. A list of the main
 data structures declared in `modeldb` is given here. For more details
-on how to use these data structures see the :ref:`modeldb <section
-modeldb>` documentation.
+on how to use these data structures see the :ref:`modeldb <modeldb>`
+documentation.
 
  - **field**: an object that can store fields and field collections. A
    field or field collection can be accessed from `field` by name.
@@ -273,4 +273,4 @@ transformations to optimise the code.
 
 The structure of algorithms and kernels, and the use of PSyclone is
 the subject of the major section describing the :ref:`LFRic data model
-and its use of PSyclone <section psykal and datamodel>`.
+and its use of PSyclone <psykal and datamodel>`.
