@@ -39,7 +39,7 @@ jobs:
       run: |
         chmod -c -R +rX "documentation/build/html/"
     - id: deployment
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         name: github-pages
         path: documentation/build/html
