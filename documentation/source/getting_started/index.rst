@@ -16,7 +16,8 @@ applications for training purposes or for developing and testing particular
 technical capabilities.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    guide
    repository_contents
+   installation/index
