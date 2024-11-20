@@ -14,6 +14,7 @@ Developer Guide
 
    templated_source
    build_system/library_import
+   unit_testing/index
 
 
 Contributing
