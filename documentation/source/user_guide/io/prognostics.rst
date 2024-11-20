@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section prognostics:
+.. _prognostics:
 
 Prognostic Fields
 =================
@@ -20,17 +20,17 @@ by reading in data from file.
 The LFRic infrastructure provides support and recommendations for
 creating and managing the model prognostic state for applications
 aligned with the :ref:`standard LFRic model application structure
-<section application structure>`. In such applications, fields are
+<application structure>`. In such applications, fields are
 created and initialised during the initialisation phase and stored in
 the ``modeldb`` data structure either as fields or within :ref:`field
-collections <section field collection>`.
+collections <field collection>`.
 
 In the time-step phase of the model, field collections and fields are
 extracted from ``modeldb`` and passed to science code through the
 argument list.
 
 The following figure expands on the figure found in the
-:ref:`application structure section <section application structure>`
+:ref:`application structure section <application structure>`
 to illustrate the role of each stage of a model in creating and using
 prognostic fields.
 
@@ -105,7 +105,7 @@ fields set up at initialisation time can be extracted from the
 kernels.
 
 Code illustration
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 The following code snippets illustrate examples of creating fields,
 and adding them to field collections.
@@ -186,7 +186,7 @@ the model. For example:
      call convection_science(rain,...
 
 During the finalise stage of a model, a procedure in the
-:ref:`lfric_xios component <section lfric xios>` can be called and
+:ref:`lfric_xios component <lfric xios component>` can be called and
 passed the field collection containing the fields that need to be
 checkpointed. After the fields are checkpointed, the collections can
 be cleared.
@@ -279,9 +279,9 @@ to other model requirements including models that do not use XIOS.
    :math:`\mathbb{W}_{3}` function space within the model, whereas a
    field with ``grid_ref="half_level_edge_grid"`` is on the
    :math:`\mathbb{W}_{2h}` function space. In addition to initialising
-   the field, the ``apply`` routine will add it to one or more field 
+   the field, the ``apply`` routine will add it to one or more field
    collections. In the call above, the ``albedo_obs_vis`` field
    is added to the ``radiation`` field collection and, depending on the
-   checkpoint flag setting, to the ``checkpoint_fields`` field collection. 
-   Additionally, like all other prognostic fields, it is added to the 
+   checkpoint flag setting, to the ``checkpoint_fields`` field collection.
+   Additionally, like all other prognostic fields, it is added to the
    ``depository`` field collection.

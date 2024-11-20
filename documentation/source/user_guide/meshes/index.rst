@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section meshes and tools:
+.. _meshes and tools:
 
 Meshes and mesh tools
 =====================

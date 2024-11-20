@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section psykal and datamodel:
+.. _psykal and datamodel:
 
 The LFRic data model and PSyclone
 =================================
@@ -35,21 +35,21 @@ Infrastructure needs to support a range of generalised unstructured
 meshes.
 
 The structure of the next few sections is as follows: The :ref:`Key
-Concepts and Requirements <section concepts>` section lists the key
+Concepts and Requirements <lfric concepts>` section lists the key
 requirements of the LFRic model that motivate the design, and defines
-some terms. An :ref:`overview of the PSyKAl design <section psykal>`
+some terms. An :ref:`overview of the PSyKAl design <psykal overview>`
 follows, describing the PSyKAl architecture of the core science code
 within the model, and illustrating how scientists will typically
 contribute new science to existing models. Code examples derived from
 LFRic atmosphere model illustrate the descriptions.
 
-.. _section concepts:
+.. _lfric concepts:
 
 Key Concepts and Requirements
 -----------------------------
 
 Overview of the architecture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To meet the needs for more flexible parallel deployment of codes on
 future HPC architectures, LFRic has implemented a library [1]_ of
@@ -147,7 +147,7 @@ over cells at the surface, passing references to all the data points on
 this cell into the kernel. The kernel can loop over the individual cells
 of the column by incrementing each of the data point references to
 access the data for each subsequent cell. A worked example based on
-the above figure is given :ref:`in a later section <section dofs>`.
+the above figure is given :ref:`in a later section <dofs>`.
 
 The LFRic infrastructure supports distributed memory domain
 decomposition of fields. Field data accessed by the PSy layer is a
@@ -165,7 +165,7 @@ so as to remove a halo swap that would otherwise be required to run
 the next kernel.
 
 Requirements summary
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 The following lists some of the major requirements that need to be met
 by the LFRic Infrastructure, including requirements relating to the
@@ -260,7 +260,7 @@ documented here.
 -  Support for interfacing to external model couplers such as OASIS.
 
 Class diagrams
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 The LFRic infrastructure uses object-oriented features of Fortran to
 implement much of its design. Where appropriate, UML class diagrams have
@@ -269,7 +269,7 @@ be found in the ``uml`` directory of the LFRic documentation. The
 diagrams can be rendered using a tool called ``plantuml``.
 
 Mixed precision support
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 LFRic supports mixed-precision applications. Therefore it is important
 to consistently apply the correct kinds to variables and literal
@@ -285,7 +285,7 @@ using compiler DEFs to be 32-bit, 64-bit or 128-bit. Integer values of
 Within the code base will be seen declarations
 and code such as the following:
 
-::
+.. code-block:: fortran
 
        use constants_mod,          only: i_def, r_def
    ...
@@ -298,7 +298,7 @@ the alternative ``real(0.125, r_def)`` is not guaranteed to give the
 same result.
 
 Definition of Meshes and mesh entities
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A **mesh** is a formal description of a grid used by a model, and
 comprises locations of points (referred to as vertices or nodes) and
@@ -343,10 +343,10 @@ cubed-sphere mesh share a face, four edges and four vertices.
    given the same number.  For duplicated edges, only one of the
    representations is numbered.
 
-.. _section dofs:
+.. _dofs:
 
 Dofs, dof-maps and function spaces
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The LFRic Infrastructure supports finite difference (FD), finite volume
 (FV) and finite element methods (FEM). Simply put, in FV and FEM, the
@@ -464,7 +464,7 @@ such fields do not have basis functions, for simplicity this document
 will use the "dof" term to describe data points in these fields too.
 
 Looping over columns of dofs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To compute changes to a finite element field within a cell, a kernel
 will need to operate on all of the dofs in the cell. In a regular mesh
@@ -477,7 +477,7 @@ through in this way. Instead, for each type of field, look-up
 tables are created that can be used to reference all dofs in each
 cell. These look-up tables are referred to as **dof-maps**.
 
-As noted in the section introducing :ref:`key concepts <section
+As noted in the section introducing :ref:`key concepts <lfric
 concepts>`, LFRic stores dof-maps for the lowest cell of the 3D mesh
 as the dof-maps for the cells in the next layer can be computed by
 incrementing the dof-map addresses. The ability to infer the dofmaps
@@ -519,17 +519,17 @@ cell, is simpler:
 A kernel can be called with a reference to the dof-map arrays for each
 of the lines in the two dof-maps, and so can operate on the bottom
 cell and the column of data above it. As discussed :ref:`earlier
-<section concepts>` the kernel is called via the PSy
+<lfric concepts>` the kernel is called via the PSy
 layer code which calls the kernel many times with different chunks of
 the global data, and for a kernel, the appropriate chunk is all the
 data in a vertical column of cells.
 
-.. _section simplePsy:
+.. _simplePsy:
 
 A simplified kernel and PSy layer example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before providing a :ref:`real example <section psykal>` of PSyKAl code
+Before providing a :ref:`real example <psykal overview>` of PSyKAl code
 from the code-base of a real LFRic application, a simpler
 implementation of the PSyKAl architecture is shown for a kernel using
 two fields both of the function spaces as illustrated in the figure
@@ -538,7 +538,7 @@ with data on faces, ``face_data``, and a field with data within the
 cell volume, ``volume_data``. Among other arguments, the kernel
 subroutine interface could look like this:
 
-::
+.. code-block:: fortran
 
        subroutine my_kernel_code(nlayers,                       &
          face_data, volume_data...                              &
@@ -554,7 +554,7 @@ be modified is the field on faces.
 
 For such a kernel, the PSy layer code could look something like this:
 
-::
+.. code-block:: fortran
 
      do cell = 1, ncells
        call my_kernel_code(nlayers, face_data(:), volume_data(:)...     &
@@ -566,7 +566,7 @@ For such a kernel, the PSy layer code could look something like this:
 For the function spaces and mesh illustrated in the :ref:`figure <w2_w3_vert_3d>`
 the array sizes and dof-map variables would be set as follows
 
-::
+.. code-block:: fortran
 
     dofs_per_cell_face   = 6
     dofs_per_cell_volume = 1
@@ -587,7 +587,7 @@ the array sizes and dof-map variables would be set as follows
 Within the kernel, the data and dof-map arrays would be declared in this
 way:
 
-::
+.. code-block:: fortran
 
      ! Declare the input arrays using the input array sizes
      integer(kind=i_def), intent(in)  :: dofmap_face(dofs_per_cell_face)
@@ -600,7 +600,7 @@ field of cell volume data. The loop over columns is managed by the PSy
 layer, so the kernel needs to loop over layers (each cell in the
 vertical column), and over both dof-maps.
 
-::
+.. code-block:: fortran
 
      ! Loop over all layers
      do k = 0, nlayers - 1
@@ -647,7 +647,7 @@ them) such kernels must compute the same value for the dof for either
 cell, so ensuring the results are not dependent on the order in which
 cells are computed.
 
-.. _section function space intro:
+.. _function space intro:
 
 LFRic Function spaces and element order
 ---------------------------------------
@@ -658,7 +658,7 @@ the function space is a concept in the finite element method whereby
 data and basis functions can define a field that spacially varies
 within an individual cell, and this was illustrated for individual
 cells in the previous section on :ref:`dof-maps and function spaces
-<section dofs>`. The implementation of the function space object in
+<dofs>`. The implementation of the function space object in
 LFRic goes further than this as it maps all of the data to the whole
 three-dimensional mesh.
 
@@ -706,9 +706,11 @@ function spaces at lowest order and at next lowest order:
 :math:`\mathbb{W}_0`, :math:`\mathbb{W}_1`, :math:`\mathbb{W}_2`, and
 :math:`\mathbb{W}_3`,
 
+.. _dof locations:
+
 .. tab-set::
 
-    .. tab-item:: ​ :math:`\mathbb{W}_0` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_0`
        :name: k0_w0_dofs
 
        .. grid:: 2
@@ -729,7 +731,7 @@ function spaces at lowest order and at next lowest order:
                   order. The field is fully continuous so dofs are shared with all
                   neighbouring cells.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_1` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_1`
        :name: w1_dofs
 
        .. grid:: 2
@@ -758,7 +760,7 @@ function spaces at lowest order and at next lowest order:
                   **Expanded view of** :math:`\mathbb{W}_1` at next lowest order showing the
                   details of the locations of dofs.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_2` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_2`
        :name: k0_w2_dofs
 
        .. grid:: 2
@@ -786,7 +788,7 @@ function spaces at lowest order and at next lowest order:
                   illustrating that basis functions are continuous normal to the
                   faces.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_3` ​
+    .. tab-item:: ​ :math:`\mathbb{W}_3`
        :name: w3_dofs
 
        .. grid:: 2
@@ -860,24 +862,24 @@ continuity is unchanged means that the code does not have to be
 regenerated to run the model at a different order.
 
 As in the :ref:`illustration of the one-dimensional discontinuous
-field <dg2_2d>`, the dof locations shown
-in the :ref:`higher order <k1_w3_dofs>` :math:`\mathbb{W}_{3}`
-function space are slightly offset from the corner
-to illustrate that the :math:`\mathbb{W}_{3}` function space is
-discontinuous at higher order as well as at lowest order. It
-distinguishes the function space from :ref:`the lowest order <k0_w0_dofs>`
-:math:`\mathbb{W}_{0}` function space which is continuous. The
-expanded images of the function space corners show similar
-subtleties for the higher order versions of the :math:`\mathbb{W}_{1}`
-and :math:`\mathbb{W}_{2}` function spaces.
+field <dg2_2d>`, the dof locations shown in :ref:`the dof location
+figure <dof locations>` for the higher order :math:`\mathbb{W}_{3}`
+function space are slightly offset from the corner to illustrate that
+the :math:`\mathbb{W}_{3}` function space is discontinuous at higher
+order as well as at lowest order. It distinguishes the function space
+from :ref:`the lowest order <k0_w0_dofs>` :math:`\mathbb{W}_{0}`
+function space which is continuous. The expanded images of the
+function space corners show similar subtleties for the higher order
+versions of the :math:`\mathbb{W}_{1}` and :math:`\mathbb{W}_{2}`
+function spaces.
 
-.. _section psykal:
+.. _psykal overview:
 
 Overview of the PSyKAl design
 -----------------------------
 
-The section describing an :ref:`overview of the architecture <section
-simplePsy>` introduced the kernel API and illustrative PSy layer
+The section describing an :ref:`overview of the architecture
+<simplePsy>` introduced the kernel API and illustrative PSy layer
 code. This section briefly describes the implementation of the full
 PSyKAl design using real code snippets taken from the GungHo dynamics
 implementation, including snippets of code that was generated by
@@ -911,7 +913,7 @@ model data. LFRic models use the PSyclone tool to generate PSy layer
 code to interface between the algorithm and kernel code.
 
 Algorithm Code
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 Algorithms are Fortran subroutines. One algorithm can call one or more
 other algorithms so providing support for a sensible organisation of
@@ -944,7 +946,7 @@ is a call to a kernel to compute a field of angular momentum values
 referenced by the ``compute_total_aam_kernel_type`` argument. The second
 is a summation of these values to return the total angular momentum.
 
-::
+.. code-block:: fortran
 
          ! Compute Total Axial Angular Momentum
          call invoke( name = "compute_axial_momentum",                   &
@@ -976,7 +978,7 @@ combined arguments of all the original kernels and built-ins of the
 original ``invoke`` call. Note that arguments such as ``aam`` that
 appear in more than one kernel or built-in are not repeated:
 
-::
+.. code-block:: fortran
 
       call invoke_compute_axial_momentum(aam, u, rho, chi, total_aam, qr)
 
@@ -986,7 +988,7 @@ kernel. Therefore, before the PSy layer code is described, we first
 describe key aspects of a kernel.
 
 Kernels
-~~~~~~~
+^^^^^^^
 
 Kernels are written by scientists and software engineers to operate on a
 subset of a field each time they are called. In the example below, the
@@ -1008,7 +1010,7 @@ extends an LFRic ``kernel_type`` base class. The kernel metadata from
 the angular momentum kernel referenced by the above ``invoke`` is as
 follows:
 
-::
+.. code-block:: fortran
 
      type, public, extends(kernel_type) :: compute_total_aam_kernel_type
        private
@@ -1081,14 +1083,14 @@ coordinate field representing the fixed coordinates of the mesh.
 The subroutine interface for the kernel is as follows. It has many
 more arguments than the original ``invoke`` call, and each argument
 will be described when the :ref:`PSy layer code generation example
-<section psy example>` is introduced.  All of the arguments and the
+<psy example>` is introduced.  All of the arguments and the
 order of the arguments derive entirely from the kernel metadata. In
 fact, the PSyclone toolset includes a stub generator ``genkernelstub``
 which will generate the following subroutine call and all the argument
 declarations based on the above metadata. See the PSyclone
 documentation for details.
 
-::
+.. code-block:: fortran
 
        subroutine compute_total_aam_code(                            &
                                          nlayers,                    &
@@ -1124,7 +1126,7 @@ The PSy layer code
 ------------------
 
 PSyclone overview
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 This section provides a brief overview of the general operation and
 use of PSyclone, before describing in more detail the PSy layer code
@@ -1186,10 +1188,10 @@ optimisation scripts seek to reorganise the order in which kernels are
 executed, PSyclone applies dependency analysis to ensure any data
 dependency between kernels is respected.
 
-.. _section psy example:
+.. _psy example:
 
 PSy layer code generation example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We now return to the example ``invoke`` call described above to
 illustrate the basic operation of PSyclone using snippets of PSy layer
@@ -1222,13 +1224,13 @@ above are as follows:
    function spaces of the input fields and the coordinate fields. For
    example, this number would be 6 for a :ref:`lowest order <k0_w2_dofs>`
    :math:`\mathbb{W}_{2}` field. In the :ref:`simplified kernel example
-   <section simplePsy>` given previously, the more meaningful
+   <simplePsy>` given previously, the more meaningful
    variable name ``dofs_per_cell`` was used.
 
 ``undf_chi, undf_w2, undf_w3``
    are the dimensions of the whole field data array for fields on each
    function space. In the :ref:`simplified kernel example
-   <section simplePsy>` given previously, the more meaningful
+   <simplePsy>` given previously, the more meaningful
    variable name ``total_dofs`` was used. The ``u`` stands for "unique": where
    dofs are shared between cells, the total "unique" number of dofs is
    not a multiple of ``ndf`` and the number of cells.
@@ -1289,14 +1291,14 @@ PSy layer subroutine interface call will be named after the ``name``
 argument, prefixed by ``invoke``, and will take all the arguments of the
 kernels and built-ins that were referenced:
 
-::
+.. code-block:: fortran
 
       subroutine invoke_compute_axial_momentum(aam, u, rho, chi, total_aam, qr)
 
 For the four field arguments it first obtains the related proxy objects
 that are used to access all the data about the field.
 
-::
+.. code-block:: fortran
 
          ! Initialise field and/or operator proxies
          aam_proxy = aam%get_proxy()
@@ -1311,7 +1313,7 @@ object. Currently, PSyclone assumes that all LFRic fields have the same
 number of layers. The number of layers is obtained from the first field
 that appeared in the ``invoke`` call:
 
-::
+.. code-block:: fortran
 
          ! Initialise number of layers
           nlayers = aam_proxy%vspace%get_nlayers()
@@ -1320,7 +1322,7 @@ The mesh object provides access to information about cells within the
 mesh for the local partition. For this ``invoke``, all fields have the
 same mesh:
 
-::
+.. code-block:: fortran
 
          ! Create a mesh object
          mesh => aam_proxy%vspace%get_mesh()
@@ -1331,7 +1333,7 @@ the same :math:`\mathbb{W}_{3}` function space. The following calls
 return pointers to 2D arrays providing a cell dof-map for every cell of
 the first level of each field.
 
-::
+.. code-block:: fortran
 
          ! Look-up dof-maps for each function space
          map_w2  => u_proxy%vspace%get_whole_dofmap()
@@ -1344,7 +1346,7 @@ As we pass the whole of the field data into the kernel, we also extract
 partition). To illustrate, the code for extracting these values for just
 one of the function spaces is shown here.
 
-::
+.. code-block:: fortran
 
          ! Initialise number of DoFs for w3
          ndf_w3 = mass_proxy%vspace%get_ndf()
@@ -1359,7 +1361,7 @@ argument. If you are not familiar with the finite element method, the
 details do not matter, but as an example, the code generated by PSyclone
 for computing one set of basis functions is shown.
 
-::
+.. code-block:: fortran
 
          ! Look-up quadrature variables
          qr_proxy = qr%get_quadrature_proxy()
@@ -1380,7 +1382,7 @@ call the kernel. But finally, we need to find the range of cells to
 call the kernel with. In this case, the kernel will loop over the
 domain of cells owned by the MPI rank:
 
-::
+.. code-block:: fortran
 
          loop0_start = 1
          loop0_stop = aam_proxy%vspace%get_last_edge_cell()
@@ -1394,7 +1396,7 @@ PSyclone uses the loop-range values to generate a loop over cells to
 call the kernel. The final set of information from the proxy is the
 actual field data which are referenced directly from the proxy.
 
-::
+.. code-block:: fortran
 
          ! Call kernels and communication routines
          do cell=loop0_start,loop0_stop
@@ -1413,7 +1415,7 @@ As loop range for this kernel excludes the halo cells, after the loop
 has completed, the halo region of the output field is now out of
 date. PSyclone signals this by marking the halo as "dirty":
 
-::
+.. code-block:: fortran
 
          ! Set halos dirty/clean for fields modified in the above loop
          call aam_proxy%set_dirty()
@@ -1425,7 +1427,7 @@ would insert the following code into the PSy layer to ensure that the
 the halos are updated prior to the kernel call (in this case, to the
 depth of one halo cell):
 
-::
+.. code-block:: fortran
 
          if (aam_proxy%is_dirty(depth=1)) then
            call aam_proxy%halo_exchange(depth=1)
@@ -1444,7 +1446,7 @@ exclude some dofs attached to owned cells whose ownership has been
 given to (or "annexed" by) another partition. See :ref:`here <dofmap
 generation>` for details on owned and annexed dofs.
 
-::
+.. code-block:: fortran
 
          use scalar_mod, only: scalar_type
          <snip>

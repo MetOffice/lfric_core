@@ -20,8 +20,7 @@ body:
     attributes:
       label: Are there any linked Issues or Pull Requests?
       description: Please tell us about any issues that might be associated with this bug or PRs that may be affected.
-      placeholder: e.g. "#12, MetOffice/Vernier#33, lfric-srs#1981,
-      lfric_apps-srs#123"
+      placeholder: e.g. "#12, MetOffice/Vernier#33, lfric-srs#1981, lfric_apps-srs#123"
     validations:
       required: false
   - type: textarea

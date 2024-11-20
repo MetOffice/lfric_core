@@ -4,7 +4,11 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-******************
+.. _skeleton application:
+
 Skeleton
-******************
-This is a very simple application that uses the minimum of the infrastructure source. It runs as only a single core application with no MPI.
+========
+
+This is a very simple application that uses the minimum of the
+infrastructure source. It runs as only a single core application with
+no MPI.
