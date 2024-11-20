@@ -4,10 +4,10 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section Quick start:
+.. _section Usage:
 
 ******************************
-Quick Start
+Usage
 ******************************
 
 Two separate mesh generators are provided to produce either Planar or Cubed-sphere meshes.

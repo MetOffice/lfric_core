@@ -4,24 +4,28 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section meshes and tools:
+.. _section mesh generation:
 
-Meshes
+Mesh generation
 =====================
 
-LFRic fields require an association with a 3D-mesh. Such a mesh requires formal definition of its entities (nodes,edges,faces,volumes) and how they are interconnected. Field 3D-meshes are constructed internally via the extrusion of pre-generated 2D-meshes dimensioned to the models surface extents.
+LFRic fields require an association with a 3D-mesh object. Such a mesh object
+requires formal definition of its entities (nodes,edges,faces,volumes) and how
+they are interconnected. LFRic 3D-mesh objects are constructed internally by
+the LFRic application via extrusion of 2D-meshes which are read in from file.
 
-This section aims to describe supported 2D-meshes and how to generate them. 
+This section aims to describe supported 2D-meshes and how to generate them for
+use in an LFRic application.
 
 .. toctree::
    :caption: Contents
-   :maxdepth: 2
+   :maxdepth: 3
 
-   quick_start
-   mesh_generator_namelists
-   mesh_generation
-   mesh_topologies
-   transformations
-   intermesh_mappings
-   prepartitioning
-   mesh_metadata
+   mesh_generators
+   mesh_configuration_namelists
+   mesh_namelist
+   cubed_sphere_namelist
+   planar_mesh_namelist
+   partitions_namelist
+   rotation_namelist
+   stretch_grid_namelist

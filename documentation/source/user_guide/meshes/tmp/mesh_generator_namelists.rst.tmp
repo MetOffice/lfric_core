@@ -4,20 +4,20 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section Configuration file:
+.. _section mesh configuration namelists:
 
+************************
+Configuration namelists
+************************
 
-===================
-Configuration file
-===================
-
-The mesh generators are controlled via a configuration file containing FOTRAN namelists. Some namelists are only relevant
+The mesh generators are controlled via a configuration file containing FORTRAN namelists. Some namelists are only relevant
 depending on which generator program is used or are triggered by settings in the configuration file.
 
-.. _mesh_nml:
-
+.. _section mesh_nml:
+============================
 &mesh (Cubed-Sphere|Planar)
-  Control namelist for common variables of principle meshes requested (Cubed-Sphere|Planar). Principle meshes are those which are not derived from another mesh. 
+============================
+Control namelist for common variables of principle meshes requested (Cubed-Sphere|Planar). Principle meshes are those which are not derived from another mesh. 
 
 .. _coord_sys:
 
