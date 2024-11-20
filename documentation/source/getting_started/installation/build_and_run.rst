@@ -98,7 +98,10 @@ number of optional arguments:
   * ``make integration-tests`` builds and runs any integration tests.
 
 The ``Makefile`` has a number of optional variable settings that can be
-overridden. To see these, look in the ``Makefile``. For example,
+overridden. To see these, look in the ``Makefile``. More than one option can be
+supplied in a given invokation of ``make``.
+
+For example,
 
  * ``make PROFILE=full-debug`` applies the set of ``full-debug`` compile flags
    rather than the default ``fast-debug`` settings.
@@ -108,9 +111,9 @@ overridden. To see these, look in the ``Makefile``. For example,
    transformation scripts must be defined in the
    ``applications/[app-name]/optimisations`` directory. See PSyclone
    documentation for an explanation.
- * ``make VERBOSE=1`` will additionally output much more, including information
+ * ``make VERBOSE=1``: The verbose option causes output of information
    from the dependency analyser, the compile command for each compilation
-   process and timings of the processes.
+   process, and timings of these processes.
 
 In addition to the ``bin`` directory that is created to hold the application
 executable, the build process creates a ``working`` directory to hold the
@@ -137,11 +140,11 @@ Running the Cylc test suite
 
 The test suite requires Cylc and Rose to run. Once they are installed and run,
 tests are run using the ``rose stem`` command to select the group of tests to
-run and ``cylc`` to initiate the suite. For example, to run all of the developer
-tests for all of the applications and components within the LFRic working copy
-run the following from the top-level of the working copy:
+run and ``cylc`` to initiate the suite. For example, to run the developer tests
+for all the applications and components within an LFRic working copy run the
+following from the top-level of the working copy:
 
 .. code-block::
 
-   rose stem --group=all
+   rose stem --group=developer
    cylc play <working_copy_name>
