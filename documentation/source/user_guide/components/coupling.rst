@@ -101,13 +101,13 @@ Coupling exchange objects
 In order to send data through the coupler, it has to be extracted from within a
 field object so it can be passed to the coupler. This will break the
 encapsulation enforced by the field object. The agreed method for doing this is
-to use the "external field" mechanism. We create an object called
-``coupler_exchange_2d_mod`` which is inherited from an external field. This is
-initialised with:
+to use the "external field" mechanism. We create an object of type
+``coupler_exchange_2d_type`` which is inherited from the abstract external
+field. This is initialised with:
 
 .. code-block:: fortran
 
-  call coupler_exchange_2d_mod%initialise(lfric_field_ptr, sorting_index)
+  call coupler_exchange_2d%initialise(lfric_field_ptr, sorting_index)
 
 where:
 
@@ -121,7 +121,7 @@ Data can then be sent to or received from the coupler with calls to:
 
 .. code-block:: fortran
 
-  call coupler_exchange_2d_mod%copy_from_lfric(return_code)
+  call coupler_exchange_2d%copy_from_lfric(return_code)
 
 where:
 
@@ -130,7 +130,7 @@ where:
 
 .. code-block:: fortran
 
-  call coupler_exchange_2d_mod%copy_to_lfric(return_code)
+  call coupler_exchange_2d%copy_to_lfric(return_code)
 
 where:
 
