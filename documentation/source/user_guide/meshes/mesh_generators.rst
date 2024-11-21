@@ -30,11 +30,12 @@ Cubed-Sphere mesh generator
 
 Generates one (or more) 2D Cubed-Sphere meshes that each follow the base
 strategy.
- * Six panels (1 per face of the cube), each of side ``n X n`` cells.
- * Panels 1:4 band the equator, with Panel-1 centred on the null island
-   [#f2]_.
- * Panels 5 & 6 are centred on the North (90N,0E) and South (90S,0E) poles
-   respectively.
+
+* Six panels (1 per face of the cube), each of side ``n X n`` cells.
+* Panels 1:4 band the equator, with Panel-1 centred on the null island
+  [#f2]_.
+* Panels 5 & 6 are centred on the North (90N,0E) and South (90S,0E) poles
+  respectively.
 
 --`usage:`
 

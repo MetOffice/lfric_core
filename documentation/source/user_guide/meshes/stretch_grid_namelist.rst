@@ -7,9 +7,11 @@
 .. _section stretch transform namelist:
 
 .. _stretch_transform_nml:
+
 =======================
 ``&stretch_transform``
 =======================
+
 Optional control namelist for stretched grid transformation. The stretched
 grid transform modifies the base planar mesh resulting in two regions of
 differing cell size with a stretch region separating them. The intention is to

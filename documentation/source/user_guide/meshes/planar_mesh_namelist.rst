@@ -7,9 +7,11 @@
 .. _section planar_mesh_nml:
 
 .. _planar_mesh_nml:
+
 =============================
 ``&planar_mesh``
 =============================
+
 Control namelist for planar mesh generation, required for use with the
 `planar_mesh_generator`. This creates a mesh which uses the planar mesh
 base strategy and requires ``edge_cells`` along `both` axes aswell as the

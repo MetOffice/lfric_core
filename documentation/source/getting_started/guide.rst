@@ -44,7 +44,7 @@ core repository, describing the role of the application and including
 pointers to the features of the LFRic core that it depends upon or
 tests.
 
-The :ref:`Meshes section<section meshes and tools>` describes the
+The :ref:`Meshes section<section mesh generation>` describes the
 LFRic mesh generator and LFRic meshes, including discussion of mesh
 partitioning, mesh hierarchies and mesh maps, the LFRic mesh
 generator.

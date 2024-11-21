@@ -7,9 +7,11 @@
 .. _section rotate_mesh_nml:
 
 .. _rotation_nml:
+
 ============================
 ``&rotation``
 ============================
+
 Optional control namelist for rotation of node coordinates. Rotation in
 [longitude, latitude] is specified by using a reference location, which is
 rotated such that it arrives at the specified target location. All nodes then

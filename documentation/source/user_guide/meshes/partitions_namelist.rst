@@ -7,9 +7,11 @@
 .. _section partitions namelist:
 
 .. _partitions_nml:
+
 =================
 ``&partitions``
 =================
+
 Optional control namelist for partitioning of mesh domains. Use of this
 namelist allows meshes to be partitioned by the mesh generators rather than by
 an application at runtime. Principle meshes are partitioned and written to
@@ -69,6 +71,7 @@ the :ref:`partition_mesh<partition_mesh>` logical.
     (:ref:`panel_xproc<panel_xproc>`).
 
 .. _panel_yproc:
+
 * ``panel_yproc``:  **<integer>**
     Number of partitions in local y-direction of mesh panel, this variable is
     only valid when requesting a ``custom`` decomposition

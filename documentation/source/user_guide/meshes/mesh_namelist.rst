@@ -7,6 +7,7 @@
 .. _section mesh_nml:
 
 .. _mesh_nml:
+
 ============================
 ``&mesh``
 ============================
@@ -105,6 +106,8 @@ is required in the configuration file, `e.g.` configuration.nml.
    :ref:`mesh_names<mesh_names>`. These meshes are generated from
    the base strategy as opposed to being derived from another mesh
    topology `e.g.` rim mesh.
+
+.. [#f2] The void region is where there is no connected mesh after crossing the bounds of the domain.
 
 .. |degree| unicode:: U+00B0 .. degree symbol
 .. |nbsp|   unicode:: U+00A0 .. no-break space symbol
