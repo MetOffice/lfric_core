@@ -18,7 +18,7 @@ produces Fortran source to manage the namelists produced from that metadata.
    metafile
 
 Usage
-~~~~~
+-----
 
 The Configurator consists of three commands which may be found in
 ``infrastructure/build/tools`` and a separate tool :ref:`Rose Picker` which

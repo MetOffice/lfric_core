@@ -4,10 +4,10 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _section field:
+.. _field:
 
 LFRic fields
-------------
+============
 
 This section provides an overview of the different variations of
 fields and how they should be initialised and used in an application.
@@ -19,15 +19,15 @@ passing the field to a kernel or PSyclone built-in.
 
 While the type of an LFRic field definds the type (real or integer)
 and kind (32-bit or 64-bit) of data, all other aspects of the data
-depend on the choice of :ref:`function space <section function space>`
+depend on the choice of :ref:`function space <function space>`
 used to initialise the field, including the layout of data points on
 each 3-dimensional cell.
 
 Initialising new fields
-=======================
+-----------------------
 
-To create a field, first construct a :ref:`function space <section
-function space>` and a 3-dimensional mesh (note that a 3D mesh with a
+To create a field, first construct a :ref:`function space <function
+space>` and a 3-dimensional mesh (note that a 3D mesh with a
 single level may be referred to in the code as a 2-dimensional
 mesh). The code for creating a new field based on an existing mesh
 ``mesh_id`` and function space ``W2`` is as follows. In this and other
@@ -49,7 +49,7 @@ The ``name`` argument is optional, and not required for fields that
 are created and used for temporary purposes. Names would be required
 where fields need to be recognised by other parts of the
 infrastructure such as when they are added to :ref:`field collections
-<section field collection>`.
+<field collection>`.
 
 Once created, a field can be passed to a call to an ``invoke`` for
 processing by a kernel or a PSyclone built-in.
@@ -96,7 +96,7 @@ The function will fail if the requested halo depth is larger than the
 function space halo.
 
 Initialisation of field data
-============================
+----------------------------
 
 It should be assumed that field data is not initialised to any
 particular value when a field is initialised. However, if an
@@ -144,8 +144,10 @@ negative ``huge`` 32-bit value: there is no such thing as an integer
 ``NaN`` value, so setting an unrealistic value that might cause
 failures is the best that can be done.
 
+.. _field proxy:
+
 The field_proxy object
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 The data held in a field is private, meaning it cannot be accessed
 using field methods. Clearly, the data does need to be accessed
@@ -154,7 +156,7 @@ doing so. The field proxy object must be used with care to maintain
 the integrity of the application's data.
 
 Keeping the data private within the field is a way of enforcing the
-:ref:`PSyKAl design<section concepts>` that underpins key LFRic
+:ref:`PSyKAl design<lfric concepts>` that underpins key LFRic
 applications. The application needs to monitor the status of halos:
 whether or not they are "dirty": out of date with the corresponding
 owned data points on the neighbouring ranks. PSyclone generates code
@@ -172,13 +174,13 @@ following limited circumstances:
     code should be written in a style that, plausibly, PSyclone
     `could` generate if it were extended to support the new
     requirement.
- #. For writing an :ref:`external field <section external field>`
+ #. For writing an :ref:`external field <external field>`
     interface to copy data between the LFRic application and another
     application.
  #. For debugging purposes, or within unit or integration tests.
 
 If the field proxy is to be used, a good understanding of the
-:ref:`distributed memory design <section distributed memory>` is
+:ref:`distributed memory design <distributed memory>` is
 required so that code maintains the integrity of the data and its
 halos. For example, if the data is updated in such a way that the
 halos may be inconsistent with data on neighbouring partitions, then
@@ -195,10 +197,10 @@ Data can be accessed using the proxy as follows:
    wind_field_proxy = wind_field%get_proxy()
    wind_field_data => wind_field_proxy%data
 
-.. _section mixed precision field:
+.. _mixed precision field:
 
 Mixed precision fields
-======================
+----------------------
 
 The ``field_type`` object referenced in a lot of code examples found
 in the documentation is either a 32-bit or a 64-bit field. The choice
@@ -265,7 +267,7 @@ in the following code can be either 32-bit or 64-bit:
    field collection.
 
 Integer fields
-==============
+--------------
 
 The infrastructure supports 32-bit integer fields:
 ``integer_field_type``. Their creation and usage is essentially the
@@ -277,7 +279,7 @@ Currently, there is no known requirement for 64-bit integer fields, so
 a 64-bit integer field is not supported.
 
 Column-first and layer-first fields
-===================================
+-----------------------------------
 
 A function space definition affects the order of the data in a
 field. By default, data in a field is ordered column-first - often
@@ -288,10 +290,10 @@ referred to as `i-first`.
 The data order of a field has to match with the data order expected by
 a kernel.
 
-.. _section multidata field:
+.. _multidata field:
 
 Multidata fields
-================
+----------------
 
 Multidata fields hold more than one quantity on the same mesh and
 function space. The number and list of quantities is defined by the

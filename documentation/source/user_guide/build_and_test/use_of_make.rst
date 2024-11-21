@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section make:
+.. _make:
 
 Use of make
 ===========

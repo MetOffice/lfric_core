@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section build and test:
+.. _build and test:
 
 Build and Test Systems
 ======================

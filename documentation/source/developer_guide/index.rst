@@ -15,7 +15,6 @@ Developer Guide
    templated_source
    build_system/library_import
 
-
 Contributing
 ------------
 
