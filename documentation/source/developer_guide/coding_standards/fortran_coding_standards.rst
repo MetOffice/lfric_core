@@ -10,16 +10,17 @@ Fortran Coding Standards for LFRic
 ==================================
 
 Rules for coding standards are driven by the need for readability and
-consistency (which aids readability).
-
-While some people are happy to read inconsistent code, other people find
-inconsistency to be distracting and their needs should be respected.
+consistency (which aids readability). While some people are happy to read
+inconsistent code, other people find inconsistency to be distracting and their
+needs should be respected.
 
 Some of the rules are required to meet the technical needs of the LFRic
 core and application code structure and organisation.
 
-LFRic coding standards start from the UM standards which cover Fortran 95. These
-rules should be followed unless the LFRic rules on this page override them.
+LFRic coding standards start from the `UM standards
+<https://code.metoffice.gov.uk/doc/um/latest/umdp.html#003>`_ which cover
+Fortran 95. These rules should be followed unless the LFRic rules on this page
+override them.
 
 When can I break the rules
 --------------------------
@@ -75,12 +76,15 @@ Calling hierararchy
 -------------------
 
 The diagram below gives a high level overview of how the various parts of a
-model system should relate to each other.
+model system should relate to each other. Enforcement of the rules best ensures
+that parts of the code-base remain independent from other parts.
 
-Of particular note is the requirement that calls can be made "down" but must
-never be made "up" the hierarchy. In some circumstances, calling horizontally
-across the diagram (for example, from one component to another) is acceptable,
-but caution should be used.
+.. figure:: images/BroadCodeStructure.svg
+   :width: 80%
+
+   Calls can be made "down" but must never be made "up" the hierarchy. In some
+   circumstances, calling horizontally across the diagram (for example, from one
+   component to another) is acceptable, but caution should be used.
 
 General syntax and style rules
 ------------------------------
@@ -207,14 +211,17 @@ pointers later in the routine.
 C code must be called only using the ISO Fortran C interoperability features.
 
 LFRic-specific standards - the basics
-=====================================
+-------------------------------------
 
 These rules apply to the LFRic infrastructure code and to science code that
 runs within LFRic model configurations.
 
-* LFRic uses Doxygen to generate interface documentation for the LFRic interface
-  and for the algorithm layer of science code. Therefore, comment the LFRic
-  interface and algorithm-layer code with Doxygen markup.
+General rules
+^^^^^^^^^^^^^
+
+* LFRic comments uses markup so that to interface documentation can be generated
+  for rendering in a browser or a PDF document. Therefore, comment the LFRic
+  interface and algorithm-layer code with appropriate markup.
 
   * Program units must all have, at the very least, a one line description that
     is prefixed with the Doxygen directive ``@brief``
@@ -222,18 +229,143 @@ runs within LFRic model configurations.
   * Each input argument must (with the following exception) be described using
     the ``@param`` directive with the intent and name of variable.
 
-.. code-block:: fortran
+    .. code-block:: fortran
 
- !> @brief A brief description of the program unit.
- !> @details A longer description of the program unit where a brief one is
- !!          insufficient. The longer description can go over several lines.
- !> @param[out]    output_arg   Description of an output argument
- !> @param[in,out] inoutput_arg Description of an updated argument
- !> @param[in]     input_arg    Description of an input argument
+       !> @brief A brief description of the program unit.
+       !> @details A longer description of the program unit where a brief one is
+       !!          insufficient. The longer description can go over several lines.
+       !> @param[out]    output_arg   Description of an output argument
+       !> @param[in,out] inoutput_arg Description of an updated argument
+       !> @param[in]     input_arg    Description of an input argument
 
 * A :ref:`field collection <field collection>` must be declared ``intent(in)`` as
   it is the set of fields in the collection, and not the field collection object
   itself, that is modified.
 * Do not use ``write`` or ``print`` statements to write text to standard
   output. Use the LFRic :ref:`logger <logger>`.
-*
+* Do not hold any variables or objects in module scope as this can prevent the
+  module being used in two different concurrent processes in which different
+  processes want to configure the variable or object differently.
+
+Calling kernels
+^^^^^^^^^^^^^^^
+
+* In algorithms, group kernel and built-in calls into a single ``call invoke``
+  where possible. Review code, and if you can safely move things around to group
+  more kernels, then do so. Grouping allows PSyclone to be used to generate
+  optimised code that takes into account dependencies between operations. Note,
+  PSyclone cannot see dependencies between separate invoke calls.
+
+  For example, if:
+
+  .. code-block:: fortran
+
+      call invoke( setval_c(dtheta, 0.0_r_def) )
+      call invoke( setval_c(du, 0.0_r_def) )
+      call invoke( X_divideby_Y(u_physics, u, dA) )
+      call invoke( extract_w_kernel_type(w_physics, u_physics) )
+
+  becomes:
+
+  .. code-block:: fortran
+
+      call invoke( setval_c(dtheta, 0.0_r_def),                 &
+                   setval_c(du, 0.0_r_def),                     &
+                   X_divideby_Y(u_physics, u, dA)               &
+                   extract_w_kernel_type(w_physics, u_physics) )
+
+* ``invoke`` calls can include a name. The name must be a valid subroutine name. The
+  subroutine name generated by PSyclone in the PSy-layer will be the name
+  prefixed with ``invoke_`` making it easy to find the link between the invoke
+  call and the PSy layer subroutine it relates to.
+
+  .. code-block:: fortran
+
+     call invoke( name = "map_to_physics",                     &
+                  setval_c(dtheta, 0.0_r_def),                 &
+                  setval_c(du, 0.0_r_def),                     &
+                  X_divideby_Y(u_physics, u, dA)               &
+                  extract_w_kernel_type(w_physics, u_physics) )
+
+* By convention, kernels and built-ins list output or input output arguments
+  first in their argument list followed by input arguments. Aim to follow this
+  convention in other code too.
+
+  * Kernels are designed to be called multiple times per invoke, each call
+    modifying only a subset of the field. Therefore, kernel output arguments
+    need always to have intent(inout) and not intent(out). To understand the
+    true intent, examine the kernel metadata.
+* PSyclone must be able to access field declaration for fields being passed into
+  an invoke. Therefore do not pass fields obtained from modules or from function
+  calls. Rather, declare a field pointer of the correct type, point it to your
+  module field or function call, then pass the field pointer.
+
+PSyclone and psykal-lite code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :ref:`PSyKAl <psykal and datamodel>` design implemented as part of LFRic has
+several standards which define the directory and code structure of science code,
+and rules about what can be done within kernels and algorithms. Documentation
+should be referred to or advice sought from the LFRic team.
+
+Where scientific requirements of a kernel are not met by the existing PSyclone
+LFRic API, so-called "psykal-lite" code can be written to provide the link
+between algorithm and kernel that would otherwise be generated by the PSyclone
+code generator. Such code must be drawn to the attention of the LFRic team and
+PSyclone developers. It must be plausible that PSyclone can be updated to
+generate code meeting the new requirements. LFRic tickets or PSyclone issues
+must be raised to extend support to the new requirement, and the tickets
+accepted by the PSyclone developers.
+
+The psykal-lite code must reference the tickets and issues.
+
+Declaring precision
+^^^^^^^^^^^^^^^^^^^
+
+* LFRic supports mixed-precision codes where an application may combine
+  substantial amounts of codes running at different real precisions.
+
+  * All real and integers must be declared with a specified ``kind``
+  * All literal real variables must be given a kind using the following syntax,
+    where ``r_mykind`` references a specified kind parameter:
+
+   .. code-block:: fortran
+
+      my_var = 1.23_r_mykind
+
+   Note that the following can give a numerically-different result:
+
+   .. code-block:: fortran
+
+      my_var = real( 1.23, r_mykind )
+
+  * Literal integers do not need a kind if their value can be represented by
+    ``real32``. If they are an argument in a call to a subroutine in which
+    the dummy argument is declared with a specific kind, then they must have a
+    matching kind.
+  * Unless there is good reason, avoid mixing different precisions within a
+    program unit.
+
+Unit Testing
+------------
+
+Some key standards for writing tests are as follows:
+
+* Name the test after the unit being tested as follows: the test file for a unit
+  mycalc_kernel_mod.f90 will be called mycalc_kernel_mod_test.pf.
+
+  * Large test files can be split by adding a further suffix: for example
+    ``mycalc_kernel_mod_test_cubedsphere.pf`` and
+    ``mycalc_kernel_mod_test_planar.pf`` might logically split tests into
+    testing data from a cubed-sphere mesh and data from planar mesh. However, do
+    consider whether testing could be simplified by breaking the module down
+    into smaller components.
+* The unit_test directory tree should mirror the source directory tree to make
+  finding test files easy.
+* Use named arguments when initialising configuration items with the feign
+  functions, as the order of variables in the configuration cannot be guaranteed.
+* Do not create LFRic fields in tests. Where field data is required simplified
+  canned fields have been created.
+* Use a class extending TestCase only if you need to pass fixtures to the
+  tests. Otherwise use the ``@before`` and ``@after`` directives to garnish your
+  set-up and tear-down subroutines.
