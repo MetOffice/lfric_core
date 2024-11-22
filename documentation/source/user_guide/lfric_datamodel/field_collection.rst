@@ -118,11 +118,12 @@ the fields in a field collection. For example:
 
    do
 
-   if ( .not.iter%has_next() ) exit
+     if ( .not.iter%has_next() ) exit
      field => iter%next()
 
      ! Select type to disambiguate different field types
      select type(field)
-       type is (field_real32_type)
-         ! Do something
-         ...
+       type is (field_type)
+         ! Do something...
+     end select
+   end do
