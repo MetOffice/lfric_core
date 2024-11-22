@@ -195,16 +195,18 @@ API of higher-level science algorithms more manageable by hiding both
 the large number of fields and the fact that some fields are not
 required for all model configurations.
 
-A :ref:`configuration object <configuration object>` stores
-the model configuration derived from the input namelist, such as input
-values for real variables, science options and switches. Settings can
-be accessed by a name based on the namelist name and the variable
-name.
+.. _configuration-object:
 
-A :ref:`key-value <keyvalue pair object>` data structure exist
-that stores an arbitrary number of key-value pairs where the value can
-be an object of any type. At a basic level, this data structure can
-store native fortran types such as real or integer variables and
+A configuration object stores the model configuration derived from the input
+namelist, such as input values for real variables, science options and
+switches. Settings can be accessed by a name based on the namelist name and the
+variable name.
+
+.. _keyvalue-pair-object:
+
+A key-value data structure exist that stores an arbitrary number of key-value
+pairs where the value can be an object of any type. At a basic level, this data
+structure can store native fortran types such as real or integer variables and
 arrays. More complex abstract or concrete types can also be stored.
 
 The `modeldb` object defined in the `driver` component provides the
@@ -215,12 +217,12 @@ documentation.
 
  - **field**: an object that can store fields and field collections. A
    field or field collection can be accessed from `field` by name.
- - **configuration** An instance of the configuration object described
-   above, which stores the model configuration: input values, science
-   options, switches and so forth.
- - **values** An instance of the key-value data structure described
-   above that can store any type or class which can be accessed by
-   name.
+ - **configuration** An instance of the
+   :ref:`configuration object <configuration-object>` described above, which stores the model
+   configuration: input values, science options, switches and so forth.
+ - **values** An instance of the :ref:`key-value data structure
+   <keyvalue-pair-object>` described above that can store any type or class
+   which can be accessed by name.
  - **mpi** Stores an object that can be used to perform MPI tasks.
  - **clock** and **calendar** objects can track model time.
 
