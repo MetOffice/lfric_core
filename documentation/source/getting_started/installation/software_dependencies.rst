@@ -79,8 +79,8 @@ applications:
    core LFRic repository, supports parsing Rose metadata when generating
    namelist-reading code.
 
-Additional specialist software essential for running the LFRic infrastructure
-and application tests:
+Additional specialist software essential for running the LFRic infrastructure and
+application tests, or for processing documentation:
 
  * `Rose (2.3.1) <https://metomi.github.io/rose/doc/html/index.html>`_ and `Cylc
    (8+) <https://cylc.github.io/>`_ for running the full test-suite that

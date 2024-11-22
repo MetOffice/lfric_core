@@ -10,7 +10,7 @@ Installing LFRic
 ================
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
     software_dependencies
     build_and_run

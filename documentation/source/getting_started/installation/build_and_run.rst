@@ -10,19 +10,20 @@ Quick Start Guide for LFRic
 ===========================
 
 The LFRic repository includes some small applications for testing and training
-purposes. In particular, the ``simple_diffusion`` app is used in LFRic training
-courses and the ``skeleton`` app is designed to be an extremely simple and
-minimal LFRic app.
+purposes. In particular, the :ref:`simple_diffusion <simple diffusion
+application>` app is used in LFRic training courses and the :ref:`skeleton
+<skeleton application>` app is designed to be an extremely simple and minimal
+LFRic app.
 
 A separate ``lfric_apps`` repository holds key science applications, such as
-``lfric_atm``. The ``lfric_apps`` repository has a different set of instructions
-for building and testing apps, but largely they do the same thing.
+``lfric_atm``. The lfric_apps repository has a different set of instructions for
+building and testing apps, but largely they do the same thing.
 
 Check-out a working copy
-========================
+------------------------
 
-To checkout a working copy of the code to a new directory, named 'trunk' in this
-example, run this command:
+To checkout a working copy of the code to a new directory, named ``trunk`` in
+this example, run this command:
 
 .. code-block::
 
@@ -52,24 +53,25 @@ example, run this command:
 
      fcm co fcm:lfric-tr
 
-To create a branch and check it out, run the following:
+If keywords are set up, to create a branch and check it out, run the following:
 
 .. code-block::
 
    fcm bc MyBranchName fcm:lfric.x-tr
 
 The command will create a branch with your chosen name prefixed by the revision
-number of the head of trunk. Assuming the current trunk revision is ``1234``, to
-check-out the branch run the following, which checks the branch out to a new
-directory that is named after the branch if the optional working copy name is
-not supplied.
+number of the head of trunk. Assuming the current trunk revision is ``1234``,
+the branch will be called ``r1234_MyBranchName``. The following checks the code
+out and puts it into a directory called a ``working copy``.
 
 .. code-block::
 
    fcm co r1234_MyBranchName [working_copy_name]
 
+If the working copy name is not specified, it defaults to the name of the branch.
+
 Building an application
-=======================
+-----------------------
 
 The applications can be found in directories within the ``application``
 directory. An application can be built by running the ``make`` command from
@@ -80,28 +82,32 @@ within its directory.
   cd r1234_MyBranchName/applications/simple_diffusion
   make
 
-.. warning::
-
-   Instructions for building an application from the ``lfric_apps`` repository,
-   such as the ``lfric_atm`` atmosphere model are different. This is because
-   these applications need to include steps to import external code, including
-   the LFRic core code. Refer to the ``lfric_apps`` documentation for
-   instructions.
-
-The ``make`` command will build the ``simple_diffusion`` executable and place it
-in the ``simple_diffusion/bin`` directory. It will also build and run any
-integration and unit tests that the application has. The ``make`` command has a
-number of optional arguments:
+The ``make`` command will build the simple_diffusion executable and place it in
+the ``simple_diffusion/bin`` directory. It will also build and run any
+integration and unit tests that the application has. The make command uses the
+Makefile in the same directory as the application. The Makefile has a number of
+optional arguments:
 
   * ``make build`` builds just the application executable.
   * ``make unit-tests`` builds and runs any the unit tests.
   * ``make integration-tests`` builds and runs any integration tests.
 
-The ``Makefile`` has a number of optional variable settings that can be
-overridden. To see these, look in the ``Makefile``. More than one option can be
-supplied in a given invokation of ``make``.
+.. warning::
 
-For example,
+   Instructions for command-line building of an application from the
+   lfric_apps repository, such as the lfric_atm atmosphere model, are
+   different:
+
+   https://code.metoffice.gov.uk/trac/lfric_apps/wiki/local_builds
+
+   The method is different because it needs to include steps to import external
+   code, including the LFRic core code.
+
+The Makefile has a number of optional variable settings that can be
+overridden. To see these, look in the file. More than one option can be supplied
+in a given invokation of ``make``.
+
+A few of the more commonly used variables are:
 
  * ``make PROFILE=full-debug`` applies the set of ``full-debug`` compile flags
    rather than the default ``fast-debug`` settings.
@@ -117,32 +123,36 @@ For example,
 
 In addition to the ``bin`` directory that is created to hold the application
 executable, the build process creates a ``working`` directory to hold the
-products of the build system process.
+products of an executable build and a ``test`` directory to hold products of a
+build of the unit and integration tests.
 
-Running ``make clean`` will remove the ``working`` and ``bin`` directories.
+Running ``make clean`` will remove the working, test and bin directories.
 
-For most applications, it is common practice for applications in the ``lfric``
-and ``lfric_apps`` repository to include a test configuration of the application
-in an ``example`` directory within the application directory. Having built the
-application it should be possible to ``cd`` to the ``example`` directory and run
-the application, as follows:
+After building an application from the command line, it can be useful to do a
+quick test to ensure it can run. Most applications in the lfric and lfric_apps
+repository hold a simple example configuration in their ``example`` directory.
+
+After building, go into to the example directory and run the application, as
+follows:
 
 .. code-block::
 
    ../bin/simple_diffusion configuration.nml
 
-The ``configuration.nml`` contains a set of namelist configurations. Depending
-on the application, the ``example`` directory may contain other files required
-to run it such as a mesh definition file, a start dump or other input files.
+The ``configuration.nml`` file contains a set of namelist
+configurations. Depending on the application, the ``example`` directory may
+contain other files required to run it such as a mesh definition file, a start
+dump or other input files.
 
 Running the Cylc test suite
 ---------------------------
 
-The test suite requires Cylc and Rose to run. Once they are installed and run,
-tests are run using the ``rose stem`` command to select the group of tests to
-run and ``cylc`` to initiate the suite. For example, to run the developer tests
-for all the applications and components within an LFRic working copy run the
-following from the top-level of the working copy:
+To run the test suites, Cylc and Rose need to be installed.
+
+The ``rose stem`` command selects the group of tests to run. Then ``cylc play``
+starts the suite running. For example, to run the developer tests for all the
+applications and components within an LFRic working copy, run the following from
+the top-level of the working copy:
 
 .. code-block::
 
