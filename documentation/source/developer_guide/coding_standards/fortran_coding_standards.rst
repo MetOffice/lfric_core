@@ -37,7 +37,7 @@ Copyright
 ---------
 
 The copyright statement references the LFRic licence, and must be included in
-all new LFRic code. A Fortran example for 2022 is:
+all new LFRic code. A Fortran example for 2024 is:
 
 .. code-block:: rst
 
@@ -142,7 +142,7 @@ readability. But omit spaces in a consistent way.
   the open-parenthesis that may follow.
 * There must be no "trailing whitespace": spaces at the end of lines. This rule
   applies to comment lines too.
-* Spaces att he beginning and at the end of a comma-separated list within
+* Spaces at the beginning and at the end of a comma-separated list within
   parentheses.
 
   * Where there is a single item within parenthesis, spaces are optional, but be
@@ -171,7 +171,7 @@ Fortran 2003 related aspects:
 * Constructors and destructors must be given a suffix that identifies them
   (either ``_constructor``, ``_destructor`` or ``_init``, ``_final`` can be
   appropriate).
-* Where more than one constructor exists, the main constructor must have the
+* Where more than one constructor exists, the main constructor must have
   just the chosen constructor suffix. Additional constructors must have the same
   name but with a further descriptive suffix e.g. if a URL type has a
   ``url_constructor`` then a constructor that constructs a URL by copying
@@ -219,7 +219,7 @@ runs within LFRic model configurations.
 General rules
 ^^^^^^^^^^^^^
 
-* LFRic comments uses markup so that to interface documentation can be generated
+* LFRic comments use markup so that the interface documentation can be generated
   for rendering in a browser or a PDF document. Therefore, comment the LFRic
   interface and algorithm-layer code with appropriate markup.
 
