@@ -23,9 +23,9 @@ use in an LFRic application.
 
    mesh_generators
    mesh_configuration_namelists
-   mesh_namelist
-   cubed_sphere_namelist
-   planar_mesh_namelist
-   partitions_namelist
-   rotation_namelist
-   stretch_grid_namelist
+..   mesh_namelist
+..   cubed_sphere_namelist
+..   planar_mesh_namelist
+..   partitions_namelist
+..   rotation_namelist
+..   stretch_grid_namelist
