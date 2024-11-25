@@ -48,7 +48,7 @@ Generates one (or more) 2D gridded meshes that each follow the base strategy.
  * Single panel of side ``n X m`` cells.
  * Located using combination of the specified domain centre and extents.
  * Axes aligned with `<longitude>,<latitude>` or `<x>,<y>`.
- * Non-periodic at domain boundaries.
+ * Allows periodicity of oppposing domain boundaries to be set[#f4]_.
 
 --`usage:`
 
@@ -64,3 +64,7 @@ Generates one (or more) 2D gridded meshes that each follow the base strategy.
 	 to a planar surface domain. References to planar meshes with respect
 	 the following sections should be taken as a mesh produced by the
 	 `planar_mesh_generator` program.
+
+.. [#f4] A pair of periodic domain boundaries are connected such, that where a
+	 field quantity exits the model domain crossing one of the boundaries,
+	 it re-enters the domain at the opposing domain boundary.

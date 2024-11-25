@@ -20,7 +20,7 @@ file as 1 partition per file.
 This functionality results in multiple mesh files with the corresponding
 portion of each principle mesh. In addition to the mesh tolopologies,
 partition information is also written to each file. In essence, each file
-provides the information required to load and insantiate 2D-mesh objects which
+provides the information required to load and instantiate 2D-mesh objects which
 are `local` to a given process rank. This namelist is enabled if triggered by
 the :ref:`partition_mesh<partition_mesh>` logical.
 
@@ -30,8 +30,11 @@ the :ref:`partition_mesh<partition_mesh>` logical.
 	  continuity of a partition.
 
 * ``max_stencil_depth``: **<integer>**
-    The maximum stencil depth (in cells) supported by the partitioned
-    principle meshes.
+    For communication across partitions, the `local` mesh domains need to be
+    extended with a `halo` region applied around each partition. The required
+    depth of the halo region depends on a specific LFRic application's runtime
+    configuration. The `max_stencil_depth` (in cells) specifies the
+    anticipated stencil size that the partitioned mesh should support.
 
 .. _n_partitions:
 

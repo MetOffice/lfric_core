@@ -22,10 +22,10 @@ undergo the same coordinate transformation. Enabled by
     Feature to use as reference for rotation.
 
     ``north_pole``
-      Use North Pole (90N,0E) as reference location.
+      Use North Pole (90°N,0°E) as reference location.
 
     ``null_island``
-      Use Null Island (0N,0E) as reference location.
+      Use Null Island (0°N,0°E) as reference location.
 
 * ``target_north_pole``: **<real>,<real>**
     Target location of North Pole after rotation.

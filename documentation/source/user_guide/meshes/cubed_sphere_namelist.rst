@@ -13,7 +13,7 @@
 ======================
 Control namelist for cubed-sphere mesh generation, required for use with the
 `cubedsphere_mesh_generator`. This creates a mesh which uses the
-cubded-sphere base strategy and requires ``edge_cells`` to define the mesh
+cubed-sphere base strategy and requires ``edge_cells`` to define the mesh
 connectivity. The remaining options are mesh transformations that are
 subsequently applied to the node coordinates; the connectively of the mesh
 elements are not altered by transformations.
