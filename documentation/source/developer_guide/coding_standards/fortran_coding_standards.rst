@@ -112,9 +112,25 @@ follows:
   library). For example, ESMF uses camel case such as
   ``ESMF_VMGetCurrent``. Follow ESMF's use of camel case when calling their
   functions. Do not write ``call esmf_vmgetcurrent``.
+* The suffixes ``_mod``, ``_type`` must be used for modules and Fortran types. A
+  module whose key role is to define a type and which has a type constructor
+  must use type names with the same prefix. For example, the operator_mod module
+  may include an operator_type and an operator_constructor.
+* Constructors and destructors must be given a suffix that identifies them
+  (either ``_constructor``, ``_destructor`` or ``_init``, ``_final`` can be
+  appropriate).
+* Where more than one constructor exists, the main constructor must have
+  just the chosen constructor suffix. Additional constructors must have the same
+  name but with a further descriptive suffix e.g. if a URL type has a
+  ``url_constructor`` then a constructor that constructs a URL by copying
+  features of another URL may be called ``url_constructor_copy``.
 
-Preferred spellings
--------------------
+Use comments and Fortran labelling appropriately to clarify the structure of
+heavily-nested loops, long ``if``- or loop- blocks, or if-blocks with many
+``else if`` statements.
+
+Preferred spelling and spacing
+------------------------------
 
 It makes sense to standardise spellings for words that have more than one
 accepted spelling, as it makes searching the code-base for names easier.
@@ -162,25 +178,6 @@ A short illustration of acceptable spacing:
         call invoke( aX_plus_bY( u_adv, varbeta, state_after_slow(igh_u), &
                      varalpha, state(igh_u) ) )
 
-Fortran 2003 related aspects:
-
-* The suffixes ``_mod``, ``_type`` must be used for modules and Fortran types. A
-  module whose key role is to define a type and which has a type constructor
-  must use type names with the same prefix. For example, the operator_mod module
-  may include an operator_type and an operator_constructor.
-* Constructors and destructors must be given a suffix that identifies them
-  (either ``_constructor``, ``_destructor`` or ``_init``, ``_final`` can be
-  appropriate).
-* Where more than one constructor exists, the main constructor must have
-  just the chosen constructor suffix. Additional constructors must have the same
-  name but with a further descriptive suffix e.g. if a URL type has a
-  ``url_constructor`` then a constructor that constructs a URL by copying
-  features of another URL may be called ``url_constructor_copy``.
-
-Use comments and Fortran labelling appropriately to clarify the structure of
-heavily-nested loops, long ``if``- or loop- blocks, or if-blocks with many
-``else if`` statements.
-
 Robust Coding
 -------------
 
@@ -226,7 +223,7 @@ General rules
   * Program units must all have, at the very least, a one line description that
     is prefixed with the Doxygen directive ``@brief``
   * If appropriate more detailed description uses the ``@details`` directive.
-  * Each input argument must (with the following exception) be described using
+  * Each input argument must be described using
     the ``@param`` directive with the intent and name of variable.
 
     .. code-block:: fortran
