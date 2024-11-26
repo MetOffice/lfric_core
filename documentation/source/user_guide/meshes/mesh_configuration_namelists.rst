@@ -38,11 +38,11 @@ depending on generator.
       file. Valid options:
 
       ``ll``
-        Spherical coordinates (lon,lat) in (Degrees East, Degrees North).
+        Spherical coordinates (lon,lat) in (°E,°N).
 
       ``xyz``
         Cartesian coordinates, This is only supported for a flat planar mesh
-	at z=0, as a result features are located with only 2-coordinates,
+	at z=0, as a result, features are located with only 2-coordinates,
 	``(x,y)`` in metres.
 
   * ``geometry``: **'<string>'**
@@ -125,7 +125,7 @@ depending on generator.
       Number of cells along edge of each mesh panel. The sequence of integers
       will map to entries given by :ref:`mesh_names<mesh_names>`.
   * ``equatorial_latitude``: **<real>**
-      Real world latitude (DegreesN) of cubed-sphere mesh equator after
+      Real world latitude (°N) of cubed-sphere mesh equator after
       applying Schmit transform. The `top` (or `bottom`) panels of the
       cubed-sphere are reduced in size while maintaining the same
       connectivity. This has the effect of a localised increase in resolution
@@ -157,11 +157,11 @@ depending on generator.
       (:ref:`mesh_names<mesh_names>`).
   * ``domain_centre``: **<real>,<real>**
       Location of domain centre for all principle meshes. Coordinates aligned
-      with the :ref:`coord_sys<coord_sys>` with units of `[m]` or `[degrees]`
+      with the :ref:`coord_sys<coord_sys>` with units of `[m|°]`
       as appropriate, `i.e.` `x,y` or `lon,lat` coordinates.
   * ``domain_size``: **<real>,<real>**
       Domain size for all principle meshes.  Domain sizes aligned with the
-      :ref:`coord_sys<coord_sys>` with units of `[m]` or `[degrees]` as
+      :ref:`coord_sys<coord_sys>` with units of `[m|°]` as
       appropriate, `i.e.` `x,y` or `lon,lat` domain extents. 
   * ``edge_cells_x``: **<integer>, ...**
       Number of cells along x-axis of domain. Order of integers map to
@@ -259,7 +259,7 @@ depending on generator.
       (:ref:`panel_yproc<panel_yproc>`). 
 
   * ``partition_range``: **<integer>,<integer>**
-      Specifies `start`,`end` partition ids to output, valid ids range from
+      Specifies the ``start``, ``end`` partition ids to output, valid ids range from
       [0: :ref:`n_partitions<n_partitions>`-1]. The generators will produce 1
       file per requested partition, with the partition id tagged to the output
       filename.
@@ -310,11 +310,11 @@ depending on generator.
 
   * ``cell_size_inner``: **<real>,<real>**
       Cell size for domain inner region of stretch grid along
-      ``x-axis,y-axis``, units in `m` or `degrees` depending on planar mesh
+      ``x-axis,y-axis``, units in `[m|°]` depending on planar mesh
       type. 
   * ``cell_size_outer``: **<real>,<real>**
       Cell size for domain outer region of stretch grid along
-      ``x-axis,y-axis``, units in `m` or `degrees` depending on planar mesh
+      ``x-axis,y-axis``, units in `[m|°]` depending on planar mesh
       type. 
   * ``n_cells_outer``: **<integer>,<integer>**
       Depth (in cells) of domain outer region along ``x-axis,y-axis``.
@@ -338,3 +338,16 @@ depending on generator.
       their node locations updated accordingly. 
 
 
+.. rubric:: Footnotes
+
+.. [#f1] Principle meshes are those meshes explicity requested
+   and named in the configuration file, `i.e.` |nbsp|
+   :ref:`mesh_names<mesh_names>`. These meshes are generated from
+   the base strategy as opposed to being derived from another mesh
+   topology `e.g.` rim mesh.
+
+.. [#f2] The void region is where there is no connected mesh after crossing the bounds of the domain.
+
+.. |degree| unicode:: U+00B0 .. degree symbol
+.. |nbsp|   unicode:: U+00A0 .. no-break space symbol
+   :trim:
