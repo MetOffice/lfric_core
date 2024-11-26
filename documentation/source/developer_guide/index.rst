@@ -15,6 +15,15 @@ Developer Guide
    templated_source
    build_system/library_import
 
+Requirements
+------------
+
+.. toctree::
+   :maxdepth: 2
+
+   requirements
+
+
 Contributing
 ------------
 
