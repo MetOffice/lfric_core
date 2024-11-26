@@ -93,7 +93,7 @@ with any cell-based partitioning, it could be shared by more than one
 partition. The solution is to represent those dofs on both partitions
 (with the necessary surrounding data in "halos" of cells around each
 partition). The calculations for the duplicated dofs is then performed
-on each partition. :ref:`Figure 1 <partitioning>` shows how this
+on each partition. :numref:`partitioning` shows how this
 technique works for the case where the dofs located on
 vertices are calculated from dofs located in the cell volume.
 
