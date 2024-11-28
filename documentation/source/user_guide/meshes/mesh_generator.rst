@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section mesh generator:
+.. _mesh generator:
 
 The Mesh Generator
 ==================

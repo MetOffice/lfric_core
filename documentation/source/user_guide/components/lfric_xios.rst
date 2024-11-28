@@ -4,10 +4,10 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section lfric xios:
+.. _lfric xios component:
 
 LFRic-XIOS
-----------
+==========
 
 The LFRic-XIOS component provides an API for LFRic applications that
 use the XIOS IO system.

@@ -18,7 +18,7 @@ commented out using the normal exclamation mark: ``!``.
 .. _rose: https://metomi.github.io/rose/doc/html/index.html
 
 Extensions to Namelist Definitions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Normally a namelist may only appear once in a namelist file however it can be
 appropriate for them to appear multiple times. In order to mark a namelist as
@@ -38,7 +38,7 @@ An example showing both of these::
     ...
 
 Extension to Namelist Member Definitions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 Although Rose understands the data type a namelist member must have it does
 not understand the concept of Fortran "kinds." To add this knowledge a ``kind``
