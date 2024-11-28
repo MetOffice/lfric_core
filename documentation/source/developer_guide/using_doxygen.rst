@@ -40,13 +40,13 @@ which may be documented are:
 
   * Public types
 
+    * Public type-bound parameters
+    * Public type-bound variables
     * Public type-bound procedures
-    * Public parameters
-    * Public variables
 
   * Public parameters
-  * Public procedures
   * Public variables
+  * Public procedures
 
 You will notice that all the documentable entities are public. This is the
 nature of API documentation, if it is private then it is not part of the API.
