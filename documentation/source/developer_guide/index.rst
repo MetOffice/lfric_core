@@ -13,7 +13,7 @@ Developer Guide
    :maxdepth: 2
 
    templated_source
-   build_system/library_import
+   build_system/index
 
 Contributing
 ------------
