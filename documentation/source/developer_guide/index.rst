@@ -22,4 +22,5 @@ Contributing
 .. toctree::
    :maxdepth: 2
 
+   coding_standards/fortran_coding_standards
    sphinx_style/documentation_style_guide
