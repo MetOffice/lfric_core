@@ -7,15 +7,9 @@
 Configurator
 ============
 
-Used by the build system this tool takes an extended Rose metadata file and
-produces Fortran source to manage the namelists produced from that metadata.
-
-.. toctree::
-   :caption: Further Details
-   :maxdepth: 1
-
-   picker
-   metafile
+Used by the build system this tool takes an
+:ref:`extended Rose metadata <extended-rose-metadata>` file and produces
+Fortran source to manage the namelists produced from that metadata.
 
 Usage
 -----
