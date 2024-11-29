@@ -12,9 +12,10 @@ Developer Guide
 .. toctree::
    :maxdepth: 2
 
-   templated_source
    build_system/library_import
    build_system/dependerator
+   using_doxygen
+   templated_source
 
 Contributing
 ------------
