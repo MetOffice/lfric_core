@@ -14,6 +14,7 @@ Developer Guide
 
    templated_source
    build_system/index
+   using_doxygen
 
 Contributing
 ------------
