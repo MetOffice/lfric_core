@@ -4,10 +4,10 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section components:
+.. _components:
 
 Components
-----------
+==========
 
 LFRic Core includes a number of components each of which are packages
 of code that deliver a particular functionality or provide a set of
@@ -17,5 +17,6 @@ related capabilities.
    :caption: Contents:
    :maxdepth: 1
 
+   coupling
    lfric_xios
    driver_layer

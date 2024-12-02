@@ -39,3 +39,7 @@ documentation/build
 
 # vscode
 .vscode
+
+# Emacs backup files
+.#*
+\#*#

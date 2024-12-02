@@ -4,13 +4,15 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
+.. _extended-rose-metadata:
+
 Configuration Metadata File Extensions
 ======================================
 
 `Rose`_ uses a modified Windows ``.ini`` file syntax to store the metadata used
 to describe the GUI it presents and thence the namelists it creates. In order
-to effectively load those namelists further information is required. Therefore
-the Configurator tools look for various additional key/value pairs.
+to effectively load those namelists further information is required so
+the "Configurator" tools look for various additional key/value pairs.
 
 In order to prevent this additional information disrupting Rose they are
 commented out using the normal exclamation mark: ``!``.
@@ -18,7 +20,7 @@ commented out using the normal exclamation mark: ``!``.
 .. _rose: https://metomi.github.io/rose/doc/html/index.html
 
 Extensions to Namelist Definitions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Normally a namelist may only appear once in a namelist file however it can be
 appropriate for them to appear multiple times. In order to mark a namelist as
@@ -32,13 +34,13 @@ An example showing both of these::
 
     [namelist:instance]
     duplicate = .true.
-    instance_key_member = index
+    instance_key_member = name
 
-    [namelist:instance=index]
+    [namelist:instance=name]
     ...
 
 Extension to Namelist Member Definitions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 Although Rose understands the data type a namelist member must have it does
 not understand the concept of Fortran "kinds." To add this knowledge a ``kind``

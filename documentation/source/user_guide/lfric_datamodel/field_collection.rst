@@ -4,10 +4,10 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _section field collection:
+.. _field collection:
 
 Field collections
------------------
+=================
 
 A field collection is an object that can store several fields or
 pointers to fields.
@@ -68,7 +68,7 @@ the field being requested.
    call my_field_collection%get_field("my_field_name", my_field)
 
 The field collection object stores fields in a linked list. A separate
-:ref:`field collection iterator<section field collection iterator>`
+:ref:`field collection iterator<field collection iterator>`
 object uses the ``get_next_item`` function of the field collection to
 step through field collections. Most likely, the ``get_next_item``
 would not be used in isolation, but is described here for
@@ -99,10 +99,10 @@ table; ``get_name`` returns the field collection name.
 Finally, the ``clear`` function removes all items from the field
 collection.
 
-.. _section field collection iterator:
+.. _field collection iterator:
 
 Field collection iterator
-=========================
+-------------------------
 
 The field collection iterator supports the ability to loop through all
 the fields in a field collection. For example:
@@ -118,11 +118,12 @@ the fields in a field collection. For example:
 
    do
 
-   if ( .not.iter%has_next() ) exit
+     if ( .not.iter%has_next() ) exit
      field => iter%next()
 
      ! Select type to disambiguate different field types
      select type(field)
-       type is (field_real32_type)
-         ! Do something
-         ...
+       type is (field_type)
+         ! Do something...
+     end select
+   end do

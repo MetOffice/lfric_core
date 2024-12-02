@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section diagnostics:
+.. _diagnostics:
 
 Diagnostics
 ===========
@@ -41,11 +41,11 @@ The LFRic infrastructure supports these principles in the following way.
 #. The output method of fields calls a procedure pointer, permitting
    an application to choose which diagnostic processing application to
    use for each diagnostic. Details on creating output methods are
-   found in the :ref:`write_interface procedures <section write
+   found in the :ref:`write_interface procedures <write
    interface procedures>` section.
 
 Writing out a diagnostic
-++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 An LFRic field has a ``write_field`` method which sends the field to
 the diagnostic system via a ``write_interface`` procedure. The
@@ -78,7 +78,7 @@ diagnostic system:
    call my_diagnostic_field%write_field('my_diagnostic_field_name')
 
 The ``write_field`` method calls ``send_diagnostic`` with the name of
-the field and the :ref:`field proxy <section field proxy>`. The field
+the field and the :ref:`field proxy <field proxy>`. The field
 proxy holds pointers to the data and to other information about the
 field. The field proxy information should be sufficient for
 ``send_diagnostic`` to work out how to pass the diagnostic data to the
@@ -87,10 +87,10 @@ diagnostic processing library it links to.
 The field name is an optional argument of ``write_field``: if a string
 is not supplied, the name of the field will be used.
 
-.. _section optional diagnostics:
+.. _optional diagnostics:
 
 Optional diagnostics
-++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^
 
 If a diagnostic is not requested and is not otherwise used by the
 model, then to save memory and time it is beneficial to avoid
@@ -176,7 +176,7 @@ not be, computed:
 This approach saves having to pass an extra logical into the kernel.
 
 Diagnostics from existing fields
-++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For reasons described above, the same field `name` should not be
 written out as a diagnostic twice in one time-step, but the same
@@ -211,7 +211,7 @@ after a kernel has processed it:
 
 
 Enhanced approach
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 The above code demonstrate the LFRic diagnostic system using
 simple examples where fields are initialised and named with hard-wired
@@ -226,14 +226,14 @@ be.
 
 Knowledge about which time-step a diagnostic is output can be used to
 set the ``my_diagnostic_flag`` used in the :ref:`Optional
-Diagnostics<section optional diagnostics>` section above.
+Diagnostics<optional diagnostics>` section above.
 
 Knowledge about the function space that the field lives on can be
 inferred from the output format of the diagnostic.
 
 These two aspects can be combined into a single generic function,
 illustrated by a rewrite of the second code example in the
-:ref:`Optional Diagnostics<section optional diagnostics>` section, as follows:
+:ref:`Optional Diagnostics<optional diagnostics>` section, as follows:
 
 .. code-block:: fortran
 
@@ -248,10 +248,10 @@ illustrated by a rewrite of the second code example in the
 Such a function has been written to support the LFRic atmosphere. See
 the LFRic atmosphere documentation for more details.
 
-.. _section write interface procedures:
+.. _write interface procedures:
 
 write_interface procedures
-++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``write_interface`` procedure acts as the interface between LFRic
 and a diagnostic system. Its abstract interface is defined as follows.
@@ -282,12 +282,12 @@ Example: XIOS integration
 
 Several LFRic applications use the XIOS library as a diagnostic
 processing system by integrating to the :ref:`lfric_xios component
-<section lfric xios>`. See the `diagnostics documentation
+<lfric xios component>`. See the `diagnostics documentation
 <https://metoffice.github.io/simulation-systems/WorkingPractices/Diagnostics/lfric_diagnostics.html>`_
 in the lfric_apps repository for more usage examples.
 
 Initialising fields for lfric_xios
-++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For diagnostic fields supported by the ``lfric_xios`` component it is
 possible to infer the field type (its function space) from the XIOS
@@ -312,7 +312,7 @@ new diagnostic, one can write the following:
     end if
 
 Writing fields for lfric_xios
-+++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As the field type of a field can be inferred from its metadata, so can
 the method required to send the field to the XIOS library. Therefore,

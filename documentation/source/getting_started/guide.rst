@@ -6,7 +6,7 @@
 .. _guide_to_documentation:
 
 Guide to the documentation
---------------------------
+==========================
 The LFRic Core documentation is split into a number of main sections, this
 :ref:`Getting Started <getting_started_index>` section contains information on
 the dependencies required to run any LFRic based applications including those
@@ -25,15 +25,15 @@ applications for training purposes or for developing and testing particular
 technical capabilities.
 
 Before giving an overview of the core infrastructure, an overview of
-the :ref:`structure of a typical LFRic application <section
-application structure>` is given. It briefly references several LFRic
+the :ref:`structure of a typical LFRic application <application
+structure>` is given. It briefly references several LFRic
 core capabilities. These capabilities are then described in later
 sections.
 
 Any developer of the LFRic core or an LFRic application should have a
 good understanding of the underlying principles behind LFRic and the
 core data model, and the scientific model architecture known as
-**PSyKAl**. The :ref:`LFRic data model and PSyclone <section psykal
+**PSyKAl**. The :ref:`LFRic data model and PSyclone <psykal
 and datamodel>` documentation describes key aspects of LFRic and of
 PSyclone, the code autogeneration tool that LFRic applications depend
 upon.
@@ -49,15 +49,15 @@ LFRic mesh generator and LFRic meshes, including discussion of mesh
 partitioning, mesh hierarchies and mesh maps, the LFRic mesh
 generator.
 
-The :ref:`Components section <section components>` describes
+The :ref:`Components section <components>` describes
 components which are code libraries delivering specific capabilities
 required by some LFRic applications.
 
-The :ref:`build and test system section <section build and test>` describes
+The :ref:`build and test system section <build and test>` describes
 the build and test system, and includes descriptions of the tools that
 underpin it.
 
-The :ref:`Technical Articles section <section technical articles>`
+The :ref:`Technical Articles section <technical articles>`
 includes articles on several topics including the distributed memory
 strategy and implementation, the clock and calendar.
 
