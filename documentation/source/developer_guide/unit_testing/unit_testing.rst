@@ -82,7 +82,7 @@ canned data which is merely copied into the appropriate array. Thus they
 represent a much lower risk.
 
 Information on how to use the provided helper routines that return the canned
-data can be found below.
+data can be found in the section: :ref:`canned_info`.
 
 What to Test
 ------------
@@ -166,6 +166,11 @@ Note the pFUnit directives prefixed with the ``@`` (at) symbol. These are used
 to mark out the test cases with ``@test``. They are also used to denote
 "assertions". These are the actual business end of a test case. An assertion
 must be met in order for the test to pass.
+
+.. note::
+
+   A restriction of pFUnit is that any line that start with the ``@`` symbol
+   must all be written on a single line. Continuation lines are not permitted.
 
 In this case ``@assertEqual`` is used. Surprising no one, this requires that the
 value from the unit under test (the second argument) must be equal to the
@@ -630,6 +635,8 @@ case being run.
 You may, of course, use the configuration feigning functions in parameterised
 tests. They were removed from this example for clarity.
 
+.. _canned_info:
+
 Replacing Infrastructure calls with Canned Information
 ------------------------------------------------------
 
@@ -646,9 +653,11 @@ Using Canned Information
 A description of the available canned-data support routines can be found at
 :ref:`unit_test_canned_data_routines`.
 
-NOTE: All arrays returned by the helper routines are allocated inside the
-routines and so, will need to be deallocated in the calling routine when they
-are no longer required.
+.. note::
+
+  All arrays returned by the helper routines are allocated inside the
+  routines and so, will need to be deallocated in the calling routine when
+  they are no longer required.
 
 Adding New Canned Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
