@@ -185,7 +185,7 @@ the routines that provide that data.
     Computes the CMA scalars from the input CMA scalars of the product operands.
   * ``get_wtheta_m3x3_cma_data`` :raw-html:`<br />`
     Computes the CMA scalars, allocates and populates the maps for a
-    Wtheta-Wtheta CMA operator.
+    :math:`\mathbb{W}_{theta}`-:math:`\mathbb{W}_{theta}` CMA operator.
   * ``get_wtheta_w3_m3x3_cma_data`` :raw-html:`<br />`
     Computes the CMA scalars, allocates and populates the maps for a
     :math:`\mathbb{W}_{theta}`-:math:`\mathbb{W}_{3}` CMA operator.
