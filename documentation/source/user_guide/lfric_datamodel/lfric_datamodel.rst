@@ -649,10 +649,10 @@ cells are computed.
 
 .. _function space intro:
 
-LFRic Function spaces and element order
----------------------------------------
+LFRic Function spaces and element orders
+----------------------------------------
 
-This section introduces the LFRic function space object which
+This section introduces the LFRic function space object, which
 underpins fields used in LFRic. In previous sections it was noted that
 the function space is a concept in the finite element method whereby
 data and basis functions can define a field that spacially varies
@@ -686,25 +686,33 @@ documentation will focus on these four as they are core to the GungHo
 formulation.
 
 The above descriptions of the dof locations are for the "lowest order"
-versions of the four function spaces. At lowest element order, the
-basis functions are a constant function (for :math:`\mathbb{W}_{3}`)
-or linear functions. Higher order function spaces are possible for
-each type of function space. At the next higher order, each function
-space has more basis functions and therefore more dofs. The basis
+versions of the four function spaces. The order of a function space is
+governed by two arguments: ``element_order_h`` and ``element_order_v``.
+These arguments represent the polynomial order of the finite elements
+used, in the horizontal and vertical directions respectively.
+The function space being "lowest order" means that both of these
+arguments are set to 0, and either argument being 1 or greater would
+be called "higher order".
+
+At lowest element order in one of the horizontal or vertical
+directions, the basis functions are linear in that direction (with the
+exception of :math:`\mathbb{W}_{3}` which is constant).
+Higher order function spaces are possible for each type of function
+space. At the next higher order in a direction, each function space
+has more basis functions and therefore more dofs. The basis
 functions are changed from being constant to linear for
 :math:`\mathbb{W}_{3}`, and from linear to quadratic for the other
 function spaces. For GungHo, only lowest and next-to-lowest order are
-used.
+currently used.
 
 Given all the above, the definition of a field requires both definition
 of the function space type, the mesh (which defines the horizontal
 domain and number of vertical levels) and the order of the basis
-functions.
+functions in the vertical and horizontal directions.
 
 The following figures show dof locations for four of the main
-function spaces at lowest order and at next lowest order:
-:math:`\mathbb{W}_0`, :math:`\mathbb{W}_1`, :math:`\mathbb{W}_2`, and
-:math:`\mathbb{W}_3`,
+function spaces at lowest order (``element_order_h=element_order_v=0``),
+and at next lowest order (``element_order_h=element_order_v=1``):
 
 .. _dof locations:
 
@@ -807,6 +815,14 @@ function spaces at lowest order and at next lowest order:
                   order. The dofs are shown slightly offset from the corners to
                   illustrate that the field is discontinuous: each of the 8 cells
                   that share a vertex have their own dof at the same location.
+
+While not pictured, the so-called "split element order" options such as
+:math:`\mathbb{W}_3` with linear order in the horizontal and constant order
+in the vertical are also supported. This specific example would look like
+a square of 4 dofs in the horizontal plane through the middle of the cell,
+giving 4 dofs in total per cell. Similarly, we could have constant order
+in the horizontal and linear order in the vertical, which would give 2 dofs
+on a vertical line through the middle of the cell.
 
 A brief description of dof-locations for lowest order versions of all
 supported function space types is given in the following table:
