@@ -109,7 +109,8 @@ diagnostic is not required:
 
    if (my_diagnostic_flag) then
      ! Diagnostic has been requested
-     vector_space => function_space_collection%get_fs( mesh, element_order, W3 )
+     vector_space => function_space_collection%get_fs( mesh, element_order_h, &
+                                                       element_order_v, W3 )
      call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name')
      call my_diagnostic_field%set_write_behaviour(write_behaviour)
 
@@ -134,14 +135,15 @@ illustrates the approach:
    use empty_data, only, : empty_real_data
 
    ! Function space for the diagnostic field
-   vector_space => function_space_collection%get_fs( mesh, element_order, W3 )
+   vector_space => function_space_collection%get_fs( mesh, element_order_h, &
+                                                     element_order_v, W3 )
    if (my_diagnostic_flag) then
      ! Diagnostic has been requested
      call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name')
      call my_diagnostic_field%set_write_behaviour(write_behaviour)
    else
      ! Diagnostic is not required
-     call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name' &
+     call my_diagnostic_field%initialise(vector_space, name='my_diagnostic_name', &
                                          override_data = empty_real_data)
    end if
 

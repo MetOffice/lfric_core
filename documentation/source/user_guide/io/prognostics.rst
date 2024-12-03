@@ -148,8 +148,9 @@ added to more than one field collection.
    class(pure_abstract_field_type), pointer :: tmp_ptr
 
    ! rain is a 2D field on the W3 function space
-   function_space => function_space_collection%get_fs( mesh2d, &
-                                              element_order, W3 )
+   function_space => function_space_collection%get_fs( mesh2d,          &
+                                                       element_order_h, &
+                                                       element_order_v, W3 )
    call rain%initialise(function_space, name='rain')
 
    ! Add actual field to depository
