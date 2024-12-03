@@ -7,7 +7,7 @@
 .. _repository_contents:
 
 Contents of the Repository
---------------------------
+==========================
 
 The repository contains the following directories:
 

@@ -4,10 +4,10 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _section technical articles:
+.. _technical articles:
 
 Technical Articles
-------------------
+==================
 
 This section includes some techical articles covering different
 aspects of the LFRic core infrastructure
@@ -17,3 +17,4 @@ aspects of the LFRic core infrastructure
    :maxdepth: 1
 
    lfric_distmem_impl
+   configuration_meta

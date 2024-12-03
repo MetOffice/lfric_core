@@ -23,7 +23,7 @@ In order to maintain the separation of the two licences ``rose_picker`` is
 held in a separate repository within the LFRic collection.
 
 Usage
-~~~~~
+-----
 
 The tool is invoked like this::
 
