@@ -38,13 +38,13 @@ and datamodel>` documentation describes key aspects of LFRic and of
 PSyclone, the code autogeneration tool that LFRic applications depend
 upon.
 
-The :ref:`Application Documentation section<lfric applications>` provides
+The :ref:`Application Documentation section<section applications>` provides
 links to documentation for each application developed within the LFRic
 core repository, describing the role of the application and including
 pointers to the features of the LFRic core that it depends upon or
 tests.
 
-The :ref:`Meshes section<meshes and tools>` describes the
+The :ref:`Meshes section<section mesh generation>` describes the
 LFRic mesh generator and LFRic meshes, including discussion of mesh
 partitioning, mesh hierarchies and mesh maps, the LFRic mesh
 generator.
