@@ -1,5 +1,5 @@
 .. ------------------------------------------------------------------------------
-     (c) Crown copyright 2023 Met Office. All rights reserved.
+     (c) Crown copyright 2024 Met Office. All rights reserved.
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    ------------------------------------------------------------------------------
@@ -9,11 +9,10 @@
 Requirements summary
 ====================
 
-The following lists some of the major requirements that need to be met
-by the LFRic Infrastructure, including requirements relating to the
-above issues. It should be noted that some of these requirements
-underpin other complex requirements that are not described in detail,
-such as the need for a comprehensive diagnostic system.
+The following lists some of the major requirements that need to be met by the
+LFRic Infrastructure. It should be noted that some of these requirements
+underpin other complex requirements that are not described in detail, such as
+the need for a comprehensive diagnostic system.
 
 Where implementation is substantially incomplete, or where there are
 notable omissions, the current status of the LFRic implementation in
@@ -42,7 +41,7 @@ documented here.
    implementation.
 
 -  Support for organising and grouping fields as required by
-   applications such as the Unified Model. For example, support for
+   applications. For example, the LFRic atmosphere requires support for
    collections of fields of different types and support for tiled
    fields.
 
@@ -53,7 +52,7 @@ documented here.
    rectangular meshes.
 
 -  Support is required for different looping strategies to enable an
-   operation over all or a subset of data points or cells in a field.
+   operation over all, or a subset, of data points or cells in a field.
    LFRic provides the ability for kernels to operate on columns of cells
    (and the data points they contain), or individual levels (for certain
    field types). PSyclone support for the latter is in development.
@@ -70,23 +69,27 @@ documented here.
    detail in the :ref:`distributed memory
    <overlap comms compute>` section.
 
--  To support kernels that operate on continuous fields (those in which
+-  For kernels that operate on continuous fields (those in which
    data points are shared between neighbouring columns), support is
-   required for "colouring" the mesh to ensure concurrent shared-memory
-   operations on the same shared data point can be prevented.
+   required for looping strategies (such as "colouring" or "tiling") that
+   ensure concurrent shared-memory operations on the same shared data point
+   are prevented.
 
--  As GungHo is a mixed finite element scheme and as existing physics
-   schemes are finite difference schemes, support for placing of
-   different field types on the same mesh is required.
+-  Support for the GungHo dynamics is required. GungHo is a mixed finite
+   element scheme, therefore support for placing of fields with
+   different function space types on the same mesh is required.
 
 -  Support for fields on hierarchical meshes. Each mesh in the hierarchy
-   covers the same geographical domain, but the resolution of the lower
-   meshes is an integer multiple of the higher resolution mesh such
-   that, for example, each cell in the lower resolution mesh contains
+   covers the same geographical domain, but the resolution of the lower resolution
+   meshes is an integer multiple of the higher resolution mesh. For example, if
+   the resolution of the higher resolution mesh is 10km then the lower
+   resolution mesh may have a resolution of 20km or 30km. If the two meshes are
+   aligned, then each cell in the lower resolution mesh would contain
    :math:`2 * 2` or :math:`3 * 3` cells of the higher
-   resolution mesh. The hierarchy supports multigrid solvers, and will
+   resolution mesh. The hierarchy is intended to support multigrid solvers, and will
    enable easier transformation of data between different science
-   schemes running at different resolutions.
+   schemes running at different resolutions, where interpolation can be done
+   local to a distributed memory domain.
 
 -  Support for mapping stencils of various shapes and depths to allow
    operations on cell data that are dependent on data in nearby cells.
