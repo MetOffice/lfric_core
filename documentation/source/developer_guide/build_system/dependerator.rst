@@ -14,7 +14,7 @@ performed by the "Dependerator" tool.
 
 There are two stages:
 
-#. Analyse ever source file
+#. Analyse each source file
 #. Generate dependency information
 
 The reason every source file is analysed is that ahead-of-time it is not
@@ -155,7 +155,7 @@ to link that program::
 
     SOME_PROGRAM_OBJS = special/first_mod.o normal/second_mod.o path/to/third_mod.o
 
-It also creates a variable ``PROG_OBJS`` while lists all the program objects::
+It also creates a variable ``PROG_OBJS`` which lists all the program objects::
 
     PROG_OBJS = some_program.o
 
