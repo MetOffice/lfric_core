@@ -12,12 +12,10 @@ User Guide
     :maxdepth: 2
 
     applications/index
-    build_and_test/index
     lfric_datamodel/index
     meshes/index
     components/index
     time/index
     io/index
     technical_articles/index
-
-
+    build_and_test/index
