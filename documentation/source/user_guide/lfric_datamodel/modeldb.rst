@@ -158,7 +158,7 @@ Configuration
 The configuration item within the modeldb object stores the input namelists
 (from a namelist input file) used to configure an instance of modeldb. Once
 the configuration has been populated from file, the configuration values are
-immutable.
+immutable, unlike other components of modeldb.
 
 .. Should provide a link to the namelist collection type (when it's written)
 
@@ -175,10 +175,12 @@ read in and any valid namelists are added the modeldb%configuration item.
   call modeldb%configuration%initialise()
   call read_configuration( filename, modeldb%configuration )
 
+.. _access_config_data:
+
 Accessing configuration data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To access data from the configuration item, a pointer to the required namelist
-is first request before the namelist variable member can be retrieved. This
+is first requested before the namelist variable member can be retrieved. This
 allows for different namelists to have member variables with the same name.
 
 .. code-block:: fortran
@@ -186,7 +188,7 @@ allows for different namelists to have member variables with the same name.
    type(namelist_type), pointer :: config_nml
 
    config_nml => modeldb%configuration%get_namelist('<namelist_name>')
-   call config_nml%get_value( '<namelist_variable_name', nml_var_name )
+   call config_nml%get_value( '<namelist_variable_name>', nml_var )
 
 All namelists in the collection must have a unique `<namelist_name>`, unless
 the namelist metadata specfies `duplicate=.true.`. For namelists which may
@@ -197,9 +199,10 @@ specified.
 
    type(namelist_type), pointer :: config_nml
 
-   config_nml => modeldb%configuration%get_namelist('<namelist_name>')
-   call config_nml%get_value( '<namelist_variable_name', nml_var_name, &
-                              profile_name='<profile_name>' )
+   config_nml => modeldb%configuration%get_namelist( '<namelist_name>', &
+                                                     profile_name='<profile_name>' )
+   call config_nml%get_value( '<namelist_variable_name>', nml_var )
+
 
 I/O contexts
 ------------
