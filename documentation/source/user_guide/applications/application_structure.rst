@@ -199,7 +199,10 @@ required for all model configurations.
    guide when available.
 
 A `configuration object` stores the model configuration derived from the input
-namelists file. It contains input values for real variables, science options, switches, etc. Configuration settings can be accessed by first accessing the `namelist object(s)` in the `configuration object`, then requesting the desired namelist variable (see :ref:`Accessing configuration data<access_config_data>`).
+namelists file. It contains input values for real variables, science options,
+switches, etc. Configuration settings can be accessed by first accessing the
+`namelist object(s)` in the `configuration object`, then requesting the desired
+namelist variable (see :ref:`Accessing configuration data<access_config_data>`).
 
 A :ref:`key-value <keyvalue pair object>` data structure exist
 that stores an arbitrary number of key-value pairs where the value can
