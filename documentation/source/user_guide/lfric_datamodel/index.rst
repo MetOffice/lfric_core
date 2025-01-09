@@ -12,6 +12,5 @@ LFRic Data Model
 .. toctree::
    :maxdepth: 2
 
-   lfric_datamodel
    data_structures
    modeldb

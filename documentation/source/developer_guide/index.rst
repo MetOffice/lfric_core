@@ -13,8 +13,30 @@ Developer Guide
    :maxdepth: 2
 
    templated_source
-   build_system/library_import
 
+   build_system/index
+   using_doxygen
+   unit_testing/index
+
+
+Requirements
+------------
+
+.. toctree::
+   :maxdepth: 2
+
+   requirements
+
+Technical Overviews
+-------------------
+
+These sections describe key parts of the LFRic infrastructure, which will help
+explain the reasons for the design and implementation choices that have been made.
+
+.. toctree::
+   :maxdepth: 2
+
+   core_data_model/science_model_architecture
 
 Contributing
 ------------
@@ -22,4 +44,5 @@ Contributing
 .. toctree::
    :maxdepth: 2
 
+   coding_standards/fortran_coding_standards
    sphinx_style/documentation_style_guide

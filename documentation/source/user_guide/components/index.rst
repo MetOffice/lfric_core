@@ -17,5 +17,6 @@ related capabilities.
    :caption: Contents:
    :maxdepth: 1
 
+   coupling
    lfric_xios
    driver_layer
