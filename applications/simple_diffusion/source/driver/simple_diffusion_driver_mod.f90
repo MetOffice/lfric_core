@@ -183,7 +183,8 @@ contains
     ! 3.0 Setup I/O system.
     !=======================================================================
     ! Initialise I/O context
-    call init_io( program_name, modeldb, chi_inventory, panel_id_inventory )
+    call init_io( program_name, prime_mesh_name, &
+                  modeldb, chi_inventory, panel_id_inventory )
 
 
     !=======================================================================

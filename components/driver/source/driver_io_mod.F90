@@ -10,7 +10,6 @@
 !>
 module driver_io_mod
 
-  use base_mesh_config_mod,    only: prime_mesh_name
   use constants_mod,           only: str_def, i_def
   use driver_modeldb_mod,      only: modeldb_type
   use driver_model_data_mod,   only: model_data_type
@@ -53,8 +52,9 @@ contains
 
   !> @brief  Initialises the model I/O
   !>
-  !> @param[in] name                     A string identifier for the context
-  !> @param[inout] modeldb               Modeldb object
+  !> @param[in] context_name             Unique context identifier
+  !> @param[in] mesh_name                Mesh used by this context
+  !> @param[inout] modeldb               Model state
   !> @param[in] chi_inventory            Contains the model's coordinate fields
   !> @param[in] panel_id_inventory       Contains the model's panel ID fields
   !> @param[in] populate_filelist        Optional procedure for creating a list of
@@ -64,17 +64,19 @@ contains
   !!                                     to initialise I/O for
   !> @param[in] before_close             Optional routine to be called before
   !!                                     context closes
-  subroutine init_io( name,                  &
-                      modeldb,               &
-                      chi_inventory,         &
-                      panel_id_inventory,    &
-                      populate_filelist,     &
-                      alt_mesh_names,        &
-                      before_close           )
+  subroutine init_io( context_name,       &
+                      mesh_name,          &
+                      modeldb,            &
+                      chi_inventory,      &
+                      panel_id_inventory, &
+                      populate_filelist,  &
+                      alt_mesh_names,     &
+                      before_close )
 
     implicit none
 
-    character(*),                     intent(in)    :: name
+    character(*),                     intent(in)    :: context_name
+    character(*),                     intent(in)    :: mesh_name
     class(modeldb_type),              intent(inout) :: modeldb
     type(inventory_by_mesh_type),     intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),     intent(in)    :: panel_id_inventory
@@ -94,7 +96,8 @@ contains
         before_close_ptr => null()
       end if
 
-      call init_xios_io_context( name,               &
+      call init_xios_io_context( context_name,       &
+                                 mesh_name,          &
                                  modeldb,            &
                                  chi_inventory,      &
                                  panel_id_inventory, &
@@ -106,7 +109,7 @@ contains
                       "XIOS enabled", log_level_error )
 #endif
     else
-      call init_empty_io_context(name, modeldb%io_contexts)
+      call init_empty_io_context(context_name, modeldb%io_contexts)
     end if
 
   end subroutine init_io
@@ -122,18 +125,20 @@ contains
 
   end subroutine final_io
 
+
   !> @brief Initialises an empty I/O context and puts it in and I/O context collection
-  !> @param[in]    name      The identifying name for the context
-  !> @param[inout] modeldb   The modeldb to store the context in
-  subroutine init_empty_io_context(name, io_context_collection)
+  !> @param[in]    context_name  Unique context identifier
+  !> @param[inout] modeldb       Model state
+  subroutine init_empty_io_context(context_name, io_context_collection)
+
     implicit none
-    character(*),                     intent(in)    :: name
+    character(*),                     intent(in)    :: context_name
     type(io_context_collection_type), intent(inout) :: io_context_collection
     type(empty_io_context_type) :: tmp_io_context
 
-    call tmp_io_context%initialise(name)
+    call tmp_io_context%initialise(context_name)
     call io_context_collection%add_context(tmp_io_context)
-    write(log_scratch_space, "(A25)")"Adding empty IO context: " // name
+    write(log_scratch_space, "(A25)")"Adding empty IO context: " // context_name
     call log_event(log_scratch_space, LOG_LEVEL_INFO)
 
   end subroutine init_empty_io_context
@@ -141,8 +146,9 @@ contains
 #ifdef USE_XIOS
   !> @brief  Initialises an xios I/O context based on user input
   !>
-  !> @param[in] name                A string identifier for the context
-  !> @param[in] modeldb             Modeldb object
+  !> @param[in] context_name        Unique context identifier
+  !> @param[in] mesh_name           Mesh used by this context
+  !> @param[in] modeldb             Model state
   !> @param[in] chi_inventory       Contains the model's coordinate fields
   !> @param[in] panel_id_inventory  Contains the model's panel ID fields
   !> @param[in] before_close        Routine to be called before context closes
@@ -150,7 +156,8 @@ contains
   !!                                file descriptions used by the model I/O
   !> @param[in] alt_mesh_names      Optional array of names for other meshes
   !!                                to initialise I/O for
-  subroutine init_xios_io_context( name,               &
+  subroutine init_xios_io_context( context_name,       &
+                                   mesh_name,          &
                                    modeldb,            &
                                    chi_inventory,      &
                                    panel_id_inventory, &
@@ -160,7 +167,8 @@ contains
 
     implicit none
 
-    character(*),                        intent(in)    :: name
+    character(*),                        intent(in)    :: context_name
+    character(*),                        intent(in)    :: mesh_name
     class(modeldb_type),                 intent(inout) :: modeldb
     type(inventory_by_mesh_type),        intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),        intent(in)    :: panel_id_inventory
@@ -184,10 +192,9 @@ contains
     type(linked_list_type), pointer :: file_list
     procedure(event_action), pointer :: context_advance
 
-    call tmp_io_context%initialise(name)
+    call tmp_io_context%initialise(context_name)
     call modeldb%io_contexts%add_context(tmp_io_context)
-
-    call modeldb%io_contexts%get_io_context(name, io_context)
+    call modeldb%io_contexts%get_io_context(context_name, io_context)
 
     ! Populate list of I/O files if procedure passed through
     if (present(populate_filelist)) then
@@ -198,8 +205,8 @@ contains
     end if
     call io_context%set_timer_flag(subroutine_timers)
 
-    ! Get coordinate fields for prime mesh
-    mesh => mesh_collection%get_mesh(prime_mesh_name)
+    ! Get coordinate fields for mesh
+    mesh => mesh_collection%get_mesh(mesh_name)
     call chi_inventory%get_field_array(mesh, chi)
     call panel_id_inventory%get_field(mesh, panel_id)
 
@@ -220,17 +227,19 @@ contains
         call alt_panel_id_ptr%copy_field_serial(alt_panel_ids(i))
       end do
 
-      call io_context%initialise_xios_context( modeldb%mpi%get_comm(),      &
-                                               chi, panel_id,         &
-                                               modeldb%clock, modeldb%calendar, &
-                                               before_close,          &
+      call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
+                                               chi, panel_id,          &
+                                               modeldb%clock,          &
+                                               modeldb%calendar,       &
+                                               before_close,           &
                                                alt_coords, alt_panel_ids )
       deallocate(alt_coords)
       deallocate(alt_panel_ids)
     else
-      call io_context%initialise_xios_context( modeldb%mpi%get_comm(),      &
-                                               chi, panel_id,         &
-                                               modeldb%clock, modeldb%calendar, &
+      call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
+                                               chi, panel_id,          &
+                                               modeldb%clock,          &
+                                               modeldb%calendar,       &
                                                before_close )
     end if
 
