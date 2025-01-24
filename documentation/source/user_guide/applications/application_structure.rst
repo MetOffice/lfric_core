@@ -195,11 +195,14 @@ API of higher-level science algorithms more manageable by hiding both
 the large number of fields and the fact that some fields are not
 required for all model configurations.
 
-A :ref:`configuration object <configuration object>` stores
-the model configuration derived from the input namelist, such as input
-values for real variables, science options and switches. Settings can
-be accessed by a name based on the namelist name and the variable
-name.
+.. Link to configuration object to `namelist_collection_type` in developer
+   guide when available.
+
+A `configuration object` stores the model configuration derived from the input
+namelists file. It contains input values for real variables, science options,
+switches, etc. Configuration settings can be accessed by first accessing the
+`namelist object(s)` in the `configuration object`, then requesting the desired
+namelist variable (see :ref:`Accessing configuration data<access_config_data>`).
 
 A :ref:`key-value <keyvalue pair object>` data structure exist
 that stores an arbitrary number of key-value pairs where the value can

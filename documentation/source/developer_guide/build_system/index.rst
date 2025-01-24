@@ -14,3 +14,4 @@ Build System
    configurator
    picker
    library_import
+   dependerator

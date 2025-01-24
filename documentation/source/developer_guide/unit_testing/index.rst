@@ -4,13 +4,13 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _lfric_datamodel_index:
+.. _section unit_testing:
 
-LFRic Data Model
-================
+Testing
+=======
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 1
 
-   data_structures
-   modeldb
+    unit_testing
+    unit_test_canned_data_routines
