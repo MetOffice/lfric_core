@@ -521,7 +521,7 @@ cells are computed.
 LFRic Function spaces and element orders
 ----------------------------------------
 
-This section introduces the LFRic function space object, which
+This section introduces the LFRic function space object which
 underpins fields used in LFRic. In previous sections it was noted that
 the function space is a concept in the finite element method whereby
 data and basis functions can define a field that spacially varies
