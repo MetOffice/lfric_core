@@ -295,6 +295,17 @@ Calling kernels
                   X_divideby_Y(u_physics, u, dA)               &
                   extract_w_kernel_type(w_physics, u_physics) )
 
+* PSyclone must be able to access field declaration for fields being passed into
+  an invoke. Therefore do not pass fields obtained from modules or from function
+  calls. Rather, declare a field pointer of the correct type, point it to your
+  module field or function call, then pass the field pointer.
+
+Kernel Rules
+^^^^^^^^^^^^
+
+There are a number of Do's and Don't's that must be adhered to when writing
+kernels for LFRic.
+
 * By convention, kernels and built-ins list output or input output arguments
   first in their argument list followed by input arguments. Aim to follow this
   convention in other code too.
@@ -303,10 +314,6 @@ Calling kernels
     modifying only a subset of the field. Therefore, kernel output arguments
     need always to have intent(inout) and not intent(out). To understand the
     true intent, examine the kernel metadata.
-* PSyclone must be able to access field declaration for fields being passed into
-  an invoke. Therefore do not pass fields obtained from modules or from function
-  calls. Rather, declare a field pointer of the correct type, point it to your
-  module field or function call, then pass the field pointer.
 
 PSyclone and psykal-lite code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
