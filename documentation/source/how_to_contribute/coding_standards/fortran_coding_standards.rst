@@ -287,6 +287,10 @@ Calling kernels
   prefixed with ``invoke_`` making it easy to find the link between the invoke
   call and the PSy layer subroutine it relates to.
 
+* By convention, kernels and built-ins list output or input output arguments
+  first in their argument list followed by input arguments. Aim to follow this
+  convention in other code too.
+
   .. code-block:: fortran
 
      call invoke( name = "map_to_physics",                     &
@@ -303,17 +307,33 @@ Calling kernels
 Kernel Rules
 ^^^^^^^^^^^^
 
-There are a number of Do's and Don't's that must be adhered to when writing
+There are a number of Do's and Don't's that should/must be adhered to when writing
 kernels for LFRic.
 
-* By convention, kernels and built-ins list output or input output arguments
-  first in their argument list followed by input arguments. Aim to follow this
-  convention in other code too.
+* Kernels should have output or input/output arguments first in their argument
+  list followed by input arguments. Aim to follow this convention in other code
+  too.
 
-  * Kernels are designed to be called multiple times per invoke, each call
-    modifying only a subset of the field. Therefore, kernel output arguments
-    need always to have intent(inout) and not intent(out). To understand the
-    true intent, examine the kernel metadata.
+* Kernels are designed to be called multiple times per invoke, each call
+  modifying only a subset of the field. Therefore, kernel output arguments
+  need always to have intent(inout) and not intent(out). To understand the
+  true intent, examine the kernel metadata.
+
+* Kernels may be run on GPUs and therefore must not have any logging or exit
+  methods in them, this includes `LOG_LEVEL_ERROR`, `lfric_abort`, `exit` and
+  the `STOP` statement.
+
+* Use of config in Kernels should be avoided if possible, splitting of Kernels
+  and use of logic in the algorithm layer is preferred. If config is needed in
+  a kernel the variables must pass through the interface **not** via the use
+  statements. Only the parameter options are allowed to be passed through the
+  use statement.
+
+* Calls to functions and subroutines from kernels should be avoided if possible.
+  When running on a GPU additional information must be provided on the locations
+  of any subroutines called from a kernel. If you believe this capability is
+  needed please discuss with the system maintainers first.
+
 
 PSyclone and psykal-lite code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
