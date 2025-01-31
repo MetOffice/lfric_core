@@ -287,10 +287,6 @@ Calling kernels
   prefixed with ``invoke_`` making it easy to find the link between the invoke
   call and the PSy layer subroutine it relates to.
 
-* By convention, kernels and built-ins list output or input output arguments
-  first in their argument list followed by input arguments. Aim to follow this
-  convention in other code too.
-
   .. code-block:: fortran
 
      call invoke( name = "map_to_physics",                     &
@@ -298,6 +294,10 @@ Calling kernels
                   setval_c(du, 0.0_r_def),                     &
                   X_divideby_Y(u_physics, u, dA)               &
                   extract_w_kernel_type(w_physics, u_physics) )
+
+* By convention, kernels and built-ins list output or input output arguments
+  first in their argument list followed by input arguments. Aim to follow this
+  convention in other code too.
 
 * PSyclone must be able to access field declaration for fields being passed into
   an invoke. Therefore do not pass fields obtained from modules or from function
@@ -320,8 +320,8 @@ kernels for LFRic.
   true intent, examine the kernel metadata.
 
 * Kernels may be run on GPUs and therefore must not have any logging or exit
-  methods in them, this includes `LOG_LEVEL_ERROR`, `lfric_abort`, `exit` and
-  the `STOP` statement.
+  methods in them, this includes ``LOG_LEVEL_ERROR``, ``lfric_abort``, ``exit``
+  and the ``STOP`` statement.
 
 * Use of config in Kernels should be avoided if possible, splitting of Kernels
   and use of logic in the algorithm layer is preferred. If config is needed in
