@@ -61,7 +61,9 @@ contains
 
     type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
     type(mesh_type) :: unit_test_mesh_A, unit_test_mesh_B
-    integer(i_def)  :: mesh_id_A, mesh_id_B
+    integer(i_def)  :: mesh_id
+    integer(i_def)  :: mesh_id_A = 3
+    integer(i_def)  :: mesh_id_B = 4
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
@@ -75,16 +77,18 @@ contains
 
     ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
     unit_test_mesh_A = mesh_type( PLANE_BI_PERIODIC, unit_test_local_mesh_ptr )
-    mesh_id_A = mesh_collection%add_new_mesh( unit_test_mesh_A )
-    this%mesh_A => mesh_collection%get_mesh( mesh_id_A )
+    call unit_test_mesh_A%set_id( mesh_id_A )
+    mesh_id = mesh_collection%add_new_mesh( unit_test_mesh_A )
+    this%mesh_A => mesh_collection%get_mesh( mesh_id )
     this%w3_fs_A => function_space_collection%get_fs( this%mesh_A,     &
                                                       element_order_h, &
                                                       element_order_v, &
                                                       W3 )
 
     unit_test_mesh_B = mesh_type( PLANE, unit_test_local_mesh_ptr )
-    mesh_id_B = mesh_collection%add_new_mesh( unit_test_mesh_B )
-    this%mesh_B => mesh_collection%get_mesh( mesh_id_B )
+    call unit_test_mesh_B%set_id( mesh_id_B )
+    mesh_id = mesh_collection%add_new_mesh( unit_test_mesh_B )
+    this%mesh_B => mesh_collection%get_mesh( mesh_id )
     this%w3_fs_B => function_space_collection%get_fs( this%mesh_B,     &
                                                       element_order_h, &
                                                       element_order_v, &
