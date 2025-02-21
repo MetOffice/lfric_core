@@ -1,6 +1,6 @@
 LFRic Core
 ==========
-[![Docs](https://github.com/MetOffice/lfric_core/actions/workflows/sphinx.yml/badge.svg?branch=main)](https://github.com/MetOffice/lfric_core/actions/workflows/sphinx.yml)
+[![Docs](https://github.com/MetOffice/lfric_core/actions/workflows/deploy-docs.yml/badge.svg?branch=main)](https://github.com/MetOffice/lfric_core/actions/workflows/deploy-docs.yml)
 
 Location for LFRic infrastructure documentation. The source code will be migrated here at a later date.
 
