@@ -40,7 +40,7 @@ field depending on compile-time choices.
    type(field_type)                   :: wind_field
 
    ! Get a reference to a lowest order W2 function space
-   vector_space => function_space_collection%get_fs(mesh_id, 0, W2)
+   vector_space => function_space_collection%get_fs(mesh_id, 0, 0, W2)
 
    ! Create a field to hold wind data
    call wind_field%initialise(vector_space, name = "wind")
@@ -315,7 +315,7 @@ space.
 
    ! Get a reference to a lowest order W3 multidata function space
    fspace_surface_tiles =>
-        function_space_collection%get_fs(mesh2D, 0, W3, surface_tiles)
+        function_space_collection%get_fs(mesh2D, 0, 0, W3, surface_tiles)
 
    ! Create a field to hold wind data
    call canopy_water%initialise(fspace_surface_tiles, name = "canopy_water")
