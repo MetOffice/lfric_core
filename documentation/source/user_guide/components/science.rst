@@ -1,6 +1,7 @@
 Science Component
 =================
 
-The LFRic infrastructure is intended to support a wide veriety of environmental
-models. These share a lot of fundamental mathematics which are encompased by
-this component.
+The LFRic infrastructure is intended to support a wide variety of environmental
+models. These models have a lot of common scientific and mathematical
+requirements. The science component provides a central location for holding
+code supporting such requirements.
