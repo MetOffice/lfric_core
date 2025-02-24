@@ -239,7 +239,7 @@ General rules
   it is the set of fields in the collection, and not the field collection object
   itself, that is modified.
 * Do not use ``write`` or ``print`` statements to write text to standard
-  output. Use the LFRic :ref:`logger <logger>`.
+  output. Use the LFRic :ref:`logger <logging>`.
 * Do not hold any variables or objects in module scope as this can prevent the
   module being used in two different concurrent processes in which different
   processes want to configure the variable or object differently.
