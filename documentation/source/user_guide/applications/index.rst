@@ -4,7 +4,7 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _lfric applications:
+.. _core applications:
 
 Applications
 ============
