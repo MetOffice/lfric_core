@@ -19,4 +19,6 @@ related capabilities.
 
    coupling
    lfric_xios
-   driver_layer
+   driver
+   inventory
+   science
