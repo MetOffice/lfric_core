@@ -36,7 +36,8 @@ Supported levels are:
 The first, "Error" is special as it will not only emmit a message but will also
 terminate execution. This is used when an unrecoverable issue has occurred.
 
-The logger's level is set using ``log_set_level()``.
+The logger's level is set using ``log_set_level()``. If this is not called it
+will default to "Info" level.
 
 Timestep
 ~~~~~~~~
