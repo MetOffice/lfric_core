@@ -24,6 +24,9 @@ templates_path = ['_templates']
 
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_js_files = ['plotly.min.js']
+
+exclude_patterns = ['_plotly']
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -89,4 +92,3 @@ html_context = {
 # Enable numbered references to e.g. figures.
 #
 numfig = True
-

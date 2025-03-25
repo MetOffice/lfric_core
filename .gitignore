@@ -33,6 +33,7 @@
 
 # Sphinx
 documentation/build
+documentation/generated
 
 # Jetbrains
 .idea
