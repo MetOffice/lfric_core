@@ -1,0 +1,8 @@
+# Python packages required to build documentation
+
+sphinx
+pydata-sphinx-theme
+sphinx-sitemap
+sphinx_design
+numpy
+plotly
