@@ -52,6 +52,8 @@
     [[AZSPICE_BUILD_GNU]]
         inherit=AZSPICE_BASE,AZSPICE_BUILD,AZSPICE_GNU
         {{ generate_script("pre-script", [azspice_base, azspice_scitools, azspice_compiler_gnu]) }}
+        [[[environment]]]
+            USE_MPI_F08 = "use_mpi_f08"
 
     [[AZSPICE_RUN_GNU]]
         inherit=AZSPICE_BASE,AZSPICE_RUN,AZSPICE_GNU

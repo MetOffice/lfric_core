@@ -16,7 +16,8 @@ module halo_comms_mod
   use constants_mod,         only: i_def, i_halo_index
   use linked_list_data_mod,  only: linked_list_data_type
   use log_mod,               only: log_event, LOG_LEVEL_ERROR
-  use mpi_mod,               only: global_mpi, get_mpi_datatype
+  use mpi_mod,               only: global_mpi, get_lfric_datatype, &
+                                   lfric_comm_type, lfric_datatype_type
 #ifdef NO_MPI
   ! If this is a non-mpi build - YAXT won't work - so don't "use" it
 #else
@@ -222,7 +223,7 @@ function halo_routing_constructor( global_dof_id,   &
     self%redist(idepth) = generate_redistribution_map( &
                      global_dof_id(1:last_owned_dof), &
                      global_dof_id( halo_start(idepth):halo_finish(idepth) ), &
-                     get_mpi_datatype( fortran_type, fortran_kind ) )
+                     get_lfric_datatype( fortran_type, fortran_kind ) )
   end do
 #endif
 
@@ -361,13 +362,17 @@ end function get_redist
 !>
 subroutine initialise_halo_comms(comm)
   implicit none
-  integer(i_def), intent(in) :: comm
+  type(lfric_comm_type), intent(in) :: comm
 
 #ifdef NO_MPI
   ! Don't initialise YAXT in non-mpi build.
 #else
+  integer(i_def) ::comm_mpi_val
+
   ! Initialise YAXT
-  call xt_initialize( comm )
+
+  comm_mpi_val = comm%get_comm_mpi_val()
+  call xt_initialize( comm_mpi_val )
 #endif
 
 end subroutine initialise_halo_comms
@@ -610,8 +615,8 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype) &
                                      result(redist)
   implicit none
 
-  integer(i_halo_index), intent(in) :: src_indices(:), tgt_indices(:)
-  integer(i_def),        intent(in) :: datatype
+  integer(i_halo_index),     intent(in) :: src_indices(:), tgt_indices(:)
+  type(lfric_datatype_type), intent(in) :: datatype
 #ifdef NO_MPI
   !  Redistribution maps are meaningless in a non-mpi build, so just return 0
   integer(i_def) :: redist
@@ -624,6 +629,8 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype) &
   integer(i_def), allocatable :: src_offsets(:)
   integer(i_def), allocatable :: tgt_offsets(:)
   integer(i_def) :: i
+  type(lfric_comm_type) :: comm
+  integer(i_def) :: datatype_mpi_val
 
   if( global_mpi%is_comm_set() )then
     ! create decomposition descriptors
@@ -631,7 +638,9 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype) &
     tgt_idxlist = xt_idxvec_new( tgt_indices, size(tgt_indices) )
 
     ! generate exchange map
-    xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, global_mpi%get_comm() )
+    comm = global_mpi%get_comm()
+    xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, &
+                                 comm%get_comm_mpi_val() )
 
     allocate(src_offsets( size(src_indices) ))
     allocate(tgt_offsets( size(tgt_indices) ))
@@ -644,7 +653,8 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype) &
       tgt_offsets(i) = i + size(src_indices) - 1
     end do
 
-    redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype)
+    datatype_mpi_val = datatype%get_datatype_mpi_val()
+    redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype_mpi_val)
 
     call xt_xmap_delete(xmap)
     call xt_idxlist_delete(tgt_idxlist)

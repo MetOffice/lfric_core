@@ -1387,7 +1387,7 @@ contains
   !>
   subroutine init_cell_owner(self)
     use fs_continuity_mod, only: W3
-    use mpi_mod,           only: get_mpi_datatype, global_mpi
+    use mpi_mod,           only: global_mpi
 
     implicit none
     class (local_mesh_type), intent(inout), target :: self

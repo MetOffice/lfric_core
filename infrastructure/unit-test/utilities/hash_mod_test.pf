@@ -17,38 +17,13 @@ module hash_mod_test
 
   private
 
-  public set_up, tear_down, test_string_hashing
+  public test_string_hashing
   !
   ! pFUnit depends on symbol spill
   !
   public MPITestMethod, MPITestParameter
 
 contains
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @before
-  subroutine set_up(this)
-
-    implicit none
-
-    class(MPITestMethod), intent(inout) :: this
-
-    !Store the MPI communicator for later use
-    call global_mpi%initialise(this%getMpiCommunicator())
-
-  end subroutine set_up
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @after
-  subroutine tear_down(this)
-
-    implicit none
-
-    class(MPITestMethod), intent(inout) :: this
-
-    ! Clear the stored MPI communicator
-    call global_mpi%finalise()
-
-  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test( npes=[1] )

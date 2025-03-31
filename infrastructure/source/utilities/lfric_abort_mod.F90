@@ -22,7 +22,11 @@ contains
 #ifdef NO_MPI
    ! No "use mpi" in non-mpi build
 #else
+#ifdef LEGACY_MPI
     use mpi, only : mpi_abort, MPI_COMM_WORLD
+#else
+    use mpi_f08, only : mpi_abort, MPI_COMM_WORLD
+#endif
 #endif
 
     implicit none

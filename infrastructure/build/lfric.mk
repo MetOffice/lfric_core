@@ -85,6 +85,13 @@ ifdef NO_MPI
   export PRE_PROCESS_MACROS += NO_MPI=no_mpi
 endif
 
+# Currently default to legacy MPI, rather than use the not completely well-
+# supported mpi_f08 (which would be the default in the absence of any setting)
+#
+ifndef USE_MPI_F08
+  export PRE_PROCESS_MACROS += LEGACY_MPI
+endif
+
 # Set the default precision for reals
 RDEF_PRECISION ?= 64
 export PRE_PROCESS_MACROS += RDEF_PRECISION=$(RDEF_PRECISION)

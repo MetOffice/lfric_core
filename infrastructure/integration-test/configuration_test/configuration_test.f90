@@ -8,7 +8,8 @@ program configuration_test
 
   use, intrinsic :: iso_fortran_env, &
                                 only : error_unit
-  use mpi_mod,                  only : global_mpi, create_comm, destroy_comm
+  use mpi_mod,                  only : global_mpi, create_comm, destroy_comm, &
+                                       lfric_comm_type
   use one_of_each_test_config_mod,                                            &
                                 only : key_from_an_enum,                      &
                                        postprocess_one_of_each_test_namelist, &
@@ -36,7 +37,7 @@ program configuration_test
   integer,      parameter :: file_unit = 13
   character(*), parameter :: filename = 'configuration_test.nml'
 
-  integer       :: comm
+  type(lfric_comm_type) :: comm
   integer       :: rank
   integer       :: condition
   character(20) :: result_filename

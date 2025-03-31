@@ -33,7 +33,8 @@ module test_db_mod
   use function_space_mod,             only: function_space_type
   use fs_continuity_mod,              only: Wchi, W0, W2H, W3
   use mpi_mod,                        only: mpi_type, global_mpi, &
-                                            create_comm, destroy_comm
+                                            create_comm, destroy_comm, &
+                                            lfric_comm_type
   use step_calendar_mod,              only: step_calendar_type
 
 
@@ -42,7 +43,7 @@ module test_db_mod
   !> Object containing infrastructure for testing LFRic-XIOS
   type, public :: test_db_type
     private
-    integer(i_def),   public :: comm
+    type(lfric_comm_type),   public :: comm
     type(namelist_collection_type), public :: config
     type(field_type), public :: chi(3)
     type(field_type), public :: panel_id
@@ -82,7 +83,7 @@ contains
     call create_comm(self%comm)
     call global_mpi%initialise(self%comm)
     call initialise_halo_comms(self%comm)
-    call initialise_logging(self%comm, 'lfric_xios_context_test')
+    call initialise_logging(self%comm%get_comm_mpi_val(), 'lfric_xios_context_test')
 
     call self%config%initialise( "lfric_xios_integration_tests", table_len=10 )
     call read_configuration( "configuration.nml", self%config )

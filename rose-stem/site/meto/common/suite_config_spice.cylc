@@ -68,6 +68,8 @@
     [[SPICE_BUILD_GNU]]
         inherit=SPICE_BASE,SPICE_BUILD,SPICE_GNU
         {{ generate_script("pre-script", [spice_base, spice_scitools, spice_compiler_gnu]) }}
+        [[[environment]]]
+            USE_MPI_F08 = "use_mpi_f08"
 
     [[SPICE_RUN_INTEL]]
         inherit=SPICE_BASE,SPICE_RUN,SPICE_INTEL

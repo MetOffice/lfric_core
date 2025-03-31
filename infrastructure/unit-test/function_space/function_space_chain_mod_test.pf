@@ -29,7 +29,8 @@ use global_mesh_collection_mod,    only: global_mesh_collection_type, &
 use local_mesh_mod,                only: local_mesh_type
 use local_mesh_collection_mod,     only: local_mesh_collection_type, &
                                          local_mesh_collection
-use mpi_mod,                       only: global_mpi
+use mpi_mod,                       only: global_mpi, &
+                                         lfric_comm_type
 use ugrid_mesh_data_mod,           only: ugrid_mesh_data_type
 
 implicit none
@@ -108,6 +109,7 @@ type(mesh_type), pointer        :: target_mesh_ptr => null()
 type(local_mesh_type)           :: local_mesh
 type(local_mesh_type), pointer  :: source_local_mesh_ptr => null()
 type(local_mesh_type), pointer  :: target_local_mesh_ptr => null()
+type(lfric_comm_type)           :: lfric_comm
 
 type(partition_type)               :: partition
 type(uniform_extrusion_type)       :: extrusion
@@ -127,10 +129,12 @@ integer(i_def) :: i, j, n, x, y
 
 procedure (partitioner_interface), pointer :: partitioner_ptr => null()
 
+call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
+
 !Store the MPI communicator for later use
-call global_mpi%initialise(this%getMpiCommunicator())
+call global_mpi%initialise(lfric_comm)
 ! Initialise halo functionality
-call initialise_halo_comms( this%getMpiCommunicator() )
+call initialise_halo_comms(lfric_comm)
 
 partitioner_ptr => partitioner_cubedsphere_serial
 

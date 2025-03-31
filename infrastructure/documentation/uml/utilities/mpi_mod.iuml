@@ -2,13 +2,15 @@
 ' The file LICENCE, distributed with this code, contains details of the terms
 ' under which the code may be used.
 
-class mpi_type {
-  -comm: integer
-  -comm_set: Boolean
+class mpi_mod::mpi_type {
+  -comm: mpi_comm_type
+  -comm_size : integer
+  -comm rank : integer
+  -comm_set: logical
 
-  +initialise(in_comm: integer)
+  +initialise(in_comm: lfric_comm_type)
   +finalise()
-  +get_comm(): integer
+  +get_comm(): lfric_comm_type
   +is_comm_set(): Boolean
   +global_sum(l_sum: real64, g_sum: real64)
   +global_sum(l_sum: real32, g_sum: real32)
@@ -19,7 +21,7 @@ class mpi_type {
   +global_max(l_max: real64, g_max: real64)
   +global_max(l_max: real32, g_max: real32)
   +global_max(l_max: int32,  g_max: int32)
-  +all_gather(send_buffer: integer, recv_buffer: integer, count: integer)
+  +all_gather(send_buffer: int32, recv_buffer: int32, count: int32)
   +broadcast(buffer(:): logical, count: integer, root: integer)
   +broadcast(buffer(:): int32, count: integer, root: integer)
   +broadcast(buffer(:): real64, count: integer, root: integer)
@@ -36,3 +38,36 @@ class mpi_type {
   +get_comm_size(): integer
   +get_comm_rank(): integer
 }
+note right
+This object encapsulates
+all LFRic use of mpi
+end note
+
+class mpi_mod::lfric_comm_type {
+  -comm: mpi_comm_type
+
+  +get_comm_mpi_val(): integer
+  +set_comm_mpi_val(comm: integer)
+}
+note right
+This is defined in LFRic and
+passed around the LFRic code
+(including to the mpi_type initialiser)
+end note
+
+class mpi_comm_type {
+  +mpi_val: integer
+}
+note left
+This is defined in mpi_f08 and
+given to any mpi_f08 code that
+needs a communicator
+end note
+
+class mpi_val{
+}
+note left
+This is a simple integer and is
+given to any legacy mpi code
+that needs a communicator
+end note

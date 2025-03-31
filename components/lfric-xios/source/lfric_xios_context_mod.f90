@@ -25,6 +25,7 @@ module lfric_xios_context_mod
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
   use model_clock_mod,      only : model_clock_type
+  use mpi_mod,              only : lfric_comm_type
   use timer_mod,            only : timer
   use xios,                 only : xios_context,                  &
                                    xios_context_initialize,       &
@@ -98,7 +99,7 @@ contains
     implicit none
 
     class(lfric_xios_context_type), intent(inout) :: this
-    integer(i_def),                 intent(in)    :: communicator
+    type(lfric_comm_type),          intent(in)    :: communicator
     type(field_type),               intent(in)    :: chi(:)
     type(field_type),               intent(in)    :: panel_id
     type(model_clock_type),         intent(inout) :: model_clock
@@ -122,7 +123,8 @@ contains
       zero_start = .false.
     end if
 
-    call xios_context_initialize( this%get_context_name(), communicator )
+    call xios_context_initialize( this%get_context_name(), &
+                                  communicator%get_comm_mpi_val() )
     call xios_get_handle( this%get_context_name(), this%handle )
     call xios_set_current_context( this%handle )
 

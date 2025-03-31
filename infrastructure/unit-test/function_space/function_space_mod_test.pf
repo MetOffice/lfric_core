@@ -78,7 +78,8 @@ module function_space_mod_test
                                     WB, SB, EB, NB,         &
                                     SW, SE, NE, NW,         &
                                     WT, ST, ET, NT
-  use mpi_mod,               only : global_mpi
+  use mpi_mod,               only : global_mpi, &
+                                    lfric_comm_type
 
   implicit none
 
@@ -239,9 +240,12 @@ contains
 
     type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
     type(mesh_type) :: unit_test_mesh
+    type(lfric_comm_type) :: lfric_comm
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
     !Store the MPI communicator for later use
-    call global_mpi%initialise(this%getMpiCommunicator())
+    call global_mpi%initialise(lfric_comm)
 
     call this%unit_test_local_mesh%initialise()
     unit_test_local_mesh_ptr => this%get_local_mesh_ptr()

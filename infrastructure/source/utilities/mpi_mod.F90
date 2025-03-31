@@ -16,7 +16,18 @@ module mpi_mod
 #ifdef NO_MPI
   ! No "use mpi" in non-mpi build
 #else
-  use mpi
+#ifdef LEGACY_MPI
+  use mpi, only: mpi_comm_world,mpi_sum, mpi_min, mpi_max, mpi_success, &
+                 mpi_real4, mpi_double_precision, mpi_logical,          &
+                 mpi_integer1, mpi_integer2, mpi_integer, mpi_integer8, &
+                 mpi_character
+#else
+  use mpi_f08, only: mpi_comm, mpi_datatype, mpi_comm_world,                &
+                     mpi_sum, mpi_min, mpi_max, mpi_success,                &
+                     mpi_real4, mpi_double_precision, mpi_logical,          &
+                     mpi_integer1, mpi_integer2, mpi_integer, mpi_integer8, &
+                     mpi_character
+#endif
 #endif
   use log_mod,       only : log_event, LOG_LEVEL_ERROR
 
@@ -24,14 +35,30 @@ module mpi_mod
 
   private
 
-  public global_mpi, create_comm, destroy_comm, get_mpi_datatype
+  public global_mpi, create_comm, destroy_comm, get_lfric_datatype
+
+#ifdef NO_MPI
+  ! When running without MPI, create a dummy object that looks like an MPI_F08
+  ! communicator object
+  type, public :: mpi_comm
+    integer, public :: mpi_val
+  end type
+#endif
 
   type, public :: mpi_type
-
     private
-
     !> The mpi communicator
-    integer :: comm=-999, comm_size=-999, comm_rank=-999
+#ifdef NO_MPI
+    type(mpi_comm) :: comm
+#else
+#ifdef LEGACY_MPI
+    integer        :: comm
+#else
+    type(mpi_comm) :: comm
+#endif
+#endif
+    integer :: comm_size
+    integer :: comm_rank
     !> Flag marks whether an MPI communicator has been stored
     logical :: comm_set = .false.
 
@@ -91,6 +118,48 @@ module mpi_mod
 
   end type mpi_type
 
+  ! Define an "LFRic" type that we can pass around that holds a communicator
+  type, public :: lfric_comm_type
+    private
+#ifdef NO_MPI
+    type(mpi_comm) :: comm
+#else
+#ifdef LEGACY_MPI
+    integer :: comm
+#else
+    type(mpi_comm) :: comm
+#endif
+#endif
+  contains
+    procedure, public :: get_comm_mpi_val
+    procedure, public :: set_comm_mpi_val
+  end type
+
+#ifdef NO_MPI
+  ! When running without MPI, create a dummy object that looks like an MPI_F08
+  ! datatype object
+  type, public :: mpi_datatype
+    integer, public :: mpi_val
+  end type
+#endif
+
+  ! Define an "LFRic" type that we can pass around that holds an mpi datatype
+  type, public :: lfric_datatype_type
+    private
+#ifdef NO_MPI
+    type(mpi_datatype) :: datatype
+#else
+#ifdef LEGACY_MPI
+    integer :: datatype
+#else
+    type(mpi_datatype) :: datatype
+#endif
+#endif
+  contains
+    procedure, public :: get_datatype_mpi_val
+    procedure, public :: get_mpi_datatype
+  end type
+
   !Global MPI object
   !> @todo This needs to be moved out of global scope and into the modeldb
   !>       object, when that object exists
@@ -105,18 +174,18 @@ contains
   !>
   subroutine create_comm(out_comm)
     implicit none
-    integer, intent(out) :: out_comm
+    type(lfric_comm_type), intent(out) :: out_comm
     integer :: ierr
 
 #ifdef NO_MPI
     ! Don't initialise mpi in non-mpi build.
-    out_comm = 0
+    out_comm%comm%mpi_val = 0
     ierr=0 ! Set local variable to avoid unused variable errors
 #else
     call mpi_init(ierr)
     if (ierr /= mpi_success) &
           call log_event('Unable to initialise MPI', LOG_LEVEL_ERROR )
-    out_comm = mpi_comm_world
+    out_comm%comm = MPI_COMM_WORLD
 #endif
   end subroutine create_comm
 
@@ -145,17 +214,17 @@ contains
   !> @param fortran_kind A Fortran kind variable
   !> @return mpi_datatype The MPI datatype enumerator associated with the
   !>                      given Fortran type and kind
-  function get_mpi_datatype( fortran_type, fortran_kind ) result(mpi_datatype)
+  function get_lfric_datatype( fortran_type, fortran_kind ) result(mpi_datatype)
     use, intrinsic :: iso_fortran_env, only : real128, real64, real32, &
                                               int64, int32, int16, int8
     implicit none
-    integer, intent(in) :: fortran_type
-    integer, intent(in) :: fortran_kind
-    integer             :: mpi_datatype
+    integer,       intent(in) :: fortran_type
+    integer,       intent(in) :: fortran_kind
+    type(lfric_datatype_type) :: mpi_datatype
 
 #ifdef NO_MPI
     ! In a non-mpi build the mpi datatype is meaningless - just return zero
-    mpi_datatype = 0
+    mpi_datatype%datatype%mpi_val = 0
 #else
    ! Determine MPI datatype enumerator from a Fortran kind.
    ! (To support a new Fortran kind, just add a new case clause)
@@ -164,9 +233,9 @@ contains
       ! In the case where the data is real
       select case (fortran_kind)
       case (real32)
-        mpi_datatype = MPI_REAL4
+        mpi_datatype%datatype = MPI_REAL4
       case (real64)
-        mpi_datatype = MPI_DOUBLE_PRECISION
+        mpi_datatype%datatype = MPI_DOUBLE_PRECISION
       case (real128)
         call log_event( 'Attempt to use real128 Fortran kind used for MPI comms - &
            &NOT YET SUPPORTED', LOG_LEVEL_ERROR )
@@ -174,27 +243,28 @@ contains
         call log_event( 'Unrecognised Fortran kind used for MPI comms', &
            LOG_LEVEL_ERROR )
       end select
+
     case (integer_type)
       ! In the case where the data is integer
       select case (fortran_kind)
       case (int8)
-        mpi_datatype = MPI_INTEGER1
+        mpi_datatype%datatype = MPI_INTEGER1
       case (int16)
-        mpi_datatype = MPI_INTEGER2
+        mpi_datatype%datatype = MPI_INTEGER2
       case (int32)
-        mpi_datatype = MPI_INTEGER
+        mpi_datatype%datatype = MPI_INTEGER
       case (int64)
-        mpi_datatype = MPI_INTEGER8
+        mpi_datatype%datatype = MPI_INTEGER8
       case default
         call log_event( 'Unrecognised Fortran kind used for MPI comms', &
            LOG_LEVEL_ERROR )
       end select
     case (logical_type)
-      mpi_datatype = MPI_LOGICAL
+      mpi_datatype%datatype = MPI_LOGICAL
     end select
 #endif
 
-  end function get_mpi_datatype
+  end function get_lfric_datatype
 
   !> Stores the MPI communicator in a private variable, ready for later use.
   !>
@@ -202,11 +272,11 @@ contains
   !>
   subroutine initialise(self, in_comm)
     implicit none
-    class(mpi_type), intent(inout) :: self
-    integer,         intent(in)    :: in_comm
+    class(mpi_type),       intent(inout) :: self
+    type(lfric_comm_type), intent(in)    :: in_comm
     integer :: ierr
 
-    self%comm = in_comm
+    self%comm = in_comm%comm
 #ifdef NO_MPI
     ! Set default values for number of ranks and local rank in non-mpi build
     self%comm_size = 1
@@ -224,10 +294,6 @@ contains
   subroutine finalise(self)
     implicit none
     class(mpi_type), intent(inout) :: self
-
-    self%comm = -999
-    self%comm_size = -999
-    self%comm_rank = -999
     self%comm_set = .false.
   end subroutine finalise
 
@@ -237,8 +303,8 @@ contains
   function get_comm(self) result(communicator)
     implicit none
     class(mpi_type), intent(in) :: self
-    integer :: communicator
-    communicator = self%comm
+    type(lfric_comm_type) :: communicator
+    communicator%comm = self%comm
   end function get_comm
 
   !> Returns whether the MPI communicator has been stored
@@ -262,16 +328,21 @@ contains
     real(real64), intent(in)       :: l_sum
     real(real64), intent(out)      :: g_sum
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global sum and local sum are the same thing in a non-mpi build
     g_sum = l_sum
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global sum
-      call mpi_allreduce( l_sum, g_sum, 1, get_mpi_datatype( real_type, real64 ), &
+      lfric_datatype =  get_lfric_datatype( real_type, real64 )
+      call mpi_allreduce( l_sum, g_sum, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_sum, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real global_sum failed with an MPI error.', &
@@ -297,16 +368,21 @@ contains
     real(real32), intent(in)       :: l_sum
     real(real32), intent(out)      :: g_sum
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global sum and local sum are the same thing in a non-mpi build
     g_sum = l_sum
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global sum
-      call mpi_allreduce( l_sum, g_sum, 1, get_mpi_datatype( real_type, real32), &
+      lfric_datatype = get_lfric_datatype( real_type, real32)
+      call mpi_allreduce( l_sum, g_sum, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_sum, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real global_sum failed with an MPI error.', &
@@ -332,16 +408,21 @@ contains
     integer(int32), intent(in)     :: l_sum
     integer(int32), intent(out)    :: g_sum
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global sum and local sum are the same thing in a non-mpi build
     g_sum = l_sum
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global sum
-      call mpi_allreduce( l_sum, g_sum, 1, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_allreduce( l_sum, g_sum, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_sum, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to integer global_sum failed with an MPI error.', &
@@ -367,16 +448,21 @@ contains
     real(real64), intent(in)       :: l_min
     real(real64), intent(out)      :: g_min
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global minimum and local minimum are the same thing in a non-mpi build
     g_min = l_min
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global min
-      call mpi_allreduce( l_min, g_min, 1, get_mpi_datatype( real_type, real64 ), &
+      lfric_datatype = get_lfric_datatype( real_type, real64 )
+      call mpi_allreduce( l_min, g_min, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_min, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to global_min failed with an MPI error.', &
@@ -401,16 +487,21 @@ contains
     real(real32), intent(in)       :: l_min
     real(real32), intent(out)      :: g_min
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global minimum and local minimum are the same thing in a non-mpi build
     g_min = l_min
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global min
-      call mpi_allreduce( l_min, g_min, 1, get_mpi_datatype( real_type, real32), &
+      lfric_datatype = get_lfric_datatype( real_type, real32)
+      call mpi_allreduce( l_min, g_min, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_min, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to global_min failed with an MPI error.', &
@@ -436,16 +527,21 @@ contains
     integer(int32), intent(in)     :: l_min
     integer(int32), intent(out)    :: g_min
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global minimum and local minimum are the same thing in a non-mpi build
     g_min = l_min
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global min
-      call mpi_allreduce( l_min, g_min, 1, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_allreduce( l_min, g_min, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_min, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to global_min failed with an MPI error.', &
@@ -471,16 +567,21 @@ contains
     real(real64), intent(in)       :: l_max
     real(real64), intent(out)      :: g_max
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global maximum and local maximum are the same thing in a non-mpi build
     g_max = l_max
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global max
-      call mpi_allreduce( l_max, g_max, 1, get_mpi_datatype( real_type, real64 ), &
+      lfric_datatype = get_lfric_datatype( real_type, real64 )
+      call mpi_allreduce( l_max, g_max, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_max, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to global_max failed with an MPI error.', &
@@ -506,16 +607,21 @@ contains
     real(real32), intent(in)       :: l_max
     real(real32), intent(out)      :: g_max
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global maximum and local maximum are the same thing in a non-mpi build
     g_max = l_max
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global max
-      call mpi_allreduce( l_max, g_max, 1, get_mpi_datatype( real_type, real32), &
+      lfric_datatype = get_lfric_datatype( real_type, real32)
+      call mpi_allreduce( l_max, g_max, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_max, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to global_max failed with an MPI error.', &
@@ -541,16 +647,21 @@ contains
     integer(int32), intent(in)     :: l_max
     integer(int32), intent(out)    :: g_max
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Global maximum and local maximum are the same thing in a non-mpi build
     g_max = l_max
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
       ! Generate global max
-      call mpi_allreduce( l_max, g_max, 1, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_allreduce( l_max, g_max, 1, lfric_datatype%get_mpi_datatype(), &
                           mpi_max, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to global_max failed with an MPI error.', &
@@ -579,16 +690,20 @@ contains
     integer(int32), intent(out)    :: recv_buffer(:)
     integer(int32), intent(in)     :: count
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! Send and recv buffers in a gather are the same thing in a non-mpi build
     recv_buffer = send_buffer
-    err=0 ! Set local variable to avoid unused variable errors
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
-      call mpi_allgather(send_buffer, count, get_mpi_datatype( integer_type, int32 ), &
-                         recv_buffer, count, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_allgather(send_buffer, count, lfric_datatype%get_mpi_datatype(), &
+                         recv_buffer, count, lfric_datatype%get_mpi_datatype(), &
                          self%comm, err)
       if (err /= mpi_success) &
         call log_event('Call to all_gather failed with an MPI error.', &
@@ -622,7 +737,9 @@ contains
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    err=0
 #else
     if(self%comm_set)then
       call mpi_bcast( buffer, count, MPI_LOGICAL, root, self%comm, err )
@@ -653,14 +770,19 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
-      call mpi_bcast( buffer, count, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_bcast( buffer, count, lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to integer broadcast failed with an MPI error.', &
@@ -689,15 +811,20 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
+      lfric_datatype = get_lfric_datatype( real_type, real64 )
       call mpi_bcast( buffer, count, &
-                      get_mpi_datatype( real_type, real64 ), &
+                      lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real broadcast failed with an MPI error.', &
@@ -726,15 +853,20 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
+      lfric_datatype = get_lfric_datatype( real_type, real32 )
       call mpi_bcast( buffer, count, &
-                      get_mpi_datatype( real_type, real32 ), &
+                      lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real broadcast failed with an MPI error.', &
@@ -767,7 +899,9 @@ contains
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    err=0
 #else
     if(self%comm_set)then
       call mpi_bcast( buffer, count, MPI_CHARACTER, root, self%comm, err )
@@ -802,7 +936,9 @@ contains
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    err=0
 #else
     if(self%comm_set)then
       call mpi_bcast( buffer, count, MPI_LOGICAL, root, self%comm, err )
@@ -833,14 +969,19 @@ contains
     integer, intent(in)            :: count
     integer, intent(in)            :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
-      call mpi_bcast( buffer, count, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_bcast( buffer, count, lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to integer broadcast failed with an MPI error.', &
@@ -869,15 +1010,20 @@ contains
     integer, intent(in)            :: count
     integer, intent(in)            :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
+      lfric_datatype = get_lfric_datatype( real_type, real64 )
       call mpi_bcast( buffer, count, &
-                      get_mpi_datatype( real_type, real64 ), &
+                      lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real broadcast failed with an MPI error.', &
@@ -906,15 +1052,20 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
+      lfric_datatype = get_lfric_datatype( real_type, real32 )
       call mpi_bcast( buffer, count, &
-                      get_mpi_datatype( real_type, real32 ), &
+                      lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real broadcast failed with an MPI error.', &
@@ -947,7 +1098,9 @@ contains
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    err=0
 #else
     if(self%comm_set)then
       call mpi_bcast( buffer, count, MPI_LOGICAL, root, self%comm, err )
@@ -978,14 +1131,19 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer(int32) :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
-      call mpi_bcast( buffer, count, get_mpi_datatype( integer_type, int32 ), &
+      lfric_datatype = get_lfric_datatype( integer_type, int32 )
+      call mpi_bcast( buffer, count, lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to integer broadcast failed with an MPI error.', &
@@ -1014,15 +1172,20 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
+      lfric_datatype = get_lfric_datatype( real_type, real64 )
       call mpi_bcast( buffer, count, &
-                      get_mpi_datatype( real_type, real64 ), &
+                      lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real broadcast failed with an MPI error.', &
@@ -1051,15 +1214,20 @@ contains
     integer,         intent(in)    :: count
     integer,         intent(in)    :: root
 
+    type(lfric_datatype_type) :: lfric_datatype
     integer :: err
 
 #ifdef NO_MPI
     ! In a non-mpi build there is nowhere to broadcast to - so do nothing
-    err=0 ! Set local variable to avoid unused variable errors
+
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
 #else
     if(self%comm_set)then
+      lfric_datatype = get_lfric_datatype( real_type, real32 )
       call mpi_bcast( buffer, count, &
-                      get_mpi_datatype( real_type, real32 ), &
+                      lfric_datatype%get_mpi_datatype(), &
                       root, self%comm, err )
       if (err /= mpi_success) &
         call log_event('Call to real broadcast failed with an MPI error.', &
@@ -1115,5 +1283,77 @@ contains
     end if
 #endif
   end function get_comm_rank
+
+  !> Returns the integer communicator
+  !>
+  !> @return comm The integer component of the communicator
+  function get_comm_mpi_val(self) result(comm)
+    implicit none
+    class(lfric_comm_type), intent(in)  :: self
+    integer :: comm
+#ifdef NO_MPI
+    comm = self%comm%mpi_val
+#else
+#ifdef LEGACY_MPI
+    comm = self%comm
+#else
+    comm = self%comm%mpi_val
+#endif
+#endif
+  end function get_comm_mpi_val
+
+  !> Sets the LFRic communicator to point at the given integer communicator
+  !>
+  !> @param comm Integer communicator that the LFRic comm should point at
+  subroutine set_comm_mpi_val(self, comm)
+    implicit none
+    class(lfric_comm_type), intent(inout)  :: self
+    integer, intent(in) :: comm
+#ifdef NO_MPI
+    self%comm%mpi_val = comm
+#else
+#ifdef LEGACY_MPI
+    self%comm = comm
+#else
+    self%comm%mpi_val = comm
+#endif
+#endif
+  end subroutine set_comm_mpi_val
+
+  !> Returns the integer datatype
+  !>
+  !> @return datatype The integer component of the datatype
+  function get_datatype_mpi_val(self) result(datatype)
+    implicit none
+    class(lfric_datatype_type), intent(in)  :: self
+    integer :: datatype
+#ifdef NO_MPI
+    datatype = self%datatype%mpi_val
+#else
+#ifdef LEGACY_MPI
+    datatype = self%datatype
+#else
+    datatype = self%datatype%mpi_val
+#endif
+#endif
+  end function get_datatype_mpi_val
+
+  !> Returns the mpi datatype
+  !>
+  !> @return datatype The integer component of the datatype
+  function get_mpi_datatype(self) result(datatype)
+    implicit none
+    class(lfric_datatype_type), intent(inout)  :: self
+#ifdef NO_MPI
+    type(mpi_datatype) :: datatype
+#else
+#ifdef LEGACY_MPI
+    integer :: datatype
+#else
+    type(mpi_datatype) :: datatype
+#endif
+#endif
+    datatype = self%datatype
+  end function get_mpi_datatype
 
 end module mpi_mod

@@ -24,7 +24,8 @@ program summarise_ugrid
   use log_mod,         only : initialise_logging, finalise_logging, &
                               log_event, log_scratch_space,         &
                               LOG_LEVEL_ERROR, LOG_LEVEL_INFO
-  use mpi_mod,         only : global_mpi, create_comm, destroy_comm
+  use mpi_mod,         only : global_mpi, create_comm, destroy_comm, &
+                              lfric_comm_type
 
   implicit none
 
@@ -58,14 +59,16 @@ program summarise_ugrid
   integer(i_def) :: nodes_per_face, edges_per_face
   integer(i_def) :: nodes_per_edge, max_faces_per_node
 
-  integer(i_def) :: comm, total_ranks, local_rank, nmaps
+  integer(i_def) :: total_ranks, local_rank, nmaps
+  type(lfric_comm_type) :: comm
+
 
   ! Start up
   call create_comm(comm)
   call global_mpi%initialise(comm)
   total_ranks = global_mpi%get_comm_size()
   local_rank  = global_mpi%get_comm_rank()
-  call initialise_logging( comm, "summarise" )
+  call initialise_logging( comm%get_comm_mpi_val(), "summarise" )
 
   ! Get filename from command line
   call get_initial_filename( filename, 'UGRID mesh file' )

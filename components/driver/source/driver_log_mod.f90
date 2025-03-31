@@ -20,6 +20,7 @@ use logging_config_mod,   only: run_log_level,          &
                                 RUN_LOG_LEVEL_DEBUG,    &
                                 RUN_LOG_LEVEL_TRACE,    &
                                 RUN_LOG_LEVEL_WARNING
+use mpi_mod,              only: lfric_comm_type
 
 implicit none
 
@@ -37,12 +38,12 @@ subroutine init_logger(communicator, program_name)
 
   implicit none
 
-  character(len=*), intent(in) :: program_name
-  integer(i_def),   intent(in) :: communicator
+  character(len=*),       intent(in) :: program_name
+  type(lfric_comm_type),  intent(in) :: communicator
 
   integer(i_def) :: log_level
 
-  call initialise_logging( communicator, program_name )
+  call initialise_logging( communicator%get_comm_mpi_val(), program_name )
 
   select case (run_log_level)
   case( RUN_LOG_LEVEL_ERROR )

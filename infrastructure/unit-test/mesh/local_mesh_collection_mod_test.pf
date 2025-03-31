@@ -16,7 +16,8 @@ module local_mesh_collection_mod_test
   use local_mesh_collection_mod,  only : local_mesh_collection_type, &
                                          local_mesh_collection
   use local_mesh_mod,             only : local_mesh_type
-  use mpi_mod,                    only : global_mpi
+  use mpi_mod,                    only : global_mpi, &
+                                         lfric_comm_type
   use partition_mod,              only : partition_type,     &
                                          partitioner_planar, &
                                          partitioner_interface
@@ -42,9 +43,12 @@ contains
     implicit none
 
     class(MPITestMethod), intent(inout) :: this
+    type(lfric_comm_type) :: lfric_comm
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
     !Store the MPI communicator for later use
-    call global_mpi%initialise(this%getMpiCommunicator())
+    call global_mpi%initialise(lfric_comm)
 
     ! Create top level collections
     global_mesh_collection = global_mesh_collection_type()

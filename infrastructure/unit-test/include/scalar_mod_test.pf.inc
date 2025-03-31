@@ -25,7 +25,8 @@ module TMPL_MODULE_NAME
 
   use, intrinsic :: iso_fortran_env, only : TMPL_KIND
   use constants_mod, only: i_def
-  use mpi_mod, only : global_mpi
+  use mpi_mod, only : global_mpi, &
+                      lfric_comm_type
   use pfunit
 
   implicit none
@@ -46,9 +47,12 @@ contains
     implicit none
 
     class(MPITestMethod), intent(inout) :: this
+    type(lfric_comm_type) :: lfric_comm
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
     !Store the MPI communicator for later use
-    call global_mpi%initialise(this%getMpiCommunicator())
+    call global_mpi%initialise(lfric_comm)
 
   end subroutine set_up
 

@@ -34,7 +34,8 @@ module coupling_mod
                                             LOG_LEVEL_INFO,   &
                                             LOG_LEVEL_DEBUG
   use mesh_mod,                      only : mesh_type
-  use mpi_mod,                       only : mpi_type
+  use mpi_mod,                       only : mpi_type, &
+                                            lfric_comm_type
   use sort_mod,                      only : bubble_sort
 
   implicit none
@@ -86,24 +87,26 @@ contains
   !
   subroutine initialise(self, cpl_name, comm_out, comm_in, comm_is_split)
     implicit none
-    class(coupling_type), intent(inout) :: self
-    character(*),         intent(in)    :: cpl_name
-    integer(i_def),       intent(out)   :: comm_out
-    integer(i_def),       intent(in)    :: comm_in
-    logical,              intent(inout) :: comm_is_split
+    class(coupling_type),  intent(inout) :: self
+    character(*),          intent(in)    :: cpl_name
+    type(lfric_comm_type), intent(out)   :: comm_out
+    type(lfric_comm_type), intent(in)    :: comm_in
+    logical,               intent(inout) :: comm_is_split
 #ifdef MCT
+    integer(i_def)                :: comm  ! Communicator returned from Oasis
     integer(i_def)                :: kinfo ! error return by OASIS
 
     call oasis_init_comp (self%comp_id,  &
                          trim(cpl_name), &
                          kinfo,          &
-                         commworld=comm_in)
+                         commworld=comm_in%get_comm_mpi_val())
 
     if (kinfo .NE. prism_ok) then
       call oasis_abort(self%comp_id, trim(cpl_name), 'initialise')
     endif
 
-    call oasis_get_localcomm ( comm_out, kinfo)
+    call oasis_get_localcomm(comm, kinfo)
+    call comm_out%set_comm_mpi_val(comm)
 
     if (kinfo .NE. prism_ok) then
       call oasis_abort(self%comp_id, trim(cpl_name), 'initialise')
@@ -112,7 +115,7 @@ contains
     comm_is_split = .true.
 
 #else
-    comm_out = -1
+    call comm_out%set_comm_mpi_val( -1 )
     comm_is_split = .false.
 
 #endif

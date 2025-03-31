@@ -13,9 +13,18 @@ module mpi_mod_test
   use, intrinsic   :: iso_fortran_env, only : int32, real32, real64
   use constants_mod, only: i_def, r_single, r_double, &
                            integer_type, real_type
-  use mpi, only    : MPI_COMM_WORLD, &
-                     MPI_DOUBLE_PRECISION, MPI_REAL4, MPI_INTEGER
-  use mpi_mod, only: global_mpi, create_comm, get_mpi_datatype
+#ifdef LEGACY_MPI
+  use mpi,     only      : MPI_DOUBLE_PRECISION, MPI_REAL4, MPI_INTEGER
+#else
+!> @todo: This should be "use mpi_f08...", but that clashes with the
+!> "use pfunit" which is currently built with legacy mpi, only
+!> - so use legacy mpi here, too.
+!> When pfunit is built with mpi_f08, #4545 will swap to the following line:
+!>  use mpi_f08, only      : MPI_DOUBLE_PRECISION, MPI_REAL4, MPI_INTEGER
+  use mpi,     only      : MPI_DOUBLE_PRECISION, MPI_REAL4, MPI_INTEGER
+#endif
+  use mpi_mod, only      : global_mpi, create_comm, get_lfric_datatype, &
+                           lfric_comm_type, lfric_datatype_type
 
   implicit none
 
@@ -37,9 +46,12 @@ contains
     implicit none
 
     class(MPITestMethod), intent(inout) :: this
+    type(lfric_comm_type) :: lfric_comm
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
     !Store the MPI communicator for later use
-    call global_mpi%initialise(this%getMpiCommunicator())
+    call global_mpi%initialise(lfric_comm)
 
   end subroutine set_up
 
@@ -71,13 +83,22 @@ contains
     real(r_test)   :: l_sum, l_max, l_min
     real(r_test)   :: g_sum, g_max, g_min
     real(r_test)   :: s, answer
-    integer(i_def) :: i, mpi_datatype
+    integer(i_def) :: i
+    type(lfric_comm_type) :: lfric_comm
+    type(lfric_datatype_type) :: lfric_datatype
     integer(i_def) :: rank_number, total_ranks
     integer(i_def) :: num_processes
     integer(i_def) :: proc_num
 
     num_processes = this%context%getNumProcesses()
     proc_num      = this%getProcessRank()
+
+    ! Test extracting the integer component of the communicator
+    ! Note: currently this%getMpiCommunicator() returns an integer. If pFUnit
+    ! moves to mpi_f08, this will become an mpi_comm type and the following will
+    ! need to change
+    lfric_comm = global_mpi%get_comm()
+    @assertEqual( this%getMpiCommunicator(), lfric_comm%get_comm_mpi_val() )
 
     ! Test real global sum routine
     l_sum = 0.0_r_test
@@ -120,8 +141,17 @@ contains
     @assertTrue( rank_number <= total_ranks)
 
     ! Test the mpi data type routines - double and single
-    mpi_datatype = get_mpi_datatype( real_type, r_double )
-    @assertEqual( MPI_DOUBLE_PRECISION, mpi_datatype )
+    lfric_datatype = get_lfric_datatype( real_type, r_double )
+
+#ifdef LEGACY_MPI
+    @assertEqual( MPI_DOUBLE_PRECISION, lfric_datatype%get_datatype_mpi_val() )
+#else
+!> @todo: This should be "...%mpi_val", but that clashes with the use of legacy
+!> mpi in pfunit - so use the legacy line here for now.
+!> When pfunit is built with mpi_f08, #4545 will swap to the following line:
+!>    @assertEqual( MPI_DOUBLE_PRECISION%mpi_val, lfric_datatype%get_datatype_mpi_val() )
+    @assertEqual( MPI_DOUBLE_PRECISION, lfric_datatype%get_datatype_mpi_val() )
+#endif
 
   end subroutine test_real64
 
@@ -175,7 +205,8 @@ contains
     real(r_test)   :: l_sum, l_max, l_min
     real(r_test)   :: g_sum, g_max, g_min
     real(r_test)   :: s, answer
-    integer(i_def) :: i, mpi_datatype
+    integer(i_def) :: i
+    type(lfric_datatype_type) :: lfric_datatype
     integer(i_def) :: rank_number, total_ranks
     integer(i_def) :: num_processes
     integer(i_def) :: proc_num
@@ -217,8 +248,16 @@ contains
     @assertEqual( answer, g_min, 1.0e-2_r_test )
 
     ! Test the mpi data type routines - double and single
-    mpi_datatype = get_mpi_datatype( real_type, r_single )
-    @assertEqual( MPI_REAL4, mpi_datatype )
+    lfric_datatype = get_lfric_datatype( real_type, r_single )
+#ifdef LEGACY_MPI
+    @assertEqual( MPI_REAL4, lfric_datatype%get_datatype_mpi_val() )
+#else
+!> @todo: This should be "...%mpi_val", but that clashes with the use of legacy
+!> mpi in pfunit - so use the legacy line here for now.
+!> When pfunit is built with mpi_f08, #4545 will swap to the following line:
+!>    @assertEqual( MPI_REAL4%mpi_val, lfric_datatype%get_datatype_mpi_val() )
+    @assertEqual( MPI_REAL4, lfric_datatype%get_datatype_mpi_val() )
+#endif
 
     ! Test the routines for getting total number of ranks and local rank number
     total_ranks = global_mpi%get_comm_size()
@@ -286,7 +325,8 @@ contains
     integer(i_test), allocatable :: i_buffer_ans(:)
     integer(i_test) :: w, answer
     character(len=3)  :: str_buffer(1)
-    integer(i_def) :: i, mpi_datatype
+    integer(i_def) :: i
+    type(lfric_datatype_type) :: lfric_datatype
     integer(i_def) :: rank_number, total_ranks
     integer(i_def) :: num_processes
     integer(i_def) :: proc_num
@@ -346,7 +386,7 @@ contains
     call global_mpi%broadcast( i_buffer_2d, 1, 0 )
     @assertEqual( 907_i_test, i_buffer_2d(1,1) )
     ! 3d data
-    i_buffer_3d(1,1,1) = 19.0_i_test*(proc_num+1)
+    i_buffer_3d(1,1,1) = 19_i_test*(proc_num+1)
     call global_mpi%broadcast( i_buffer_3d, 1, 0 )
     @assertEqual( 19_i_test, i_buffer_3d(1,1,1) )
 
@@ -360,8 +400,16 @@ contains
     @assertEqual( 'Hi ', str_buffer(1) )
 
     ! Test the mpi data type routines - integer
-    mpi_datatype = get_mpi_datatype( integer_type, i_test )
-    @assertEqual( MPI_INTEGER, mpi_datatype )
+    lfric_datatype = get_lfric_datatype( integer_type, i_test )
+#ifdef LEGACY_MPI
+    @assertEqual( MPI_INTEGER, lfric_datatype%get_datatype_mpi_val() )
+#else
+!> @todo: This should be "...%mpi_val", but that clashes with the use of legacy
+!> mpi in pfunit - so use the legacy line here for now.
+!> When pfunit is built with mpi_f08, #4545 will swap to the following line:
+!>    @assertEqual( MPI_INTEGER%mpi_val, lfric_datatype%get_datatype_mpi_val() )
+    @assertEqual( MPI_INTEGER, lfric_datatype%get_datatype_mpi_val() )
+#endif
 
     ! Test the routines for getting total number of ranks and local rank number
     total_ranks = global_mpi%get_comm_size()
@@ -401,7 +449,7 @@ contains
     call global_mpi%broadcast( i_buffer_2d, 1, 0 )
     @assertEqual( 907_i_test, i_buffer_2d(1,1) )
     ! 3d data
-    i_buffer_3d(1,1,1) = 19.0_i_test*int(proc_num+1, i_test)
+    i_buffer_3d(1,1,1) = 19_i_test*int(proc_num+1, i_test)
     call global_mpi%broadcast( i_buffer_3d, 1, 0 )
     @assertEqual( 19_i_test, i_buffer_3d(1,1,1) )
 

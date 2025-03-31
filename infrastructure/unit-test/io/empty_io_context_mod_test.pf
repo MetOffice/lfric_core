@@ -9,42 +9,18 @@
 !>
 module empty_io_context_mod_test
 
-  use mpi_mod, only : global_mpi
   use pfunit
 
   implicit none
 
   private
-  public :: set_up, tear_down, test_empty_io_context
+  public :: test_empty_io_context
   !
   ! pFUnit requirest symbol spillage
   !
   public :: MPITestMethod, MPITestParameter
 
 contains
-
-  @before
-  subroutine set_up(this)
-
-    implicit none
-
-    class(MPITestMethod), intent(inout) :: this
-
-    call global_mpi%initialise(this%getMpiCommunicator())
-
-  end subroutine set_up
-
-
-  @after
-  subroutine tear_down(this)
-
-    implicit none
-
-    class(MPITestMethod), intent(inout) :: this
-
-    call global_mpi%finalise()
-
-  end subroutine tear_down
 
   ! Test filename generation for restart files
   @test( npes=[1] )

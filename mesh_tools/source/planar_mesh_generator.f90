@@ -38,7 +38,8 @@ program planar_mesh_generator
                            log_event, log_set_level,             &
                            log_scratch_space, LOG_LEVEL_INFO,    &
                            LOG_LEVEL_ERROR
-  use mpi_mod,       only: global_mpi, create_comm, destroy_comm
+  use mpi_mod,       only: global_mpi, create_comm, destroy_comm, &
+                           lfric_comm_type
 
   use namelist_collection_mod, only: namelist_collection_type
   use namelist_mod,            only: namelist_type
@@ -71,7 +72,7 @@ program planar_mesh_generator
 
   implicit none
 
-  integer(i_def) :: communicator = -999
+  type(lfric_comm_type) :: communicator
   integer(i_def) :: total_ranks, local_rank
 
   character(:), allocatable :: filename
@@ -191,7 +192,7 @@ program planar_mesh_generator
 
   total_ranks = global_mpi%get_comm_size()
   local_rank  = global_mpi%get_comm_rank()
-  call initialise_logging( communicator, "PlanarGen" )
+  call initialise_logging( communicator%get_comm_mpi_val(), "PlanarGen" )
 
 
   !===================================================================

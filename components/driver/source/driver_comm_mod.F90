@@ -21,7 +21,8 @@ module driver_comm_mod
   use driver_modeldb_mod,    only: modeldb_type
   use halo_comms_mod,        only: initialise_halo_comms, &
                                    finalise_halo_comms
-  use mpi_mod,               only: create_comm, destroy_comm
+  use mpi_mod,               only: create_comm, destroy_comm, &
+                                   lfric_comm_type
 
 #ifdef MCT
   use coupling_mod,          only: coupling_type, &
@@ -56,12 +57,12 @@ contains
 
     implicit none
 
-    character(len=*),         intent(in)    :: program_name
-    class(modeldb_type),      intent(inout) :: modeldb
-    integer(i_def), optional, intent(in)    :: input_comm
+    character(len=*),                intent(in)    :: program_name
+    class(modeldb_type),             intent(inout) :: modeldb
+    type(lfric_comm_type), optional, intent(in)    :: input_comm
 
-    integer(i_def) :: start_communicator = -999
-    integer(i_def) :: model_communicator = -999
+    type(lfric_comm_type) :: start_communicator
+    type(lfric_comm_type) :: model_communicator
 
     logical :: comm_is_split
 
@@ -82,8 +83,8 @@ contains
     else
       ! Initialise mpi and use MPI_COMM_WORLD as the starting communicator
       if(.not. comm_created)then
-       call create_comm( start_communicator )
-       comm_created = .true.
+        call create_comm( start_communicator )
+        comm_created = .true.
       endif
     endif
 

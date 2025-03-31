@@ -42,7 +42,8 @@ module TMPL_MODULE_NAME
   use mesh_mod,                       only : mesh_type, PLANE_BI_PERIODIC
   use function_space_mod,             only : function_space_type
   use fs_continuity_mod,              only : W2, W3
-  use mpi_mod,                        only : global_mpi
+  use mpi_mod,                        only : global_mpi, &
+                                             lfric_comm_type
   use pfunit
 
   implicit none
@@ -85,12 +86,15 @@ contains
     type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
     type(mesh_type) :: unit_test_mesh
     integer(i_def)  :: mesh_id
+    type(lfric_comm_type) :: lfric_comm
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
     !Store the MPI communicator for later use
-    call global_mpi%initialise(this%getMpiCommunicator())
+    call global_mpi%initialise(lfric_comm)
 
     ! Initialise halo functionality
-    call initialise_halo_comms( this%getMpiCommunicator() )
+    call initialise_halo_comms(lfric_comm)
 
     ! Create top level mesh collection
     mesh_collection = mesh_collection_type()
