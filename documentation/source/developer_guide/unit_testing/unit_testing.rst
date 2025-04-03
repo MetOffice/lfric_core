@@ -28,6 +28,10 @@ files garnished with ``@`` (at symbol) prefixed directives. The processor
 substitutes the directives with additional Fortran code and Fortran preprocessor
 directives.
 
+It is possible to use a ``.PF`` extension. This causes the Fortran preprocessor
+to be run on the file prior to the pFUnit processor. This is necessary for
+testing templated source but should otherwise be avoided.
+
 When the resulting program is run, the pFUnit framework marks progress and
 reports any failures.
 
