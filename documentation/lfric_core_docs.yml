@@ -1,0 +1,12 @@
+name: lfric-core-docs
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python==3.12 
+  - sphinx
+  - pydata-sphinx-theme
+  - sphinx-sitemap
+  - sphinx-design
+  - conda-lock
