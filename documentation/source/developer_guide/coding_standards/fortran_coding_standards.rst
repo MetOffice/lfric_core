@@ -316,6 +316,11 @@ accepted by the PSyclone developers.
 
 The psykal-lite code must reference the tickets and issues.
 
+Even if a kernel cannot be called from the generated PSy layer and requires
+psykal-lite code, it must still be a well-formed kernel, complete with
+appropriate kernel metadata. That way, it will be ready for when PSyclone
+is updated.
+
 Declaring precision
 ^^^^^^^^^^^^^^^^^^^
 
