@@ -9,8 +9,11 @@
 Driver Component
 ================
 
-The driver component contains some standard modules that can be used
-to construct the driver layer of an application. Applications can use
-some or all driver layer components, mixing and matching if
-necessary. Where a component does not support all the needs of an
-application, it may still provide a starting point.
+The driver component contains some convenience modules that can be used to help
+construct the driver layer of an application. Applications can use some or all
+of the driver component, mixing and matching as necessary.
+
+Bear in mind that the driver component only supports typical usage. If your specific
+needs are not covered, then your application will need its own specific driver code.
+The driver component may act as a starting point for application specific driver code,
+but it should not be modified with any application specific logic.
