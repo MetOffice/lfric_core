@@ -18,7 +18,7 @@ transformation script in the command.
 If a match is not made, the build system proceeds to search for a more
 generic transformation script, ``global.py``, and applies it to the current
 module via PSyclone. The transformations called in ``global.py`` will be applied
-to any module that does not have a transformation script of their own. This
+to any module that does not have a transformation script of its own. This
 principle is true for both LFRic and non-LFRic source. Finally, if no
 optimisation script is present, global or otherwise, the module is passed to
 PSyclone with no transformation script specification. This will also remove any
