@@ -13,36 +13,52 @@ contains
   @test
   subroutine test_of_matrix_invert()
     use funit
-    use, intrinsic :: iso_fortran_env, only: real64
-    use matrix_invert_mod, only : matrix_invert
+    use, intrinsic :: iso_fortran_env, only: real32, real64
+    use matrix_invert_mod, only : matrix_invert_lu, matrix_invert_plu
     use constants_mod,     only : r_def
     implicit none
 
-    real(kind=r_def), parameter :: tol = 1.0e-14_r_def  ! r_def 64bit tolerance
-    real(kind=r_def) :: a(4,4), a_inv(4,4), answer(4,4)
-    real(kind=r_def) :: use_tol, one
+    real(kind=r_def) :: tol
+    real(kind=r_def) :: a(4,4), a_inv(4,4), answer(4,4), I(4,4)
 
+#if (RDEF_PRECISION == 64)
+    tol = 1.0e-7_real64
+#elif (RDEF_PRECISION == 32)
+    tol = 2.0e-7_real32
+#else
+    @assertFail("Unsupported default precision")
+#endif
+
+    I(1,:) = (/ 1.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def /)
+    I(2,:) = (/ 0.0_r_def, 1.0_r_def, 0.0_r_def, 0.0_r_def /)
+    I(3,:) = (/ 0.0_r_def, 0.0_r_def, 1.0_r_def, 0.0_r_def /)
+    I(4,:) = (/ 0.0_r_def, 0.0_r_def, 0.0_r_def, 1.0_r_def /)
+
+    ! Test lu decomposition
     ! This uses 2D P1_DG mass matrix as an example
     a(1,:) = 1.0_r_def/9.0_r_def*(/ 4.0_r_def, 2.0_r_def, 2.0_r_def, 1.0_r_def /)
     a(2,:) = 1.0_r_def/9.0_r_def*(/ 2.0_r_def, 4.0_r_def, 1.0_r_def, 2.0_r_def /)
     a(3,:) = 1.0_r_def/9.0_r_def*(/ 2.0_r_def, 1.0_r_def, 4.0_r_def, 2.0_r_def /)
     a(4,:) = 1.0_r_def/9.0_r_def*(/ 1.0_r_def, 2.0_r_def, 2.0_r_def, 4.0_r_def /)
 
-    call matrix_invert(a, a_inv,4)
+    call matrix_invert_lu(a, a_inv, 4)
 
     answer = matmul(a, a_inv)
 
-    one = 1.0_r_def
+    @assertEqual( I, answer, tol )
 
-    if ( r_def == real64 ) then
-      use_tol = tol
-    else
-      use_tol = 10.0_r_def*spacing( maxval(answer) )
-    endif
-    @assertEqual( one, answer(1,1), use_tol )
-    @assertEqual( one, answer(2,2), use_tol )
-    @assertEqual( one, answer(3,3), use_tol )
-    @assertEqual( one, answer(4,4), use_tol )
+    ! Test plu decomposition
+    ! Use an example of an invertible matrix with no LU decomposition
+    a(1,:) = (/ 0.0_r_def, 0.0_r_def, 0.0_r_def, 1.0_r_def /)
+    a(2,:) = (/ 0.0_r_def, 0.0_r_def, 1.0_r_def, 0.0_r_def /)
+    a(3,:) = (/ 0.0_r_def, 1.0_r_def, 0.0_r_def, 0.0_r_def /)
+    a(4,:) = (/ 1.0_r_def, 0.0_r_def, 0.0_r_def, 0.0_r_def /)
+
+    call matrix_invert_plu(a, a_inv, 4)
+
+    answer = matmul(a, a_inv)
+
+    @assertEqual( I, answer, tol )
 
   end subroutine test_of_matrix_invert
 

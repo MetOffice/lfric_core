@@ -13,7 +13,7 @@ module sci_invert_local_operator_kernel_mod
   use constants_mod,     only: r_def, i_def
   use fs_continuity_mod, only: W3
   use kernel_mod,        only: kernel_type
-  use matrix_invert_mod, only: matrix_invert
+  use matrix_invert_mod, only: matrix_invert_lu
 
   implicit none
 
@@ -70,7 +70,7 @@ subroutine invert_local_operator_code(cell, nlayers, ncell3d_inv,  &
   do k = 1, nlayers
     ik = k + (cell-1)*nlayers
     local_mat(:,:) = matrix(ik,:,:)
-    call matrix_invert(local_mat, local_mat_inv, ndf)
+    call matrix_invert_lu(local_mat, local_mat_inv, ndf)
     matrix_inv(ik,:,:) = local_mat_inv(:,:)
   end do
 
