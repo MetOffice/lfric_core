@@ -210,7 +210,7 @@ C code must be called only using the ISO Fortran C interoperability features.
 Rules about character variables:
 
 * Character variables that are inputs (``intent(in)`` or
-  ``intent(inout)`` to a procedure must be declared
+  ``intent(inout)``) to a procedure must be declared
   ``character(*)``. If the declaration specifies a length, problems
   can occur when passing in strings of a different length.
 * The ``trim`` function should be used when passing a character
