@@ -16,7 +16,6 @@ Developer Guide
 
    build_system/index
    using_doxygen
-   unit_testing/index
 
 
 Requirements
