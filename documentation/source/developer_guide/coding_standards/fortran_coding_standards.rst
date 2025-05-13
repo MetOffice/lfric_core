@@ -207,6 +207,16 @@ pointers later in the routine.
 
 C code must be called only using the ISO Fortran C interoperability features.
 
+Rules about character variables:
+
+* Character variables that are inputs (``intent(in)`` or
+  ``intent(inout)`` to a procedure must be declared
+  ``character(*)``. If the declaration specifies a length, problems
+  can occur when passing in strings of a different length.
+* The ``trim`` function should be used when passing a character
+  variable to a procedure.
+
+
 LFRic-specific standards - the basics
 -------------------------------------
 
@@ -222,7 +232,7 @@ General rules
 
   * Program units must all have, at the very least, a one line description that
     is prefixed with the Doxygen directive ``@brief``
-  * If appropriate more detailed description uses the ``@details`` directive.
+  * If appropriate, more detailed description uses the ``@details`` directive.
   * Each input argument must be described using
     the ``@param`` directive with the intent and name of variable.
 
