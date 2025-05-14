@@ -16,7 +16,7 @@ The LFRic project makes use of functional testing whereby a known set of
 input stimuli are presented to a piece of code and the resulting output is
 compared to expected results. Any deviation indicates a change in behaviour.
 
-This functional testing is a continuum from fine to course grained.
+This functional testing is a continuum from fine to coarse grained.
 
 The finest grained end is "unit testing" where code units are tested. This
 usually means individual procedures. This testing is very good at isolating
