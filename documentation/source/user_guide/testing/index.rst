@@ -38,7 +38,7 @@ call down to procedures further down the call tree. Thus the unit test is
 testing multiple units. Meanwhile an integration test may be testing a
 substantial fraction of the whole system test.
 
-Where these boundaries are down is a matter of ongoing discussion and debate
+Where these boundaries are drawn is a matter of ongoing discussion and debate
 and outwith the scope of this document.
 
 .. toctree::
