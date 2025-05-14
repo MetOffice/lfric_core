@@ -90,7 +90,7 @@ If your test requires interaction with the command-line then
 Implementing Tests
 ~~~~~~~~~~~~~~~~~~
 
-As for any other integration test there will be a Fortran program which
+As with any other integration test there will be a Fortran program which
 creates any necessary fields, calls the algorithm, then prints suitible
 diagnostic quantities to standard out. This will be received by the Python
 script which checks for correctness and reports success or failure.
