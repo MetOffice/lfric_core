@@ -33,7 +33,7 @@ reasonable isolation.
 
 A good testing regime makes use of all these approaches.
 
-Also note that the boundaries are not hard drawn. A unit under test may well
+Note that the boundaries are not hard drawn. A unit under test may well
 call down to procedures further down the call tree. Thus the unit test is
 testing multiple units. Meanwhile an integration test may be testing a
 substantial fraction of the while system test.
