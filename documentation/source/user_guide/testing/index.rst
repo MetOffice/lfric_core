@@ -9,7 +9,7 @@ Testing
 =======
 
 Comprehensive and automated testing is an essential aspect of successful
-software developement. Comperhensive because we can't find bugs in code we
+software developement. Comprehensive because we can't find bugs in code we
 aren't testing. Automated because tests which aren't run aren't catching bugs.
 
 The LFRic project makes use of functional testing whereby a known set of
