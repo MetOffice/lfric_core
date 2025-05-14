@@ -18,4 +18,5 @@ User Guide
     time/index
     io/index
     technical_articles/index
+    testing/index
     build_and_test/index
