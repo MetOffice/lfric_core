@@ -36,7 +36,7 @@ A good testing regime makes use of all these approaches.
 Note that the boundaries are not hard drawn. A unit under test may well
 call down to procedures further down the call tree. Thus the unit test is
 testing multiple units. Meanwhile an integration test may be testing a
-substantial fraction of the while system test.
+substantial fraction of the whole system test.
 
 Where these boundaries are down is a matter of ongoing discussion and debate
 and outwith the scope of this document.
