@@ -13,7 +13,7 @@ software developement. Comprehensive because we can't find bugs in code we
 aren't testing. Automated because tests which aren't run aren't catching bugs.
 
 The LFRic project makes use of functional testing whereby a known set of
-input stimulii are presented to a piece of code and the resulting output is
+input stimuli are presented to a piece of code and the resulting output is
 compared to expected results. Any deviation indicates a change in behaviour.
 
 This functional testing is a continuum from fine to course grained.
