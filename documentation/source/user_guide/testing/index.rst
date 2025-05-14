@@ -23,7 +23,7 @@ usually means individual procedures. This testing is very good at isolating
 faults to a small piece of code but it can't tell you how these units interact
 with each other.
 
-The coursest grained end is "system testing" where the complete executable
+The coarsest grained end is "system testing" where the complete executable
 is tested. This is the ultimate test of interaction between units but is poor
 at isolating a problem.
 
