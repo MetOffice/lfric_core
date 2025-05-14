@@ -278,7 +278,7 @@ Isolate and extract the field data from standard output.
                   message = "Tracer field does not match expectation for rank " + rank
                   raise TestFailed(message, stdout=out, stderr=err)
 
-Check the field data agains the expected result and report an error if they
+Check the field data against the expected result and report an error if they
 don't match.
 
 .. code-block:: python
