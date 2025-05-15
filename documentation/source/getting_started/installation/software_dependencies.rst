@@ -19,7 +19,7 @@ describing the relation between the two repositories.
 Currently, the development of the two code bases is done
 hand-in-hand. Therefore, certain revisions of the core code are tagged with the
 version number of the relevant ``lfric_apps`` release. For example, revision
-51381 is tagged ``core1.2`` and works with the 1.2 LFRic apps release.
+51381 is tagged ``core2.1`` and works with the 2.1 LFRic apps release.
 
 Note, also, that any given revision of ``lfric_apps`` includes a
 ``dependencies.sh`` file in its top-level directory which references a specific
@@ -35,23 +35,23 @@ running LFRic applications with some compilers.
 
 The following compilers are routinely tested at the Met Office:
 
- * The Gnu compiler (versions 11.2 and 12.1)
- * The Intel ifort compiler (version 19.0)
+ * The Gnu compiler (version 12.2.0)
+ * The Cray compiler (version 15.0.0)
 
 Software Stack
 --------------
 
 To build and run typical LFRic applications, the following software will be
 required. The numbers in parenthesis identify versions in use at the Met Office
-for the revision of LFRic tagged ``core1.2``.
+for the revision of LFRic tagged ``core2.1``.
 
 Common software which may already be installed on some HPC and research
 platforms:
 
- * Python version 3 (3.7)
- * HDF5 (1.12.1)
- * NetCDF (4.8.1)
- * MPI (mpich 3.4.1)
+ * Python version 3 (3.12.5)
+ * HDF5 (1.14.5)
+ * NetCDF (C:4.9.2, Fortran:4.6.1)
+ * MPI (mpich 4.2.3)
 
 More specialist software for developing, building and running LFRic
 applications:
@@ -60,16 +60,16 @@ applications:
    <https://metomi.github.io/fcm/doc/user_guide>`_ is an application that wraps
    Subversion commands to help impose standard development workflows for LFRic
    development.
- * PSyclone (2.5.0), a code generation library used by LFRic for generating
+ * PSyclone (3.1.0), a code generation library used by LFRic for generating
    portable performance code. The `PSyclone documentation
    <https://psyclone.readthedocs.io/en/stable/>`_ list its own software
    dependencies, which include some Python packages and the following Fortran
    parser.
- * fparser (0.1.4), a Fortran parser used by PSyclone.
+ * fparser (0.2.0), a Fortran parser used by PSyclone.
  * YAXT 0.10.0), an `MPI wrapper
    <https://swprojects.dkrz.de/redmine/projects/yaxt>`_ which supports MPI data
    exchange in LFRic application.
- * XIOS (r2252.2) an `IO server library
+ * XIOS (r2252) an `IO server library
    <https://forge.ipsl.jussieu.fr/ioserver>`_ to support input and output of
    data to UGRID NetCDF files.
  * blitz (1.0.2), a `support library <https://github.com/blitzpp/blitz>`_
@@ -86,13 +86,15 @@ application tests, or for processing documentation:
    (8+) <https://cylc.github.io/>`_ for running the full test-suite that
    includes application configurations, integration tests, unit tests, style
    checker and metadata validation checks.
- * PFUnit (3.3.3) A `Fortran unit testing
+ * PFUnit (4.10.0) A `Fortran unit testing
    <https://github.com/Goddard-Fortran-Ecosystem/pFUnit>`_ framework.
- * stylist (0.4.1a): A `code style-checker
+ * stylist (0.4.1): A `code style-checker
    <https://github.com/MetOffice/stylist>`_.
  * plantuml (1.2021.7): the LFRic repository holds formal descriptions of key
    LFRic classes using a format that can be rendered into UML diagrams by
    `plantuml <https://plantuml.com>`_.
+ * Doxygen (1.12.0): the LFRic API is documented using the `Doxygen 
+   <https://doxygen.nl/>`_ documentation generator.
 
 
 Future releases
@@ -100,9 +102,3 @@ Future releases
 
 About three releases of ``lfric_apps`` are planned to take place each year.  The
 LFRic core code will be appropriately tagged against each such release.
-
-Late 2024, a version 2.0 release is planned:
-  * The primary aim of the release is to upgrade to PSyclone version 3.
-  * This release is expected to include an upgrade the Rose testing of LFRic
-    core to Cylc 8 to match ``lfric_apps``.
-  * The version of pfUnit will hopefully be upgraded to version 4.
