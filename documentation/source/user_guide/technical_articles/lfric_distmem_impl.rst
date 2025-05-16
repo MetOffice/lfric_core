@@ -189,7 +189,7 @@ to support a chosen iteration strategy.
 
 By default, the cells in the partition are ordered using the mesh-ids
 from the global mesh. This makes cells that are geographically
-close to each to be close to each other in the list. This can aid with
+nearby close to each other in the list. This can aid with
 performance, through better cache use.
 
 Alternatively, the cells can be ordered so that they support the
