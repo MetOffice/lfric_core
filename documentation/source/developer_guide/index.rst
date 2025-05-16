@@ -43,5 +43,6 @@ Contributing
 .. toctree::
    :maxdepth: 2
 
+   code_review_primer
    coding_standards/fortran_coding_standards
    sphinx_style/documentation_style_guide
