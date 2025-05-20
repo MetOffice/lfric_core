@@ -30,6 +30,8 @@ data pertinent to their operation.
    :alt: Graphical representation of the PSyKAl model.
    :align: center
 
+More in-depth documentation is available in the :ref:`psykal overview`.
+
 Algorithms
 ----------
 
@@ -81,7 +83,7 @@ discussion on the ticket and an associated `PSyclone issue`_.
 
 .. _PSyclone issue: https://github.com/stfc/psyclone/issues
 
-This issue must be sited in a comment with the PSyKAl light implementation.
+This issue must be cited in a comment with the PSyKAl light implementation.
 
 Passing values by Global Variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
