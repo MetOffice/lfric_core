@@ -15,13 +15,9 @@ needs should be respected.
 Python version
 ~~~~~~~~~~~~~~
 
-The LFRic trunk moved to version 3 of Python in January 2020 version 2 Python
-is no longer supported. The existing code was updated. All new code must be
-written for Python 3.
-
-This means that the LFRic development software stack includes only Python3 and
-and any associated tooling is a version which works with Python3.
-
+The LFRic project uses only Python version 3. We track version deprecation so
+as support ends for Python versions we stop supporting them too. At the time
+of writing the oldest supported version was 3.9.
 
 Style guide
 ~~~~~~~~~~~
@@ -36,7 +32,7 @@ checker on your source file, i.e::
 
 Resolve *all* errors and warnings (but see :ref:`E402` exception below).
 
-Flake8 is available in the LFRic software stack on SPICE Desltop and compute.
+Flake8 is available in the LFRic software stack on SPICE Desktop and servers.
 
 .. _PEP 8: https://www.python.org/dev/peps/pep-0008
 .. _flake8: https://flake8.pycqa.org/en/latest/
