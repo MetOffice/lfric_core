@@ -15,7 +15,7 @@ which goes against these guidelines is wrong.
 Never forget that "but it's too hard" is rarely a reason for circumventing the
 guidelines.
 
-If you are unsure on any point or just need moral support just ask someone
+If you are unsure on any point or just need moral support simply ask someone
 from the Core Capabilities Development (CCD) team. We are always happy to help.
 
 PSyKAl model
@@ -30,7 +30,8 @@ data pertinent to their operation.
    :alt: Graphical representation of the PSyKAl model.
    :align: center
 
-More in-depth documentation is available in the :ref:`psykal overview`.
+More in-depth documentation is available in the :ref:`psykal overview`, what
+follows is an overview of how it relates to reviewing.
 
 Algorithms
 ----------
@@ -62,6 +63,9 @@ All data needed by a kernel should be passed to it through its argument list,
 passing data via global variable is contra-indicated even more than normal due
 to the way it inhibits the use of accelerators such as GPUs.
 
+Kernels should also never emmit log messages. Remember, that message is going
+to be generated for every column in the field.
+
 Parallel System
 ---------------
 
@@ -85,6 +89,10 @@ discussion on the ticket and an associated `PSyclone issue`_.
 
 This issue must be cited in a comment with the PSyKAl light implementation.
 
+Even when a "light" implementation is made, any new kernels should have
+correct metadata. Don't let a developer leave it to someone else to try and
+work out what they were thinking.
+
 Passing values by Global Variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -96,13 +104,16 @@ effects clear across the code base.
 As such we have the normal prohibition on the use of globals, however we do
 allow global data in certain limited circumstances.
 
-Included in the test suite is a task which checks for global data and reports,
-as an error, where it is found. This task uses a "dirty list" which contains
+The test suite includes a task which checks for global data and reports, as an
+error, where it is found. This task uses a "dirty list" which contains
 files which are allowed to contain global variables.
 
 Removing files from this list is always welcome and encouraged. Adding files,
 on the other hand, is instantly suspicious. The dirty list can only be expanded
 after a discussion (visible on the ticket) with CCD team.
+
+In particular, adding a file to the dirty list is not an excuse for adding new
+global variables.
 
 Interface Kernels
 ~~~~~~~~~~~~~~~~~
@@ -114,7 +125,7 @@ data into a different form, appropriate for passing to some other code-base.
 
 These are "interface kernels."
 
-The rule of thumb for interface kernels is one call to the under-lying
+The rule of thumb for interface kernels is one call to the underlying
 code-base per kernel. If there are two or more calls then it probably means
 two or more kernels have been pushed together and should be split apart.
 
