@@ -8,6 +8,10 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
 
+
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+DEPLOYDIR	  = $(HOME)/public_html
+
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -28,6 +32,9 @@ html: $(patsubst source/_plotly/%.py, \
 #
 # %: Makefile
 # 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+#
+#deploy:
+# 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(DEPLOYDIR)/$(BRANCH)" $(SPHINXOPTS) $(O)
 
 generated/html/plots/%.html: source/_plotly/%.py build/html/_static/plotly.min.js | $$(dir $$@)
 	python3 $<
