@@ -232,7 +232,8 @@ General rules
 
   * Program units must all have, at the very least, a one line description that
     is prefixed with the Doxygen directive ``@brief``
-  * If appropriate, more detailed description uses the ``@details`` directive.
+  * If appropriate, more detailed descriptions can be added using the
+    ``@details`` directive.
   * Each input argument must be described using
     the ``@param`` directive with the intent and name of variable.
 
