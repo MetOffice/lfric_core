@@ -112,32 +112,29 @@ whereas in others they may be set to invalid numbers.
 
 .. warning::
 
-   It should be noted that current versions of the Gnu compiler (up to
-   the current latest version 14) incorrectly assign "quiet" ``NaN``
+   It should be noted that some older versions of the Gnu compiler (up to
+   version 11) incorrectly assign "quiet" ``NaN``
    values which means that this recommended method of testing is
    inadequate: unlike signalling ``NaN`` values, quiet ``NaN`` values
    do not cause floating point exceptions when operated on.
 
-   The method for initialising fields to ``NaN`` is worth summarising
-   so that the behaviour of other compilers can be tested for correct
-   behaviour once they start being used.
+The method for initialising fields to ``NaN`` is worth summarising
+so that the behaviour of other compilers can be tested for correct
+behaviour once they start being used.
 
-   When a field is initialised, the code runs the following IEEE
-   procedure that returns ``.true.`` if numerical checking compile
-   options are applied:
+When a field is initialised, the code runs the following IEEE
+procedure that returns ``.true.`` if numerical checking compile
+options are applied:
 
-   .. code-block:: fortran
+.. code-block:: fortran
 
-      call ieee_get_halting_mode(IEEE_INVALID, halt_mode)
+   call ieee_get_halting_mode(IEEE_INVALID, halt_mode)
 
-   If ``.true.``, the following value is assigned to real fields:
+If ``.true.``, the following value is assigned to real fields:
 
-   .. code-block:: fortran
+.. code-block:: fortran
 
-      signalling_value = ieee_value(type_variable, IEEE_SIGNALING_NAN)
-
-   As stated above, the Gnu version of the ``ieee_value`` routine
-   incorrectly returns the value relating to ``IEEE_QUIET_NAN``.
+   signalling_value = ieee_value(type_variable, IEEE_SIGNALING_NAN)
 
 Note that for 32-bit integer fields, the signalling value is set to a
 negative ``huge`` 32-bit value: there is no such thing as an integer
