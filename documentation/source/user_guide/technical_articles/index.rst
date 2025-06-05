@@ -18,3 +18,5 @@ aspects of the LFRic core infrastructure
 
    lfric_distmem_impl
    configuration_meta
+   logging
+   simple_io

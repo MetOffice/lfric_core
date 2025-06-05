@@ -13,8 +13,10 @@ Developer Guide
    :maxdepth: 2
 
    templated_source
+
    build_system/index
    using_doxygen
+
 
 Requirements
 ------------
@@ -41,5 +43,7 @@ Contributing
 .. toctree::
    :maxdepth: 2
 
+   code_review_primer
    coding_standards/fortran_coding_standards
+   coding_standards/python_coding_standards
    sphinx_style/documentation_style_guide

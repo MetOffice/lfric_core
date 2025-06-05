@@ -30,13 +30,24 @@ A new LFRic function space is initialised as follows:
    type(function_space_type), pointer :: vector_space
 
    ! Get a reference to a lowest order W2 function space
-   vector_space => function_space_collection%get_fs(mesh_id, element_order, fs_type)
+   vector_space => function_space_collection%get_fs(mesh_id,         &
+                                                    element_order_h, &
+                                                    element_order_v, &
+                                                    fs_type)
 
 The ``mesh_id`` identifies the 3D mesh that the LFRic function space
-must cover. The ``element_order`` is typically ``0`` for lowest order
-or ``1`` for next-to-lowest order. The GungHo dynamical core is tested
+must cover. The ``element_order`` options dictate the polynomial
+order of the function space in the horizontal and vertical directions
+respectively. They are typically ``0`` for lowest order or ``1`` for
+next-to-lowest order. The GungHo dynamical core is tested
 with both of these settings whereas the Momentum\ :sup:`®` atmosphere
 model runs with lowest order function spaces.
+
+The ``element_order_h`` and ``element_order_v`` options are ordered
+horizontal order first, and vertical order second. This is the
+convention adopted throughout the code, so functions will always
+take the horizontal version of an entity, and then the vertical
+version, and finally the next entity / argument.
 
 The ``fs_type`` refers to one of a number of available function space
 types. A `high-level description

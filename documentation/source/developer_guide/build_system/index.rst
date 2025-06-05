@@ -14,3 +14,5 @@ Build System
    configurator
    picker
    library_import
+   dependerator
+   psyclone_mk
