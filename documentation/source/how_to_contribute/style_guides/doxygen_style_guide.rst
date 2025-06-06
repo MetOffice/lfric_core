@@ -143,39 +143,39 @@ descriptions::
 
     Example of an inline formula: \f$\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}\f$
 
-.. image:: _images/formula-inline.png
+.. image:: ../_images/formula-inline.png
     :alt: Rendering of the in-line formula example.
 
 When you need them centred on the page use ``\f[`` and ``\f]``::
 
     Example of a formula block:
-    
+
     \f[
-        |I_2|=\left| \int_{0}^T \psi(t) 
-              \left\{ 
+        |I_2|=\left| \int_{0}^T \psi(t)
+              \left\{
                   u(a,t)-
-                  \int_{\gamma(t)}^a 
+                  \int_{\gamma(t)}^a
                   \frac{d\theta}{k(\theta,t)}
               \int_{a}^\theta c(\xi)u_t(\xi,t)\,d\xi
               \right\} dt
               \right|
     \f]
 
-.. image:: _images/formula-block.png
+.. image:: ../_images/formula-block.png
     :alt: Rendering of the formula block example.
 
 If you want to show a derivation you can use ``\f{align}{`` and ``\f}``::
 
     Example of a derivation:
-    
+
     \f{align}{
-        g &=& \frac{Gm_2}{r^2} \\ 
+        g &=& \frac{Gm_2}{r^2} \\
           &=& \frac{(6.673 \times 10^{-11}\,\mbox{m}^3\,\mbox{kg}^{-1}\,
-              \mbox{s}^{-2})(5.9736 \times 10^{24}\,\mbox{kg})}{(6371.01\,\mbox{km})^2} \\ 
+              \mbox{s}^{-2})(5.9736 \times 10^{24}\,\mbox{kg})}{(6371.01\,\mbox{km})^2} \\
           &=& 9.82066032\,\mbox{m/s}^2
     \f}
 
-.. image:: _images/formula-derivation.png
+.. image:: ../_images/formula-derivation.png
     :alt: Rendering of the derivation example.
 
 Guidelines
@@ -324,7 +324,7 @@ preceding document:
 
       !> @brief Determines the skill required of the practitioner for a particular
       !> magical effect.
-      !> 
+      !>
       !> Only the minimum proficiency requirements are returned. Hubris
       !> may prevent a more skilled practitioner from achieving a particular effect.
       !>

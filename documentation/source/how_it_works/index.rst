@@ -4,9 +4,9 @@
      under which the code may be used.
    ------------------------------------------------------------------------------
 
-.. _developer_guide_index:
+.. _how_it_works_index:
 
-Developer Guide
+How it works
 ===============
 
 .. toctree::
@@ -15,7 +15,6 @@ Developer Guide
    templated_source
 
    build_system/index
-   using_doxygen
 
 
 Requirements
@@ -43,5 +42,4 @@ Contributing
 .. toctree::
    :maxdepth: 2
 
-   coding_standards/fortran_coding_standards
-   sphinx_style/documentation_style_guide
+

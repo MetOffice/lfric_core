@@ -23,19 +23,19 @@ appropriate year).
 
 .. code-block:: rst
 
-  .. ------------------------------------------------------------------------------
-       (c) Crown copyright 2024 Met Office. All rights reserved.
-       The file LICENCE, distributed with this code, contains details of the terms
-       under which the code may be used.
-     ------------------------------------------------------------------------------
+  .. -----------------------------------------------------------------------------
+      (c) Crown copyright 2025 Met Office. All rights reserved.
+      The file LICENCE, distributed with this code, contains details of the terms
+      under which the code may be used.
+     -----------------------------------------------------------------------------
 
 Purposes of each section
 ------------------------
 
 There are four main sections to the documentation: "Getting Started",
-"User Guide", "Developer Guide" and "LFRic Core API".
+"How to use it", "How it works" and "LFRic Core API".
 
-At the time of writing, the User Guide is in the process of being
+At the time of writing, the How to use it is in the process of being
 written, but the other sections are at a very early stage of
 development, so a summary of the purpose of each section is given
 here.
@@ -49,29 +49,26 @@ LFRic Core before, details on how to get started building the included
 applications, the general layout of the repository and its contents as
 well as any more detailed tutorials.
 
-User Guide
-~~~~~~~~~~
+How to use it
+~~~~~~~~~~~~~
 
-The :ref:`User Guide <user_guide_index>` section is for developers of
+The :ref:`How to use it<how_to_use_it_index>` section is for developers of
 LFRic applications. It provides an introduction to the structure of a
-typical model application, an overview of the LFRic data model, and
-usage examples for key aspects of the LFRic infrastructure.
+typical model application and how to use them.
 
-Developer Guide
-~~~~~~~~~~~~~~~
+How it works
+~~~~~~~~~~~~
 
-The :ref:`Developer Guide <developer_guide_index>` section is for
-developers of the core LFRic code. It describes coding and
-documentation standards, gives detailed technical overviews of
-aspects of the infrastructure and components, describes the build
-system including the use of templated code and code generation, and
-describes the testing strategy.
+The :ref:`How it works<how_it_works_index>` section is for developers of the
+LFRic core software and experienced developers who may need to know the
+implementation details of the LFRic Core components they are using.
 
-LFRic Core API
-~~~~~~~~~~~~~~
+How to contribute
+~~~~~~~~~~~~~~~~~
 
-The :ref:`LFRic Core API <API_index>` section describes the technical
-API for LFRic core software.
+The :ref:`How to contribute<how_to_contribute_index>` section is for
+developers of the core LFRic code. It describes coding and documentation
+standards.
 
 Text Formatting
 ---------------

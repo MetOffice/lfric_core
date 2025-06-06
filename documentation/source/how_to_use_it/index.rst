@@ -3,10 +3,10 @@
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    ------------------------------------------------------------------------------
-.. _user_guide_index:
+.. _how_to_use_it_index:
 
-User Guide
-==========
+How to use it
+=============
 
 .. toctree::
     :maxdepth: 2
@@ -20,3 +20,4 @@ User Guide
     technical_articles/index
     testing/index
     build_and_test/index
+    API/index
