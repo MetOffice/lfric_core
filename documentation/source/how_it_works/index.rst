@@ -13,7 +13,6 @@ How it works
    :maxdepth: 2
 
    templated_source
-
    build_system/index
 
 
@@ -35,11 +34,5 @@ explain the reasons for the design and implementation choices that have been mad
    :maxdepth: 2
 
    core_data_model/science_model_architecture
-
-Contributing
-------------
-
-.. toctree::
-   :maxdepth: 2
 
 

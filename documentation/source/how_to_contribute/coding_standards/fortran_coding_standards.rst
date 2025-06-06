@@ -207,6 +207,16 @@ pointers later in the routine.
 
 C code must be called only using the ISO Fortran C interoperability features.
 
+Rules about character variables:
+
+* Character variables that are inputs (``intent(in)`` or
+  ``intent(inout)``) to a procedure must be declared
+  ``character(*)``. If the declaration specifies a length, problems
+  can occur when passing in strings of a different length.
+* The ``trim`` function should be used when passing a character
+  variable to a procedure.
+
+
 LFRic-specific standards - the basics
 -------------------------------------
 
@@ -222,7 +232,8 @@ General rules
 
   * Program units must all have, at the very least, a one line description that
     is prefixed with the Doxygen directive ``@brief``
-  * If appropriate more detailed description uses the ``@details`` directive.
+  * If appropriate, more detailed descriptions can be added using the
+    ``@details`` directive.
   * Each input argument must be described using
     the ``@param`` directive with the intent and name of variable.
 
@@ -312,14 +323,15 @@ code generator. Such code must be drawn to the attention of the LFRic team and
 PSyclone developers. It must be plausible that PSyclone can be updated to
 generate code meeting the new requirements. LFRic tickets or PSyclone issues
 must be raised to extend support to the new requirement, and the tickets
-accepted by the PSyclone developers.
+must be accepted by an experienced PSyclone developer.
 
-The psykal-lite code must reference the tickets and issues.
+The psykal-lite code must include comments that reference the tickets and issues.
 
-Even if a kernel cannot be called from the generated PSy layer and requires
-psykal-lite code, it must still be a well-formed kernel, complete with
-appropriate kernel metadata. That way, it will be ready for when PSyclone
-is updated.
+Even if a kernel cannot be called from the generated PSy layer and
+requires psykal-lite code, it must still be a well-formed kernel,
+complete with appropriate kernel metadata (including place-holder
+metadata if there are inputs that are not currently supported). That
+way, it will require minimal rewriting when PSyclone is updated.
 
 Declaring precision
 ^^^^^^^^^^^^^^^^^^^
@@ -327,7 +339,8 @@ Declaring precision
 * LFRic supports mixed-precision codes where an application may combine
   substantial amounts of codes running at different real precisions.
 
-  * All real and integers must be declared with a specified ``kind``
+  * All real and integer variables and parameters must be declared
+    with a specified ``kind``.
   * All literal real variables must be given a kind using the following syntax,
     where ``r_mykind`` references a specified kind parameter:
 
@@ -335,16 +348,17 @@ Declaring precision
 
       my_var = 1.23_r_mykind
 
-   Note that the following can give a numerically-different result:
+   This rule exists because the following alternative can give a numerically-different result:
 
    .. code-block:: fortran
 
       my_var = real( 1.23, r_mykind )
 
-  * Literal integers do not need a kind if their value can be represented by
-    ``real32``. If they are an argument in a call to a subroutine in which
-    the dummy argument is declared with a specific kind, then they must have a
-    matching kind.
+  * Literal integers do not need a kind unless their value is too
+    large to hold in a native integer. However, if a literal integer
+    is an argument in a call to a procedure in which the dummy
+    argument is declared with a specific kind, then it must be given
+    a matching kind.
   * Unless there is good reason, avoid mixing different precisions within a
     program unit.
 

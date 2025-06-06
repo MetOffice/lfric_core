@@ -185,7 +185,15 @@ partitioner for use on fully unstructured meshes.
 Computation within the science parts of the code is performed by
 iterating over cells. The order of the computation is determined by
 order the cells appear in the partition object, so it should be defined
-to support our chosen iteration strategy.
+to support a chosen iteration strategy.
+
+By default, the cells in the partition are ordered using the mesh-ids
+from the global mesh. This makes cells that are geographically
+nearby close to each other in the list. This can aid with
+performance, through better cache use.
+
+Alternatively, the cells can be ordered so that they support the
+optimisation known as "overlapping communications with compute"
 
 .. _overlap comms compute:
 
