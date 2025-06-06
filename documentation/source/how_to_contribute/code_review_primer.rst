@@ -1,12 +1,8 @@
 So You've Been Asked to Code Review an LFRic Core Ticket
 ========================================================
 
-Congratulations, you are now a guardian of LFRic Core's precious bodily
-fluids [#strangelove]_.
-
-As such you will need to be familiar with the relevant
-:ref:`fortran coding standards` but it is also
-important to understand some broader concepts.
+You will need to be familiar with the relevant :ref:`fortran coding standards`
+but it is also important to understand some broader concepts.
 
 As ever when reviewing no rules can be hard and fast. There's always the
 possibility of exceptions however your default assumption must be that code
@@ -128,7 +124,3 @@ These are "interface kernels."
 The rule of thumb for interface kernels is one call to the underlying
 code-base per kernel. If there are two or more calls then it probably means
 two or more kernels have been pushed together and should be split apart.
-
-.. rubric:: Footnotes
-
-.. [#strangelove] General Ripper's mania in "Dr. Strangelove."

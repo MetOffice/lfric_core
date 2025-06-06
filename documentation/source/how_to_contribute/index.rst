@@ -16,6 +16,7 @@ to submit contributions.
     :maxdepth: 2
 
     coding_standards/fortran_coding_standards
+    coding_standards/python_coding_standards
     style_guides/doxygen_style_guide
     style_guides/documentation_style_guide
 
