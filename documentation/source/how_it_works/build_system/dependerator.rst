@@ -1,3 +1,9 @@
+.. -----------------------------------------------------------------------------
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
+   -----------------------------------------------------------------------------
+
 Build System Component: Dependerator
 ====================================
 
@@ -42,23 +48,23 @@ There are additional optional arguments which may be useful:
 
 ``-ignore <module name>``
     May be specified multiple times.
-    
+
     Usage of this module will not be included in the database. This is
     essential for 3rd party libraries which will not be found as part of the
     build.
 
 ``-include <directory>``
     May be specified multiple times.
-    
+
     The preprocessor will use this directory for inclusions. It is passed
     through to an ``-I`` argument.
 
 ``-macro <name>[=<value>]``
     May be specified multiple times.
-    
+
     The preprocessor will use this macro definition. If the value is not
     specified then the macro is defined but uninitialised.
-    
+
     It is passed through to a ``-D`` argument.
 
 You may also use the standard ``-help``, ``-version``, ``-verbose`` and

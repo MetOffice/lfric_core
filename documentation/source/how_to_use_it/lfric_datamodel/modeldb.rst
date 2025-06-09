@@ -1,7 +1,7 @@
 .. -----------------------------------------------------------------------------
-     (c) Crown copyright 2023 Met Office. All rights reserved.
-     The file LICENCE, distributed with this code, contains details of the terms
-     under which the code may be used.
+    (c) Crown copyright 2023 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
    -----------------------------------------------------------------------------
 
 .. _modeldb:
@@ -224,7 +224,7 @@ of I/O contexts. The modeldb object contains an item called
 ``io_contexts`` for this purpose. It is simply a collection of the
 different io_contexts that are required.
 
-As with the ``configuration`` item, the ``io_context`` item must be 
+As with the ``configuration`` item, the ``io_context`` item must be
 initialised prior to its first use.
 
 To put an I/O context into the collection

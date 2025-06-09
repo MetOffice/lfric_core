@@ -1,8 +1,8 @@
-.. ------------------------------------------------------------------------------
-     (c) Crown copyright 2023 Met Office. All rights reserved.
-     The file LICENCE, distributed with this code, contains details of the terms
-     under which the code may be used.
-   ------------------------------------------------------------------------------
+.. -----------------------------------------------------------------------------
+    (c) Crown copyright 2023 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
+   -----------------------------------------------------------------------------
 .. _software dependencies:
 
 Software dependencies of LFRic
@@ -93,7 +93,7 @@ application tests, or for processing documentation:
  * plantuml (1.2021.7): the LFRic repository holds formal descriptions of key
    LFRic classes using a format that can be rendered into UML diagrams by
    `plantuml <https://plantuml.com>`_.
- * Doxygen (1.12.0): the LFRic API is documented using the `Doxygen 
+ * Doxygen (1.12.0): the LFRic API is documented using the `Doxygen
    <https://doxygen.nl/>`_ documentation generator.
 
 
