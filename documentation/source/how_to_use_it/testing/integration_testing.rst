@@ -1,7 +1,7 @@
 .. -----------------------------------------------------------------------------
-     (c) Crown copyright 2025 Met Office. All rights reserved.
-     The file LICENCE, distributed with this code, contains details of the terms
-     under which the code may be used.
+    (c) Crown copyright 2025 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
    -----------------------------------------------------------------------------
 
 Integration Testing
@@ -101,12 +101,12 @@ Firstly we need a program in
     use cli_mod, only : get_initial_filename
 
     implicit none
-  
+
     character(:), allocatable :: filename
-  
+
     call get_initial_filename( filename )
     write( output_unit, '(A)' ) filename
-  
+
   end program cli_mod_test
 
 As you can see, this program simply fetches the configuration filename from

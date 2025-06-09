@@ -1,7 +1,7 @@
 .. -----------------------------------------------------------------------------
-     (c) Crown copyright 2024 Met Office. All rights reserved.
-     The file LICENCE, distributed with this code, contains details of the terms
-     under which the code may be used.
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
    -----------------------------------------------------------------------------
 
 .. _section configuration namelists:
@@ -105,7 +105,7 @@ depending on generator.
         (`Planar meshes only`) Of the four domain boundaries, two are linked
 	as a periodic pair, the remaining boundaries are
 	non-periodic. Crossing one of the periodic domain boundaries re-enters
-	the domain at a point on other periodic domain boundary. 
+	the domain at a point on other periodic domain boundary.
 
       ``periodic``
         Opposing domain boundaries are linked as periodic pairs.
@@ -130,7 +130,7 @@ depending on generator.
       cubed-sphere are reduced in size while maintaining the same
       connectivity. This has the effect of a localised increase in resolution
       over a panel of the cubed-sphere without increasing the overall number
-      of cells in the mesh. 
+      of cells in the mesh.
   * ``smooth_passes``: **<integer>**
       Number of interations of smoothing function applied to mesh node
       locations.
@@ -162,7 +162,7 @@ depending on generator.
   * ``domain_size``: **<real>,<real>**
       Domain size for all principle meshes.  Domain sizes aligned with the
       :ref:`coord_sys<coord_sys>` with units of `[m|°]` as
-      appropriate, `i.e.` `x,y` or `lon,lat` domain extents. 
+      appropriate, `i.e.` `x,y` or `lon,lat` domain extents.
   * ``edge_cells_x``: **<integer>, ...**
       Number of cells along x-axis of domain. Order of integers map to
       :ref:`mesh_names<mesh_names>`.
@@ -173,7 +173,7 @@ depending on generator.
       exist in the :ref:`mesh_names<mesh_names>` variable.
   * ``lbc_rim_depth``: **<integer>**
       Depth (in cells) of rim mesh. This is the number of cells radially
-      across the rim mesh from the domain centre to a domain boundary. 
+      across the rim mesh from the domain centre to a domain boundary.
 
   .. _periodic_x:
 
@@ -192,14 +192,14 @@ depending on generator.
   Optional control namelist for partitioning of mesh domains. Use of this
   namelist allows meshes to be partitioned by the mesh generators rather than
   by an application at runtime. Principle meshes are partitioned and written
-  to file as 1 partition per file. 
+  to file as 1 partition per file.
 
   This functionality results in multiple mesh files with the corresponding
   portion of each principle mesh. In addition to the mesh tolopologies,
   partition information is also written to each file. In essence, each file
   provides the information required to load and instantiate 2D-mesh objects
   which are `local` to a given process rank. This namelist is enabled if
-  triggered by the :ref:`partition_mesh<partition_mesh>` logical. 
+  triggered by the :ref:`partition_mesh<partition_mesh>` logical.
 
   .. NOTE:: Care should be taken when specifying partition
 	    configurations. Partitions flag mesh cell ids as being members of
@@ -218,7 +218,7 @@ depending on generator.
 
   * ``n_partitions``: **<integer>**
       The total number of requested partitions. For `cubed-sphere` meshes,
-      this shoud be restricted to 1 or a multiple of 6. 
+      this shoud be restricted to 1 or a multiple of 6.
 
   .. _panel_decomposition:
 
@@ -242,21 +242,21 @@ depending on generator.
       ``custom``
         Forces the partitioner to attempt to configure the panel into
 	partitions given by :ref:`panel_xproc<panel_xproc>` and
-	:ref:`panel_yproc<panel_yproc>`. 
+	:ref:`panel_yproc<panel_yproc>`.
 
   .. _panel_xproc:
 
   * ``panel_xproc``: **<integer>**
       Number of partitions in local x-direction of mesh panel, this variable
       is only valid when requesting a ``custom`` decomposition
-      (:ref:`panel_xproc<panel_xproc>`). 
+      (:ref:`panel_xproc<panel_xproc>`).
 
   .. _panel_yproc:
 
   * ``panel_yproc``:  **<integer>**
       Number of partitions in local y-direction of mesh panel, this variable
       is only valid when requesting a ``custom`` decomposition
-      (:ref:`panel_yproc<panel_yproc>`). 
+      (:ref:`panel_yproc<panel_yproc>`).
 
   * ``partition_range``: **<integer>,<integer>**
       Specifies the ``start``, ``end`` partition ids to output, valid ids range from
@@ -306,16 +306,16 @@ depending on generator.
   to provide (for a given axis) an inner cell size (inner region) which
   gradually transitions (stretch region) to the outer cell size (outer
   region). Only valid for planar meshes, this transform is enabled by the
-  :ref:`apply_stretch_transform<apply_stretch_transform>` logical. 
+  :ref:`apply_stretch_transform<apply_stretch_transform>` logical.
 
   * ``cell_size_inner``: **<real>,<real>**
       Cell size for domain inner region of stretch grid along
       ``x-axis,y-axis``, units in `[m|°]` depending on planar mesh
-      type. 
+      type.
   * ``cell_size_outer``: **<real>,<real>**
       Cell size for domain outer region of stretch grid along
       ``x-axis,y-axis``, units in `[m|°]` depending on planar mesh
-      type. 
+      type.
   * ``n_cells_outer``: **<integer>,<integer>**
       Depth (in cells) of domain outer region along ``x-axis,y-axis``.
   * ``n_cells_stretch``:  **<integer>,<integer>**
@@ -335,7 +335,7 @@ depending on generator.
   * ``transform_mesh``: **'<string>'**
       Principle mesh to apply stretch transform to. Any meshes connected to
       this mesh via InterMesh maps (:ref:`mesh_maps<mesh_maps>`) will have
-      their node locations updated accordingly. 
+      their node locations updated accordingly.
 
 
 .. rubric:: Footnotes

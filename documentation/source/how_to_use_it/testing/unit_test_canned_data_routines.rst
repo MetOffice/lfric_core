@@ -1,7 +1,7 @@
 .. -----------------------------------------------------------------------------
-     (c) Crown copyright 2024 Met Office. All rights reserved.
-     The file LICENCE, distributed with this code, contains details of the terms
-     under which the code may be used.
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
    -----------------------------------------------------------------------------
 
 .. role:: raw-html(raw)
@@ -89,7 +89,7 @@ the routines that provide that data.
   * ``get_gaussian_q3x3x3_quadrature_weights_xy`` and
   * ``get_gaussian_q3x3x3_quadrature_weights_z`` :raw-html:`<br />`
     A call to ``get_gaussian_q3x3x3_quadrature_weights_xy(weights_xy)`` will
-    return the weights to apply to the quadrature points for a 3x3x3 Gaussian 
+    return the weights to apply to the quadrature points for a 3x3x3 Gaussian
     quadrature in the horizontal (``weights_xy(:)``) and
     ``get_gaussian_q3x3x3_quadrature_weights_z(weights_z)`` will return the
     vertical weights (``weights_z(:)``).
