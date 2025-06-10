@@ -4,10 +4,10 @@
      under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _technical articles:
+.. _parallelism:
 
-Technical Articles
-==================
+Parallelism
+===========
 
 This section includes information on how parallelism is implemented in LFRic,
 
@@ -15,4 +15,4 @@ This section includes information on how parallelism is implemented in LFRic,
    :caption: Contents:
    :maxdepth: 1
 
-   LFRic Message Passing Interface
+   lfric_message_passing_interface

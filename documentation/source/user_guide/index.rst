@@ -20,3 +20,4 @@ User Guide
     technical_articles/index
     testing/index
     build_and_test/index
+    parallelism/index
