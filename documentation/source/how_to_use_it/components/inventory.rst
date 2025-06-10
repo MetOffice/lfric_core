@@ -1,16 +1,12 @@
 .. -----------------------------------------------------------------------------
-    (c) Crown copyright 2023 Met Office. All rights reserved.
+    (c) Crown copyright 2025 Met Office. All rights reserved.
     The file LICENCE, distributed with this code, contains details of the terms
     under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _installation instructions:
+Inventory Component
+===================
 
-Installing LFRic
-================
-
-.. toctree::
-    :maxdepth: 2
-
-    software_dependencies
-    build_and_run
+This component provides support for a hash table which maps an integer
+identifier to an infrastructure object. e.g. field or array of real
+numbers.

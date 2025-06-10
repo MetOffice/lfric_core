@@ -4,13 +4,11 @@
     under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _installation instructions:
+.. _skeleton application:
 
-Installing LFRic
-================
+Skeleton
+========
 
-.. toctree::
-    :maxdepth: 2
-
-    software_dependencies
-    build_and_run
+This is a very simple application that uses the minimum of the
+infrastructure source. It runs as only a single core application with
+no MPI.

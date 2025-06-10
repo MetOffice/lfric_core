@@ -1,16 +1,13 @@
 .. -----------------------------------------------------------------------------
-    (c) Crown copyright 2023 Met Office. All rights reserved.
+    (c) Crown copyright 2024 Met Office. All rights reserved.
     The file LICENCE, distributed with this code, contains details of the terms
     under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _installation instructions:
+.. _lfric xios component:
 
-Installing LFRic
-================
+LFRic-XIOS Component
+====================
 
-.. toctree::
-    :maxdepth: 2
-
-    software_dependencies
-    build_and_run
+The LFRic-XIOS component provides an API for LFRic applications that
+use the XIOS IO system.

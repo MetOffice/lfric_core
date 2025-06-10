@@ -1,3 +1,8 @@
+################################################################################
+# (c) Crown copyright 2025 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+################################################################################
 # Minimal makefile for Sphinx documentation
 #
 
@@ -22,10 +27,10 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	
+
 deploy:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(DEPLOYDIR)/$(BRANCH)" $(SPHINXOPTS) $(O)
-	
+
 .PHONY: clean
 clean:
 	@echo "***** Removing, $(BUILDDIR) directory *****"

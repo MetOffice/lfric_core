@@ -3,14 +3,15 @@
     The file LICENCE, distributed with this code, contains details of the terms
     under which the code may be used.
    -----------------------------------------------------------------------------
+.. _API_index:
 
-.. _installation instructions:
+LFRic Core API
+##############
 
-Installing LFRic
-================
-
-.. toctree::
-    :maxdepth: 2
-
-    software_dependencies
-    build_and_run
+.. include:: meshes.rst
+.. include:: function_spaces.rst
+.. include:: fields.rst
+.. include:: field_collections.rst
+.. include:: operators.rst
+.. include:: quadrature.rst
+.. include:: linked_list.rst

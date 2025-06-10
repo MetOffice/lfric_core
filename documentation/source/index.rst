@@ -1,7 +1,7 @@
 .. -----------------------------------------------------------------------------
-     (c) Crown copyright 2024 Met Office. All rights reserved.
-     The file LICENCE, distributed with this code, contains details of the terms
-     under which the code may be used.
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENCE, distributed with this code, contains details of the terms
+    under which the code may be used.
    -----------------------------------------------------------------------------
 
 :html_theme.sidebar_secondary.remove: true
@@ -18,7 +18,7 @@ led by the `Core Capability Development Team
 <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science
 IT group at the Met Office.
 
-.. grid:: 3
+.. grid:: 4
 
     .. grid-item-card::
         :text-align: center
@@ -37,30 +37,44 @@ IT group at the Met Office.
     .. grid-item-card::
         :text-align: center
 
-        Guide on the code for users and developers
+        Guide on how to use LFRic Core in your applications
 
         +++
-        .. button-ref:: user_guide_index
+        .. button-ref:: how_to_use_it_index
             :ref-type: ref
             :color: primary
             :outline:
             :expand:
 
-                User Guide
+                How to use it
 
     .. grid-item-card::
         :text-align: center
 
-        Guide on details of the development process
+        Guide on how LFRic Core works under the hood
 
         +++
-        .. button-ref:: developer_guide_index
+        .. button-ref:: how_it_works_index
             :ref-type: ref
             :color: primary
             :outline:
             :expand:
 
-                Developer Guide
+                How it works
+
+    .. grid-item-card::
+        :text-align: center
+
+        Guide on what to do when contributing to LFRic Core
+
+        +++
+        .. button-ref:: how_to_contribute_index
+            :ref-type: ref
+            :color: primary
+            :outline:
+            :expand:
+
+                How to contribute
 
 Development of the LFRic core infrastructure and the new atmosphere
 model are being done within the Momentum Partnership. The Momentum
@@ -88,6 +102,6 @@ technical aspects of the code.
     :hidden:
 
     getting_started/index
-    user_guide/index
-    developer_guide/index
-    API/index
+    how_to_use_it/index
+    how_it_works/index
+    how_to_contribute/index

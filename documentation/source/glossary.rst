@@ -1,8 +1,8 @@
-.. ------------------------------------------------------------------------------
-     (c) Crown copyright 2024 Met Office. All rights reserved.
-     The file LICENSE, distributed with this code, contains details of the terms
-     under which the code may be used.
-   ------------------------------------------------------------------------------
+.. -----------------------------------------------------------------------------
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENSE, distributed with this code, contains details of the terms
+    under which the code may be used.
+   -----------------------------------------------------------------------------
 
 :html_theme.sidebar_secondary.remove: true
 :orphan:

@@ -4,13 +4,17 @@
     under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _installation instructions:
+Example Applications
+====================
 
-Installing LFRic
-================
+There are a few example applications contained within the LFRic Core
+source.  These are used as both examples of the general form an LFRic
+based application should take and also as development tools for
+specific functionality and testing.
+
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
+    :glob:
 
-    software_dependencies
-    build_and_run
+    example_applications/*
