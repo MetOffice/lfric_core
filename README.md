@@ -5,9 +5,9 @@ LFRic Core
 Location for LFRic infrastructure documentation. The source code will be 
 migrated here at a later date.
 
-To build the sphinx docs you will need to use the `lfric-core-docs/1.0.0` 
-environment made specifically for this (it contains Sphinx and the required 
-packages), be aware that this module is incompatible with the main lfric 
-environment modules due to different Python dependencies. To build use `make 
-html` in the documentation directory. `make help` will give you the other 
-options available.
+On the Met Office Azure Spice machine the main LFRic module environment 
+contains all the required packages to build the documentation. To build use 
+`make html` in the documentation directory. `make help` will give you the other
+options available. Additionally, `make deploy` will build a copy of the 
+documentation and deploy it to a directory in `$(HOME)/public_html` named after
+the git branch.
