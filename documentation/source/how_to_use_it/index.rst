@@ -20,8 +20,5 @@ How to use it
     technical_articles/index
     testing/index
     build_and_test/index
-<<<<<<< HEAD:documentation/source/user_guide/index.rst
     parallelism/index
-=======
     API/index
->>>>>>> 39b81f2476aca97972b01b05074e3497a61bee0e:documentation/source/how_to_use_it/index.rst
