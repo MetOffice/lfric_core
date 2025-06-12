@@ -19,4 +19,5 @@ to submit contributions.
     coding_standards/python_coding_standards
     style_guides/doxygen_style_guide
     style_guides/documentation_style_guide
+    code_review/code_review_primer
 

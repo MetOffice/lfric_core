@@ -4,6 +4,8 @@
     under which the code may be used.
    -----------------------------------------------------------------------------
 
+.. _code review primer:
+
 So You've Been Asked to Code Review an LFRic Core Ticket
 ========================================================
 
@@ -28,7 +30,7 @@ The most fundamental concept which drives the LFRic core is the PSyKAl
 separation of concerns, meaning that different parts of a system see only the
 data pertinent to their operation.
 
-.. image:: _images/PSyKAl.svg
+.. image:: ../_images/PSyKAl.svg
    :alt: Graphical representation of the PSyKAl model.
    :align: center
 
