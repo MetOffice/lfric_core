@@ -11,12 +11,14 @@ LFRic Message Passing Interface
 
 LFRic supports running in parallel over a distributed memory parallel system by
 passing messages between the parallel components, For this, it uses the system
-library that conforms to the Message Passing Interface (MPI) standard.
+library that conforms to the Message Passing Interface (MPI) standard
+(https://www.mpi-forum.org/).
 
 Most communication is between neighbouring components and is made via halo
 exchanges. This is handled by the ``halo_comms`` (and associated) objects, which
-subsequently call into the Yaxt library (which then, in turn, calls into the MPI
-library) to perform the halo exchanges.
+subsequently call into the Yaxt library
+(https://dkrz-sw.gitlab-pages.dkrz.de/yaxt/) which then, in turn, calls into the
+MPI library to perform the halo exchanges.
 
 That leaves a small selection of global communication functionality that needs
 to be supported, such as global reductions (min/max/sum) and broadcast of
@@ -33,8 +35,8 @@ For more details about the inner workings of the wrapper, see
 Application Programming Interface
 ---------------------------------
 
-Some of the functionality in the programming interface requires more in-depth
-knowledge of how MPI works, but is listed here for completeness.
+Some of the functionality in the programming interface will only be used by
+advanced users, but the full API listed here for completeness.
 
 Helper functions
 ^^^^^^^^^^^^^^^^^
