@@ -41,8 +41,8 @@ link to the MPI library.
 MPI_F08/Legacy
 ^^^^^^^^^^^^^^
 
-As an alternative to not using the system MPI at all, the system MPI library can
-use one of two interfaces. The original "legacy" interface stores many of its
+As an alternative to not using MPI at all, the lfric MPI wrapper can
+use one of two interfaces to the Fortran MPI library. The original "legacy" interface stores many of its
 internals (such as the handle used to identify communicators) as integers. This
 means that it impossible to implement effective type checking - one integer
 looks just like any other to the compiler. A second interface was implemented
