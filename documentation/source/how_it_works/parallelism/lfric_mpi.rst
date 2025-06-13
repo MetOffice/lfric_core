@@ -41,21 +41,34 @@ link to the MPI library.
 MPI_F08/Legacy
 ^^^^^^^^^^^^^^
 
-As an alternative to not using MPI at all, the lfric MPI wrapper can
-use one of two interfaces to the Fortran MPI library. The original "legacy" interface stores many of its
-internals (such as the handle used to identify communicators) as integers. This
-means that it impossible to implement effective type checking - one integer
-looks just like any other to the compiler. A second interface was implemented
-where each these integers is wrapped in its own object (e.g. the communicator is
-held in an ``mpi_comm`` object) - allowing type checking. This interface is
-called "mpi_f08". The ``lfric_mpi`` wrapper object supports both interfaces.
-When directly building the code, select the legacy interface by setting the
-proprocessor directive ``LEGACY_MPI``, Not setting any preprocessor directives
-will result in code that uses the mpi_f08 interface. However, the logic is
-reversed in the current build system. Here, setting the environment variable
-``USE_MPI_F08`` makes the code use the "mpi_f08" interface. The default, in the
-absence of any environment variable being set is to use the legacy mpi
-interface.
+When the user selects to use the system MPI (i.e. does not set ``NO_MPI``), the
+lfric MPI wrapper can use either of the two interfaces the system MPI library
+provides. The original "legacy" interface stores many of its internals (such as
+the handle used to identify communicators) as integers. This means that it
+impossible to implement effective type checking - one integer looks just like
+any other to the compiler. A second interface has been implemented where each of
+these integers is wrapped in its own object (e.g. the communicator is held in an
+``mpi_comm`` object). This allows full type checking. This interface is called
+"mpi_f08". The ``lfric_mpi`` wrapper object supports both interfaces.
+
+Within the code, use of the legacy interface is selected by using the
+proprocessor directive ``LEGACY_MPI``, Not using the preprocessor directive
+will default to providing code that uses the mpi_f08 interface.
+
+The current LFRic build system sets the ``LEGACY_MPI`` preprocessor directive in
+response to querying the environment varable: ``USE_MPI_F08``.
+
+* If the environment variable: ``USE_MPI_F08`` is set, the build system doesn't
+  use the ``LEGACY_MPI`` preprocessor directive and the mpi_f08 interface is
+  used.
+* If the environment variable ``USE_MPI_F08`` is **not** set the ``LEGACY_MPI``
+  preprocessor directive is used and the legacy MPI interface is used.
+
+Note the reverse in the default behaviour within the build system: if the
+environment variable is not set before the build system is used, the legacy
+interface will be used by default. When the mpi_f08 interface is better
+supported on the systems that LFRic runs on, the intention is to reverse this
+default behaviour..
 
 Moving between the different interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
