@@ -64,11 +64,14 @@ response to querying the environment varable: ``USE_MPI_F08``.
 * If the environment variable ``USE_MPI_F08`` is **not** set the ``LEGACY_MPI``
   preprocessor directive is used and the legacy MPI interface is used.
 
-Note the reverse in the default behaviour within the build system: if the
-environment variable is not set before the build system is used, the legacy
-interface will be used by default. When the mpi_f08 interface is better
-supported on the systems that LFRic runs on, the intention is to reverse this
-default behaviour.
+.. warning::
+   The default behaviour when the preprocessor directive is not set is the
+   **opposite** of default behaviour when the environment variable (within the
+   build system) is not set. Eventually the mpi_f08 interface should be the
+   default everwhere - so the preprocessor directives in the code were written
+   to default to mpi_f08 - but until there is full support for mpi_f08, the way
+   the environment variable is used in the build system means the legacy
+   interface will be the default.
 
 Moving between the different interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
