@@ -44,7 +44,7 @@ MPI_F08/Legacy
 When the user selects to use the system MPI (i.e. does not set ``NO_MPI``), the
 lfric MPI wrapper can use either of the two interfaces the system MPI library
 provides. The original "legacy" interface stores many of its internals (such as
-the handle used to identify communicators) as integers. This means that it
+the handle used to identify communicators) as integers. This means that it is
 impossible to implement effective type checking - one integer looks just like
 any other to the compiler. A second interface has been implemented where each of
 these integers is wrapped in its own object (e.g. the communicator is held in an
@@ -68,7 +68,7 @@ Note the reverse in the default behaviour within the build system: if the
 environment variable is not set before the build system is used, the legacy
 interface will be used by default. When the mpi_f08 interface is better
 supported on the systems that LFRic runs on, the intention is to reverse this
-default behaviour..
+default behaviour.
 
 Moving between the different interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

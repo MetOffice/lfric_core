@@ -36,7 +36,7 @@ Application Programming Interface
 ---------------------------------
 
 Some of the functionality in the programming interface will only be used by
-advanced users, but the full API listed here for completeness.
+advanced users, but the full API is listed here for completeness.
 
 Helper functions
 ^^^^^^^^^^^^^^^^^
