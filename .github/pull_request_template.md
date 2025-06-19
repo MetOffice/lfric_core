@@ -36,14 +36,22 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 # Checklist:
 
-- [ ] The change has been checked for design compliance by an experienced SSE
+- [ ] The change has been checked for design compliance by an experienced SSE 
+      <!-- All none trivial tickets should be seen by an appropriately experienced 
+           SSE as part of a design review or as part of the normal review process -->
 - [ ] My code follows the style guidelines of this project.
 - [ ] I have commented my code, particularly in hard-to-understand areas.
 - [ ] I have made corresponding changes to the documentation.
 - [ ] My changes generate no new warnings.
 - [ ] I have added tests that prove my fix is effective or that my feature works.
 - [ ] New and existing unit tests pass locally with my changes, for both debug and optimised builds.
-- [ ] I have used AI tools to help generate parts of this change.
+- [ ] No AI tools have been used in the creation of this change.
+
+## Reasoning on why any of the above boxes have not been checked
+<!-- 
+Please provide reasoning on why any of the above checklist have not been ticked 
+(e.g. what are the warnings and why is this expected)
+-->
 
 # Review Checks (To be filled in by the reviewer/s)
 
