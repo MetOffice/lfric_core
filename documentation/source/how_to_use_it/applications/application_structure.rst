@@ -64,7 +64,7 @@ be bespoke.
 Prior to calling the driver initialise stage, data structures shared
 by each stage of the model need to be set up. The LFRic driver layer
 component provides a :ref:`modeldb <modeldb>` data
-structure that aims to store all the data needed to run a
+structure that can be used to store all the data needed to run a
 model. Properly encapsulating all the data allows applications to
 create multiple ``modeldb`` data structures to run two or more models
 side by side, or to run ensembles of the same model side by side.
@@ -170,97 +170,60 @@ stage.
 Data in a model
 ---------------
 
-In many other model infrastructures, "fields" refer to simple native
-Fortran arrays of data representing some physical quantity over the
-spatial domain of the model. In contrast, fields in LFRic are created
-as :ref:`LFRic field_type <field>` Fortran derived-types. Alongside
-the data representing the field's physical quantity, the field type
-encapsulate other information about the field, and provides functions
-for accessing information about the field. Understanding the role of
-the `field_type` is critical to understanding LFRic, but the details
-are deferred to the section describing the :ref:`use of PSyclone and
-the LFRic data model<psykal and datamodel>`. For now, the
-distinction between LFRic fields and the simpler fields of other
-models will mostly be ignored so as to focus on the broader model
-structure.
+The LFRic infrastructure supports several data structures likely to be
+useful or necessary when writing a model. Data structures are
+implemented as Fortran objects, enabling structures to hold both data
+and methods that apply to the data.
 
-A complex model such as the Momentum\ :sup:`®` atmosphere requires
-hundreds of fields. To simplify the model design, the LFRic
-infrastructure supports :ref:`field collections <field
-collection>`. A field collection can store arbitrarily-large numbers
-of fields that can be accessed by name. The Momentum\ :sup:`®`
-atmosphere has several field collections holding fields for each of
-several major science components. Use of field collections makes the
-API of higher-level science algorithms more manageable by hiding both
-the large number of fields and the fact that some fields are not
-required for all model configurations.
+For example, the :ref:`LFRic field_type <field>` data structure holds
+both data for the field and methods for doing operations such as halo
+swaps and global sums. Understanding the role of the ``field_type`` is
+critical to understanding LFRic, but the details are deferred to the
+section describing the :ref:`use of PSyclone and the LFRic data
+model<psykal and datamodel>`.
 
-.. Link to configuration object to `namelist_collection_type` in developer
-   guide when available.
+LFRic also supports a :ref:`field_collection <field collection>` data
+structure that can store arbitrarily-large numbers of fields that can
+be accessed by name. Use of field collections makes the API of
+higher-level science algorithms more manageable by hiding both the
+large number of fields and the fact that some fields are not required
+for all model configurations.
 
-A `configuration object` stores the model configuration derived from the input
-namelists file. It contains input values for real variables, science options,
-switches, etc. Configuration settings can be accessed by first accessing the
-`namelist object(s)` in the `configuration object`, then requesting the desired
-namelist variable (see :ref:`Accessing configuration data<access_config_data>`).
+For information about these and other data structures that can be used
+by a model, refer to the section on :ref:`data structures <data
+structures>` and the section on the :ref:`modeldb <modeldb>`
+object. The ``modeldb`` object is an object that can hold a range of
+different objects, including fields and field collections. It has been
+designed with the aim of providing the ability to encapsulate the
+whole of a model state within a single object.
 
-A :ref:`key-value <keyvalue pair object>` data structure exist
-that stores an arbitrary number of key-value pairs where the value can
-be an object of any type. At a basic level, this data structure can
-store native fortran types such as real or integer variables and
-arrays. More complex abstract or concrete types can also be stored.
-
-The `modeldb` object defined in the `driver` component provides the
-ability to store all of the above data structures. A list of the main
-data structures declared in `modeldb` is given here. For more details
-on how to use these data structures see the :ref:`modeldb <modeldb>`
-documentation.
-
- - **field**: an object that can store fields and field collections. A
-   field or field collection can be accessed from `field` by name.
- - **configuration** An instance of the configuration object described
-   above, which stores the model configuration: input values, science
-   options, switches and so forth.
- - **values** An instance of the key-value data structure described
-   above that can store any type or class which can be accessed by
-   name.
- - **mpi** Stores an object that can be used to perform MPI tasks.
- - **clock** and **calendar** objects can track model time.
-
-While all algorithms in an LFRic model will rely on fields, to retain
-a degree of separation between the model and the infrastructure it is
-recommended that accesses to `modeldb` do not go too deep into the
-code: once an algorithm is sufficiently self-contained, all its inputs
-can be extracted from `modeldb` and passed to the algorithm through
-the subroutine API.
-
-Operators
-^^^^^^^^^
-
-A brief mention of operators is sufficient in this document: an
-operator is a data structure that can be used to map a field of one
-type onto another type. Its use is relevant to the GungHo mixed finite
-element formulation where there is a need to map fields between
-different function spaces.
+When writing a model that uses ``modeldb``, it is recommended that
+data is extracted from ``modeldb`` in the higher levels of the code
+so that the lower level algorithms need refer only to the simpler data
+structures such as fields or to native Fortran data
+types. Constructing an application in this way helps ensure that lower
+level scientific algorithms can more easily be tested in isolation.
 
 Algorithms, Kernels and the PSy layer
 -------------------------------------
 
 The architecure of an LFRic science model follows the PSyKAl design
 which stands for PSy (Parallel Systems) layer, Kernels and ALgorithms
-that form the core parts of the scientific code of a model. Broadly
+that form the core parts of the scientific code of a model. A separate
+:ref:`detailed technical description <psykal and datamodel>`
+describes LFRic's implementation of the PSyKAl design. Broadly
 speaking, algorithms are higher-level subroutines that deal only with
-full fields. The data in fields is encapsulated and cannot directly be
-accessed within an algorithm. Kernels are lower level subroutines that
-have access to the data in fields passed by the algorithm and
-implement the actual computations of the data requested by the
-algorithm.
+full fields. The data in fields is encapsulated within the field
+object and cannot directly be accessed from within an
+algorithm. Kernels are lower level subroutines that *do* have access
+to the data in fields passed by the algorithm and implement the actual
+computations of the data requested by the algorithm.
 
-The PSy layer sits between algorithms and kernels. It breaks open
-fields and feeds their data to kernels. The PSy layer gets its name
-from the fact that shared-memory parallelism can be applied at this
-level; for example, applying OpenMP loops over calls to the kernel
-with different chunks of the field data.
+The PSy layer sits between algorithms and kernels. It breaks open the
+field objects and feeds their data to kernels. The PSy layer gets its
+*Parallel System* name from the fact that shared-memory parallelism
+can be applied at this level; for example, applying OpenMP loops over
+calls to the kernel with different chunks of the field data.
 
 PSyclone
 --------
@@ -275,5 +238,5 @@ parsed from algorithms and kernels and applying optional
 transformations to optimise the code.
 
 The structure of algorithms and kernels, and the use of PSyclone is
-the subject of the major section describing the :ref:`LFRic data model
-and its use of PSyclone <psykal and datamodel>`.
+covered by the :ref:`technical description <psykal and datamodel>`
+referenced above.
