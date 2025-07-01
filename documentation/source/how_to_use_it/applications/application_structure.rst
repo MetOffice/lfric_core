@@ -176,8 +176,9 @@ implemented as Fortran objects, enabling structures to hold both data
 and methods that apply to the data.
 
 For example, the :ref:`LFRic field_type <field>` data structure holds
-both data for the field and methods for doing operations such as halo
-swaps and global sums. Understanding the role of the ``field_type`` is
+both data for the field and methods for doing operations such as the
+``write_field`` method which can be configured to output the data in a
+field to a diagnostic system. Understanding the role of the ``field_type`` is
 critical to understanding LFRic, but the details are deferred to the
 section describing the :ref:`use of PSyclone and the LFRic data
 model<psykal and datamodel>`.
