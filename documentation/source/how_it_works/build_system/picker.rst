@@ -9,37 +9,30 @@
 Rose Picker
 ===========
 
-Since Rose already implements code to read its own configuration files we would
-ideally make use of it to save effort and prevent diversion of two
-implementations.
-
-Unfortunately Rose is licenced under the GPL which is incompaible with the BSD
-licence we use for LFRic. As such we chose to produce a GPL stub program which
-makes use of the Rose code to read the metadata file and produce a JSON
-representation from it. This file can be used by our tools without fear of
-licence infringement.
-
-In order to maintain the separation of the two licences ``rose_picker`` is
-held in a separate repository within the LFRic collection.
+The ``rose_picker`` tool is derived from Rose and maintained
+separately from LFRic code for software licencing reasons.
 
 Usage
 -----
 
 The tool is invoked like this::
 
-    rose_picker [-help] [-directory PATH] [-include_dirs PATH] PATH
+    rose_picker [-help] [-directory PATH1] [-include_dirs PATH2] FILE
 
-As ever, usage information is available using ``-help``.
+Usage information is provided if the ``-help`` option is specified.
 
-The location where generated files are placed is provided by ``-directory`` and
-defaults to the current working directory.
+The tool generates a JSON file and a text file containing a list of
+namelists from the input metadata file specified by ``FILE``. If
+specified, output files are written to the ``PATH1``
+directory. Otherwise, the files are written to the current working
+directory.
 
-Metadata files which use the "include" directive to import additional files
-require those additional files to be located. They will be searched for in the
-directories specified by ``-include_dirs``. This argument may be specified
-multiple times, once for each directories.
+If a metadata file uses the ``include`` directive to import additional
+files an ``-include_dirs`` option must be used to specify the
+``rose-meta`` directories containing them. Where two (or more)
+``rose-meta`` directories need to be searched the ``-include_dirs``
+argument is specified once for each. For example::
 
-The final ``PATH`` is that of the metadata file.
-
-The reason the output path is specified as a directory is that as well as the
-JSON file a text file containing a list of namelists defined is also generated.
+    rose_picker -include_dirs rose-meta                           \
+                -include_dirs ../lfric_core/rose-meta             \
+                rose-meta/lfric-gungho_model/HEAD/rose-meta.conf

@@ -7,50 +7,62 @@
 Configurator
 ============
 
-Used by the build system this tool takes an
-:ref:`extended Rose metadata <extended-rose-metadata>` file and produces
-Fortran source to manage the namelists produced from that metadata.
+The Configurator is a tool that generates Fortran source based on an
+:ref:`extended form of Rose metadata <extended-rose-metadata>`. The
+Fortran code reads namelist configuration files aligned with the
+metadata and stores the configuration choices in generated data
+structures and functions with meaningful names. Applications can use
+these structures and functions to access the configuration choices. To
+support parallel applications, the generated code manages the
+distribution of choices to all MPI ranks.
 
 Usage
 -----
 
-The Configurator consists of three commands which may be found in
-``infrastructure/build/tools`` and a separate tool :ref:`Rose Picker` which
+The Configurator calls three commands which may be found in
+``infrastructure/build/tools`` and a separate tool
+:ref:`rose_picker<Rose Picker>` which
 converts the extended Rose metadata file into a JSON file.
 
-The first takes the metadata and creates namelist loading modules::
+The first command takes the JSON file created by ``rose_picker`` and
+creates a module for each namelist. Each module has procedures to read
+a namelist configuration file for the namelist, to MPI broadcast
+configuration choices and to access configuration choices::
 
-    GenerateNamelist [-help] [-version] [-directory PATH] PATH
+    GenerateNamelist [-help] [-version] [-directory PATH] FILE
 
 The ``-help`` and ``-version`` arguments cause the tool to tell you about
 itself, then exit.
 
-The final path is the metadata JSON file to use and the optional ``-directory``
-tells the tool where to put the generated source. If it is not specified the
-current working directory is used.
+The ``FILE`` argument points to the metadata JSON file to
+use. Generated source is put into the current working directory, or
+into ``PATH`` if specified.
 
-The next command generates an orchestration which makes use of the previously
-generated namelist loading modules to load a namelist file::
+The second command generates the code that calls procedures from the
+previously generated namelist loading modules to actually read a
+namelist configuration file::
 
-    GenerateLoader [-help] [-version] [-verbose] PATH NAMELIST ...
+    GenerateLoader [-help] [-version] [-verbose] FILE NAMELISTS...
 
-As before ``-help`` and ``-version`` reveal details about the tool and exit.
+As before, ``-help`` and ``-version`` options reveal details about
+the tool before exiting.
 
-The ``PATH`` is that of the resulting generated source file. Finally the
-namelists expected to appear in the file are presented as a space separated
-list of ``NAMELIST`` names.
+The ``FILE`` is that of the resulting generated source file. Finally,
+the ``NAMELISTS`` are a space-separated list of one or more namelist
+names that the code will read.
 
-The final command generates a module which which fakes the loading of a
-namelist. This is useful for controlling a test environment::
+The final command generates a module which provides procedures to
+directly configuring the contents of a namelist. This module ought not
+be used within a normal application. Instead, it is to allow test
+systems to feign the reading of a namelist so they can control the
+test environment::
 
-    GenerateFeigns [-help] [-version] [-output PATH] PATH
+    GenerateFeigns [-help] [-version] [-output FILE1] PATH2
 
-.. warning::
+Once again, ``-help`` and ``-version`` cause the command to exit after
+giving its details.
 
-    This tool is deprecated and will be removed once it is no longer needed.
-
-Once again ``-help`` and ``-version`` exit after giving their information.
-
-The resuling source file will be named by the ``-output`` argument and defaults
-to ``feign_config_mod.f90`` in the current directory. The final ``PATH`` is,
-once again, the JSON metadata file.
+The resulting source file is written to ``FILE1``, or to
+``feign_config_mod.f90`` in the current working directory if ``FILE1``
+is not specified. The ``FILE2`` argument points to the JSON metadata
+file created by ``rose-picker``.
