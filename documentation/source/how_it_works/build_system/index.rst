@@ -13,6 +13,7 @@ Build System
 
    configurator
    picker
+   configuration_meta
    library_import
    dependerator
    psyclone_mk

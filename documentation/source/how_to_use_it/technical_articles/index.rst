@@ -17,6 +17,5 @@ aspects of the LFRic core infrastructure
    :maxdepth: 1
 
    lfric_distmem_impl
-   configuration_meta
    logging
    simple_io
