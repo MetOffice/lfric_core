@@ -4,6 +4,8 @@
     under which the code may be used.
    -----------------------------------------------------------------------------
 
+.. _configurator:
+
 Configurator
 ============
 
