@@ -10,7 +10,7 @@ Configurator
 ============
 
 The Configurator is a tool that generates Fortran source based on an
-:ref:`extended form of Rose metadata <extended-rose-metadata>`. The
+:ref:`extended form of Rose metadata <extended rose metadata>`. The
 Fortran code reads namelist configuration files aligned with the
 metadata and stores the configuration choices in generated data
 structures and functions with meaningful names. Applications can use

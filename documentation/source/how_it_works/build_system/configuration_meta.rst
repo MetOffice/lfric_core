@@ -4,7 +4,7 @@
     under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _extended-rose-metadata:
+.. _extended rose metadata:
 
 Configuration Metadata File Extensions
 ======================================

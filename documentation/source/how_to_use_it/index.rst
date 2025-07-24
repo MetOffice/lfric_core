@@ -13,6 +13,7 @@ How to use it
 
     applications/index
     lfric_datamodel/index
+    configuration/index
     meshes/index
     components/index
     time/index
