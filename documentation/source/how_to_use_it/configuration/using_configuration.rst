@@ -36,10 +36,10 @@ store the configuration choices in a ``namelist_collection_type``
 
   call read_configuration( filename, configuration )
 
-The LFRic infrastructure provides a :ref:`component<driver
+The LFRic infrastructure provides a :ref:`driver component<driver
 configuration>` that orchestrates both reading of the namelist
 configuration file and cross-checking the contents to ensure all
-required namelists are present, and can be used instead of directly
+required namelists are present. It can be used instead of directly
 calling the above procedure.
 
 .. _configuration object:
@@ -77,7 +77,13 @@ To get, and to use, an enumeration, one has to get the value
 representing the choice, but also one or more of the enumeration list
 to check against. Enumerations are stored as ``i_def`` integers. The
 enumeration options are parameters that can be obtained directly from
-the Configurator-generated ``_config_mod`` file:
+the Configurator-generated ``_config_mod`` file. In the following
+example, the value of the ``geometry`` configuration is checked
+against two choices of geometry: ``spherical`` and ``planar``
+referenced by the two parameters in the ``base_mesh_config_mod``
+module. The names of the parameters are prefixed with the name of the
+variable to best ensure there is no duplication of parameter names in
+and between namelists::
 
 .. code-block:: fortran
 
@@ -175,12 +181,19 @@ It is normally possible to obtain any variables direct from the
 ``config_mod`` files rather than going through the configuration
 object functions. However, this method cannot work where namelists are
 duplicated. Namelists can be duplicated by metadata definition as
-described above, but applications can also be hard-wired to read two
-separate namelist configurations where the same namelist appears in
-both. In these cases, the data in the configuration object will be
-specific for each part of the application, but the values for the first
-namelist in the ``config_mod`` file will be overwritten by the second
-namelist.
+described above, in which case values are distinguished by a key
+variable.
+
+But applications can also be hard-wired to read two separate namelist
+configurations where the same namelist appears in both. In these
+cases, the application can load each configuration into two separate
+configuration objects. This means that different parts of the
+application can be passed different configuration objects, and the
+data in the configuration object will be specific for that part of the
+application. While the parameter values that define enumerator options
+will be the same for both parts of the application, the values for the
+first namelist in the ``config_mod`` file will be overwritten by the
+second namelist.
 
 In the following example, the same requirement as the example above is
 met by directly using the value of the ``geometry`` option from the
