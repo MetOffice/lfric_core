@@ -24,16 +24,17 @@ files they are commented out using the normal exclamation mark: ``!``.
 Extensions to Namelist Definitions
 ----------------------------------
 
-Normally a namelist may only appear once in a namelist file. However,
-it can be appropriate for some namelists to appear multiple times. To
-mark a namelist as suitable for multiple instances set the
-``duplicate`` value (using standard Rose metadata).
+Commonly, a namelist appears once in a namelist configuration
+file. However, some applications need some namelists to appear
+multiple times. To mark a namelist as suitable for multiple instances
+set the ``duplicate`` value (using standard Rose metadata).
 
 When there are multiple instances of a namelist a means is needed to
-allow the Configurator to distinguish each one. The
-``instance_key_member`` identifies one of the members of the namelist
-as an index key. The member variable must be set to a unique value in
-each instance of the namelist in the configuration file.
+allow the Configurator to distinguish each one. The extended-metadata
+``instance_key_member`` key identifies one of the members of the
+namelist as an index key. The member variable must be one that is set
+to a unique value in each instance of the namelist in the
+configuration file.
 
 .. admonition:: Example
 
@@ -60,10 +61,10 @@ each instance of the namelist in the configuration file.
   panel_decomposition   = 'auto',
   /
 
- The ``mesh_type`` variable is set to ``destination`` in one instance
- and ``source`` in the other. The different setting will be the key to
- distinguishing the two sets of values.
-
+ The instance key ``mesh_type`` variables are set to different values:
+ ``destination`` in one instance and ``source`` in the other. The
+ different setting will be the key to distinguishing the two sets of
+ values.
 
 Extension to Namelist Member Definitions
 ----------------------------------------
