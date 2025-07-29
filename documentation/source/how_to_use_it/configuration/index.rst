@@ -9,15 +9,15 @@
 Application Configuration
 =========================
 
-Application configuration can be defined by Rose metadata including
-some :ref:`extensions <extended rose metadata>` to Rose
-metadata. Using such extensions allows a tool called the
+Application configuration options can be described by Rose metadata
+with some :ref:`extensions <extended rose metadata>` to Rose
+metadata. With the extensions, the metadata enables a tool called the
 :ref:`Configurator <configurator>` to generate the code required to
 read configuration namelists into the application.
 
-This section describes summarises how the code within the application
-can access and use the application configuration options for
-applications that are built using the functions of the Configurator.
+Once a namelist is read into the application, the generated code
+stores it and makes it available. This section summarises how the code
+within the application can access and use these configuration options.
 
 .. toctree::
     :maxdepth: 1

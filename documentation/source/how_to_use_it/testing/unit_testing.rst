@@ -280,6 +280,8 @@ initialised for each test. This may be done in ``setUp`` if every test needs the
 same initial condition or locally to the test if they need different starting
 points.
 
+.. _feigning configuration:
+
 Feigning Configuration
 ----------------------
 

@@ -23,9 +23,10 @@ configuration.
 Loading the configuration
 =========================
 
-The Configurator generates a procedure ``read_configuration`` to read
-a namelist configuration file aligned with the Rose metadata and to
-store the configuration choices in a ``namelist_collection_type``
+The Configurator generates a procedure, ``read_configuration``, to
+read a namelist configuration file. Each namelist configuration is
+stored in a ``namelist_type`` object. All the ``namelist_type``
+objects are stored in a ``namelist_collection_type`` object.
 
 .. code-block:: fortran
 
@@ -36,11 +37,11 @@ store the configuration choices in a ``namelist_collection_type``
 
   call read_configuration( filename, configuration )
 
-The LFRic infrastructure provides a :ref:`driver component<driver
-configuration>` that orchestrates both reading of the namelist
-configuration file and cross-checking the contents to ensure all
-required namelists are present. It can be used instead of directly
-calling the above procedure.
+The LFRic infrastructure provides a :ref:`driver configuration
+component<driver configuration>` that orchestrates both reading of the
+namelist configuration file and cross-checking the contents to ensure
+all required namelists are present. The driver configuration component
+can be used instead of directly calling the above procedure.
 
 .. _configuration object:
 
@@ -48,11 +49,10 @@ Using the Configuration Object
 ==============================
 
 The term "configuration object" refers to an object of type
-``namelist_collection_type``. It is designed to hold comprehensive
-information about an application configuration.
-
-A configuration object holds a number of ``namelist_type`` objects. To
-access a namelist object, call the ``get_namelist`` function:
+``namelist_collection_type``. It holds a number of ``namelist_type``
+objects each of which holds the configuration choices for one of the
+namelists. To access a namelist object, call the ``get_namelist``
+function on the namelist name:
 
 .. code-block:: fortran
 
@@ -65,7 +65,8 @@ access a namelist object, call the ``get_namelist`` function:
 
   base_mesh_nml => configuration%get_namelist('base_mesh')
 
-To get a configuration value:
+Then use the ``get_value`` function of the ``namelist_type`` object to
+get the configuration value of a variable:
 
 .. code-block:: fortran
 
@@ -73,17 +74,28 @@ To get a configuration value:
 
   call base_mesh_nml%get_value('mesh_name', mesh_name)
 
+Enumerations
+------------
+
+An enumeration is a variable that can take one of a small number of
+fixed values. In the namelist the permitted values are strings, but
+within the code, the option and each of the permitted values are
+converted into integers.
+
 To get, and to use, an enumeration, one has to get the value
 representing the choice, but also one or more of the enumeration list
 to check against. Enumerations are stored as ``i_def`` integers. The
 enumeration options are parameters that can be obtained directly from
-the Configurator-generated ``_config_mod`` file. In the following
-example, the value of the ``geometry`` configuration is checked
-against two choices of geometry: ``spherical`` and ``planar``
-referenced by the two parameters in the ``base_mesh_config_mod``
-module. The names of the parameters are prefixed with the name of the
-variable to best ensure there is no duplication of parameter names in
-and between namelists::
+Configurator-generated ``_config_mod`` modules.
+
+To illustrated, Rose metadata can configure the value of the
+``geometry`` variable in the namelist so that it can be either the
+string "spherical" or the string "planar". In the following code, is
+checked against two allowed choices of geometry: ``spherical`` and
+``planar``, referenced by the two integer parameters in the
+``base_mesh_config_mod`` module. The names of the parameters are
+prefixed with the name of the variable to ensure there is no
+duplication of parameter names with other enumeration variables:
 
 .. code-block:: fortran
 
@@ -114,12 +126,13 @@ and between namelists::
   between the name and the metadata, as the metadata can be easily
   searched to find information about the option.
 
-  Code that compares integer options and parameters is safer than
-  code that compares string options and parameters. If there are
-  spelling errors in the names, the former will fail at compile time
-  whereas problems with the latter only arise at run-time.
+  Code that compares integer options and parameters is safer than code
+  that compares string options and parameters. If there are spelling
+  errors in the names in the code, the former will fail at compile
+  time whereas problems with the latter only arise at run-time.
 
-.. _config_mod files:
+Duplicating namelists
+---------------------
 
 Where namelists are duplicated, the possible values of the instance
 variable can be used to distinguish between them. For example, for a
@@ -150,8 +163,8 @@ namelist each with a different ``mesh_choice``::
   /
 
 The different namelist options can be extracted with the following
-code (noting that the possible ``mesh_choice`` values must be known in
-the code):
+code (noting that the possible ``mesh_choice`` strings must be known
+in the code):
 
 .. code-block:: fortran
 
@@ -169,6 +182,7 @@ the code):
   call destination_partitioning_nml%get_value('partitioner',  &
                                           destination_partitioner)
 
+.. _config_mod files:
 
 Using config_mod files
 ======================
@@ -184,7 +198,7 @@ duplicated. Namelists can be duplicated by metadata definition as
 described above, in which case values are distinguished by a key
 variable.
 
-But applications can also be hard-wired to read two separate namelist
+But applications can also be required to read two separate namelist
 configurations where the same namelist appears in both. In these
 cases, the application can load each configuration into two separate
 configuration objects. This means that different parts of the
@@ -193,7 +207,7 @@ data in the configuration object will be specific for that part of the
 application. While the parameter values that define enumerator options
 will be the same for both parts of the application, the values for the
 first namelist in the ``config_mod`` file will be overwritten by the
-second namelist.
+second namelist to be read in.
 
 In the following example, the same requirement as the example above is
 met by directly using the value of the ``geometry`` option from the

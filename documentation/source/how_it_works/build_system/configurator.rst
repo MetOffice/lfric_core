@@ -56,15 +56,15 @@ names that the code will read.
 The final command generates a module which provides procedures to
 directly configuring the contents of a namelist. This module ought not
 be used within a normal application. Instead, it is to allow test
-systems to feign the reading of a namelist so they can control the
-test environment::
+systems to :ref:`feign <feigning configuration>` the reading of a
+namelist so they can control the test environment::
 
-    GenerateFeigns [-help] [-version] [-output FILE1] PATH2
+    GenerateFeigns [-help] [-version] [-output FILE1] FILE2
 
 Once again, ``-help`` and ``-version`` cause the command to exit after
 giving its details.
 
-The resulting source file is written to ``FILE1``, or to
-``feign_config_mod.f90`` in the current working directory if ``FILE1``
-is not specified. The ``FILE2`` argument points to the JSON metadata
-file created by ``rose-picker``.
+The ``FILE2`` argument should point to a JSON metadata file created by
+``rose-picker``. The resulting source file is written to ``FILE1``, or
+to ``feign_config_mod.f90`` in the current working directory, if
+``FILE1`` is not specified.
