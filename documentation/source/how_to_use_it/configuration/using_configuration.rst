@@ -32,10 +32,11 @@ objects are stored in a ``namelist_collection_type`` object.
 
   use configuration_mod, only: read_configuration
 
-  ...
   type(namelist_collection_type) :: configuration
 
-  call read_configuration( filename, configuration )
+  <snip>
+
+  call read_configuration( namelist_file, configuration )
 
 The LFRic infrastructure provides a :ref:`driver configuration
 component<driver configuration>` that orchestrates both reading of the

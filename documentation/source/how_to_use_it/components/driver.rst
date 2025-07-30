@@ -78,11 +78,13 @@ Call the ``init_config`` procedure to read the namelist configuration.
 
 .. code-block:: fortran
 
-   use driver_config_mod, only: init_config
+  use driver_config_mod, only: init_config
 
-   ...
+  type(namelist_collection_type) :: configuration
 
-   call init_config(filename, required_namelists, configuration)
+  <snip>
+
+  call init_config(filename, required_namelists, configuration)
 
 Arguments are as follows:
 
