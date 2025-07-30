@@ -1,5 +1,5 @@
 .. -----------------------------------------------------------------------------
-    (c) Crown copyright 2024 Met Office. All rights reserved.
+    (c) Crown copyright 2025 Met Office. All rights reserved.
     The file LICENCE, distributed with this code, contains details of the terms
     under which the code may be used.
    -----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ to check against. Enumerations are stored as ``i_def`` integers. The
 enumeration options are parameters that can be obtained directly from
 Configurator-generated ``_config_mod`` modules.
 
-To illustrated, Rose metadata can configure the value of the
+To illustrate, Rose metadata can configure the value of the
 ``geometry`` variable in the namelist so that it can be either the
 string "spherical" or the string "planar". In the following code, is
 checked against two allowed choices of geometry: ``spherical`` and
@@ -141,13 +141,13 @@ the relevant parts of the Rose metadata may look as follows::
 
   [namelist:partitioning]
   duplicate=true
-  instance_key_member=mesh_type
+  instance_key_member=mesh_choice
 
-  [namelist:partitioning=mesh_type]
+  [namelist:partitioning=mesh_choice]
   !enumeration=true
   values='source', 'destination'
 
-As the instance key is ``mesh_type``, there may be two copies of the
+As the instance key is ``mesh_choice``, there may be two copies of the
 namelist each with a different ``mesh_choice``::
 
   &partitioning
@@ -229,3 +229,7 @@ met by directly using the value of the ``geometry`` option from the
    case default
      call log_event("Invalid geometry", LOG_LEVEL_ERROR)
    end select
+
+The ``default`` case would cause an error if ``geometry`` has not been
+set or if it has been set to another valid value that is not supported
+by this part of the code.

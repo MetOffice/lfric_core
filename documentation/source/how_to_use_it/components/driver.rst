@@ -78,7 +78,7 @@ Call the ``init_config`` procedure to read the namelist configuration.
 
 .. code-block:: fortran
 
-   use driver_config_mod
+   use driver_config_mod, only: init_config
 
    ...
 
