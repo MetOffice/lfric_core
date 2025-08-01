@@ -45,6 +45,22 @@ depending on generator.
 	at z=0, as a result, features are located with only 2-coordinates,
 	``(x,y)`` in metres.
 
+  * ``file_prefix``: **'<string>'**
+      File prefix used to construct output filename(s). Depending on the logical,
+      :ref:`partition_mesh<partition_mesh>`, the output filename(s) are constructed as:
+
+      **<file_prefix>.nc**
+        Single file output for non-partitioned mesh topologies. Requested meshes are
+	intended to encompass an entire model domain. No partition information is
+	included. Intended for tasks where partitioning is performed by the application
+	at runtime.
+
+      **<file_prefix>_<partition_id>_<n_partitions>.nc**
+        Multiple files output for pre-partitioned mesh topologies. Each file contains the
+	cells of the requested meshes on a given partition of the model domain. Each file
+	contains enough data to allow a simple load operation to populate the applications
+	local mesh objects.
+
   * ``geometry``: **'<string>'**
       Geometrical shape of the surface domain. Valid options:
 
