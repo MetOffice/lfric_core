@@ -50,16 +50,17 @@ depending on generator.
       :ref:`partition_mesh<partition_mesh>`, the output filename(s) are constructed as:
 
       **<file_prefix>.nc**
-        Single file output for non-partitioned mesh topologies. Requested meshes are
-	intended to encompass an entire model domain. No partition information is
-	included. Intended for tasks where partitioning is performed by the application
-	at runtime.
+        Single file output for non-partitioned mesh topologies. Requested meshes
+	encompass an entire model domain.
 
       **<file_prefix>_<partition_id>_<n_partitions>.nc**
-        Multiple files output for pre-partitioned mesh topologies. Each file contains the
-	cells of the requested meshes on a given partition of the model domain. Each file
-	contains enough data to allow a simple load operation to populate the applications
-	local mesh objects.
+        Multiple files output for pre-partitioned mesh topologies. Each file
+	contains the cells of the requested meshes on a given partition of
+	the model domain. Pre-partitioned meshes allow a simple load operation
+	to populate an application's local mesh objects on a mpi rank.
+
+	**Note:** Pre-partitioned meshes are only suitable for applications
+	running with mpi ranks equal to the number of partitions.
 
   * ``geometry``: **'<string>'**
       Geometrical shape of the surface domain. Valid options:
