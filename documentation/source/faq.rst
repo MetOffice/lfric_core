@@ -13,6 +13,7 @@ Frequently Asked Questions
 ==========================
 
 Where can I find ``<something>_config_mod``?
-    These modules are used as part of the configuration system and are 
-    generated as part of building an application (See :ref:`Driver 
-    Configuration <driver configuration>`).
+    These modules are used as part of the configuration system. They are not
+    available from the code base, but are generated as part of building an
+    application and are written to the "working" directory tree.
+    (See :ref:`Driver Configuration <driver configuration>`).
