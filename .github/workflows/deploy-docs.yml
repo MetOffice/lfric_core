@@ -12,7 +12,7 @@ on:
 
 jobs:
   pages:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       # url: ${{ steps.deployment.outputs.page_url }}
@@ -32,7 +32,7 @@ jobs:
     - id: finesse_environment
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install sphinx pydata-sphinx-theme sphinx-sitemap sphinx_design
+        python3 -m pip install sphinx==8.1.0 pydata-sphinx-theme==0.16.1 sphinx-sitemap==2.6.0 sphinx_design==0.6.1
     - id: sphinx
       run: |
         cd documentation
