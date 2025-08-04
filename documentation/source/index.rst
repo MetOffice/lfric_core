@@ -150,7 +150,7 @@ technical aspects of the code.
         :far:`comments;fa-xl`        
 
         +++
-        .. button-link:: https://github.com/MetOffice/lfric_core/discussions
+        .. button-link:: https://github.com/MetOffice/simulation-systems/discussions
             :ref-type: ref
             :color: primary
             :outline:
