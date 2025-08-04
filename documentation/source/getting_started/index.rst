@@ -16,7 +16,9 @@ applications for training purposes or for developing and testing particular
 technical capabilities.
 
 It may be useful to look at the Glossary of Terms and the FAQs as you get
-started.
+started to familiarise yourself with various terms used in LFRic there are 
+links to these pages on the start page and in the right-hand navigation bar on 
+all other pages.
 
 .. toctree::
    :maxdepth: 2

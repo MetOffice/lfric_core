@@ -56,7 +56,7 @@ html_theme_options = {
             "name": "GitHub Discussions",
             "url": "https://github.com/MetOffice/lfric_core/discussions",
             "icon": "far fa-comments",
-        }       
+        }
     ],
     "logo": {
         "text": "LFRic Core",
