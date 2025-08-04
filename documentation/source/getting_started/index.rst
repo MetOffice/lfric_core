@@ -15,6 +15,9 @@ repositories. The LFRic core repository does include some small LFRic
 applications for training purposes or for developing and testing particular
 technical capabilities.
 
+It may be useful to look at the Glossary of Terms and the FAQs as you get
+started.
+
 .. toctree::
    :maxdepth: 2
 

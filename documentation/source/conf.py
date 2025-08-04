@@ -56,7 +56,7 @@ html_theme_options = {
             "name": "GitHub Discussions",
             "url": "https://github.com/MetOffice/lfric_core/discussions",
             "icon": "far fa-comments",
-        }
+        }       
     ],
     "logo": {
         "text": "LFRic Core",
@@ -64,7 +64,7 @@ html_theme_options = {
         "image_dark": "_static/MO_SQUARE_for_dark_backg_RBG.png",
     },
     "secondary_sidebar_items": {
-        "**/*": ["page-toc", "edit-this-page", "show-glossary"],
+        "**/*": ["page-toc", "edit-this-page", "show-glossary", "show-faqs"],
         "index": [],
     },
     "footer_start": ["crown-copyright"],

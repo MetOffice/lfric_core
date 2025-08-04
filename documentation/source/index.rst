@@ -18,7 +18,8 @@ led by the `Core Capability Development Team
 <CoreCapabilityDevelopmentTeam@metoffice.gov.uk>`_ within the Science
 IT group at the Met Office.
 
-.. grid:: 4
+.. grid:: 2 2 4 4
+    :gutter: 2
 
     .. grid-item-card::
         :text-align: center
@@ -96,6 +97,66 @@ mind, particularly by being developed alongside the PSyclone Domain
 Specific Language (DSL) tool; it follows modern software engineering
 practices that aims to separate concerns between scientific and
 technical aspects of the code.
+
+.. grid:: 2 2 4 4
+    :gutter: 5
+    :padding: 0 0 5 5 
+
+    .. grid-item-card::
+        :text-align: center
+
+        :material-round:`menu_book;2em`
+
+        +++
+        .. button-ref:: glossary_of_terms
+            :ref-type: ref
+            :color: primary
+            :outline:
+            :expand:
+
+               Glossary 
+
+    .. grid-item-card::
+        :text-align: center
+
+        :material-round:`help_center;2em`        
+
+        +++
+        .. button-ref:: faqs
+            :ref-type: ref
+            :color: primary
+            :outline:
+            :expand:
+            
+                FAQs    
+                
+    .. grid-item-card::
+        :text-align: center
+
+        :fab:`github;fa-xl`        
+
+        +++
+        .. button-link:: https://github.com/MetOffice/lfric_core
+            :ref-type: ref
+            :color: primary
+            :outline:
+            :expand:
+            
+                GitHub 
+
+    .. grid-item-card::
+        :text-align: center
+
+        :far:`comments;fa-xl`        
+
+        +++
+        .. button-link:: https://github.com/MetOffice/lfric_core/discussions
+            :ref-type: ref
+            :color: primary
+            :outline:
+            :expand:
+            
+                Discussions                                 
 
 .. toctree::
     :maxdepth: 1
