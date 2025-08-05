@@ -25,12 +25,12 @@ Glossary
     Degree of Freedom. DoFs describe the state of a field. They typically
     correspond to the value of the field at specific locations in the mesh
     (although they don't have to), so are equivalent to data values in
-    finite difference models
+    finite difference models.
 
   Edge Cell
     These are the cells that lie on the boundary of a partition. They contain
-    DoFs that are shared with halo cells. Thery are not to be confused with
-    "edge dofs" which are the DoFs that lie oon the edges of a cell.
+    DoFs that are shared with halo cells. They are not to be confused with
+    "edge dofs" which are the DoFs that lie on the edges of a cell.
 
   Ghost Cell
     In an LFRic context, ghost cells are not the same as halo cells. They
@@ -51,7 +51,7 @@ Glossary
     an LFRic application Model Domain.
 
   Halo
-    A halo is made from halo cells and refers to the extra layers of cellsa
+    A halo is made from halo cells and refers to the extra layers of cells
     surrounding a processor's local domain. These halo cells are used to
     store data from neighboring domains, enabling each processor to
     perform calculations that depend on adjacent values without needing
@@ -99,7 +99,7 @@ Glossary
     the scientific and technical state of a model.
 
   Owned DoF
-    DoFs on owned cells and are owned by the local rank.
+    DoFs on owned cells that are owned by the local rank.
 
   Partitioning
     A way of dividing a system's computational domain (including data and
