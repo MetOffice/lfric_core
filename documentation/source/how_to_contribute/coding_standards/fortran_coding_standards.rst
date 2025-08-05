@@ -308,7 +308,8 @@ Kernel Rules
 ^^^^^^^^^^^^
 
 There are a number of Do's and Don't's that should/must be adhered to when
-writing kernels for LFRic.
+writing kernels for LFRic. For more detailed information on how kernels work and
+they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
 
 * Kernels should be self contained and not rely on any external variables.
   All none local variables must be passed through the kernel interface and
