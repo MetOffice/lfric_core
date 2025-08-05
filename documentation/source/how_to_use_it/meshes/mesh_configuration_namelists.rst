@@ -26,7 +26,7 @@ depending on generator.
 
 .. dropdown:: ``&mesh``
 
-  This is the main controlling namelist for configuring the principle meshes
+  This is the main controlling namelist for configuring the principal meshes
   [#f1]_ in the output file. Variables in this namelist are common to both mesh
   generators and are applied to each mesh topology independently. This namelist
   is required in the configuration file, `e.g.` configuration.nml.
@@ -74,7 +74,7 @@ depending on generator.
   .. _mesh_names:
 
   * ``mesh_names``: **'<string>', …**
-      Names applied to principle mesh topologies.  The number of names
+      Names applied to principal mesh topologies.  The number of names
       should match the value given by :ref:`n_meshes<n_meshes>`.
       The order of appearance has no effect on the generation of each
       requested mesh.
@@ -95,18 +95,18 @@ depending on generator.
   .. _n_meshes:
 
   * ``n_meshes``: **<integer>**
-      Number of principle mesh topologies output by the generator.
+      Number of principal mesh topologies output by the generator.
 
   .. _partition_mesh:
 
   * ``partition_mesh``: **<logical>**
-      Partition principle meshes according to configuration given
+      Partition principal meshes according to configuration given
       by :ref:`&partitions<partitions_nml>` namelist.
 
   .. _rotate_mesh:
 
   * ``rotate_mesh``: **<logical>**
-      Transform principle meshes according to configuration given
+      Transform principal meshes according to configuration given
       by :ref:`&rotation<rotation_nml>` namelist.
 
   * ``topology``:  **'<string>'**
@@ -173,11 +173,11 @@ depending on generator.
       Generate a rim mesh which is derived one of the priciple meshes
       (:ref:`mesh_names<mesh_names>`).
   * ``domain_centre``: **<real>,<real>**
-      Location of domain centre for all principle meshes. Coordinates aligned
+      Location of domain centre for all principal meshes. Coordinates aligned
       with the :ref:`coord_sys<coord_sys>` with units of `[m|°]`
       as appropriate, `i.e.` `x,y` or `lon,lat` coordinates.
   * ``domain_size``: **<real>,<real>**
-      Domain size for all principle meshes.  Domain sizes aligned with the
+      Domain size for all principal meshes.  Domain sizes aligned with the
       :ref:`coord_sys<coord_sys>` with units of `[m|°]` as
       appropriate, `i.e.` `x,y` or `lon,lat` domain extents.
   * ``edge_cells_x``: **<integer>, ...**
@@ -186,7 +186,7 @@ depending on generator.
   * ``edge_cells_y``: **<integer>, ...**
       As above, but for y-axis.
   * ``lbc_parent_mesh``: **'<string>'**
-      Name of the principle mesh to create a rim mesh from, this name should
+      Name of the principal mesh to create a rim mesh from, this name should
       exist in the :ref:`mesh_names<mesh_names>` variable.
   * ``lbc_rim_depth``: **<integer>**
       Depth (in cells) of rim mesh. This is the number of cells radially
@@ -208,11 +208,11 @@ depending on generator.
 
   Optional control namelist for partitioning of mesh domains. Use of this
   namelist allows meshes to be partitioned by the mesh generators rather than
-  by an application at runtime. Principle meshes are partitioned and written
+  by an application at runtime. Principal meshes are partitioned and written
   to file as 1 partition per file.
 
   This functionality results in multiple mesh files with the corresponding
-  portion of each principle mesh. In addition to the mesh tolopologies,
+  portion of each principal mesh. In addition to the mesh tolopologies,
   partition information is also written to each file. In essence, each file
   provides the information required to load and instantiate 2D-mesh objects
   which are `local` to a given process rank. This namelist is enabled if
@@ -240,7 +240,7 @@ depending on generator.
   .. _panel_decomposition:
 
   * ``panel_decomposition``: **'<string>'**
-      Specifies panel partition strategy applied to principle meshes. The
+      Specifies panel partition strategy applied to principal meshes. The
       generators use the partitioning module support from LFRic core
       infrastruture. Valid options:
 
@@ -350,14 +350,14 @@ depending on generator.
         Use p-points as anchor points.
 
   * ``transform_mesh``: **'<string>'**
-      Principle mesh to apply stretch transform to. Any meshes connected to
+      Principal mesh to apply stretch transform to. Any meshes connected to
       this mesh via InterMesh maps (:ref:`mesh_maps<mesh_maps>`) will have
       their node locations updated accordingly.
 
 
 .. rubric:: Footnotes
 
-.. [#f1] Principle meshes are those meshes explicity requested
+.. [#f1] Principal meshes are those meshes explicity requested
    and named in the configuration file, `i.e.` |nbsp|
    :ref:`mesh_names<mesh_names>`. These meshes are generated from
    the base strategy as opposed to being derived from another mesh
