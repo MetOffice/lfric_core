@@ -61,8 +61,11 @@ Glossary
     DoFs on halo cells, that are owned by other ranks.
 
   Inner Halo
-    A subset of owned cells that are not affected by halo exchanges, and
-    so, can be used for computation while communication is still ongoing.
+    A subset of owned cells that are used for supporting computation while
+    communication is still ongoing. If a stencil operation requires
+    *n* halo layers of data, then calculations in cells up to *n* inner
+    halos are affected by halo data. Any cells from inner halo *(n+1)*
+    onwards can be computed before or during a halo exchange.
 
   InterMesh Map
     Mapping between 2D-mesh cell IDs from source-to-target meshes. The
