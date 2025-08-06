@@ -312,7 +312,7 @@ writing kernels for LFRic. For more detailed information on how kernels work and
 they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
 
 * Kernels should be self-contained and not rely on any external variables.
-  All none-local variables must be passed through the kernel interface and
+All non-local variables must be passed through the kernel interface and
   defined in the :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`.
   This includes any variables that are used to control the behaviour of the
   kernel, such as flags or parameters. Kernels should not rely on any global
@@ -350,13 +350,10 @@ they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
 
 * Logic should be avoided where possible in kernels.
 
-* Kernels should be simple and focused on performing a single operation. If
-  logic is needed, it should be implemented in the algorithm layer and
-  appropriate arguments passed to the kernel via the interface. Kernels should
-  not contain complex logic or control flow statements such as``if``,
-  ``select case``, or ``do while`` loops.
-  Instead, use the algorithm layer to handle such logic and pass the necessary
-  parameters to the kernel.
+Kernels should be simple and focused on performing a single operation. Kernels 
+should not contain complex logic or control flow statements such as ``if``,
+``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the 
+algorithm layer, potentially with separate kernels to handle different branches in the code.
 
 * Kernels must not use the ``use`` statement to access variables from other
   modules. Instead, the kernel must declare all variables it needs to access in
