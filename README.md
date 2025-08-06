@@ -13,5 +13,5 @@ options available. Additionally, `make deploy` will build a copy of the
 documentation and deploy it to a directory in `$(HOME)/public_html` named after
 the git branch.
 
-Any changes should be developed on a fork of the ``main`` branch. Do not 
-target the ``trunk`` branch as this will be used only for official releases.
+Any changes should be developed on a fork of the `main` branch. Do not 
+target the `trunk` branch as this is currently used to synchronise subversion `trunk`, and we will remove this branch following git migration in November 2025.
