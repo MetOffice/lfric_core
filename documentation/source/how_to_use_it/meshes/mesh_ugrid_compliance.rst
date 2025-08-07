@@ -6,7 +6,6 @@
 
 .. _section ugrid compliance:
 
-
 UGRID compliance
 ========================
 
@@ -20,7 +19,6 @@ mesh topology in a :ref:`mesh output file<section mesh file content>`:
 * UGRID optional data
 
 * Non-UGRID data for application support
-
 
 .. _ugrid_madatory:
 
