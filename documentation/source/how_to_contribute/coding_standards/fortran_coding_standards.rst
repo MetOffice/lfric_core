@@ -350,10 +350,10 @@ All non-local variables must be passed through the kernel interface and
 
 * Logic should be avoided where possible in kernels.
 
-Kernels should be simple and focused on performing a single operation. Kernels 
-should not contain complex logic or control flow statements such as ``if``,
-``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the 
-algorithm layer, potentially with separate kernels to handle different branches in the code.
+* Kernels should be simple and focused on performing a single operation. Kernels 
+  should not contain complex logic or control flow statements such as ``if``,
+  ``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the 
+  algorithm layer, potentially with separate kernels to handle different branches in the code.
 
 * Kernels must not use the ``use`` statement to access variables from other
   modules. Instead, the kernel must declare all variables it needs to access in
