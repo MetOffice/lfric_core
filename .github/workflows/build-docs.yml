@@ -5,40 +5,41 @@
 # ------------------------------------------------------------------------------
 
 name: Build Docs
-
 on:
   workflow_call:
 
-  concurrency:
-      group: build-docs-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
-      cancel-in-progress: true
-
 jobs:
-  pages:
+  build-html:
+    name: HTML Docs
     runs-on: ubuntu-24.04
     steps:
       - id: extract
+        name: Extract
         uses: actions/checkout@v4
         with:
           ref: main
       - id: setup_environment
+        name: Setup Python environment
         uses: actions/setup-python@v5
         with:
           python-version: 3.12
-          cache: 'pip'
       - id: finesse_environment
+        name: Install Python packages
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install sphinx==8.1.0 pydata-sphinx-theme==0.16.1 sphinx-sitemap==2.6.0 sphinx_design==0.6.1
       - id: sphinx
+        name: Build Sphinx HTML docs
         run: |
           cd documentation
           make html
       - id: permissions
+        name: Set permissions
         run: |
           chmod -c -R +rX "documentation/build/html/"
       - id: deployment
-        if: ${{ github.event_name == 'push' || github.event_name == 'merge_group'}}
+        name: Upload Artifact
+        if: ${{ (github.event_name == 'push' || github.event_name == 'merge_group') && github.ref_name == 'main'}}
         uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages

@@ -5,11 +5,17 @@
 # ------------------------------------------------------------------------------
 
 name: pr
+run-name: Pull Request ${{github.event.pull_request.number}}
 on:
-  pull-request:
+  pull_request:
     branches:
       - main
 
+concurrency:
+  group: pr-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
 jobs:
   build-docs:
-      uses: ./.github/workflows/build-docs.yml
+    name: Build Docs
+    uses: ./.github/workflows/build-docs.yml

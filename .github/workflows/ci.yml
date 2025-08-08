@@ -5,17 +5,24 @@
 # ------------------------------------------------------------------------------
 
 name: ci
+run-name: CI
 
 on:
   push:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
   build-docs:
+      name: Build Docs
       uses: ./.github/workflows/build-docs.yml
 
   deploy-docs:
+      name: Deploy Docs
       needs: [ build-docs ]
       uses: ./.github/workflows/deploy-docs.yml
 
