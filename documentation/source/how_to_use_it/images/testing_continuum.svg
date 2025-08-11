@@ -46,6 +46,24 @@
   <defs
      id="defs2">
     <rect
+       x="410.71557"
+       y="10.715558"
+       width="160"
+       height="50"
+       id="rect40567" />
+    <rect
+       x="190.71557"
+       y="10.715558"
+       width="220"
+       height="50"
+       id="rect31763" />
+    <rect
+       x="10.715572"
+       y="10.715558"
+       width="180"
+       height="50.000001"
+       id="rect8041" />
+    <rect
        x="5.7155719"
        y="15.715558"
        width="575"
@@ -147,44 +165,45 @@
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="160.0598"
-       y="41.095608"
+       y="41.085464"
        id="text15566-6"><tspan
          sodipodi:role="line"
          id="tspan15564-7"
          style="fill:#000000;fill-opacity:0.504607;stroke-width:0.264583"
          x="160.0598"
-         y="41.095608">Integration</tspan></text>
+         y="41.085464">Integration</tspan></text>
     <text
        xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,2.456505,28.914842)"
-       id="text44580"
-       style="font-size:37.3333px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect44582)"
-       x="133.58322"
-       y="0"><tspan
-         x="441.49882"
-         y="38.746066"
-         id="tspan223113"><tspan
-           style="text-align:end;text-anchor:end"
-           id="tspan223111">System</tspan></tspan></text>
+       style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="3.9781303"
+       y="41.085464"
+       id="text78579"><tspan
+         sodipodi:role="line"
+         id="tspan78577"
+         style="stroke-width:0.264583"
+         x="3.9781303"
+         y="41.085464">Unit</tspan></text>
     <text
        xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,2.456505,28.914842)"
-       id="text112316"
-       style="font-size:37.3333px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect112318)"
-       x="99.440018"
-       y="0"><tspan
-         x="190.35686"
-         y="43.746066"
-         id="tspan223117"><tspan
-           style="text-align:center;text-anchor:middle"
-           id="tspan223115">Integration</tspan></tspan></text>
+       style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="48.669342"
+       y="41.085464"
+       id="text79639"><tspan
+         sodipodi:role="line"
+         id="tspan79637"
+         style="stroke-width:0.264583"
+         x="48.669342"
+         y="41.085464">Integration</tspan></text>
     <text
        xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,2.456505,28.914842)"
-       id="text121188"
-       style="font-size:37.3333px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect121190)"><tspan
-         x="5.7148438"
-         y="48.746066"
-         id="tspan223119">Unit</tspan></text>
+       style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="119.23183"
+       y="41.085464"
+       id="text80761"><tspan
+         sodipodi:role="line"
+         id="tspan80759"
+         style="stroke-width:0.264583"
+         x="119.23183"
+         y="41.085464">System</tspan></text>
   </g>
 </svg>
