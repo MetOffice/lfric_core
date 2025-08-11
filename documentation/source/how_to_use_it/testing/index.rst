@@ -31,6 +31,19 @@ Between the two is "integration testing" which considers clusters of units.
 This allows a sub-set of interactions to be exercised while still allowing for
 reasonable isolation.
 
+Be aware that "integration testing" is also used to refer to the testing of
+interaction between systems and so sits beyond "system testing" in out model.
+It will not be considered here but is mentioned in case you come across this
+usage.
+
+.. figure:: /how_to_use_it/images/testing_continuum.svg
+   :alt: Diagram showing a continuous ribbon of unit testing to integration
+         testing to system testing, with a second, de-emphesised, integration
+         testing beyond that.
+   :align: center
+
+   The functional testing continuum.
+
 A good testing regime makes use of all these approaches.
 
 Note that the boundaries are not hard drawn. A unit under test may well
