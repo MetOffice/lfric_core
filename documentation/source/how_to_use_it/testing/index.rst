@@ -46,13 +46,13 @@ usage.
 
 A good testing regime makes use of all these approaches.
 
-Note that the boundaries are not hard drawn. A unit under test may well
-call down to procedures further down the call tree. Thus the unit test is
-testing multiple units. Meanwhile an integration test may be testing a
-substantial fraction of the whole system test.
+Note that the boundaries are not hard drawn. A unit test may well call down to
+procedures further down the call tree. Thus the unit test is testing multiple
+units. Meanwhile an integration test may be testing a substantial fraction of
+the whole system.
 
-Where these boundaries are drawn is a matter of ongoing discussion and debate
-and outwith the scope of this document.
+Where these boundaries are drawn is a matter of ongoing discussion and debate,
+outwith the scope of this document.
 
 .. toctree::
     :maxdepth: 1
