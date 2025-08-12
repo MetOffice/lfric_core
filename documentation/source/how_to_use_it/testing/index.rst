@@ -38,7 +38,7 @@ usage.
 
 .. figure:: /how_to_use_it/images/testing_continuum.svg
    :alt: Diagram showing a continuous ribbon of unit testing to integration
-         testing to system testing, with a second, de-emphesised, integration
+         testing to system testing, with a second, de-emphasised, integration
          testing beyond that.
    :align: center
 
