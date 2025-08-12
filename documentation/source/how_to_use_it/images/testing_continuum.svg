@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="219.9828mm"
-   height="16.253649mm"
-   viewBox="0 0 219.9828 16.253649"
+   width="155.11557mm"
+   height="16.164989mm"
+   viewBox="0 0 155.11557 16.16499"
    version="1.1"
    id="svg5"
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
@@ -29,7 +29,7 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:zoom="1.2810466"
-     inkscape:cx="378.20638"
+     inkscape:cx="282.19114"
      inkscape:cy="92.892796"
      inkscape:window-width="1920"
      inkscape:window-height="1147"
@@ -40,19 +40,19 @@
     <inkscape:grid
        type="xygrid"
        id="grid846"
-       originx="-2.4565048"
-       originy="-28.914842" />
+       originx="-2.4565049"
+       originy="-28.95917" />
   </sodipodi:namedview>
   <defs
      id="defs2">
     <rect
-       x="410.71557"
+       x="410.71558"
        y="10.715558"
        width="160"
        height="50"
        id="rect40567" />
     <rect
-       x="190.71557"
+       x="190.71558"
        y="10.715558"
        width="220"
        height="50"
@@ -61,7 +61,7 @@
        x="10.715572"
        y="10.715558"
        width="180"
-       height="50.000001"
+       height="50"
        id="rect8041" />
     <rect
        x="5.7155719"
@@ -95,18 +95,6 @@
        id="rect44582" />
     <linearGradient
        inkscape:collect="always"
-       id="linearGradient3904">
-      <stop
-         style="stop-color:#56c7d7;stop-opacity:1;"
-         offset="0"
-         id="stop3900" />
-      <stop
-         style="stop-color:#f5f63d;stop-opacity:1"
-         offset="1"
-         id="stop3902" />
-    </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
        id="linearGradient3607">
       <stop
          style="stop-color:#56c7d7;stop-opacity:1;"
@@ -127,22 +115,12 @@
        y2="37.041664"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(1.1975309,0,0,1,-211.72034,0)" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient3904"
-       id="linearGradient3906"
-       x1="67.46875"
-       y1="37.041668"
-       x2="35.71875"
-       y2="37.041668"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(2.0416667,0,0,1,-295.17579,3.1789143e-6)" />
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-2.456505,-28.914842)">
+     transform="translate(-2.456505,-28.95917)">
     <rect
        style="fill:url(#linearGradient3609);fill-opacity:1;stroke:#000000;stroke-width:0.289993"
        id="rect848"
@@ -152,26 +130,6 @@
        y="29.104166"
        ry="6.357829e-07"
        transform="scale(-1,1)" />
-    <rect
-       style="fill:url(#linearGradient3906);fill-opacity:1;stroke:#000000;stroke-width:0.378649"
-       id="rect891"
-       width="64.822914"
-       height="15.875"
-       x="-222.24998"
-       y="29.104166"
-       ry="6.3578318e-07"
-       transform="scale(-1,1)" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="160.0598"
-       y="41.085464"
-       id="text15566-6"><tspan
-         sodipodi:role="line"
-         id="tspan15564-7"
-         style="fill:#000000;fill-opacity:0.504607;stroke-width:0.264583"
-         x="160.0598"
-         y="41.085464">Integration</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
