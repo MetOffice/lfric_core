@@ -32,9 +32,8 @@ This allows a sub-set of interactions to be exercised while still allowing for
 reasonable isolation.
 
 Be aware that "integration testing" is also used to refer to the testing of
-interaction between systems and so sits beyond "system testing" in out model.
-It will not be considered here but is mentioned in case you come across this
-usage.
+interaction between systems and so sits beyond "system testing" in our model.
+It will not be considered here but is mentioned for context.
 
 .. figure:: /how_to_use_it/images/testing_continuum.svg
    :alt: Diagram showing a continuous ribbon of unit testing to integration
