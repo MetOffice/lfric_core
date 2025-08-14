@@ -25,21 +25,41 @@ with each other.
 
 The coarsest grained end is "system testing" where the complete executable
 is tested. This is the ultimate test of interaction between units but is poor
-at isolating a problem.
+at isolating a problem. Our "Rose stem" test suite is an example of system
+testing.
 
 Between the two is "integration testing" which considers clusters of units.
 This allows a sub-set of interactions to be exercised while still allowing for
 reasonable isolation.
 
+.. figure:: /how_to_use_it/images/testing_continuum.svg
+   :alt: Diagram showing a continuous ribbon of unit testing to integration
+         testing to system testing, with a second, de-emphasised, integration
+         testing beyond that.
+   :align: center
+
+   The functional testing continuum.
+
 A good testing regime makes use of all these approaches.
 
-Note that the boundaries are not hard drawn. A unit under test may well
-call down to procedures further down the call tree. Thus the unit test is
-testing multiple units. Meanwhile an integration test may be testing a
-substantial fraction of the whole system test.
+Note that the boundaries are not hard drawn. A unit test may well call down to
+procedures further down the call tree. Thus the unit test is testing multiple
+units. Meanwhile an integration test may be testing a substantial fraction of
+the whole system.
 
-Where these boundaries are drawn is a matter of ongoing discussion and debate
-and outwith the scope of this document.
+Where these boundaries are drawn is a matter of ongoing discussion and debate,
+outwith the scope of this document.
+
+Be aware that "integration testing" is also used to refer to the testing of
+interaction between systems and so also sits beyond "system testing" as
+illustrated above. It is the same basic concept but at different scale. The
+systems and their interactions become the units under test.
+
+There is an element of this inter-system integration testing in our "Rose stem"
+suite. The mesh generator is built, then used to generate meshes which are
+then loaded by models. Thus the interaction between mesh generator and model
+is tested.
+
 
 .. toctree::
     :maxdepth: 1

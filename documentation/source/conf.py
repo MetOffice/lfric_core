@@ -16,7 +16,8 @@ release = '0.1.0'
 # ones.
 extensions = [
     'sphinx_sitemap',
-    'sphinx_design'
+    'sphinx_design',
+    'sphinx.ext.intersphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -89,4 +90,13 @@ html_context = {
 # Enable numbered references to e.g. figures.
 #
 numfig = True
+
+# Options for intersphinx mapping extension
+# To discover the available objects in the target project (e.g. psyclone), run:
+# python -m sphinx.ext.intersphinx https://psyclone.readthedocs.io/en/stable/objects.inv
+
+intersphinx_mapping = {
+    'psyclone': ('https://psyclone.readthedocs.io/en/stable/', None),
+    'simsys': ('https://metoffice.github.io/simulation-systems/', None)
+}
 

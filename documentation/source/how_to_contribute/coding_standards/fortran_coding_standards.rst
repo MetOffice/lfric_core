@@ -287,6 +287,10 @@ Calling kernels
   prefixed with ``invoke_`` making it easy to find the link between the invoke
   call and the PSy layer subroutine it relates to.
 
+* By convention, kernels and built-ins list output or input output arguments
+  first in their argument list followed by input arguments. Aim to follow this
+  convention in other code too.
+
   .. code-block:: fortran
 
      call invoke( name = "map_to_physics",                     &
@@ -295,18 +299,73 @@ Calling kernels
                   X_divideby_Y(u_physics, u, dA)               &
                   extract_w_kernel_type(w_physics, u_physics) )
 
-* By convention, kernels and built-ins list output or input output arguments
-  first in their argument list followed by input arguments. Aim to follow this
-  convention in other code too.
-
-  * Kernels are designed to be called multiple times per invoke, each call
-    modifying only a subset of the field. Therefore, kernel output arguments
-    need always to have intent(inout) and not intent(out). To understand the
-    true intent, examine the kernel metadata.
 * PSyclone must be able to access field declaration for fields being passed into
   an invoke. Therefore do not pass fields obtained from modules or from function
   calls. Rather, declare a field pointer of the correct type, point it to your
   module field or function call, then pass the field pointer.
+
+Kernel Rules
+^^^^^^^^^^^^
+
+There are a number of Do's and Don't's that should/must be adhered to when
+writing kernels for LFRic. For more detailed information on how kernels work and
+they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
+
+* Kernels should be self-contained and not rely on any external variables.
+All non-local variables must be passed through the kernel interface and
+  defined in the :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`.
+  This includes any variables that are used to control the behaviour of the
+  kernel, such as flags or parameters. Kernels should not rely on any global
+  variables or module variables.
+
+* Kernels should have output or input/output arguments first in their
+  argument list followed by input arguments. Aim to follow this convention in
+  other code too. Note, however, that the number of layers for the kernel is
+  taken from the first field in the kernel's argument list regardless of its
+  access method. If all output arguments have a different number of levels to
+  that required by the kernel it will be necessary to place an
+  appropriately-sized input argument at the start.
+
+* `CELL_COLUMN` and `DOF` based kernels are designed to be called multiple
+  times per invoke, each call modifying only a subset of the field. Therefore,
+  kernel output arguments need always to have intent(inout) and not intent(out).
+  To understand the true intent, examine the
+  :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`. The type of kernel
+  can be determined by examining the :ref:`psyclone:lfric-operates-on`metadata.
+  Although `DOMAIN` kernels are currently only called once per invoke, they
+  still require intent(inout) to be set for their output arguments. This is
+  because the kernel may be called multiple times in the future with
+  implementation of segments. This requirement for intent(inout) is to ensure
+  that the compiler doesn't set the output variable to zero before each call to
+  the kernel.
+
+* Kernels may be run on GPUs and therefore must not have any logging or
+  program termination methods in them; this includes ``LOG_LEVEL_ERROR``,
+  ``lfric_abort`` and the ``STOP`` statement.
+
+* Use of config modules in kernels should be avoided if possible. If config
+  variables are needed in a kernel, they must be passed through the interface
+  **not** via the use statements. Only the constant parameter options are
+  allowed to be passed through the use statement from config modules.
+
+* Logic should be avoided where possible in kernels.
+
+* Kernels should be simple and focused on performing a single operation. Kernels 
+  should not contain complex logic or control flow statements such as ``if``,
+  ``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the 
+  algorithm layer, potentially with separate kernels to handle different branches in the code.
+
+* Kernels must not use the ``use`` statement to access variables from other
+  modules. Instead, the kernel must declare all variables it needs to access in
+  its argument list. This is because the PSyclone code generator will not
+  generate GPU compatible code if the kernel uses the ``use`` statement to
+  access variables from other modules. If there is a need to pass variables
+  to a kernel that are not currently supported by PSyclone, then the
+  developer should contact the system maintainers to discuss the issue.
+
+* Calls to functions and subroutines in other modules from kernels should be
+  avoided if possible. While historically this has been allowed, it causes
+  problems for PSyclone when generating GPU code.
 
 PSyclone and psykal-lite code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
