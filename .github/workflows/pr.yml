@@ -18,4 +18,4 @@ concurrency:
 jobs:
   build-docs:
     name: Build Docs
-    uses: ./.github/workflows/build-docs.yml
+    uses: ./.github/workflows/ru_build-docs.yml
