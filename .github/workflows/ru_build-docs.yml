@@ -30,9 +30,8 @@ jobs:
           python3 -m pip install sphinx==8.1.0 pydata-sphinx-theme==0.16.1 sphinx-sitemap==2.6.0 sphinx_design==0.6.1
       - id: sphinx
         name: Build Sphinx HTML docs
-        run:
-          working-directory: ./documentation
-          make html
+        working-directory: ./documentation
+        run: make html
       - id: permissions
         name: Set permissions
         run: |
