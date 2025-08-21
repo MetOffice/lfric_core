@@ -1,14 +1,13 @@
+.. -----------------------------------------------------------------------------
+    (c) Crown copyright 2024 Met Office. All rights reserved.
+    The file LICENSE, distributed with this code, contains details of the terms
+    under which the code may be used.
+   -----------------------------------------------------------------------------
+
+:html_theme.sidebar_secondary.remove: true
+:orphan:
 
 .. _accessibility:
-
----
-orphan: true
-myst:
-  html_meta:
-    "description lang=en": "Accessibility Statement for the LFRic core Docs website"
-    "keywords": "LFRic, documentation, github template, accessibility, metoffice"
-    "property=og:locale": "en-GB"
----
 
 Accessibility statement for the LFRic core Docs website
 #######################################################

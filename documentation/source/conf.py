@@ -65,17 +65,13 @@ html_theme_options = {
         "image_dark": "_static/MO_SQUARE_for_dark_backg_RBG.png",
     },
     "secondary_sidebar_items": {
-        "**/*": ["page-toc", "edit-this-page", "show-glossary", "show-faqs"],
+        "**/*": ["page-toc", "edit-this-page", "show-glossary", "show-faqs", "show-accessibility"],
         "index": [],
     },
     "footer_start": ["crown-copyright"],
     "footer_center": ["sphinx-version"],
-    "footer_end": ["accessibility", "theme-version"],
+    "footer_end": ["theme-version"],
     "primary_sidebar_end": []
-}
-
-html_context = {
-    "accessibility": "accessibility.md",
 }
 
 html_sidebars = {
