@@ -70,8 +70,12 @@ html_theme_options = {
     },
     "footer_start": ["crown-copyright"],
     "footer_center": ["sphinx-version"],
-    "footer_end": ["theme-version"],
+    "footer_end": ["accessibility", "theme-version"],
     "primary_sidebar_end": []
+}
+
+html_context = {
+    "accessibility": "accessibility.md",
 }
 
 html_sidebars = {
@@ -99,4 +103,3 @@ intersphinx_mapping = {
     'psyclone': ('https://psyclone.readthedocs.io/en/stable/', None),
     'simsys': ('https://metoffice.github.io/simulation-systems/', None)
 }
-
