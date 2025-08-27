@@ -31,7 +31,7 @@ jobs:
       - id: sphinx
         name: Build Sphinx HTML docs
         working-directory: ./documentation
-        run: make html
+        run: make html SPINXOPTS="-W --keep-going -n"
       - id: permissions
         name: Set permissions
         run: |
