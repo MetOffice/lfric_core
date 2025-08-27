@@ -330,7 +330,7 @@ they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
   kernel output arguments need always to have intent(inout) and not intent(out).
   To understand the true intent, examine the
   :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`. The type of kernel
-  can be determined by examining the :ref:`metadata <psyclone:lfric-operates-on>`.
+  can be determined by examining the :ref:`psyclone:lfric-operates-on` metadata.
   Although `DOMAIN` kernels are currently only called once per invoke, they
   still require intent(inout) to be set for their output arguments. This is
   because the kernel may be called multiple times in the future with
