@@ -31,6 +31,8 @@ jobs:
       - id: sphinx
         name: Build Sphinx HTML docs
         working-directory: ./documentation
+        # Run Sphinx to build the HTML documentation with warnings treated as errors and continue on warnings.
+        # The '-n' option runs in nit-picky mode to warn about all references where the target cannot be found.
         run: make html SPINXOPTS="-W --keep-going -n"
       - id: permissions
         name: Set permissions
