@@ -6,7 +6,7 @@ import os
 
 project = 'LFRic Core'
 author = 'Core Capability Development Team'
-copyright = '2024 Met Office. All rights reserved'
+copyright = 'Met Office'
 release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
