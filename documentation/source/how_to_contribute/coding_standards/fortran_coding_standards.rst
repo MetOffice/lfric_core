@@ -312,7 +312,7 @@ writing kernels for LFRic. For more detailed information on how kernels work and
 they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
 
 * Kernels should be self-contained and not rely on any external variables.
-All non-local variables must be passed through the kernel interface and
+  All non-local variables must be passed through the kernel interface and
   defined in the :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`.
   This includes any variables that are used to control the behaviour of the
   kernel, such as flags or parameters. Kernels should not rely on any global
@@ -331,7 +331,7 @@ All non-local variables must be passed through the kernel interface and
   kernel output arguments need always to have intent(inout) and not intent(out).
   To understand the true intent, examine the
   :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`. The type of kernel
-  can be determined by examining the :ref:`psyclone:lfric-operates-on`metadata.
+  can be determined by examining the :ref:`psyclone:lfric-operates-on` metadata.
   Although `DOMAIN` kernels are currently only called once per invoke, they
   still require intent(inout) to be set for their output arguments. This is
   because the kernel may be called multiple times in the future with
