@@ -65,12 +65,12 @@ html_theme_options = {
         "image_dark": "_static/MO_SQUARE_for_dark_backg_RBG.png",
     },
     "secondary_sidebar_items": {
-        "**/*": ["page-toc", "edit-this-page", "show-glossary", "show-faqs", "show-accessibility"],
+        "**/*": ["page-toc", "edit-this-page", "show-glossary", "show-faqs"],
         "index": [],
     },
     "footer_start": ["crown-copyright"],
-    "footer_center": ["sphinx-version"],
-    "footer_end": ["theme-version"],
+    "footer_center": ["show-accessibility"],
+    "footer_end": ["sphinx-version", "theme-version"],
     "primary_sidebar_end": []
 }
 

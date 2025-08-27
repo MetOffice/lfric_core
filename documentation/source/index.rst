@@ -158,19 +158,6 @@ technical aspects of the code.
 
                 Discussions
 
-    .. grid-item-card::
-        :text-align: center
-
-        :fab:`github;fa-xl`
-
-        +++
-        .. button-ref:: accessibility
-            :ref-type: ref
-            :color: primary
-            :outline:
-            :expand:
-
-                Accessibility
 
 .. toctree::
     :maxdepth: 1
