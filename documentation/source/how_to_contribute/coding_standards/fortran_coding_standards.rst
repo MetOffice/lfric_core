@@ -37,19 +37,18 @@ Copyright
 ---------
 
 The copyright statement references the LFRic licence, and must be included in
-all new LFRic code. A Fortran example for 2024 is:
+all new LFRic code:
 
 .. code-block:: rst
 
  !-----------------------------------------------------------------------------
- ! (C) Crown copyright 2024 Met Office. All rights reserved.
+ ! (C) Crown copyright Met Office. All rights reserved.
  ! The file LICENCE, distributed with this code, contains details of the terms
  ! under which the code may be used.
  !-----------------------------------------------------------------------------
 
-While the date should be correct for new code, updating the date for each change
-to the code is not important. Note that some older code has a different form of
-copyright referencing the Queen's Printer. These must be left as they are.
+Note that some older code has a different form of copyright referencing the
+Queen's Printer. These must be left as they are.
 
 Quick List of most-commonly forgotten things
 --------------------------------------------
@@ -350,9 +349,9 @@ they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
 
 * Logic should be avoided where possible in kernels.
 
-* Kernels should be simple and focused on performing a single operation. Kernels 
+* Kernels should be simple and focused on performing a single operation. Kernels
   should not contain complex logic or control flow statements such as ``if``,
-  ``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the 
+  ``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the
   algorithm layer, potentially with separate kernels to handle different branches in the code.
 
 * Kernels must not use the ``use`` statement to access variables from other

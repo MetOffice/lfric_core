@@ -6,7 +6,7 @@ import os
 
 project = 'LFRic Core'
 author = 'Core Capability Development Team'
-copyright = '2024 Met Office. All rights reserved'
+copyright = 'Met Office'
 release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
@@ -69,8 +69,8 @@ html_theme_options = {
         "index": [],
     },
     "footer_start": ["crown-copyright"],
-    "footer_center": ["sphinx-version"],
-    "footer_end": ["theme-version"],
+    "footer_center": ["show-accessibility"],
+    "footer_end": ["sphinx-version", "theme-version"],
     "primary_sidebar_end": []
 }
 
@@ -99,4 +99,3 @@ intersphinx_mapping = {
     'psyclone': ('https://psyclone.readthedocs.io/en/stable/', None),
     'simsys': ('https://metoffice.github.io/simulation-systems/', None)
 }
-
