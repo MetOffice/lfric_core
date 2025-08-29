@@ -99,8 +99,8 @@ practices that aims to separate concerns between scientific and
 technical aspects of the code.
 
 .. grid:: 2 2 4 4
-    :gutter: 5
-    :padding: 0 0 5 5
+    :gutter: 3 3 4 5
+    :padding: 0 0 1 1
 
     .. grid-item-card::
         :text-align: center
