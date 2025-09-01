@@ -48,12 +48,11 @@ Optional UGRID data
     2. The face centre is calculated as the mean of vector sum of the node
        coordinates, allowing for a radius ratio.
 
-    3. The face centre coordinates are convert back to (lon, lat).
+    3. The face centre coordinates are converted back to (lon, lat).
 
   * For *Planar meshes*, the domains are constructed to be aligned with the
     coordinate axes, whether [lon,lat] or [x,y]. The face centre coordinates
-    are obtained as an offset from of 1/2 the face width in the axes
-    directions.
+    are obtained from an offset to the cell's NW node location., *i.e.* (x,y) :sub:`NW node` + 0.5(:math:`\Delta` x, :math:`-\Delta` y) :sub:`cell`.
 
 * | ``edge_node_connectivity``
   | Integer identifiers of nodes that construct a given edge.

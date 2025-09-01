@@ -69,7 +69,7 @@ always be attached to the ``source`` *`relative`* to the mapping.
 Local meshes
 -----------------------
 When partitioning global meshes for a specific domain decomposition,
-additional information is provided in the order to populate the
+additional information is provided in order to populate the
 applications ``local_mesh_type`` objects. Partitioning results in
 multiple output files, one for each partition. Each file contains
 topologies for the principal meshes, although a local mesh only
