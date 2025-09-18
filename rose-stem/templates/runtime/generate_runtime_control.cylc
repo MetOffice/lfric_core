@@ -49,7 +49,7 @@
     {% set platform = task.split('_')[1] %}
 
     [[{{task}}]]
-        inherit = EXPORT-SOURCE, {{platform|upper}}_EXPORT-SOURCE
+        inherit = EXPORT-SOURCE, {{platform|upper}}_EXPORT-SOURCE, CONTROL_TASK_RETRIES
         script  = """
                   if [[ "$PLATFORM_SYNC" = true ]] ; then
                     RELATIVE_SOURCE_DIRECTORY=`echo $SOURCE_DIRECTORY | sed "s|$HOME/||"`
@@ -62,7 +62,6 @@
                   """
         [[[environment]]]
             SOURCE_DIRECTORY = $SOURCE_ROOT
-            SOURCE_LFRIC = {{SOURCE_LFRIC}}
 
 {% elif task.startswith("housekeep") %}
 
