@@ -26,14 +26,7 @@
     [[{{task}}]]
  	    execution time limit = PT15M
 
-{% if "export_simsys_scripts" in task %}
-
-        inherit=EXPORT-SOURCE
-        script="rose task-run --app-key=export_simsys_scripts"
-        [[[environment]]]
-            github_branch={{SIMSYS_BRANCH}}
-
-{% elif "config_dump_checker" in task %}
+{% if "config_dump_checker" in task %}
 
         inherit={{inherit.str|upper}}
         script="rose task-run --app-key=check_config_dump"
