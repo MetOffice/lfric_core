@@ -34,7 +34,7 @@
         execution time limit = PT{{task_values["build_wallclock"]}}M
         [[[environment]]]
             SOURCE_DIRECTORY = $SOURCE_ROOT/{{src_path}}
-            CORE_ROOT_DIR = $SOURCE_ROOT
+            CORE_ROOT_DIR = $SOURCE_ROOT/lfric_core
             WORKING_DIR = {{working_dir}}/{{mode}}
             RDEF_PRECISION = {{task_values["precision"]["rdef"]}}
             BIN_DIR = {{bin_dir}}
@@ -65,7 +65,7 @@
         execution time limit = PT{{task_values["tech-tests_wallclock"]}}M
         [[[environment]]]
             SOURCE_DIRECTORY = $SOURCE_ROOT/{{src_path}}
-            CORE_ROOT_DIR = $SOURCE_ROOT
+            CORE_ROOT_DIR = $SOURCE_ROOT/lfric_core
             WORKING_DIR = {{working_dir}}/{{mode}}
             BIN_DIR = {{bin_dir}}
         [[[directives]]]

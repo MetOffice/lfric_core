@@ -29,7 +29,7 @@
         execution time limit = PT{{task_values["build_wallclock"]}}M
         [[[environment]]]
             SOURCE_DIRECTORY        = $SOURCE_ROOT/{{src_path}}
-            CORE_ROOT_DIR           = $SOURCE_ROOT
+            CORE_ROOT_DIR           = $SOURCE_ROOT/lfric_core
             DESTINATION_DIRECTORY   = {{destination_dir}}
             BIN_DIR                 = {{bin_dir}}
             LIB_DIR                 = {{lib_dir}}

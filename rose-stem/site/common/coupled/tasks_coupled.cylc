@@ -35,7 +35,7 @@
 
 {# Set default values for Coupled app tasks #}
 {% if task_dict %}
-    {% do task_dict.update({"application_dir": "applications/coupled"}) %}
+    {% do task_dict.update({"application_dir": "lfric_core/applications/coupled"}) %}
     {% do task_dict.update({"build_families": [task_ns.platform|upper~"_BUILD_COUPLED_"~task_ns.compiler|upper]}) %}
     {% do task_dict.update({"run_families": [task_ns.platform|upper~"_RUN_COUPLED_"~task_ns.compiler|upper]}) %}
 

@@ -99,7 +99,7 @@
 
 {# Set default values for Mesh_Tools tasks #}
 {% if task_dict %}
-    {% do task_dict.update({"application_dir": "mesh_tools"}) %}
+    {% do task_dict.update({"application_dir": "lfric_core/mesh_tools"}) %}
     {% if "app_name" not in task_dict %}
         {% do task_dict.update({"app_name": "mesh_tools"}) %}
     {% endif %}

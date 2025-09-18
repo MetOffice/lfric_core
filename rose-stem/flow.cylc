@@ -108,7 +108,7 @@
         [[[environment]]]
             SOURCE_ROOT    = $CYLC_WORKFLOW_SHARE_DIR/source
             OUTPUT_ROOT    = $CYLC_WORKFLOW_SHARE_DIR/output
-            LAUNCH_SCRIPT  = $SOURCE_ROOT/rose-stem/site/{{SITE}}/common/bin
+            LAUNCH_SCRIPT  = $SOURCE_ROOT/lfric_core/rose-stem/site/{{SITE}}/common/bin
 
         [[[events]]]
             submission timeout = PT5H

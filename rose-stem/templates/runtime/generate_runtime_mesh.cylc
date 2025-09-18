@@ -24,7 +24,7 @@
             DESTINATION_DIRECTORY = {{destination_dir}}
             BIN_DIR               = {{bin_dir}}
             MESH_DIR              = {{mesh_dir}}
-            SOURCE_DIRECTORY      = $SOURCE_ROOT/mesh_tools
+            SOURCE_DIRECTORY      = $SOURCE_ROOT/lfric_core/mesh_tools
             OUTPUT_FILE_PREFIX    = $MESH_DIR/mesh_{{task_ns.conf_name}}
         [[[directives]]]
     {{ set_task_resources(task_values["mesh_cpus"], task_values["mesh_memory"]) }}

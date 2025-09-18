@@ -57,7 +57,7 @@
         script="rose task-run --app-key=validate_rose_meta"
         [[[environment]]]
             ROSE_PYTHONPATH = $PYTHONPATH
-            ROSE_META_PATH = $SOURCE_ROOT/rose-meta
+            ROSE_META_PATH = $SOURCE_ROOT/lfric_core/rose-meta
 
 {% elif "global_variables_checker" in task %}
 

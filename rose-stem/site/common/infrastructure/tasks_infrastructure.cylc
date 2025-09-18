@@ -21,7 +21,7 @@
 
 {# Set default values for Infrastructure tasks #}
 {% if task_dict %}
-    {% do task_dict.update({"application_dir": "infrastructure"}) %}
+    {% do task_dict.update({"application_dir": "lfric_core/infrastructure"}) %}
     {% if "app_name" not in task_dict %}
         {% do task_dict.update({"app_name": "infrastructure"}) %}
     {% endif %}
