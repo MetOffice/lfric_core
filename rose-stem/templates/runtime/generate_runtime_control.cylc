@@ -9,6 +9,9 @@
 {# export_source and housekeeping for now #}
 {# gatekeeper tasks will potentially be added here if required #}
 
+    [[CONTROL_TASK_RETRIES]]
+        execution retry delays = 3*PT3M
+
 {% if task == "export-source" %}
 {# First export-source task. Runs locally to the launch platform #}
 {# Exports the lfric_core sources to the #}
