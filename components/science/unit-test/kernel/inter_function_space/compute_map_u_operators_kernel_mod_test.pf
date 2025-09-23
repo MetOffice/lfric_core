@@ -48,7 +48,8 @@ contains
                                  domain_height=10.0_r_def,    &
                                  number_of_layers=4_i_def,    &
                                  stretching_height=0.5_r_def, &
-                                 stretching_method=stretching_method_linear )
+                                 stretching_method=stretching_method_linear, &
+                                 eta_values=(/0.5_r_def/) )
 
     call feign_finite_element_config(           &
              cellshape=cellshape_quadrilateral, &

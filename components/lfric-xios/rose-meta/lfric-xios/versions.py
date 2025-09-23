@@ -31,3 +31,16 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+
+class vn22_t4661(MacroUpgrade):
+    """Upgrade macro for ticket #4661 by Denis Sergeev."""
+
+    BEFORE_TAG = "vn2.2"
+    AFTER_TAG = "vn2.2_t4661"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(config, ["namelist:extrusion", "eta_values"], "''")
+
+        return config, self.reports

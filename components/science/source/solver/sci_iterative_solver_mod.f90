@@ -21,9 +21,10 @@ module sci_iterative_solver_mod
   use sci_preconditioner_mod, &
                             only : abstract_preconditioner_type
   use log_mod,              only : log_event, LOG_LEVEL_INFO, &
-                                   LOG_LEVEL_DEBUG, &
-                                   LOG_LEVEL_ERROR, &
-                                   log_scratch_space
+                                   LOG_LEVEL_DEBUG,           &
+                                   LOG_LEVEL_ERROR,           &
+                                   log_scratch_space,         &
+                                   log_level
   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
 
   implicit none
@@ -1464,7 +1465,6 @@ contains
     class(abstract_vector_type),  intent(inout) :: b
 
     ! temporary vectors
-    class(abstract_vector_type), allocatable :: dx
     class(abstract_vector_type), allocatable :: Ax
     class(abstract_vector_type), allocatable :: res
 
@@ -1490,15 +1490,14 @@ contains
               converged(n_fields))
 
 
-    call x%duplicate(dx)
     call x%duplicate(res)
     call x%duplicate(Ax)
 
     ! initial guess
-    call dx%set_scalar(0.0_r_def)
-    call self%prec%apply( b, dx )
-    call self%lin_op%apply( dx, Ax )
-    !res = b - Ax
+    call x%set_scalar(0.0_r_def)
+    call self%prec%apply( b, x )
+    call self%lin_op%apply( x, Ax )
+
     call res%copy(b)
     call res%axpy(-1.0_r_def, Ax)
 
@@ -1511,9 +1510,12 @@ contains
       end do
       init_err = sum(initial_error)
 
-      write( log_scratch_space, '(A,E15.8,":",E15.8)' ) &
-           "BLOCK_GCR starting ... ||b|| = ", b%norm(),init_err
-      call log_event(log_scratch_space, LOG_LEVEL_INFO)
+      if (  LOG_LEVEL_INFO <= log_level() ) then
+        ! Only compute the norm if we are going to write it
+        write( log_scratch_space, '(A,E15.8,":",E15.8)' ) &
+             "BLOCK_GCR starting ... ||b|| = ", b%norm(),init_err
+        call log_event(log_scratch_space, LOG_LEVEL_INFO)
+      end if
     end if
 
     ! Use special DDT to avoid CCE bug.
@@ -1545,24 +1547,32 @@ contains
           call v(iv)%vt%scale(beta)
           call Pv(iv)%vt%scale(beta)
           alpha = res%dot(v(iv)%vt)
-          call dx%axpy(alpha, Pv(iv)%vt)
+          call x%axpy(alpha, Pv(iv)%vt)
           call res%axpy(-alpha, v(iv)%vt)
 
           if ( self%monitor_convergence ) then
 
             iv_final = iv
-            do n = 1,n_fields
+            final_error(:) = 0.0_r_def
+            ! In gungho, for the semi-implicit solver the fields are organised:
+            ! (pressure, horizontal velocity, vertical velocity).
+            ! Since the vertical velocity term generally controls the convergence
+            ! this is tested first and so the testing loop goes backwards through the field vector
+            do n = n_fields,1,-1
               final_error(n) = res%field_norm(n)
-            end do
-            aerr = sum(final_error)
-            err = sum(final_error/initial_error)
-            do n = 1,n_fields
               if (final_error(n)/initial_error(n) < self%r_tol &
                  .or. final_error(n) < self%a_tol )then
                 ! This field is converged
                 converged(n) = .true.
+              else
+                ! This field is not converged so don't bother checking any others
+                exit
               end if
             end do
+
+            aerr = sum(final_error)
+            err = sum(final_error/initial_error)
+
             if (all(converged))then
               exit
             else
@@ -1576,7 +1586,7 @@ contains
               call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
             end do
 
-         end if
+          end if
         end do
         if ( self%monitor_convergence ) then
           write( log_scratch_space, '(A, I2, A, I2, A, E12.4, A, E15.8, A, E15.8)' ) &
@@ -1607,8 +1617,6 @@ contains
         end if
       end if
     end if
-
-    call x%axpy(1.0_r_def, dx)
 
     do iv = 1, self%gcrk
       deallocate(Pv(iv)%vt)

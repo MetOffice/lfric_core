@@ -9,7 +9,6 @@ module timing_mod
     use log_mod,            only:   log_event, log_scratch_space,     &
                                     LOG_LEVEL_DEBUG, LOG_LEVEL_WARNING
     use constants_mod,      only:   i_def,  IMDI
-    use namelist_mod,       only:   namelist_type
 
 #ifdef VERNIER
     !Vernier will only be loaded if the VERNIER environment variable is used
@@ -48,31 +47,25 @@ contains
 
 !=============================================================================!
 !> @brief Initialize timings
-!> @param[in] modeldb  imports modeldb to get the communicator
-    subroutine init_timing( modeldb )
-        use driver_modeldb_mod, only: modeldb_type
+!> @param[in] communicator  LFRic mpi communicator
+!> @param[in] lsubroutine_timers Runtime logical controlling timer use
+    subroutine init_timing( communicator, lsubroutine_timers )
         use lfric_mpi_mod,      only: lfric_comm_type
+
         implicit none
 
-        type( modeldb_type ), intent(in) :: modeldb
-        type( lfric_comm_type )          :: communicator
-        type( namelist_type ), pointer   :: io_nml => null()
+        logical, intent(in)                 :: lsubroutine_timers
+        type( lfric_comm_type ), intent(in) :: communicator
 
 #ifdef TIMING_ON
         !If timing is on, LPROF will be defined by subroutine_timers
-        io_nml => modeldb%configuration%get_namelist('io')
-        call io_nml%get_value( 'subroutine_timers', LPROF)
-
-        nullify(io_nml)
+        LPROF = lsubroutine_timers
 
         write(log_scratch_space, '(A)') 'Timing Mod: Runtime timing is turned on'
         call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
 
 #ifdef VERNIER
         !If Timing and Vernier is on, Vernier will be initialised
-
-        !Vernier needs the mpi communicator from modeldb
-        communicator = modeldb%mpi%get_comm()
 
         write(log_scratch_space, '(A)') 'Timing Mod: Vernier is turned on'
         call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
