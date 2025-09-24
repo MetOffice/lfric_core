@@ -23,6 +23,8 @@
 {% do site_vars.update({"launch_platform": "azspice"}) %}
 {% do site_vars.update({"scripts_platform": "azspice"}) %}
 
+{% do site_vars.update({"git_mirror_loc": "/data/users/gitassist/git_mirrors"}) %}
+
 {# Note intel unavailable on ex1a hence using gnu #}
 {% do site_vars.update({"mesh_build": {"ex1a": "gnu_fast-debug-64bit",
                                        "azspice": "gnu_fast-debug-64bit"} }) %}
