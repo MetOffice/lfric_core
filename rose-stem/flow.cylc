@@ -77,7 +77,7 @@
     UTC mode = True
     install = site/, templates/
     [[events]]
-        mail events = timeout
+        mail events = stall timeout
         abort on stall timeout = True
         stall timeout = PT3H
         shutdown handlers = "suite_report_git.py -S $CYLC_WORKFLOW_RUN_DIR"
