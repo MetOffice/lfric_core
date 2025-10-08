@@ -15,8 +15,8 @@ module log_mod_parallel_level_test
                            log_level_debug, log_level_error,                &
                            log_level_info, log_level_trace,                 &
                            log_level_warning, log_set_alert_stream,         &
-                           log_set_level, log_set_info_stream,              &
-                           log_forget_timestep
+                           log_set_level, log_at_level,                     &
+                           log_set_info_stream, log_forget_timestep
   use pfunit
 
   implicit none
@@ -61,6 +61,10 @@ contains
     character(str_long) :: filename
     integer(i_def)      :: status
 
+    ! Ensure there's no log file from a previous run.
+    !
+    ! This is done before and after in case there was a crash.
+    !
     if (this%getNumProcesses() > 1) then
       write( filename, &
              '("PET", I0, ".", A, ".Log")') this%getProcessRank(), name
@@ -81,6 +85,10 @@ contains
 
     integer(i_def) :: status
 
+    ! Ensure there's no log file to interfere with a subsequent run.
+    !
+    ! This is done before and after in case there was a crash.
+    !
     if (allocated(this%pet_file)) then
       open( log_unit, file=this%pet_file, action='write', iostat=status )
       if (status == 0) close( log_unit, status='delete' )
@@ -304,7 +312,7 @@ contains
     integer(i_def)            :: found_zone
     character(8)              :: found_tag
     character(80)             :: found_message
-    integer(i_def)         :: status
+    integer(i_def)            :: status
 
     open( INFO_UNIT, status='scratch', action='readwrite', iostat=status )
     @assertEqual( 0, status )
@@ -375,22 +383,19 @@ contains
 
     integer(i_def), intent(in) :: level
 
-    integer(i_def), parameter :: number_of_levels = 4
+    integer, parameter :: levels(*) = [ LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, &
+                                        LOG_LEVEL_INFO, LOG_LEVEL_WARNING ]
 
-    integer(i_def)    :: levels( number_of_levels )
-    character( 22 )   :: messages( number_of_levels )
+    character(*), parameter :: messages(*) = [ &
+        'kraft cheeselike slice', 'generic cheddar       ', &
+        'wensleydale           ', 'double gloucester     '  &
+    ]
+
     integer(i_def)    :: level_index
     character(  8 )   :: info_tag, alert_tag
     character( 80 )   :: info_message, alert_message
     integer(i_def)    :: info_status, alert_status
-    integer(i_def) :: condition
-
-    levels  = [ LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, &
-                LOG_LEVEL_INFO, LOG_LEVEL_WARNING ]
-    messages  = [ 'kraft cheeselike slice', &
-                  'generic cheddar       ', &
-                  'wensleydale           ', &
-                  'double gloucester     ']
+    integer(i_def)    :: condition
 
     open( INFO_UNIT, status='scratch', action='readwrite', &
           iostat=condition )
@@ -405,13 +410,14 @@ contains
 
     call log_set_level( level )
 
-    log_loop: do level_index = 1, number_of_levels
+    log_loop: do level_index = 1, size(levels)
+      @assertEqual( (levels(level_index) >= level), log_at_level( levels(level_index) ) )
       call log_event( trim( messages(level_index) ), levels(level_index) )
     end do log_loop
 
     rewind( INFO_UNIT )
     rewind( ALERT_UNIT )
-    read_loop: do level_index = 1, number_of_levels
+    read_loop: do level_index = 1, size(levels)
       if ( levels(level_index) >= level ) then
         info_tag = ""
         info_message = ""
@@ -574,6 +580,14 @@ contains
     integer(i_def), intent(in) :: thread
     integer(i_def), intent(in) :: level
 
+    integer, parameter :: levels(*)  = [ LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, &
+                                         LOG_LEVEL_INFO, LOG_LEVEL_WARNING ]
+
+    character(*), parameter :: messages(*)  = [ 'kraft cheeselike slice', &
+                                                'generic cheddar       ', &
+                                                'wensleydale           ', &
+                                                'double gloucester     ']
+
     character(110)    :: buffer
     character(3)      :: expected_process
     integer(i_def)    :: level_index
@@ -582,19 +596,11 @@ contains
     character(80)     :: message
     integer(i_def)    :: status
     character(40)     :: filename
-    integer(i_def), allocatable :: levels(:)
-    character(22),  allocatable :: messages(:)
-
-    levels  = [ LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, &
-                LOG_LEVEL_INFO, LOG_LEVEL_WARNING ]
-    messages  = [ 'kraft cheeselike slice', &
-                  'generic cheddar       ', &
-                  'wensleydale           ', &
-                  'double gloucester     ']
 
     call log_set_level( level )
 
     log_loop: do level_index = 1, size(levels)
+      @assertEqual( (levels(level_index) >= level), log_at_level( levels(level_index) ) )
       call log_event( trim( messages(level_index) ), levels(level_index) )
     end do log_loop
 

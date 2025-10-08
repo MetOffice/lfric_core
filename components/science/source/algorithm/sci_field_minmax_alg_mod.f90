@@ -19,7 +19,7 @@ module sci_field_minmax_alg_mod
                                             invoke_int32_local_field_min_max
 
   use log_mod,                       only : log_event, log_scratch_space, &
-                                            log_level
+                                            log_at_level
   use field_real32_mod,              only : field_real32_type
   use field_real64_mod,              only : field_real64_type
   use field_int32_mod,               only : field_int32_type
@@ -124,66 +124,66 @@ contains
   end subroutine get_local_field_minmax_int32
 
   !> Logs the minimum and maximum values of a field to the log
-  !> @param[in] log_lev The logging level at which to write the message
+  !> @param[in] log_level The logging level at which to write the message
   !> @param[in] label Text that will be written  along with the min/max
   !> @param[in]  field The field for which the min and max are required
-  subroutine log_field_minmax_real32( log_lev, label, field )
-    integer,                     intent(in) :: log_lev
+  subroutine log_field_minmax_real32( log_level, label, field )
+    integer,                     intent(in) :: log_level
     character(len = *),          intent(in) :: label
     type(field_real32_type),     intent(in) :: field
     real(kind=real32)                       :: fmin, fmax
 
     ! If we aren't going to log the min and max then we don't need to
     ! do any further work here.
-    if ( log_lev < log_level() ) return
+    if ( .not. log_at_level(log_level) ) return
 
     ! Calculate min and max field values for real32 field
     call invoke_real32_field_min_max( fmin, fmax, field )
     write( log_scratch_space, '( A, A, A, 2E16.8 )' ) &
            "Min/max ", trim(label), " = ", fmin, fmax
-    call log_event( log_scratch_space, log_lev )
+    call log_event( log_scratch_space, log_level )
   end subroutine log_field_minmax_real32
 
   !> Logs the minimum and maximum values of a field to the log
-  !> @param[in] log_lev The logging level at which to write the message
+  !> @param[in] log_level The logging level at which to write the message
   !> @param[in] label Text that will be written  along with the min/max
   !> @param[in]  field The field for which the min and max are required
-  subroutine log_field_minmax_real64( log_lev, label, field )
-    integer,                     intent(in) :: log_lev
+  subroutine log_field_minmax_real64( log_level, label, field )
+    integer,                     intent(in) :: log_level
     character(len = *),          intent(in) :: label
     type(field_real64_type),     intent(in) :: field
     real(kind=real64)                       :: fmin, fmax
 
     ! If we aren't going to log the min and max then we don't need to
     ! do any further work here.
-    if ( log_lev < log_level() ) return
+    if ( .not. log_at_level(log_level) ) return
 
     ! Calculate min and max field values for real64 field
     call invoke_real64_field_min_max( fmin, fmax, field )
     write( log_scratch_space, '( A, A, A, 2E16.8 )' ) &
           "Min/max ", trim(label), " = ", fmin, fmax
-    call log_event( log_scratch_space, log_lev )
+    call log_event( log_scratch_space, log_level )
   end subroutine log_field_minmax_real64
 
   !> Logs the minimum and maximum values of a field to the log
-  !> @param[in] log_lev The logging level at which to write the message
+  !> @param[in] log_level The logging level at which to write the message
   !> @param[in] label Text that will be written  along with the min/max
   !> @param[in]  field The field for which the min and max are required
-  subroutine log_field_minmax_int32( log_lev, label, field )
-    integer,                     intent(in) :: log_lev
+  subroutine log_field_minmax_int32( log_level, label, field )
+    integer,                     intent(in) :: log_level
     character(len = *),          intent(in) :: label
     type(field_int32_type),      intent(in) :: field
     integer(kind=int32)                     :: fmin, fmax
 
     ! If we aren't going to log the min and max then we don't need to
     ! do any further work here.
-    if ( log_lev < log_level() ) return
+    if ( .not. log_at_level(log_level) ) return
 
     ! Calculate min and max field values for real32 field
     call invoke_int32_field_min_max( fmin, fmax, field )
     write( log_scratch_space, '( A, A, A, 2I16 )' ) &
            "Min/max ", trim(label), " = ", fmin, fmax
-    call log_event( log_scratch_space, log_lev )
+    call log_event( log_scratch_space, log_level )
   end subroutine log_field_minmax_int32
 
 end module sci_field_minmax_alg_mod
