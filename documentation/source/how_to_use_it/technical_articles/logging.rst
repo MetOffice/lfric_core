@@ -134,10 +134,8 @@ necessary.
      call log_event(log_scratch_space, log_level_debug)
    end if
 
-Note that there is duplication of ``log_level_debug`` here, if they are not
-the same unexpected behaviour will ensue. This is not currently considered an
-issue given that any solution so far determine to remove the duplication is
-complicated and probably worse than the problem.
+Note that there is duplication of ``log_level_debug`` here. This is the normal
+pattern of use - dissimilar log levels may not give the behaviour you expect.
 
 Get the Log Level
 -----------------

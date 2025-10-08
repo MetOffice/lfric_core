@@ -49,9 +49,8 @@ system.
 
 Once initialised :ref:`logging` may proceed as normal.
 
-When you have logged the last thing you care to log call ``final_logger``. The
-string passed to it is used only to output a final message. This rather
-unnecessary feature may well be removed in the future.
+When you have logged the last thing you care to log call ``final_logger``. This
+takes a string which should be the same as the name passed to ``init_logger``.
 
 .. _driver configuration:
 
