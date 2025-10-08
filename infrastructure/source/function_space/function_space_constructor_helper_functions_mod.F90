@@ -7,7 +7,7 @@
 !>
 module function_space_constructor_helper_functions_mod
 
-  use constants_mod,         only: i_def, i_halo_index, r_def, IMDI, l_def
+  use constants_mod,         only: i_def, i_halo_index, r_def, IMDI, l_def, EPS
   use local_mesh_mod,        only: local_mesh_type
   use mesh_mod,              only: mesh_type
   use fs_continuity_mod,     only: W0, W1, W2, W2V, W2H,   &
@@ -2654,7 +2654,7 @@ contains
     do ilayer = 0, (nlayers - 1)
       do idof = 1, ndof_cell
         l = real(ilayer, r_def) + coords_array(3, idof)
-        if (.not.(any(tmp_levs == l))) then
+        if ( .not. ( any( abs(tmp_levs - l) < EPS ) ) ) then
           tmp_levs(idx) = l
           ! keep track of how many items we added
           idx = idx + 1

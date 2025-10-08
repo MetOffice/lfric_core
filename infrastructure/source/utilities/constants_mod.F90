@@ -27,7 +27,7 @@ module constants_mod
             CMDI, UNSET_KEY, EMDI, IMDI, RMDI,                           &
             real_type, r_solver_real_type, r_tran_real_type,             &
             integer_type, logical_type,                                  &
-            EPS, tiny_eps,                                               &
+            EPS, SMALL_R_TRAN,                                           &
             str_def, str_long, str_max_filename, str_short,              &
             str_longlong,                                                &
             LARGE_REAL_NEGATIVE, LARGE_DP_NEGATIVE, LARGE_REAL_POSITIVE, &
@@ -164,12 +164,12 @@ module constants_mod
 
   !> @name Numerical constants
   !> @{
-  real(kind=r_def), parameter  :: EPS = 3.0e-15_r_def
+  real(kind=r_def), parameter  :: EPS = epsilon(1.0_r_def)
   !<                              Relative precision: if (abs(x-y) < EPS) then assume x==y.
-  real(kind=r_tran), parameter :: EPS_R_TRAN = 3.0e-15_r_tran
+  real(kind=r_tran), parameter :: EPS_R_TRAN = epsilon(1.0_r_tran)
   !<                              Relative precision: if (abs(x-y) < EPS_R_TRAN) then assume x==y.
-  real(kind=r_tran), parameter :: tiny_eps = 1.0e-30_r_tran
-  !<                              Similar to EPS but lot smaller, which can be used where
+  real(kind=r_tran), parameter :: SMALL_R_TRAN = 1.0e-30_r_tran
+  !<                              Small number, which can be used where
   !<                              x/y < EPS but (x-y) is not considered to be zero like many chemistry tracers.
   !> @}
 
