@@ -118,23 +118,33 @@ message prior to calling ``log_event``.
          "Cell ",cell_number,"   value: ", cell_value
    call log_event(log_scratch_space, log_level_debug)
 
-Get the log level
------------------
+Log Level Controlled Calculations
+---------------------------------
 
-The ``log_level`` function returns the current log level. Where a log
-message is outputting a value that requires some optional computation,
-checking the log level of the message against the application log
-level can be used to avoid the computation.
+Where a log message is outputting a value that requires some computation, 
+a check against the ``log_at_level`` function may be used to find out if it's
+necessary.
 
 .. code-block:: fortran
 
-   app_log_level = log_level()
    ! Avoid calculating average if the value is not going to be printed
-   if (app_log_level <= log_level_debug) then
+   if (log_at_level(log_level_debug)) then
      average_value = calculate_average_value(field)
      write(log_scratch_space,'(A,F12.5)')'Average is ',average_value
      call log_event(log_scratch_space, log_level_debug)
    end if
+
+Note that there is duplication of ``log_level_debug`` here, if they are not
+the same unexpected behaviour will ensue. This is not currently considered an
+issue given that any solution so far determine to remove the duplication is
+complicated and probably worse than the problem.
+
+Get the Log Level
+-----------------
+
+The ``log_level`` function returns the current log level if you need it. Most
+situations where it would be useful will be covered by the ``log_at_level``
+function mentioned previously.
 
 Output Streams
 --------------
