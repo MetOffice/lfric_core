@@ -47,6 +47,12 @@ system.
    error messages will appear in the standard output rather than in
    the PET output files.
 
+Once initialised :ref:`logging` may proceed as normal.
+
+When you have logged the last thing you care to log call ``final_logger``. The
+string passed to it is used only to output a final message. This rather
+unnecessary feature may well be removed in the future.
+
 .. _driver configuration:
 
 Reading Namelist Configuration Files
