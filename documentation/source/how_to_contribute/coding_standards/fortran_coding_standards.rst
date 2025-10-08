@@ -37,19 +37,18 @@ Copyright
 ---------
 
 The copyright statement references the LFRic licence, and must be included in
-all new LFRic code. A Fortran example for 2024 is:
+all new LFRic code:
 
 .. code-block:: rst
 
  !-----------------------------------------------------------------------------
- ! (C) Crown copyright 2024 Met Office. All rights reserved.
+ ! (C) Crown copyright Met Office. All rights reserved.
  ! The file LICENCE, distributed with this code, contains details of the terms
  ! under which the code may be used.
  !-----------------------------------------------------------------------------
 
-While the date should be correct for new code, updating the date for each change
-to the code is not important. Note that some older code has a different form of
-copyright referencing the Queen's Printer. These must be left as they are.
+Note that some older code has a different form of copyright referencing the
+Queen's Printer. These must be left as they are.
 
 Quick List of most-commonly forgotten things
 --------------------------------------------
@@ -312,7 +311,7 @@ writing kernels for LFRic. For more detailed information on how kernels work and
 they are used in LFRic, see :ref:`psyclone:lfric-kernel`.
 
 * Kernels should be self-contained and not rely on any external variables.
-All non-local variables must be passed through the kernel interface and
+  All non-local variables must be passed through the kernel interface and
   defined in the :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`.
   This includes any variables that are used to control the behaviour of the
   kernel, such as flags or parameters. Kernels should not rely on any global
@@ -331,7 +330,7 @@ All non-local variables must be passed through the kernel interface and
   kernel output arguments need always to have intent(inout) and not intent(out).
   To understand the true intent, examine the
   :ref:`kernel metadata<psyclone:lfric-api-kernel-metadata>`. The type of kernel
-  can be determined by examining the :ref:`psyclone:lfric-operates-on`metadata.
+  can be determined by examining the :ref:`psyclone:lfric-operates-on` metadata.
   Although `DOMAIN` kernels are currently only called once per invoke, they
   still require intent(inout) to be set for their output arguments. This is
   because the kernel may be called multiple times in the future with
@@ -350,9 +349,9 @@ All non-local variables must be passed through the kernel interface and
 
 * Logic should be avoided where possible in kernels.
 
-* Kernels should be simple and focused on performing a single operation. Kernels 
+* Kernels should be simple and focused on performing a single operation. Kernels
   should not contain complex logic or control flow statements such as ``if``,
-  ``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the 
+  ``select case``, or ``do while`` loops. If logic is needed, it should be implemented in the
   algorithm layer, potentially with separate kernels to handle different branches in the code.
 
 * Kernels must not use the ``use`` statement to access variables from other

@@ -19,7 +19,9 @@ use in an LFRic application.
 
 .. toctree::
    :caption: Contents
-   :maxdepth: 3
+   :maxdepth: 4
 
    mesh_generators
    mesh_configuration_namelists
+   mesh_file_content
+   mesh_ugrid_compliance

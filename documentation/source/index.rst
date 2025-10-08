@@ -99,8 +99,8 @@ practices that aims to separate concerns between scientific and
 technical aspects of the code.
 
 .. grid:: 2 2 4 4
-    :gutter: 5
-    :padding: 0 0 5 5 
+    :gutter: 3 3 4 5
+    :padding: 0 0 1 1
 
     .. grid-item-card::
         :text-align: center
@@ -114,12 +114,12 @@ technical aspects of the code.
             :outline:
             :expand:
 
-               Glossary 
+               Glossary
 
     .. grid-item-card::
         :text-align: center
 
-        :material-round:`help_center;2em`        
+        :material-round:`help_center;2em`
 
         +++
         .. button-ref:: faqs
@@ -127,13 +127,13 @@ technical aspects of the code.
             :color: primary
             :outline:
             :expand:
-            
-                FAQs    
-                
+
+                FAQs
+
     .. grid-item-card::
         :text-align: center
 
-        :fab:`github;fa-xl`        
+        :fab:`github;fa-xl`
 
         +++
         .. button-link:: https://github.com/MetOffice/lfric_core
@@ -141,13 +141,13 @@ technical aspects of the code.
             :color: primary
             :outline:
             :expand:
-            
-                GitHub 
+
+                GitHub
 
     .. grid-item-card::
         :text-align: center
 
-        :far:`comments;fa-xl`        
+        :far:`comments;fa-xl`
 
         +++
         .. button-link:: https://github.com/MetOffice/simulation-systems/discussions
@@ -155,8 +155,9 @@ technical aspects of the code.
             :color: primary
             :outline:
             :expand:
-            
-                Discussions                                 
+
+                Discussions
+
 
 .. toctree::
     :maxdepth: 1
