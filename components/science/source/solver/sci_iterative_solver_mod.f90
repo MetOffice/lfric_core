@@ -24,7 +24,7 @@ module sci_iterative_solver_mod
                                    LOG_LEVEL_DEBUG,           &
                                    LOG_LEVEL_ERROR,           &
                                    log_scratch_space,         &
-                                   log_level
+                                   log_at_level
   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
 
   implicit none
@@ -1510,7 +1510,7 @@ contains
       end do
       init_err = sum(initial_error)
 
-      if (  LOG_LEVEL_INFO <= log_level() ) then
+      if (log_at_level( log_level_info )) then
         ! Only compute the norm if we are going to write it
         write( log_scratch_space, '(A,E15.8,":",E15.8)' ) &
              "BLOCK_GCR starting ... ||b|| = ", b%norm(),init_err

@@ -43,7 +43,8 @@ module log_mod
   public finalise_logging, initialise_logging,      &
          log_set_alert_stream, log_set_info_stream, &
          log_set_timestep, log_forget_timestep,     &
-         log_set_level, log_level, log_event
+         log_set_level, log_level, log_at_level,    &
+         log_event
 
   !> Named logging level.
   !>
@@ -63,8 +64,11 @@ module log_mod
   !>
   !> Although any string can be passed to log_event() this space is provided to
   !> prevent a proliferation of work spaces all over the code. It also means
-  !> that should 160 characters be found to be insufficient it need only be
-  !> changed in one place.
+  !> that should the length be found insufficient it need only be changed in
+  !> one place.
+  !>
+  !> As it is global there may be issues with threaded code and multiple
+  !> model instances in a single executable.
   !>
   character( str_long + str_max_filename ), public :: log_scratch_space
 
@@ -350,6 +354,24 @@ contains
   end function
 
 
+  !> Tests log level for visibility.
+  !>
+  !> @param level  Log level to test.
+  !> @return True if the logger will log at given level.
+  !>
+  function log_at_level( level )
+
+    implicit none
+
+    integer, intent(in) :: level
+
+    logical :: log_at_level
+
+    log_at_level = (level >= logging_level)
+
+  end function log_at_level
+
+
   !> Log an event
   !>
   !> If the code is running on multiple MPI ranks, the event description will
@@ -382,7 +404,7 @@ contains
 
     trace = .false.
 
-    if (level >= logging_level) then
+    if (log_at_level(level)) then
 
       select case (level)
         case ( : LOG_LEVEL_DEBUG - 1)
