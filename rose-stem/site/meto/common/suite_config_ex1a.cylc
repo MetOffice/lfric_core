@@ -23,7 +23,6 @@
                     'ulimit -a '%}
 
 {% set ex1a_scitools = 'module load scitools/production-os47-1' %}
-
 {% set ex1a_tech = 'module load nccmp' %}
 
 {% set ex1a_coupled_cce = 'module unload xios/2701-h57fm7d || true ; ' ~

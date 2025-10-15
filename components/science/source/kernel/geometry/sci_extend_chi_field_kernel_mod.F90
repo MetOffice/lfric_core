@@ -8,118 +8,62 @@
 
 module sci_extend_chi_field_kernel_mod
 
-use constants_mod, only: r_def, i_def
-use log_mod,       only: log_event,         &
-                         LOG_LEVEL_ERROR
+use kernel_mod,            only: kernel_type
+use argument_mod,          only: arg_type,                                     &
+                                 GH_FIELD, GH_SCALAR,                          &
+                                 GH_REAL, GH_INTEGER,                          &
+                                 GH_READ, GH_WRITE,                            &
+                                 ANY_DISCONTINUOUS_SPACE_3,                    &
+                                 ANY_DISCONTINUOUS_SPACE_5,                    &
+                                 OWNED_AND_HALO_CELL_COLUMN
+use constants_mod,         only: r_def, i_def, l_def
+use log_mod,               only: log_event, LOG_LEVEL_ERROR
 implicit none
 
 private
 
 !-------------------------------------------------------------------------------
+! Public types
+!-------------------------------------------------------------------------------
+!> The type declaration for the kernel. Contains the metadata needed by the Psy layer
+type, public, extends(kernel_type) :: extend_chi_field_kernel_type
+  private
+  type(arg_type) :: meta_args(3) = (/                                          &
+       arg_type(GH_FIELD*3, GH_REAL,    GH_WRITE, ANY_DISCONTINUOUS_SPACE_5),  &
+       arg_type(GH_FIELD*3, GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_5),  &
+       arg_type(GH_FIELD,   GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3)   &
+  /)
+  integer :: operates_on = OWNED_AND_HALO_CELL_COLUMN
+contains
+  procedure, nopass :: extend_chi_field_code
+end type
+
+!-------------------------------------------------------------------------------
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
-public :: extend_chi_field
-public :: extend_chi_field_code ! This is only public to be available to unit tests
+public :: extend_chi_field_code
 
 contains
 
-  !>@brief Interface level (equivalent of the psy layer) for extending the coordinate
-  !!       arrays.
-  !>@param[in,out] extended_chi Extended coordinate field
-  !>@param[in]     chi          Original coordinate field
-  !>@param[in]     panel_id     Panel id field
-  subroutine extend_chi_field(extended_chi, chi, panel_id)
-
-    use field_mod, only: field_type, field_proxy_type
-    use mesh_mod,  only: mesh_type
-
-    implicit none
-
-    type(field_type), intent(in) :: extended_chi(3), chi(3), panel_id
-
-    integer(kind=i_def)          :: nlayers, cell, j
-    integer(kind=i_def)          :: ndf_wx, undf_wx, ndf_pid, undf_pid
-    integer(kind=i_def)          :: cell_start, cell_end
-    integer(kind=i_def), pointer :: map_wx(:,:) => null(), &
-                                    map_pid(:,:) => null()
-    type(mesh_type), pointer     :: mesh => null()
-    type(field_proxy_type)       :: extended_chi_proxy(3), chi_proxy(3), panel_id_proxy
-    ! Initialise field and/or operator proxies
-    extended_chi_proxy(1) = extended_chi(1)%get_proxy()
-    extended_chi_proxy(2) = extended_chi(2)%get_proxy()
-    extended_chi_proxy(3) = extended_chi(3)%get_proxy()
-    chi_proxy(1) = chi(1)%get_proxy()
-    chi_proxy(2) = chi(2)%get_proxy()
-    chi_proxy(3) = chi(3)%get_proxy()
-    panel_id_proxy = panel_id%get_proxy()
-
-    nlayers = extended_chi_proxy(1)%vspace%get_nlayers()
-    mesh => extended_chi_proxy(1)%vspace%get_mesh()
-
-    ! Look-up dofmaps for each function space
-    map_wx => extended_chi_proxy(1)%vspace%get_whole_dofmap()
-    map_pid => panel_id_proxy%vspace%get_whole_dofmap()
-
-    ! Initialise number of DoFs for wx
-    ndf_wx = extended_chi_proxy(1)%vspace%get_ndf()
-    undf_wx = extended_chi_proxy(1)%vspace%get_undf()
-
-    ! Initialise number of DoFs for w_pid_
-    ndf_pid = panel_id_proxy%vspace%get_ndf()
-    undf_pid = panel_id_proxy%vspace%get_undf()
-
-    ! Default value is to copy the existing arrays
-    do j = 1, 3
-      extended_chi_proxy(j)%data(:) = chi_proxy(j)%data(:)
-    end do
-
-    ! Call computation
-    cell_start = mesh%get_last_edge_cell() + 1
-    cell_end   = mesh%get_last_halo_cell(mesh%get_halo_depth())
-    !$omp parallel default(shared), private(cell)
-    !$omp do schedule(static)
-    do cell = cell_start, cell_end
-
-      call extend_chi_field_code(nlayers,                    &
-                                 extended_chi_proxy(1)%data, &
-                                 extended_chi_proxy(2)%data, &
-                                 panel_id_proxy%data,        &
-                                 ndf_wx,                     &
-                                 undf_wx,                    &
-                                 map_wx(:,cell),             &
-                                 ndf_pid,                    &
-                                 undf_pid,                   &
-                                 map_pid(:,cell))
-    end do
-    !$omp end do
-    !$omp end parallel
-
-    ! The extended_chi array has now been computed into the halo so make sure
-    ! the halo is marked clean (since this is a Wchi field halo swaps are not
-    ! permitted so this step is not strictly needed)
-    call extended_chi_proxy(1)%set_clean(mesh%get_halo_depth())
-    call extended_chi_proxy(2)%set_clean(mesh%get_halo_depth())
-    call extended_chi_proxy(3)%set_clean(mesh%get_halo_depth())
-
-   nullify( mesh, map_wx, map_pid )
-
-  end subroutine extend_chi_field
-
-
 !> @brief Extend the equiangular coordinate fields from panel boundaries into
 !!        the halos
-!! @param[in]     nlayers    Number of layers
-!! @param[in,out] alpha_ext  Extension of the alpha (chi(1)) coodinate field
-!! @param[in,out] beta_ext   Extension of the beta (chi(2)) coodinate field
-!! @param[in]     panel_id   Indicator of the panel for each cell column
-!! @param[in]     ndf_wx     Number of degrees of freedom per cell for the coordinate fields
-!! @param[in]     undf_wx    Number of unique degrees of freedom for the coordinate space
-!! @param[in]     map_wx     Dofmap for the cell at the base of the column for the coordinate space
-!! @param[in]     ndf_pid    Number of degrees of freedom per cell for the panel_id field
-!! @param[in]     undf_pid   Number of unique degrees of freedom for the panel_id field
-!! @param[in]     map_pid    Dofmap for the cell at the base of the column for the panel_id field
+!> @param[in]     nlayers    Number of layers
+!> @param[in,out] alpha_ext  Extension of the alpha (chi(1)) coordinate field
+!> @param[in,out] beta_ext   Extension of the beta (chi(2)) coordinate field
+!> @param[in,out] radius_ext Extension of the radius (chi(3)) coordinate field
+!> @param[in]     chi1       Original alpha (chi(1)) coordinate field
+!> @param[in]     chi2       Original beta (chi(2)) coordinate field
+!> @param[in]     chi3       Original radius (chi(3)) coordinate field
+!> @param[in]     panel_id   Indicator of the panel for each cell column
+!> @param[in]     ndf_wx     Number of degrees of freedom per cell for the coordinate fields
+!> @param[in]     undf_wx    Number of unique degrees of freedom for the coordinate space
+!> @param[in]     map_wx     Dofmap for the cell at the base of the column for the coordinate space
+!> @param[in]     ndf_pid    Number of degrees of freedom per cell for the panel_id field
+!> @param[in]     undf_pid   Number of unique degrees of freedom for the panel_id field
+!> @param[in]     map_pid    Dofmap for the cell at the base of the column for the panel_id field
 subroutine extend_chi_field_code(nlayers,                         &
-                                 alpha_ext, beta_ext,             &
+                                 alpha_ext, beta_ext, radius_ext, &
+                                 chi1, chi2, chi3,                &
                                  panel_id,                        &
                                  ndf_wx, undf_wx, map_wx,         &
                                  ndf_pid, undf_pid, map_pid       &
@@ -137,9 +81,11 @@ subroutine extend_chi_field_code(nlayers,                         &
   integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
 
   real(kind=r_def), dimension(undf_wx),  intent(inout) :: alpha_ext, beta_ext
+  real(kind=r_def), dimension(undf_wx),  intent(inout) :: radius_ext
+  real(kind=r_def), dimension(undf_wx),  intent(in)    :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf_pid), intent(in)    :: panel_id
 
-  integer(kind=i_def) :: owned_panel, halo_panel, panel_edge, df, k
+  integer(kind=i_def) :: owned_panel, halo_panel, panel_edge, df, k, idx
 
   real(kind=r_def)                    :: x, y, z
   real(kind=r_def), parameter         :: unit_radius = 1.0_r_def
@@ -151,6 +97,14 @@ subroutine extend_chi_field_code(nlayers,                         &
   ! subroutine. The transformation to change (alpha,beta) is only in the
   ! horizontal so the height value doesn't matter
   real(kind=r_def) :: h_dummy
+
+  ! First, set all of the coordinates to match the standard coordinates
+  do df = 1, ndf_wx
+    idx = map_wx(df)
+    alpha_ext(idx:idx+nlayers-1) = chi1(idx:idx+nlayers-1)
+    beta_ext(idx:idx+nlayers-1)  = chi2(idx:idx+nlayers-1)
+    radius_ext(idx:idx+nlayers-1) = chi3(idx:idx+nlayers-1)
+  end do
 
   ! Assume the first entry in panel id corresponds to an owned (not halo cell)
   owned_panel = int(panel_id(1),i_def)

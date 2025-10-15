@@ -10,6 +10,7 @@ module sci_psykal_light_mod
   use field_mod,          only : field_type, field_proxy_type
   use integer_field_mod,  only : integer_field_type, integer_field_proxy_type
   use r_solver_field_mod, only : r_solver_field_type, r_solver_field_proxy_type
+  use r_tran_field_mod,   only : r_tran_field_type, r_tran_field_proxy_type
 
   implicit none
 
@@ -33,6 +34,36 @@ contains
       val = field_proxy%data(1)
     end subroutine invoke_getvalue
 
+
+  !-----------------------------------------------------------------------------
+  !> @brief Performs a halo exchange on a field
+  !> @details This PSyKAl-lite code is required to allow an interface to the
+  !!          field's underlying halo exchange routine. Accessing a field's
+  !!          proxy type directly from an algorithm is not allowed in the API,
+  !!          so this subroutine provides an acceptable way to do this.
+  !!          NOTE: there is not an associated PSyclone issue for this, as this
+  !!          does not relate to a kernel or its metadata. The intention is that
+  !!          this routine is used in the algorithm layer as an optimisation to
+  !!          prevent a field from performing a small and then large halo
+  !!          exchange, instead of just the large exchange. It is not really
+  !!          conceivable that PSyclone could ever detect such a situation when
+  !!          it is separated across different modules.
+  !> @param[in,out] field  The field to perform a halo exchange on
+  !> @param[in]     depth  Depth of the halo exchange to be performed
+  subroutine invoke_rtran_halo_exchange(field, depth)
+
+    implicit none
+
+    type(r_tran_field_type), intent(inout) :: field
+    integer(kind=i_def),     intent(in)    :: depth
+    type(r_tran_field_proxy_type)          :: field_proxy
+
+    field_proxy = field%get_proxy()
+    if (field_proxy%is_dirty(depth=depth)) then
+      call field_proxy%halo_exchange(depth=depth)
+    end if
+
+  end subroutine invoke_rtran_halo_exchange
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Psyclone does not currently have native support for builtins with mixed

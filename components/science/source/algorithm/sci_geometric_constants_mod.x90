@@ -302,7 +302,8 @@ contains
   !> @return The coordinate field array
   function get_extended_coordinates(mesh_id) result(extended_chi)
 
-    use sci_extend_chi_field_kernel_mod,    only: extend_chi_field
+    use finite_element_config_mod,       only: coord_system, coord_system_native
+    use sci_extend_chi_field_kernel_mod, only: extend_chi_field_kernel_type
 
     implicit none
 
@@ -310,6 +311,7 @@ contains
     type(mesh_type),           pointer :: mesh
     type(field_type),          pointer :: extended_chi(:)
     logical(kind=l_def)                :: constant_exists
+    integer(kind=i_def)                :: depth
     type(field_type),          pointer :: chi(:)
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: wchi_fs
@@ -330,10 +332,20 @@ contains
       if ( subroutine_timers ) call timer('runtime_constants.geometric')
 
       wchi_fs => chi(1)%get_function_space()
+      depth = mesh%get_halo_depth()
       call extended_chi_inventory%add_field_array(                             &
-              extended_chi, wchi_fs, 3, mesh, halo_depth=mesh%get_halo_depth() &
+              extended_chi, wchi_fs, 3, mesh, halo_depth=depth                 &
       )
-      call extend_chi_field(extended_chi, chi, panel_id)
+
+      if (coord_system /= coord_system_native) then
+        call log_event(                                                        &
+                "Extended coordinates only implemented for native " //         &
+                "coord_system option", LOG_LEVEL_ERROR                         &
+        )
+      end if
+
+      call invoke( extend_chi_field_kernel_type(extended_chi, chi,             &
+                                                panel_id, depth) )
 
       if ( subroutine_timers ) call timer('runtime_constants.geometric')
     else

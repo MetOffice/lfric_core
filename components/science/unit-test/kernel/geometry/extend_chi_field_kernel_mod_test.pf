@@ -46,7 +46,8 @@ contains
     integer(i_def), dimension(ndf_wx)  :: map_wx
     integer(i_def), dimension(ndf_pid) :: map_pid
 
-    real(r_def), dimension(undf_wx)  :: alpha_ext, beta_ext
+    real(r_def), dimension(undf_wx)  :: alpha_ext, beta_ext, radius_ext
+    real(r_def), dimension(ndf_wx)   :: chi1, chi2, chi3
     real(r_def), dimension(undf_pid) :: panel_id
 
     integer(r_def) :: df
@@ -80,20 +81,31 @@ contains
     ! Flags for Wx dofs on the south edge of the cell: beta0
     south_dofs = (/ 1, 2 /)
 
-    do df = 1,2
-      alpha_ext(west_dofs(df)) = -alpha0
-      alpha_ext(east_dofs(df)) = -alpha0 + delta_alpha
-      beta_ext(south_dofs(df)) = beta0
-      beta_ext(north_dofs(df)) = beta0 + delta_beta
-   end do
+    ! Set output fields to zero
+    alpha_ext = 0.0_r_def
+    beta_ext = 0.0_r_def
+    radius_ext = 0.0_r_def
 
-   call  extend_chi_field_code(nlayers,                   &
-                               alpha_ext,                 &
-                               beta_ext,                  &
-                               panel_id,                  &
-                               ndf_wx, undf_wx, map_wx,   &
-                               ndf_pid, undf_pid, map_pid &
-                               )
+    do df = 1,2
+      chi1(west_dofs(df)) = -alpha0
+      chi1(east_dofs(df)) = -alpha0 + delta_alpha
+      chi2(south_dofs(df)) = beta0
+      chi2(north_dofs(df)) = beta0 + delta_beta
+    end do
+
+    chi3(:) = h0
+
+    call  extend_chi_field_code(nlayers,                   &
+                                alpha_ext,                 &
+                                beta_ext,                  &
+                                radius_ext,                &
+                                chi1,                      &
+                                chi2,                      &
+                                chi3,                      &
+                                panel_id,                  &
+                                ndf_wx, undf_wx, map_wx,   &
+                                ndf_pid, undf_pid, map_pid &
+                                )
     if ( r_def == real64 ) then
        use_tol = tol
     else
