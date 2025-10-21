@@ -1,0 +1,133 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> @brief   Transform W2 fields into W2h/W2v fields and vice versa.
+!> @details Algorithms to split a W2 field into its horizontal and vertical parts,
+!!          or to combine W2h and w"v fields into a W2 field.
+
+module sci_split_combine_w2_alg_mod
+
+  ! Constants and types
+  use constants_mod,                 only: i_def
+  use integer_field_mod,             only: integer_field_type
+  use field_mod,                     only: field_type
+  use fs_continuity_mod,             only: W2, W2h, W2v
+  use function_space_mod,            only: function_space_type
+  use function_space_collection_mod, only: function_space_collection
+  use sci_geometric_constants_mod,   only: get_face_selector_ew, &
+                                           get_face_selector_ns
+
+  ! Algorithms and kernels
+  use combine_w2_field_kernel_mod,   only: combine_w2_field_kernel_type
+  use split_w2_field_kernel_mod,     only: split_w2_field_kernel_type
+
+ implicit none
+
+  private
+  public  :: split_w2_field_alg
+  public  :: combine_w2_field_alg
+
+contains
+
+  ! =======================================================
+  !> @brief Split a W2 field into horizontal and vertical
+  !!        components
+  !> @param[in,out] hori_field      The horizontal part of the field
+  !> @param[in,out] vert_field      The vertical part of the field
+  !> @param[in]     field           The W2 field
+
+  subroutine split_w2_field_alg( hori_field, vert_field, field )
+
+    implicit none
+
+    ! Arguments
+    type(field_type),    intent(inout) :: hori_field
+    type(field_type),    intent(inout) :: vert_field
+    type(field_type),    intent(in)    :: field
+
+    ! Function spaces
+    type(function_space_type), pointer :: w2h_fs
+    type(function_space_type), pointer :: w2v_fs
+    type(integer_field_type),  pointer :: face_selector_ew
+    type(integer_field_type),  pointer :: face_selector_ns
+    integer(i_def) :: element_order_h
+    integer(i_def) :: element_order_v
+
+    ! Get element order
+    element_order_h = field%get_element_order_h()
+    element_order_v = field%get_element_order_v()
+    ! Get function spaces
+    w2h_fs => function_space_collection%get_fs( field%get_mesh(), &
+                                                element_order_h,  &
+                                                element_order_v, W2h )
+    w2v_fs => function_space_collection%get_fs( field%get_mesh(), &
+                                                element_order_h,  &
+                                                element_order_v, W2v )
+    ! Get face selectors
+    face_selector_ew => get_face_selector_ew(field%get_mesh_id())
+    face_selector_ns => get_face_selector_ns(field%get_mesh_id())
+    ! Initialise fields
+    if (.not. hori_field%is_initialised()) then
+      call hori_field%initialise(w2h_fs)
+    end if
+    if (.not. vert_field%is_initialised()) then
+      call vert_field%initialise(w2h_fs)
+    end if
+    ! Split the field
+    call invoke( split_w2_field_kernel_type(hori_field,       &
+                                            vert_field,       &
+                                            field,            &
+                                            face_selector_ew, &
+                                            face_selector_ns) )
+
+  end subroutine split_w2_field_alg
+
+  ! =======================================================
+  !> @brief Combine a W2h and W2v field to create a W2 field
+  !> @param[in,out] field           The combined W2 field
+  !> @param[in]     hori_field      The horizontal field
+  !> @param[in]     vert_field      The vertical field
+
+  subroutine combine_w2_field_alg( field, hori_field, vert_field )
+
+    implicit none
+
+    ! Arguments
+    type(field_type),    intent(inout) :: field
+    type(field_type),    intent(in)    :: hori_field
+    type(field_type),    intent(in)    :: vert_field
+
+    ! Function spaces
+    type(function_space_type), pointer :: w2_fs
+    type(integer_field_type),  pointer :: face_selector_ew
+    type(integer_field_type),  pointer :: face_selector_ns
+    integer(i_def) :: element_order_h
+    integer(i_def) :: element_order_v
+
+    ! Get element order
+    element_order_h = field%get_element_order_h()
+    element_order_v = field%get_element_order_v()
+    ! Get function spaces
+    w2_fs => function_space_collection%get_fs( hori_field%get_mesh(), &
+                                               element_order_h,       &
+                                               element_order_v, W2 )
+    ! Get face selectors
+    face_selector_ew => get_face_selector_ew(hori_field%get_mesh_id())
+    face_selector_ns => get_face_selector_ns(hori_field%get_mesh_id())
+    ! Initialise field
+    if (.not. field%is_initialised()) then
+      call field%initialise(w2_fs)
+    end if
+    ! Combine the fields
+    call invoke( combine_w2_field_kernel_type(field,            &
+                                              hori_field,       &
+                                              vert_field,       &
+                                              face_selector_ew, &
+                                              face_selector_ns) )
+
+  end subroutine combine_w2_field_alg
+
+end module sci_split_combine_w2_alg_mod
