@@ -18,8 +18,7 @@ documentation follows a consistent style.
 Copyright
 ---------
 
-Include a copy of the standard Copyright text in all files (with an
-appropriate year).
+Include a copy of the standard Copyright text in all files.
 
 .. code-block:: rst
 
