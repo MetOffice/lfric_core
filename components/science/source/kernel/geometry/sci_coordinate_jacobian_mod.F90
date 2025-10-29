@@ -76,6 +76,12 @@ module sci_coordinate_jacobian_mod
          jacobian_abr2XYZ_r_double
   end interface
 
+  interface jacobian_abr2XYZ_vec
+    module procedure &
+         jacobian_abr2XYZ_vec_r_single, &
+         jacobian_abr2XYZ_vec_r_double
+  end interface
+
   interface jacobian_llr2XYZ
     module procedure &
          jacobian_llr2XYZ_r_single, &
@@ -149,9 +155,11 @@ contains
     ! Local variables
     real(kind=r_single) :: jac_ref2sph(3,3,ngp_h,ngp_v)
     real(kind=r_single) :: jac_sph2XYZ(3,3)
-    real(kind=r_single) :: alpha, beta
+    real(kind=r_single) :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
+    real(kind=r_single) :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
     real(kind=r_single) :: longitude, latitude
     real(kind=r_single) :: radius
+    real(kind=r_single) :: radius_vec(ngp_h*ngp_v)
     real(kind=r_single) :: rotation_matrix(3,3)
     real(kind=r_single) :: jac_S(3,3)
     real(kind=r_single) :: stretch_factor
@@ -162,7 +170,8 @@ contains
     logical(kind=l_def) :: to_stretch
 
     integer(kind=i_def) :: df, dir
-    integer(kind=i_def) :: i, j
+    integer(kind=i_def) :: i, j, k
+    integer(kind=i_def) :: ngp
 
     ! Jacobian from reference element to native coords -------------------------
     jac_ref2sph(:,:,:,:) = 0.0_r_single
@@ -194,35 +203,44 @@ contains
         rotation_matrix = real(get_mesh_rotation_matrix(), r_single)
       end if
 
+      ngp = ngp_v*ngp_h
+      k = 1
       do j = 1,ngp_v
         do i = 1,ngp_h
-          alpha  = 0.0_r_single
-          beta   = 0.0_r_single
-          radius = real(scaled_radius, kind=r_single)
+          alpha_vec(k)  = 0.0_r_single
+          beta_vec(k)   = 0.0_r_single
+          radius_vec(k) = real(scaled_radius, kind=r_single)
           do df = 1,ndf
-            alpha  = alpha  + chi_1(df)*basis(1,df,i,j)
-            beta   = beta   + chi_2(df)*basis(1,df,i,j)
-            radius = radius + chi_3(df)*basis(1,df,i,j)
+            alpha_vec(k)  = alpha_vec(k)  + chi_1(df)*basis(1,df,i,j)
+            beta_vec(k)   = beta_vec(k)   + chi_2(df)*basis(1,df,i,j)
+            radius_vec(k) = radius_vec(k) + chi_3(df)*basis(1,df,i,j)
           end do
-          jac_sph2XYZ = jacobian_abr2XYZ(alpha, beta, radius, panel_id)
-          jac(:,:,i,j) = matmul(jac_sph2XYZ, jac_ref2sph(:,:,i,j))
+          k = k + 1
+        end do
+      end do
 
+      jac_sph2XYZ_vec = jacobian_abr2XYZ_vec_r_single(alpha_vec, beta_vec, radius_vec, panel_id, ngp)
+
+      k = 1
+      do j = 1,ngp_v
+        do i = 1,ngp_h
+          jac(:,:,i,j) = matmul(jac_sph2XYZ_vec(:,:,k), jac_ref2sph(:,:,i,j))
           ! Apply stretching ---------------------------------------------------
           if (to_stretch) then
             ! Convert chi to spherical polar (un-stretched) coordinates
-            call alphabetar2xyz(alpha, beta, radius, panel_id,                 &
+            call alphabetar2xyz(alpha_vec(k), beta_vec(k), radius_vec(k), panel_id,                 &
                                 native_x, native_y, native_z)
             call xyz2ll(native_x, native_y, native_z,                          &
                         native_lon, native_lat)
             stretch_factor = real(get_stretch_factor(), r_single)
-            jac_S = jacobian_stretched(native_lon, native_lat, radius, stretch_factor)
+            jac_S = jacobian_stretched(native_lon, native_lat, radius_vec(k), stretch_factor)
             jac(:,:,i,j) = matmul(jac_S, jac(:,:,i,j))
           end if
-
           ! Apply rotation -----------------------------------------------------
           if (to_rotate) then
             jac(:,:,i,j) = matmul(rotation_matrix, jac(:,:,i,j))
           end if
+          k = k + 1
         end do
       end do
 
@@ -291,9 +309,11 @@ contains
     ! Local variables
     real(kind=r_double) :: jac_ref2sph(3,3,ngp_h,ngp_v)
     real(kind=r_double) :: jac_sph2XYZ(3,3)
-    real(kind=r_double) :: alpha, beta
+    real(kind=r_double) :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
+    real(kind=r_double) :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
     real(kind=r_double) :: longitude, latitude
     real(kind=r_double) :: radius
+    real(kind=r_double) :: radius_vec(ngp_h*ngp_v)
     real(kind=r_double) :: rotation_matrix(3,3)
     real(kind=r_double) :: jac_S(3,3)
     real(kind=r_double) :: stretch_factor
@@ -304,7 +324,8 @@ contains
     logical(kind=l_def) :: to_stretch
 
     integer(kind=i_def) :: df, dir
-    integer(kind=i_def) :: i, j
+    integer(kind=i_def) :: i, j, k
+    integer(kind=i_def) :: ngp
 
     ! Jacobian from reference element to native coords -------------------------
     jac_ref2sph(:,:,:,:) = 0.0_r_double
@@ -336,35 +357,44 @@ contains
         rotation_matrix = real(get_mesh_rotation_matrix(), r_double)
       end if
 
+      ngp = ngp_v*ngp_h
+      k = 1
       do j = 1,ngp_v
         do i = 1,ngp_h
-          alpha  = 0.0_r_double
-          beta   = 0.0_r_double
-          radius = real(scaled_radius, kind=r_double)
+          alpha_vec(k)  = 0.0_r_double
+          beta_vec(k)   = 0.0_r_double
+          radius_vec(k) = real(scaled_radius, kind=r_double)
           do df = 1,ndf
-            alpha  = alpha  + chi_1(df)*basis(1,df,i,j)
-            beta   = beta   + chi_2(df)*basis(1,df,i,j)
-            radius = radius + chi_3(df)*basis(1,df,i,j)
+            alpha_vec(k)  = alpha_vec(k)  + chi_1(df)*basis(1,df,i,j)
+            beta_vec(k)   = beta_vec(k)   + chi_2(df)*basis(1,df,i,j)
+            radius_vec(k) = radius_vec(k) + chi_3(df)*basis(1,df,i,j)
           end do
-          jac_sph2XYZ = jacobian_abr2XYZ(alpha, beta, radius, panel_id)
-          jac(:,:,i,j) = matmul(jac_sph2XYZ, jac_ref2sph(:,:,i,j))
+          k = k + 1
+        end do
+      end do
 
+      jac_sph2XYZ_vec = jacobian_abr2XYZ_vec_r_double(alpha_vec, beta_vec, radius_vec, panel_id, ngp)
+
+      k = 1
+      do j = 1,ngp_v
+        do i = 1,ngp_h
+          jac(:,:,i,j) = matmul(jac_sph2XYZ_vec(:,:,k), jac_ref2sph(:,:,i,j))
           ! Apply stretching ---------------------------------------------------
           if (to_stretch) then
             ! Convert chi to spherical polar (un-stretched) coordinates
-            call alphabetar2xyz(alpha, beta, radius, panel_id,                 &
+            call alphabetar2xyz(alpha_vec(k), beta_vec(k), radius_vec(k), panel_id,                 &
                                 native_x, native_y, native_z)
-            call xyz2ll(native_x, native_y, native_z,                         &
-                         native_lon, native_lat)
+            call xyz2ll(native_x, native_y, native_z,                          &
+                        native_lon, native_lat)
             stretch_factor = real(get_stretch_factor(), r_double)
-            jac_S = jacobian_stretched(native_lon, native_lat, radius, stretch_factor)
+            jac_S = jacobian_stretched(native_lon, native_lat, radius_vec(k), stretch_factor)
             jac(:,:,i,j) = matmul(jac_S, jac(:,:,i,j))
           end if
-
           ! Apply rotation -----------------------------------------------------
           if (to_rotate) then
             jac(:,:,i,j) = matmul(rotation_matrix, jac(:,:,i,j))
           end if
+          k = k + 1
         end do
       end do
 
@@ -1218,6 +1248,133 @@ contains
     jac_abr2XYZ(:,:) = matmul(PANEL_ROT_MATRIX(:,:,panel_id), jac_abr2XYZ(:,:))
 
   end function jacobian_abr2XYZ_r_double
+
+  !-----------------------------------------------------------
+  ! f u n c t i o n    j a c o b i a n _ a b r 2 X Y Z _ v e c
+  !-----------------------------------------------------------
+  !> @brief Compute the pointwise Jacobian for transforming from cubed-sphere
+  !         (alpha,beta,r) coordinates to the global Cartesian (X,Y,Z)
+  !         coordinates. Vectorised version
+  !> @param[in] alpha        Vector of alpha coordinates
+  !> @param[in] beta         Vector of beta coordinates
+  !> @param[in] radius       Vector of radius coordinates
+  !> @param[in] panel_id     Integer giving the ID of the mesh panel
+  !> @param[in] ngp          Number of quadrature points
+  !> @return    jac_abr2XYZ  Vector of 3x3 matrices for the Jacobian of the transformation
+function jacobian_abr2XYZ_vec_r_single(alpha, beta, radius, panel_id, ngp) &
+                                                      result(jac_abr2XYZ)
+    implicit none
+
+    integer(kind=i_def), intent(in) :: ngp
+    real(kind=r_single), dimension(ngp), intent(in) :: alpha
+    real(kind=r_single), dimension(ngp), intent(in) :: beta
+    real(kind=r_single), dimension(ngp), intent(in) :: radius
+    integer(kind=i_def), intent(in) :: panel_id
+
+    real(kind=r_single)                   :: jac_abr2XYZ(3,3,ngp)
+
+    real(kind=r_single)   :: tan_alpha, tan_beta, panel_rho
+    real(kind=r_single)   :: tan_ab, tan_aa_p1, tan_bb_p1, factor, oneoverrho
+
+    integer(kind=i_def) :: k
+
+    do k = 1,ngp
+      tan_alpha = tan(alpha(k))
+      tan_beta = tan(beta(k))
+      tan_ab = tan_alpha*tan_beta
+      tan_aa_p1 = 1.0_r_single+tan_alpha**2
+      tan_bb_p1 = 1.0_r_single+tan_beta**2
+      panel_rho = sqrt(1.0_r_single+tan_alpha**2+tan_beta**2)
+      factor = radius(k)/panel_rho**3
+      oneoverrho = 1.0_r_single/panel_rho
+
+    ! First column, g_alpha
+      jac_abr2XYZ(1,1,k) = -tan_alpha*tan_aa_p1*factor
+      jac_abr2XYZ(2,1,k) = tan_bb_p1*tan_aa_p1*factor
+      jac_abr2XYZ(3,1,k) = -tan_ab*tan_aa_p1*factor
+
+    ! Second column, g_beta
+      jac_abr2XYZ(1,2,k) = -tan_beta*tan_bb_p1*factor
+      jac_abr2XYZ(2,2,k) = -tan_ab*tan_bb_p1*factor
+      jac_abr2XYZ(3,2,k) = tan_aa_p1*tan_bb_p1*factor
+
+    ! Third column, g_r
+      jac_abr2XYZ(1,3,k) = oneoverrho
+      jac_abr2XYZ(2,3,k) = tan_alpha*oneoverrho
+      jac_abr2XYZ(3,3,k) = tan_beta*oneoverrho
+
+    end do
+
+    do k = 1,ngp
+    ! Rotate to the appropriate panel
+      jac_abr2XYZ(:,:,k) = matmul(PANEL_ROT_MATRIX(:,:,panel_id), jac_abr2XYZ(:,:,k))
+    end do
+
+  end function jacobian_abr2XYZ_vec_r_single
+
+  !-----------------------------------------------------------
+  ! f u n c t i o n    j a c o b i a n _ a b r 2 X Y Z _ v e c
+  !-----------------------------------------------------------
+  !> @brief Compute the pointwise Jacobian for transforming from cubed-sphere
+  !         (alpha,beta,r) coordinates to the global Cartesian (X,Y,Z)
+  !         coordinates. Vectorised version
+  !> @param[in] alpha        Vector of alpha coordinates
+  !> @param[in] beta         Vector of beta coordinates
+  !> @param[in] radius       Vector of radius coordinates
+  !> @param[in] panel_id     Integer giving the ID of the mesh panel
+  !> @param[in] ngp          Number of quadrature points
+  !> @return    jac_abr2XYZ  Vector of 3x3 matrices for the Jacobian of the transformation
+function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
+                                                      result(jac_abr2XYZ)
+    implicit none
+
+    integer(kind=i_def), intent(in) :: ngp
+    real(kind=r_double), dimension(ngp), intent(in) :: alpha
+    real(kind=r_double), dimension(ngp), intent(in) :: beta
+    real(kind=r_double), dimension(ngp), intent(in) :: radius
+    integer(kind=i_def), intent(in) :: panel_id
+
+    real(kind=r_double)                   :: jac_abr2XYZ(3,3,ngp)
+
+    real(kind=r_double)   :: tan_alpha, tan_beta, panel_rho
+    real(kind=r_double)   :: tan_ab, tan_aa_p1, tan_bb_p1, factor, oneoverrho
+
+    integer(kind=i_def) :: k
+
+    do k = 1,ngp
+      tan_alpha = tan(alpha(k))
+      tan_beta = tan(beta(k))
+      tan_ab = tan_alpha*tan_beta
+      tan_aa_p1 = 1.0_r_double+tan_alpha**2
+      tan_bb_p1 = 1.0_r_double+tan_beta**2
+      panel_rho = sqrt(1.0_r_double+tan_alpha**2+tan_beta**2)
+      factor = radius(k)/panel_rho**3
+      oneoverrho = 1.0_r_double/panel_rho
+
+    ! First column, g_alpha
+      jac_abr2XYZ(1,1,k) = -tan_alpha*tan_aa_p1*factor
+      jac_abr2XYZ(2,1,k) = tan_bb_p1*tan_aa_p1*factor
+      jac_abr2XYZ(3,1,k) = -tan_ab*tan_aa_p1*factor
+
+    ! Second column, g_beta
+      jac_abr2XYZ(1,2,k) = -tan_beta*tan_bb_p1*factor
+      jac_abr2XYZ(2,2,k) = -tan_ab*tan_bb_p1*factor
+      jac_abr2XYZ(3,2,k) = tan_aa_p1*tan_bb_p1*factor
+
+    ! Third column, g_r
+      jac_abr2XYZ(1,3,k) = oneoverrho
+      jac_abr2XYZ(2,3,k) = tan_alpha*oneoverrho
+      jac_abr2XYZ(3,3,k) = tan_beta*oneoverrho
+
+    end do
+
+    do k = 1,ngp
+    ! Rotate to the appropriate panel
+      jac_abr2XYZ(:,:,k) = matmul(PANEL_ROT_MATRIX(:,:,panel_id), jac_abr2XYZ(:,:,k))
+    end do
+
+  end function jacobian_abr2XYZ_vec_r_double
+
 
   !----------------------------------------------------------
   ! f u n c t i o n    j a c o b i a n _ l l r 2 X Y Z
