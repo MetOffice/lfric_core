@@ -1,0 +1,27 @@
+This directory contains standalone files to run LBC_demo from the command line.
+
+=================================
+Generate the input meshes
+=================================
+LBC demo only supports pre-partitioned meshes. To generate the meshes:
+
+  * Compile the planar_mesh_generator.
+  * From lbc_demo/example:
+    ../../../mesh_tools/bin/planar_mesh_generator mesh_config.nml
+
+=================================
+Run lbc_demo
+=================================
+
+  * Compile the lbc_demo program.
+  * From lbc_demo/example:
+    mpiexec -n 3 ../bin/lbc_demo configuration.nml
+
+=================================
+View the ouput
+=================================
+  * Can use the lfric tools ploterator
+  * Note: The ploterator is under development and may not display all the fields.
+    If there are issues, viewing a field, restart the ploterator and try again.
+    (W2H_fields will not plot).
+

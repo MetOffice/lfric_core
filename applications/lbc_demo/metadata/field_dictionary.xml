@@ -1,0 +1,22 @@
+<field_definition>
+<field_group id="lbc_demo:diags" prec="8" operation="instant">
+  <field id="wtheta_field" name="wtheta_field" long_name="wtheta_field" unit="1" grid_ref="full_level_face_grid" />
+  <field id="w0_field"     name="w0_field"     long_name="w0_field"     unit="1" grid_ref="node_grid" />
+  <field id="w3_field"     name="w3_field"     long_name="w3_field"     unit="1" grid_ref="half_level_face_grid" />
+  <field id="w2h_field"    name="w2h_field"    long_name="w2h_field"    unit="1" grid_ref="half_level_edge_grid" />
+  <field id="w2v_field"    name="w2v_field"    long_name="w2v_field"    unit="1" grid_ref="full_level_face_grid" />
+  <field id="w3_2d_field"      name="w3_2d_field"      long_name="w3_2h_field"      unit="1" domain_ref="face" />
+  <field id="multi_data_field" name="multi_data_field" long_name="multi_data_field" unit="1" domain_ref="face" axis_ref="multi_data_axis" />
+</field_group>
+
+<field_group id="lbc_demo:lbcs" prec="8" operation="instant">
+  <field id="wtheta_field:lbc" name="wtheta_field" long_name="wtheta_field" unit="1" grid_ref="full_level_face_grid" />
+  <field id="w0_field:lbc"     name="w0_field"     long_name="w0_field"     unit="1" grid_ref="node_grid" />
+  <field id="w3_field:lbc"     name="w3_field"     long_name="w3_field"     unit="1" grid_ref="half_level_face_grid" />
+  <field id="w2h_field:lbc"    name="w2h_field"    long_name="w2h_field"    unit="1" grid_ref="half_level_edge_grid" />
+  <field id="w2v_field:lbc"    name="w2v_field"    long_name="w2v_field"    unit="1" grid_ref="full_level_face_grid" />
+
+  <field id="w3_2d_field:lbc"      name="w3_2d_field"      long_name="w3_2d_field"      unit="1" domain_ref="face" />
+  <field id="multi_data_field:lbc" name="multi_data_field" long_name="multi_data_field" unit="1" domain_ref="face" axis_ref="multi_data_axis" />
+</field_group>
+</field_definiton>

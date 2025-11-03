@@ -475,7 +475,7 @@ abstract interface
     implicit none
 
     class(ugrid_file_type), intent(in) :: self
-    character(str_def),     intent(in) :: mesh_name
+    character(*),           intent(in) :: mesh_name
     logical(l_def) :: answer
 
   end function is_mesh_present_interface

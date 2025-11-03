@@ -22,6 +22,7 @@ VALID_CORE = [
     "infrastructure",
     "mesh_tools",
     "applications/io_demo",
+    "applications/lbc_demo",
     "applications/simple_diffusion",
     "applications/skeleton",
 ]

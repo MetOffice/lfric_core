@@ -144,8 +144,8 @@
       {% if task_ns.application == "mesh_tools" %}
             ROSE_LAUNCHER         = mpiexec
             RUN_METHOD            = mpiexec
-            PROCESSES             = {{task_values["mpi_parts"]}}
       {% endif %}
+            PROCESSES             = {{task_values["mpi_parts"]}}
       {% if task_ns.application == "coupled" %}
         {% if task_values["app_name"] == "canned_test" %}
             CONFIGURATION_FILE1   = {{configuration_file1}}

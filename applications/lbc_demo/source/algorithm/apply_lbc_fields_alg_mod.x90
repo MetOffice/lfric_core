@@ -1,0 +1,111 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> @brief  Simple algorithm to apply lbc field increments to
+!>         fields of the same name in the another field collection.
+!>
+module apply_lbc_fields_alg_mod
+
+  use constants_mod,                 only: str_def
+  use driver_modeldb_mod,            only: modeldb_type
+  use integer_field_mod,             only: integer_field_type
+  use field_mod,                     only: field_type
+  use field_parent_mod,              only: field_parent_type
+  use field_collection_iterator_mod, only: field_collection_iterator_type
+  use field_collection_mod,          only: field_collection_type
+
+  use psykal_apply_real_lbc_lite_mod, only: invoke_apply_real_lbc_kernel_type
+  use psykal_apply_int_lbc_lite_mod,  only: invoke_apply_int_lbc_kernel_type
+
+  implicit none
+
+  private
+  public :: apply_lbc_fields
+
+contains
+
+!> @details      An algorithm for updating fields with lbc driving data
+!> @description  All LBC driving fields in the "lbc_fields" collection
+!>               are used to update fields of the same name in the modeldb
+!>               depository field collection.
+!>
+!> @param[inout] modeldb  Model state object
+!>
+subroutine apply_lbc_fields( modeldb )
+
+  implicit none
+
+  type(modeldb_type), intent(inout) :: modeldb
+
+  type(field_collection_type), pointer :: lam_fields
+  type(field_collection_type), pointer :: lbc_fields
+
+  type(field_collection_iterator_type) :: iter
+
+  class(field_parent_type), pointer :: field_item
+
+  type(field_type), pointer :: lbc_field
+  type(field_type), pointer :: lam_field
+
+  type(integer_field_type), pointer :: int_lbc_field
+  type(integer_field_type), pointer :: int_lam_field
+
+  character(str_def) :: lam_field_name
+
+  field_item    => null()
+  lbc_field     => null()
+  lam_field     => null()
+  int_lbc_field => null()
+  int_lam_field => null()
+
+  lbc_fields => modeldb%fields%get_field_collection("lbc")
+  lam_fields => modeldb%fields%get_field_collection("depository")
+
+  ! This iterates over all the fields in the lbc_field collection
+  !
+  ! lbc_fields intuitively should hold the lbc driving fields,
+  ! although, these are not necessarily applied to the lam fields.
+  !
+  call iter%initialise(lbc_fields)
+
+  ! Apply LBC field to Model field of the same name
+  !=================================================
+  ! In this case lbc/lam field names are the same,
+  ! however in future this may not be the case.
+  do
+    if ( .not. iter%has_next() ) exit
+
+    field_item => iter%next()
+    select type(field_item)
+
+    type is (field_type)
+
+      lbc_field      => field_item
+      lam_field_name =  lbc_field%get_name()
+
+      if ( lam_fields%field_exists( trim(lam_field_name) ) ) then
+        call lam_fields%get_field( trim(lam_field_name), lam_field )
+        call invoke_apply_real_lbc_kernel_type( lam_field, &
+                                                lbc_field )
+      end if
+
+    type is (integer_field_type)
+
+      int_lbc_field  => field_item
+      lam_field_name =  int_lbc_field%get_name()
+
+      if ( lam_fields%field_exists( trim(lam_field_name) ) ) then
+        call lam_fields%get_field( trim(lam_field_name), int_lam_field )
+        call invoke_apply_int_lbc_kernel_type( int_lam_field, &
+                                               int_lbc_field )
+      end if
+
+    end select
+  end do
+
+end subroutine apply_lbc_fields
+
+end module apply_lbc_fields_alg_mod

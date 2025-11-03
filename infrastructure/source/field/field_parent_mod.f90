@@ -19,6 +19,8 @@ module field_parent_mod
   use halo_routing_collection_mod, only: halo_routing_collection
   use halo_comms_mod,              only: halo_routing_type
   use lfric_mpi_mod,               only: global_mpi, lfric_mpi_type
+  use log_mod,                     only: log_event, log_scratch_space, &
+                                         log_level_info, log_level_error
   use mesh_mod,                    only: mesh_type
   use pure_abstract_field_mod,     only: pure_abstract_field_type
 
@@ -142,7 +144,7 @@ module field_parent_mod
 
     subroutine write_interface(field_name, field_proxy)
       import field_parent_proxy_type
-      character(len=*), intent(in)                :: field_name
+      character(len=*),                intent(in) :: field_name
       class(field_parent_proxy_type ), intent(in) :: field_proxy
     end subroutine write_interface
 
@@ -216,7 +218,7 @@ contains
     !> Depth of halo this field will be created with
     integer(i_def), optional, intent(in)          :: halo_depth
 
-    type (mesh_type), pointer :: mesh => null()
+    type (mesh_type), pointer :: mesh
 
     self%vspace => vector_space
     mesh => self%vspace%get_mesh()
@@ -229,7 +231,8 @@ contains
     if ( present(halo_depth) ) then
       self%field_halo_depth = halo_depth
     else
-      self%field_halo_depth = default_halo_depth
+      self%field_halo_depth = min( mesh%get_halo_depth(), &
+                                   default_halo_depth )
     end if
 
     ! Set the name of the field if given, otherwise default to 'none'
@@ -428,21 +431,26 @@ contains
   ! Returns true if a halo depth is dirty
   function is_dirty(self, depth) result(dirtiness)
 
-    use log_mod,         only : log_event, &
-                                LOG_LEVEL_ERROR
     implicit none
 
     class(field_parent_proxy_type), intent(in) :: self
     integer(i_def), intent(in) :: depth
+
     logical(l_def) :: dirtiness
 
-    if( depth > self%field_halo_depth ) &
-      call log_event( 'Error in field: '// &
-                      'call to is_dirty() with depth out of range.', &
-                      LOG_LEVEL_ERROR )
-
     dirtiness = .false.
-    if(self%halo_dirty(depth) == 1)dirtiness = .true.
+
+    if (size(self%halo_dirty) > 1) then
+
+      if ( depth > self%field_halo_depth ) then
+        call log_event( 'Error in field: '// &
+                        'call to is_dirty() with depth out of range.', &
+                        log_level_error )
+      else
+        if (self%halo_dirty(depth) == 1) dirtiness = .true.
+      end if
+
+    end if
 
   end function is_dirty
 
@@ -453,27 +461,32 @@ contains
 
     class(field_parent_proxy_type), intent(inout) :: self
 
-    ! Leave zero depth clean
-    self%halo_dirty(1:) = 1
+    if (size(self%halo_dirty) > 1) then
+      self%halo_dirty(1:) = 1
+    end if
 
   end subroutine set_dirty
 
   ! Sets the halos up to depth to be flagged as clean
   subroutine set_clean(self, depth)
 
-    use log_mod,         only : log_event, &
-                                LOG_LEVEL_ERROR
     implicit none
 
     class(field_parent_proxy_type), intent(inout) :: self
     integer(i_def), intent(in) :: depth
 
-    if( depth > self%field_halo_depth ) &
-      call log_event( 'Error in field: '// &
-                      'call to set_clean() with depth out of range.', &
-                      LOG_LEVEL_ERROR )
+    if (size(self%halo_dirty) > 1) then
 
-    self%halo_dirty(1:depth) = 0
+      if ( depth > self%field_halo_depth ) then
+        call log_event( 'Error in field: call to set_clean() '// &
+                        'with depth out of range.',              &
+                        log_level_error )
+      else
+        self%halo_dirty(1:depth) = 0
+      end if
+
+    end if
+
   end subroutine set_clean
 
   !> Returns the mpi object this field is built on
@@ -502,7 +515,7 @@ contains
   !> @param[in] i_multidata_lev multidata-level for which coupling id is requested
   !> @return field coupling id
   function get_cpl_id(self, i_multidata_lev) result(dcpl_id)
-    use log_mod, only : log_event, log_scratch_space, LOG_LEVEL_ERROR
+
     implicit none
 
     class (field_parent_type), intent(in) :: self
@@ -519,7 +532,7 @@ contains
        ' larger than number of multidata-levels available (', &
        function_space%get_ndata(), &
        ') for', self%name
-       call log_event(log_scratch_space,LOG_LEVEL_ERROR )
+       call log_event( log_scratch_space, log_level_error )
        dcpl_id = imdi
     elseif(allocated(self%cpl_id)) then
        dcpl_id = self%cpl_id(i_multidata_lev)
@@ -535,7 +548,7 @@ contains
   !> @param[in] dcpl_id oasis id of the field
   !> @param[in] i_multidata_lev multidata-level for which coupling id is set
   subroutine set_cpl_id(self, dcpl_id, i_multidata_lev)
-    use log_mod, only : log_event, log_scratch_space, LOG_LEVEL_ERROR
+
     implicit none
 
     class (field_parent_type), intent(inout) :: self
@@ -551,7 +564,7 @@ contains
       ') larger than number of multidata-levels available (', &
       function_space%get_ndata(), &
       ') for ', self%name
-      call log_event(log_scratch_space,LOG_LEVEL_ERROR )
+      call log_event( log_scratch_space, log_level_error )
     endif
 
     if(allocated(self%cpl_id)) then

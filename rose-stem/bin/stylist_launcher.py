@@ -58,6 +58,7 @@ if __name__ == "__main__":
         "applications/skeleton",
         "applications/simple_diffusion",
         "applications/io_demo",
+        "applications/lbc_demo",
     ]
     for app in candidates:
         print(f"Running on {app}\n")

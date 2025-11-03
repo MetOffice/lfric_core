@@ -1,0 +1,7 @@
+Inner product checksum w3_2d_field = 410FC00000000000
+Inner product checksum wtheta_field = 412FC00000000000
+Inner product checksum multi_data_field = 411FC00000000000
+Inner product checksum w0_field = 412F3A0800000000
+Inner product checksum w3_field = 4127D00000000000
+Inner product checksum w2h_field = 41379DC000000000
+Inner product checksum w2v_field = 412FC00000000000

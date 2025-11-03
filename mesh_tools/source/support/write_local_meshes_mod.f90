@@ -189,7 +189,7 @@ subroutine write_local_meshes( partition_id,     &
     end if
 
     ! Add cell centre coordinates to
-    !     the ugrid_2d object.
+    ! the ugrid_2d object.
     !---------------------------------------------
     if ( allocated(local_cell_coords) ) deallocate( local_cell_coords )
     allocate( local_cell_coords(2,size(local_gids)) )
@@ -228,9 +228,11 @@ subroutine write_local_meshes( partition_id,     &
     end if
 
     inquire(file=output_file, size=fsize)
-    write( log_scratch_space, '(A,I0,A,I0,A)' )                       &
-        'Thread ',thread_id, ' adding mesh (' // trim(source_name) // &
-        ') to ' // trim(output_file) // ' - ', fsize, ' bytes written.'
+    write( log_scratch_space, '(2(A,I0),A)' )     &
+        'Thread ', thread_id, ' adding mesh (' // &
+        trim(source_name) // ') to ' //           &
+        trim(output_file) // ' - ', fsize,        &
+        ' bytes written.'
     call log_event( log_scratch_space, log_level_info )
 !$omp end critical
 
@@ -268,20 +270,23 @@ subroutine write_local_meshes( partition_id,     &
         global_lbc_mesh_maps_ptr => global_lbc_mesh_ptr%get_mesh_maps()
         global_lbc_mesh_map_ptr  => global_lbc_mesh_maps_ptr%get_global_mesh_map(1,2)
 
-        call global_lbc_mesh_map_ptr%get_cell_map(global_lbc_lam_cell_map)
+        if (local_lbc_mesh_ptr%get_last_edge_cell() > 0) then
 
-        global_ids = local_lbc_mesh_ptr%get_all_gid()
+          call global_lbc_mesh_map_ptr%get_cell_map(global_lbc_lam_cell_map)
 
-        if (allocated(local_cell_coords)) deallocate(local_cell_coords)
-        allocate(local_cell_coords(2, local_lbc_mesh_ptr%get_last_edge_cell()))
+          global_ids = local_lbc_mesh_ptr%get_all_gid()
 
-        do cell=1, local_lbc_mesh_ptr%get_last_edge_cell()
-          local_cell_coords(:,cell) = &
-              global_cell_coords(:, global_lbc_lam_cell_map(1,1,global_ids(cell)))
-        end do
+          if (allocated(local_cell_coords)) deallocate(local_cell_coords)
+          allocate(local_cell_coords(2, local_lbc_mesh_ptr%get_last_edge_cell()))
 
+          do cell=1, local_lbc_mesh_ptr%get_last_edge_cell()
+            local_cell_coords(:,cell) = &
+                global_cell_coords(:, global_lbc_lam_cell_map(1,1,global_ids(cell)))
+          end do
 
-        call ugrid_2d%set_coords( face_coords=local_cell_coords*factor )
+          call ugrid_2d%set_coords( face_coords=local_cell_coords*factor )
+
+        end if ! LBC on this partition
 
 !$omp critical
         thread_id = omp_get_thread_num()
@@ -289,10 +294,10 @@ subroutine write_local_meshes( partition_id,     &
         call ugrid_2d%append_to_file( trim(output_file) )
 
         inquire(file=output_file, size=fsize)
-        write( log_scratch_space, '(A,I0,A,I0,A)' )                &
-            'Thread ',thread_id, ' adding mesh (' // trim(name) // &
-            ') to ' // trim(output_file) // ' - ', fsize,          &
-            ' bytes written.'
+        write( log_scratch_space, '(2(A,I0),A)' )         &
+            'Thread ', thread_id, ' adding mesh (' //     &
+            trim(name) // ') to ' // trim(output_file) // &
+            ' - ', fsize, ' bytes written.'
         call log_event( log_scratch_space, log_level_info )
 !$omp end critical
 

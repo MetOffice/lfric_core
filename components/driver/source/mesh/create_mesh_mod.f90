@@ -23,15 +23,16 @@ module create_mesh_mod
                                  DOUBLE_LEVEL
   use local_mesh_mod,      only: local_mesh_type
   use mesh_mod,            only: mesh_type
+  use sci_query_mod,       only: check_lbc
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
 
   use local_mesh_collection_mod,  only: local_mesh_collection
   use mesh_collection_mod,        only: mesh_collection
 
   ! Configuration modules
-  use extrusion_config_mod, only: METHOD_UNIFORM,   &
-                                  METHOD_GEOMETRIC, &
-                                  METHOD_QUADRATIC
+  use extrusion_config_mod, only: method_uniform,   &
+                                  method_geometric, &
+                                  method_quadratic
 
   use multigrid_config_mod, only: chain_mesh_tags
 
@@ -75,15 +76,15 @@ function create_extrusion( extrusion_method, &
   if (allocated(new)) deallocate(new)
 
   select case (extrusion_method)
-    case (METHOD_UNIFORM)
+    case (method_uniform)
       allocate( new, source=uniform_extrusion_type(        &
                                 domain_bottom, domain_height, &
                                 n_layers, extrusion_id ) )
-    case (METHOD_QUADRATIC)
+    case (method_quadratic)
       allocate( new, source=quadratic_extrusion_type(      &
                                 domain_bottom, domain_height, &
                                 n_layers, extrusion_id ) )
-    case (METHOD_GEOMETRIC)
+    case (method_geometric)
       allocate( new, source=geometric_extrusion_type(      &
                                 domain_bottom, domain_height, &
                                 n_layers, extrusion_id ) )
@@ -201,11 +202,15 @@ subroutine create_mesh_single( local_mesh_name, &
   local_mesh_ptr => local_mesh_collection%get_local_mesh(local_mesh_name)
 
   if ( .not. associated(local_mesh_ptr) ) then
-    write(log_scratch_space,'(A)')                                &
-        'Specified local mesh object ('//trim(local_mesh_name)//  &
-        ') was not found in the program local_mesh_collection '// &
-        'object.'
-    call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+    if ( check_lbc(local_mesh_name) ) then
+      return
+    else
+      write(log_scratch_space,'(A)')                                &
+          'Specified local mesh object ('//trim(local_mesh_name)//  &
+          ') was not found in the program local_mesh_collection '// &
+          'object.'
+      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+    end if
   end if
 
 

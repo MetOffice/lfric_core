@@ -25,6 +25,7 @@ module add_mesh_map_mod
                                  quadratic_extrusion_type
   use local_mesh_mod,      only: local_mesh_type
   use mesh_mod,            only: mesh_type
+  use sci_query_mod,       only: check_lbc
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
 
 
@@ -68,8 +69,16 @@ subroutine assign_mesh_maps( mesh_names )
     allocate(local_mesh_names(size(mesh_names)))
     do i=1, size(mesh_names)
       mesh => mesh_collection%get_mesh(mesh_names(i))
+
+      if (.not. associated(mesh)) then
+        if (check_lbc(mesh_names(i))) then
+          cycle
+        end if
+      end if
+
       local_mesh => mesh%get_local_mesh()
       local_mesh_names(i) = local_mesh%get_mesh_name()
+
     end do
 
     !============================================================================
@@ -86,6 +95,13 @@ subroutine assign_mesh_maps( mesh_names )
       ! Find all of the target local meshes associated with the local
       ! mesh object that this mesh object was extruded from.
       mesh => mesh_collection%get_mesh(mesh_name_A)
+
+      if ( .not. associated(mesh)) then
+        if (check_lbc(mesh_names(i))) then
+          cycle
+        end if
+      end if
+
       local_mesh => mesh%get_local_mesh()
       local_mesh_name = local_mesh%get_mesh_name()
 
@@ -154,10 +170,9 @@ subroutine add_mesh_map( source_mesh_name, &
     end if
 
     call source_mesh % add_mesh_map (target_mesh)
-    call target_mesh % add_mesh_map (source_mesh)
     write(log_scratch_space,'(A,I0,A)')     &
         'Adding intergrid map "'//          &
-         trim(source_mesh_name)//'"<-->"'// &
+         trim(source_mesh_name)//'"-->"'//  &
          trim(target_mesh_name)//'"'
     call log_event( log_scratch_space, LOG_LEVEL_INFO )
   else

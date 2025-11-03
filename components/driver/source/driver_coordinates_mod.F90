@@ -14,9 +14,10 @@ module driver_coordinates_mod
                                        topology_fully_periodic, &
                                        topology_non_periodic
   use constants_mod,             only: r_def, i_def, l_def, &
-                                       radians_to_degrees, &
-                                       i_halo_index, EPS, PI
-  use log_mod,                   only: log_event, LOG_LEVEL_ERROR
+                                       radians_to_degrees,  &
+                                       i_halo_index, eps, pi
+  use log_mod,                   only: log_event, log_scratch_space, &
+                                       log_level_error
   use planet_config_mod,         only: scaled_radius
   use coord_transform_mod,       only: xyz2llr, llr2xyz, identify_panel, &
                                        xyz2alphabetar, alphabetar2xyz,   &
@@ -158,17 +159,20 @@ contains
     to_rotate = get_to_rotate()
 
     ! Throw an error if stretching factor is not 1 and not on cubed-sphere
-    if ( abs(stretch_factor - 1.0_r_def) > EPS .and. .not.                     &
+    if ( abs(stretch_factor - 1.0_r_def) > eps .and. .not.                     &
          (geometry == geometry_spherical .and.                                 &
           topology == topology_fully_periodic) ) then
       call log_event(                                                          &
         'driver_coordinates: Cannot determine coordinates if Schmidt ' //      &
         'stretching factor is not 1 and mesh is not cubed-sphere',             &
-        LOG_LEVEL_ERROR                                                        &
+        log_level_error                                                        &
       )
     end if
 
-    if ( coord_system == coord_system_xyz .or. geometry == geometry_planar ) then
+    panel_id_proxy%data = 1.0_r_def
+
+    if ( coord_system == coord_system_xyz .or. &
+         geometry == geometry_planar ) then
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -201,7 +205,8 @@ contains
                                     map_pid(:,cell)      )
       end do
 
-    else if ( geometry == geometry_spherical .and. topology /= topology_fully_periodic ) then
+    else if ( geometry == geometry_spherical .and. &
+              topology /= topology_fully_periodic ) then
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -233,7 +238,8 @@ contains
                                         map_pid(:,cell)          )
       end do
 
-    else if ( geometry == geometry_spherical .and. topology == topology_fully_periodic ) then
+    else if ( geometry == geometry_spherical .and. &
+              topology == topology_fully_periodic ) then
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -316,16 +322,15 @@ contains
 
     if ( geometry == geometry_spherical .and. &
          topology == topology_fully_periodic ) then
-      ! The following code assumes that the mesh generator has ordered the global cell ids panel-by-panel.
-      ! If this is ever not the case, the code will produce an incorrect panel_id.
+
+      ! The following code assumes that the mesh generator has ordered the
+      ! global cell ids panel-by-panel. If this is ever not the case, the
+      ! code will produce an incorrect panel_id.
       do k = 0, nlayers-1
         vert = map_pid(1) + k
         panel_id(vert) = real(1+int( (global_dof_id(vert)-1)/panel_ncells , i_def), r_def)
       end do
 
-    else
-      ! Set all panel_ids to 1
-      panel_id(map_pid(1):map_pid(1)+nlayers-1) = 1.0_r_def
     end if
 
   end subroutine calc_panel_id
@@ -512,7 +517,14 @@ contains
     real(kind=r_def) :: v_xyz(3), v_a, v_b, v_r
     real(kind=r_def) :: vertex_local_coords(3,nverts)
 
-    panel = int(panel_id(map_pid(1)))
+    if ( any(map_pid < 0) ) then
+      write(log_scratch_space,'(A)' ) &
+        'Cell map is pointing off domain'
+      call log_event(log_scratch_space, log_level_error)
+      return
+    else
+      panel = int(panel_id(map_pid(1)))
+    end if
 
     ! Compute the representation of the coordinate field
     do k = 0, nlayers-1

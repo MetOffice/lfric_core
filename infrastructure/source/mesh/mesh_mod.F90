@@ -1812,13 +1812,15 @@ contains
                                     'get_last_halo_cell_any'
     integer(i_def)             :: last_halo_cell
 
-    ! Check arguments, which will abort if out of bounds
-    call bounds_check (self, function_name, depth=depth )
-    if (depth == 0) then
+
+    if (depth == 0 .or. &
+        self%get_halo_depth() == 0) then
       ! The zeroth depth halo has no size, so its last cell is in the
       ! same place as the last edge cell
       last_halo_cell = self%local_mesh%get_last_edge_cell()
     else
+      ! Check arguments, which will abort if out of bounds
+      call bounds_check (self, function_name, depth=depth )
       last_halo_cell = self%local_mesh%get_last_halo_cell(depth)
     end if
 

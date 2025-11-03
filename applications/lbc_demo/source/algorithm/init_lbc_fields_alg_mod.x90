@@ -1,0 +1,248 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> @brief Initialisation lbc fields for the lbc_demo application
+!> @details
+!>
+module init_lbc_fields_alg_mod
+
+  ! Constants
+  use constants_mod, only: i_def, r_def, str_def, l_def
+
+  ! Variables
+  use mesh_collection_mod, only: mesh_collection
+
+  ! Object types
+  use driver_modeldb_mod,            only: modeldb_type
+  use field_collection_iterator_mod, only: field_collection_iterator_type
+
+  use field_collection_mod,  only: field_collection_type
+  use field_mod,             only: field_type
+  use field_parent_mod,      only: field_parent_type
+  use function_space_mod,    only: function_space_type
+  use integer_field_mod,     only: integer_field_type
+  use inventory_by_mesh_mod, only: inventory_by_mesh_type
+  use mesh_mod,              only: mesh_type
+  use namelist_mod,          only: namelist_type
+
+  ! Kernels
+  use set_lbc_int_kernel_mod,  only: set_lbc_int_kernel_type
+  use set_lbc_real_kernel_mod, only: set_lbc_real_kernel_type
+
+  ! Procedures
+  use create_field_set_mod, only: create_field_set
+  use field_parent_mod,     only: write_interface, read_interface
+  use lfric_xios_read_mod,  only: read_field_generic
+  use lfric_xios_write_mod, only: write_field_generic
+
+  ! Configuration modules
+  use lbc_demo_config_mod, only: lbc_source_file,     &
+                                 lbc_source_analytic, &
+                                 set_lbc_constant,    &
+                                 set_lbc_quadrant
+
+  implicit none
+
+  contains
+
+  !> @details Initialises LBC fields for lbc_demo
+  !> @param[in]     mesh           LAM mesh
+  !> @param[in]     chi_inventory
+  !> @param[in,out] modeldb        Model state object
+  subroutine init_lbc_fields( mesh, chi_inventory, modeldb )
+
+    implicit none
+
+    type(mesh_type), pointer,     intent(in)    :: mesh
+    type(inventory_by_mesh_type), intent(in)    :: chi_inventory
+    type(modeldb_type),           intent(inout) :: modeldb
+
+    ! Coordinate field
+    type(field_type),         pointer :: chi(:)
+    type(field_type),         pointer :: tmp_real_field
+    type(integer_field_type), pointer :: tmp_int_field
+
+    type( field_collection_type ), pointer :: fld_collection
+    class(field_parent_type),      pointer :: field
+    type(mesh_type),               pointer :: lbc_mesh
+
+    procedure(write_interface), pointer :: tmp_write_ptr
+    procedure(read_interface),  pointer :: tmp_read_ptr
+
+    integer(i_def) :: set_lbc
+
+    logical :: use_xios_io
+    logical :: write_diag
+
+    logical :: enable_lbc
+    logical :: write_lbc
+    logical :: read_lbc
+
+    character(str_def) :: lbc_mesh_name
+
+    integer(i_def) ::  lbc_source
+    integer(i_def) ::  geometry
+    integer(i_def) ::  ndata
+    logical(l_def) ::  ndata_first
+
+    type( field_collection_iterator_type) :: iter
+
+    character(*),   parameter :: field_collection_name = 'lbc'
+    real(r_def),    parameter :: lbc_real_value = 1.0_r_def
+    integer(i_def), parameter :: lbc_int_value  = 2_i_def
+
+    type(function_space_type), pointer :: fs
+
+    type(namelist_type), pointer :: base_mesh_nml
+    type(namelist_type), pointer :: finite_element_nml
+    type(namelist_type), pointer :: lbc_demo_nml
+    type(namelist_type), pointer :: io_nml
+
+    base_mesh_nml      => modeldb%configuration%get_namelist('base_mesh')
+    finite_element_nml => modeldb%configuration%get_namelist('finite_element')
+    io_nml             => modeldb%configuration%get_namelist('io')
+    lbc_demo_nml       => modeldb%configuration%get_namelist('lbc_demo')
+
+    call base_mesh_nml%get_value( 'geometry', geometry)
+    call io_nml%get_value( 'use_xios_io', use_xios_io)
+    call io_nml%get_value( 'write_diag', write_diag)
+
+    call lbc_demo_nml%get_value( 'enable_lbc', enable_lbc )
+    call lbc_demo_nml%get_value( 'lbc_source', lbc_source )
+    call lbc_demo_nml%get_value( 'set_lbc', set_lbc )
+    call lbc_demo_nml%get_value( 'write_lbc', write_lbc )
+    call lbc_demo_nml%get_value( 'read_lbc', read_lbc )
+
+    lbc_mesh_name = trim(mesh%get_mesh_name())//'-lbc'
+
+    ! This code is assumed to only work with lbc meshes.
+    ! As such there is a possibility that this rank partition
+    ! may not contain any cells on the LBC mesh
+    lbc_mesh => mesh_collection%get_mesh(lbc_mesh_name)
+    if (.not. associated(lbc_mesh)) then
+      ! This partition contains no LBC cells
+      return
+    end if
+
+    fld_collection => &
+        modeldb%fields%get_field_collection( field_collection_name )
+
+    !=====================================
+    ! Create an LBC field
+    !=====================================
+    call create_field_set( fld_collection, lbc_mesh, modeldb%configuration )
+
+    !=====================================
+    ! Set up field with an IO behaviour
+    ! (XIOS only at present)
+    !=====================================
+    if ( write_diag .and. use_xios_io ) then
+      tmp_write_ptr => write_field_generic
+      tmp_read_ptr  => read_field_generic
+    else
+      tmp_write_ptr => null()
+      tmp_read_ptr  => null()
+    end if
+
+    !=====================================
+    ! LBC field data initilisation
+    !=====================================
+    call iter%initialise( fld_collection )
+    nullify(field)
+    do ! Iterate over fields
+
+      if ( iter%has_next() ) then
+        field => iter%next()
+      else
+        exit
+      end if
+
+
+      select type (field)
+
+      type is (field_type)
+        !=============================
+        ! Real LBC Fields
+        !=============================
+        tmp_real_field => field
+        call tmp_real_field%set_write_behaviour(tmp_write_ptr)
+        call tmp_real_field%set_read_behaviour(tmp_read_ptr)
+
+        select case (lbc_source)
+
+        case (lbc_source_file)
+          ! This is the one still to be written
+
+        case (lbc_source_analytic)
+          ! Initialising the field from within the application
+
+          select case (set_lbc)
+
+          case (set_lbc_constant)
+            call invoke( setval_c(tmp_real_field, lbc_real_value) )
+
+          case (set_lbc_quadrant)
+            ! Initialise the 3D-LBC fields based on the DoF coordinates
+            ! with repsect to (0,0). This should allow confirmation
+            ! that the LBC has been applied with the correct orientation.
+            call chi_inventory%get_field_array(lbc_mesh, chi)
+
+            fs => tmp_real_field%get_function_space()
+            ndata       = fs%get_ndata()
+            ndata_first = fs%is_ndata_first()
+            call invoke( set_lbc_real_kernel_type(ndata, ndata_first, &
+                                                  tmp_real_field,     &
+                                                  geometry, chi) )
+
+          end select ! set_lbc
+
+        end select ! lbc_source
+
+
+      type is (integer_field_type)
+        !=============================
+        ! Integer LBC Fields
+        !=============================
+        tmp_int_field => field
+        call tmp_int_field%set_write_behaviour(tmp_write_ptr)
+
+        select case (lbc_source)
+
+        case (lbc_source_file)
+          ! This is the one still to be written
+
+        case (lbc_source_analytic)
+          ! Initialising the field from within the application
+
+          select case (set_lbc)
+
+          case (set_lbc_constant)
+            call invoke( int_setval_c(tmp_int_field, lbc_int_value) )
+
+          case (set_lbc_quadrant)
+            ! Initialise the 3D-LBC fields based on the DoF coordinates
+            ! with repsect to (0,0). This should allow confirmation
+            ! that the LBC has been applied with the correct orientation.
+            call chi_inventory%get_field_array(lbc_mesh, chi)
+
+            fs => tmp_int_field%get_function_space()
+            ndata       = fs%get_ndata()
+            ndata_first = fs%is_ndata_first()
+
+            call invoke( set_lbc_int_kernel_type(ndata, ndata_first, &
+                                                 tmp_int_field,      &
+                                                 geometry, chi) )
+
+          end select ! set_lbc
+
+        end select ! lbc_source
+
+      end select ! field
+
+    end do ! Iterate over fields
+
+  end subroutine init_lbc_fields
+
+  end module init_lbc_fields_alg_mod

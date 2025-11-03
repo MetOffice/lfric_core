@@ -1,0 +1,115 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> @brief Initialise lam fields for the lbc_demo application
+!> @details
+!>
+module init_lam_fields_alg_mod
+
+  ! Constants
+  use constants_mod, only: i_def, r_def, str_def
+
+  ! Object types
+  use driver_modeldb_mod,            only: modeldb_type
+  use field_collection_iterator_mod, only: field_collection_iterator_type
+
+  use field_collection_mod, only: field_collection_type
+  use field_mod,            only: field_type
+  use field_parent_mod,     only: field_parent_type
+  use integer_field_mod,    only: integer_field_type
+  use mesh_mod,             only: mesh_type
+  use namelist_mod,         only: namelist_type
+
+  ! Procedures
+  use create_field_set_mod, only: create_field_set
+  use field_parent_mod,     only: write_interface, read_interface
+  use lfric_xios_write_mod, only: write_field_generic
+
+  implicit none
+
+contains
+
+!> @details Initialises LAM fields for lbc_demo
+!> @param[in]     mesh     LAM mesh
+!> @param[in,out] modeldb  Model state object
+subroutine init_lam_fields( mesh, modeldb )
+
+  implicit none
+
+  type(mesh_type), pointer, intent(in)    :: mesh
+  type(modeldb_type),       intent(inout) :: modeldb
+
+  type( field_collection_type ), pointer :: fld_collection
+
+  class(field_parent_type), pointer :: field
+  type(field_type),         pointer :: tmp_real_field
+  type(integer_field_type), pointer :: tmp_int_field
+  type(namelist_type),      pointer :: io_nml
+
+  logical :: use_xios_io
+  logical :: write_diag
+  type( field_collection_iterator_type) :: iter
+
+  procedure(write_interface), pointer :: tmp_write_ptr
+
+  character(*),   parameter :: field_collection_name = 'depository'
+  real(r_def),    parameter :: lam_real_value = 9.0_r_def
+  integer(i_def), parameter :: lam_int_value  = 9_i_def
+
+  io_nml => modeldb%configuration%get_namelist('io')
+
+  call io_nml%get_value('write_diag', write_diag)
+  call io_nml%get_value('use_xios_io', use_xios_io)
+
+  fld_collection => modeldb%fields%get_field_collection( field_collection_name )
+
+  !=====================================
+  ! Create LAM fields
+  !=====================================
+  call create_field_set( fld_collection, mesh, modeldb%configuration )
+
+  !=====================================
+  ! Set up field with an IO behaviour
+  ! (XIOS only at present)
+  !=====================================
+  if ( write_diag .and. use_xios_io ) then
+      tmp_write_ptr => write_field_generic
+  else
+      tmp_write_ptr => null()
+  end if
+
+  !=====================================
+  ! LAM field data initilisation
+  !=====================================
+  call iter%initialise( fld_collection )
+  nullify(field)
+
+  do
+
+    if ( iter%has_next() ) then
+      field => iter%next()
+    else
+      exit
+    end if
+
+    select type (field)
+
+    type is (field_type)
+      tmp_real_field => field
+      call tmp_real_field%set_write_behaviour(tmp_write_ptr)
+      call invoke( setval_c(tmp_real_field, lam_real_value) )
+
+    type is (integer_field_type)
+      tmp_int_field => field
+      call tmp_int_field%set_write_behaviour(tmp_write_ptr)
+      call invoke( int_setval_c(tmp_int_field, lam_int_value) )
+
+    end select
+
+  end do
+
+end subroutine init_lam_fields
+
+end module init_lam_fields_alg_mod

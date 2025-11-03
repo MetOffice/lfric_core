@@ -1,0 +1,7 @@
+<axis_definition>
+  <axis id="vert_axis_half_levels" name="half_levels"/>
+  <axis id="vert_axis_full_levels" name="full_levels"/>
+  <axis id="multi_data_axis"       name="multi_data_axis" n_glo="2"/>
+
+  <axis id="radiation_levels" name="radiation_levels"/>
+</axis_definition>

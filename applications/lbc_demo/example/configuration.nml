@@ -1,0 +1,74 @@
+&base_mesh
+f_lat_deg=45.0,
+file_prefix='lbc_demo_mesh',
+fplane=.false.,
+geometry='spherical',
+prepartitioned=.true.,
+prime_mesh_name='primary',
+topology='non_periodic',
+/
+
+&extrusion
+domain_height=1000.0,
+method='uniform',
+number_of_layers=3,
+planet_radius=2000.0,
+/
+
+&finite_element
+cellshape='quadrilateral',
+coord_order=1,
+coord_system='native',
+element_order_h=0,
+element_order_v=0,
+rehabilitate=.true.,
+/
+
+&io
+checkpoint_read=.false.,
+checkpoint_write=.false.,
+counter_output_suffix='counter.txt',
+diagnostic_frequency=1,
+file_convention='UGRID',
+subroutine_counters=.false.,
+subroutine_timers=.false.,
+timer_output_path='timer.txt',
+use_xios_io=.true.,
+write_diag=.true.,
+/
+
+
+# Fails in attempting to write lbcs
+# without modified nodal_coordinates_kernel psy_layer
+# requires further work.
+&lbc_demo
+enable_lbc = .true.,
+apply_lbc  = .true.,
+write_lbc  = .false.,
+read_lbc   = .false.,
+lbc_source = 'analytic',
+set_lbc    = 'quadrant',
+field_type = 'real',
+/
+
+&logging
+run_log_level='info',
+/
+
+&planet
+scaling_factor=125.0,
+/
+
+&time
+calendar='timestep'
+calendar_origin='2016-01-01 15:00:00'
+calendar_start='2016-01-01 15:00:00'
+calendar_type='gregorian'
+timestep_end='2'
+timestep_start='1'
+/
+
+&timestepping
+dt=1.0,
+spinup_period=0.0,
+/

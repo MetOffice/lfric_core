@@ -32,7 +32,7 @@ module field_{{kind}}_mod
                                   perform_halo_exchange, &
                                   perform_halo_exchange_start, &
                                   perform_halo_exchange_finish
-
+  use mesh_mod,             only: mesh_type
   use log_mod,              only: log_event, &
                                   log_scratch_space, &
                                   log_level, &
@@ -266,12 +266,16 @@ contains
 
     character(str_def) :: local_name
 
+    type(mesh_type), pointer :: mesh
+
     ! Defines whether to halt when signalling numbers are experienced
     logical :: halt_mode
     ! The signalling number
     {{type}}({{kind}}) :: signalling_value
     ! Depth of halo to allocate data array
     integer(i_def) :: field_halo_depth
+
+    mesh => null()
 
     if ( present(name) ) then
       local_name = name
@@ -286,7 +290,10 @@ contains
         field_halo_depth = halo_depth
       end if
     else
-      field_halo_depth = default_halo_depth
+      ! Check that the mesh this function space uses has halos
+      mesh => vector_space%get_mesh()
+      field_halo_depth = min( default_halo_depth, &
+                              mesh%get_halo_depth() )
     end if
 
     ! In case the field is already initialised, destruct it ready for

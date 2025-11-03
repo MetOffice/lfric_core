@@ -15,43 +15,6 @@ module sci_psykal_builtin_light_mod
 
 contains
 
-  !---------------------------------------------------------------------
-  subroutine invoke_convert_cart2sphere_vector( field, coords)
-    use coord_transform_mod, only: cart2sphere_scalar
-    implicit none
-    type(field_type), intent(inout) :: field(3)
-    type(field_type), intent(in)    :: coords(3)
-
-    type(field_proxy_type) :: f_p(3), x_p(3)
-
-    integer :: i, df, undf
-
-    do i = 1,3
-      f_p(i) = field(i)%get_proxy()
-      x_p(i) = coords(i)%get_proxy()
-    end do
-
-    undf = f_p(1)%vspace%get_last_dof_annexed()
-
-!Please see PSyclone issues #1351 regarding this implementation
-!$omp parallel default(none)                                           &
-!$omp private(df)                                                      &
-!$omp shared(undf,f_p,x_p)
-!$omp do schedule(static)
-    do df = 1, undf
-        call cart2sphere_scalar(                                       &
-           x_p(1)%data(df), x_p(2)%data(df), x_p(3)%data(df) ,         &
-           f_p(1)%data(df), f_p(2)%data(df), f_p(3)%data(df) )
-    end do
-!$omp end do
-!$omp end parallel
-
-    call f_p(1)%set_dirty()
-    call f_p(2)%set_dirty()
-    call f_p(3)%set_dirty()
-
-  end subroutine invoke_convert_cart2sphere_vector
-
   !--------------------------------------------------------------------
   subroutine invoke_pointwise_convert_xyz2llr( coords)
     use coord_transform_mod, only: xyz2llr

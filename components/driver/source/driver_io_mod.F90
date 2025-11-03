@@ -21,7 +21,6 @@ module driver_io_mod
   use inventory_by_mesh_mod,   only: inventory_by_mesh_type
   use io_context_collection_mod, only: io_context_collection_type
   use io_context_mod,          only: io_context_type, callback_clock_arg
-  use io_config_mod,           only: use_xios_io, subroutine_timers
   use log_mod,                 only: log_event, log_level_error, &
                                      log_level_trace, log_level_info, &
                                      log_scratch_space
@@ -33,6 +32,7 @@ module driver_io_mod
   use mesh_mod,                only: mesh_type
   use mesh_collection_mod,     only: mesh_collection
   use model_clock_mod,         only: model_clock_type
+  use namelist_mod,            only: namelist_type
 
   implicit none
 
@@ -86,6 +86,13 @@ contains
     procedure(callback_clock_arg), optional         :: before_close
 
     procedure(callback_clock_arg), pointer :: before_close_ptr
+
+    type(namelist_type), pointer :: io_nml
+
+    logical :: use_xios_io
+
+    io_nml => modeldb%configuration%get_namelist('io')
+    call io_nml%get_value( 'use_xios_io', use_xios_io )
 
     ! Allocate IO context type based on model configuration
     if ( use_xios_io ) then
@@ -177,20 +184,40 @@ contains
                    pointer, optional,    intent(in)    :: populate_filelist
     character(len=str_def), optional,    intent(in)    :: alt_mesh_names(:)
 
-    type(mesh_type),                  pointer       :: mesh => null()
-    type(field_type),                 pointer       :: chi(:) => null()
-    type(field_type),                 pointer       :: panel_id => null()
-    type(field_type),                 pointer       :: alt_chi_ptr(:) => null()
-    type(field_type),                 pointer       :: alt_panel_id_ptr => null()
-    type(field_type),                 allocatable   :: alt_coords(:,:)
-    type(field_type),                 allocatable   :: alt_panel_ids(:)
-    integer(kind=i_def)                             :: num_meshes, i, j
-    type(lfric_xios_context_type)                   :: tmp_io_context
-    type(lfric_xios_context_type), pointer          :: io_context
-    class(event_actor_type), pointer                 :: event_actor_ptr
+    type(mesh_type),  pointer     :: mesh
+    type(field_type), pointer     :: chi(:)
+    type(field_type), pointer     :: panel_id
+    type(field_type), pointer     :: alt_chi_ptr(:)
+    type(field_type), pointer     :: alt_panel_id_ptr
+    type(field_type), allocatable :: alt_coords(:,:)
+    type(field_type), allocatable :: alt_panel_ids(:)
+
+    type(lfric_xios_context_type)          :: tmp_io_context
+    type(lfric_xios_context_type), pointer :: io_context
+    class(event_actor_type),       pointer :: event_actor_ptr
 
     type(linked_list_type), pointer :: file_list
     procedure(event_action), pointer :: context_advance
+
+    integer(i_def) :: num_meshes, i, j
+
+    type(namelist_type), pointer :: io_nml
+    logical :: subroutine_timers
+
+    io_nml => modeldb%configuration%get_namelist('io')
+    call io_nml%get_value( 'subroutine_timers', subroutine_timers )
+
+    subroutine_timers = .false.
+
+    mesh             => null()
+    chi              => null()
+    panel_id         => null()
+    alt_chi_ptr      => null()
+    alt_panel_id_ptr => null()
+
+    mesh => mesh_collection%get_mesh(mesh_name)
+
+    !==============================================================
 
     call tmp_io_context%initialise(context_name)
     call modeldb%io_contexts%add_context(tmp_io_context)
@@ -205,10 +232,20 @@ contains
     end if
     call io_context%set_timer_flag(subroutine_timers)
 
-    ! Get coordinate fields for mesh
-    mesh => mesh_collection%get_mesh(mesh_name)
-    call chi_inventory%get_field_array(mesh, chi)
-    call panel_id_inventory%get_field(mesh, panel_id)
+    ! ===============================
+    ! Check that a mesh exists
+    ! ===============================
+
+    if (associated(mesh)) then
+      call chi_inventory%get_field_array(mesh, chi)
+      call panel_id_inventory%get_field(mesh, panel_id)
+    else
+      write(log_scratch_space,'(A)') trim(mesh_name) // &
+          'mesh not associated, skipping xios io ' //   &
+          'initialisation of this mesh for this partition.'
+      call log_event(log_scratch_space, log_level_info)
+      return
+    end if
 
     ! Unpack alternative meshes and get their coordinates to pass to I/O
     if (present(alt_mesh_names)) then
@@ -232,7 +269,8 @@ contains
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
                                                before_close,           &
-                                               alt_coords, alt_panel_ids )
+                                               alt_coords,             &
+                                               alt_panel_ids )
       deallocate(alt_coords)
       deallocate(alt_panel_ids)
     else

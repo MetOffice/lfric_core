@@ -42,6 +42,7 @@ class local_mesh_mod::local_mesh_type {
   -num_ghost:          integer
   -last_ghost_cell:    integer
   -max_stencil_depth:  integer
+  -lbc_mesh:           logical
 
   -ntarget_meshes:     integer
   -target_mesh_names:  string[:] <<allocatable>>

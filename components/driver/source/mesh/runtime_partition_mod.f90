@@ -24,6 +24,7 @@ module runtime_partition_mod
                            partitioner_cubedsphere_serial, &
                            partitioner_cubedsphere,        &
                            partitioner_planar
+  use sci_query_mod, only: is_lbc
 
   use panel_decomposition_mod, only: panel_decomposition_type
 
@@ -156,9 +157,12 @@ subroutine create_local_mesh( mesh_names,              &
     ! Create local_mesh
     call local_mesh%initialise( global_mesh_ptr, partition )
 
-    ! Make sure the local_mesh cell owner lookup is correct
-    ! (Can only be done when the code is running on its full set of MPI tasks)
-    call local_mesh%init_cell_owner()
+    if ( .not. is_lbc(local_mesh) ) then
+      ! Make sure the local_mesh cell owner lookup is correct
+      ! (Can only be done when the code is running on its full set of MPI tasks)
+      call local_mesh%init_cell_owner()
+    end if
+
     local_mesh_id = local_mesh_collection%add_new_local_mesh( local_mesh )
 
   end do

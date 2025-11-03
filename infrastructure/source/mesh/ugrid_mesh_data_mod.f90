@@ -143,6 +143,8 @@ module ugrid_mesh_data_mod
     !> Cell(LID)-Edge(GIDs) connectivity of local mesh.
     integer(i_def), allocatable :: edge_on_cell_gid(:,:)
 
+    logical :: populated_with_mesh = .false.
+
   contains
     procedure, public :: read_from_file
     procedure, public :: set_by_ugrid_2d
@@ -150,7 +152,9 @@ module ugrid_mesh_data_mod
     procedure, public :: get_partition_data
     procedure, public :: is_local
 
+    procedure, public :: contains_mesh
     procedure, public :: clear
+
     final :: ugrid_mesh_data_destructor
 
   end type ugrid_mesh_data_type
@@ -187,13 +191,18 @@ contains
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
     call ugrid_2d%set_from_file_read( trim(global_mesh_name), trim(filename) )
-    call self%clear()
-    call self%set_by_ugrid_2d( ugrid_2d )
 
-    if (ugrid_2d%is_local()) then
-      self%mesh_extents = LOCAL_MESH_FLAG
-    else
-      self%mesh_extents = GLOBAL_MESH_FLAG
+    self%populated_with_mesh = .false.
+    if (ugrid_2d%contains_mesh()) then
+      call self%set_by_ugrid_2d( ugrid_2d )
+
+      if (ugrid_2d%is_local()) then
+        self%mesh_extents = LOCAL_MESH_FLAG
+      else
+        self%mesh_extents = GLOBAL_MESH_FLAG
+      end if
+
+      self%populated_with_mesh = .true.
     end if
 
     if (allocated(file_handler)) deallocate( file_handler )
@@ -487,9 +496,27 @@ contains
 
 
   !-------------------------------------------------------------------------------
+  !> @brief   Returns logical .true. if the object contains a valid mesh object
+  !> @return  Logical  .True. if a mesh is present.
+  !-------------------------------------------------------------------------------
+  function contains_mesh(self) result(answer)
+
+    implicit none
+
+    class(ugrid_mesh_data_type), intent(in)  :: self
+
+    logical :: answer
+
+    answer = self%populated_with_mesh
+
+    return
+  end function contains_mesh
+
+
+  !-------------------------------------------------------------------------------
   !> @brief   Returns logical to determine it current contents represents a global
   !>          or local mesh object.
-  !> @return  Logical  .True. if contents represent a logcal mesh.
+  !> @return  Logical  .True. if contents represent a local mesh.
   !-------------------------------------------------------------------------------
   function is_local(self) result(answer)
 

@@ -25,8 +25,8 @@
         [[[environment]]]
             BUILD_ROOT = ${TMPDIR}
             HYPERTHREADS    = 1
-            CORES_PER_NODE  = 1
-            NUMA_REGIONS_PER_NODE = 0
+            CORES_PER_NODE  = 128
+            NUMA_REGIONS_PER_NODE = 2
             ROSE_LAUNCHER = mpiexec
 
     [[AZSPICE_BUILD]]

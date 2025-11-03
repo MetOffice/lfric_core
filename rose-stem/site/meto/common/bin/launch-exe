@@ -42,17 +42,24 @@ fi
 
 # Construct XIOS server options
 #===========================================
-if [[ ! -z "${XIOS_SERVER_MODE}" && "${XIOS_SERVER_MODE}" = "True" ]] ; then
-  XIOS_CORES_PER_NODE="$(( (mpi_parts_xios+xios_nodes-1) / xios_nodes ))"
-  XIOS_CORES_PER_NUMA="$(( (XIOS_CORES_PER_NODE+NUMA_REGIONS_PER_NODE-1) / NUMA_REGIONS_PER_NODE ))"
-  XIOS_EXEC=" : -n ${XIOS_SERVER_RANKS} -S ${XIOS_CORES_PER_NUMA} ${XIOS_SERVER_EXEC_PATH}"
-else
-  XIOS_EXEC=""
+if [ "${RUN_METHOD}" = "mpiexec" ] ; then
+  if [[ ! -z "${XIOS_SERVER_MODE}" && "${XIOS_SERVER_MODE}" = "True" ]] ; then
+    if [ "${xios_nodes}" = "0" ] ; then
+      XIOS_OPTS=" : --np ${XIOS_SERVER_RANKS} "
+    else
+      XIOS_CORES_PER_NODE="$(( mpi_parts_xios / xios_nodes ))"
+      XIOS_OPTS=" : --np ${XIOS_SERVER_RANKS} --ppn ${XIOS_CORES_PER_NODE} "
+    fi
+  fi
+fi
+
+if [ -z "$XIOS_OPTS" ] ; then
+  XIOS_SERVER_EXEC_PATH=""
 fi
 
 # Launch the model
 #===========================================
-EXEC_COMMAND="${LAUNCHER} ${LAUNCHER_OPTS} ${EXEC_PATH} ${NAMELIST_FILE} ${XIOS_EXEC}"
+EXEC_COMMAND="${LAUNCHER} ${LAUNCHER_OPTS} ${EXEC_PATH} ${NAMELIST_FILE} ${XIOS_OPTS} ${XIOS_SERVER_EXEC_PATH}"
 
 echo Execute command is:
 echo ""

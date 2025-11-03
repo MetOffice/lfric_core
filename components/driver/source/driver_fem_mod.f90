@@ -69,7 +69,9 @@ contains
     type(function_space_type), pointer :: fs => null()
     integer(kind=i_def)                :: chi_space, coord, i
 
-    call log_event( 'FEM specifics: creating function spaces...', LOG_LEVEL_INFO )
+    character(str_def) :: mesh_name
+
+    call log_event( 'FEM specifics: creating function spaces...', log_level_info )
 
     ! ======================================================================== !
     ! Initialise coordinates
@@ -91,6 +93,7 @@ contains
 
     do i = 1, SIZE(all_mesh_names)
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
+      mesh_name = mesh%get_mesh_name()
 
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= TWOD) then
@@ -103,10 +106,14 @@ contains
         ! Initialise chi field object --------------------------------------------
         if ( coord_order == 0 ) then
           chi_space = W0
-          call log_event( "FEM specifics: Computing W0 coordinate fields", LOG_LEVEL_INFO )
+          write(log_scratch_space,'(A)') &
+              'Computing W0 coordinate fields for ' // trim(mesh_name) // 'mesh'
+          call log_event( log_scratch_space, log_level_info )
         else
           chi_space = Wchi
-          call log_event( "FEM specifics: Computing Wchi coordinate fields", LOG_LEVEL_INFO )
+          write(log_scratch_space,'(A)') &
+              'Computing Wchi coordinate fields for ' // trim(mesh_name) // 'mesh'
+          call log_event( log_scratch_space, log_level_info )
         end if
         fs => function_space_collection%get_fs(mesh, coord_order, coord_order, chi_space)
 
@@ -125,7 +132,7 @@ contains
       end if
     end do
 
-    call log_event( 'FEM specifics created', LOG_LEVEL_INFO )
+    call log_event( 'FEM specifics created', log_level_info )
 
   end subroutine init_fem
 

@@ -1,0 +1,43 @@
+!--------------------------------------------------------------------
+! Example namelist for LBC demo application
+!--------------------------------------------------------------------
+! This example namelist will result in a LAM mesh
+! partitioned into 3 partitions along the x-axis.
+!===================================================================
+&mesh
+  mesh_file_prefix = 'lbc_demo_mesh'
+  geometry         = 'spherical'
+  topology         = 'non_periodic'
+  n_meshes         = 1
+  mesh_names       = 'primary'
+  partition_mesh   = .true.
+  coord_sys        = 'll'
+  rotate_mesh      = .false.
+/
+
+&planar_mesh
+  edge_cells_x    = 30
+  edge_cells_y    = 30
+  domain_size     = 24.0, 22.0
+  domain_centre   = 0.0, 0.0
+  periodic_x      = .false.
+  periodic_y      = .false.
+  create_lbc_mesh = .true.
+  lbc_rim_depth   = 6
+  lbc_parent_mesh = 'primary'
+/
+
+&partitions
+  panel_decomposition = 'custom'
+  panel_xproc         = 3
+  panel_yproc         = 1
+  max_stencil_depth   = 2
+  n_partitions        = 3
+  partition_range     = 0, 2
+/
+
+&rotation
+  rotation_target    = "null_island"
+  target_null_island = 0.0, 45.0
+  target_north_pole  = 0.0, 45.0
+/

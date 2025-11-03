@@ -17,9 +17,8 @@ module lfric_xios_context_mod
   use io_context_mod,       only : io_context_type, callback_clock_arg
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use lfric_mpi_mod,        only : lfric_comm_type
-  use log_mod,              only : log_event, log_scratch_space,      &
-                                   log_level_error, &
-                                   log_level_info
+  use log_mod,              only : log_event, log_scratch_space, &
+                                   log_level_error, log_level_debug
   use lfric_xios_setup_mod, only : init_xios_calendar,   &
                                    init_xios_dimensions, &
                                    setup_xios_files
@@ -44,11 +43,12 @@ module lfric_xios_context_mod
   type, public, extends(io_context_type) :: lfric_xios_context_type
     private
 
-    type(xios_context)                        :: handle
-    type(linked_list_type)                    :: filelist
-    integer(i_def)                            :: context_clock_step = 1_i_def
-    logical                                   :: uses_timer = .false.
-    logical                                   :: xios_context_initialised = .false.
+    type(xios_context)     :: handle
+    type(linked_list_type) :: filelist
+    integer(i_def)         :: context_clock_step = 1_i_def
+
+    logical :: uses_timer = .false.
+    logical :: xios_context_initialised = .false.
 
   contains
     private
@@ -90,11 +90,13 @@ contains
   !> @param [in]     before_close      Routine to be called before context closes
   !> @param [in]     alt_coords        Array of coordinate fields for alternative meshes
   !> @param [in]     alt_panel_ids     Panel ID fields for alternative meshes
-  subroutine initialise_xios_context( this, communicator,              &
-                                      chi, panel_id,                   &
-                                      model_clock, calendar,           &
-                                      before_close,                    &
-                                      alt_coords, alt_panel_ids, start_at_zero )
+  subroutine initialise_xios_context( this, communicator,    &
+                                      chi, panel_id,         &
+                                      model_clock, calendar, &
+                                      before_close,          &
+                                      alt_coords,            &
+                                      alt_panel_ids,         &
+                                      start_at_zero )
 
     implicit none
 
@@ -114,10 +116,11 @@ contains
     type(lfric_xios_file_type),  pointer :: file => null()
     logical :: zero_start
 
-    write(log_scratch_space, "(A)") "Initialising XIOS context: " // this%get_context_name()
-    call log_event(log_scratch_space, LOG_LEVEL_INFO)
+    write(log_scratch_space, "(A)") &
+        "Initialising XIOS context: " // this%get_context_name()
+    call log_event(log_scratch_space, log_level_debug)
 
-    if(present(start_at_zero)) then
+    if (present(start_at_zero)) then
       zero_start = start_at_zero
     else
       zero_start = .false.
@@ -191,7 +194,7 @@ contains
       ! Finalise the XIOS context - all data will be written to disk and files
       ! will be closed.
       write(log_scratch_space, "(A)") "Finalising XIOS context: " // this%get_context_name()
-      call log_event(log_scratch_space, LOG_LEVEL_INFO)
+      call log_event(log_scratch_space, log_level_debug)
       call xios_context_finalize()
 
       ! We have closed the context on our end, but we need to make sure that XIOS

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation>
+
+  <context id = "lbc_demo:diags">
+    <axis_definition  src="../metadata/axis_dictionary.xml"/>
+    <grid_definition  src="../metadata/grid_dictionary.xml"/>
+    <field_definition src="../metadata/field_dictionary.xml"/>
+
+    <file_definition type="one_file" time_counter="none">
+      <file id="diagnostics" name="diagnostics" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+
+        <field field_ref="w3_field" />
+        <field field_ref="w0_field" />
+        <field field_ref="w2h_field" />
+        <field field_ref="w2v_field" />
+        <field field_ref="wtheta_field" />
+
+        <field field_ref="w3_2d_field" />
+        <field field_ref="multi_data_field" />
+
+      </file>
+    </file_definition>
+  </context>
+
+
+  <context id = "lbc_demo:lbcs">
+    <axis_definition  src="../metadata/axis_dictionary.xml"/>
+    <grid_definition  src="../metadata/grid_dictionary.xml"/>
+    <field_definition src="../metadata/field_dictionary.xml"/>
+
+    <file_definition type="one_file" time_counter="none">
+      <file id="lbcs_out" name="lbcs_out" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+
+        <field field_ref="w3_field:lbc" />
+        <field field_ref="w0_field:lbc" />
+        <field field_ref="w2h_field:lbc" />
+        <field field_ref="w2v_field:lbc" />
+        <field field_ref="wtheta_field:lbc" />
+
+        <field field_ref="w3_2d_field:lbc" />
+        <field field_ref="multi_data_field:lbc" />
+
+      </file>
+    </file_definition>
+  </context>
+
+  <context id = "xios">
+    <variable_definition>
+      <variable_group id = "buffer">
+        <variable id = "optimal_buffer_size" type = "string" >performance</variable>
+        <variable id = "buffer_factor_size" type = "double" >1.0</variable>
+      </variable_group>
+
+      <variable_group id = "parameters" >
+        <variable id = "using_server" type = "bool" >true</variable>
+        <variable id = "info_level" type = "int" >50</variable>
+        <variable id = "print_file" type="bool">true</variable>
+      </variable_group>
+    </variable_definition>
+  </context>
+
+</simulation>

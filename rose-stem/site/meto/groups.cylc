@@ -66,5 +66,6 @@
 {% include "site/meto/groups/group_science.cylc" %}
 {% include "site/meto/groups/group_skeleton.cylc" %}
 {% include "site/meto/groups/group_simple_diffusion.cylc" %}
+{% include "site/meto/groups/group_lbc_demo.cylc" %}
 
 {% do LOG.debug("Finished in site/meto/groups.cylc") %}

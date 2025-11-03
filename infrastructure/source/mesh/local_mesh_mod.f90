@@ -649,14 +649,20 @@ contains
   ! cell is on the outer edge of domain.
   integer(i_def) :: no_cell_next
 
-  nullify( global_lbc_mesh_maps )
-  nullify( global_lbc_mesh_map )
-
   !     0000000000000000000000
   !     0+------------------+0
   !     0|  LBC Rim Cells   |0
   !     0| +--------------+ |0
   !     0| | no_cell_next | |0
+
+  integer(i_def) :: node_lid
+  integer(i_def) :: node_gid
+  integer(i_def) :: edge_lid
+  integer(i_def) :: edge_gid
+  integer(i_def) :: cell_owner_gid
+
+  nullify( global_lbc_mesh_maps )
+  nullify( global_lbc_mesh_map )
 
   lam_no_cell_next = global_lam_mesh%get_void_cell()
   no_cell_next     = global_lbc_mesh%get_void_cell()
@@ -693,7 +699,7 @@ contains
   !
   self%last_ghost_cell    = imdi
   self%num_ghost          = 0_i_def
-  self%ncells_global_mesh = global_lam_mesh%get_ncells()
+  self%ncells_global_mesh = global_lbc_mesh%get_ncells()
 
   self%nedges_per_cell    = local_lam_mesh%get_nedges_per_cell()
   self%nverts_per_cell    = local_lam_mesh%get_nverts_per_cell()
@@ -753,6 +759,12 @@ contains
   local_lam_last_edge_cell = local_lam_mesh%get_last_edge_cell()
   n_layer_cells            = local_lam_mesh%get_num_cells_in_layer()
   n_ghost_cells            = local_lam_mesh%get_num_cells_ghost()
+
+  if ( .not. allocated(local_lam_gids) ) then
+    ! LAM partition has no global cells, though
+    ! this eventuality is unlikely.
+    return
+  end if
 
   allocate(tmp_lbc_gids(local_lam_last_edge_cell))
   allocate(tmp_lam_lids(local_lam_last_edge_cell))
@@ -835,7 +847,7 @@ contains
   !----------------------------------
   allocate( tmp_cell_next(self%nedges_per_cell) )
   allocate( self%cell_next(self%nedges_per_cell, self%last_edge_cell) )
-  self%num_edge = 0_i_def
+  self%num_edge = self%last_edge_cell
 
   do local_lbc_id=1, self%last_edge_cell
 
@@ -851,14 +863,6 @@ contains
     end do
 
     self%cell_next(:,local_lbc_id) = tmp_cell_next(:)
-
-    ! 4.2 Capture number of cells on the edge of partition.
-    !------------------------------------------------------
-    ! If any cell has a NO_CELL_NEXT it is then an
-    ! edge cell as the LBC local has no halos.
-    if ( any(self%cell_next(:,local_lbc_id) == no_cell_next) ) then
-      self%num_edge = self%num_edge + 1
-    end if
 
   end do
 
@@ -1013,26 +1017,53 @@ contains
   !       local LBC mesh.
   !======================================================================================
   allocate( self%vert_cell_owner(self%n_unique_vertices) )
+  self%vert_cell_owner(:) = -1
+
   do vert=1, self%n_unique_vertices
 
-    self%vert_cell_owner(vert) = &
-        self%get_lid_from_gid(   &
-            global_lbc_mesh%get_vert_cell_owner( vert_lbc_lid_gid_map(vert) ) )
+    ! A binary search will not work for a LBC mesh strategy. The cell numbering
+    ! for an LBC mesh is not laid out the same as cubedsphere/planar mesh
+    ! rectangular partitions on panels.
+    node_lid = vert
+    node_gid = vert_lbc_lid_gid_map( node_lid )
+
+    cell_owner_gid = global_lbc_mesh%get_vert_cell_owner( node_gid )
+
+    do i=1, size( self%global_cell_id )
+      if ( self%global_cell_id(i) == cell_owner_gid ) then
+        self%vert_cell_owner(vert) = i
+      end if
+    end do
 
     if ( self%vert_cell_owner(vert) == -1 ) then
       self%vert_cell_owner(vert) = self%void_cell
     end if
+
   end do
 
   allocate( self%edge_cell_owner(self%n_unique_edges) )
+  self%edge_cell_owner(:) = -1
+
   do edge=1, self%n_unique_edges
-    self%edge_cell_owner(edge) = &
-        self%get_lid_from_gid(   &
-            global_lbc_mesh%get_edge_cell_owner( edge_lbc_lid_gid_map(edge) ) )
+
+    ! A binary search will not work for a LBC mesh strategy. The cell numbering
+    ! for an LBC mesh is not laid out the same as cubedsphere/planar mesh
+    ! rectangular partitions on panels.
+    edge_lid = edge
+    edge_gid = edge_lbc_lid_gid_map( edge_lid )
+
+    cell_owner_gid = global_lbc_mesh%get_edge_cell_owner( edge_gid )
+
+    do i=1, size( self%global_cell_id )
+      if ( self%global_cell_id(i) == cell_owner_gid ) then
+        self%edge_cell_owner(edge) = i
+      end if
+    end do
 
     if ( self%edge_cell_owner(edge) == -1 ) then
       self%edge_cell_owner(edge) = self%void_cell
     end if
+
   end do
 
 
@@ -1123,7 +1154,6 @@ contains
     character(str_def)       :: topology_str
     character(str_def)       :: coord_sys_str
 
-
     if (.not. ugrid_mesh_data%is_local()) then
       call log_event( 'Insufficient data to initialise local mesh', &
                       LOG_LEVEL_ERROR )
@@ -1162,7 +1192,6 @@ contains
              self%cell_next,           &
              self%vert_on_cell,        &
              self%edge_on_cell )
-
 
     select case (trim(geometry_str))
     case ('spherical')
@@ -1389,6 +1418,7 @@ contains
   !> every processor has its halo cells filled with their owner id.
   !>
   subroutine init_cell_owner(self)
+
     use lfric_mpi_mod,     only: global_mpi
     use fs_continuity_mod, only: W3
 
@@ -1407,70 +1437,81 @@ contains
     nullify( halo_routing )
     nullify( cell_owner_ptr )
 
-    allocate( self%cell_owner(self%num_cells_in_layer+self%num_ghost) )
+    allocate( self%cell_owner( self%num_cells_in_layer + &
+                               self%num_ghost) )
     self%cell_owner = 0_i_def
-
-    ! Halo routines expect a 64-bit integer index - so convert global_cell_id.
-    allocate( cell_id(size(self%global_cell_id)) )
-    do i = 1, size(self%global_cell_id)
-      cell_id(i) = self%global_cell_id(i)
-    end do
 
     ! Work out the boundary between owned and halo cells.
     total_inners=0
     do i=1,self%inner_depth
-      total_inners=total_inners+self%num_inner(i)
+      total_inners = total_inners + self%num_inner(i)
     end do
-    last_owned_cell = total_inners+self%num_edge
-    halo_start(1)  = last_owned_cell + 1_i_def
-    halo_finish(1) = self%get_num_cells_in_layer()+self%get_num_cells_ghost()
-    ! The above assumes there is a halo cell following the last owned cell.
-    ! This might not be true (e.g. in a serial run), so fix the start/finish
-    ! points when that happens.
-    if(halo_start(1) > self%get_num_cells_in_layer())then
-      halo_start(1)  = self%get_num_cells_in_layer()
-      halo_finish(1) = self%get_num_cells_in_layer() - 1_i_def
-    end if
-
-    ! Set up a halo routing table for the cell owners data. Note this is
-    ! cell data rather than field dof data, The routing table is defined by
-    ! the first four arguments. The remaining arguments are used for finding the
-    ! correct routing table in a collection and are therefore not required here
-    ! as this is a one-use routing table. But to complete the argument list
-    ! the closest description of this data is that it is lowest order,
-    ! non-multidata, 32-bit integer, W3 data. As this is mesh data it's not
-    !'on' a mesh as such - so just pass a mesh_id of zero.
-    allocate(halo_routing)
-    halo_routing = halo_routing_type( global_dof_id    = cell_id,         &
-                                      last_owned_dof   = last_owned_cell, &
-                                      halo_start       = halo_start,      &
-                                      halo_finish      = halo_finish,     &
-                                      mesh_id          = 0_i_def,         &
-                                      element_order_h  = 0_i_def,         &
-                                      element_order_v  = 0_i_def,         &
-                                      lfric_fs         = W3,              &
-                                      ndata            = 1_i_def,         &
-                                      fortran_type     = integer_type,    &
-                                      fortran_kind     = i_def,           &
-                                      halo_depth       = self%halo_depth )
-
-    deallocate(cell_id)
+    last_owned_cell = total_inners + self%num_edge
 
     ! Set ownership of all inner and edge cells to the local rank id
     ! - halo cells are unset.
     local_rank = global_mpi%get_comm_rank()
-    do cell = 1,total_inners+self%num_edge
-      self%cell_owner(cell)=local_rank
+    do cell=1, last_owned_cell
+      self%cell_owner(cell) = local_rank
     end do
 
-    ! Perform the halo swap to depth 1.
-    cell_owner_ptr => self%cell_owner
-    call perform_halo_exchange( cell_owner_ptr, &
-                                halo_routing, &
-                                1_i_def )
+    ! Cell ownership is redundant if there are no halos
+    if (self%halo_depth > 0) then
+      if (sum(self%num_halo(:)) > 0) then
 
-    call halo_routing%clear()
-    deallocate(halo_routing)
+        ! Halo routines expect a 64-bit integer index,
+        ! so convert global_cell_id.
+        allocate( cell_id(size(self%global_cell_id)) )
+        do i = 1, size(self%global_cell_id)
+          cell_id(i) = self%global_cell_id(i)
+        end do
+
+        halo_start(1)  = last_owned_cell + 1_i_def
+        halo_finish(1) = self%get_num_cells_in_layer() &
+                       + self%get_num_cells_ghost()
+
+        ! The above assumes there is a halo cell following the
+        ! last owned cell. This might not be true (e.g. in a serial run),
+        ! so fix the start/finish points when that happens.
+        if (halo_start(1) > self%get_num_cells_in_layer()) then
+          halo_start(1)  = self%get_num_cells_in_layer()
+          halo_finish(1) = self%get_num_cells_in_layer() - 1_i_def
+        end if
+
+        ! Set up a halo routing table for the cell owners data. Note this is
+        ! cell data rather than field dof data, The routing table is defined
+        ! by the first four arguments. The remaining arguments are used for
+        ! finding the correct routing table in a collection and are therefore
+        ! not required here as this is a one-use routing table. But to
+        ! complete the argument list the closest description of this data is
+        ! that it is lowest order, non-multidata, 32-bit integer, W3 data.
+        ! As this is mesh data it's not 'on' a mesh as such, so just pass a
+        ! mesh_id of zero.
+        allocate(halo_routing)
+        halo_routing = halo_routing_type( global_dof_id   = cell_id, &
+                                          last_owned_dof  = last_owned_cell, &
+                                          halo_start      = halo_start, &
+                                          halo_finish     = halo_finish, &
+                                          mesh_id         = 0_i_def, &
+                                          element_order_h = 0_i_def, &
+                                          element_order_v = 0_i_def, &
+                                          lfric_fs        = W3, &
+                                          ndata           = 1_i_def, &
+                                          fortran_type    = integer_type, &
+                                          fortran_kind    = i_def, &
+                                          halo_depth      = self%halo_depth )
+
+        deallocate(cell_id)
+
+        ! Perform the halo swap to depth 1.
+        cell_owner_ptr => self%cell_owner
+        call perform_halo_exchange( cell_owner_ptr, &
+                                    halo_routing, &
+                                    1_i_def )
+        deallocate(halo_routing)
+
+      end if ! If there are any halo cells
+    end if ! If there are any halos
 
   end subroutine init_cell_owner
 
@@ -1688,6 +1729,7 @@ contains
     answer = ( self%coord_sys == xyz_coords )
 
   end function is_coord_sys_xyz
+
 
   !---------------------------------------------------------------------------
   !> @brief  Queries if the local mesh nodes are specified using Spherical
@@ -2114,9 +2156,10 @@ contains
     integer(i_def), intent(in) :: depth
     integer(i_def)             :: halo_cells
 
-    if( depth > self%halo_depth .or. depth < 1)then
-      halo_cells = 0
-    else
+    halo_cells = 0_i_def
+
+    if ( depth >= 1_i_def .and. &
+         depth <= self%halo_depth ) then
       halo_cells = self%num_halo(depth)
     end if
 
@@ -2142,15 +2185,14 @@ contains
     integer(i_def), intent(in) :: depth
     integer(i_def)             :: last_halo_cell
 
-    if ( depth > self%halo_depth .or. depth < 0 ) then
-      last_halo_cell = 0
-    else if (depth == 0) then
-      ! The zeroth depth halo has no size, so its last cell is in the
-      ! same place as the last edge cell.
-      last_halo_cell = self%get_last_edge_cell()
-    else
-      last_halo_cell = self%last_halo_cell(depth)
-    end if
+   ! The zeroth depth halo has no size, so its last cell is in the
+   ! same place as the last edge cell, use this as default.
+   last_halo_cell = self%get_last_edge_cell()
+
+   if ( depth >= 1_i_def .and. &
+        depth <= self%halo_depth ) then
+     last_halo_cell = self%last_halo_cell(depth)
+   end if
 
   end function get_last_halo_cell
 
@@ -2284,7 +2326,9 @@ contains
     integer(i_def), allocatable :: gids(:)
 
     if (allocated(gids)) deallocate(gids)
-    allocate( gids, source=self%global_cell_id )
+    if (allocated(self%global_cell_id)) then
+      allocate( gids, source=self%global_cell_id )
+    end if
 
   end function get_all_gid
 
@@ -2490,7 +2534,7 @@ contains
     character(str_def) :: coord_sys
     character(str_def) :: topology
     character(str_def) :: units_xy(2)
-    real(r_def)        :: factor
+    real(r_def)        :: factor, domain_out(2,4)
 
 
     if (self%is_geometry_spherical())    geometry  = 'spherical'
@@ -2520,29 +2564,68 @@ contains
       units_xy(:) = self%coord_units_xy(:)
     end if
 
-    call ugrid_2d%set_coords( node_coords         = factor * self%vert_coords, &
-                              north_pole          = factor * self%north_pole,  &
-                              null_island         = factor * self%null_island, &
-                              equatorial_latitude =                            &
-                                            factor * self%equatorial_latitude, &
-                              coord_sys           = coord_sys,                 &
-                              units_xy            = units_xy )
+    if (self%n_unique_vertices == 0) then
 
-    call ugrid_2d%set_connectivity( nodes_on_faces=self%vert_on_cell, &
-                                    edges_on_faces=self%edge_on_cell, &
-                                    faces_on_faces=self%cell_next,    &
-                                    nodes_on_edges=self%vert_on_edge, &
-                                    void_cell=self%void_cell )
+      call ugrid_2d%set_coords( north_pole  = factor * self%north_pole,  &
+                                null_island = factor * self%null_island, &
+                                equatorial_latitude =                    &
+                                    factor * self%equatorial_latitude,   &
+                                coord_sys   = coord_sys,                 &
+                                units_xy    = units_xy )
 
-    call ugrid_2d%set_partition_data( self%vert_cell_owner,  &
-                                      self%edge_cell_owner,  &
-                                      self%num_inner,        &
-                                      self%num_halo,         &
-                                      self%last_inner_cell,  &
-                                      self%last_halo_cell,   &
-                                      self%global_cell_id,   &
-                                      self%vert_on_cell_gid, &
-                                      self%edge_on_cell_gid )
+      call ugrid_2d%set_connectivity( nodes_on_faces=self%vert_on_cell, &
+                                      edges_on_faces=self%edge_on_cell, &
+                                      faces_on_faces=self%cell_next,    &
+                                      nodes_on_edges=self%vert_on_edge, &
+                                      void_cell=self%void_cell )
+
+      call ugrid_2d%set_partition_data( self%n_unique_vertices, &
+                                        self%n_unique_edges,    &
+                                        self%vert_cell_owner,   &
+                                        self%edge_cell_owner,   &
+                                        self%num_inner,         &
+                                        self%num_halo,          &
+                                        self%last_inner_cell,   &
+                                        self%last_halo_cell,    &
+                                        self%global_cell_id,    &
+                                        self%vert_on_cell_gid,  &
+                                        self%edge_on_cell_gid )
+
+    else
+
+      call ugrid_2d%set_coords( node_coords = factor * self%vert_coords, &
+                                north_pole  = factor * self%north_pole,  &
+                                null_island = factor * self%null_island, &
+                                equatorial_latitude =                    &
+                                    factor * self%equatorial_latitude,   &
+                                coord_sys   = coord_sys,                 &
+                                units_xy    = units_xy )
+
+      call ugrid_2d%set_connectivity( nodes_on_faces=self%vert_on_cell, &
+                                      edges_on_faces=self%edge_on_cell, &
+                                      faces_on_faces=self%cell_next,    &
+                                      nodes_on_edges=self%vert_on_edge, &
+                                      void_cell=self%void_cell )
+
+      call ugrid_2d%set_partition_data( self%n_unique_vertices, &
+                                        self%n_unique_edges,    &
+                                        self%vert_cell_owner,   &
+                                        self%edge_cell_owner,   &
+                                        self%num_inner,         &
+                                        self%num_halo,          &
+                                        self%last_inner_cell,   &
+                                        self%last_halo_cell,    &
+                                        self%global_cell_id,    &
+                                        self%vert_on_cell_gid,  &
+                                        self%edge_on_cell_gid )
+
+      if ( allocated(self%local_mesh_maps) ) then
+        call ugrid_2d%set_mesh_maps( self%local_mesh_maps )
+      end if
+
+    end if
+
+    domain_out = factor * self%domain_extents
 
     call ugrid_2d%set_metadata(                                &
               mesh_name          = self%mesh_name,             &
@@ -2552,7 +2635,7 @@ contains
               constructor_inputs = self%constructor_inputs,    &
               ncells_global_mesh = self%ncells_global_mesh,    &
               max_stencil_depth  = self%max_stencil_depth,     &
-              domain_extents     = factor*self%domain_extents, &
+              domain_extents     = domain_out,                 &
               rim_depth          = self%rim_depth,             &
               inner_depth        = self%inner_depth,           &
               halo_depth         = self%halo_depth,            &
@@ -2562,8 +2645,6 @@ contains
               last_ghost_cell    = self%last_ghost_cell,       &
               nmaps              = self%ntarget_meshes,        &
               target_mesh_names  = self%target_mesh_names )
-
-    call ugrid_2d%set_mesh_maps( self%local_mesh_maps )
 
     return
   end subroutine as_ugrid_2d

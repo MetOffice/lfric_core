@@ -1313,7 +1313,11 @@ contains
 
     integer(i_def) :: last_dof_halo
 
-    last_dof_halo = self%last_dof_halo(depth)
+    if (self%get_halo_depth() == 0_i_def) then
+      last_dof_halo = self%last_dof_annexed
+    else
+      last_dof_halo = self%last_dof_halo(depth)
+    end if
 
   end function get_last_dof_halo_any
 

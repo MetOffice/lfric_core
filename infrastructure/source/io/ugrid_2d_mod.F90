@@ -132,6 +132,8 @@ type, public :: ugrid_2d_type
   ! File handler
   class(ugrid_file_type), allocatable :: file_handler
 
+  logical :: populated_with_mesh = .false.
+
 contains
   procedure :: get_n_meshes
   procedure :: get_mesh_names
@@ -170,6 +172,7 @@ contains
   procedure :: set_partition_data
   procedure :: set_metadata
 
+  procedure :: contains_mesh
   procedure :: is_local
 
   !> Routine to destroy object
@@ -503,6 +506,12 @@ subroutine set_from_file_read(self, mesh_name, filename)
 
   call self%file_handler%file_open(trim(filename))
 
+  if (.not. self%file_handler%is_mesh_present(trim(mesh_name))) then
+    self%populated_with_mesh = .false.
+    call self%file_handler%file_close()
+    return
+  end if
+
   call self%file_handler%get_dimensions(                  &
        mesh_name              = self%mesh_name,           &
        num_nodes              = self%num_nodes,           &
@@ -540,6 +549,8 @@ subroutine set_from_file_read(self, mesh_name, filename)
 
 
   call self%file_handler%file_close()
+
+  self%populated_with_mesh = .true.
 
   return
 end subroutine set_from_file_read
@@ -896,6 +907,20 @@ function get_face_coords(self) result(face_coords)
 
   return
 end function get_face_coords
+
+
+function contains_mesh(self) result(answer)
+
+  implicit none
+
+  class(ugrid_2d_type), intent(in)  :: self
+
+  logical :: answer
+
+  answer = self%populated_with_mesh
+
+  return
+end function contains_mesh
 
 !-------------------------------------------------------------------------------
 !> @brief   Gets an array of node indices surrounding each face.
@@ -1333,6 +1358,8 @@ end subroutine set_connectivity
 !>              mesh partition they realte to. Partition data is not required
 !>              for UGRID mesh topology.
 !>
+!> @param[in] n_nodes           Number of nodes on this partition.
+!> @param[in] n_edges           Number of edges on this partition.
 !> @param[in] node_cell_owner   Cell ID that owns a given node.
 !> @param[in] edge_cell_owner   Cell ID that owns a given edge.
 !> @param[in] num_inner         Number cells in each inner layer.
@@ -1344,6 +1371,8 @@ end subroutine set_connectivity
 !> @param[in] edge_on_cell_gid  Edge on cell connectivity in Global IDs.
 !-------------------------------------------------------------------------------
 subroutine set_partition_data( self,               &
+                               n_nodes,            &
+                               n_edges,            &
                                node_cell_owner,    &
                                edge_cell_owner,    &
                                num_inner,          &
@@ -1357,6 +1386,9 @@ subroutine set_partition_data( self,               &
   implicit none
 
   class (ugrid_2d_type), intent(inout) :: self
+
+  integer(i_def), intent(in) :: n_nodes
+  integer(i_def), intent(in) :: n_edges
 
   integer(i_def), intent(in) :: node_cell_owner(:)
   integer(i_def), intent(in) :: edge_cell_owner(:)
@@ -1382,9 +1414,8 @@ subroutine set_partition_data( self,               &
   if (allocated( self%node_on_cell_gid )) deallocate( self%node_on_cell_gid )
   if (allocated( self%edge_on_cell_gid )) deallocate( self%edge_on_cell_gid )
 
-
-  allocate(self%node_cell_owner, source=node_cell_owner )
-  allocate(self%edge_cell_owner, source=edge_cell_owner )
+  if (n_nodes > 0) allocate(self%node_cell_owner, source=node_cell_owner )
+  if (n_edges > 0) allocate(self%edge_cell_owner, source=edge_cell_owner )
 
   if (allocated(cell_gid)) then
     allocate( self%cell_gid, source=cell_gid )

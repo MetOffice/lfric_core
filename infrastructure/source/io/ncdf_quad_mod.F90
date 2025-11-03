@@ -1607,7 +1607,7 @@ subroutine inquire_ids(self, mesh_name)
   character(*), parameter :: routine = 'inquire_ids'
   character(str_long) :: cmess
 
-  mesh_present = self%is_mesh_present(mesh_name)
+  mesh_present = self%is_mesh_present(trim(mesh_name))
 
   if (.not. mesh_present) then
     write(log_scratch_space,'(A)') &
@@ -3156,12 +3156,12 @@ function is_mesh_local(self, mesh_name) result (answer)
   integer(i_def)      :: ierr
   logical(l_def)      :: mesh_present
 
-  mesh_present = self%is_mesh_present(mesh_name)
+  mesh_present = self%is_mesh_present(trim(mesh_name))
 
   if (.not. mesh_present) then
     write( log_scratch_space,'(A)' ) &
         'Mesh '//trim(mesh_name)//' not present in file.'
-    call log_event(trim(log_scratch_space), LOG_LEVEL_ERROR)
+    call log_event(log_scratch_space, log_level_warning)
   end if
 
   cmess = 'Getting mesh netcdf id for"'//trim(mesh_name)//'"'
@@ -3192,7 +3192,7 @@ function is_mesh_present(self, mesh_name) result(answer)
   implicit none
 
   class(ncdf_quad_type), intent(in) :: self
-  character(str_def),    intent(in) :: mesh_name
+  character(*),          intent(in) :: mesh_name
 
   logical(l_def) :: answer
 
@@ -3380,7 +3380,7 @@ subroutine append_mesh( self,                                              &
   character(str_long)     :: cmess
   logical(l_def)          :: mesh_present
 
-  mesh_present = self%is_mesh_present(mesh_name)
+  mesh_present = self%is_mesh_present(trim(mesh_name))
 
   if (mesh_present) then
     write(log_scratch_space,'(A)') &
@@ -3484,7 +3484,6 @@ subroutine scan_for_topologies(self, mesh_names, n_meshes)
 
   character(*), parameter :: routine = 'scan_for_topologies'
   character(str_long) :: cmess
-
 
   cmess = 'Requesting number of variables'
   ierr = nf90_inquire(ncid=self%ncid, nvariables=n_variables )

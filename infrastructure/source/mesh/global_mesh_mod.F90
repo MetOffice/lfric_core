@@ -1040,36 +1040,57 @@ contains
 
   integer(i_def) :: cell_id
 
-  integer(i_def) :: index, dist, i
+  integer(i_def) :: index_x, dist_x
+  integer(i_def) :: index_y, dist_y
+  integer(i_def) :: i
 
-  cell_id=cell_number
+  cell_id = cell_number
 
-  if (x_cells > 0 )then
-    index = E
-    dist = x_cells
-  else if (x_cells < 0 )then
-    index = W
-    dist = abs(x_cells)
+  ! Determine march along local x-axis
+  if (x_cells > 0) then
+    index_x = E
+    dist_x  = x_cells
+  else if (x_cells < 0) then
+    index_x = W
+    dist_x  = abs(x_cells)
   else
-    index = W
-    dist = 0
-  endif
-  do i = 1,dist
-    cell_id = self%cell_next_2d(index,cell_id)
+    index_x = W
+    dist_x  = 0
+  end if
+
+  ! Determine march along local y-axis
+  if (y_cells > 0) then
+    index_y = N
+    dist_y  = y_cells
+  else if (y_cells < 0) then
+    index_y = S
+    dist_y  = abs(y_cells)
+  else
+    index_y = S
+    dist_y  = 0
+  end if
+
+  !========================================
+  ! March from anchor along local x/y axes.
+  !========================================
+  do i=1, dist_x
+    if (cell_id == self%void_cell) then
+      ! The current cell is not on the domain
+      write(log_scratch_space,'(A)') &
+          'No adjacent cell, the current cell is not on mesh domain'
+      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+    end if
+    cell_id = self%cell_next_2d(index_x, cell_id)
   end do
 
-  if (y_cells > 0 )then
-    index = N
-    dist = y_cells
-  else if (y_cells < 0 )then
-    index = S
-    dist = abs(y_cells)
-  else
-    index = S
-    dist = 0
-  endif
-  do i = 1,dist
-    cell_id = self%cell_next_2d(index,cell_id)
+  do i=1, dist_y
+    if (cell_id == self%void_cell) then
+      ! The current cell is not on the domain
+      write(log_scratch_space,'(A)') &
+          'No adjacent cell, the current cell is not on mesh domain'
+      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+    end if
+    cell_id = self%cell_next_2d(index_y, cell_id)
   end do
 
   end function get_cell_id

@@ -132,7 +132,7 @@ contains
   end function file_is_tagged
 
   !> @brief Return the name of an XIOS file
-  !> @param[in]    file_id      XIOS id of the field
+  !> @param[in]    file_id      XIOS id of the file
   !> @return                    The file name
   function get_file_name(file_id) result(name)
     implicit none

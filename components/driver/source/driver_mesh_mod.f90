@@ -41,6 +41,7 @@ module driver_mesh_mod
                                         log_level_error
   use namelist_collection_mod,    only: namelist_collection_type
   use namelist_mod,               only: namelist_type
+  use panel_decomposition_mod,    only: panel_decomposition_type
   use partition_mod,              only: partitioner_interface
 
   use runtime_partition_lfric_mod, only: get_partition_parameters
@@ -56,7 +57,6 @@ module driver_mesh_mod
   use finite_element_config_mod, only: cellshape_quadrilateral
   use base_mesh_config_mod,      only: geometry_spherical, &
                                        topology_fully_periodic
-  use panel_decomposition_mod, only: panel_decomposition_type
 
   implicit none
 
@@ -137,19 +137,18 @@ subroutine init_mesh( configuration,           &
 
   class(panel_decomposition_type), allocatable :: decomposition
 
+  integer(i_def)     :: n_digit
+  character(str_def) :: fmt_str, number_str
 
   !============================================================================
   ! 0.0 Extract configuration variables
   !============================================================================
   base_mesh_nml      => configuration%get_namelist('base_mesh')
   finite_element_nml => configuration%get_namelist('finite_element')
-  partitioning_nml   => configuration%get_namelist('partitioning')
 
   call base_mesh_nml%get_value( 'prepartitioned', prepartitioned )
   call base_mesh_nml%get_value( 'file_prefix',    file_prefix )
-
   call finite_element_nml%get_value( 'cellshape', cellshape )
-  call partitioning_nml%get_value( 'generate_inner_halos', generate_inner_halos )
 
 
 
@@ -198,6 +197,9 @@ subroutine init_mesh( configuration,           &
   !        at runtime.  NOTE: This option is provided as legacy, and support
   !        is on a best endeavours basis.
   !===========================================================================
+
+  generate_inner_halos = .false.
+
   if (prepartitioned) then
 
     !==========================================================================
@@ -211,8 +213,11 @@ subroutine init_mesh( configuration,           &
     !   <input_basename>_<local_rank>_<total_ranks>.nc
     !
     ! Where 1 rank is assigned to each mesh partition.
-    write(input_mesh_file,'(A,2(I0,A))') &
-        trim(file_prefix) // '_', local_rank, '-', total_ranks, '.nc'
+    n_digit = int(log10(real(total_ranks))) + 1
+    write(fmt_str, '(A,I0,A,I0,A)') "(I", n_digit, ".", n_digit, ")"
+    write(number_str, fmt_str) local_rank
+    write(input_mesh_file, '(A, "_", A, "-", I0, ".nc")') &
+        trim(file_prefix), trim(number_str), total_ranks
 
     call log_event( 'Using pre-partitioned mesh file:', log_level_debug )
     call log_event( '   '//trim(input_mesh_file), log_level_debug )
@@ -251,6 +256,11 @@ subroutine init_mesh( configuration,           &
     !==========================================================================
     call base_mesh_nml%get_value( 'geometry', geometry )
     call base_mesh_nml%get_value( 'topology', topology )
+
+    partitioning_nml => configuration%get_namelist('partitioning')
+
+    call partitioning_nml%get_value( 'generate_inner_halos', &
+                                      generate_inner_halos )
 
     if ( geometry == geometry_spherical .and. &
          topology == topology_fully_periodic ) then

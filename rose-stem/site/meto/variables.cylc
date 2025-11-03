@@ -10,6 +10,7 @@
                                                "driver",
                                                "infrastructure",
                                                "io_demo",
+                                               "lbc_demo",
                                                "lfric_xios",
                                                "mesh",
                                                "mesh_tools",

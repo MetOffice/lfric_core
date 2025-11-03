@@ -1,0 +1,195 @@
+{# ########################################################################### #}
+{# (c) Crown copyright 2025 Met Office. All rights reserved. #}
+{# The file LICENCE, distributed with this code, contains details of the terms #}
+{# under which the code may be used. #}
+{# ########################################################################### #}
+{% do LOG.debug("Entered site/common/lbc_demo/tasks_lbc_demo.cylc") %}
+
+{#      "opt_confs": ["default"],   #}
+{#      "resolution": "lbc",        #}
+{#      "use_xios": true,           #}
+{#      "mpi_parts": 48,            #}
+{#      "mpi_parts_xios": 1,        #}
+{#      "xios_nodes": 1,  This will turn on/off xios in launch script #}
+{#      "xios_server_mode": true,   #}
+{#      "xios_server_ranks": 1,     #}
+{#	"log_level":"info"          #}
+
+{% if task_ns.conf_name in ["default-lbc"] %}
+
+    {% do task_dict.update({
+        "opt_confs":["default"],
+        "resolution":"lbc",
+        "use_xios":true,
+        "mpi_parts":48,
+        "mpi_parts_xios":1,
+        "xios_nodes":0,
+        "xios_server_mode":false,
+        "xios_server_ranks":0,
+        "log_level":"info",
+        "last_tstep":2,
+        "kgo_checks": ["checksum"],
+    }) %}
+
+{% elif task_ns.conf_name == "ConstantLBC-lbc" %}
+
+    {% do task_dict.update({
+        "opt_confs":["ConstantLBC"],
+        "resolution":"lbc",
+        "use_xios":true,
+        "mpi_parts":48,
+        "mpi_parts_xios":1,
+        "xios_nodes":0,
+        "xios_server_mode":false,
+        "xios_server_ranks":0,
+        "log_level":"info",
+        "last_tstep":2,
+        "kgo_checks": ["checksum"],
+    }) %}
+
+{% elif task_ns.conf_name == "OutputOnLBC-lbc" %}
+
+    {% if task_ns.platform == "azspice" %}
+
+        {% do task_dict.update({
+            "opt_confs":["OutputOnLBC"],
+            "resolution":"lbc",
+            "use_xios":true,
+            "mpi_parts":48,
+            "mpi_parts_xios":1,
+            "xios_nodes":1,
+            "xios_server_mode":true,
+            "xios_server_ranks":1,
+            "log_level":"info",
+            "last_tstep":2,
+            "kgo_checks": ["checksum"],
+        }) %}
+
+    {% elif task_ns.platform == "ex1a" %}
+
+        {% do task_dict.update({
+            "opt_confs":["OutputOnLBC"],
+            "resolution":"lbc",
+            "use_xios":true,
+            "mpi_parts":48,
+            "mpi_parts_xios":1,
+            "xios_nodes":0,
+            "xios_server_mode":false,
+            "xios_server_ranks":0,
+            "log_level":"info",
+            "last_tstep":2,
+            "kgo_checks": ["checksum"],
+        }) %}
+
+    {% endif %}
+
+{% elif task_ns.conf_name == "OutputOnLBC-lbc_1x1P" %}
+
+    {% if task_ns.platform == "ex1a" %}
+
+        {% do task_dict.update({
+            "opt_confs":["OutputOnLBC"],
+            "resolution":"lbc_1x1P",
+            "use_xios":true,
+            "mpi_parts":1,
+            "mpi_parts_xios":1,
+            "xios_nodes":0,
+            "xios_server_mode":false,
+            "xios_server_ranks":0,
+            "log_level":"info",
+            "last_tstep":2,
+            "kgo_checks": ["checksum"],
+        }) %}
+
+    {% endif %}
+
+{% elif task_ns.conf_name == "OutputOnLBC-lbc_2x2P" %}
+
+    {% if task_ns.platform == "ex1a" %}
+
+        {% do task_dict.update({
+            "opt_confs":["OutputOnLBC"],
+            "resolution":"lbc_2x2P",
+            "use_xios":true,
+            "mpi_parts":4,
+            "mpi_parts_xios":1,
+            "xios_nodes":0,
+            "xios_server_mode":false,
+            "xios_server_ranks":0,
+            "log_level":"info",
+            "last_tstep":2,
+            "kgo_checks": ["checksum"],
+        }) %}
+
+    {% endif %}
+
+{% elif task_ns.conf_name == "OutputOnLBC-lbc_8x2P" %}
+
+    {% if task_ns.platform == "ex1a" %}
+
+        {% do task_dict.update({
+            "opt_confs":["OutputOnLBC"],
+            "resolution":"lbc_8x2P",
+            "use_xios":true,
+            "mpi_parts":16,
+            "mpi_parts_xios":1,
+            "xios_nodes":0,
+            "xios_server_mode":false,
+            "xios_server_ranks":0,
+            "log_level":"info",
+            "last_tstep":2,
+            "kgo_checks": ["checksum"],
+        }) %}
+
+    {% endif %}
+
+{% elif task_ns.conf_name == "IntegerFields-lbc" %}
+
+    {% do task_dict.update({
+        "opt_confs":["IntegerFields"],
+        "resolution":"lbc",
+        "use_xios":true,
+        "mpi_parts":48,
+        "mpi_parts_xios":1,
+        "xios_nodes":0,
+        "xios_server_mode":false,
+        "xios_server_ranks":0,
+        "log_level":"info",
+        "last_tstep":2,
+        "kgo_checks": [""],
+    }) %}
+
+{% elif task_ns.conf_name == "unit_tests" %}
+
+    {% do task_dict.update({
+        "placeholder": true,
+    }) %}
+
+{% elif task_ns.conf_name == "canned" %}
+
+    {% do task_dict.update({
+        "app_name": "canned_test",
+        "mpi_parts":3,
+        "kgo_checks": [],
+    }) %}
+
+{% elif task.startswith("build") %}
+
+    {% do task_dict.update({
+        "placeholder": true,
+    }) %}
+
+{% endif %}
+
+{# Set default values for LBC demo tasks #}
+{% if task_dict %}
+    {% do task_dict.update({"application_dir": "applications/lbc_demo"}) %}
+    {% if "app_name" not in task_dict %}
+        {% do task_dict.update({"app_name": "lbc_demo"}) %}
+    {% endif %}
+    {% if "kgo_checks" not in task_dict %}
+        {% do task_dict.update({"kgo_checks": ["checksum"]}) %}
+    {% endif %}
+{% endif %}
+
+{% do LOG.debug("Finished in site/common/lbc_demo/tasks_lbc_demo.cylc") %}
