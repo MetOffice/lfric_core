@@ -15,7 +15,7 @@ body:
       placeholder: e.g. email@example.com @octocat
     validations:
       required: false
-  - type: textarea
+  - type: input
     id: linked-issues
     attributes:
       label: Are there any linked Issues or Pull Requests?
