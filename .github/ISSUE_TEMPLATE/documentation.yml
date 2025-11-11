@@ -1,6 +1,5 @@
 name: Documentation Issue
 description: Report an issue with the LFRic Core documentation or suggest an improvement.  
-title: ""
 labels: ["documentation"]
 type: task
 body:
