@@ -1,0 +1,170 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Test the key_value collection iterator object
+!>
+module key_value_collection_iterator_mod_test
+
+    use, intrinsic :: iso_fortran_env, only : real32, real64, int32, int64
+
+    use constants_mod,                 only : str_longlong, str_def, &
+                                              i_def, r_def, l_def
+    use key_value_mod,                 only: key_value_type, &
+                                             int32_key_value_type, int64_key_value_type, &
+                                             int32_arr_key_value_type, int64_arr_key_value_type, &
+                                             real32_key_value_type, real64_key_value_type, &
+                                             real32_arr_key_value_type, real64_arr_key_value_type, &
+                                             logical_key_value_type, logical_arr_key_value_type, &
+                                             str_key_value_type, str_arr_key_value_type, &
+                                             abstract_key_value_type, abstract_value_type
+    use key_value_collection_iterator_mod, only : key_value_collection_iterator_type
+    use key_value_collection_mod,          only : key_value_collection_type
+
+    use funit
+
+  implicit none
+
+  private
+
+  type, extends(abstract_value_type) :: test_type
+    integer, public :: int_number
+  contains
+  end type test_type
+
+  public :: test_iterator
+
+contains
+
+  @Test
+  subroutine test_iterator()
+    type(key_value_collection_type) :: key_value_collection
+    type(key_value_collection_iterator_type) :: iterator
+
+    type(int32_key_value_type)       :: int32_key_value
+    type(int64_key_value_type)       :: int64_key_value
+    type(real32_key_value_type)      :: real32_key_value
+    type(real64_key_value_type)      :: real64_key_value
+    type(logical_key_value_type)     :: logical_key_value
+    type(str_key_value_type)         :: string_key_value
+    type(int32_arr_key_value_type)   :: int32_arr_key_value
+    type(int64_arr_key_value_type)   :: int64_arr_key_value
+    type(real32_arr_key_value_type)  :: real32_arr_key_value
+    type(real64_arr_key_value_type)  :: real64_arr_key_value
+    type(logical_arr_key_value_type) :: logical_arr_key_value
+    type(str_arr_key_value_type)     :: string_arr_key_value
+    type(abstract_key_value_type)    :: abstract_key_value
+
+    integer(int32),             pointer :: int32_val
+    integer(int64),             pointer :: int64_val
+    real(real32),               pointer :: real32_val
+    real(real64),               pointer :: real64_val, real64_val2
+    logical,                    pointer :: logical_val
+    character(str_longlong),    pointer :: string_val
+    integer(int32),             pointer :: int32_arr_val(:)
+    integer(int64),             pointer :: int64_arr_val(:)
+    real(real32),               pointer :: real32_arr_val(:)
+    real(real64),               pointer :: real64_arr_val(:)
+    logical,                    pointer :: logical_arr_val(:)
+    character(str_def),         pointer :: string_arr_val(:)
+    class(abstract_value_type), pointer :: abstract_val
+
+    type(test_type) :: test_object
+    integer(i_def) :: length, table_length
+    logical(l_def) :: exists
+    character(str_longlong) :: name_str
+    real(r_def), parameter :: tol = 1.0e-6_r_def
+    class(key_value_type), pointer :: kv
+
+    !Create a key-value pair collection
+    call key_value_collection%initialise(name = "key_value_collection", &
+                                         table_len=4)
+
+    ! Initialise an object that inherits from the abstract key_value_type
+    test_object%int_number = 42
+
+    !Add all different types of key-value pair to a single collection
+    call int32_key_value%initialise("key_for_int32", 320_int32)
+    call key_value_collection%add_key_value(int32_key_value)
+    call int64_key_value%initialise("key_for_int64", 640_int64)
+    call key_value_collection%add_key_value(int64_key_value)
+    call real32_key_value%initialise("key_for_real32", 3200.0_real32)
+    call key_value_collection%add_key_value(real32_key_value)
+    call real64_key_value%initialise("key_for_real64", 6400.0_real64)
+    call key_value_collection%add_key_value(real64_key_value)
+    call logical_key_value%initialise("key_for_logical", .true.)
+    call key_value_collection%add_key_value(logical_key_value)
+    call string_key_value%initialise("key_for_string", "test_string")
+    call key_value_collection%add_key_value(string_key_value)
+    call int32_arr_key_value%initialise("key_for_int32_arr", [1_int32, 2_int32, 3_int32, 4_int32, 5_int32])
+    call key_value_collection%add_key_value(int32_arr_key_value)
+    call int64_arr_key_value%initialise("key_for_int64_arr", [9_int64, 8_int64, 7_int64, 6_int64])
+    call key_value_collection%add_key_value(int64_arr_key_value)
+    call real32_arr_key_value%initialise("key_for_real32_arr", [0.1_real32, 0.2_real32])
+    call key_value_collection%add_key_value(real32_arr_key_value)
+    call real64_arr_key_value%initialise("key_for_real64_arr", [99.9_real64, 99.8_real64, 99.7_real64])
+    call key_value_collection%add_key_value(real64_arr_key_value)
+    call logical_arr_key_value%initialise("key_for_logical_arr", [.true., .false., .true.])
+    call key_value_collection%add_key_value(logical_arr_key_value)
+    call string_arr_key_value%initialise("key_for_string_arr", ["one", "two"])
+    call key_value_collection%add_key_value(string_arr_key_value)
+    call abstract_key_value%initialise("key_for_abstract_obj", test_object )
+    call key_value_collection%add_key_value(abstract_key_value)
+
+    !Create an iterator for the key-value collection
+    call iterator%initialise(key_value_collection)
+
+    !Iterate over the collection and check each value is as expected
+    do
+      if (.not. iterator%has_next()) exit
+      kv => iterator%next()
+      select type(kv_typed => kv)
+        type is (int32_key_value_type)
+          @assertEqual(320_int32, kv_typed%value)
+        type is (int64_key_value_type)
+          @assertEqual(640_int64, kv_typed%value)
+        type is (real32_key_value_type)
+          @assertEqual(3200.0_real32, kv_typed%value)
+        type is (real64_key_value_type)
+          @assertEqual(6400.0_real64, kv_typed%value)
+        type is (logical_key_value_type)
+          @assertEqual(.true., kv_typed%value)
+        type is (str_key_value_type)
+          @assertEqual("test_string", kv_typed%value)
+        type is (int32_arr_key_value_type)
+          int32_arr_val => kv_typed%value
+          @assertEqual([1_int32, 2_int32, 3_int32, 4_int32, 5_int32], int32_arr_val)
+        type is (int64_arr_key_value_type)
+          int64_arr_val => kv_typed%value
+          @assertEqual([9_int64, 8_int64, 7_int64, 6_int64], int64_arr_val)
+        type is (real32_arr_key_value_type)
+          real32_arr_val => kv_typed%value
+          @assertEqual([0.1_real32, 0.2_real32], real32_arr_val)
+        type is (real64_arr_key_value_type)
+          real64_arr_val => kv_typed%value
+          @assertEqual([99.9_real64, 99.8_real64, 99.7_real64], real64_arr_val)
+        type is (logical_arr_key_value_type)
+          logical_arr_val => kv_typed%value
+          @assertTrue(logical_arr_val(1))
+          @assertFalse(logical_arr_val(2))
+          @assertTrue(logical_arr_val(3))
+          @assertEqual(3, size(logical_arr_val))
+        type is (str_arr_key_value_type)
+          string_arr_val => kv_typed%value
+          @assertEqual("one", string_arr_val(1))
+          @assertEqual("two", string_arr_val(2))
+          @assertEqual(2, size(string_arr_val))
+        type is (abstract_key_value_type)
+          abstract_val => kv_typed%value
+          select type(abstract_typed => abstract_val)
+            type is (test_type)
+              @assertEqual(42, abstract_typed%int_number)
+          end select
+      end select
+    end do
+
+  end subroutine test_iterator
+
+end module key_value_collection_iterator_mod_test

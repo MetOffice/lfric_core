@@ -108,12 +108,17 @@ end subroutine checkpoint_read_xios
 !> @brief Read the data from an XIOS checkpoint file into the io_value
 !> @param[in,out] io_value The io_value to read data into
 !>
-subroutine checkpoint_read_value(io_value)
+subroutine checkpoint_read_value(io_value, value_name)
   class(io_value_type), intent(inout) :: io_value
+  character(*), optional, intent(in)  :: value_name
   character(str_def) :: restart_id
   integer(i_def)     :: array_dims
 
-  restart_id = "restart_" // trim(io_value%io_id)
+  if(present(value_name)) then
+    restart_id = trim(value_name)
+  else
+    restart_id = "restart_" // trim(io_value%io_id)
+  end if
   array_dims = size(io_value%data)
 
   if ( xios_is_valid_field(trim(restart_id)) ) then

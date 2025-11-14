@@ -1,0 +1,99 @@
+!-------------------------------------------------------------------------------
+! (c) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-------------------------------------------------------------------------------
+module lfric_string_mod_test
+  use funit
+  use lfric_string_mod, only: split_string
+  implicit none
+
+  public :: test_basic, test_leading_delim, test_trailing_delim, &
+            test_multiple_delims, test_no_delim, test_space_delim,  &
+            test_empty_string, test_empty_delim
+
+contains
+
+  @Test
+  subroutine test_basic()
+    character(:), allocatable :: result(:)
+    result = split_string("a,b,c", ",")
+    @assertEqual(size(result), 3)
+    @assertEqual("a", result(1))
+    @assertEqual("b", result(2))
+    @assertEqual("c", result(3))
+  end subroutine
+
+  @Test
+  subroutine test_leading_delim()
+    character(:), allocatable :: result(:)
+    result = split_string(",a,b", ",")
+    @assertEqual(3, size(result))
+    @assertEqual(" ", result(1))
+    @assertEqual("a", result(2))
+  end subroutine
+
+  @Test
+  subroutine test_trailing_delim()
+    character(:), allocatable :: result(:)
+    result = split_string("a,b,", ",")
+    @assertEqual(3, size(result))
+    @assertEqual("a", result(1))
+    @assertEqual("b", result(2))
+    @assertEqual(" ", result(3))
+  end subroutine
+
+  @Test
+  subroutine test_multiple_delims()
+    character(:), allocatable :: result(:)
+    result = split_string("a,,b", ",")
+    @assertEqual(3, size(result))
+    @assertEqual("a", result(1))
+    @assertEqual(" ", result(2))
+    @assertEqual("b", result(3))
+  end subroutine
+
+  @Test
+  subroutine test_no_delim()
+    character(:), allocatable :: result(:)
+    result = split_string("abc", ",")
+    @assertEqual(1, size(result))
+    @assertEqual("abc", result(1))
+  end subroutine
+
+  @Test
+  subroutine test_space_delim()
+    character(:), allocatable :: result(:)
+    result = split_string("a b c", " ")
+    @assertEqual(size(result), 3)
+    @assertEqual("a", result(1))
+    @assertEqual("b", result(2))
+    @assertEqual("c", result(3))
+  end subroutine
+
+  @Test
+  subroutine test_empty_string()
+    character(:), allocatable :: result(:)
+    result = split_string("", ",")
+    @assertEqual(1, size(result))
+    @assertEqual("", result(1))
+  end subroutine
+
+  @Test
+  subroutine test_empty_delim()
+    character(:), allocatable :: result(:)
+    result = split_string("abc", "")
+    @assertEqual(1, size(result))
+    @assertEqual("abc", result(1))
+  end subroutine
+
+  @Test
+  subroutine test_multi_delim()
+    character(:), allocatable :: result(:)
+    result = split_string("abc/def//gh/i", "//")
+    @assertEqual(2, size(result))
+    @assertEqual("abc/def", result(1))
+    @assertEqual("gh/i", result(2))
+  end subroutine
+
+end module lfric_string_mod_test

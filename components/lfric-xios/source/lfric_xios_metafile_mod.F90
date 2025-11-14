@@ -11,12 +11,14 @@ module lfric_xios_metafile_mod
   use log_mod,                       only: log_event,                         &
                                            log_level_error,                   &
                                            log_level_info,                    &
+                                           log_level_debug,                   &
                                            log_level_warning
   use xios,                          only: xios_file,                         &
                                            xios_field,                        &
                                            xios_get_handle,                   &
                                            xios_add_child,                    &
                                            xios_set_attr,                     &
+                                           xios_get_attr,                     &
                                            xios_is_defined_field_attr,        &
                                            xios_get_field_attr,               &
                                            xios_set_field_attr,               &
@@ -31,14 +33,19 @@ module lfric_xios_metafile_mod
   !> @brief Wrap XIOS file handle
   type :: metafile_type
     type(xios_file) :: handle
+    character(str_def) :: id
   contains
     private
     procedure, public :: init => metafile_init
     procedure, public :: get_handle => metafile_get_handle
+    procedure, public :: get_id => metafile_get_id
 
     ! destructor - here to avoid gnu compiler bug
     final :: metafile_destructor
   end type metafile_type
+
+  integer(i_def), public, parameter :: CHECKPOINTING = 763
+  integer(i_def), public, parameter :: RESTARTING = 851
 
 private
 
@@ -104,9 +111,23 @@ contains
     class(metafile_type), intent(in out) :: self
 
     character(*), intent(in) :: file_id
+    call log_event('Initialising metafile for file id: ' // trim(file_id), log_level_debug)
 
     call xios_get_handle(file_id, self%handle)
+    self%id = file_id
+
   end subroutine metafile_init
+
+  !> @brief Accessor for id
+  !> @param[inout] self  Metafile object
+  !> @return             XIOS file id
+  function metafile_get_id(self) result(id)
+    class(metafile_type), intent(in) :: self
+    character(str_def) :: id
+
+    id = self%id
+
+  end function metafile_get_id
 
   !> @brief Accessor for handle
   !> @param[inout] self  Metafile object
@@ -163,20 +184,21 @@ contains
   !> @brief Add copy of dictionary field to file
   !> @param[in] metafile       XIOS file wrapper
   !> @param[in] dict_field_id  XIOS id of dictionary field to be copied
-  !> @param[in] prefix         ID prefix to be used, .e.g, "checkpoint_"
+  !> @param[in] mode           ID prefix to be used, .e.g, "checkpoint_"
   !> @param[in] operation      XIOS field operation, e.g., "once"
   !> @param[in] id_as_name     Use dictionary field ID as field name?
   !> @param[in] legacy         Use legacy checkpointing domain?
-  subroutine add_field(metafile, dict_field_id, prefix, operation, id_as_name, legacy)
+  subroutine add_field(metafile, dict_field_id, mode, operation, id_as_name, legacy)
     implicit none
-    type(metafile_type), intent(in) :: metafile
+    type(metafile_type), intent(in) :: metafile(:)
     character(*), intent(in) :: dict_field_id
-    character(*), intent(in) :: prefix
+    integer(i_def), intent(in) :: mode
     character(*), intent(in) :: operation
     logical(l_def), optional, intent(in) :: id_as_name
     logical(l_def), optional, intent(in) :: legacy
 
     character(20), parameter :: lfric_dict = 'lfric_dictionary'
+    character(str_def) :: file_id
     integer(i_def), parameter :: dflt_prec = 8
 
     type(xios_file)    :: file
@@ -189,6 +211,7 @@ contains
     integer(i_def)     :: prec
     logical(l_def)     :: use_id_as_name
     logical(l_def)     :: use_legacy
+    integer(i_def)     :: i
 
     use_id_as_name = .false.
     if (present(id_as_name)) use_id_as_name = id_as_name
@@ -196,49 +219,57 @@ contains
     use_legacy = .false.
     if (present(legacy)) use_legacy = legacy
 
-    call metafile%get_handle(file)
-
-    field_id = trim(prefix) // dict_field_id
-
-    if (field_is_valid(field_id)) then
-      ! old style checkpoint configuration - enable field
-      call xios_set_field_attr(field_id, enabled=.true.)
-    else
-      ! new style - add field to checkpoint file
-      call xios_add_child(file, field, field_id)
-      call log_event('adding checkpoint field ' // trim(field_id), log_level_info)
-      if (.not. field_is_valid(field_id)) &
-        call log_event('internal error: added field invalid', log_level_error)
-
-      ! copy name and precision from dictionary field
-       if (use_id_as_name) then
-        field_name = dict_field_id ! correct for checkpointing
+    do i = 1, size(metafile)
+      file_id = metafile(i)%get_id()
+      if (mode == CHECKPOINTING ) then
+        field_id = trim(file_id) // "_" // trim(dict_field_id)
+      elseif (mode == RESTARTING) then
+        field_id = "restart_" // trim(dict_field_id)
       else
-        call xios_get_field_attr(dict_field_id, name=field_name)
-        if (field_name /= dict_field_id) &
-          call log_event('internal error - mismatch: ' // trim(field_name) &
-            // ' vs ' // trim(dict_field_id), log_level_warning)
+        call log_event("Invalid 'mode' for adding field", log_level_error)
       end if
 
-      prec = get_field_precision(dict_field_id, dflt_prec, lfric_dict)
-
-      call xios_set_attr(field, name=field_name, prec=prec, operation=operation)
-
-      if (use_legacy) then
-        call handle_legacy_fields(field, dict_field_id)
+      call log_event('Adding checkpoint field: ' // trim(field_id) // " to " // trim(file_id), log_level_debug)
+      if (field_is_valid(field_id)) then
+        ! old style checkpoint configuration - enable field
+        call xios_set_field_attr(field_id, enabled=.true.)
       else
-        grid_ref = get_field_grid_ref(dict_field_id)
-        if (grid_ref /= '') then
-          call xios_set_attr(field, grid_ref=grid_ref)
+        call metafile(i)%get_handle(file)
+        call xios_add_child(file, field, field_id)
+
+
+        if (.not. field_is_valid(field_id)) &
+          call log_event('internal error: added field invalid', log_level_error)
+
+        ! copy name and precision from dictionary field
+        if (use_id_as_name) then
+          field_name = dict_field_id ! correct for checkpointing
         else
-          domain_ref = get_field_domain_ref(dict_field_id)
-          axis_ref = get_field_axis_ref(dict_field_id)
-          if (domain_ref /= '') call xios_set_attr(field, domain_ref=domain_ref)
-          if (axis_ref /= '') call xios_set_attr(field, axis_ref=axis_ref)
+          call xios_get_field_attr(dict_field_id, name=field_name)
+          if (field_name /= dict_field_id) &
+            call log_event('internal error - mismatch: ' // trim(field_name) &
+              // ' vs ' // trim(dict_field_id), log_level_warning)
+        end if
+
+        prec = get_field_precision(dict_field_id, dflt_prec, lfric_dict)
+
+        call xios_set_attr(field, name=field_name, prec=prec, operation=operation)
+
+        if (use_legacy) then
+          call handle_legacy_fields(field, dict_field_id)
+        else
+          grid_ref = get_field_grid_ref(dict_field_id)
+          if (grid_ref /= '') then
+            call xios_set_attr(field, grid_ref=grid_ref)
+          else
+            domain_ref = get_field_domain_ref(dict_field_id)
+            axis_ref = get_field_axis_ref(dict_field_id)
+            if (domain_ref /= '') call xios_set_attr(field, domain_ref=domain_ref)
+            if (axis_ref /= '') call xios_set_attr(field, axis_ref=axis_ref)
+          end if
         end if
       end if
-    end if
-
+    end do
   end subroutine add_field
 
 end module lfric_xios_metafile_mod

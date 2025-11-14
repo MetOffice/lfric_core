@@ -92,9 +92,12 @@ module key_value_collection_mod
     procedure, public  :: get_table_len
     procedure, public  :: clear
     procedure, private :: get_hash
+    procedure, public  :: get_next_item
 
     final              :: key_value_collection_destructor
   end type key_value_collection_type
+
+  private :: get_key_value_name
 
 contains
 
@@ -872,6 +875,48 @@ function get_hash(self, key) result(hash)
   hash = mod(sum_string(trim(key)),self%get_table_len())
 end function get_hash
 
+!> Returns the next item in the collection
+!> @param [in] current_item Pointer to the current item in the collection
+!> @return next_item Pointer to the next item in the collection
+function get_next_item(self, current_item) result(next_item)
+  implicit none
+  class(key_value_collection_type), intent(in) :: self
+  type(linked_list_item_type), pointer, intent(in), optional :: current_item
+  type(linked_list_item_type), pointer :: next_item
+  type(linked_list_item_type), pointer :: new_item
+  character(str_def) :: name
+  integer(i_def) :: i, hash
+
+  if(associated(current_item))then
+    ! If current item is given, get the next item in the same linked list
+    new_item => current_item%next
+    if(.not.associated(new_item))then
+      ! If there is no next item in the current linked list, move to the next linked list
+      name = get_key_value_name(current_item%payload)
+      hash = self%get_hash(name)
+
+      do i = hash+1, self%get_table_len()-1
+        ! If a field is gound, this i the next one - so exit the loop
+        new_item => self%key_value_list(i)%get_head()
+        if(associated(new_item))then
+          exit
+        end if
+      end do
+    end if
+  else
+    ! Find the first item in the collection
+    do i = 0, self%get_table_len()-1
+      new_item => self%key_value_list(i)%get_head()
+      ! If a key_value is found, this is the first one - so exit the loop
+      if (associated(new_item)) then
+        exit
+      end if
+    end do
+  end if
+  next_item => new_item
+
+end function get_next_item
+
 !> Clears all items from the collection
 subroutine clear(self)
 
@@ -917,5 +962,22 @@ function sum_string(string) result(ch_sum)
     ch_sum = ch_sum + ichar(string(i:i))
   end do
 end function sum_string
+
+!> Private helper function to extract the name of any key_value object
+!> @param [in] key_value The key_value object to extract the name from
+!> @return name The name of the key_value object
+function get_key_value_name(key_value) result(name)
+  implicit none
+  class(linked_list_data_type), intent(in) :: key_value
+  character(str_def) :: name
+
+  select type(kv => key_value)
+    class is (key_value_type)
+      name = kv%get_key()
+    class default
+      call log_event("Unsupported type", LOG_LEVEL_ERROR)
+  end select
+
+  end function get_key_value_name
 
 end module key_value_collection_mod

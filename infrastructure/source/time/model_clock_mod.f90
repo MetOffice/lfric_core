@@ -47,6 +47,7 @@ module model_clock_mod
     procedure, public :: get_last_step
     procedure, public :: get_seconds_per_step
     procedure, public :: seconds_from_steps
+    procedure, public :: steps_from_seconds
     procedure, public :: get_spinup_fraction
     procedure, public :: is_initialisation
     procedure, public :: is_running
@@ -335,6 +336,23 @@ contains
 
   end function seconds_from_steps
 
+  !> @brief Converts a number of seconds to a number of timesteps.
+  !> @detail The number of timesteps is calculated by dividing the number of
+  !> seconds by the length of a timestep and returning the integer value.
+  !>
+  !> @param[in] seconds Number of seconds, may be positive or negative.
+  !> @return Timesteps will be positive or negative depending on seconds.
+  function steps_from_seconds( this, seconds )
+
+    implicit none
+
+    class(model_clock_type),   intent(in) :: this
+    real(r_second), intent(in) :: seconds
+    integer(i_timestep) :: steps_from_seconds
+
+    steps_from_seconds = int( seconds / this%seconds_per_step )
+
+  end function steps_from_seconds
 
   !> Advances the clock by one timestep.
   !>

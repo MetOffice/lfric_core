@@ -47,6 +47,7 @@ private
 
 integer, parameter :: undef_freq = -999 ! uninitialised frequency value
 integer, parameter :: no_freq = 0       ! do not override the frequency
+integer, parameter :: undef_file_convention = -999
 character(20), parameter :: undef_group = "unset"
 character(20), parameter :: diag_main_file = "lfric_diag"
 character(20), parameter :: diag_field_group = "diagnostic_fields"
@@ -71,6 +72,8 @@ type, public, extends(file_type) :: lfric_xios_file_type
   integer(i_def)              :: io_mode
   !> How the contents of the file evolve with time
   integer(i_def)              :: operation
+  !> The file convention
+  integer(i_def)              :: file_convention = undef_file_convention
   !> The file frequency in timesteps
   integer(i_def)              :: freq_ts = undef_freq
   !> @todo field_group is slated for removal, it is a leftover placeholder
@@ -115,6 +118,9 @@ end interface
 
 integer(i_def), public, parameter :: OPERATION_ONCE       = 1938
 integer(i_def), public, parameter :: OPERATION_TIMESERIES = 3406
+
+integer(i_def), public, parameter :: CONVENTION_CF    =  6542
+integer(i_def), public, parameter :: CONVENTION_UGRID =  3698
 
 contains
 
@@ -190,7 +196,8 @@ end subroutine register_diagnostics_file
 function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
                                       operation, field_group_id,         &
                                       fields_in_file, is_diag,           &
-                                      diag_always_on_sampling ) result(self)
+                                      diag_always_on_sampling,           &
+                                      file_convention ) result(self)
 
   implicit none
 
@@ -205,6 +212,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
                      optional, intent(in) :: fields_in_file
   logical(l_def),    optional, intent(in) :: is_diag
   logical(l_def),    optional, intent(in) :: diag_always_on_sampling
+  integer(i_def),    optional, intent(in) :: file_convention
 
   type(field_collection_iterator_type) :: iter
   class(field_parent_type), pointer    :: fld => null()
@@ -218,6 +226,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
   self%io_mode = io_mode
 
   if (present(operation)) self%operation = operation
+  if (present(file_convention)) self%file_convention = file_convention
 
   if (present(freq)) then
     if (freq < 0) then ! we are going to allow freq = 0 (= no_freq)
@@ -352,6 +361,14 @@ subroutine register_with_context(self)
     else
       call xios_set_attr( self%handle, time_counter="none")
     end if
+  end select
+
+  ! Set XIOS file convention
+  select case(self%file_convention)
+    case (CONVENTION_CF)
+      call xios_set_attr( self%handle, convention="CF" )
+    case (CONVENTION_UGRID)
+      call xios_set_attr( self%handle, convention="UGRID" )
   end select
 
   ! Set XIOS duration object second value equal to file output frequency

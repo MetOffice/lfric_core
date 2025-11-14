@@ -39,5 +39,20 @@ class vn22_t4661(MacroUpgrade):
     def upgrade(self, config, meta_config=None):
         # Commands From: rose-meta/lfric-driver
         self.add_setting(config, ["namelist:extrusion", "eta_values"], "''")
+        return config, self.reports
+
+
+class vn22_t4020(MacroUpgrade):
+    """Upgrade macro for ticket #4020 by Andrew Coughtrie."""
+
+    BEFORE_TAG = "vn2.2_t4661"
+    AFTER_TAG = "vn2.2_t4020"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:io", "end_of_run_checkpoint"], ".true."
+        )
+        self.add_setting(config, ["namelist:io", "checkpoint_times"], "")
 
         return config, self.reports

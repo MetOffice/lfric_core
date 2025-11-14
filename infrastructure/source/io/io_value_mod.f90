@@ -6,7 +6,7 @@
 
 module io_value_mod
 
-  use constants_mod,            only : str_def, r_def, r_double
+  use constants_mod,            only : str_def, r_def, r_double, l_def
   use key_value_mod,            only : abstract_value_type
   use key_value_collection_mod, only : key_value_collection_type
   use log_mod,                  only : log_event, &
@@ -31,15 +31,17 @@ module io_value_mod
     procedure, public :: set_write_behaviour
     procedure, public :: set_checkpoint_write_behaviour
     procedure, public :: set_checkpoint_read_behaviour
+    procedure, public :: can_write_checkpoint
     procedure, public :: write_value
     procedure, public :: write_checkpoint
     procedure, public :: read_checkpoint
   end type io_value_type
 
   abstract interface
-    subroutine io_operation_interface(self)
+    subroutine io_operation_interface(self, value_name)
       import io_value_type
       class(io_value_type), intent(inout) :: self
+      character(*), optional, intent(in) :: value_name
     end subroutine io_operation_interface
   end interface
 
@@ -87,11 +89,11 @@ subroutine set_checkpoint_read_behaviour(self, read_behaviour)
 end subroutine set_checkpoint_read_behaviour
 
 !> @brief Subroutine to write to the diagnostic file with write behaviour
-subroutine write_value(self)
+subroutine write_value(self, value_name)
   class(io_value_type), intent(inout) :: self
-
+  character(*), optional, intent(in) :: value_name
   if ( associated(self%write_method) ) then
-    call self%write_method()
+    call self%write_method(value_name)
   else
     call log_event( 'Error trying to write value ' // trim(self%io_id) // &
                     ', write method not set', LOG_LEVEL_ERROR )
@@ -100,11 +102,12 @@ subroutine write_value(self)
 end subroutine write_value
 
 !> @brief Subroutine to write to a checkpoint file with write behaviour
-subroutine write_checkpoint(self)
+subroutine write_checkpoint(self, value_name)
   class(io_value_type), intent(inout) :: self
+  character(*), optional, intent(in) :: value_name
 
   if ( associated(self%checkpoint_write_method) ) then
-    call self%checkpoint_write_method()
+    call self%checkpoint_write_method(value_name)
   else
     call log_event( 'Error trying to write value ' // trim(self%io_id) // &
                     ', checkpoint write method not set', LOG_LEVEL_ERROR )
@@ -113,17 +116,38 @@ subroutine write_checkpoint(self)
 end subroutine write_checkpoint
 
 !> @brief Subroutine to read data from the checkpoint file to the value
-subroutine read_checkpoint(self)
+subroutine read_checkpoint(self, value_name)
   class(io_value_type), intent(inout) :: self
+  character(*), optional, intent(in) :: value_name
 
   if ( associated(self%checkpoint_read_method) ) then
-    call self%checkpoint_read_method()
+    call self%checkpoint_read_method(value_name)
   else
     call log_event( 'Error trying to read value ' // trim(self%io_id) // &
                     ', checkpoint read method not set', LOG_LEVEL_ERROR )
   end if
 
 end subroutine read_checkpoint
+
+!> @brief A helper function to determine if the io_value_type
+!>        can be written to a checkpoint file
+!>
+
+!> @return .true. or .false.
+function can_write_checkpoint(self) result(checkpointable)
+
+  implicit none
+
+  class(io_value_type), intent(in) :: self
+  logical(l_def) :: checkpointable
+
+  if (associated(self%checkpoint_write_method)) then
+    checkpointable = .true.
+  else
+    checkpointable = .false.
+  end if
+
+end function can_write_checkpoint
 
 !> @brief A helper function to retrieve an io_value_type object
 !>        from a key-value collection
