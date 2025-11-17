@@ -27,7 +27,7 @@ LDFLAGS_OPENMP = -h omp
 FFLAGS_COMPILER           =
 FFLAGS_NO_OPTIMISATION    = -O0
 FFLAGS_SAFE_OPTIMISATION  = -O2 -hflex_mp=strict
-FFLAGS_RISKY_OPTIMISATION = -O3 -hipa3
+FFLAGS_RISKY_OPTIMISATION = -O3 -hipa2
 
 #Cray has debug levels tied to optimisation levels
 ifeq ($(shell expr ${CRAYFTN_VERSION} \>= 015000000), 1)
