@@ -3,6 +3,7 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+! TODO: Add unit tests after Git migration
 module sci_pointwise_convert_xyz2llr_kernel_mod
 
 use argument_mod,        only : arg_type, GH_FIELD,       &
@@ -50,6 +51,10 @@ subroutine pointwise_convert_xyz2llr_code(coord_vec_1, coord_vec_2,   &
 
   call xyz2llr(coord_vec_1, coord_vec_2, coord_vec_3, &
                llr_1, llr_2, llr_3)
+
+  coord_vec_1 = llr_1
+  coord_vec_2 = llr_2
+  coord_vec_3 = llr_3
 
 end subroutine pointwise_convert_xyz2llr_code
 

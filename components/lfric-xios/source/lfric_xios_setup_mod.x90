@@ -41,8 +41,6 @@ module lfric_xios_setup_mod
                                      only: nodal_xyz_coordinates_kernel_type
   use sci_nodal_coordinates_kernel_mod, &
                                      only: nodal_coordinates_kernel_type
-
-  use sci_psykal_builtin_light_mod,  only: invoke_pointwise_convert_xyz2llr
   use sci_pointwise_convert_xyz2llr_kernel_mod, &
                                      only: pointwise_convert_xyz2llr_kernel_type
   use step_calendar_mod,             only: step_calendar_type
@@ -933,9 +931,8 @@ contains
     !=========================================================================
     ! This call needs to be replaced with a working infrastructure alternative:
     ! If spherical geometry convert the coordinate field to (longitude, latitude, radius)
-    ! TODO: replace PSyKAl-lite code with kernel in LFRic#4683
     if ( mesh%is_geometry_spherical() ) then
-      call invoke_pointwise_convert_xyz2llr(coord_output)
+      call invoke(pointwise_convert_xyz2llr_kernel_type(coord_output))
     end if
     !=========================================================================
 

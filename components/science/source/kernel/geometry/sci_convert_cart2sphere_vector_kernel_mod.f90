@@ -3,6 +3,7 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+! TODO: Add unit tests after Git migration
 module sci_convert_cart2sphere_vector_kernel_mod
 
 use argument_mod,        only : arg_type, GH_FIELD,       &
