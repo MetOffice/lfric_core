@@ -363,37 +363,32 @@ contains
     implicit none
 
     class(model_clock_type), intent(inout) :: this
-    logical           :: tick, init_flag
+    logical           :: tick
     type(linked_list_item_type), pointer :: loop
 
-    init_flag = .false.
-
     if (this%starting) then
-      init_flag = this%initialisation_phase
       this%starting = .false.
       this%initialisation_phase = .false.
     else
       this%current_step = this%current_step + 1
     end if
 
-    ! Run timestep events only after initialisation - will be changed in #3321
-    if (.not. init_flag) then
-      loop => this%ts_events%get_head()
-      do
-        ! If list is empty of we're at the end then exit
-        if (.not. associated(loop)) then
-          exit
-        end if
-        ! extract payload object
-        select type(event_object => loop%payload)
-          type is (event_type)
-            if (event_object%is_active()) then
-              call event_object%happens(this)
-            end if
-        end select
-        loop => loop%next
-      end do
-    end if
+    ! Run timestep events
+    loop => this%ts_events%get_head()
+    do
+      ! If list is empty of we're at the end then exit
+      if (.not. associated(loop)) then
+        exit
+      end if
+      ! extract payload object
+      select type(event_object => loop%payload)
+        type is (event_type)
+          if (event_object%is_active()) then
+            call event_object%happens(this)
+          end if
+      end select
+      loop => loop%next
+    end do
 
     if (this%is_running()) then
       call log_set_timestep( this%current_step )

@@ -1,0 +1,316 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> @brief A module containing a time controller object.
+!> @details Fields need to be updated at different times and frequencies. The
+!>          temporal object can be linked to a file to provide information of
+!>          how the fields associated with that file should be updated with
+!>          time.
+module lfric_xios_temporal_mod
+
+  use constants_mod,        only: i_def, str_def, str_long, &
+                                  str_max_filename, r_def, l_def
+  use field_mod,            only: field_type, field_proxy_type
+  use field_parent_mod,     only: field_parent_type
+  use field_collection_iterator_mod, &
+                            only: field_collection_iterator_type
+  use field_collection_mod, only: field_collection_type
+  use file_mod,             only: FILE_OP_OPEN, FILE_MODE_READ
+  use lfric_ncdf_dims_mod,  only: lfric_ncdf_dims_type
+  use lfric_ncdf_field_mod, only: lfric_ncdf_field_type
+  use lfric_ncdf_file_mod,  only: lfric_ncdf_file_type
+  use lfric_xios_field_mod, only: lfric_xios_field_type
+  use lfric_xios_utils_mod, only: parse_date_as_xios, seconds_from_date, &
+                                  read_time_data
+  use linked_list_data_mod, only: linked_list_data_type
+  use log_mod,              only: log_event, log_scratch_space, &
+                                  LOG_LEVEL_ERROR, LOG_LEVEL_INFO, &
+                                  LOG_LEVEL_TRACE
+  use xios,                 only: xios_file, xios_filegroup, xios_fieldgroup, &
+                                  xios_recv_field, xios_date, xios_duration,  &
+                                  xios_set_attr, xios_get_current_date,       &
+                                  xios_get_time_origin, xios_get_handle,      &
+                                  xios_add_child, xios_get_start_date,        &
+                                  xios_get_timestep, xios_day, xios_month,    &
+                                  xios_year, operator(-), operator(+),        &
+                                  operator(<), operator(<=)
+
+  implicit none
+
+  private
+
+  integer(i_def), private, parameter :: unset_freq = -999
+
+  !> Time axis object type
+  type, public :: temporal_type
+    private
+
+    !> The data values of the time axis
+    type(xios_date), allocatable :: time_data(:)
+    !> Time that the model data will next be updated
+    type(xios_date) :: next_model_update
+    !> Array of fields used to hold intermediate data from time-varying inputs
+    type(field_type), allocatable :: fields(:,:)
+    !> Array of lfric_xios fields which hold pointers to the destination fields
+    !! to be populated
+    type(lfric_xios_field_type), allocatable :: field_dest(:)
+    !> The index of the local field cache to be read-into next
+    integer(i_def) :: read_index
+    !> The field index (between 1 and window_size) corresponding to the current time window
+    integer(i_def) :: current_field_index
+    !> How many time entries of a field to be kept in memory
+    integer(i_def) :: window_size = 1 ! Hard coded to 1 until interpolation
+    !> Flag denoting whether the time-axis is cyclic
+    logical(l_def) :: is_cyclic = .false.
+    !> Duration over which the time-axis cycles over
+    type(xios_duration) :: cycle_period
+    !> How often the data is read by XIOS
+    type(xios_duration) :: io_frequency
+
+
+  contains
+    !> Initialiser for the time axis object
+    procedure, public  :: initialise
+    !> Align time series data (time_data(:)) so that the current model date
+    !> falls between the first two entries
+    procedure, private :: align_time_axis
+    !> Progress the time axis
+    procedure, public  :: advance
+    !> Update model fields from temporal fields
+    procedure, private :: update_model_data
+
+    procedure, public :: clear
+
+    ! Destructor
+    final :: temporal_destructor
+
+  end type temporal_type
+
+contains
+
+  !> @brief Initialise a <code>temporal_type</code> object.
+  !>
+  !> @param[in]     file_path      Path to the file containing the time data
+  !> @param[in,out] file_fields    A list of fields within the file
+  !> @param[in]     io_frequency   How often the file is read
+  !> @param[in]     cyclic         Is the time axis cyclic or not
+  !> @param[out]    record_offset  Time index for XIOS to start reading data from
+  subroutine initialise( self, file_path, file_fields, io_frequency, &
+                         cyclic, record_offset )
+
+    implicit none
+
+    class(temporal_type), target, intent(inout) :: self
+    character(*),                 intent(in)    :: file_path
+    type(lfric_xios_field_type),  intent(inout) :: file_fields(:)
+    type(xios_duration),          intent(in)    :: io_frequency
+    logical,                      intent(in)    :: cyclic
+    integer(i_def),               intent(out)   :: record_offset
+
+    type(xios_date)       :: context_start
+    integer(i_def)        :: i, j, n_fields
+
+    ! Read time data from file
+    self%time_data = read_time_data(trim(file_path))
+
+    call xios_get_start_date(context_start)
+
+    self%io_frequency = io_frequency
+
+    if (cyclic) then
+      call log_event("Temporal control not yet implemented for cyclic time axes", LOG_LEVEL_ERROR)
+    else
+      self%is_cyclic = .false.
+      self%cycle_period = xios_duration(0)
+    end if
+
+    ! Align time window - moves time data so that the current model date is
+    ! between the first two time entries
+    call self%align_time_axis(context_start, record_offset)
+
+    ! The lfric_xios_field_type object is used to store the pointers to the model fields
+    self%field_dest = file_fields
+
+    self%next_model_update = context_start
+
+    ! #TODO - hard coded to 1 until cyclic temporal control implemented
+    self%read_index = 1
+
+    ! Set up fields for reading and holding data
+    n_fields = size(file_fields)
+    allocate(self%fields(self%window_size,n_fields))
+    self%current_field_index = 1
+    do i = 1, n_fields
+      select type(fld => self%field_dest(i)%get_model_field())
+      type is (field_type)
+        do j = 1, self%window_size
+          call fld%copy_field_properties(self%fields(j,i))
+        end do
+      end select
+      ! Set the file to read into the time axis field
+      call file_fields(i)%set_model_field(self%fields(self%read_index,i))
+    end do
+
+  end subroutine initialise
+
+  !> Aligns the internal time data axis with the current model time
+  !!
+  !> @param[in]    context_start  The date at which the current XIOS starts
+  !> @param[inout] record_offset  The index corresponding to the start of the
+  !!                              aligned time axis
+  subroutine align_time_axis( self, context_start, record_offset )
+
+    implicit none
+
+    class(temporal_type), intent(inout) :: self
+    type(xios_date),      intent(in)    :: context_start
+    integer(i_def),       intent(inout) :: record_offset
+
+    integer(i_def) :: t
+
+    if (self%is_cyclic) then
+      ! Loop through to find the correct validity window
+      do
+        if ( ( self%time_data(1) <= context_start ) .and. &
+              ( context_start < self%time_data(1) + self%cycle_period ) ) then
+          exit
+        else
+          do t = 1, size(self%time_data)
+            self%time_data(t) = self%time_data(t) + self%cycle_period
+          end do
+        end if
+      end do
+
+    else
+      if (context_start < self%time_data(1) .or. &
+            self%time_data(size(self%time_data)) < context_start) then
+          call log_event( "Context must start within data time window for" // &
+                          " non-cyclic temporal data", log_level_error )
+      end if
+
+    end if
+
+    ! Loop through validity window to find record offset
+    record_offset = 0
+    do t = 1, size(self%time_data)
+      if ( ( self%time_data(1) <= context_start ) .and. &
+            ( context_start < self%time_data(2) ) ) then
+        exit
+      else
+        record_offset = record_offset + 1
+        self%time_data(1) = self%time_data(1) + self%cycle_period
+        self%time_data = cshift(self%time_data, 1)
+      end if
+    end do
+
+    ! Record offset of N_t is better represented as 0
+    if (record_offset == size(self%time_data)) record_offset = 0
+
+  end subroutine align_time_axis
+
+  !> Ticks forward the time data if required by the context
+  !!
+  !> @return Returns true if the corresponding file should keep reading data
+  function advance(self) result(carryon)
+
+    implicit none
+
+    class(temporal_type), intent(inout) :: self
+    logical :: carryon
+
+    type(xios_date)   :: model_date
+    integer(i_def) :: next_field_index
+
+    ! Get current date from XIOS calendar
+    call xios_get_current_date(model_date)
+
+    if ( self%next_model_update <= model_date ) then
+      call self%update_model_data()
+      self%next_model_update = model_date + self%io_frequency
+    end if
+
+    if ( self%time_data(1) <= model_date .and. model_date < self%time_data(2) ) then
+      carryon = .true.
+    else
+      self%time_data(1) = self%time_data(1) + self%cycle_period
+      self%time_data = cshift(self%time_data, 1)
+
+      next_field_index = self%current_field_index + 1
+      if (next_field_index > self%window_size) next_field_index = 1
+      self%current_field_index = next_field_index
+      if (.not. self%is_cyclic) then
+        carryon = (model_date <= self%time_data(2))
+      else
+        carryon = .true.
+      end if
+    end if
+
+  end function advance
+
+  !> Updates the model fields with the fields contained within the temporal
+  !! control object
+  subroutine update_model_data(self)
+
+    implicit none
+
+    class(temporal_type),       intent(inout) :: self
+
+    type(xios_date) :: current_date
+    class(field_parent_type), pointer :: tmp_model_field => null()
+    type(field_type),         pointer :: model_field     => null()
+
+    integer(i_def) :: i, n_fields
+
+    call xios_get_current_date(current_date)
+
+    ! If it's not yet time to update, exit
+    if (current_date < self%next_model_update) return
+
+    n_fields = size(self%fields, dim=2)
+
+    do i = 1, n_fields
+      tmp_model_field => self%field_dest(i)%get_model_field()
+
+      select type(tmp_model_field)
+      type is (field_type)
+        model_field => tmp_model_field
+      end select
+      call invoke(setval_X(model_field, self%fields(self%current_field_index, i)))
+    end do
+
+  end subroutine update_model_data
+
+  !-----------------------------------------------------------------------------
+  ! Destructor routines
+  !-----------------------------------------------------------------------------
+  !  Function to clear up objects - called by destructor
+  !-----------------------------------------------------------------------------
+  !> @details Explicitly deallocates any allocatable arrays in the object
+  subroutine clear(self)
+
+    implicit none
+
+    class(temporal_type), intent(inout) :: self
+
+    if (allocated(self%time_data))  deallocate(self%time_data)
+    if (allocated(self%fields))     deallocate(self%fields)
+    if (allocated(self%field_dest)) deallocate(self%field_dest)
+
+    return
+  end subroutine clear
+
+  subroutine temporal_destructor(self)
+
+    implicit none
+
+    type(temporal_type), intent(inout) :: self
+
+    call self%clear()
+
+    return
+  end subroutine temporal_destructor
+
+end module lfric_xios_temporal_mod

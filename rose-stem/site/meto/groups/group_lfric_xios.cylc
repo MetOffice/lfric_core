@@ -67,18 +67,18 @@
 {% do site_groups.developer.extend(site_groups.lfric_xios_developer) %}
 {% do site_groups.all.extend(site_groups.lfric_xios) %}
 {% do site_groups.unit_tests.extend(site_groups.lfric_xios_unit_tests) %}
-{% do site_groups.unit_tests.extend(site_groups.lfric_xios_integration_tests) %}
+{% do site_groups.integration_tests.extend(site_groups.lfric_xios_integration_tests) %}
 
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.lfric_xios_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.lfric_xios_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.lfric_xios_azspice_unit_tests) %}
-{% do site_groups.azspice_unit_tests.extend(site_groups.lfric_xios_azspice_integration_tests) %}
+{% do site_groups.azspice_integration_tests.extend(site_groups.lfric_xios_azspice_integration_tests) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.lfric_xios_ex1a_developer) %}
 {% do site_groups.ex1a.extend(site_groups.lfric_xios_ex1a) %}
 {% do site_groups.ex1a_unit_tests.extend(site_groups.lfric_xios_ex1a_unit_tests) %}
-{% do site_groups.ex1a_unit_tests.extend(site_groups.lfric_xios_ex1a_integration_tests) %}
+{% do site_groups.ex1a_integration_tests.extend(site_groups.lfric_xios_ex1a_integration_tests) %}
 
 {% do LOG.debug("Finished in site/meto/groups/group_lfric_xios.cylc") %}

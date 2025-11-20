@@ -1,27 +1,27 @@
 &base_mesh
-f_lat_deg=45.0,
-file_prefix='mesh_C24',
-fplane=.false.,
-geometry='planar',
-prepartitioned=.false.,
-prime_mesh_name='C24',
-topology='fully_periodic',
+  f_lat_deg       = 45.0
+  file_prefix     = 'mesh_C24'
+  fplane          = .false.
+  geometry        = 'planar'
+  prepartitioned  = .false.
+  prime_mesh_name = 'C24'
+  topology        = 'fully_periodic'
 /
 
 &extrusion
-planet_radius=6371229.0,
-domain_height=1000.0,
-method='uniform',
-number_of_layers=10,
+  planet_radius    = 6371229.0
+  domain_height    = 1000.0
+  method           = 'uniform'
+  number_of_layers = 10
 /
 
 &finite_element
-cellshape='quadrilateral',
-element_order_h=0,
-element_order_v=0,
-rehabilitate=.true.,
-coord_order=1
-coord_system='native'
+  cellshape       ='quadrilateral'
+  element_order_h = 0
+  element_order_v = 0
+  rehabilitate    =.true.
+  coord_order     = 1
+  coord_system    ='native'
 /
 
 &io
@@ -46,12 +46,12 @@ coord_system='native'
   timestep_start = '1'
   timestep_end = '10'
   calendar_type='gregorian'
-  calendar_start='2024-01-01 15:00:00'
+  calendar_start='2024-01-01 15:01:00'
   calendar_origin='2024-01-01 15:00:00'
 /
 
 &timestepping
-  dt=1.0
+  dt=60.0
   spinup_period=0.0
 /
 

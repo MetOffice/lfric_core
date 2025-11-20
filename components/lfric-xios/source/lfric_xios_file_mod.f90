@@ -26,6 +26,7 @@ module lfric_xios_file_mod
   use mesh_mod,                      only: mesh_type
   use mod_wait,                      only: init_wait
   use lfric_xios_diag_mod,           only: get_file_name
+  use lfric_xios_temporal_mod,       only: temporal_type
   use xios,                          only: xios_file, xios_is_valid_file,    &
                                            xios_add_child, xios_get_handle,  &
                                            xios_set_attr, xios_filegroup,    &
@@ -88,6 +89,12 @@ type, public, extends(file_type) :: lfric_xios_file_type
   logical :: is_diag = .false.
   !> Flag denoting if the always-on sampling mode is selected
   logical :: diag_always_on_sampling = .true.
+  !> Will the file be read again from the beginning once the end is reached
+  logical :: cyclic = .false.
+  !>
+  logical :: context_init_read = .true.
+  !> Temporal controller for file
+  type(temporal_type) :: temporal
 
   !> XIOS representations
   !> Internal XIOS representation of the file
@@ -98,6 +105,7 @@ type, public, extends(file_type) :: lfric_xios_file_type
   type(xios_date)             :: next_operation
   !> An array of lfric_xios_field_type objects attached to this file
   type(lfric_xios_field_type), allocatable :: fields(:)
+
 
 contains
   procedure, public :: file_new
@@ -189,30 +197,32 @@ end subroutine register_diagnostics_file
 !> @param[in] freq           The frequency in timesteps that the file is
 !!                           read-from/written-to
 !> @param[in] operation      Enum denoting the kind of I/O done by the file
+!> @param[in] cyclic         Whether the file is cyclic (for time series files)
 !> @param[in] field_group_id XIOS ID of the field group contained in the file
 !> @param[in] fields_in_file Array of fields contained in the file
 !> @param[in] is_diag        Is it a diagnostics file?
 !> @param[in] diag_always_on_sampling Is the always-on sampling mode selected?
-function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
-                                      operation, field_group_id,         &
-                                      fields_in_file, is_diag,           &
-                                      diag_always_on_sampling,           &
+function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
+                                      operation, cyclic, field_group_id,      &
+                                      fields_in_file, is_diag,                &
+                                      diag_always_on_sampling,                &
                                       file_convention ) result(self)
 
   implicit none
 
-  type(lfric_xios_file_type)  :: self
-  character(len=*),            intent(in) :: file_name
-  character(len=*),            intent(in) :: xios_id
-  integer(i_def),              intent(in) :: io_mode
-  integer(i_def),    optional, intent(in) :: freq
-  integer(i_def),    optional, intent(in) :: operation
-  character(len=*),  optional, intent(in) :: field_group_id
+  type(lfric_xios_file_type)                :: self
+  character(len=*),              intent(in) :: file_name
+  character(len=*),              intent(in) :: xios_id
+  integer(i_def),                intent(in) :: io_mode
+  integer(i_def),      optional, intent(in) :: freq
+  integer(i_def),      optional, intent(in) :: operation
+  logical,             optional, intent(in) :: cyclic
+  character(len=*),    optional, intent(in) :: field_group_id
   type(field_collection_type), &
-                     optional, intent(in) :: fields_in_file
-  logical(l_def),    optional, intent(in) :: is_diag
-  logical(l_def),    optional, intent(in) :: diag_always_on_sampling
-  integer(i_def),    optional, intent(in) :: file_convention
+                       optional, intent(in) :: fields_in_file
+  logical(l_def),      optional, intent(in) :: is_diag
+  logical(l_def),      optional, intent(in) :: diag_always_on_sampling
+  integer(i_def),      optional, intent(in) :: file_convention
 
   type(field_collection_iterator_type) :: iter
   class(field_parent_type), pointer    :: fld => null()
@@ -227,6 +237,9 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq, &
 
   if (present(operation)) self%operation = operation
   if (present(file_convention)) self%file_convention = file_convention
+  if (present(cyclic) .and. self%io_mode == FILE_MODE_READ) then
+    self%cyclic = cyclic
+  end if
 
   if (present(freq)) then
     if (freq < 0) then ! we are going to allow freq = 0 (= no_freq)
@@ -321,7 +334,7 @@ subroutine register_with_context(self)
   type(xios_duration)    :: timestep_duration
   type(xios_date)        :: start_date
 
-  integer(i_def) :: i
+  integer(i_def) :: i, record_offset
 
   call log_event( "Registering XIOS file ["//trim(self%xios_id)//"]", &
                   log_level_trace )
@@ -348,19 +361,12 @@ subroutine register_with_context(self)
 
   ! Set I/O mode (no need for case defalt as we will fall back to XIOS's
   ! default behaviour)
+  call xios_set_attr( self%handle, type="one_file" )
   select case(self%io_mode)
   case (FILE_MODE_READ)
     call xios_set_attr( self%handle, mode="read" )
-    call xios_set_attr( self%handle, type="one_file")
   case (FILE_MODE_WRITE)
     call xios_set_attr( self%handle, mode="write" )
-    ! Create CF-compliant time description
-    if (self%operation == OPERATION_TIMESERIES) then
-      call xios_set_attr( self%handle, time_counter="exclusive", &
-                                       time_counter_name="time" )
-    else
-      call xios_set_attr( self%handle, time_counter="none")
-    end if
   end select
 
   ! Set XIOS file convention
@@ -371,21 +377,26 @@ subroutine register_with_context(self)
       call xios_set_attr( self%handle, convention="UGRID" )
   end select
 
+  ! Create CF-compliant time description
+  if (self%operation == OPERATION_TIMESERIES) then
+    call xios_set_attr( self%handle, time_counter="exclusive", &
+                                     time_counter_name="time" )
+  else
+    call xios_set_attr( self%handle, time_counter="none")
+  end if
+
   ! Set XIOS duration object second value equal to file output frequency
   call xios_get_timestep(timestep_duration)
   if (.not. self%freq_ts == undef_freq) then
     self%frequency = self%freq_ts * timestep_duration
     call xios_set_attr( self%handle, output_freq=self%frequency )
+  else
+    call xios_set_attr( self%handle, output_freq=timestep_duration )
   end if
 
   ! Set the date of the first operation
   call xios_get_start_date(start_date)
-  select case(self%io_mode)
-  case (FILE_MODE_READ)
-    self%next_operation = start_date
-  case (FILE_MODE_WRITE)
-    self%next_operation = start_date + self%frequency
-  end select
+  self%next_operation = start_date + self%frequency
 
   ! Set up fields in file
   if (allocated(self%fields)) then
@@ -404,8 +415,21 @@ subroutine register_with_context(self)
       call self%fields(i)%register()
     end do
 
+    ! Set up time axis if needed
+    if ( self%io_mode == FILE_MODE_READ .and. &
+         self%operation == OPERATION_TIMESERIES ) then
+
+      ! Initialise file temporal control. Get the record offset from
+      ! the temporal object initialiser which will tell XIOS which time entry
+      ! to start reading from
+      call xios_set_attr(self%handle, cyclic=self%cyclic)
+      call self%temporal%initialise( self%path, self%fields, self%frequency, &
+                                     self%cyclic, record_offset )
+      call xios_set_attr(self%handle, record_offset=record_offset)
+    end if
+
     ! Enable field collection
-    call xios_set_attr(file_fields, enabled=.true. )
+    call xios_set_attr(file_fields, enabled=.true.)
 
   end if
 
@@ -455,13 +479,10 @@ subroutine recv_fields(self)
   type(xios_date)   :: model_date
   integer(i_def)    :: i
 
-  ! Don't do any operations if file is closed
-  if (self%is_closed) return
+  ! If file is closed or if there are no field descriptions in the file then
+  ! don't do any operations
+  if (.not. allocated(self%fields) .or. self%is_closed) return
 
-  ! Don't do any operations if there are no field descriptions in the file
-  if (.not. allocated(self%fields)) return
-
-  ! Don't try to write if file is in read mode
   if (self%io_mode /= FILE_MODE_READ) then
     call log_event( "Can't perform read operations on file ["//     &
                     trim(self%xios_id)//"]: file not in read mode", &
@@ -469,7 +490,7 @@ subroutine recv_fields(self)
   end if
 
   call xios_get_current_date(model_date)
-  if (self%next_operation <= model_date) then
+  if (self%context_init_read .or. self%next_operation <= model_date) then
 
     ! Iterate over field collection and read fields
     do i = 1, size(self%fields)
@@ -480,9 +501,17 @@ subroutine recv_fields(self)
     ! the next operation
     if (self%operation == OPERATION_ONCE) then
       call self%file_close()
-    else
+    else if (.not. self%context_init_read) then
       self%next_operation = self%next_operation + self%frequency
     end if
+
+    ! Advance the time axis if present
+    if ( (self%io_mode == FILE_MODE_READ) .and. &
+         (self%operation == OPERATION_TIMESERIES) ) then
+      if (.not. self%temporal%advance()) call self%file_close()
+    end if
+
+    self%context_init_read = .false.
 
   end if
 
@@ -498,11 +527,9 @@ subroutine send_fields(self)
   type(xios_date)   :: model_date
   integer(i_def)    :: i
 
-  ! Do not do any operations if file is closed
-  if (self%is_closed) return
-
-  ! Do not do any operations if there are no field descriptions in the file
-  if (.not. allocated(self%fields)) return
+  ! If file is closed or if there are no field descriptions in the file then
+  ! don't do any operations
+  if (.not. allocated(self%fields) .or. self%is_closed) return
 
   ! Do not try to write if file is not in write mode
   if (self%io_mode /= FILE_MODE_WRITE) then

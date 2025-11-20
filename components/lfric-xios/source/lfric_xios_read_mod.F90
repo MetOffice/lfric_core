@@ -36,7 +36,8 @@ module lfric_xios_read_mod
   use log_mod,                  only: log_event,         &
                                       log_scratch_space, &
                                       LOG_LEVEL_INFO,    &
-                                      LOG_LEVEL_ERROR
+                                      LOG_LEVEL_ERROR,   &
+                                      LOG_LEVEL_TRACE
 #ifdef UNIT_TEST
   use lfric_xios_mock_mod,      only: xios_recv_field,      &
                                       xios_get_domain_attr, &
@@ -151,9 +152,9 @@ subroutine post_read(field_proxy)
 
 end subroutine post_read
 
-!>  @brief   Read field data from UGRIDs via XIOS
-!>  @param[in]     field_name       Field name (for error reporting only)
-!>  @param[in]     field_proxy      A field proxy to be written
+!>  @brief Read field data from UGRIDs via XIOS
+!>  @param[in] field_name   Field name (for error reporting only)
+!>  @param[in] field_proxy  A field proxy to be written
 !>
 subroutine read_field_generic(xios_field_name, field_proxy)
   use lfric_xios_diag_mod,        only: get_field_domain_ref
@@ -173,6 +174,9 @@ subroutine read_field_generic(xios_field_name, field_proxy)
   vdim = field_proxy%vspace%get_ndata() * size(field_proxy%vspace%get_levels())
 
   hdim = undf/vdim
+
+  call log_event( "Reading from XIOS field [" // trim(xios_field_name // "]"), &
+                  LOG_LEVEL_TRACE )
 
   ! detect field with legacy checkpointing domain
   legacy = (index(get_field_domain_ref(xios_field_name), 'checkpoint_') == 1)

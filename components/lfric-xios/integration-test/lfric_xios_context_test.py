@@ -11,7 +11,7 @@ then destroys it. This will also create an attached XIOS context.
 
 from testframework import TestEngine, TestFailed
 from xiostest import LFRicXiosTest
-
+import sys
 
 ###############################################################################
 class LfricXiosContextTest(LFRicXiosTest):
@@ -20,7 +20,7 @@ class LfricXiosContextTest(LFRicXiosTest):
     """
 
     def __init__(self):
-        super().__init__(processes=1)
+        super().__init__(command=[sys.argv[1], "resources/configs/context.nml"], processes=1)
 
     def test(self, returncode: int, out: str, err: str):
         """

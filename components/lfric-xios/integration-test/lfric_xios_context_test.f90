@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------------
-! Copyright (c) 2024,  Met Office, on behalf of HMSO and Queen's Printer
-! For further details please refer to the file LICENCE.original which you
-! should have received as part of this distribution.
+! (C) Crown copyright 2024-2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
 !-----------------------------------------------------------------------------
 
 ! Simple test which initialises and destroys an XIOS context

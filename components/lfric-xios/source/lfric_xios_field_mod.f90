@@ -39,6 +39,8 @@ type, public :: lfric_xios_field_type
   type(xios_field)                  :: handle
   !> Unique identifier for XIOS field handle
   character(str_def)                :: xios_id
+   !> Name of the XIOS field as it appears in the output file
+  character(str_def)                :: xios_name
   !> Unique identifier for XIOS fieldgroup handle
   character(str_def)                :: fieldgroup_id
   !> Pointer to model field associated with XIOS field
@@ -49,6 +51,10 @@ contains
   procedure, public :: register
   procedure, public :: recv
   procedure, public :: send
+  procedure, public :: get_model_field
+  procedure, public :: set_model_field
+  procedure, public :: get_xios_name
+  procedure, public :: set_xios_name
   final             :: lfric_xios_field_final
 
 end type lfric_xios_field_type
@@ -73,8 +79,8 @@ function lfric_xios_field_constructor(model_field, xios_id, fieldgroup_id) resul
   type(lfric_xios_field_type) :: self
 
   class(field_parent_type), pointer, intent(in) :: model_field
-  character(str_def), optional,      intent(in) :: xios_id
-  character(str_def), optional,      intent(in) :: fieldgroup_id
+  character(len=*), optional,        intent(in) :: xios_id
+  character(len=*), optional,        intent(in) :: fieldgroup_id
 
   ! Point object to model data field
   self%model_field => model_field
@@ -95,7 +101,7 @@ function lfric_xios_field_constructor(model_field, xios_id, fieldgroup_id) resul
   end if
 
   if (present(fieldgroup_id)) then
-    self%fieldgroup_id = fieldgroup_id
+    self%fieldgroup_id = trim(adjustl(fieldgroup_id))
   else
     self%fieldgroup_id = "field_definition"
   end if
@@ -127,7 +133,7 @@ subroutine register(self)
                   log_level_trace )
 
   ! Get field group handle and add field
-  call xios_get_handle(self%fieldgroup_id, fieldgroup_hdl)
+  call xios_get_handle(trim(adjustl(self%fieldgroup_id)), fieldgroup_hdl)
   call xios_add_child(fieldgroup_hdl, self%handle, trim(self%xios_id))
   call xios_set_attr(self%handle, name=trim(adjustl(self%model_field%get_name())))
 
@@ -264,6 +270,57 @@ subroutine send(self)
   end select
 
 end subroutine send
+
+!> Returns a pointer to the associated model field
+function get_model_field(self) result(model_field_ptr)
+
+  implicit none
+
+  class(lfric_xios_field_type), intent(in) :: self
+  class(field_parent_type), pointer :: model_field_ptr
+
+  model_field_ptr => self%model_field
+
+end function get_model_field
+
+!> Sets the associated model field
+!> @param[in] new_model_field  A pointer to the new model field to associate with
+!>                             this XIOS field
+subroutine set_model_field(self, new_model_field)
+
+  implicit none
+
+  class(lfric_xios_field_type),         intent(inout) :: self
+  class(field_parent_type),     target, intent(in)    :: new_model_field
+
+  self%model_field => new_model_field
+
+end subroutine set_model_field
+
+!> Returns the associated XIOS field name
+function get_xios_name(self) result(xios_name_out)
+
+  implicit none
+
+  class(lfric_xios_field_type), intent(in) :: self
+  character(len=str_def), allocatable :: xios_name_out
+
+  xios_name_out = trim(adjustl(self%xios_name))
+
+end function get_xios_name
+
+!> Sets the associated XIOS field name
+!> @param[in] xios_name_in  The new XIOS field name to associate with this field
+subroutine set_xios_name(self, xios_name_in)
+
+  implicit none
+
+  class(lfric_xios_field_type), intent(inout) :: self
+  character(len=*),             intent(in)    :: xios_name_in
+
+  self%xios_name = trim(adjustl(xios_name_in))
+
+end subroutine set_xios_name
 
 !> Finaliser for the lfric_xios_field_type object
 subroutine lfric_xios_field_final(self)

@@ -92,7 +92,7 @@
 
     [[AZSPICE_TECH_TESTS_GNU]]
         inherit=AZSPICE_TECH_TESTS,AZSPICE_GNU
-        {{ generate_script("pre-script", [azspice_base, azspice_compiler_gnu]) }}
+        {{ generate_script("pre-script", [azspice_base, azspice_compiler_gnu, azspice_scitools]) }}
 
     [[AZSPICE_TECH]]
         inherit=AZSPICE_TECH_BASE

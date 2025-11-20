@@ -93,12 +93,8 @@ contains
 
     do while (test_unit%tick())
 
-      ! Nothing happens on step 1 for now to allow initial I/O - this is
-      ! temporary behaviour until #3321
-      if (test_unit%get_step() > 1) then
-        @assertEqual(actor_1%indicator, test_unit%get_step() - 1)
-        @assertEqual(actor_1%event_step, test_unit%get_step())
-      end if
+      @assertEqual(actor_1%indicator, test_unit%get_step())
+      @assertEqual(actor_1%event_step, test_unit%get_step())
 
       ! Set up event to start half way and run until the end
       if (test_unit%get_step() == 5) then

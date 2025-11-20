@@ -1,0 +1,16 @@
+class lfric_xios_temporal_mod::temporal_type {
+  -name : character
+  -time_data : xios_date<<allocatable>>
+  -next_model_update : xios_date
+  -fields : field_type[::]<<allocatable>>
+  -field_dest : lfric_xios_field_type<<allocatable>>
+  -read_index : integer
+  -current_field_index : integer
+  -window_size : integer = 1
+  -is_cyclic : logical = .false.
+  -cycle_period : xios_duration
+  -io_frequency : xios_duration
+
+  +initialise(<<in>>file_path: character, <<in>>file_fields: lfric_xios_field_type, <<in>>io_freq: xios_duration, <<in>>cyclic: logical, <<out>>record_offset: integer )
+  +advance() : logical
+ }

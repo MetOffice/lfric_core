@@ -8,9 +8,12 @@
 module test_db_mod
 
   use calendar_mod,                   only: calendar_type
+  use cli_mod,                        only: get_initial_filename
   use configuration_mod,              only: read_configuration
   use constants_mod,                  only: i_def, r_def, str_def, imdi, r_second, i_timestep
   use extrusion_mod,                  only: TWOD
+  use field_collection_mod,           only: field_collection_type
+  use field_parent_mod,               only: read_interface, write_interface
   use field_mod,                      only: field_type, field_proxy_type
   use halo_comms_mod,                 only: initialise_halo_comms, &
                                             finalise_halo_comms
@@ -25,8 +28,12 @@ module test_db_mod
   use local_mesh_mod,                 only: local_mesh_type
   use log_mod,                        only: initialise_logging, &
                                             finalise_logging,   &
-                                            log_event, LOG_LEVEL_ERROR
+                                            log_set_level, log_event, &
+                                            LOG_LEVEL_TRACE, LOG_LEVEL_ERROR
   use namelist_collection_mod,        only: namelist_collection_type
+  use namelist_mod,                   only: namelist_type
+  use lfric_xios_read_mod,            only: read_field_generic
+  use lfric_xios_write_mod,           only: write_field_generic
   use local_mesh_collection_mod,      only: local_mesh_collection_type, &
                                             local_mesh_collection
   use mesh_collection_mod,            only: mesh_collection_type, &
@@ -49,6 +56,7 @@ module test_db_mod
     type(field_type), public :: panel_id
     type(model_clock_type), public, allocatable :: clock
     class(calendar_type),   public, allocatable :: calendar
+    type(field_collection_type), public :: temporal_fields
 
   contains
     procedure initialise
@@ -65,13 +73,19 @@ contains
     class(test_db_type), target, intent(inout) :: self
 
     type(local_mesh_type), target  :: local_mesh
-    type(local_mesh_type), pointer :: local_mesh_ptr => null()
+    type(local_mesh_type), pointer :: local_mesh_ptr
     type(mesh_type), target :: mesh, twod_mesh
-    type(mesh_type), pointer :: mesh_ptr => null()
-    type(mesh_type), pointer :: twod_mesh_ptr => null()
-    type(function_space_type), pointer :: wchi_fs => null()
-    type(function_space_type), pointer :: tmp_fs => null()
-    type(field_proxy_type) :: chi_p(3), pid_p
+    type(mesh_type), pointer :: mesh_ptr
+    type(mesh_type), pointer :: twod_mesh_ptr
+    type(namelist_type), pointer :: time_nml
+    type(namelist_type), pointer :: timestepping_nml
+    type(function_space_type), pointer :: wchi_fs
+    type(function_space_type), pointer :: tmp_fs
+    type(field_proxy_type) :: chi_p(3), pid_p, rproxy
+    type(field_type) :: temporal_field
+
+    procedure(read_interface),  pointer :: read_ptr
+    procedure(write_interface), pointer :: write_ptr
 
     integer(i_def), parameter :: n_x = 3
     integer(i_def), parameter :: n_y = 3
@@ -79,14 +93,34 @@ contains
 
     integer(i_def) :: local_mesh_id, mesh_id, twod_mesh_id, coord, i, x_start, y_start, rc, cells_per_layer
 
+    character(:), allocatable :: filename
+
+    integer(i_timestep) :: first
+    integer(i_timestep) :: last
+    character(str_def) :: start_date, calendar_start, calendar_origin
+    character(str_def) :: timestep_start
+    character(str_def) :: timestep_end
+
+    real(r_second) :: timestep_length
+
     ! Initialise MPI & logging
     call create_comm(self%comm)
     call global_mpi%initialise(self%comm)
     call initialise_halo_comms(self%comm)
     call initialise_logging(self%comm%get_comm_mpi_val(), 'lfric_xios_context_test')
+    call log_set_level(LOG_LEVEL_TRACE)
 
-    call self%config%initialise( "lfric_xios_integration_tests", table_len=10 )
-    call read_configuration( "resources/configuration.nml", self%config )
+    call self%config%initialise("lfric_xios_integration_tests", table_len=10)
+    call get_initial_filename(filename)
+    call read_configuration(trim(adjustl(filename)), self%config)
+    deallocate(filename)
+
+    time_nml => self%config%get_namelist('time')
+    timestepping_nml => self%config%get_namelist('timestepping')
+    call time_nml%get_value('calendar_start', start_date)
+    call time_nml%get_value('timestep_start', timestep_start)
+    call time_nml%get_value('timestep_end', timestep_end)
+    call timestepping_nml%get_value('dt', timestep_length)
 
     ! Create top level mesh collection, function spaces & routing tables
     local_mesh_collection = local_mesh_collection_type()
@@ -152,23 +186,47 @@ contains
     end do
 
     ! Init clock and calendar
-    allocate( self%calendar,                                      &
-              source = step_calendar_type( "2024-01-01 15:00:00", &
-                                           "2024-01-01 15:00:00" ), stat=rc )
+    calendar_origin = start_date
+    calendar_start = start_date
+    allocate( self%calendar,                                                &
+              source = step_calendar_type( trim(adjustl(calendar_origin)),  &
+                                           trim(adjustl(calendar_start)) ), &
+                                           stat=rc )
     if (rc /= 0) then
       call log_event( "Unable to allocate calendar", LOG_LEVEL_ERROR )
     end if
 
-    allocate( self%clock,                                               &
-              source = model_clock_type( 1_i_timestep, 10_i_timestep,   &
-                                         60.0_r_second, 0.0_r_second ), &
+
+    first = self%calendar%parse_instance(timestep_start)
+    last  = self%calendar%parse_instance(timestep_end)
+
+    if ( allocated(self%clock) ) deallocate (self%clock)
+    allocate( self%clock,                                 &
+              source = model_clock_type( first, last,     &
+                                         timestep_length, &
+                                         0.0_r_second ),  &
                                          stat=rc )
+
     if (rc /= 0) then
       call log_event( "Unable to allocate model clock", LOG_LEVEL_ERROR )
     end if
 
+    ! Create field for reading
+    call self%temporal_fields%initialise(name="temporal_fields", table_len=1)
+    tmp_fs => function_space_collection%get_fs(mesh_ptr, 0, 0, W3)
+    call temporal_field%initialise(vector_space = tmp_fs, name="temporal_field" )
+    rproxy = temporal_field%get_proxy()
+    rproxy%data(:) = 0.0_r_def
+    read_ptr => read_field_generic
+    call temporal_field%set_read_behaviour(read_ptr)
+    write_ptr => write_field_generic
+    call temporal_field%set_write_behaviour(write_ptr)
+    call self%temporal_fields%add_field(temporal_field)
+
+
     nullify(local_mesh_ptr)
     nullify(mesh_ptr)
+    nullify(time_nml)
     nullify(twod_mesh_ptr)
     nullify(wchi_fs)
     nullify(tmp_fs)
