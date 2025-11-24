@@ -62,7 +62,9 @@ subroutine abstract_external_field_initialiser( self, &
   implicit none
 
   class(abstract_external_field_type), intent(inout) :: self
-  class(field_parent_type),   pointer, intent(in)    :: lfric_field_ptr
+!> Set this as a 'target', not a 'pointer', as Intel compilers (ifort and ifx)
+!> will not build this routine if the parent class is set as a pointer here
+  class(field_parent_type),   target,  intent(in)    :: lfric_field_ptr
 
   self%lfric_field => lfric_field_ptr
 
