@@ -13,15 +13,19 @@ module runtime_partition_lfric_mod
   use namelist_mod,            only: namelist_type
   use partition_mod,           only: partitioner_interface
   use runtime_partition_mod,   only: get_partition_strategy
-  use panel_decomposition_mod, only: panel_decomposition_type, &
-                                     auto_decomposition_type,&
-                                     row_decomposition_type, &
-                                     column_decomposition_type, &
-                                     custom_decomposition_type
-  use partitioning_config_mod, only: panel_decomposition_auto,   &
-                                     panel_decomposition_row,    &
-                                     panel_decomposition_column, &
-                                     panel_decomposition_custom
+  use panel_decomposition_mod, only: panel_decomposition_type,           &
+                                     auto_decomposition_type,            &
+                                     row_decomposition_type,             &
+                                     column_decomposition_type,          &
+                                     custom_decomposition_type,          &
+                                     auto_nonuniform_decomposition_type, &
+                                     guided_nonuniform_decomposition_type
+  use partitioning_config_mod, only: panel_decomposition_auto,            &
+                                     panel_decomposition_row,             &
+                                     panel_decomposition_column,          &
+                                     panel_decomposition_custom,          &
+                                     panel_decomposition_auto_nonuniform, &
+                                     panel_decomposition_guided_nonuniform
 
   use log_mod, only: log_event, log_scratch_space, LOG_LEVEL_ERROR
 
@@ -105,7 +109,14 @@ subroutine get_partition_parameters_nml( partitioning,   &
   case ( panel_decomposition_custom )
     call partitioning%get_value( 'panel_xproc', panel_xproc )
     call partitioning%get_value( 'panel_yproc', panel_yproc )
-    decomposition = custom_decomposition_type( num_xprocs=panel_xproc, num_yprocs=panel_yproc )
+    decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
+
+  case ( panel_decomposition_auto_nonuniform )
+    decomposition = auto_nonuniform_decomposition_type()
+
+  case ( panel_decomposition_guided_nonuniform )
+    call partitioning%get_value( 'panel_xproc', panel_xproc )
+    decomposition = guided_nonuniform_decomposition_type( panel_xproc )
 
   case default
     ! Not clear it's possible to still error at this point but no harm in checking

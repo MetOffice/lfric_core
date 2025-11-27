@@ -42,12 +42,6 @@ module gen_planar_mod
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
 
-  use panel_decomposition_mod, only: panel_decomposition_type,  &
-                                     auto_decomposition_type,   &
-                                     row_decomposition_type,    &
-                                     column_decomposition_type, &
-                                     custom_decomposition_type
-
   implicit none
 
   private
@@ -2392,17 +2386,27 @@ end function is_generated
 !>==============================================================================
 subroutine set_partition_parameters( decomposition, partitioner_ptr )
 
+  use panel_decomposition_mod, only: panel_decomposition_type,           &
+                                     auto_decomposition_type,            &
+                                     row_decomposition_type,             &
+                                     column_decomposition_type,          &
+                                     custom_decomposition_type,          &
+                                     auto_nonuniform_decomposition_type, &
+                                     guided_nonuniform_decomposition_type
+
   use partition_mod, only: partitioner_interface, &
                            partitioner_planar
 
   ! Configuration modules.
-  use partitions_config_mod, only: n_partitions,               &
-                                   panel_xproc, panel_yproc,   &
-                                   panel_decomposition,        &
-                                   PANEL_DECOMPOSITION_AUTO,   &
-                                   PANEL_DECOMPOSITION_ROW,    &
-                                   PANEL_DECOMPOSITION_COLUMN, &
-                                   PANEL_DECOMPOSITION_CUSTOM
+  use partitions_config_mod, only: n_partitions,                        &
+                                   panel_xproc, panel_yproc,            &
+                                   panel_decomposition,                 &
+                                   panel_decomposition_auto,            &
+                                   panel_decomposition_row,             &
+                                   panel_decomposition_column,          &
+                                   panel_decomposition_custom,          &
+                                   panel_decomposition_auto_nonuniform, &
+                                   panel_decomposition_guided_nonuniform
 
   implicit none
 
@@ -2417,18 +2421,24 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
   call log_event( "Using planar partitioner", LOG_LEVEL_INFO )
 
   select case(panel_decomposition)
-    case( PANEL_DECOMPOSITION_AUTO )
+    case( panel_decomposition_auto )
       decomposition = auto_decomposition_type()
 
-    case( PANEL_DECOMPOSITION_ROW )
+    case( panel_decomposition_row )
       decomposition = row_decomposition_type()
 
-    case( PANEL_DECOMPOSITION_COLUMN )
+    case( panel_decomposition_column )
       decomposition = column_decomposition_type()
 
-    case( PANEL_DECOMPOSITION_CUSTOM )
-      ! Use the values provided from the partitions namelist.
-      decomposition = custom_decomposition_type(num_xprocs=panel_xproc, num_yprocs=panel_yproc)
+    case( panel_decomposition_custom )
+      ! use the values provided from the partitions namelist.
+      decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
+
+    case ( panel_decomposition_auto_nonuniform )
+      decomposition = auto_nonuniform_decomposition_type()
+
+    case ( panel_decomposition_guided_nonuniform )
+      decomposition = guided_nonuniform_decomposition_type( panel_xproc )
 
     case default
       call log_event( "Missing entry for panel decomposition, "// &

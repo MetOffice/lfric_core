@@ -128,6 +128,8 @@ module partition_mod
     !> @param[in]  total_ranks  Total number of MPI ranks.
     !> @param[in] max_stencil_depth  The maximum depth of stencil that will be
     !>                               used with this partition
+    !> @param[in]  mapping_factor  Ratio between this and coarsest associated
+    !>                             mesh
     !> @param[in] generate_inner_halos Flag to control the generation of inner
     !>                                  halos
     !> @param[inout] global_cell_id  Holds the global IDs of all cells in
@@ -149,6 +151,7 @@ module partition_mod
                                       local_rank, &
                                       total_ranks, &
                                       max_stencil_depth, &
+                                      mapping_factor, &
                                       generate_inner_halos, &
                                       global_cell_id, &
                                       num_inner, &
@@ -165,6 +168,7 @@ module partition_mod
       integer(i_def), intent(in)                 :: local_rank,   &
                                                     total_ranks
       integer(i_def), intent(in)                 :: max_stencil_depth
+      integer(i_def), intent(in)                 :: mapping_factor
       logical(l_def), intent(in)                 :: generate_inner_halos
       integer(i_def), intent(inout), allocatable :: global_cell_id(:)
       integer(i_def), intent(out)                :: num_inner(:), &
@@ -190,6 +194,8 @@ contains
   !> @param [in] halo_depth The depth to which halos will be created
   !> @param [in] local_rank Number of the local process rank
   !> @param [in] total_ranks Total number of process ranks available
+  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
+  !>                             mesh
   !> @return self the partition object
   !-------------------------------------------------------------------------------
   function partition_constructor( global_mesh, &
@@ -198,7 +204,8 @@ contains
                                   max_stencil_depth, &
                                   generate_inner_halos, &
                                   local_rank, &
-                                  total_ranks) result(self)
+                                  total_ranks, &
+                                  mapping_factor ) result(self)
 
   implicit none
 
@@ -209,11 +216,19 @@ contains
   integer(i_def),                   intent(in) :: local_rank
   integer(i_def),                   intent(in) :: total_ranks
   logical(l_def),                   intent(in) :: generate_inner_halos
+  integer(i_def), optional,         intent(in) :: mapping_factor
 
   type(partition_type), target :: self
 
   integer(i_def) :: i
   integer(i_def) :: last
+  integer(i_def) :: mf_actual
+
+  if (present(mapping_factor)) then
+    mf_actual = mapping_factor
+  else
+    mf_actual = 1_i_def
+  end if
 
   self%max_stencil_depth = max_stencil_depth
   self%halo_depth = self%max_stencil_depth
@@ -232,6 +247,7 @@ contains
                     local_rank, &
                     total_ranks, &
                     self%max_stencil_depth, &
+                    mf_actual, &
                     generate_inner_halos, &
                     self%global_cell_id, &
                     self%num_inner, &
@@ -379,6 +395,8 @@ contains
   !> @param[in] total_ranks  Total number of MPI ranks.
   !> @param[in] max_stencil_depth  The maximum depth of stencil that will be
   !>                               used with this partition.
+  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
+  !>                             mesh
   !> @param [in] generate_inner_halos Flag to control the generation of inner
   !>                                   halos
   !> @param[inout] partitioned_cells  Returned array that holds the global IDs
@@ -399,7 +417,8 @@ contains
                                  local_rank,            &
                                  total_ranks,           &
                                  max_stencil_depth,     &
-                                 generate_inner_halos, &
+                                 mapping_factor,        &
+                                 generate_inner_halos,  &
                                  partitioned_cells,     &
                                  num_inner,             &
                                  num_edge,              &
@@ -414,6 +433,7 @@ contains
     integer(i_def),              intent(in)    :: local_rank
     integer(i_def),              intent(in)    :: total_ranks
     integer(i_def),              intent(in)    :: max_stencil_depth
+    integer(i_def),              intent(in)    :: mapping_factor
     integer(i_def), allocatable, intent(inout) :: partitioned_cells( : )
     integer(i_def),              intent(out)   :: num_inner( : )
     integer(i_def),              intent(out)   :: num_edge
@@ -430,6 +450,7 @@ contains
                                         local_rank, &
                                         total_ranks, &
                                         max_stencil_depth, &
+                                        mapping_factor, &
                                         generate_inner_halos, &
                                         partitioned_cells, &
                                         num_inner, &
@@ -453,6 +474,8 @@ contains
   !> @param[in]  total_ranks  Total number of MPI ranks.
   !> @param[in] max_stencil_depth  Maximum depth of stencil that will be used
   !>                               with this partition.
+  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
+  !>                             mesh
   !> @param [in] generate_inner_halos Flag to control the generation of inner
   !>                                   halos
   !> @param[inout] partitioned_cells  Holds the global IDs of all cells in
@@ -474,7 +497,8 @@ contains
                                       local_rank,             &
                                       total_ranks,            &
                                       max_stencil_depth,      &
-                                      generate_inner_halos,  &
+                                      mapping_factor,         &
+                                      generate_inner_halos,   &
                                       partitioned_cells,      &
                                       num_inner,              &
                                       num_edge,               &
@@ -489,6 +513,7 @@ contains
     integer(i_def),              intent(in)    :: local_rank
     integer(i_def),              intent(in)    :: total_ranks
     integer(i_def),              intent(in)    :: max_stencil_depth
+    integer(i_def),              intent(in)    :: mapping_factor
     integer(i_def), allocatable, intent(inout) :: partitioned_cells( : )
     integer(i_def),              intent(out)   :: num_inner( : )
     integer(i_def),              intent(out)   :: num_edge
@@ -510,6 +535,7 @@ contains
                                         local_rank, &
                                         total_ranks, &
                                         max_stencil_depth, &
+                                        mapping_factor, &
                                         generate_inner_halos, &
                                         partitioned_cells, &
                                         num_inner, &
@@ -530,6 +556,8 @@ contains
   !> @param[in]  total_ranks  Total number of MPI ranks.
   !> @param[in]  max_stencil_depth  Maximum depth of stencil that will be used
   !>                                with this partition.
+  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
+  !>                             mesh
   !> @param [in] generate_inner_halos Flag to control the generation of inner
   !>                                   halos
   !> @param[inout] partitioned_cells  Holds the global IDs of all cells in
@@ -550,7 +578,8 @@ contains
                                              local_rank,            &
                                              total_ranks,           &
                                              max_stencil_depth,     &
-                                             generate_inner_halos, &
+                                             mapping_factor,        &
+                                             generate_inner_halos,  &
                                              partitioned_cells,     &
                                              num_inner,             &
                                              num_edge,              &
@@ -570,6 +599,7 @@ contains
     integer(i_def),              intent(in)    :: local_rank
     integer(i_def),              intent(in)    :: total_ranks
     integer(i_def),              intent(in)    :: max_stencil_depth
+    integer(i_def),              intent(in)    :: mapping_factor
     integer(i_def), allocatable, intent(inout) :: partitioned_cells( : )
     integer(i_def),              intent(out)   :: num_inner( : )
     integer(i_def),              intent(out)   :: num_edge
@@ -610,7 +640,8 @@ contains
                                              local_rank,            &
                                              total_ranks,           &
                                              max_stencil_depth,     &
-                                             generate_inner_halos, &
+                                             mapping_factor,        &
+                                             generate_inner_halos,  &
                                              partitioned_cells,     &
                                              num_inner,             &
                                              num_edge,              &
@@ -633,6 +664,8 @@ contains
     integer(i_def),              intent(in)    :: total_ranks             ! Total number of MPI ranks
     integer(i_def),              intent(in)    :: max_stencil_depth       ! The maximum depth of stencil that will be used
                                                                           ! with this partition
+    integer(i_def),              intent(in)    :: mapping_factor          ! The ratio of number of edge cells between this and the
+                                                                          ! coarsest recursively mapped mesh
     integer(i_def), allocatable, intent(inout) :: partitioned_cells( : )  ! Returned array that holds the global ids of
                                                                           ! all cells in local partition
     integer(i_def),              intent(out)   :: num_inner( : )          ! Number of cells that are inner halo cells.
@@ -784,19 +817,26 @@ contains
     start_rank = panel_ranks * (face - 1)
     relative_rank = local_rank - start_rank + 1
 
-    call decomposition%get_partition( relative_rank, &
-                                      panel_ranks,   &
-                                      num_cells_x,   &
-                                      num_cells_y,   &
-                                      any_maps,      &
-                                      num_x,         &
-                                      num_y,         &
-                                      start_x,       &
+    call decomposition%get_partition( relative_rank,    &
+                                      panel_ranks,      &
+                                      mapping_factor,   &
+                                      num_cells_x,      &
+                                      num_cells_y,      &
+                                      any_maps,         &
+                                      num_x,            &
+                                      num_y,            &
+                                      start_x,          &
                                       start_y )
 
 
     start_cell = sw_corner_cells(face)
     deallocate(sw_corner_cells)
+
+    write(log_scratch_space,"(a,i0,a,i0,a,i0,a,i0)") "start_x ", start_x, &
+                                                    " start_y ", start_y, &
+                                                    " num_x ",   num_x,   &
+                                                    " num_y ",   num_y
+    call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
 
     ! Create a linked list of all cells that are part of this partition (not halos)
 

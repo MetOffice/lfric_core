@@ -18,15 +18,15 @@ module runtime_partition_mod
   use namelist_collection_mod, only: namelist_collection_type
   use namelist_mod,            only: namelist_type
   use ncdf_quad_mod,           only: ncdf_quad_type
+  use partition_mod,           only: partition_type,                 &
+                                     partitioner_interface,          &
+                                     partitioner_cubedsphere_serial, &
+                                     partitioner_cubedsphere,        &
+                                     partitioner_planar
 
-  use partition_mod, only: partition_type,                 &
-                           partitioner_interface,          &
-                           partitioner_cubedsphere_serial, &
-                           partitioner_cubedsphere,        &
-                           partitioner_planar
+  use panel_decomposition_mod, only: panel_decomposition_type, &
+                                     calc_mapping_factor
   use sci_query_mod, only: is_lbc
-
-  use panel_decomposition_mod, only: panel_decomposition_type
 
   use local_mesh_collection_mod,  only: local_mesh_collection
   use global_mesh_collection_mod, only: global_mesh_collection
@@ -118,9 +118,9 @@ end subroutine get_partition_strategy
 !> @param[in]  partitioner_ptr        Mesh partitioning strategy
 subroutine create_local_mesh( mesh_names,              &
                               local_rank, total_ranks, &
-                              decomposition,            &
+                              decomposition,           &
                               stencil_depth,           &
-                              generate_inner_halos,   &
+                              generate_inner_halos,    &
                               partitioner_ptr )
 
   implicit none
@@ -142,18 +142,23 @@ subroutine create_local_mesh( mesh_names,              &
   type(local_mesh_type)           :: local_mesh
 
   integer(i_def) :: local_mesh_id, i
+  integer(i_def) :: mapping_factor
 
   do i=1, size(mesh_names)
 
     global_mesh_ptr => global_mesh_collection%get_global_mesh( mesh_names(i) )
 
+    mapping_factor = calc_mapping_factor( global_mesh_collection, global_mesh_ptr )
+
     ! Create partition
-    partition = partition_type( global_mesh_ptr,       &
-                                partitioner_ptr,       &
-                                decomposition,         &
-                                stencil_depth,         &
+    partition = partition_type( global_mesh_ptr,      &
+                                partitioner_ptr,      &
+                                decomposition,        &
+                                stencil_depth,        &
                                 generate_inner_halos, &
-                                local_rank, total_ranks )
+                                local_rank,           &
+                                total_ranks,          &
+                                mapping_factor )
     ! Create local_mesh
     call local_mesh%initialise( global_mesh_ptr, partition )
 

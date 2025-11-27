@@ -144,11 +144,16 @@ subroutine init_mesh( configuration,           &
   ! 0.0 Extract configuration variables
   !============================================================================
   base_mesh_nml      => configuration%get_namelist('base_mesh')
-  finite_element_nml => configuration%get_namelist('finite_element')
-
   call base_mesh_nml%get_value( 'prepartitioned', prepartitioned )
   call base_mesh_nml%get_value( 'file_prefix',    file_prefix )
+
+  finite_element_nml => configuration%get_namelist('finite_element')
   call finite_element_nml%get_value( 'cellshape', cellshape )
+
+  if ( .not. prepartitioned ) then
+    partitioning_nml   => configuration%get_namelist('partitioning')
+    call partitioning_nml%get_value( 'generate_inner_halos', generate_inner_halos )
+  end if
 
 
 

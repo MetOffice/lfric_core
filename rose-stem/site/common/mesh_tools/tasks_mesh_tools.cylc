@@ -10,6 +10,7 @@
       task_ns.conf_name == "cubedsphere-c3" or
       task_ns.conf_name == "cubedsphere-rotated" or
       task_ns.conf_name == "cubedsphere-maps" or
+      task_ns.conf_name == "cubedsphere-op-nonuniform" or
       task_ns.conf_name == "cubedsphere" %}
 
     {% do task_dict.update({
