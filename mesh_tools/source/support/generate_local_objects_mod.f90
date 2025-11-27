@@ -18,7 +18,8 @@ module generate_local_objects_mod
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
   use global_mesh_map_mod,            only: global_mesh_map_type
   use partition_mod,                  only: partition_type, partitioner_interface
-  use panel_decomposition_mod,        only: panel_decomposition_type
+  use panel_decomposition_mod,        only: panel_decomposition_type, &
+                                            calc_mapping_factor
 
   implicit none
 
@@ -102,7 +103,7 @@ subroutine generate_local_objects( local_mesh_bank,       &
   character(str_def) :: source_name, name, lbc_name
 
   integer(i_def) :: n_meshes, n_maps, map_xcells, map_ycells, local_id
-  integer(i_def) :: i, p, q, target, local_cell, cell_global_id
+  integer(i_def) :: i, p, q, target, local_cell, cell_global_id, mapping_factor
 
   ! Local variables for LBC meshes
   type(local_mesh_type)       :: local_lbc_mesh
@@ -119,6 +120,8 @@ subroutine generate_local_objects( local_mesh_bank,       &
     source_name = mesh_names(i)
     source_global_mesh_ptr => global_mesh_bank%get_global_mesh(source_name)
 
+    mapping_factor = calc_mapping_factor(global_mesh_bank, source_global_mesh_ptr)
+
     call log_event( 'Partitioning mesh:'//trim(source_name), log_level_debug )
 
     write( name,'(A,I0)' ) trim(adjustl(source_name))//'_', partition_id
@@ -130,7 +133,9 @@ subroutine generate_local_objects( local_mesh_bank,       &
                                 decomposition,          &
                                 max_stencil_depth,      &
                                 generate_inner_halos,   &
-                                partition_id, n_partitions )
+                                partition_id,           &
+                                n_partitions,           &
+                                mapping_factor )
 
     call local_mesh%initialise( source_global_mesh_ptr, &
                                 partition, name=name )

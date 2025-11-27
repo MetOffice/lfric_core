@@ -441,9 +441,10 @@ contains
     ! Vertices: Bottom Left (south-west)
     ! Edges:    Left        (west)
     ! Faces:    Left        (west)
-    self%ncells = 9
-    self%nverts = 16
-    self%nedges = 24
+    self%ncells  = 9
+    self%nverts  = 16
+    self%nedges  = 24
+    self%npanels = 1
 
     allocate( self%cell_next_2d    (self%nedges_per_cell, self%ncells) )
     allocate( self%vert_on_cell_2d (self%nverts_per_cell, self%ncells) )
