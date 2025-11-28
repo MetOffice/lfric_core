@@ -240,6 +240,7 @@ contains
                                      partition_y_pos
 
     integer(i_def) :: num_xprocs, num_yprocs
+    integer(i_def) :: mp_num_cells_x, mp_num_cells_y
     integer(i_def) :: start_xprocs, start_width, i
     logical :: found_partition
 
@@ -248,11 +249,14 @@ contains
     ! For automatic partitioning, try to partition into the squarest
     ! possible partitions.
 
+    mp_num_cells_x = num_cells_x / mapping_factor
+    mp_num_cells_y = num_cells_y / mapping_factor
+
     ! Find width of squarest possible partitions and corresponding xprocs
     start_width = nint( sqrt( &
-                    real(num_cells_x * num_cells_y / panel_ranks, kind=r_def) &
+                    real(mp_num_cells_x * mp_num_cells_y / panel_ranks, kind=r_def) &
                   ), kind=i_def)
-    start_xprocs = num_cells_x / start_width
+    start_xprocs = mp_num_cells_x / start_width
 
     found_partition = .false.
 
@@ -266,8 +270,8 @@ contains
 
         ! If we have any maps then x and y procs must divide the coarsest panel
         if ( (.not. any_maps) .or. &
-             ( mod( num_cells_x / mapping_factor, num_xprocs ) == 0 .and. &
-               mod( num_cells_y / mapping_factor, num_yprocs ) == 0 ) &
+             ( mod( mp_num_cells_x, num_xprocs ) == 0 .and. &
+               mod( mp_num_cells_y, num_yprocs ) == 0 ) &
         ) then
           found_partition = .true.
           exit
@@ -284,8 +288,8 @@ contains
 
         ! If we have any maps then x and y procs must divide the coarsest panel
         if ( (.not. any_maps) .or. &
-             ( mod( num_cells_x / mapping_factor, num_xprocs ) == 0 .and. &
-               mod( num_cells_y / mapping_factor, num_yprocs ) == 0 ) &
+             ( mod( mp_num_cells_x, num_xprocs ) == 0 .and. &
+               mod( mp_num_cells_y, num_yprocs ) == 0 ) &
         ) then
           found_partition = .true.
           exit
@@ -505,22 +509,23 @@ contains
                                      partition_x_pos,  &
                                      partition_y_pos
 
-    integer(i_def) :: num_xprocs, mp_num_cells_x
+    integer(i_def) :: num_xprocs, mp_num_cells_x, mp_num_cells_y
     integer(i_def) :: start_xprocs, start_width, i
     logical ::found_factors
 
     call log_event("Using auto_nonuniform decomposition", LOG_LEVEL_INFO)
 
     mp_num_cells_x = num_cells_x / mapping_factor
+    mp_num_cells_y = num_cells_y / mapping_factor
 
     ! For automatic partitioning, try to partition into the squarest
     ! possible partitions
 
     ! Find width of squarest possible partitions and corresponding xprocs
     start_width = nint( sqrt( &
-                    real(num_cells_x * num_cells_y / panel_ranks, kind=r_def) &
+                    real(mp_num_cells_x * mp_num_cells_y / panel_ranks, kind=r_def) &
                   ), kind=i_def)
-    start_xprocs = num_cells_x / start_width
+    start_xprocs = mp_num_cells_x / start_width
     found_factors = .false.
 
     do i = 0, start_xprocs - 1

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="155.11557mm"
+   height="16.164989mm"
+   viewBox="0 0 155.11557 16.16499"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="testing_continuum.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="1.2810466"
+     inkscape:cx="282.19114"
+     inkscape:cy="92.892796"
+     inkscape:window-width="1920"
+     inkscape:window-height="1147"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid846"
+       originx="-2.4565049"
+       originy="-28.95917" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2">
+    <rect
+       x="410.71558"
+       y="10.715558"
+       width="160"
+       height="50"
+       id="rect40567" />
+    <rect
+       x="190.71558"
+       y="10.715558"
+       width="220"
+       height="50"
+       id="rect31763" />
+    <rect
+       x="10.715572"
+       y="10.715558"
+       width="180"
+       height="50"
+       id="rect8041" />
+    <rect
+       x="5.7155719"
+       y="15.715558"
+       width="575"
+       height="45"
+       id="rect121190" />
+    <rect
+       x="5.7155719"
+       y="10.715558"
+       width="575"
+       height="45"
+       id="rect112318" />
+    <rect
+       x="-4.2844281"
+       y="15.715558"
+       width="475"
+       height="50"
+       id="rect64066" />
+    <rect
+       x="0.71557206"
+       y="10.715558"
+       width="475"
+       height="50"
+       id="rect57896" />
+    <rect
+       x="5.7155719"
+       y="5.7155576"
+       width="575"
+       height="45"
+       id="rect44582" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient3607">
+      <stop
+         style="stop-color:#56c7d7;stop-opacity:1;"
+         offset="0"
+         id="stop3603" />
+      <stop
+         style="stop-color:#d955d8;stop-opacity:1"
+         offset="1"
+         id="stop3605" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3607"
+       id="linearGradient3609"
+       x1="67.33625"
+       y1="37.041664"
+       x2="174.75751"
+       y2="37.041664"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.1975309,0,0,1,-211.72034,0)" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-2.456505,-28.95917)">
+    <rect
+       style="fill:url(#linearGradient3609);fill-opacity:1;stroke:#000000;stroke-width:0.289993"
+       id="rect848"
+       width="154.82558"
+       height="15.874997"
+       x="-157.42708"
+       y="29.104166"
+       ry="6.357829e-07"
+       transform="scale(-1,1)" />
+    <text
+       xml:space="preserve"
+       style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="3.9781303"
+       y="41.085464"
+       id="text78579"><tspan
+         sodipodi:role="line"
+         id="tspan78577"
+         style="stroke-width:0.264583"
+         x="3.9781303"
+         y="41.085464">Unit</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="48.669342"
+       y="41.085464"
+       id="text79639"><tspan
+         sodipodi:role="line"
+         id="tspan79637"
+         style="stroke-width:0.264583"
+         x="48.669342"
+         y="41.085464">Integration</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:9.87777px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="119.23183"
+       y="41.085464"
+       id="text80761"><tspan
+         sodipodi:role="line"
+         id="tspan80759"
+         style="stroke-width:0.264583"
+         x="119.23183"
+         y="41.085464">System</tspan></text>
+  </g>
+</svg>
