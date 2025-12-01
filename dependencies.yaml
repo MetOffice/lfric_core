@@ -23,4 +23,4 @@ lfric_core:
 
 SimSys_Scripts:
     source: git@github.com:james-bruten-mo/SimSys_Scripts.git
-    ref: git_migration_pkg_branch
+    ref: main
