@@ -31,27 +31,50 @@ creates a module for each namelist. Each module has procedures to read
 a namelist configuration file for the namelist, to MPI broadcast
 configuration choices and to access configuration choices::
 
-    GenerateNamelist [-help] [-version] [-directory PATH] FILE
+    GenerateNamelistLoader [-help] [-version] [-directory PATH] FILE
+    GenerateConfigLoader [-help] [-version] [-directory PATH] FILE
+    GenerateExtendedNamelistType [-help] [-version] [-directory PATH] FILE
+    GenerateConfigType [-help] [-version] [-directory PATH] FILE
 
-The ``-help`` and ``-version`` arguments cause the tool to tell you about
-itself, then exit.
+.. dropdown:: ``Generation script arguments``
 
-The ``FILE`` argument points to the metadata JSON file to
-use. Generated source is put into the current working directory, or
-into ``PATH`` if specified.
+  .. dropdown:: **GenerateNamelistLoader**
+
+    ``-help`` | ``-version``:
+      Caused the tool to tell you about itself, then exit.
+    ``FILE``:
+      Points to the metadata JSON file to use.
+    ``PATH``:
+      Location is to place the generated source. Defaults to
+      the current working directory.
+
+  .. dropdown:: **GenerateConfigLoader**
+
+    ``-help`` | ``-version``:
+      Caused the tool to tell you about itself, then exit.
+    ``FILE``:
+      Points to the metadata JSON file to use.
+    ``NAMELISTS``:
+      Space-separated list of one or more namelist names that
+      the code will read.
+    ``-duplicate <listname>``:
+      Optional argument to add namelist name to set of namelists to allow
+      duplicate instances. This ...
+
+  .. dropdown:: **GenerateAppConfigType**
+  .. dropdown:: **GenerateExtenedNmlType**
 
 The second command generates the code that calls procedures from the
 previously generated namelist loading modules to actually read a
 namelist configuration file::
 
-    GenerateLoader [-help] [-version] [-verbose] FILE NAMELISTS...
+    GenerateConfigLoader [-help] [-version] [-verbose] FILE NAMELISTS...
 
 As before, ``-help`` and ``-version`` options reveal details about
 the tool before exiting.
 
 The ``FILE`` is that of the resulting generated source file. Finally,
-the ``NAMELISTS`` are a space-separated list of one or more namelist
-names that the code will read.
+
 
     GenerateAppConfig [-help] [-version] [-directory PATH] FILE ! Generates config_mod.f90,
                                                                 !           <listname>_iterator_mod.f90
