@@ -27,6 +27,7 @@
                       cp $SOURCE_ROOT/SimSys_Scripts/github_scripts/get_git_sources.py $CYLC_WORKFLOW_RUN_DIR/bin
                       """
         [[[environment]]]
+            SOURCE_DIRECTORY = $SOURCE_ROOT
             ROSE_TASK_APP = extract_source
             DEPENDENCIES = {{dependencies}}
             USE_MIRRORS = {{USE_MIRRORS}}
