@@ -85,25 +85,24 @@ Call the ``init_config`` procedure to read the namelist configuration.
 
   use driver_config_mod, only: init_config
 
-  type(namelist_collection_type) :: configuration
+  type(config_type) :: config
 
-  <snip>
+  ...
 
-  call init_config(filename, required_namelists, configuration)
+  call init_config(filename, required_namelists, config=config)
 
 Arguments are as follows:
 
 * ``filename``: The file containing the namelist configuration.
 * ``required_namelists``: A list of character strings containing the
   name of all the namelists that the application must read.
-* ``configuration`` A ``namelist_collection_type`` which will be
-  loaded with the contents of the namelist configuration file.
+* ``config``: A ``config_type`` which will be loaded with the contents
+  of the namelist configuration file.
 
 After reading the configuration file, the procedure checks whether all
 the namelists in the ``required_namelists`` array were present in the
 file, and reports an error if any are missing.
 
-Once initialisation completes, applications can access
-configuration information from the ``namelist_collection_type``
-:ref:`configuration object<configuration object>` or direct from the
-:ref:`config_mod<config_mod files>` files.
+Once initialisation completes, applications can access configuration
+information from the :ref:`config object<config object>` or direct
+from the :ref:`config_mod<config_mod files>` files.

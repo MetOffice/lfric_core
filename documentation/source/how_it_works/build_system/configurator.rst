@@ -53,6 +53,11 @@ The ``FILE`` is that of the resulting generated source file. Finally,
 the ``NAMELISTS`` are a space-separated list of one or more namelist
 names that the code will read.
 
+    GenerateAppConfig [-help] [-version] [-directory PATH] FILE ! Generates config_mod.f90,
+                                                                !           <listname>_iterator_mod.f90
+    GenerateExtendedNml [-help] [-version] [-directory PATH] FILE ! Generates <listname>_nml_mod.f90
+    GenerateLoader [-help] [-version] [-directory PATH] FILE ! Generates config_loader_mod.f90
+
 The final command generates a module which provides procedures to
 directly configuring the contents of a namelist. This module ought not
 be used within a normal application. Instead, it is to allow test
