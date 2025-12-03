@@ -18,74 +18,93 @@ these structures and functions to access the configuration choices. To
 support parallel applications, the generated code manages the
 distribution of choices to all MPI ranks.
 
-Usage
------
+The Configurator provides several python scripts found in
+``infrastructure/build/tools``. Each of these scripts generate
+Fortran source code that is specific to an applications metadata.
 
-The Configurator calls three commands which may be found in
-``infrastructure/build/tools`` and a separate tool
-:ref:`rose_picker<Rose Picker>` which
-converts the extended Rose metadata file into a JSON file.
+.. dropdown:: **GenerateNamelistLoader**
 
-The first command takes the JSON file created by ``rose_picker`` and
-creates a module for each namelist. Each module has procedures to read
-a namelist configuration file for the namelist, to MPI broadcast
-configuration choices and to access configuration choices::
+  Takes JSON file created by ``rose_picker`` from an applications ``rose-meta.conf`` file.
+  For each namelist described in the JSON file, a Fortran module is generated.
+  Each module has procedures to read a the specifc namelist from the configuration file,
+  MPI broadcast the configuration choices *and to access configuration choices*:
 
-    GenerateNamelistLoader [-help] [-version] [-directory PATH] FILE
-    GenerateConfigLoader [-help] [-version] [-directory PATH] FILE
-    GenerateExtendedNamelistType [-help] [-version] [-directory PATH] FILE
-    GenerateConfigType [-help] [-version] [-directory PATH] FILE
-    GenerateFeigns [-help] [-version] [-output FILE1] FILE2
+  .. admonition:: Usage
 
-.. dropdown:: ``Generation script arguments``
+    GenerateNamelistLoader
+      *[-help] [-version] [-directory PATH]* FILE
 
-  .. dropdown:: **GenerateNamelistLoader**
+  ``-help`` | ``-version``:
+    Returns script information, then exits.
+  ``-directory PATH``:
+    Location of generated source. Defaults to the current working directory.
+  ``FILE``:
+    JSON file containing the application metadata.
 
-    ``-help`` | ``-version``:
-      Caused the tool to tell you about itself, then exit.
-    ``FILE``:
-      Points to the metadata JSON file to use.
-    ``PATH``:
-      Location is to place the generated source. Defaults to
-      the current working directory.
+.. dropdown:: **GenerateConfigLoader**
 
-  .. dropdown:: **GenerateConfigLoader**
-The second command generates the code that calls procedures from the
-previously generated namelist loading modules to actually read a
-namelist configuration file::
+  The second command generates the code that calls procedures from the
+  previously generated namelist loading modules to actually read a
+  namelist configuration file:
 
-    GenerateConfigLoader [-help] [-version] [-verbose] FILE NAMELISTS...
+  .. admonition:: Usage
 
-As before, ``-help`` and ``-version`` options reveal details about
-the tool before exiting.
+    GenerateConfigLoader
+      *[-help] [-version] [-verbose] [-duplicate LISTNAME]* FILE NAMELISTS...
 
-The ``FILE`` is that of the resulting generated source file.
+  ``-help`` | ``-version``:
+    Returns the script help information, then exits.
+  ``-duplicate LISTNAME``:
+    Optional argument to add LISTNAME to the set of namelists allowed
+    to have duplicate instances.
+  ``FILE``:
+    The generated Fortran source code.
+  ``NAMELISTS``:
+    Space-separated list of one or more namelist names that
+    the code will read.
 
-    ``-help`` | ``-version``:
-      Caused the tool to tell you about itself, then exit.
-    ``FILE``:
-      Points to the metadata JSON file to use.
-    ``NAMELISTS``:
-      Space-separated list of one or more namelist names that
-      the code will read.
-    ``-duplicate <listname>``:
-      Optional argument to add namelist name to set of namelists to allow
-      duplicate instances. This ...
+.. dropdown:: **GenerateAppConfigType**
 
-  .. dropdown:: **GenerateAppConfigType**
-  .. dropdown:: **GenerateExtenedNmlType**
-  .. dropdown:: **GenerateFeigns**
+  .. admonition:: Usage
 
-    The final command generates a module which provides procedures to
-    directly configuring the contents of a namelist. This module ought not
-    be used within a normal application. Instead, it is to allow test
-    systems to :ref:`feign <feigning configuration>` the reading of a
-    namelist so they can control the test environment::
+    GenerateConfigType
+      *[-help] [-version] [-directory PATH]* FILE
 
-    ``-help`` | ``-version``:
-      Caused the tool to tell you about itself, then exit.
-    ``-output FILE1``
-      Generated source file is written FILE1, defaults to ``feign_config_mod.f90``
-      in the current working directory,
-    ``FILE2``
-      JSON metadata file created by ``rose-picker``.
+.. dropdown:: **GenerateExtenedNmlType**
+
+  .. admonition:: Usage
+
+     GenerateExtendedNamelistType
+       *[-help] [-version] [-directory PATH]* FILE
+
+.. dropdown:: **GenerateFeigns**
+
+  The final command generates a module which provides procedures to
+  directly configuring the contents of a namelist. This module ought not
+  be used within a normal application. Instead, it is to allow test
+  systems to :ref:`feign <feigning configuration>` the reading of a
+  namelist so they can control the test environment:
+
+  .. admonition:: Usage
+
+    GenerateFeigns
+      *[-help] [-version] [-output FILE1]* FILE2
+
+  ``-help`` | ``-version``:
+    Caused the tool to tell you about itself, then exit.
+  ``-output FILE1``:
+    Generated source file is written FILE1, defaults to ``feign_config_mod.f90``
+    in the current working directory,
+  ``FILE2``:
+    JSON metadata file created by ``rose-picker``.
+
+Ultimately, these scripts require an applications
+extended Rose metadata in the form of a JSON file.
+
+For convienence, a separate tool, (:ref:`rose_picker<Rose Picker>`)
+is used to convert the extended Rose metadata file into a JSON file.
+
+
+
+
+
