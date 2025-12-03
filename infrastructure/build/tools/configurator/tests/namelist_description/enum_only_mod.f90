@@ -26,7 +26,7 @@ module enum_config_mod
             enum_is_loadable, enum_is_loaded, &
             enum_reset_load_status, &
             enum_multiples_allowed, enum_final, &
-            get_enum_nml
+            get_enum_nml, get_new_enum_nml
 
   integer(i_def), public, parameter :: value_one = 1695414371
   integer(i_def), public, parameter :: value_three = 839906103
@@ -210,8 +210,8 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(1)
 
-      call members(1)%initialise( &
-                  'value', value )
+    call members(1)%initialise( &
+                'value', value )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -223,6 +223,32 @@ contains
     end if
 
   end function get_enum_nml
+
+  !> @brief Returns a <<enum_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<enum_nml_type>> with current namelist contents.
+  function get_new_enum_nml() result(namelist_obj)
+
+    use enum_nml_mod, only: enum_nml_type
+
+    implicit none
+
+    type(enum_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(1)
+
+    call members(1)%initialise( &
+                'value', value )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_enum_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

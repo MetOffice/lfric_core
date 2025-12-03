@@ -590,7 +590,7 @@ class NamelistDescription:
             "use_from": self._module_usage,
         }
 
-        template = self._engine.get_template("namelist.f90.jinja")
+        template = self._engine.get_template("namelist_loader.f90.jinja")
         file_object.write_text(template.render(inserts))
 
     def _dereference_expression(

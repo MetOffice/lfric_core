@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+##############################################################################
+# Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
+# For further details please refer to the file LICENCE.original which you
+# should have received as part of this distribution.
+##############################################################################
+# pylint: disable=invalid-name
+"""
+Reads in a namelist description file, produces a Fortran namelist module and
+updates the configuration module. Files will be created in the current
+directory unless commanded otherwise.
+"""
+import argparse
+import logging
+from pathlib import Path
+
+from configurator import __version__
+import configurator.namelistdescription as namelist
+
+
+def main():
+    """
+    Entry point. Handles command-line arguments.
+    """
+    parser = argparse.ArgumentParser(add_help=False,
+                                     description=__doc__)
+    parser.add_argument('-help', '-h', '--help', action='help',
+                        help='Show this help message and exit')
+    parser.add_argument('-version', action='version',
+                        version=f'%(prog)s {__version__}')
+    parser.add_argument('-verbose', action='store_true',
+                        help='Provide a running commentry')
+    parser.add_argument('-directory', metavar='path',
+                        type=Path, default=Path.cwd(),
+                        help='Generated source files are put here.')
+    parser.add_argument('meta_filename', metavar='description-file', nargs=1,
+                        type=Path,
+                        help='The metadata file to load')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        handler = logging.StreamHandler()
+        logging.getLogger('configurator').addHandler(handler)
+        logging.getLogger('configurator').setLevel(logging.WARNING)
+
+    description_list = []
+    duplicate_list   = []
+
+    meta_filename = args.meta_filename[0]
+
+    meta_parser = namelist.NamelistConfigDescription()
+
+    # Generate namelists from the namelist configuration file.
+    description_list = meta_parser.process_config(meta_filename)
+
+    for description in description_list:
+        leafname = description.get_module_name() + '.f90'
+        module_file = args.directory / leafname
+        description.write_module(module_file)
+
+        if description._multiple_instances_allowed:
+            duplicate_list.append(description._listname)
+
+
+    # Write out which namelist allow duplicates
+    with open(f'{args.directory}/duplicate_namelists.txt', 'wt', encoding='utf-8') as output:
+      for listname in duplicate_list:
+          output.write(f'{listname}\n')
+
+if __name__ == '__main__':
+    main()

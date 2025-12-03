@@ -36,6 +36,7 @@ program simple_diffusion
 
   call modeldb%values%initialise()
   call modeldb%configuration%initialise( program_name, table_len=10 )
+  call modeldb%config%initialise( program_name )
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &
@@ -44,9 +45,11 @@ program simple_diffusion
   modeldb%mpi => global_mpi
   call init_comm(program_name, modeldb)
   call get_initial_filename( filename )
-  call init_config( filename,                            &
-                    simple_diffusion_required_namelists, &
-                    modeldb%configuration )
+
+  call init_config( filename, simple_diffusion_required_namelists, &
+                    configuration=modeldb%configuration,           &
+                    config=modeldb%config )
+
   deallocate( filename )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )

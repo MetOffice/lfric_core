@@ -10,6 +10,8 @@ Takes a list of namelists and generates source for a namelist loader.
 """
 import argparse
 import logging
+import os
+
 from pathlib import Path
 
 from configurator import __version__
@@ -28,9 +30,9 @@ def main():
                         version=f'%(prog)s {__version__}')
     parser.add_argument('-verbose', action='store_true',
                         help='Provide a running commentry')
-    parser.add_argument('outputFilename', metavar='output-filename',
-                        type=Path,
-                        help='Source file to produce')
+    parser.add_argument( "-o", "--output-dir", type=Path,
+                         default=os.getcwd(),
+                         help="Path to the output directory (default: current directory)" )
     parser.add_argument('namelistNames', metavar='namelist',
                         nargs='*',
                         help='Namelists to load.')
@@ -41,13 +43,14 @@ def main():
         logging.getLogger('configurator').addHandler(handler)
         logging.getLogger('configurator').setLevel(logging.WARNING)
 
-    module_name = args.outputFilename.stem
-    generator = loader.ConfigurationLoader(module_name)
+    moduleName = "config_loader_mod"
+    generator = loader.ConfigurationLoader(moduleName)
+
     for name in args.namelistNames:
         generator.add_namelist(name)
 
-    generator.write_module(args.outputFilename)
-
+    outputFile = Path(str(args.output_dir.joinpath(moduleName)) + ".f90")
+    generator.write_module(outputFile)
 
 if __name__ == '__main__':
     main()

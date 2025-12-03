@@ -9,8 +9,9 @@ module test_db_mod
 
   use calendar_mod,                   only: calendar_type
   use cli_mod,                        only: get_initial_filename
-  use configuration_mod,              only: read_configuration
-  use constants_mod,                  only: i_def, r_def, str_def, imdi, r_second, i_timestep
+  use config_loader_mod,              only: read_configuration
+  use constants_mod,                  only: i_def, r_def, str_def, imdi, &
+                                            r_second, i_timestep
   use extrusion_mod,                  only: TWOD
   use field_collection_mod,           only: field_collection_type
   use field_parent_mod,               only: read_interface, write_interface
@@ -43,7 +44,6 @@ module test_db_mod
   use function_space_mod,             only: function_space_type
   use fs_continuity_mod,              only: Wchi, W0, W2H, W3
   use step_calendar_mod,              only: step_calendar_type
-
 
   implicit none
 

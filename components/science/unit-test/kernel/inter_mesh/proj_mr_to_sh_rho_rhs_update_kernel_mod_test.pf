@@ -39,10 +39,9 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use configuration_mod,        only: final_configuration
+    use config_loader_mod, only: final_configuration
 
     implicit none
-
 
     class(proj_mr_to_sh_rho_rhs_update_kernel_test_type), intent(inout) :: this
 

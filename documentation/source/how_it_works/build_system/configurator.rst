@@ -35,6 +35,7 @@ configuration choices and to access configuration choices::
     GenerateConfigLoader [-help] [-version] [-directory PATH] FILE
     GenerateExtendedNamelistType [-help] [-version] [-directory PATH] FILE
     GenerateConfigType [-help] [-version] [-directory PATH] FILE
+    GenerateFeigns [-help] [-version] [-output FILE1] FILE2
 
 .. dropdown:: ``Generation script arguments``
 
@@ -49,6 +50,16 @@ configuration choices and to access configuration choices::
       the current working directory.
 
   .. dropdown:: **GenerateConfigLoader**
+The second command generates the code that calls procedures from the
+previously generated namelist loading modules to actually read a
+namelist configuration file::
+
+    GenerateConfigLoader [-help] [-version] [-verbose] FILE NAMELISTS...
+
+As before, ``-help`` and ``-version`` options reveal details about
+the tool before exiting.
+
+The ``FILE`` is that of the resulting generated source file.
 
     ``-help`` | ``-version``:
       Caused the tool to tell you about itself, then exit.
@@ -63,36 +74,18 @@ configuration choices and to access configuration choices::
 
   .. dropdown:: **GenerateAppConfigType**
   .. dropdown:: **GenerateExtenedNmlType**
+  .. dropdown:: **GenerateFeigns**
 
-The second command generates the code that calls procedures from the
-previously generated namelist loading modules to actually read a
-namelist configuration file::
+    The final command generates a module which provides procedures to
+    directly configuring the contents of a namelist. This module ought not
+    be used within a normal application. Instead, it is to allow test
+    systems to :ref:`feign <feigning configuration>` the reading of a
+    namelist so they can control the test environment::
 
-    GenerateConfigLoader [-help] [-version] [-verbose] FILE NAMELISTS...
-
-As before, ``-help`` and ``-version`` options reveal details about
-the tool before exiting.
-
-The ``FILE`` is that of the resulting generated source file. Finally,
-
-
-    GenerateAppConfig [-help] [-version] [-directory PATH] FILE ! Generates config_mod.f90,
-                                                                !           <listname>_iterator_mod.f90
-    GenerateExtendedNml [-help] [-version] [-directory PATH] FILE ! Generates <listname>_nml_mod.f90
-    GenerateLoader [-help] [-version] [-directory PATH] FILE ! Generates config_loader_mod.f90
-
-The final command generates a module which provides procedures to
-directly configuring the contents of a namelist. This module ought not
-be used within a normal application. Instead, it is to allow test
-systems to :ref:`feign <feigning configuration>` the reading of a
-namelist so they can control the test environment::
-
-    GenerateFeigns [-help] [-version] [-output FILE1] FILE2
-
-Once again, ``-help`` and ``-version`` cause the command to exit after
-giving its details.
-
-The ``FILE2`` argument should point to a JSON metadata file created by
-``rose-picker``. The resulting source file is written to ``FILE1``, or
-to ``feign_config_mod.f90`` in the current working directory, if
-``FILE1`` is not specified.
+    ``-help`` | ``-version``:
+      Caused the tool to tell you about itself, then exit.
+    ``-output FILE1``
+      Generated source file is written FILE1, defaults to ``feign_config_mod.f90``
+      in the current working directory,
+    ``FILE2``
+      JSON metadata file created by ``rose-picker``.

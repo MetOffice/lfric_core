@@ -21,8 +21,8 @@ module init_coupled_mod
   use field_collection_mod,           only : field_collection_type
   use field_mod,                      only : field_type
   use field_parent_mod,               only : write_interface
-  use finite_element_config_mod,      only : element_order_h, element_order_v
   use function_space_collection_mod,  only : function_space_collection
+  use function_space_mod,             only : function_space_type
   use fs_continuity_mod,              only : W3
   use log_mod,                        only : log_event,      &
                                              LOG_LEVEL_INFO, &
@@ -40,11 +40,12 @@ module init_coupled_mod
   !> @param[in,out] chi The co-ordinate field
   !> @param[in,out] panel_id 2d field giving the id for cubed sphere panels
   !> @param[in,out] modeldb The structure that holds model state
-  subroutine init_coupled( mesh, chi, panel_id, modeldb)
+  subroutine init_coupled(mesh, chi, panel_id, modeldb)
 
     implicit none
 
     type(mesh_type), intent(in), pointer     :: mesh
+
     ! Coordinate field
     type( field_type ), intent(inout)        :: chi(:)
     type( field_type ), intent(inout)        :: panel_id
@@ -74,19 +75,23 @@ module init_coupled_mod
 
     procedure(write_interface), pointer :: tmp_ptr
 
+    integer(i_def) :: order_h, order_v
+    type(function_space_type), pointer :: fs
+
     call log_event( 'coupled: Initialising app ...', LOG_LEVEL_INFO )
 
     ! Get the name of the coupling component
     call modeldb%values%get_value("cpl_name", cpl_component_name)
 
+    order_h = modeldb%config%finite_element%element_order_h()
+    order_v = modeldb%config%finite_element%element_order_v()
+
+    fs => function_space_collection%get_fs(mesh, order_h, order_v, W3)
+
     ! Create prognostic fields
     ! Creates a field in the W3 function space (fully discontinuous field)
-    call field_1%initialise( vector_space = &
-                    function_space_collection%get_fs(mesh, element_order_h, element_order_v, W3), &
-                             name="field_1")
-    call field_2%initialise( vector_space = &
-                    function_space_collection%get_fs(mesh, element_order_h, element_order_v, W3), &
-                             name="field_2")
+    call field_1%initialise(fs, name="field_1")
+    call field_2%initialise(fs, name="field_2")
 
     ! Add field to modeldb
     depository => modeldb%fields%get_field_collection("depository")

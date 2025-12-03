@@ -32,7 +32,6 @@ module lbc_demo_driver_mod
                                       log_level_trace
   use mesh_mod,                 only: mesh_type
   use mesh_collection_mod,      only: mesh_collection
-  use namelist_mod,             only: namelist_type
 
   !------------------------------------
   ! Configuration modules
@@ -40,8 +39,8 @@ module lbc_demo_driver_mod
   use base_mesh_config_mod, only: geometry_spherical, &
                                   geometry_planar,    &
                                   topology_non_periodic
-  use lbc_demo_config_mod,  only: lbc_source_file, &
-                                  field_type_real
+  use lbc_demo_config_mod,  only: field_type_real
+
   implicit none
 
   private
@@ -78,12 +77,6 @@ subroutine initialise( program_name, modeldb)
   class(extrusion_type),        allocatable :: extrusion
   type(uniform_extrusion_type), allocatable :: extrusion_2d
 
-  type(namelist_type), pointer :: base_mesh_nml
-  type(namelist_type), pointer :: planet_nml
-  type(namelist_type), pointer :: extrusion_nml
-  type(namelist_type), pointer :: io_nml
-  type(namelist_type), pointer :: lbc_demo_nml
-
   character(str_def) :: prime_mesh_name
   character(str_def) :: lbc_mesh_name
   character(str_def) :: output_mesh_name
@@ -103,7 +96,6 @@ subroutine initialise( program_name, modeldb)
   logical :: enable_lbc
   logical :: apply_lbc
   logical :: write_lbc
-  integer :: lbc_source
   integer :: topology
 
   integer :: i
@@ -113,26 +105,20 @@ subroutine initialise( program_name, modeldb)
   !=======================================================================
   ! Extract configuration variables
   !=======================================================================
-  base_mesh_nml => modeldb%configuration%get_namelist('base_mesh')
-  planet_nml    => modeldb%configuration%get_namelist('planet')
-  extrusion_nml => modeldb%configuration%get_namelist('extrusion')
-  io_nml        => modeldb%configuration%get_namelist('io')
-  lbc_demo_nml  => modeldb%configuration%get_namelist('lbc_demo')
+  prime_mesh_name = modeldb%config%base_mesh%prime_mesh_name()
+  geometry        = modeldb%config%base_mesh%geometry()
+  topology        = modeldb%config%base_mesh%topology()
 
-  call base_mesh_nml%get_value( 'prime_mesh_name', prime_mesh_name )
-  call base_mesh_nml%get_value( 'geometry', geometry )
-  call base_mesh_nml%get_value( 'topology', topology )
+  method           = modeldb%config%extrusion%method()
+  domain_height    = modeldb%config%extrusion%domain_height()
+  number_of_layers = modeldb%config%extrusion%number_of_layers()
 
-  call extrusion_nml%get_value( 'method', method )
-  call extrusion_nml%get_value( 'domain_height', domain_height )
-  call extrusion_nml%get_value( 'number_of_layers', number_of_layers )
-  call planet_nml%get_value( 'scaled_radius', scaled_radius )
-  call io_nml%get_value( 'write_diag', write_diag)
+  scaled_radius = modeldb%config%planet%scaled_radius()
+  write_diag    = modeldb%config%io%write_diag()
 
-  call lbc_demo_nml%get_value( 'enable_lbc', enable_lbc )
-  call lbc_demo_nml%get_value( 'apply_lbc',  apply_lbc )
-  call lbc_demo_nml%get_value( 'write_lbc',  write_lbc )
-  call lbc_demo_nml%get_value( 'lbc_source', lbc_source )
+  enable_lbc = modeldb%config%lbc_demo%enable_lbc()
+  apply_lbc  = modeldb%config%lbc_demo%apply_lbc()
+  write_lbc  = modeldb%config%lbc_demo%write_lbc()
 
   !=======================================================================
   ! Mesh setup
@@ -278,21 +264,17 @@ subroutine step( program_name, modeldb )
   character(*),       intent(in)    :: program_name
   type(modeldb_type), intent(inout) :: modeldb
 
-  type( field_collection_type ), pointer :: output_diags
-  type(namelist_type), pointer :: io_nml
-  type(namelist_type), pointer :: lbc_demo_nml
+  type(field_collection_type), pointer :: output_diags
 
   logical :: apply_lbc, write_diag, write_lbc, enable_lbc
   character(str_def) :: suffix
 
-  io_nml       => modeldb%configuration%get_namelist('io')
-  lbc_demo_nml => modeldb%configuration%get_namelist('lbc_demo')
+  nullify(output_diags)
 
-  call io_nml%get_value( 'write_diag',   write_diag)
-
-  call lbc_demo_nml%get_value( 'apply_lbc',  apply_lbc )
-  call lbc_demo_nml%get_value( 'enable_lbc', enable_lbc )
-  call lbc_demo_nml%get_value( 'write_lbc',  write_lbc )
+  write_diag = modeldb%config%io%write_diag()
+  enable_lbc = modeldb%config%lbc_demo%enable_lbc()
+  apply_lbc  = modeldb%config%lbc_demo%apply_lbc()
+  write_lbc  = modeldb%config%lbc_demo%write_lbc()
 
   if (apply_lbc) then
     ! Update prognostic with LBC fields
@@ -301,7 +283,6 @@ subroutine step( program_name, modeldb )
 
   if (write_diag) then
     ! Write out output file
-
     if (enable_lbc .and. write_lbc) then
       output_diags => modeldb%fields%get_field_collection('lbc')
       suffix=':lbc'
@@ -311,7 +292,6 @@ subroutine step( program_name, modeldb )
     end if
 
     call write_field_set(output_diags, suffix)
-
   end if
 
 end subroutine step
@@ -329,12 +309,10 @@ subroutine finalise( program_name, modeldb )
   type(modeldb_type), intent(inout) :: modeldb
 
   type(field_collection_type), pointer :: depository
-  type(namelist_type),         pointer :: lbc_demo_nml
 
   integer(i_def) :: lbc_field_type
 
-  lbc_demo_nml => modeldb%configuration%get_namelist('lbc_demo')
-  call lbc_demo_nml%get_value( 'field_type',  lbc_field_type )
+  lbc_field_type = modeldb%config%lbc_demo%field_type()
 
   !-------------------------------------------------------------------------
   ! Checksum output - Only for real fields

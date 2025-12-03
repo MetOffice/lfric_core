@@ -25,7 +25,7 @@ module test_config_mod
             test_is_loadable, test_is_loaded, &
             test_reset_load_status, &
             test_multiples_allowed, test_final, &
-            get_test_nml
+            get_test_nml, get_new_test_nml
 
   real(r_def), public, protected :: bar = rmdi
   integer(i_def), public, protected :: foo = imdi
@@ -121,11 +121,11 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(2)
 
-      call members(1)%initialise( &
-                  'bar', bar )
+    call members(1)%initialise( &
+                'bar', bar )
 
-      call members(2)%initialise( &
-                  'foo', foo )
+    call members(2)%initialise( &
+                'foo', foo )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -137,6 +137,35 @@ contains
     end if
 
   end function get_test_nml
+
+  !> @brief Returns a <<test_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<test_nml_type>> with current namelist contents.
+  function get_new_test_nml() result(namelist_obj)
+
+    use test_nml_mod, only: test_nml_type
+
+    implicit none
+
+    type(test_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(2)
+
+    call members(1)%initialise( &
+                'bar', bar )
+
+    call members(2)%initialise( &
+                'foo', foo )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_test_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

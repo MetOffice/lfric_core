@@ -25,7 +25,6 @@ module init_lbc_fields_alg_mod
   use integer_field_mod,     only: integer_field_type
   use inventory_by_mesh_mod, only: inventory_by_mesh_type
   use mesh_mod,              only: mesh_type
-  use namelist_mod,          only: namelist_type
 
   ! Kernels
   use set_lbc_int_kernel_mod,  only: set_lbc_int_kernel_type
@@ -95,25 +94,14 @@ module init_lbc_fields_alg_mod
 
     type(function_space_type), pointer :: fs
 
-    type(namelist_type), pointer :: base_mesh_nml
-    type(namelist_type), pointer :: finite_element_nml
-    type(namelist_type), pointer :: lbc_demo_nml
-    type(namelist_type), pointer :: io_nml
-
-    base_mesh_nml      => modeldb%configuration%get_namelist('base_mesh')
-    finite_element_nml => modeldb%configuration%get_namelist('finite_element')
-    io_nml             => modeldb%configuration%get_namelist('io')
-    lbc_demo_nml       => modeldb%configuration%get_namelist('lbc_demo')
-
-    call base_mesh_nml%get_value( 'geometry', geometry)
-    call io_nml%get_value( 'use_xios_io', use_xios_io)
-    call io_nml%get_value( 'write_diag', write_diag)
-
-    call lbc_demo_nml%get_value( 'enable_lbc', enable_lbc )
-    call lbc_demo_nml%get_value( 'lbc_source', lbc_source )
-    call lbc_demo_nml%get_value( 'set_lbc', set_lbc )
-    call lbc_demo_nml%get_value( 'write_lbc', write_lbc )
-    call lbc_demo_nml%get_value( 'read_lbc', read_lbc )
+    geometry    = modeldb%config%base_mesh%geometry()
+    use_xios_io = modeldb%config%io%use_xios_io()
+    write_diag  = modeldb%config%io%write_diag()
+    enable_lbc  = modeldb%config%lbc_demo%enable_lbc()
+    lbc_source  = modeldb%config%lbc_demo%lbc_source()
+    set_lbc     = modeldb%config%lbc_demo%set_lbc()
+    write_lbc   = modeldb%config%lbc_demo%write_lbc()
+    read_lbc    = modeldb%config%lbc_demo%read_lbc()
 
     lbc_mesh_name = trim(mesh%get_mesh_name())//'-lbc'
 
@@ -132,7 +120,7 @@ module init_lbc_fields_alg_mod
     !=====================================
     ! Create an LBC field
     !=====================================
-    call create_field_set( fld_collection, lbc_mesh, modeldb%configuration )
+    call create_field_set(modeldb, fld_collection, lbc_mesh)
 
     !=====================================
     ! Set up field with an IO behaviour

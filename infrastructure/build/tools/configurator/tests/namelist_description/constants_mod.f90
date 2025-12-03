@@ -25,7 +25,7 @@ module cheese_config_mod
             cheese_is_loadable, cheese_is_loaded, &
             cheese_reset_load_status, &
             cheese_multiples_allowed, cheese_final, &
-            get_cheese_nml
+            get_cheese_nml, get_new_cheese_nml
 
   real(r_def), public, protected :: fred = rmdi
   real(r_def), public, protected :: wilma = rmdi
@@ -116,11 +116,11 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(2)
 
-      call members(1)%initialise( &
-                  'fred', fred )
+    call members(1)%initialise( &
+                'fred', fred )
 
-      call members(2)%initialise( &
-                  'wilma', wilma )
+    call members(2)%initialise( &
+                'wilma', wilma )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -132,6 +132,35 @@ contains
     end if
 
   end function get_cheese_nml
+
+  !> @brief Returns a <<cheese_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<cheese_nml_type>> with current namelist contents.
+  function get_new_cheese_nml() result(namelist_obj)
+
+    use cheese_nml_mod, only: cheese_nml_type
+
+    implicit none
+
+    type(cheese_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(2)
+
+    call members(1)%initialise( &
+                'fred', fred )
+
+    call members(2)%initialise( &
+                'wilma', wilma )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_cheese_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

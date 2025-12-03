@@ -13,6 +13,7 @@ module empty_mod
 
   use namelist_collection_mod, only: namelist_collection_type
   use namelist_mod,            only: namelist_type
+  use config_mod,              only: config_type
 
   implicit none
 
@@ -25,33 +26,60 @@ contains
   !
   ! [in] filename File holding the namelists.
   !
-  ! TODO: Assumes namelist tags come at the start of lines.
   ! TODO: Support "namelist file" namelists which recursively call this
   !       procedure to load other namelist files.
   !
-  subroutine read_configuration( filename, nml_bank )
+  subroutine read_configuration( filename, configuration, config )
 
     use io_utility_mod, only : open_file, close_file
 
     implicit none
 
     character(*), intent(in) :: filename
-    type(namelist_collection_type), intent(inout) :: nml_bank
+
+    type(namelist_collection_type), optional, intent(inout) :: configuration
+    type(config_type),              optional, intent(inout) :: config
 
     integer(i_def) :: local_rank
 
     character(str_def), allocatable :: namelists(:)
-    integer(i_def) :: unit = -1
+    integer(i_def) :: unit
+
+    if (.not. present(configuration) .and. .not. present(config)) then
+      write(log_scratch_space,'(A)')                               &
+          'At least one optional argument must be provided for ' //&
+          'read_configuration.'
+      call log_event(log_scratch_space, log_level_error)
+    end if
 
     local_rank = global_mpi%get_comm_rank()
 
+    unit = -1
     if (local_rank == 0) unit = open_file( filename )
 
     call get_namelist_names( unit, local_rank, namelists )
 
-    call read_configuration_namelists( unit, local_rank,    &
-                                       namelists, filename, &
-                                       nml_bank )
+    if (present(configuration) .and. present(config)) then
+      ! TODO Transition, remove when all code ported to config
+      ! access pattern
+      call read_configuration_namelists( unit, local_rank,       &
+                                         namelists, filename,    &
+                                         nml_bank=configuration, &
+                                         config=config )
+
+    else if (present(configuration) .and. .not. present(config)) then
+      ! TODO Deprecated, remove when all code ported to config
+      ! access pattern
+      call read_configuration_namelists( unit, local_rank,    &
+                                         namelists, filename, &
+                                         nml_bank=configuration )
+
+    else if (.not. present(configuration) .and. present(config)) then
+      call read_configuration_namelists( unit, local_rank,    &
+                                         namelists, filename, &
+                                         config=config )
+
+    end if
 
     if (local_rank == 0) call close_file( unit )
 
@@ -80,7 +108,7 @@ contains
     character(str_def + str_max_filename) :: buffer
     logical(l_def)     :: continue_read
     ! Number of names
-    integer(i_def)  :: namecount(1)
+    integer(i_def)  :: namecount
 
     namecount = 0
     if (local_rank == 0) then
@@ -89,8 +117,7 @@ contains
         continue_read = read_line( unit, buffer )
         if ( .not. continue_read ) exit text_line_loop
 
-        ! TODO: Assumes namelist tags are at the start of lines. #1753
-        !
+        buffer = adjustl(buffer)
         if (buffer(1:1) == '&') then
           namecount = namecount + 1
           allocate(names_temp(namecount))
@@ -143,6 +170,7 @@ contains
 
     name_loop: do i = 1, size(names)
       select case(trim( names(i) ))
+
       case default
         write( log_scratch_space, '(A)' )               &
             'Tried to ensure unrecognised namelist "'// &
@@ -160,7 +188,7 @@ contains
 
   subroutine read_configuration_namelists( unit, local_rank,    &
                                            namelists, filename, &
-                                           nml_bank )
+                                           nml_bank, config )
     implicit none
 
     integer(i_def),     intent(in) :: unit
@@ -168,7 +196,8 @@ contains
     character(str_def), intent(in) :: namelists(:)
     character(*),       intent(in) :: filename
 
-    type(namelist_collection_type), intent(inout) :: nml_bank
+    type(namelist_collection_type), optional, intent(inout) :: nml_bank
+    type(config_type),              optional, intent(inout) :: config
 
     type(namelist_type) :: nml_obj
 
@@ -189,6 +218,8 @@ contains
       do i=1, size(namelists)
 
         select case (trim(namelists(i)))
+
+
         case default
           write( log_scratch_space, '(A)' )                   &
               'Unrecognised namelist "'//trim(namelists(i))// &
