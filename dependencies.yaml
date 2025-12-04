@@ -22,5 +22,5 @@ lfric_core:
     ref:
 
 SimSys_Scripts:
-    source: git@github.com:james-bruten-mo/SimSys_Scripts.git
+    source: git@github.com:MetOffice/SimSys_Scripts.git
     ref: main
