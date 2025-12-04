@@ -1,7 +1,7 @@
 # PR Summary
 
-Sci/Tech Reviewer: <!-- SR id, filled when known -->
-Code Reviewer: <!-- CR id, filled by SSD/CCD -->
+Sci/Tech Reviewer: <!-- SR id, filled when known (e.g. @octocat) -->
+Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 
 <!-- To be completed by the developer -->
 
@@ -25,7 +25,7 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD -->
 (_Some checks are automatically carried out via the CI pipeline_)
 
 - [ ] I have performed a self-review of my own code
-- [ ] My code follows the project's style guidelines
+- [ ] My code follows the project's [style guidelines](https://metoffice.github.io/lfric_core/how_to_contribute/index.html#how-to-contribute-index)
 - [ ] Comments have been included that aid undertanding and enhance the
       readability of the code
 - [ ] My changes generate no new warnings
@@ -39,10 +39,10 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD -->
       acceptable (eg. kgo changes)
 - [ ] I have added tests to cover new functionality as appropriate (eg. system
       tests, unit tests, etc.)
-- [ ] Have any new tests been assigned an appropriate amount of compute resource
-      and have tests been allocated to an appropriate testing group (i.e. the
+- [ ] Any new tests have been assigned an appropriate amount of compute resource
+      and have been allocated to an appropriate testing group (i.e. the
       developer tests are for jobs which use a small amount of compute resource
-      and complete in a matter of minutes)?
+      and complete in a matter of minutes)
 
 <!-- Describe other testing performed (if applicable) -->
 
