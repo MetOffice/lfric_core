@@ -15,8 +15,8 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 <!-- List any blocking PRs or issues to be closed here
 - is blocked-by #pr-number
 - blocks #pr-number
-- closes #issue-number
-- fixes #issue-number
+- closes #issue-number (auto-closes the issue)
+- fixes #issue-number (auto-closes the issue)
 - is related to #issue-number
 -->
 
@@ -25,7 +25,8 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 (_Some checks are automatically carried out via the CI pipeline_)
 
 - [ ] I have performed a self-review of my own code
-- [ ] My code follows the project's [style guidelines](https://metoffice.github.io/lfric_core/how_to_contribute/index.html#how-to-contribute-index)
+- [ ] My code follows the project's
+      [style guidelines](https://metoffice.github.io/lfric_core/how_to_contribute/index.html#how-to-contribute-index)
 - [ ] Comments have been included that aid undertanding and enhance the
       readability of the code
 - [ ] My changes generate no new warnings
