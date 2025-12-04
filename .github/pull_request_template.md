@@ -1,61 +1,110 @@
-# Description
+# PR Summary
 
-<!-- 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. 
-List any dependencies that are required for this change. 
-If there is additional detail included in the linked issue please note that here so a reviewer knows to check.      
+Sci/Tech Reviewer: <!-- SR id, filled when known (e.g. @octocat) -->
+Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
+
+<!-- To be completed by the developer -->
+
+<!-- Provide a brief description of the changes in this PR, including any notes
+     useful for reviewers -->
+
+<!-- List any linked PRs here
+- linked MetOffice/<REPO-NAME>#<pr-number>
 -->
 
-## Linked issues
-<!-- 
-Linked issues should include issues on this repo and on any other repos where the change has an 
-affect (e.g. tickets linked between lfric_core and lfric_apps 
+<!-- List any blocking PRs or issues to be closed here
+- is blocked-by #pr-number
+- blocks #pr-number
+- closes #issue-number (auto-closes the issue)
+- fixes #issue-number (auto-closes the issue)
+- is related to #issue-number
 -->
 
-Closes # (issue) <!-- Can be of the following forms Close/s/d #123 Fix/es/ed #123 or Resolve/s/d #123 (e.g. Closes #123) -->
+## Code Quality Checklist
 
-## Developer tags
-<!-- 
-Please include tags of any developers who should be notified about this PR 
-Format: @github_user_name
--->
+(_Some checks are automatically carried out via the CI pipeline_)
 
-## Type of change
+- [ ] I have performed a self-review of my own code
+- [ ] My code follows the project's
+      [style guidelines](https://metoffice.github.io/lfric_core/how_to_contribute/index.html#how-to-contribute-index)
+- [ ] Comments have been included that aid undertanding and enhance the
+      readability of the code
+- [ ] My changes generate no new warnings
 
-- [ ] New feature (non-breaking change which adds functionality).
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected).
-- [ ] This change requires a documentation update.
+## Testing
 
-# How has this been tested?
+- [ ] I have tested this change locally, using the LFRic Core rose-stem suite
+- [ ] If required (eg. API changes) I have also run the LFRic Apps test suite
+      using this branch
+- [ ] If any tests fail (rose-stem or CI) the reason is understood and
+      acceptable (eg. kgo changes)
+- [ ] I have added tests to cover new functionality as appropriate (eg. system
+      tests, unit tests, etc.)
+- [ ] Any new tests have been assigned an appropriate amount of compute resource
+      and have been allocated to an appropriate testing group (i.e. the
+      developer tests are for jobs which use a small amount of compute resource
+      and complete in a matter of minutes)
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
+<!-- Describe other testing performed (if applicable) -->
 
-- [ ] New tests have been added.
-- [ ] Tests have been modified to accommodate this change.
-- [ ] GitHub workflows have been changed or added.
+### trac.log
 
-# Checklist:
+<!-- Paste your trac.log from testing output here -->
 
-- [ ] The change has been checked for design compliance by an experienced SSE 
-      <!-- All none trivial tickets should be seen by an appropriately experienced 
-           SSE as part of a design review or as part of the normal review process -->
-- [ ] My code follows the style guidelines of this project.
-- [ ] I have commented my code, particularly in hard-to-understand areas.
-- [ ] I have made corresponding changes to the documentation.
-- [ ] My changes generate no new warnings.
-- [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] New and existing unit tests pass locally with my changes, for both debug and optimised builds.
-- [ ] No AI tools have been used in the creation of this change.
+## Security Considerations
 
-## Reasoning on why any of the above boxes have not been checked
-<!-- 
-Please provide reasoning on why any of the above checklist have not been ticked 
-(e.g. what are the warnings and why is this expected)
--->
+- [ ] I have reviewed my changes for potential security issues
+- [ ] Sensitive data is properly handled (if applicable)
+- [ ] Authentication and authorisation are properly implemented (if applicable)
 
-# Review Checks (To be filled in by the reviewer/s)
+## Performance Impact
 
-- [ ] Has the developer completed the appropriate sections above?
-- [ ] Is the change compliant with LFRic Core principles?
-- [ ] Is the testing coverage sufficient?
-- [ ] Have any technical debt workarounds identified had issues opened and interested parties notified?
+- [ ] Performance of the code has been considered and, if applicable, suitable
+      performance measurements have been conducted
+
+## AI Assistance and Attribution
+
+- [ ] Some of the content of this change has been produced with the assistance
+      of _Generative AI tool name_ (e.g., Met Office Github Copilot Enterprise,
+      Github Copilot Personal, ChatGPT GPT-4, etc) and I have followed the
+      [Simulation Systems AI policy](https://metoffice.github.io/simulation-systems/FurtherDetails/ai.html)
+      (including attribution labels)
+
+<!-- If AI has been used, please provide more details here -->
+
+## Documentation
+
+- [ ] Where appropriate I have updated documentation related to this change and
+      confirmed that it builds correctly
+
+## PSyclone Approval
+
+- [ ] If you have edited any PSyclone-related code (eg. PSyKAl-lite, Kernel
+      interface, optimisation scripts, LFRic data structure code) then please
+      contact the
+      [tooscollabdevteam@metoffice.gov.uk](tooscollabdevteam@metoffice.gov.uk)
+
+# Sci/Tech Review
+
+<!-- To be completed by the Sci/Tech Reviewer -->
+<!-- May be skipped for trivial tickets -->
+
+- [ ] I understand this area of code and the changes being added
+- [ ] The proposed changes correspond to the pull request description
+- [ ] Documentation is sufficient (do documentation papers need updating)
+- [ ] Sufficient testing has been completed
+
+_Please alert the code reviewer via a tag when you have approved the SR_
+
+# Code Review
+
+<!-- To be completed by the Code Reviewer -->
+
+- [ ] All dependencies have been resolved
+- [ ] Related Issues have been properly linked and addressed
+- [ ] CLA compliance has been confirmed
+- [ ] Code quality standards have been met
+- [ ] Tests are adequate and have passed
+- [ ] Documentation is complete and accurate
+- [ ] Security considerations have been addressed
+- [ ] Performance impact is acceptable
