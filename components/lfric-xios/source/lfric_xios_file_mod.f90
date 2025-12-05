@@ -390,8 +390,6 @@ subroutine register_with_context(self)
   if (.not. self%freq_ts == undef_freq) then
     self%frequency = self%freq_ts * timestep_duration
     call xios_set_attr( self%handle, output_freq=self%frequency )
-  else
-    call xios_set_attr( self%handle, output_freq=timestep_duration )
   end if
 
   ! Set the date of the first operation
