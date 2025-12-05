@@ -8,7 +8,7 @@
 # pylint: disable=invalid-name
 """
 Reads in a namelist description file and produces Fortran source defining
-an extended namelist type specific to the namelist desciption provided.
+an extended namelist type specific to the namelist description provided.
 """
 import argparse
 import logging

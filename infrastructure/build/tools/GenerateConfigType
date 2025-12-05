@@ -35,11 +35,11 @@ def main():
     parser.add_argument( "-o", "--output-dir", type=Path,
                          default=os.getcwd(),
                          help="Path to the output directory (default: current directory)" )
+    parser.add_argument('-duplicate', action='append', metavar='-duplicate', nargs=1,
+                        help='Enables multiple instances for the specified namellist.')
     parser.add_argument('namelistNames', metavar='namelist',
                         nargs='*',
                         help='Namelists memebers of app configuration.')
-    parser.add_argument('-duplicate', action='append', metavar='-duplicate', nargs=1,
-                        help='Enables multiple instances for the specified namellist.')
 
     args = parser.parse_args()
 
