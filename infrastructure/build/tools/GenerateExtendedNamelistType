@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 ##############################################################################
-# UPDATE with current copyright
-# Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
-# For further details please refer to the file LICENCE.original which you
-# should have received as part of this distribution.
+# (C) Crown copyright 2025 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
 ##############################################################################
 # pylint: disable=invalid-name
 """
