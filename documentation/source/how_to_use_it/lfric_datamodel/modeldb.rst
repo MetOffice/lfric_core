@@ -230,7 +230,7 @@ To put an I/O context into the collection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: fortran
 
-   type( lfric_xios_context_type )        :: my_io_context
+   type( lfric_xios_context_type ) :: my_io_context
 
    call modeldb%io_context%initialise()
    call modeldb%io_contexts%add_context(my_io_context)
@@ -246,7 +246,7 @@ Assuming the context, ``my_io_context``, has the name "my_io_context", use:
 
 .. code-block:: fortran
 
-   type( lfric_xios_context_type )        :: my_io_context
+   type( lfric_xios_context_type ) :: my_io_context
 
    call modeldb%io_contexts%get_io_context("my_io_context", my_io_context)
 
