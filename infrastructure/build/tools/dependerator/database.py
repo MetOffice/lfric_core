@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ##############################################################################
 # Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
-# For further details please refer to the file LICENCE.original which you
+# For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
 # Manages a database of dependency information.

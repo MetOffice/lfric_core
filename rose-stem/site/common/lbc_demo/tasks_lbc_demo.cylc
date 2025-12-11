@@ -8,7 +8,7 @@
 {#      "opt_confs": ["default"],   #}
 {#      "resolution": "lbc",        #}
 {#      "use_xios": true,           #}
-{#      "mpi_parts": 48,            #}
+{#      "mpi_parts": 6,             #}
 {#      "mpi_parts_xios": 1,        #}
 {#      "xios_nodes": 1,  This will turn on/off xios in launch script #}
 {#      "xios_server_mode": true,   #}
@@ -21,7 +21,7 @@
         "opt_confs":["default"],
         "resolution":"lbc",
         "use_xios":true,
-        "mpi_parts":48,
+        "mpi_parts":6,
         "mpi_parts_xios":1,
         "xios_nodes":0,
         "xios_server_mode":false,
@@ -37,7 +37,7 @@
         "opt_confs":["ConstantLBC"],
         "resolution":"lbc",
         "use_xios":true,
-        "mpi_parts":48,
+        "mpi_parts":6,
         "mpi_parts_xios":1,
         "xios_nodes":0,
         "xios_server_mode":false,
@@ -55,7 +55,7 @@
             "opt_confs":["OutputOnLBC"],
             "resolution":"lbc",
             "use_xios":true,
-            "mpi_parts":48,
+            "mpi_parts":6,
             "mpi_parts_xios":1,
             "xios_nodes":1,
             "xios_server_mode":true,
@@ -71,7 +71,7 @@
             "opt_confs":["OutputOnLBC"],
             "resolution":"lbc",
             "use_xios":true,
-            "mpi_parts":48,
+            "mpi_parts":6,
             "mpi_parts_xios":1,
             "xios_nodes":0,
             "xios_server_mode":false,
@@ -149,7 +149,7 @@
         "opt_confs":["IntegerFields"],
         "resolution":"lbc",
         "use_xios":true,
-        "mpi_parts":48,
+        "mpi_parts":6,
         "mpi_parts_xios":1,
         "xios_nodes":0,
         "xios_server_mode":false,
