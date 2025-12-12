@@ -3,10 +3,10 @@
 Modeldb Configuration Item
 ==============================================
 
-The ``configuration`` item (`namelist_collection_type`) within the ``modeldb``
+The ``configuration`` item (``namelist_collection_type``) within the ``modeldb``
 object stores the input namelists used to configure an instance of modeldb.
 Once the configuration has been populated, the configuration values are
-immutable, unlike other components of ``modeldb``. This item is `deprecated`
+immutable, unlike other components of ``modeldb``. This item is **deprecated**
 and use of the ``config`` item in ``modedb`` is the preferred configuration
 access method.
 
@@ -14,7 +14,7 @@ access method.
 
 Initialising the configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The ``modeldb%configration`` item is populated using a module generated
+The ``modeldb%configuration`` item is populated using a module generated
 by the ``configurator`` tool. A namelist input file is simply read in and
 any valid namelists are added the ``modeldb%configuration`` item.
 
@@ -23,10 +23,10 @@ file.
 
 .. code-block:: fortran
 
-  use configuration_mod, only: read_configuration
+   use configuration_mod, only: read_configuration
 
-  call modeldb%configuration%initialise()
-  call read_configuration( filename, configuration=modeldb%configuration )
+   call modeldb%configuration%initialise()
+   call read_configuration( filename, configuration=modeldb%configuration )
 
 .. _access_configuration_data:
 

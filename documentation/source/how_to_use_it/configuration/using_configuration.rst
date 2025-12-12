@@ -23,21 +23,28 @@ configuration.
 Loading the configuration
 =========================
 
-The Configurator generates a procedure, ``read_configuration``, to
-read an applications configuration which entails one or more
-Fortran namelists. Each Fotran namelist is stored in a namelist
-specific type (`<namelist_name>_nml_type`). These namelists are
-in turn stored in a configuration object (`config_type`).
+The Configurator generates a procedure (``read_configuration``) to read
+a configuration file based on an applications metadata file (``.json``).
+The configuration which entails one or more Fortran namelists, which
+are each read and stored in a namelist specific type
+(`<namelist_name>_nml_type`). These namelist objects are in turn stored
+in a configuration object (`config_type`).
+
+This allows for multiple configurations to be loaded into a given
+application.
 
 .. code-block:: fortran
 
-  use config_loader_mod, only: read_configuration
+   use config_loader_mod, only: read_configuration
 
-  type(config_type) :: config
+   type(config_type) :: config_A, config_B
+   ...
 
-  ...
+   call config_A%initialise( 'ConfigurationName_A' )
+   call config_B%initialise( 'ConfigurationName_B' )
 
-  call read_configuration( namelist_file, config=config )
+   call read_configuration( namelist_file_A, config=config_A )
+   call read_configuration( namelist_file_B, config=config_B )
 
 The LFRic infrastructure provides a :ref:`driver configuration
 component<driver configuration>` that orchestrates both reading of the
@@ -58,12 +65,12 @@ the configuration hirarchy in the ``config_type``, `e.g.`
 
 .. code-block:: fortran
 
-  use config_mod, only: config_type
+   use config_mod, only: config_type
 
-  type(config_type)  :: configuration
-  character(str_def) :: name
+   type(config_type)  :: configuration
+   character(str_def) :: name
 
-  name = config%base_mesh%mesh_name()
+   name = config%base_mesh%mesh_name()
 
 In general, applications will only require one ``config_type`` object.
 Should an application require to read more than one configuration file
@@ -113,26 +120,27 @@ duplication of parameter names with other enumeration variables:
 
 .. admonition:: Hidden values
 
-  Use of enumerations can be better than using numerical options or
-  string variables.
+   Use of enumerations can be better than using numerical options or
+   string variables.
 
-  A parameter name is more meaningful and memorable than a numerical
-  option, making code more readable. There is also a clearer link
-  between the name and the metadata, as the metadata can be easily
-  searched to find information about the option.
+   A parameter name is more meaningful and memorable than a numerical
+   option, making code more readable. There is also a clearer link
+   between the name and the metadata, as the metadata can be easily
+   searched to find information about the option.
 
-  Code that compares integer options and parameters is safer than code
-  that compares string options and parameters. If there are spelling
-  errors in the names in the code, the former will fail at compile
-  time whereas problems with the latter only arise at run-time.
+   Code that compares integer options and parameters is safer than code
+   that compares string options and parameters. If there are spelling
+   errors in the names in the code, the former will fail at compile
+   time whereas problems with the latter only arise at run-time.
 
 Duplicate namelists
 ---------------------
 
 When a defined namelist is allowed to have multiple instances in a namelist
-input file, the namelist is said to allow `duplicates`. This is indicated
-by the Rose metadata as ``duplicate=true``. These namelist instances have the
-same variable names, though those varibles may contain different values.
+input file, the namelist is said to allow `duplicates` (with a given
+configuration). This is indicated by the Rose metadata as ``duplicate=true``.
+These namelist instances have the same variable names, though those varibles
+may contain different values.
 
 Instances of a ``duplicate`` namelist may be differentiated using one of the
 namelists members as a key. The :ref:`extended Rose metadata <extended rose
@@ -169,40 +177,43 @@ To extract a *specific instance*, the possible ``mesh_choice`` string must be kn
 
 .. code-block:: fortran
 
-    type(partitioning_nml_iterator_type) :: iter
-    type(partitioning_nml_type), pointer :: partitioning_nml
+   type(partitioning_nml_iterator_type) :: iter
+   type(partitioning_nml_type), pointer :: partitioning_nml
 
-    call iter%initialise(config%partitioning)
-    do while (iter%has_next())
+   call iter%initialise(config%partitioning)
+   do while (iter%has_next())
 
-      partitioning_nml => iter%next()
-      mesh_choice = partitioning_nml%get_profile_name()
-      select case (trim(mesh_choice))
-        case('source')
-	  srce_partitioner = partitioning_nml%partitioner()
+     partitioning_nml => iter%next()
+     mesh_choice = partitioning_nml%get_profile_name()
 
-        case('destination')
-          dest_partitioner = partitioning_nml%partitioner()
-      end select
+     select case (trim(mesh_choice))
 
-    end do
+     case('source')
+         srce_partitioner = partitioning_nml%partitioner()
+
+     case('destination')
+         dest_partitioner = partitioning_nml%partitioner()
+
+     end select
+
+   end do
 
 .. _config_mod files:
 
 Using config_mod files
 ======================
 
-In the examples above, the ``config_mod`` modules were used only to
+In the examples above, the ``config_mod`` modules were used **only** to
 obtain the parameters that represent the options of an enumeration
 variable. The preferred practice is to only use global scope
 ``config_mod`` modules to access fixed runtime parameters.
 
 .. admonition:: Configuration access via ``use`` statements.
 
-  While existing code will allow access to any variables direct from
-  the ``config_mod`` files, this legacy practice is strongly
-  **discouraged**. Access via ``use`` statements cannot work where
-  namelists may have multiple instances or when an application wishes
-  to load multiple configuration files. It is recommended that access
-  to configuration namelists be limited to usage of the ``modeldb%config``
-  item described above.
+   While existing code will allow access to any variables direct from
+   the ``config_mod`` files, this legacy practice is strongly
+   **discouraged**. Access via ``use`` statements cannot work where
+   namelists may have multiple instances or when an application wishes
+   to load multiple configuration files. It is recommended that access
+   to configuration namelists be limited to usage of the ``modeldb%config``
+   item described above.

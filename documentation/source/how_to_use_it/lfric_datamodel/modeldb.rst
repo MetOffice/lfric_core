@@ -198,7 +198,7 @@ hierachy.
    MemberValue = modeldb%config%<NamelistName>%<MemberName>()
 
 The access pattern for namelists which allow multiple instances
-(with metadata `duplicate=.true.`) is via an iterator which cycles
+(with metadata ``duplicate=true``) is via an iterator which cycles
 through instances of the namelist type.
 
 .. code-block:: fortran
