@@ -1,1 +1,40 @@
-* @MetOffice/core-capability-development
+# This CODEOWNERS file isn't comprehensive deliberately as all people listed
+# will be automatically notified of changes to the listed files.
+
+# The files in the .github directory have the ability to alter the 
+# functionality of the GitHub repo and so care should be taken when altering.
+/.github/ @andrewcoughtrie @yaswant
+
+# Rose suite infrastructure owners
+/rose-stem/templates/ @mo-rickywong @james-bruten-mo
+
+# Infrastructure
+# Owners of most of the source code in infrastructure
+/infrastructure/source/ @mike-hobson @matthewhambley
+/infrastructure/unit-test/ @mike-hobson @matthewhambley
+
+# Exceptions for infrastructure source either with different owners or no owner.
+/infrastructure/**/mesh/  @mo-rickywong @mike-hobson
+/infrastructure/unit-test/mesh/  @mo-rickywong @mike-hobson
+/infrastructure/**/configuration/ @mo-rickywong @matthewhambley
+/infrastructure/**/PSYKE/ @christophermaynard @teranivy
+/infrastructure/**/io/ @andrewcoughtrie @mo-rickywong
+/infrastructure/**/kernel_metadata/ @teranivy @stevemullerworth
+/infrastructure/**/kernel_metadata/ @matthewhambley @andrewcoughtrie
+/infrastructure/integration-test/ @matthewhambley
+
+# Components
+/components/coupling/ @mike-hobson
+
+# Applications
+/applications/coupled/ @mike-hobson
+/applications/io_demo/ @andrewcoughtrie @edhone
+/applications/lbc_demo/ @mo-rickywong
+/applications/simple_diffusion @andrewcoughtrie @stevemullerworth
+/applications/skeleton/ @mike-hobson @stevemullerworth
+
+# Build system owners
+/lfric_build/          @matthewhambley @allynt
+/infrastructure/build/ @matthewhambley @stevemullerworth
+/infrastructure/build/tools/ @mo-rickywong @matthewhambley
+**/MakeFile @matthewhambley @stevemullerworth
