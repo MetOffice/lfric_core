@@ -15,7 +15,6 @@
 
 # Exceptions for infrastructure source either with different owners or no owner.
 /infrastructure/**/mesh/  @mo-rickywong @mike-hobson
-/infrastructure/unit-test/mesh/  @mo-rickywong @mike-hobson
 /infrastructure/**/configuration/ @mo-rickywong @matthewhambley
 /infrastructure/**/PSYKE/ @christophermaynard @teranivy
 /infrastructure/**/io/ @andrewcoughtrie @mo-rickywong
