@@ -34,7 +34,7 @@ test produces the correct answer, given the inputs.
 In a perfect world, the test is written first (and by a different developer) so
 it is informed only by the expected correct behaviour and not at all by
 knowledge of the implementation. In the real world this is often not possible
-but the developer should still do their best to divorse themselves from their
+but the developer should still do their best to divorce themselves from their
 knowledge of the implementation.
 
 A numerical integration is an example of the ideal circumstance for correctness
