@@ -91,7 +91,7 @@ the code under test is changed, it always honours the contract of its interface.
 
 Which is to say, the same input data produces the same results.
 
-The value of this is exactly that it allows implementation to be improved and
+The value of this is exactly that it allows the implementation to be improved and
 optimised while retaining some confidence that it is still working correctly.
 In that sense it is an extension of correctness testing.
 
