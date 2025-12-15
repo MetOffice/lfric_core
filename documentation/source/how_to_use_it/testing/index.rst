@@ -78,7 +78,7 @@ Regression Testing
 The second testing super-power comes under the banner of "regression testing."
 
 Obviously this type of testing is intended to prevent "regression," but what
-does that mean.
+does that mean?
 
 The first kind of regression is where modifications to the code under test
 causes it to behave differently to the expected behaviour of the tests. This
