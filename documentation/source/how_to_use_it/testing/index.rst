@@ -122,7 +122,7 @@ to anticipate what *might* go wrong.
 This is particularly important when dealing with user input. There is no
 guarantee that the user is going to pass us what we asked for. We should treat
 such data with suspicion. As such it's important to test how our code behaves
-when, for instance, a negative number is passed to that value which must be
+when, for instance, a negative number is passed to a value which must be
 positive.
 
 Even when we are not dealing directly with user input it is important to test
