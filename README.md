@@ -7,7 +7,7 @@ LFRic Core provides the underlying infrastructure for the Momentum:tm: Atmospher
 |           |                                                                                                                                                             |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |:repeat: CI|[![Doc Deploy](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml)|
-|:speech_balloon|![Static Badge](https://img.shields.io/badge/github-discussions-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FMetOffice%2Fsimulation-systems%2Fdiscussions)|
+|:speech_balloon: Community|![Static Badge](https://img.shields.io/badge/github-discussions-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FMetOffice%2Fsimulation-systems%2Fdiscussions)|
 |:package: Repo | ![GitHub Release](https://img.shields.io/github/v/release/metoffice/lfric_core) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/metoffice/lfric_core/latest)  |
 |           |                                                                                                                                                             |
 
@@ -28,7 +28,7 @@ space for all contributors.
 ### Contributors Licence Agreement
 
 Please see the
-[Momentum Contributors Licence Agreement](https://github.com/MetOffice/Momentum/blob/main/CLA.md)
+[Momentum Contributors Licence Agreement.](https://github.com/MetOffice/Momentum/blob/main/CLA.md)
 
 Agreement of the CLA can be shown by adding yourself to the CONTRIBUTORS file
 alongside this one, and is a requirement for contributing to this project.
@@ -36,7 +36,7 @@ alongside this one, and is a requirement for contributing to this project.
 ### Code of Conduct
 
 Please be aware of and follow the
-[Momentum Code of Coduct](https://github.com/MetOffice/Momentum/blob/main/docs/CODE_OF_CONDUCT.md)
+[Momentum Code of Conduct.](https://github.com/MetOffice/Momentum/blob/main/docs/CODE_OF_CONDUCT.md)
 
 ### Working Practices
 
