@@ -12,7 +12,7 @@ module cli_mod
   implicit none
 
   private
-  public :: get_initial_filename
+  public :: parse_command_line
 
 contains
 
@@ -27,7 +27,7 @@ contains
   !>                         not specified, master namelist is assumed.
   !> @param [inout] component_name Optional component-component name
   !>
-  subroutine get_initial_filename( filename, description, component_name )
+  subroutine parse_command_line( filename, description, component_name )
 
     implicit none
 
@@ -47,6 +47,7 @@ contains
     integer      :: argument_tally
     integer      :: iarg
     logical      :: filename_set
+    logical      :: file_exists
 
     if (present(description)) then
       allocate( filename_description, source=description )
@@ -112,7 +113,14 @@ contains
       if(allocated(oname))allocate(component_name,source=oname)
     end if
 
-  end subroutine get_initial_filename
+    ! Check if the provided filename exists
+    inquire(file=filename, exist=file_exists)
+    if(.not.file_exists)then
+      write( error_unit, '("File ",a," does not exist.")' )filename
+      stop 2
+    end if
+
+  end subroutine parse_command_line
 
   subroutine print_usage( to_unit, program_name, filename_description )
 
