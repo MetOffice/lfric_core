@@ -7,8 +7,8 @@ LFRic Core provides the underlying infrastructure for the Momentum&trade; Atmosp
 |           |                                                                                                                                                             |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |:repeat: CI|[![Doc Deploy](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml)|
-|:speech_balloon: Community|![Static Badge](https://img.shields.io/badge/github-discussions-blue?logo=github&link=https%3A%2F%2Fgithub.com%2FMetOffice%2Fsimulation-systems%2Fdiscussions)|
-|:package: Repo | ![GitHub Release](https://img.shields.io/github/v/release/metoffice/lfric_core) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/metoffice/lfric_core/latest)  |
+|:speech_balloon: Community|![Discussions link](https://img.shields.io/badge/github-discussions-yellow?logo=github&link=https%3A%2F%2Fgithub.com%2FMetOffice%2Fsimulation-systems%2Fdiscussions)|
+|:package: Repo |![GitHub License](https://img.shields.io/github/license/metoffice/lfric_core) ![GitHub Release](https://img.shields.io/github/v/release/metoffice/lfric_core?color=purple) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/metoffice/lfric_core/latest)  |
 |           |                                                                                                                                                             |
 
 ## Getting Started
