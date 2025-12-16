@@ -25,7 +25,7 @@ trap 'rm -f $temp_file; exit 1' INT TERM EXIT
 if  sed 's@\.\./\(\.\./\)*lfric_atm/metadata@$METADATA@' $iodef |\
     sed 's@\.\./\(\.\./\)*metadata@$METADATA@' |\
     rose env-cat - >$temp_file
-    echo "tweak_iodef: editing sucessful"
+    echo "tweak_iodef: editing sucessful in $temp_file"
 then
     trap '' INT TERM EXIT
     cp $temp_file $iodef
