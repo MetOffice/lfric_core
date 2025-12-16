@@ -7,8 +7,8 @@ LFRic Core provides the underlying infrastructure for the Momentum:tm: Atmospher
 |           |                                                                                                                                                             |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |:repeat: CI|[![Doc Deploy](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml)|
-|           |
-|           |                                                                                                                                                             |  
+|:github: Repo | https://img.shields.io/github/v/release/metoffice/lfric_core |
+|           |                                                                                                                                                             |
 
 ## Getting Started
 
