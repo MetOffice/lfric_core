@@ -106,7 +106,7 @@
         execution time limit = PT{{task_values["wallclock"]}}M
         [[[environment]]]
             DESTINATION_DIRECTORY = {{destination_dir}}
-            CORE_ROOT_DIR         = $SOURCE_ROOT
+            CORE_ROOT_DIR         = $SOURCE_ROOT/lfric_core
             SOURCE_DIRECTORY      = $SOURCE_ROOT/{{task_values["application_dir"]}}
             METADATA              = $SOURCE_ROOT/{{task_values["application_dir"]}}/metadata
             BIN_DIR               = {{bin_dir}}

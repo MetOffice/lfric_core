@@ -51,7 +51,7 @@
 
         {% if task_ns.application == "mesh" %}
 
-            {% do task_dict.update({"application_dir": "mesh_tools",
+            {% do task_dict.update({"application_dir": "lfric_core/mesh_tools",
                                     "app_name": "mesh"}) %}
             {% if task.startswith("build") %}
                 {% do task_dict.update({"task_family": "build"}) %}

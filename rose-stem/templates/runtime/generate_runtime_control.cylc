@@ -9,23 +9,39 @@
 {# export_source and housekeeping for now #}
 {# gatekeeper tasks will potentially be added here if required #}
 
+    [[CONTROL_TASK_RETRIES]]
+        execution retry delays = 3*PT3M
+
 {% if task == "export-source" %}
 {# First export-source task. Runs locally to the launch platform #}
 {# Exports the lfric_core sources to the #}
 {# cylc-run/share/source directory #}
 
     [[{{task}}]]
-        inherit = EXPORT-SOURCE, {{SITE|upper}}_ORIG
-        script  = """
-                  mkdir -p `dirname $SOURCE_ROOT`
-
-                  echo Source lfric_core: $SOURCE_LFRIC_CORE
-
-                  fcm export --force $SOURCE_LFRIC_CORE $SOURCE_ROOT
-                  """
+        inherit = EXPORT-SOURCE, {{SITE|upper}}_ORIG, CONTROL_TASK_RETRIES
+        post-script = """
+                      cp $SOURCE_ROOT/lfric_core/dependencies.yaml $CYLC_WORKFLOW_RUN_DIR
+                      cp $SOURCE_ROOT/SimSys_Scripts/github_scripts/suite_report_git.py $CYLC_WORKFLOW_RUN_DIR/bin
+                      cp $SOURCE_ROOT/SimSys_Scripts/github_scripts/suite_data.py $CYLC_WORKFLOW_RUN_DIR/bin
+                      cp $SOURCE_ROOT/SimSys_Scripts/github_scripts/git_bdiff.py $CYLC_WORKFLOW_RUN_DIR/bin
+                      cp $SOURCE_ROOT/SimSys_Scripts/github_scripts/get_git_sources.py $CYLC_WORKFLOW_RUN_DIR/bin
+                      """
         [[[environment]]]
             SOURCE_DIRECTORY = $SOURCE_ROOT
-            SOURCE_LFRIC_CORE = {{SOURCE_LFRIC}}
+            ROSE_TASK_APP = extract_source
+            DEPENDENCIES = {{dependencies}}
+            USE_MIRRORS = {{USE_MIRRORS}}
+            USE_TOKENS = {{USE_TOKENS}}
+        {% if USE_MIRRORS %}
+            {% if "git_mirror_loc" in site_vars %}
+            GIT_MIRROR_LOC = {{site_vars.git_mirror_loc}}
+            {% else %}
+                {{ raise(
+                    "Trying to run with mirrors without setting a mirror location. "
+                    "Ensure 'git_mirror_loc' is included in site_vars."
+                    ) }}
+            {% endif %}
+        {% endif %}
 
 {% elif task.startswith("export-source") %}
 {# 2nd export-source task specific to each platform #}
@@ -36,7 +52,7 @@
     {% set platform = task.split('_')[1] %}
 
     [[{{task}}]]
-        inherit = EXPORT-SOURCE, {{platform|upper}}_EXPORT-SOURCE
+        inherit = EXPORT-SOURCE, {{platform|upper}}_EXPORT-SOURCE, CONTROL_TASK_RETRIES
         script  = """
                   if [[ "$PLATFORM_SYNC" = true ]] ; then
                     RELATIVE_SOURCE_DIRECTORY=`echo $SOURCE_DIRECTORY | sed "s|$HOME/||"`
@@ -49,7 +65,6 @@
                   """
         [[[environment]]]
             SOURCE_DIRECTORY = $SOURCE_ROOT
-            SOURCE_LFRIC = {{SOURCE_LFRIC}}
 
 {% elif task.startswith("housekeep") %}
 

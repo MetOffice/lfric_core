@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------------
 ! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
-! For further details please refer to the file LICENCE.original which you
+! For further details please refer to the file LICENCE which you
 ! should have received as part of this distribution.
 !-----------------------------------------------------------------------------
 module sci_compute_curl_operator_kernel_mod

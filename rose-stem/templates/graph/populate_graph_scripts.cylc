@@ -65,7 +65,6 @@
     {% if "validate_rose_meta" in task %}
         {# The validate rose meta task relies on the export of SimSys_Scripts #}
         {% do graph_sections.append([
-            "export_simsys_scripts",
             task
             ]) %}
     {% endif %}

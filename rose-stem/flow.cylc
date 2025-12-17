@@ -5,6 +5,28 @@
 {# under which the code may be used. #}
 {# ########################################################################### #}
 {% from "cylc.flow" import LOG %}
+{% from "utils" import get_site %}
+{% from "read_sources" import read_sources  %}
+
+{% if SITE is not defined %}
+    {% set SITE = get_site() %}
+{% endif %}
+{% do LOG.info("Site: " + SITE) %}
+
+{% set SOURCE_DIRECTORY = ROSE_ORIG_HOST~":"~CYLC_WORKFLOW_SRC_DIR~"/.." %}
+{# Include log message for suite_report #}
+{% do LOG.info("LFRIC_CORE SOURCE CLONE="~SOURCE_DIRECTORY) %}
+
+{# Read in groups to run #}
+{% if group is defined %}
+    {% set RUN_NAMES = group %}
+{% elif g is defined %}
+    {% set RUN_NAMES = g %}
+{% else %}
+    {% set RUN_NAMES = ["developer"] %}
+{% endif %}
+{% do LOG.info("Running groups: "~RUN_NAMES|join('
+                   ')) %}
 
 {# Include the site variables file #}
 {# Contains some settings used for the workflow #}
@@ -32,7 +54,8 @@
 {% set site_groups = {} %}
 {% include "site/"+SITE+"/groups.cylc" %}
 
-{% set lfric_source = SOURCE_LFRIC %}
+{# Read the sources of dependencies from the dependencies.yaml file #}
+{% set dependencies = read_sources(SOURCE_DIRECTORY, "lfric_core", USE_HEADS) %}
 
 {# Generate list of tasks given by --group= #}
 {# Expand any groups included so list is only tasks #}
@@ -42,7 +65,6 @@
 {# Generate a list of all scripts - used to determine if a task is a script #}
 {% set scripts_list = [] %}
 {{ expand_task_list(site_groups, ["scripts"], false, scripts_list) }}
-{% do set_add(scripts_list, "export_simsys_scripts") %}
 
 {# Load the task definitions for each application requested at current site #}
 {% set requested_tasks = {} %}
@@ -59,11 +81,11 @@
     UTC mode = True
     install = site/, templates/
     [[events]]
-        mail events = timeout
+        mail events = stall timeout
         abort on stall timeout = True
         stall timeout = PT3H
-        shutdown handlers = "suite_report.py"
-        stall handlers = "suite_report.py"
+        shutdown handlers = "suite_report_git.py -S $CYLC_WORKFLOW_RUN_DIR"
+        stall handlers = "suite_report_git.py -S $CYLC_WORKFLOW_RUN_DIR"
 
 [scheduling]
     [[graph]]
@@ -92,8 +114,7 @@
         [[[environment]]]
             SOURCE_ROOT    = $CYLC_WORKFLOW_SHARE_DIR/source
             OUTPUT_ROOT    = $CYLC_WORKFLOW_SHARE_DIR/output
-            LAUNCH_SCRIPT  = $SOURCE_ROOT/rose-stem/site/{{SITE}}/common/bin
-            INFRASTRUCTURE_ROSESTEM = $SOURCE_ROOT/infrastructure/rose-stem/
+            LAUNCH_SCRIPT  = $SOURCE_ROOT/lfric_core/rose-stem/site/{{SITE}}/common/bin
 
         [[[events]]]
             submission timeout = PT5H

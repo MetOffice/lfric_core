@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------------
 ! Copyright (c) 2024,  Met Office, on behalf of HMSO and Queen's Printer
-! For further details please refer to the file LICENCE.original which
+! For further details please refer to the file LICENCE which
 ! you
 ! should have received as part of this distribution.
 !-----------------------------------------------------------------------------
