@@ -38,7 +38,7 @@ module {{moduleName}}
   type :: config_type
 
     !> The name of the namelist collection if provided.
-    character(str_def), private :: config_name = cmdi
+    character(:), private, allocatable :: config_name = cmdi
 
     !> Whether object has been initialised or not
     logical, private :: isinitialised = .false.
