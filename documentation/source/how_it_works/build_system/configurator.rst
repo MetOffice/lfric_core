@@ -20,7 +20,7 @@ distribution of choices to all MPI ranks.
 
 The Configurator provides several python scripts found in
 ``infrastructure/build/tools``. Each of these scripts generate
-Fortran source code that is specific to an applications metadata.
+Fortran source code that is specific to an application's metadata.
 
 .. _GenNmlLoader:
 
