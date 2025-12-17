@@ -96,10 +96,27 @@ ifdef USE_VERNIER
   export PRE_PROCESS_MACROS += VERNIER
 endif
 
+ifdef USE_LEGACY_TIMER
+  export PRE_PROCESS_MACROS += LEGACY_TIMER
+endif
+
 ifdef USE_TIMING_WRAPPER
   export PRE_PROCESS_MACROS += TIMING_ON
 endif
 
+# Check that only one profiler is requested
+ifneq ($(and $(findstring LEGACY_TIMER, $(PRE_PROCESS_MACROS)),  \
+             $(findstring VERNIER,      $(PRE_PROCESS_MACROS))), )
+  $(error Multiple profilers specified, limit choice to single profiler.)
+endif
+
+# Check that TIMING ON has been set if any profiler requested.
+ifneq ($(or $(findstring LEGACY_TIMER,$(PRE_PROCESS_MACROS)), \
+            $(findstring VERNIER,     $(PRE_PROCESS_MACROS))), )
+ifndef USE_TIMING_WRAPPER
+  $(error Conflicting options: Profiler requested with Timing disabled.)
+endif
+endif
 
 # Set the default precision for reals
 RDEF_PRECISION ?= 64
