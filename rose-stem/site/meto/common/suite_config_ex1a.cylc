@@ -42,8 +42,8 @@
 
     [[EX1A_BUILD]]
         [[[environment]]]
-            USE_VERNIER=yes
-            USE_TIMING_WRAPPER=yes
+            USE_TIMING_WRAPPER=true
+            USE_VERNIER=true
         [[[directives]]]
             -l tmpsize=12GB
 
