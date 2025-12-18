@@ -14,7 +14,8 @@
 module config_mod
 
   use constants_mod,   only: i_def, l_def, str_def, cmdi
-  use log_mod,         only: log_event, log_scratch_space, log_level_error
+  use log_mod,         only: log_event, log_scratch_space, &
+                             log_level_error, log_level_warning
   use linked_list_mod, only: linked_list_type, linked_list_item_type
 
   use namelist_mod,            only: namelist_type

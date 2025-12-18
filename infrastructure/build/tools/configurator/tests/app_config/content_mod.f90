@@ -14,7 +14,8 @@
 module config_mod
 
   use constants_mod,   only: i_def, l_def, str_def, cmdi
-  use log_mod,         only: log_event, log_scratch_space, log_level_error
+  use log_mod,         only: log_event, log_scratch_space, &
+                             log_level_error, log_level_warning
   use linked_list_mod, only: linked_list_type, linked_list_item_type
 
   use namelist_mod,            only: namelist_type
@@ -130,7 +131,7 @@ subroutine add_namelist(self, namelist_obj)
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
       write(log_scratch_space, '(A)') &
-          trim(name) // ' namelist alreadly allocated.'
+          trim(name) // ' namelist already allocated.'
       call log_event(log_scratch_space, log_level_error)
     else
       allocate(self%foo, source=namelist_obj)
@@ -141,7 +142,7 @@ subroutine add_namelist(self, namelist_obj)
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
       write(log_scratch_space, '(A)') &
-          trim(name) // ' namelist alreadly allocated.'
+          trim(name) // ' namelist already allocated.'
       call log_event(log_scratch_space, log_level_error)
     else
       allocate(self%moo, source=namelist_obj)
@@ -150,9 +151,13 @@ subroutine add_namelist(self, namelist_obj)
 
   type is ( bar_nml_type )
     ! Multiple instances: ALLOWED
-    if (self%namelist_exists(trim(full_name))) then
+    if (trim(profile_name) == cmdi) then
+      write(log_scratch_space, '(A)') 'Ignoring ' // trim(name) // &
+          ' namelist: missing profile name.'
+      call log_event(log_scratch_space, log_level_warning)
+    else if (self%namelist_exists(trim(full_name))) then
       write(log_scratch_space, '(A)') trim(name) // &
-          ' namelist (' // trim(profile_name) // '), alreadly allocated.'
+          ' namelist (' // trim(profile_name) // '), already allocated.'
       call log_event(log_scratch_space, log_level_error)
     else
       if (.not. allocated(self%bar)) then
@@ -164,9 +169,13 @@ subroutine add_namelist(self, namelist_obj)
 
   type is ( pot_nml_type )
     ! Multiple instances: ALLOWED
-    if (self%namelist_exists(trim(full_name))) then
+    if (trim(profile_name) == cmdi) then
+      write(log_scratch_space, '(A)') 'Ignoring ' // trim(name) // &
+          ' namelist: missing profile name.'
+      call log_event(log_scratch_space, log_level_warning)
+    else if (self%namelist_exists(trim(full_name))) then
       write(log_scratch_space, '(A)') trim(name) // &
-          ' namelist (' // trim(profile_name) // '), alreadly allocated.'
+          ' namelist (' // trim(profile_name) // '), already allocated.'
       call log_event(log_scratch_space, log_level_error)
     else
       if (.not. allocated(self%pot)) then

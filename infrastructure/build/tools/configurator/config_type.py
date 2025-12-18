@@ -28,7 +28,7 @@ class AppConfiguration:
         self._namelists: List[str] = []
         self._duplicates: List[bool] = []
 
-    def add_namelist(self, name:str, duplicate:bool) -> None:
+    def add_namelist(self, name: str, duplicate: bool) -> None:
         """
         Registers a namelist name with the loader.
 
@@ -53,9 +53,11 @@ class AppConfiguration:
         template = self._engine.get_template("config_type.f90.jinja")
         module_file.write_text(template.render(inserts))
 
+        iter_template = "namelist_iterator_type.f90.jinja"
         for i, duplicate in enumerate(self._duplicates):
-             if duplicate:
-                 iterator_file = self._namelists[i] + '_nml_iterator_mod.f90'
-                 iterator_filepath = module_file.parent.joinpath(iterator_file)
-                 template = self._engine.get_template("namelist_iterator_type.f90.jinja")
-                 iterator_filepath.write_text(template.render({"listname":self._namelists[i]}))
+            if duplicate:
+                iter_file = self._namelists[i] + '_nml_iterator_mod.f90'
+                name = self._namelists[i]
+                iter_filepath = module_file.parent.joinpath(iter_file)
+                template = self._engine.get_template(iter_template)
+                iter_filepath.write_text(template.render({"listname": name}))
