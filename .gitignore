@@ -66,6 +66,7 @@ mesh_tools/**/test
 components/**/bin
 components/**/working
 components/**/test
+components/**/documents
 infrastructure/**/bin
 infrastructure/**/working
 infrastructure/**/test
