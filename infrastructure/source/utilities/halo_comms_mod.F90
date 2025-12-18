@@ -42,6 +42,7 @@ module halo_comms_mod
          perform_halo_exchange_finish, create_exchange_map
 
   type, extends(linked_list_data_type), public :: exchange_map_type
+    private
     !> Id of the mesh used in the function space that this information
     !> is valid for
     integer(i_def) :: mesh_id
@@ -68,6 +69,8 @@ module halo_comms_mod
     type(xt_xmap), allocatable :: xmaps(:)
 #endif
   contains
+    !> Gets the xmap that is used to create a redistrubution map
+    procedure, public :: get_xmap
     !> Gets the mesh_id for which the halo_routing object is valid
     procedure, public :: get_exchange_map_mesh_id
     !> Gets the element_order_h for which the halo_routing object is valid
@@ -274,7 +277,7 @@ function halo_routing_constructor( global_dof_id,   &
                                    fortran_type,    &
                                    fortran_kind,    &
                                    halo_depth,      &
-                                   xmaps) result(self)
+                                   exchange_maps) result(self)
 
   implicit none
 
@@ -290,11 +293,7 @@ function halo_routing_constructor( global_dof_id,   &
   integer(i_def), intent(in) :: fortran_type
   integer(i_def), intent(in) :: fortran_kind
   integer(i_def), intent(in) :: halo_depth
-#ifdef NO_MPI
-  integer(i_def), optional, intent(in) :: xmaps(:)
-#else
-  type(xt_xmap), optional, intent(in) :: xmaps(:)
-#endif
+  type(exchange_map_type), intent(in), pointer, optional :: exchange_maps
 
   type(halo_routing_type)    :: self
   integer(i_def)             :: max_depth
@@ -325,8 +324,9 @@ function halo_routing_constructor( global_dof_id,   &
   xmap=0
 #else
 do idepth = 1 ,max_depth
-    if (present(xmaps)) then
-      xmap = xmaps(idepth)
+
+    if (present(exchange_maps)) then
+      xmap = exchange_maps%get_xmap(idepth)
     else
       xmap = create_exchange_map(global_dof_id(1:last_owned_dof), &
                                        global_dof_id( halo_start(idepth):halo_finish(idepth) ))
@@ -470,6 +470,28 @@ end function get_redist
 
 !----------------------------------------------------------------------
 ! Getter functions for exchange map
+
+!> @brief Gets a YAXT xmap used to create the redistribution maps
+!> @param [in] depth The depth of halo exchange that the redistribution map
+!>                   will be used for
+!> @return The YAXT xmap for a particular depth of halo
+function get_xmap(self, depth) result (xmap)
+
+  implicit none
+
+  class(exchange_map_type), intent(in), target :: self
+  integer(i_def), intent(in) :: depth
+
+#ifdef NO_MPI
+  integer(i_def) :: xmap
+#else
+  type(xt_xmap)  :: xmap
+#endif
+
+  xmap = self%xmaps(depth)
+
+  return
+end function get_xmap
 
 !> @brief Gets the mesh_id for which this object is valid
 !> @return Id of the mesh that this information is valid for

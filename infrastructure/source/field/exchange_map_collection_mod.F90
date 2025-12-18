@@ -223,12 +223,12 @@ function get_exchange_maps_from_list(self, &
     ! 'cast' to the halo_routing_type
     select type(listhalo_routing => loop%payload)
       type is (exchange_map_type)
-      if ( mesh_id == listhalo_routing%mesh_id .and. &
-           element_order_h == listhalo_routing%element_order_h.and. &
-           element_order_v == listhalo_routing%element_order_v .and. &
-           lfric_fs == listhalo_routing%lfric_fs .and. &
-           ndata == listhalo_routing%ndata .and. &
-           halo_depth == listhalo_routing%halo_depth ) then
+      if ( mesh_id == listhalo_routing%get_exchange_map_mesh_id() .and. &
+           element_order_h == listhalo_routing%get_exchange_map_element_order_h() .and. &
+           element_order_v == listhalo_routing%get_exchange_map_element_order_v() .and. &
+           lfric_fs == listhalo_routing%get_exchange_map_lfric_fs() .and. &
+           ndata == listhalo_routing%get_exchange_map_ndata() .and. &
+           halo_depth == listhalo_routing%get_exchange_map_halo_depth() ) then
         instance => listhalo_routing
         exit
       end if

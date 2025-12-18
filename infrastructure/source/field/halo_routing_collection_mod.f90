@@ -119,7 +119,7 @@ function get_halo_routing( self,            &
   integer(i_halo_index), allocatable :: global_dof_id(:)
   integer(i_def), allocatable :: halo_start(:)
   integer(i_def), allocatable :: halo_finish(:)
-  type(exchange_map_type),  pointer :: exchange_maps_obj
+  type(exchange_map_type),  pointer :: exchange_maps
   integer(i_def) :: idepth
   integer(i_def) :: last_owned_dof
   integer(i_def) :: mesh_id
@@ -170,26 +170,29 @@ function get_halo_routing( self,            &
 
     mesh_id = mesh%get_id()
 
-    exchange_maps_obj => self%exchange_map_collection%get_exchange_map(   mesh,    &
-                                                  element_order_h, &
-                                                  element_order_v, &
-                                                  lfric_fs,        &
-                                                  ndata,           &
-                                                  halo_depth )
+    exchange_maps => self%exchange_map_collection%get_exchange_map( &
+                                                mesh,               &
+                                                element_order_h,    &
+                                                element_order_v,    &
+                                                lfric_fs,           &
+                                                ndata,              &
+                                                halo_depth )
 
-    call self%halo_routing_list%insert_item( halo_routing_type( global_dof_id,   &
-                                                                last_owned_dof,  &
-                                                                halo_start,      &
-                                                                halo_finish,     &
-                                                                mesh_id,         &
-                                                                element_order_h, &
-                                                                element_order_v, &
-                                                                lfric_fs,        &
-                                                                ndata,           &
-                                                                fortran_type,    &
-                                                                fortran_kind,    &
-                                                                halo_depth,      &
-                                                                exchange_maps_obj%xmaps) )
+    call self%halo_routing_list%insert_item( &
+                             halo_routing_type( global_dof_id,   &
+                                                last_owned_dof,  &
+                                                halo_start,      &
+                                                halo_finish,     &
+                                                mesh_id,         &
+                                                element_order_h, &
+                                                element_order_v, &
+                                                lfric_fs,        &
+                                                ndata,           &
+                                                fortran_type,    &
+                                                fortran_kind,    &
+                                                halo_depth,      &
+                                                exchange_maps)   &
+                                              )
     deallocate( halo_start, halo_finish, global_dof_id )
 
     halo_routing => get_halo_routing_from_list( self,            &
