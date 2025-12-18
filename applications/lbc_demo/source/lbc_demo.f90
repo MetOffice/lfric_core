@@ -8,7 +8,7 @@
 !> @details Calls init, run and finalise routines from lbc_demo driver module
 program lbc_demo
 
-  use cli_mod,                only: get_initial_filename
+  use cli_mod,                only: parse_command_line
   use driver_collections_mod, only: init_collections, final_collections
 
   use constants_mod,       only: precision_real
@@ -38,6 +38,8 @@ program lbc_demo
   type(namelist_type), pointer :: base_mesh_nml
   integer :: geometry, topology
 
+  call parse_command_line( filename )
+
   write(log_scratch_space, '(A)') &
       'Application built with ' // trim(precision_real) // '-bit real numbers'
   call log_event( log_scratch_space, log_level_trace )
@@ -47,7 +49,6 @@ program lbc_demo
   call modeldb%configuration%initialise( program_name, table_len=10 )
 
   call init_comm(program_name, modeldb)
-  call get_initial_filename( filename )
   call init_config( filename, required_namelists, &
                     modeldb%configuration )
 
