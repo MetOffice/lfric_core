@@ -121,9 +121,10 @@ subroutine initialise(self, name)
 end subroutine initialise
 
 
-!> @brief Adds a new namelist object to the collection.
-!> @param [in] namelist The namelist that is to be added
-!>                      into the collection.
+!> @brief Installs a new namelist object into the configuration.
+!> @param [in] namelist The extended namelist type object. Only
+!>                      extended namelist types defined by the
+!>                      application metadata file will be accepted.
 !===================================================================
 subroutine add_namelist(self, namelist_obj)
 
@@ -133,9 +134,9 @@ subroutine add_namelist(self, namelist_obj)
 
   class(namelist_type), intent(in) :: namelist_obj
 
-  character(str_def) :: name
-  character(str_def) :: profile_name
-  character(str_def) :: full_name
+  character(:), allocatable :: name
+  character(:), allocatable :: profile_name
+  character(:), allocatable :: full_name
 
   ! Check namelist name is valid, if not then exit with error
   full_name    = namelist_obj%get_full_name()

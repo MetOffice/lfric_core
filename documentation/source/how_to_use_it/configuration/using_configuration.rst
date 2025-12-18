@@ -4,7 +4,7 @@
     under which the code may be used.
    -----------------------------------------------------------------------------
 
-.. _using configuration:
+.. _generating_configuration:
 
 Configuration code generation
 =============================
@@ -19,6 +19,8 @@ a user-friendly format.
 This section describes how to load an application configuration into
 the application, and how code can use the various types of application
 configuration.
+
+.. _loading_configuration:
 
 Loading the configuration
 =========================
@@ -52,7 +54,7 @@ namelist configuration file and cross-checking the contents to ensure
 all required namelists are present. The driver configuration component
 can be used instead of directly calling the above procedure.
 
-.. _config object:
+.. _using_config_object:
 
 Using the Config Object
 ==============================
@@ -67,15 +69,12 @@ the configuration hirarchy in the ``config_type``, `e.g.`
 
    use config_mod, only: config_type
 
-   type(config_type)  :: configuration
+   type(config_type)  :: config
    character(str_def) :: name
 
    name = config%base_mesh%mesh_name()
 
-In general, applications will only require one ``config_type`` object.
-Should an application require to read more than one configuration file
-in a model run, another ``config_type`` will be required,
-`i.e.` 1 ``config_type`` object/configuration file.
+.. _config_enumerations:
 
 Enumerations
 ------------
@@ -132,6 +131,8 @@ duplication of parameter names with other enumeration variables:
    that compares string options and parameters. If there are spelling
    errors in the names in the code, the former will fail at compile
    time whereas problems with the latter only arise at run-time.
+
+.. _config_duplicate_namelists:
 
 Duplicate namelists
 ---------------------
@@ -198,10 +199,10 @@ To extract a *specific instance*, the possible ``mesh_choice`` string must be kn
 
    end do
 
-.. _config_mod files:
+.. _config_mod_files:
 
-Using config_mod files
-======================
+Using configuration module files
+================================
 
 In the examples above, the ``config_mod`` modules were used **only** to
 obtain the parameters that represent the options of an enumeration

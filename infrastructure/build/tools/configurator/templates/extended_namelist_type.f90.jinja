@@ -33,6 +33,7 @@ contains
 {%- for name, parameter in parameters | dictsort %}
 {%-   if loop.first %}{{'\n'}}{%- endif %}
 {%-   if name in arrays %}
+{# Template function to return an array namelist member #}
   function {{parameter.name}}(self) result(answer)
 
     implicit none
@@ -45,6 +46,7 @@ contains
   end function {{parameter.name}}
 
 {%-   else %}
+{# Template function to return an scalar namelist member #}
   function {{parameter.name}}(self) result(answer)
 
     implicit none
