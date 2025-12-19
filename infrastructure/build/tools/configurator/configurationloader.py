@@ -46,5 +46,5 @@ class ConfigurationLoader:
             "namelists": self._namelists,
         }
 
-        template = self._engine.get_template("loader.f90.jinja")
+        template = self._engine.get_template("config_loader.f90.jinja")
         module_file.write_text(template.render(inserts))

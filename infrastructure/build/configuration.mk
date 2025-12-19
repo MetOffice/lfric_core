@@ -35,9 +35,11 @@ endif
 .INTERMEDIATE: $(CONFIG_DIR)/build_config_loaders
 $(CONFIG_DIR)/build_config_loaders: $(CONFIG_DIR)/rose-meta.json
 	$(call MESSAGE,Generating namelist loading modules.)
-	$(Q)$(LFRIC_BUILD)/tools/GenerateNamelist $(VERBOSE_ARG) \
-                           $(CONFIG_DIR)/rose-meta.json          \
+	$(Q)$(LFRIC_BUILD)/tools/GenerateNamelistLoader \
+                           $(VERBOSE_ARG)               \
+                           $(CONFIG_DIR)/rose-meta.json \
                            -directory $(CONFIG_DIR)
+	$(Q)touch $(WORKING_DIR)/duplicate_namelists.txt
 	$(Q)touch $(CONFIG_DIR)/build_config_loaders
 
 # This recipe requires config_namelists.txt, although adding it to the dependencies
@@ -48,8 +50,20 @@ $(CONFIG_DIR)/build_config_loaders: $(CONFIG_DIR)/rose-meta.json
 $(WORKING_DIR)/configuration_mod.f90: $(CONFIG_DIR)/build_config_loaders
 	$(call MESSAGE,Generating configuration loader module,$(notdir $@))
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(LFRIC_BUILD)/tools/GenerateLoader $(VERBOSE_ARG) $@ $(shell cat $(CONFIG_DIR)/config_namelists.txt)
-
+	$(Q)$(LFRIC_BUILD)/tools/GenerateConfigLoader                      \
+                           $(VERBOSE_ARG)                                  \
+                           $(shell cat $(CONFIG_DIR)/config_namelists.txt) \
+                           -o $(WORKING_DIR)
+	$(Q)$(LFRIC_BUILD)/tools/GenerateExtendedNamelistType \
+                           $(VERBOSE_ARG)                     \
+                           $(CONFIG_DIR)/rose-meta.json       \
+                           -directory $(CONFIG_DIR)
+	$(Q)$(shell sed 's\^\-duplicate \' <$(CONFIG_DIR)/duplicate_namelists.txt >$(CONFIG_DIR)/duplicates.txt)
+	$(Q)$(LFRIC_BUILD)/tools/GenerateConfigType                        \
+                           $(VERBOSE_ARG)                                  \
+                           $(shell cat $(CONFIG_DIR)/config_namelists.txt) \
+                           $(shell cat $(CONFIG_DIR)/duplicates.txt)       \
+                           -o $(WORKING_DIR)
 
 .PRECIOUS: $(WORKING_DIR)/feign_config_mod.f90
 $(WORKING_DIR)/feign_config_mod.f90: $(CONFIG_DIR)/rose-meta.json

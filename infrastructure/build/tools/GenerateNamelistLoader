@@ -45,6 +45,7 @@ def main():
         logging.getLogger('configurator').setLevel(logging.WARNING)
 
     description_list = []
+    duplicate_list   = []
 
     meta_filename = args.meta_filename[0]
 
@@ -58,6 +59,14 @@ def main():
         module_file = args.directory / leafname
         description.write_module(module_file)
 
+        if description._multiple_instances_allowed:
+            duplicate_list.append(description._listname)
+
+
+    # Write out which namelist allow duplicates
+    with open(f'{args.directory}/duplicate_namelists.txt', 'wt', encoding='utf-8') as output:
+      for listname in duplicate_list:
+          output.write(f'{listname}\n')
 
 if __name__ == '__main__':
     main()

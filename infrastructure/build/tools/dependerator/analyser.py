@@ -464,6 +464,7 @@ class FortranAnalyser(Analyser):
                 for module_name in module_names:
                     if module_name is not None:
                         logger.info("    Depends on external " + module_name)
+                        assert isinstance(program_unit, str)
                         add_dependency(program_unit, module_name)
                 continue
 

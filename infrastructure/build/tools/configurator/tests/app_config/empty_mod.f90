@@ -1,0 +1,307 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!
+!> @brief   Defines \<config_type\> object.
+!> @details A container object that holds namelist
+!>          objects of various types).
+!>
+!>          Access pattern will differ for namelist types that are permitted
+!>          to have multiple instances within the configuration.
+!>
+module config_mod
+
+  use constants_mod,   only: i_def, l_def, str_def, cmdi
+  use log_mod,         only: log_event, log_scratch_space, &
+                             log_level_error, log_level_warning
+  use linked_list_mod, only: linked_list_type, linked_list_item_type
+
+  use namelist_mod,            only: namelist_type
+  use namelist_collection_mod, only: namelist_collection_type
+
+  implicit none
+
+  private
+  public :: config_type
+
+  !-----------------------------------------------------------------------------
+  ! Type that stores namelists of an application configuration
+  !-----------------------------------------------------------------------------
+  type :: config_type
+
+    !> The name of the namelist collection if provided.
+    character(str_def), private :: config_name = cmdi
+
+    !> Whether object has been initialised or not
+    logical, private :: isinitialised = .false.
+
+    !> The name of the namelist collection if provided.
+    character(str_def), private, allocatable :: nml_fullnames(:)
+
+  contains
+
+    procedure, public :: initialise
+    procedure, public :: name
+    procedure, public :: add_namelist
+    procedure, public :: contents
+    procedure, public :: n_namelists
+    procedure, public :: namelist_exists
+
+    procedure, public :: clear
+
+    final :: config_destructor
+
+    procedure, private :: update_contents
+
+  end type config_type
+
+contains
+
+
+!> @brief Initialises application configuration.
+!> @param [in] name  Optional: The name given to the configuration.
+!=====================================================================
+subroutine initialise(self, name)
+
+  implicit none
+
+  class(config_type), intent(inout) :: self
+
+  character(*), optional, intent(in) :: name
+
+  if (self%isinitialised) then
+    write(log_scratch_space, '(A)')       &
+        'Application configuration: [' // &
+         trim(self%config_name)        // &
+        '] has already been initiaised.'
+    call log_event(log_scratch_space, log_level_error)
+  end if
+
+  if (present(name)) self%config_name = trim(name)
+  self%isinitialised = .true.
+
+  return
+end subroutine initialise
+
+
+!> @brief Adds a new namelist object to the collection.
+!> @param [in] namelist The namelist that is to be added
+!>                      into the collection.
+!===================================================================
+subroutine add_namelist(self, namelist_obj)
+
+  implicit none
+
+  class(config_type), intent(inout) :: self
+
+  class(namelist_type), intent(in) :: namelist_obj
+
+  character(str_def) :: name
+  character(str_def) :: profile_name
+  character(str_def) :: full_name
+
+  ! Check namelist name is valid, if not then exit with error
+  full_name    = namelist_obj%get_full_name()
+  profile_name = namelist_obj%get_profile_name()
+  name         = namelist_obj%get_listname()
+
+  select type(namelist_obj)
+  class default
+     write(log_scratch_space, '(A)')                  &
+         ' Undefined namelist type(' // trim(name) // &
+         '), for this configuration.'
+     call log_event(log_scratch_space, log_level_error)
+
+  end select
+
+end subroutine add_namelist
+
+
+!> @brief Check if a namelist is present the collection.
+!> @param [in] name         The name of the namelist to be checked.
+!> @param [in] profile_name Optional: In the case of namelists which
+!>                          are permitted to have multiple instances,
+!>                          the profile name distiguishes the instances
+!>                          of <name> namelists.
+!> @return exists           Flag stating if namelist is present or not
+!=====================================================================
+function namelist_exists(self, name, profile_name) result(exists)
+
+  implicit none
+
+  class(config_type), intent(in) :: self
+
+  character(*),           intent(in) :: name
+  character(*), optional, intent(in) :: profile_name
+
+  logical(l_def) :: exists
+
+  integer(i_def)     :: i
+  character(str_def) :: full_name
+
+  exists = .false.
+
+  if (allocated(self%nml_fullnames)) then
+
+    if (present(profile_name)) then
+      full_name = trim(name)//':'//trim(profile_name)
+    else
+      full_name = trim(name)
+    end if
+
+    do i=1, size(self%nml_fullnames)
+      if (trim(self%nml_fullnames(i)) == trim(full_name)) then
+        exists = .true.
+        exit
+      end if
+    end do
+  end if
+
+end function namelist_exists
+
+!> @brief Queries config_type for the total number of namelists stored.
+!> @return answer  The number of namelists stored
+!=====================================================================
+function n_namelists(self) result(answer)
+
+  implicit none
+
+  class(config_type), intent(in) :: self
+
+  integer(i_def) :: answer
+
+  answer = 0
+  if (allocated(self%nml_fullnames)) then
+    answer = size(self%nml_fullnames)
+  end if
+
+end function n_namelists
+
+!> @brief Queries the name of config_type.
+!> @return name  The name identifying this namelist collection
+!>               on initialisation.
+!=====================================================================
+function name(self) result(answer)
+
+  implicit none
+
+  class(config_type), intent(in) :: self
+  character(str_def) :: answer
+
+  answer = self%config_name
+
+end function name
+
+!> @brief Extracts namelist names in config_type.
+!> @param  listname        Optional: if specified, returns entries
+!>                         begining with this string.
+!> @return namelist_names  Array of unique names of namelists in the
+!>                         collection.
+!=====================================================================
+function contents(self, listname) result(namelist_names)
+
+  implicit none
+
+  class(config_type), intent(in) :: self
+
+  character(*), optional, intent(in) :: listname
+
+  character(str_def), allocatable :: namelist_names(:)
+
+  character(str_def), allocatable :: tmp(:)
+  character(str_def) :: tmp_str
+  integer(i_def) :: n_found, i, start_index
+
+  if (allocated(namelist_names)) deallocate(namelist_names)
+
+  n_found = 0
+  if (present(listname)) then
+
+    allocate(tmp(size(self%nml_fullnames)))
+
+    do i=1, size(self%nml_fullnames)
+      if (index(trim(self%nml_fullnames(i)), trim(listname)) > 0) then
+        tmp_str      = trim(self%nml_fullnames(i))
+        start_index  = index(tmp_str, ':')
+        n_found      = n_found + 1_i_def
+        tmp(n_found) = trim(tmp_str(start_index+1:))
+      end if
+    end do
+
+    allocate(namelist_names(n_found))
+    namelist_names = tmp(1:n_found)
+    deallocate(tmp)
+
+  else
+
+    allocate(namelist_names, source=self%nml_fullnames)
+
+  end if
+
+end function contents
+
+
+!> @brief Clears all items from the namelist collection.
+!=====================================================================
+subroutine clear(self)
+
+  implicit none
+
+  class(config_type), intent(inout) :: self
+
+  if (allocated(self%nml_fullnames)) deallocate(self%nml_fullnames)
+
+  self%config_name = cmdi
+  self%isinitialised = .false.
+
+end subroutine clear
+
+
+!> @brief Destructor for the namelist collection
+!=====================================================================
+subroutine config_destructor(self)
+
+  implicit none
+
+  type(config_type), intent(inout) :: self
+
+  call self%clear()
+
+end subroutine config_destructor
+
+
+!> @brief Adds namelist identifier to the to list on namelists stored.
+!> @param [in] nml_full_name  Namelists identifier to be added.
+!=====================================================================
+subroutine update_contents(self, nml_full_name)
+
+  implicit none
+
+  class(config_type), intent(inout) :: self
+
+  character(*), intent(in) :: nml_full_name
+
+  character(str_def), allocatable :: tmp_str(:)
+  integer(i_def) :: n_entries
+
+  if (allocated(self%nml_fullnames)) then
+
+    n_entries = size(self%nml_fullnames)
+    allocate(tmp_str, source=self%nml_fullnames)
+    deallocate(self%nml_fullnames)
+    allocate(self%nml_fullnames(n_entries+1))
+    self%nml_fullnames(1:n_entries) = tmp_str(:)
+    self%nml_fullnames(n_entries+1) = nml_full_name
+
+  else
+
+    allocate(self%nml_fullnames(1))
+    self%nml_fullnames(1) = trim(nml_full_name)
+
+  end if
+
+end subroutine update_contents
+
+end module config_mod

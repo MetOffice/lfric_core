@@ -37,6 +37,7 @@ program skeleton
   character(:), allocatable :: filename
 
   call modeldb%configuration%initialise( program_name, table_len=10 )
+  call modeldb%config%initialise(program_name)
 
   write(log_scratch_space,'(A)')                          &
       'Application built with '// trim(precision_real) // &
@@ -47,8 +48,11 @@ program skeleton
 
   call init_comm( "skeleton", modeldb )
   call get_initial_filename( filename )
+
   call init_config( filename, skeleton_required_namelists, &
-                    modeldb%configuration )
+                    configuration=modeldb%configuration,   &
+                    config=modeldb%config )
+
   call init_logger( modeldb%mpi%get_comm(), program_name )
   call init_collections()
   call init_time( modeldb )
@@ -60,7 +64,7 @@ program skeleton
   call modeldb%io_contexts%initialise(program_name, 100)
 
   call log_event( 'Initialising ' // program_name // ' ...', log_level_trace )
-  call initialise( program_name, modeldb, modeldb%calendar )
+  call initialise( program_name, modeldb )
 
   do while (modeldb%clock%tick())
     call step( program_name, modeldb )

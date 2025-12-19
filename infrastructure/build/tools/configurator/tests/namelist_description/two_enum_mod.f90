@@ -27,7 +27,7 @@ module twoenum_config_mod
             twoenum_is_loadable, twoenum_is_loaded, &
             twoenum_reset_load_status, &
             twoenum_multiples_allowed, twoenum_final, &
-            get_twoenum_nml
+            get_twoenum_nml, get_new_twoenum_nml
 
   integer(i_def), public, parameter :: first_one = 1952457118
   integer(i_def), public, parameter :: first_three = 1813125082
@@ -306,11 +306,11 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(2)
 
-      call members(1)%initialise( &
-                  'first', first )
+    call members(1)%initialise( &
+                'first', first )
 
-      call members(2)%initialise( &
-                  'second', second )
+    call members(2)%initialise( &
+                'second', second )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -322,6 +322,35 @@ contains
     end if
 
   end function get_twoenum_nml
+
+  !> @brief Returns a <<twoenum_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<twoenum_nml_type>> with current namelist contents.
+  function get_new_twoenum_nml() result(namelist_obj)
+
+    use twoenum_nml_mod, only: twoenum_nml_type
+
+    implicit none
+
+    type(twoenum_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(2)
+
+    call members(1)%initialise( &
+                'first', first )
+
+    call members(2)%initialise( &
+                'second', second )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_twoenum_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

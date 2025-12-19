@@ -18,6 +18,7 @@ module driver_modeldb_mod
   use lfric_mpi_mod,             only: lfric_mpi_type
   use model_clock_mod,           only: model_clock_type
   use namelist_collection_mod,   only: namelist_collection_type
+  use config_mod,                only: config_type
   use io_context_collection_mod, only: io_context_collection_type
 
   implicit none
@@ -32,6 +33,8 @@ module driver_modeldb_mod
 
     !> Configuration namelist collection
     type(namelist_collection_type), public :: configuration
+
+    type(config_type), public :: config
 
     !> Stores all the fields used by the model
     type( model_data_type ), public :: fields

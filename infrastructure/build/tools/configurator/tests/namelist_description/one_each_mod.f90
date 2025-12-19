@@ -34,7 +34,7 @@ module test_config_mod
             test_is_loadable, test_is_loaded, &
             test_reset_load_status, &
             test_multiples_allowed, test_final, &
-            get_test_nml
+            get_test_nml, get_new_test_nml
 
   integer(i_def), public, parameter :: enum_one = 189779348
   integer(i_def), public, parameter :: enum_three = 1061269036
@@ -301,47 +301,47 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(14)
 
-      call members(1)%initialise( &
-                  'dint', dint )
+    call members(1)%initialise( &
+                'dint', dint )
 
-      call members(2)%initialise( &
-                  'dlog', dlog )
+    call members(2)%initialise( &
+                'dlog', dlog )
 
-      call members(3)%initialise( &
-                  'dreal', dreal )
+    call members(3)%initialise( &
+                'dreal', dreal )
 
-      call members(4)%initialise( &
-                  'dstr', dstr )
+    call members(4)%initialise( &
+                'dstr', dstr )
 
-      call members(5)%initialise( &
-                  'enum', enum )
+    call members(5)%initialise( &
+                'enum', enum )
 
-      call members(6)%initialise( &
-                  'fstr', fstr )
+    call members(6)%initialise( &
+                'fstr', fstr )
 
-      call members(7)%initialise( &
-                  'lint', lint )
+    call members(7)%initialise( &
+                'lint', lint )
 
-      call members(8)%initialise( &
-                  'lreal', lreal )
+    call members(8)%initialise( &
+                'lreal', lreal )
 
-      call members(9)%initialise( &
-                  'sint', sint )
+    call members(9)%initialise( &
+                'sint', sint )
 
-      call members(10)%initialise( &
-                  'sreal', sreal )
+    call members(10)%initialise( &
+                'sreal', sreal )
 
-      call members(11)%initialise( &
-                  'treal', treal )
+    call members(11)%initialise( &
+                'treal', treal )
 
-      call members(12)%initialise( &
-                  'vint', vint )
+    call members(12)%initialise( &
+                'vint', vint )
 
-      call members(13)%initialise( &
-                  'vreal', vreal )
+    call members(13)%initialise( &
+                'vreal', vreal )
 
-      call members(14)%initialise( &
-                  'vstr', vstr )
+    call members(14)%initialise( &
+                'vstr', vstr )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -353,6 +353,71 @@ contains
     end if
 
   end function get_test_nml
+
+  !> @brief Returns a <<test_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<test_nml_type>> with current namelist contents.
+  function get_new_test_nml() result(namelist_obj)
+
+    use test_nml_mod, only: test_nml_type
+
+    implicit none
+
+    type(test_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(14)
+
+    call members(1)%initialise( &
+                'dint', dint )
+
+    call members(2)%initialise( &
+                'dlog', dlog )
+
+    call members(3)%initialise( &
+                'dreal', dreal )
+
+    call members(4)%initialise( &
+                'dstr', dstr )
+
+    call members(5)%initialise( &
+                'enum', enum )
+
+    call members(6)%initialise( &
+                'fstr', fstr )
+
+    call members(7)%initialise( &
+                'lint', lint )
+
+    call members(8)%initialise( &
+                'lreal', lreal )
+
+    call members(9)%initialise( &
+                'sint', sint )
+
+    call members(10)%initialise( &
+                'sreal', sreal )
+
+    call members(11)%initialise( &
+                'treal', treal )
+
+    call members(12)%initialise( &
+                'vint', vint )
+
+    call members(13)%initialise( &
+                'vreal', vreal )
+
+    call members(14)%initialise( &
+                'vstr', vstr )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_test_nml
 
 
   !> Performs any processing to be done once all namelists are loaded
