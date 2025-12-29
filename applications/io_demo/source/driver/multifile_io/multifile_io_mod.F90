@@ -22,7 +22,7 @@ module multifile_io_mod
   use inventory_by_mesh_mod,   only: inventory_by_mesh_type
   use io_context_collection_mod, only: io_context_collection_type
   use io_context_mod,          only: io_context_type, callback_clock_arg
-  use io_config_mod,           only: use_xios_io, subroutine_timers
+  use io_config_mod,           only: use_xios_io
   use log_mod,                 only: log_event, log_level_error, &
                                      log_level_trace, log_level_info, &
                                      log_scratch_space
