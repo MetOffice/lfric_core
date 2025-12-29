@@ -44,6 +44,8 @@ module lfric_xios_write_mod
                                   LOG_LEVEL_WARNING, &
                                   LOG_LEVEL_ERROR
   use lfric_string_mod,     only: split_string
+  use io_config_mod,        only: subroutine_timers
+  use timer_mod,            only: timer
 #ifdef UNIT_TEST
   use lfric_xios_mock_mod,  only: xios_send_field,      &
                                   xios_get_domain_attr, &
@@ -123,6 +125,8 @@ subroutine write_field_generic(field_name, field_proxy)
   ! without doing anything
   if (.not. field_is_active(field_name, .true.)) return
 
+  if ( subroutine_timers ) call timer('lfric_xios_write_fldg')
+
   undf = field_proxy%vspace%get_last_dof_owned() ! total dimension
 
   vdim = field_proxy%vspace%get_ndata() * size(field_proxy%vspace%get_levels())
@@ -151,6 +155,8 @@ subroutine write_field_generic(field_name, field_proxy)
   end if
 
   deallocate(xios_data)
+
+  if ( subroutine_timers ) call timer('lfric_xios_write_fldg')
 
 end subroutine write_field_generic
 
