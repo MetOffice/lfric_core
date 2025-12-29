@@ -35,6 +35,8 @@ module function_space_mod
   use linked_list_data_mod, only : linked_list_data_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
   use mesh_collection_mod,  only : mesh_collection
+  use io_config_mod,        only : subroutine_timers
+  use timer_mod,            only : timer
 
   implicit none
 
@@ -444,6 +446,8 @@ contains
 
     integer(i_def) :: id
 
+    if ( subroutine_timers ) call timer('fs.constructor')
+
     if ( present(ndata_first) ) then
       instance%ndata_first = ndata_first
     else
@@ -473,6 +477,8 @@ contains
       instance%fs_order_v = element_order_v
     end if
     call init_function_space(instance)
+
+    if ( subroutine_timers ) call timer('fs.constructor')
 
   end function fs_constructor
 

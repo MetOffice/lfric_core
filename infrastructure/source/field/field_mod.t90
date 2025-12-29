@@ -42,6 +42,8 @@ module field_{{kind}}_mod
 
   use pure_abstract_field_mod, &
                             only: pure_abstract_field_type
+  use io_config_mod,      only: subroutine_timers
+  use timer_mod,          only: timer
 
   implicit none
 
@@ -275,6 +277,8 @@ contains
     ! Depth of halo to allocate data array
     integer(i_def) :: field_halo_depth
 
+    if ( subroutine_timers ) call timer('field.initialise')
+
     mesh => null()
 
     if ( present(name) ) then
@@ -333,6 +337,8 @@ contains
       self%override_data => null()
 
     end if
+
+    if ( subroutine_timers ) call timer('field.initialise')
 
   end subroutine field_initialiser
 
@@ -602,6 +608,8 @@ contains
 
     character(str_def) :: name_used
 
+    if ( subroutine_timers ) call timer('field.write')
+
     if (present(field_name)) then
 
       name_used = field_name
@@ -624,6 +632,8 @@ contains
                       ', write_method not set up', LOG_LEVEL_ERROR )
     end if
 
+    if ( subroutine_timers ) call timer('field.write')
+
   end subroutine write_field
 
   !> Calls the underlying IO implementation for reading into the field
@@ -637,6 +647,8 @@ contains
     character(len=*),                    intent(in)    :: field_name
 
     type( field_{{kind}}_proxy_type )                    :: tmp_proxy
+
+    if ( subroutine_timers ) call timer('field.read')
 
     if (associated(self%read_method)) then
 
@@ -655,6 +667,8 @@ contains
                       ', read_method not set up', LOG_LEVEL_ERROR )
     end if
 
+    if ( subroutine_timers ) call timer('field.read')
+
   end subroutine read_field
 
   !> Reads a checkpoint file into the field
@@ -670,6 +684,7 @@ contains
 
     type( field_{{kind}}_proxy_type )                   :: tmp_proxy
 
+    if ( subroutine_timers ) call timer('field.read_chkpt')
 
     if (associated(self%checkpoint_read_method)) then
 
@@ -687,6 +702,8 @@ contains
       call log_event( 'Error trying to read checkpoint for field '// trim(field_name) // &
                       ', checkpoint_read_method not set up', LOG_LEVEL_ERROR )
     end if
+
+    if ( subroutine_timers ) call timer('field.read_chkpt')
 
   end subroutine read_checkpoint
 
@@ -724,12 +741,17 @@ contains
     class( field_{{kind}}_proxy_type ), target, intent(inout) :: self
     integer(i_def), intent(in) :: depth
     type(halo_routing_type), pointer :: halo_routing => null()
+    character(len=str_def) :: timer_name
 
     if ( self%vspace%is_writable() ) then
       if ( depth > self%get_field_proxy_halo_depth() ) &
         call log_event( 'Error in field: '// &
                         'attempt to exchange halos with depth out of range.', &
                         LOG_LEVEL_ERROR )
+      write(timer_name, '(I4)') depth
+      timer_name = 'field.halo_ex_' // adjustl(trim(timer_name))
+      if ( subroutine_timers ) call timer(trim(adjustl(timer_name)))
+
       ! Start a blocking (synchronous) halo exchange
       halo_routing => self%get_halo_routing()
 
@@ -740,6 +762,9 @@ contains
       self%halo_dirty(1:depth) = 0
       ! If a halo counter has been set up, increment it
       if (allocated(halo_calls)) call halo_calls%counter_inc()
+
+      if ( subroutine_timers ) call timer(trim(adjustl(timer_name)))
+
     else
       call log_event( 'Error in field: '// &
         'attempt to exchange halos (a write operation) on a read-only field.', &

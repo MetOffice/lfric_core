@@ -25,6 +25,7 @@ module lfric_xios_context_mod
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
   use model_clock_mod,      only : model_clock_type
+  use io_config_mod,        only : subroutine_timers
   use timer_mod,            only : timer
   use xios,                 only : xios_context,                  &
                                    xios_context_initialize,       &
@@ -119,6 +120,7 @@ contains
     write(log_scratch_space, "(A)") &
         "Initialising XIOS context: " // this%get_context_name()
     call log_event(log_scratch_space, log_level_debug)
+    if ( subroutine_timers ) call timer('lfric_xios_init_context')
 
     if (present(start_at_zero)) then
       zero_start = start_at_zero
@@ -140,7 +142,12 @@ contains
 
     ! Close the context definition - no more I/O operations can be defined
     ! after this point
+    if ( subroutine_timers ) call timer('xios_close_context_definition')
+    call log_event('XIOS context definition closing', log_level_debug)
     call xios_close_context_definition()
+    if ( subroutine_timers ) call timer('xios_close_context_definition')
+    call log_event('XIOS context definition closed', log_level_debug)
+
     this%xios_context_initialised = .true.
 
     ! Read all files that need to be read from
@@ -155,6 +162,7 @@ contains
         loop => loop%next
       end do
     end if
+    if ( subroutine_timers ) call timer('lfric_xios_init_context')
 
   end subroutine initialise_xios_context
 
@@ -177,6 +185,7 @@ contains
     type(linked_list_item_type), pointer :: loop => null()
     type(lfric_xios_file_type),  pointer :: file => null()
 
+    if ( subroutine_timers ) call timer('lfric_xios_finalise_context')
     if (this%xios_context_initialised) then
       ! Perform final write
       if (this%filelist%get_length() > 0) then
@@ -195,7 +204,9 @@ contains
       ! will be closed.
       write(log_scratch_space, "(A)") "Finalising XIOS context: " // this%get_context_name()
       call log_event(log_scratch_space, log_level_debug)
+      if ( subroutine_timers ) call timer('xios_context_finalize')
       call xios_context_finalize()
+      if ( subroutine_timers ) call timer('xios_context_finalize')
 
       ! We have closed the context on our end, but we need to make sure that XIOS
       ! has closed the files for all servers before we process them.
@@ -217,6 +228,7 @@ contains
     end if
     nullify(loop)
     nullify(file)
+    if ( subroutine_timers ) call timer('lfric_xios_finalise_context')
 
   end subroutine finalise_xios_context
 
