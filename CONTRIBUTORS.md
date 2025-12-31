@@ -8,3 +8,5 @@
 | mo-marqh        | Mark Hedley      | Met Office  | 2025-12-11 |
 | MatthewHambley  | Matthew Hambley  | Met Office  | 2025-12-15 |
 | yaswant         | Yaswant Pradhan  | Met Office  | 2025-12-16 |
+| jedbakerMO      | Jed Baker        | Met Office  | 2025-12-29 |
+

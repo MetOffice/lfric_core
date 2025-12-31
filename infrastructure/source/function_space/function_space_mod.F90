@@ -35,6 +35,8 @@ module function_space_mod
   use linked_list_data_mod, only : linked_list_data_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
   use mesh_collection_mod,  only : mesh_collection
+  use timing_mod,           only : start_timing, stop_timing, &
+                                   tik, LPROF
 
   implicit none
 
@@ -443,6 +445,9 @@ contains
     type(function_space_type) :: instance
 
     integer(i_def) :: id
+    integer(tik)   :: t_id
+
+    if ( LPROF ) call start_timing(t_id, 'fs.constructor')
 
     if ( present(ndata_first) ) then
       instance%ndata_first = ndata_first
@@ -473,6 +478,8 @@ contains
       instance%fs_order_v = element_order_v
     end if
     call init_function_space(instance)
+
+    if ( LPROF ) call stop_timing(t_id, 'fs.constructor')
 
   end function fs_constructor
 
