@@ -57,8 +57,6 @@ module lfric_xios_context_mod
     procedure, public :: initialise_xios_context
     procedure, public :: get_filelist
     procedure, public :: set_current
-    procedure, public :: set_timer_flag
-    procedure, public :: get_timer_flag
     procedure, public :: tick_context_clock
     procedure, public :: get_context_clock_step
     procedure, public :: finalise_xios_context
@@ -260,38 +258,6 @@ contains
     call xios_set_current_context( this%handle )
 
   end subroutine set_current
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Tells I/O context whether to use subroutine timers
-  !>
-  !> @param[in] timer_flag
-  !>
-  subroutine set_timer_flag( this, timer_flag )
-
-    implicit none
-
-    class(lfric_xios_context_type), target, intent(inout) :: this
-    logical,                                intent(in)    :: timer_flag
-
-    this%uses_timer = timer_flag
-
-  end subroutine set_timer_flag
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Returns whether the IO context uses timers
-  !>
-  !> @return timer_flag
-  !>
-  function get_timer_flag(this) result(timer_flag)
-
-    implicit none
-
-    class(lfric_xios_context_type), target, intent(in) :: this
-    logical :: timer_flag
-
-    timer_flag = this%uses_timer
-
-  end function get_timer_flag
 
   subroutine tick_context_clock(this)
     implicit none
