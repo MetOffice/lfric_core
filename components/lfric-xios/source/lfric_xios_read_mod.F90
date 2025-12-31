@@ -38,8 +38,8 @@ module lfric_xios_read_mod
                                       LOG_LEVEL_INFO,    &
                                       LOG_LEVEL_ERROR,   &
                                       LOG_LEVEL_TRACE
-  use io_config_mod,            only: subroutine_timers
-  use timer_mod,                only: timer
+  use timing_mod,               only: start_timing, stop_timing, &
+                                      tik, LPROF
 #ifdef UNIT_TEST
   use lfric_xios_mock_mod,      only: xios_recv_field,      &
                                       xios_get_domain_attr, &
@@ -86,8 +86,9 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
 
   integer(i_def) :: undf
   integer(i_def) :: fs_id
+  integer(tik)   :: id
 
-  if ( subroutine_timers ) call timer('lfric_xios_chkpt_readf')
+  if ( LPROF ) call start_timing(id, 'lfric_xios_chkpt_readf')
 
   ! We only read in up to undf for the partition
   undf = field_proxy%vspace%get_last_dof_owned()
@@ -107,7 +108,7 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
       call log_event( "Invalid type for input field proxy", LOG_LEVEL_ERROR )
 
   end select
-  if ( subroutine_timers ) call timer('lfric_xios_chkpt_readf')
+  if ( LPROF ) call stop_timing(id, 'lfric_xios_chkpt_readf')
 
 end subroutine checkpoint_read_xios
 
@@ -119,8 +120,9 @@ subroutine checkpoint_read_value(io_value, value_name)
   character(*), optional, intent(in)  :: value_name
   character(str_def) :: restart_id
   integer(i_def)     :: array_dims
+  integer(tik)   :: id
 
-  if ( subroutine_timers ) call timer('lfric_xios_chkpt_readv')
+  if ( LPROF ) call start_timing(id, 'lfric_xios_chkpt_readv')
 
   if(present(value_name)) then
     restart_id = trim(value_name)
@@ -136,7 +138,7 @@ subroutine checkpoint_read_value(io_value, value_name)
     call log_event( 'No XIOS field with id="'//trim(restart_id)//'" is defined', &
                     LOG_LEVEL_ERROR )
   end if
-  if ( subroutine_timers ) call timer('lfric_xios_chkpt_readv')
+  if ( LPROF ) call stop_timing(id, 'lfric_xios_chkpt_readv')
 
 end subroutine checkpoint_read_value
 
@@ -176,8 +178,9 @@ subroutine read_field_generic(xios_field_name, field_proxy)
   integer(i_def) :: vdim          ! vertical dimension
   real(dp_xios), allocatable :: xios_data(:)
   logical(l_def) :: legacy
+  integer(tik)   :: id
 
-  if ( subroutine_timers ) call timer('lfric_xios_read_fldg')
+  if ( LPROF ) call start_timing(id, 'lfric_xios_read_fldg')
 
   undf = field_proxy%vspace%get_last_dof_owned() ! total dimension
 
@@ -208,7 +211,7 @@ subroutine read_field_generic(xios_field_name, field_proxy)
 
   deallocate(xios_data)
 
-  if ( subroutine_timers ) call timer('lfric_xios_read_fldg')
+  if ( LPROF ) call stop_timing(id, 'lfric_xios_read_fldg')
 
 end subroutine read_field_generic
 

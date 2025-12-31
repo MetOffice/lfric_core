@@ -23,8 +23,8 @@ module halo_routing_collection_mod
   use linked_list_mod,    only: linked_list_type, &
                                 linked_list_item_type
   use mesh_mod,           only: mesh_type
-  use io_config_mod,      only: subroutine_timers
-  use timer_mod,          only: timer
+  use timing_mod,         only: start_timing, stop_timing, &
+                                tik, LPROF
 
   implicit none
 
@@ -119,8 +119,9 @@ function get_halo_routing( self,            &
   integer(i_def) :: idepth
   integer(i_def) :: last_owned_dof
   integer(i_def) :: mesh_id
+  integer(tik) :: id
 
-  if ( subroutine_timers ) call timer('halo_routing_creation')
+  if ( LPROF ) call start_timing(id, 'halo_routing_creation')
 
   nullify( function_space )
 
@@ -194,7 +195,7 @@ function get_halo_routing( self,            &
 
   end if
 
-  if ( subroutine_timers ) call timer('halo_routing_creation')
+  if ( LPROF ) call stop_timing(id, 'halo_routing_creation')
 
   return
 end function get_halo_routing
