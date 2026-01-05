@@ -49,6 +49,10 @@ contains
     logical      :: filename_set
     logical      :: file_exists
 
+! NOTE: This should be the first routine called by an LFRic application.
+!       That means it is called before logging has been initialised, hence
+!       it writes output to "error_unit" from the iso_fortran_env module
+
     if (present(description)) then
       allocate( filename_description, source=description )
     else
