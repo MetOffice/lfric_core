@@ -718,7 +718,7 @@ contains
     logical :: check_orientation    ! Check for orientation changes when getting cell id's
     integer :: n_cross_panels       ! number of panels to decompose across
     integer, allocatable :: face_of_combined_panels(:)
-                                    ! The first face in sections of combined cubed sphere panels 
+                                    ! The first face in sections of combined cubed sphere panels
     integer :: nprocs(2)            ! number of processors in the x- & y-direction
     integer :: xproc                ! number of processsors in x-direction
     integer :: yproc                ! number of processsors in y-direction
@@ -808,7 +808,7 @@ contains
         ! Super panels consist of faces (1, 2, 3), (6, 4, 5)
         ! In terms of the panel numbers used here is then
         ! (3, 2, 6), (5, 4, 1)
-        face_of_combined_panels(:) = (/ 3, 5 /) 
+        face_of_combined_panels(:) = (/ 3, 5 /)
       elseif( num_panels == 6 .and.              &
               xproc*yproc*3 == total_ranks .and. &
               modulo(total_ranks,3) == 0 ) then
@@ -823,7 +823,7 @@ contains
         ! Super panels consist of faces (1, 2), (4,5) & (6,3)
         ! In terms of the panel numbers used here is then
         ! (3, 2), (4, 1), (5, 6)
-        face_of_combined_panels(:) = (/ 3, 4, 5 /) 
+        face_of_combined_panels(:) = (/ 3, 4, 5 /)
       elseif( modulo(total_ranks,num_panels) == 0 ) then
         ! For multi-panel meshes, the panels must be square
         num_cells_x = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
@@ -838,7 +838,7 @@ contains
 
       ! Calculate the South West corner cells of all the panels in the global mesh
       ! Note the 'panel' numbers used here do not correspond to the panel numbers
-      ! used in the rest of the model as this uses the vertex index to find 
+      ! used in the rest of the model as this uses the vertex index to find
       ! the cell in the corner of each panel and it is not true that the first corner
       ! cell found in this manner will correspond to panel 1.
       ! In fact for the cubed sphere meshes used the relationship is:
@@ -897,32 +897,32 @@ contains
     ! Set up limits for finding cells
     start1 = start_x
     end1   = start_x + num_x - 1
-    inc1   = 1 
+    inc1   = 1
     start2 = start_y
     end2   = start_y + num_y - 1
-    inc2   = 1 
+    inc2   = 1
 
     if ( cross_panels ) then
       ! Generally we want the start cell to be the SW corner cell
       ! but there is an exception when we are spanning 3 panels and looking
       ! at cubed sphere panels (6,4,5) when we want to start in the NW corner.
-      ! Cubed sphere panels (6,4,5) correspond to the indices (5, 4, 1) of the 
+      ! Cubed sphere panels (6,4,5) correspond to the indices (5, 4, 1) of the
       ! sw_corner_cells array since the sw_corner_cells array indices (1,..,6) do not
       ! correspond to cubed sphere panels (1,..,6) and are in fact
       ! ordered (5, 2, 1, 4, 6, 3)
       start_cell = sw_corner_cells(face_of_combined_panels(face))
-      if (n_cross_panels == 2 .and. start_cell == sw_corner_cells(5) ) then 
+      if (n_cross_panels == 2 .and. start_cell == sw_corner_cells(5) ) then
         ! Start in the NW corner and go in (-y, x) direction
-        start_cell = global_mesh%get_cell_id(start_cell, 0, num_cells_y-1) 
+        start_cell = global_mesh%get_cell_id(start_cell, 0, num_cells_y-1)
 
         num_y   = num_cells_x / xproc
         num_x   = num_cells_y / yproc
         start1 = start_y
         end1   = start1 + num_x - 1
-        inc1   = 1 
+        inc1   = 1
         start2 = -start_x + 2
         end2   = start2 - num_y + 1
-        inc2   = -1 
+        inc2   = -1
       end if
       deallocate( face_of_combined_panels )
     else
@@ -957,7 +957,7 @@ contains
         ! (if it is not already there)
         if ( ix == start1 .or. ix == end1 .or. iy == start2 .or. iy == end2 ) then
           if ( .not. known_cells%item_exists(cell_id) ) then
-            call known_cells%insert_item( linked_list_int_type( cell_id ) ) 
+            call known_cells%insert_item( linked_list_int_type( cell_id ) )
           end if
         end if
 

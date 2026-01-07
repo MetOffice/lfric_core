@@ -1098,7 +1098,7 @@ contains
   ! Since the direction may have changed we need to recompute
   y_index = rotate(x_index)
   if ( y_cells < 0 ) y_index = opposite(y_index)
-    
+
   ! y_index and y_dist
   do i = 1,y_dist
     old_cell_id = cell_id
