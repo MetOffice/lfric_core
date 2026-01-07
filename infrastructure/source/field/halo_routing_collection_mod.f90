@@ -19,7 +19,7 @@ module halo_routing_collection_mod
   use function_space_collection_mod, &
                           only: function_space_collection_type, &
                                 function_space_collection
-  use halo_comms_mod,     only: halo_routing_type, create_exchange_map, exchange_map_type
+  use halo_comms_mod,     only: halo_routing_type, exchange_map_type
   use linked_list_mod,    only: linked_list_type, &
                                 linked_list_item_type
   use mesh_mod,           only: mesh_type
@@ -36,7 +36,7 @@ module halo_routing_collection_mod
     private
     !> Linked list which will hold the halo_routing objects
     type(linked_list_type) :: halo_routing_list
-    ! xmap cache
+    ! Cache of exchange maps
     type(exchange_map_collection_type) :: exchange_map_collection
   contains
     !> Extracts a specific halo_routing object from the list

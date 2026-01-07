@@ -4,14 +4,13 @@ module exchange_map_collection_mod
   use function_space_mod,     only: function_space_type
   use function_space_collection_mod, &
                               only: function_space_collection_type, &
-                                function_space_collection
-  use halo_comms_mod,         only: create_exchange_map, &
-                                exchange_map_type
+                                    function_space_collection
+  use halo_comms_mod,         only: exchange_map_type
   use mesh_mod,               only: mesh_type
   use log_mod,                only: log_event, LOG_LEVEL_ERROR
   use lfric_mpi_mod,          only: global_mpi, get_lfric_datatype
   use linked_list_mod,        only: linked_list_type, &
-                                linked_list_item_type
+                                    linked_list_item_type
   use linked_list_data_mod,   only: linked_list_data_type
 
   implicit none
@@ -135,8 +134,6 @@ function get_exchange_map( self, &
     end do
 
     mesh_id = mesh%get_id()
-
-    !! EDIT
     call self%exchange_map_list%insert_item( exchange_map_type( global_dof_id,&
                                                                 last_owned_dof,&
                                                                 halo_start, &
@@ -206,7 +203,7 @@ function get_exchange_maps_from_list(self, &
   integer(i_def) :: mesh_id
 
   mesh_id = mesh%get_id()
-  ! Point to head of the function space linked list
+  ! Point to head of the exchange map linked list
   loop => self%exchange_map_list%get_head()
 
   ! Loop through the linked list

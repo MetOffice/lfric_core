@@ -39,8 +39,12 @@ module halo_comms_mod
 
   public initialise_halo_comms, finalise_halo_comms, &
          perform_halo_exchange, perform_halo_exchange_start, &
-         perform_halo_exchange_finish, create_exchange_map
+         perform_halo_exchange_finish
 
+  !> @details A wrapper type for a YAXT xt_xmap object (which is used in the
+  !> generation of halo routing tables), along with metadata that describes
+  !> the fields for which it is valid
+  !
   type, extends(linked_list_data_type), public :: exchange_map_type
     private
     !> Id of the mesh used in the function space that this information
@@ -231,7 +235,7 @@ contains
     idepth=0 ! Set local variables to avoid unused variable errors
 #else
     do idepth = 1 ,max_depth
-        self%xmaps(idepth) = create_exchange_map(global_dof_id(1:last_owned_dof), &
+        self%xmaps(idepth) = generate_exchange_map(global_dof_id(1:last_owned_dof), &
                                          global_dof_id( halo_start(idepth):halo_finish(idepth) ))
     end do
 #endif
@@ -328,7 +332,7 @@ do idepth = 1 ,max_depth
     if (present(exchange_maps)) then
       xmap = exchange_maps%get_xmap(idepth)
     else
-      xmap = create_exchange_map(global_dof_id(1:last_owned_dof), &
+      xmap = generate_exchange_map(global_dof_id(1:last_owned_dof), &
                                        global_dof_id( halo_start(idepth):halo_finish(idepth) ))
     end if
     ! Get the redistribution map objects for doing halo exchanges later
@@ -875,9 +879,8 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
 
 end function generate_redistribution_map
 
-!> @brief Create an exchange map between source and target indices.
-!>
-!> Constructs an `xt_xmap` describing data exchange. Returns 0 if MPI is disabled.
+!> Private function to generate an exchange map between
+!> source and target indices.
 !>
 !> @param[in] src_indices  Array of source indices.
 !> @param[in] tgt_indices  Array of target indices.
@@ -886,7 +889,7 @@ end function generate_redistribution_map
 !>
 !> @note MPI must be initialised in an MPI-enabled build.
 !> @warning Logs an error if MPI is not initialised.
-function create_exchange_map(src_indices, tgt_indices) result(xmap)
+function generate_exchange_map(src_indices, tgt_indices) result(xmap)
   implicit none
   integer(i_halo_index), intent(in) :: src_indices(:), tgt_indices(:)
 #ifdef NO_MPI
@@ -911,11 +914,11 @@ function create_exchange_map(src_indices, tgt_indices) result(xmap)
     call xt_idxlist_delete(src_idxlist)
   else
     call log_event( &
-    'Call to create_exchange_map failed. Must initialise mpi first',&
+    'Call to generate_exchange_map failed. Must initialise mpi first',&
     LOG_LEVEL_ERROR )
   end if
 #endif
 
-end function create_exchange_map
+end function generate_exchange_map
 
 end module halo_comms_mod
