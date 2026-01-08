@@ -15,7 +15,7 @@
 !-----------------------------------------------------------------------------
 program planar_mesh_generator
 
-  use cli_mod,             only: get_initial_filename
+  use cli_mod,             only: parse_command_line
   use constants_mod,       only: i_def, l_def, r_def, str_def, &
                                  cmdi, imdi, emdi, str_max_filename
   use config_loader_mod,   only: read_configuration, final_configuration
@@ -186,6 +186,11 @@ program planar_mesh_generator
   nullify(partitioner_ptr)
 
   !===================================================================
+  ! Read in the control namelists from file.
+  !===================================================================
+  call parse_command_line( filename )
+
+  !===================================================================
   ! Set the logging level for the run, should really be able
   ! to set it from the command line as an option.
   !===================================================================
@@ -205,12 +210,6 @@ program planar_mesh_generator
   total_ranks = global_mpi%get_comm_size()
   local_rank  = global_mpi%get_comm_rank()
   call initialise_logging( communicator%get_comm_mpi_val(), "PlanarGen" )
-
-
-  !===================================================================
-  ! Read in the control namelists from file.
-  !===================================================================
-  call get_initial_filename( filename )
 
   call configuration%initialise( 'PlanarGen', table_len=10 )
   call config%initialise( 'PlanarGen' )

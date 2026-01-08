@@ -12,7 +12,7 @@
 
 program skeleton
 
-  use cli_mod,                 only: get_initial_filename
+  use cli_mod,                 only: parse_command_line
   use constants_mod,           only: precision_real
   use driver_collections_mod,  only: init_collections, final_collections
   use driver_comm_mod,         only: init_comm, final_comm
@@ -36,6 +36,7 @@ program skeleton
   character(*), parameter   :: program_name = "skeleton"
   character(:), allocatable :: filename
 
+  call parse_command_line( filename )
   call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise(program_name)
 
@@ -47,8 +48,6 @@ program skeleton
   modeldb%mpi => global_mpi
 
   call init_comm( "skeleton", modeldb )
-  call get_initial_filename( filename )
-
   call init_config( filename, skeleton_required_namelists, &
                     configuration=modeldb%configuration,   &
                     config=modeldb%config )
