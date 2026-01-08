@@ -124,3 +124,17 @@ the top-level of the working copy:
 
    rose stem --group=developer
    cylc play <working_copy_name>
+
+Building the documentation
+--------------------------
+
+Documentation for the code exists as RST files in the documentation
+directory. The directory includes a Makefile that runs Sphinx (currently using
+v8.1.0 with the PyData Sphinx Theme 0.16.1) to generate html web pages. To build
+the documentation and then view it with the Firefox browser:
+
+.. code-block::
+
+   cd lfric_core/documentation
+   make html
+   firefox build/html/index.html
