@@ -4,3 +4,4 @@
 | ----------- | --------- | ----------- | ---- |
 | james-bruten-mo | James Bruten | Met Office | 2025-12-09 |
 | jennyhickson | Jenny Hickson | Met Office | 2025-12-10 |
+| harry-shepherd | Harry Shepherd | Met Office | 2026-01-08 |
