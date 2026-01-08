@@ -87,6 +87,8 @@ application tests, or for processing documentation:
    <https://github.com/Goddard-Fortran-Ecosystem/pFUnit>`_ framework.
  * stylist (0.4.1): A `code style-checker
    <https://github.com/MetOffice/stylist>`_.
+ * Sphinx v8.1.0, using the PyData Sphinx Theme 0.16.1 is used to generate the
+   Web documentation that is published alongside the code repository.
  * plantuml (1.2021.7): the LFRic repository holds formal descriptions of key
    LFRic classes using a format that can be rendered into UML diagrams by
    `plantuml <https://plantuml.com>`_.
