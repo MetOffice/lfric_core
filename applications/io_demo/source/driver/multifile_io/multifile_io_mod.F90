@@ -31,7 +31,6 @@ module multifile_io_mod
   use mesh_mod,                only: mesh_type
   use mesh_collection_mod,     only: mesh_collection
   use model_clock_mod,         only: model_clock_type
-  use namelist_mod,            only: namelist_type
   use step_calendar_mod,       only: step_calendar_type
 
   use multifile_io_nml_iterator_mod, only: multifile_io_nml_iterator_type

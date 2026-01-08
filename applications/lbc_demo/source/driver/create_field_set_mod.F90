@@ -10,8 +10,6 @@ module create_field_set_mod
   use field_collection_mod,    only: field_collection_type
   use field_mod,               only: field_type
   use integer_field_mod,       only: integer_field_type
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
   use mesh_collection_mod,     only: mesh_collection
   use mesh_mod,                only: mesh_type
   use fs_continuity_mod,       only: W0, W2H, W2V, W3, Wtheta
@@ -33,7 +31,6 @@ contains
 !! @param[in, out]  modeldb          Application state object
 !! @param[in, out]  fld_collection   Field collection to add field set
 !! @param[in]       mesh             Mesh to use for field set
-!! @param[in]       configuration    Configuration namelist
 subroutine create_field_set(modeldb, fld_collection, mesh)
 
   implicit none
