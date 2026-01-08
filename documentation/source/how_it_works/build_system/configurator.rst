@@ -128,7 +128,7 @@ Fortran source code that is specific to an application's metadata.
   Generates a module which provides procedures to directly configure
   the contents of a namelist. This module should not be used within a
   normal application. Instead, it is to allow test systems to
-  :ref:`feign <feigning configuration>` the reading of a namelist so
+  :ref:`feign<feigning configuration>` the reading of a namelist so
   they can control the test environment:
 
   .. admonition:: Usage

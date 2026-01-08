@@ -8,9 +8,10 @@ object stores the input namelists used to configure an instance of modeldb.
 Once the configuration has been populated, the configuration values are
 immutable, unlike other components of ``modeldb``. This item is **deprecated**
 and use of the ``config`` item in ``modedb`` is the preferred configuration
-access method.
+access method. The component ``modeldb%configuration`` is marked for removal
+after April 2026.
 
-.. Should provide a link to the namelist collection type (when it's written)
+.. Should provide a link to the namelist collection type (when it's written) #PR206
 
 Initialising the configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

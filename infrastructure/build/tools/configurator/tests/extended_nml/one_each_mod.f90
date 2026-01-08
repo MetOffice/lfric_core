@@ -48,6 +48,7 @@ module one_of_each_nml_mod
 
 contains
 
+
   function dint(self) result(answer)
 
     implicit none
@@ -58,6 +59,7 @@ contains
     call self%get_value('dint', answer)
 
   end function dint
+
 
   function dlog(self) result(answer)
 
@@ -70,6 +72,7 @@ contains
 
   end function dlog
 
+
   function dreal(self) result(answer)
 
     implicit none
@@ -80,6 +83,7 @@ contains
     call self%get_value('dreal', answer)
 
   end function dreal
+
 
   function dstr(self) result(answer)
 
@@ -92,6 +96,7 @@ contains
 
   end function dstr
 
+
   function enum(self) result(answer)
 
     implicit none
@@ -102,6 +107,7 @@ contains
     call self%get_value('enum', answer)
 
   end function enum
+
 
   function fstr(self) result(answer)
 
@@ -114,6 +120,7 @@ contains
 
   end function fstr
 
+
   function lint(self) result(answer)
 
     implicit none
@@ -124,6 +131,7 @@ contains
     call self%get_value('lint', answer)
 
   end function lint
+
 
   function lreal(self) result(answer)
 
@@ -136,6 +144,7 @@ contains
 
   end function lreal
 
+
   function sint(self) result(answer)
 
     implicit none
@@ -146,6 +155,7 @@ contains
     call self%get_value('sint', answer)
 
   end function sint
+
 
   function sreal(self) result(answer)
 
@@ -158,6 +168,7 @@ contains
 
   end function sreal
 
+
   function treal(self) result(answer)
 
     implicit none
@@ -168,6 +179,7 @@ contains
     call self%get_value('treal', answer)
 
   end function treal
+
 
   function vint(self) result(answer)
 
@@ -180,6 +192,7 @@ contains
 
   end function vint
 
+
   function vreal(self) result(answer)
 
     implicit none
@@ -190,6 +203,7 @@ contains
     call self%get_value('vreal', answer)
 
   end function vreal
+
 
   function vstr(self) result(answer)
 

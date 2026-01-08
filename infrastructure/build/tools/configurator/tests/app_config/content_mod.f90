@@ -29,31 +29,32 @@ module config_mod
   implicit none
 
   private
-  public :: config_type
 
   !-----------------------------------------------------------------------------
   ! Type that stores namelists of an application configuration
   !-----------------------------------------------------------------------------
-  type :: config_type
+  type, public :: config_type
+
+    private
 
     !> The name of the namelist collection if provided.
-    character(str_def), private :: config_name = cmdi
+    character(:), allocatable :: config_name
 
     !> Whether object has been initialised or not
-    logical, private :: isinitialised = .false.
+    logical :: isinitialised = .false.
 
     !> The name of the namelist collection if provided.
-    character(str_def), private, allocatable :: nml_fullnames(:)
+    character(str_def), allocatable :: nml_fullnames(:)
 
     ! Single instance namelists
-    type(foo_nml_type), allocatable :: foo
-    type(moo_nml_type), allocatable :: moo
+    type(foo_nml_type), public, allocatable :: foo
+    type(moo_nml_type), public, allocatable :: moo
 
     ! Namelists which may have multiple instances.
     ! These are accesed via the associated
     ! <namelist name>_list methods.
-    type(linked_list_type), allocatable :: bar
-    type(linked_list_type), allocatable :: pot
+    type(linked_list_type), public, allocatable :: bar
+    type(linked_list_type), public, allocatable :: pot
 
   contains
 
@@ -97,16 +98,21 @@ subroutine initialise(self, name)
     call log_event(log_scratch_space, log_level_error)
   end if
 
-  if (present(name)) self%config_name = trim(name)
+  if (present(name)) then
+    self%config_name = trim(name)
+  else
+    self%config_name = cmdi
+  end if
+
   self%isinitialised = .true.
 
-  return
 end subroutine initialise
 
 
-!> @brief Adds a new namelist object to the collection.
-!> @param [in] namelist The namelist that is to be added
-!>                      into the collection.
+!> @brief Installs a new namelist object into the configuration.
+!> @param [in] namelist_obj The extended namelist type object. Only
+!>                          extended namelist types defined by the
+!>                          application metadata file will be accepted.
 !===================================================================
 subroutine add_namelist(self, namelist_obj)
 
@@ -116,9 +122,9 @@ subroutine add_namelist(self, namelist_obj)
 
   class(namelist_type), intent(in) :: namelist_obj
 
-  character(str_def) :: name
-  character(str_def) :: profile_name
-  character(str_def) :: full_name
+  character(:), allocatable :: name
+  character(:), allocatable :: profile_name
+  character(:), allocatable :: full_name
 
   ! Check namelist name is valid, if not then exit with error
   full_name    = namelist_obj%get_full_name()
@@ -364,7 +370,7 @@ function name(self) result(answer)
   implicit none
 
   class(config_type), intent(in) :: self
-  character(str_def) :: answer
+  character(:), allocatable :: answer
 
   answer = self%config_name
 

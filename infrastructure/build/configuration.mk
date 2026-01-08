@@ -19,13 +19,13 @@ $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR
 	$(call MESSAGE,Generating namelist configuration file.)
 	$(Q)mkdir -p $(dir $@)
 ifdef APPS_ROOT_DIR
-	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf    \
-	                -directory $(CONFIG_DIR)           \
-	                -include_dirs $(APPS_ROOT_DIR)/rose-meta     \
+	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
+	                -directory $(CONFIG_DIR)                 \
+	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
 else
-	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf    \
-	                -directory $(CONFIG_DIR)           \
+	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
+	                -directory $(CONFIG_DIR)        \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
 endif
 	# It's not clear why this is needed but as of 5/2/20 the diagnostic
@@ -69,7 +69,7 @@ $(WORKING_DIR)/configuration_mod.f90: $(CONFIG_DIR)/build_config_loaders
 $(WORKING_DIR)/feign_config_mod.f90: $(CONFIG_DIR)/rose-meta.json
 	$(call MESSAGE,Generating namelist feigning module.)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(LFRIC_BUILD)/tools/GenerateFeigns        \
+	$(Q)$(LFRIC_BUILD)/tools/GenerateFeigns         \
                            $(CONFIG_DIR)/rose-meta.json \
                            -output $@
 

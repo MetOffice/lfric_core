@@ -16,16 +16,12 @@ module {{moduleName}}
   use namelist_collection_mod, only: namelist_collection_type
   use namelist_mod,            only: namelist_type
   use config_mod,              only: config_type
-{%- if namelists %}
 {{-'\n'}}
-{%-   for listname in namelists %}
+{%- for listname in namelists %}
   use {{listname}}_nml_mod, only: {{listname}}_nml_type
-{%-   endfor %}
-{%- endif %}
-
-{%- if namelists %}
+{%- endfor %}
 {{-'\n'}}
-{%-   for listname in namelists %}
+{%- for listname in namelists %}
   use {{listname}}_config_mod, only : read_{{listname}}_namelist, &
 {%-   set indent = '  use '+listname+'_config_mod, only : ' %}
 {%-   set indent = indent | length() %}
@@ -36,8 +32,7 @@ module {{moduleName}}
 {{' '*indent}}{{listname}}_final, &
 {{' '*indent}}get_{{listname}}_nml, &
 {{' '*indent}}get_new_{{listname}}_nml
-{%-   endfor %}
-{%- endif %}
+{%- endfor %}
 
   implicit none
 
@@ -237,13 +232,10 @@ contains
 
     logical :: scan
 
-{%- if namelists %}
-{{-'\n'}}
     ! Reset load status from any previous file reads
-{%-   for listname in namelists %}
+{%- for listname in namelists %}
     call {{listname}}_reset_load_status()
-{%-   endfor %}
-{%- endif %}
+{%- endfor %}
 
     ! Read the namelists
     do j=1, 2
@@ -304,13 +296,10 @@ contains
   subroutine final_configuration()
 
     implicit none
-
-{%- if namelists %}
 {{-'\n'}}
-{%-   for listname in namelists %}
+{%- for listname in namelists %}
     call {{listname}}_final()
-{%-   endfor %}
-{%- endif %}
+{%- endfor %}
 
     return
   end subroutine final_configuration

@@ -21,50 +21,47 @@ module {{moduleName}}
   use namelist_mod,            only: namelist_type
   use namelist_collection_mod, only: namelist_collection_type
 
-{%- if namelists %}
 {{-'\n'}}
-{%-   for i in range(namelists|length) %}
+{%- for i in range(namelists|length) %}
   use {{namelists[i]}}_nml_mod, only: {{namelists[i]}}_nml_type
-{%-   endfor %}
-{%- endif %}
+{%- endfor %}
 
   implicit none
 
   private
-  public :: config_type
 
   !-----------------------------------------------------------------------------
   ! Type that stores namelists of an application configuration
   !-----------------------------------------------------------------------------
-  type :: config_type
+  type, public :: config_type
+
+    private
 
     !> The name of the namelist collection if provided.
-    character(:), private, allocatable :: config_name = cmdi
+    character(:), allocatable :: config_name
 
     !> Whether object has been initialised or not
-    logical, private :: isinitialised = .false.
+    logical :: isinitialised = .false.
 
     !> The name of the namelist collection if provided.
-    character(str_def), private, allocatable :: nml_fullnames(:)
+    character(str_def), allocatable :: nml_fullnames(:)
 
-{%- if namelists %}
 {{-'\n'}}
     ! Single instance namelists
-{%-   for i in range(namelists|length) %}
-{%-     if not duplicates[i] %}
-    type({{namelists[i]}}_nml_type), allocatable :: {{namelists[i]}}
-{%-     endif %}
-{%-   endfor %}
+{%- for i in range(namelists|length) %}
+{%-   if not duplicates[i] %}
+    type({{namelists[i]}}_nml_type), public, allocatable :: {{namelists[i]}}
+{%-   endif %}
+{%- endfor %}
 
     ! Namelists which may have multiple instances.
     ! These are accesed via the associated
     ! <namelist name>_list methods.
-{%-   for i in range(namelists|length) %}
-{%-     if duplicates[i] %}
-    type(linked_list_type), allocatable :: {{namelists[i]}}
-{%-     endif %}
-{%-   endfor %}
-{%- endif %}
+{%- for i in range(namelists|length) %}
+{%-   if duplicates[i] %}
+    type(linked_list_type), public, allocatable :: {{namelists[i]}}
+{%-   endif %}
+{%- endfor %}
 
   contains
 
@@ -75,14 +72,12 @@ module {{moduleName}}
     procedure, public :: n_namelists
     procedure, public :: namelist_exists
 
-{%- if namelists %}
 {{-'\n'}}
-{%-   for i in range(namelists|length) %}
-{%-     if duplicates[i] %}
+{%- for i in range(namelists|length) %}
+{%-   if duplicates[i] %}
     procedure, public :: {{namelists[i]}}_list
-{%-     endif %}
-{%-   endfor %}
-{%- endif %}
+{%-   endif %}
+{%- endfor %}
 
     procedure, public :: clear
 
@@ -114,17 +109,21 @@ subroutine initialise(self, name)
     call log_event(log_scratch_space, log_level_error)
   end if
 
-  if (present(name)) self%config_name = trim(name)
+  if (present(name)) then
+    self%config_name = trim(name)
+  else
+    self%config_name = cmdi
+  end if
+
   self%isinitialised = .true.
 
-  return
 end subroutine initialise
 
 
 !> @brief Installs a new namelist object into the configuration.
-!> @param [in] namelist The extended namelist type object. Only
-!>                      extended namelist types defined by the
-!>                      application metadata file will be accepted.
+!> @param [in] namelist_obj The extended namelist type object. Only
+!>                          extended namelist types defined by the
+!>                          application metadata file will be accepted.
 !===================================================================
 subroutine add_namelist(self, namelist_obj)
 
@@ -144,10 +143,9 @@ subroutine add_namelist(self, namelist_obj)
   name         = namelist_obj%get_listname()
 
   select type(namelist_obj)
-{%- if namelists %}
 {{-'\n'}}
-{%-   for i in range(namelists|length) %}
-{%-     if not duplicates[i] %}
+{%- for i in range(namelists|length) %}
+{%-   if not duplicates[i] %}
   type is( {{namelists[i]}}_nml_type )
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
@@ -158,11 +156,11 @@ subroutine add_namelist(self, namelist_obj)
       allocate(self%{{namelists[i]}}, source=namelist_obj)
       call self%update_contents(trim(name))
     end if
-{%      endif %}
-{%-   endfor %}
+{%    endif %}
+{%- endfor %}
 
-{%-   for i in range(namelists|length) %}
-{%-     if duplicates[i] %}
+{%- for i in range(namelists|length) %}
+{%-   if duplicates[i] %}
   type is ( {{namelists[i]}}_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
@@ -180,10 +178,8 @@ subroutine add_namelist(self, namelist_obj)
       call self%{{namelists[i]}}%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
     end if
-{%      endif %}
-{%-   endfor %}
-
-{%- endif %}
+{%    endif %}
+{%- endfor %}
   class default
      write(log_scratch_space, '(A)')                  &
          ' Undefined namelist type(' // trim(name) // &
@@ -237,11 +233,9 @@ function namelist_exists(self, name, profile_name) result(exists)
 
 end function namelist_exists
 
-
-{%- if namelists %}
 {{-'\n'}}
-{%-   for i in range(namelists|length) %}
-{%-     if duplicates[i] %}
+{%- for i in range(namelists|length) %}
+{%-   if duplicates[i] %}
 
 !> @brief Returns a pointer to an instance of <{{namelists[i]}}_nml_type>.
 !> @param [in] profile_name  Profile name used to identify the
@@ -292,9 +286,8 @@ function {{namelists[i]}}_list(self, profile_name) result({{namelists[i]}}_nml_o
 
 end function {{namelists[i]}}_list
 
-{%-     endif %}
-{%-   endfor %}
-{%- endif %}
+{%-   endif %}
+{%- endfor %}
 
 !> @brief Queries config_type for the total number of namelists stored.
 !> @return answer  The number of namelists stored
@@ -323,7 +316,7 @@ function name(self) result(answer)
   implicit none
 
   class(config_type), intent(in) :: self
-  character(str_def) :: answer
+  character(:), allocatable :: answer
 
   answer = self%config_name
 
@@ -386,19 +379,16 @@ subroutine clear(self)
 
   class(config_type), intent(inout) :: self
 
-{%- if namelists %}
 {{-'\n'}}
   ! Namlists which may have multiple instances per configuration
-{%-   for i in range(namelists|length) %}
-{%-     if duplicates[i] %}
+{%- for i in range(namelists|length) %}
+{%-   if duplicates[i] %}
   call self%{{namelists[i]}}%clear()
-{%-     endif %}
-{%-   endfor %}
-{%    for i in range(namelists|length) %}
+{%-   endif %}
+{%- endfor %}
+{%  for i in range(namelists|length) %}
   if (allocated(self%{{namelists[i]}})) deallocate(self%{{namelists[i]}})
-{%-   endfor %}
-
-{%- endif %}
+{%- endfor %}
 
   if (allocated(self%nml_fullnames)) deallocate(self%nml_fullnames)
 

@@ -17,7 +17,7 @@ import jinja2
 ##############################################################################
 class AppConfiguration:
     """
-    Fortran source to load configuration namelists.
+    Fortran source object type to store configuration namelists.
     """
 
     def __init__(self, module_name: str):
@@ -30,7 +30,7 @@ class AppConfiguration:
 
     def add_namelist(self, name: str, duplicate: bool) -> None:
         """
-        Registers a namelist name with the loader.
+        Registers a namelist name for the object to store.
 
         :param name: Name to register.
         :param duplicate: Is this namelist allowed multiple instances.
@@ -44,6 +44,10 @@ class AppConfiguration:
 
         :param module_file: Filename to use.
         """
+
+        if not self._namelists:
+            raise ValueError("No registered namelists to store.")
+
         inserts = {
             "moduleName": self._module_name,
             "namelists": self._namelists,

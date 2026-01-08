@@ -218,3 +218,6 @@ variable. The preferred practice is to only use global scope
    to load multiple configuration files. It is recommended that access
    to configuration namelists be limited to usage of the ``modeldb%config``
    item described above.
+
+   Direct access from ``*_config_mod`` modules will be restricted to
+   enumeration parameter values only by April 2026.

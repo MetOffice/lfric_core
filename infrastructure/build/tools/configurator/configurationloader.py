@@ -41,6 +41,10 @@ class ConfigurationLoader:
 
         :param module_file: Filename to use.
         """
+
+        if not self._namelists:
+            raise ValueError("No registered namelists to load.")
+
         inserts = {
             "moduleName": self._module_name,
             "namelists": self._namelists,
