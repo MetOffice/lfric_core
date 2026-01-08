@@ -32,6 +32,7 @@ module driver_io_mod
   use mesh_mod,                only: mesh_type
   use mesh_collection_mod,     only: mesh_collection
   use model_clock_mod,         only: model_clock_type
+  use namelist_mod,            only: namelist_type
 
   implicit none
 
@@ -86,9 +87,12 @@ contains
 
     procedure(callback_clock_arg), pointer :: before_close_ptr
 
+    type(namelist_type), pointer :: io_nml
+
     logical :: use_xios_io
 
-    use_xios_io = modeldb%config%io%use_xios_io()
+    io_nml => modeldb%configuration%get_namelist('io')
+    call io_nml%get_value( 'use_xios_io', use_xios_io )
 
     ! Allocate IO context type based on model configuration
     if ( use_xios_io ) then
@@ -197,9 +201,13 @@ contains
 
     integer(i_def) :: num_meshes, i, j
 
+    type(namelist_type), pointer :: io_nml
     logical :: subroutine_timers
 
-    subroutine_timers = modeldb%config%io%subroutine_timers()
+    io_nml => modeldb%configuration%get_namelist('io')
+    call io_nml%get_value( 'subroutine_timers', subroutine_timers )
+
+    subroutine_timers = .false.
 
     mesh             => null()
     chi              => null()
