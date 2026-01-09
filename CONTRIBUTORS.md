@@ -8,5 +8,7 @@
 | mike-hobson     | Mike Hobson      | Met Office  | 2025-12-17 |
 | MatthewHambley  | Matthew Hambley  | Met Office  | 2025-12-15 |
 | yaswant         | Yaswant Pradhan  | Met Office  | 2025-12-16 |
-| harry-shepherd | Harry Shepherd | Met Office | 2026-01-08 |
 | stevemullerworth | Steve Mullerworth | Met Office  | 2026-01-08 |
+| harry-shepherd  | Harry Shepherd   | Met Office  | 2026-01-08 |
+| EdHone          | Ed Hone          | Met Office  | 2026-01-09 |
+
