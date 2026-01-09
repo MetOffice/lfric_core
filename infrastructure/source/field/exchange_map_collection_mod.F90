@@ -53,9 +53,6 @@ end function exchange_map_collection_constructor
 !! If no matching exchange map is found, a new one is constructed,
 !! initialised, inserted into the collection, and then returned.
 !>
-!> \param[in,out] self            The exchange-map collection from which
-!!                                the map is retrieved or to which a new
-!!                                map is added.
 !> \param[in]     mesh            The mesh object associated with the exchange map.
 !> \param[in]     element_order_h Horizontal element order.
 !> \param[in]     element_order_v Vertical element order.

@@ -128,7 +128,7 @@ contains
     class(halo_comms_test_type), intent(inout) :: this
 
     type(exchange_map_type) :: exchange_map
-    type(function_space_type), pointer :: function_space => null()
+    type(function_space_type), pointer :: function_space
     integer(i_halo_index), allocatable :: global_dof_id(:)
     integer(i_def), allocatable :: halo_start(:)
     integer(i_def), allocatable :: halo_finish(:)
@@ -136,7 +136,7 @@ contains
     integer(i_def) :: last_owned_dof
     integer(i_def) :: ndata
     integer(i_def) :: result
-    type(mesh_type), pointer :: mesh => null()
+    type(mesh_type), pointer :: mesh
 
     mesh => mesh_collection%get_mesh(this%mesh_id)
 
@@ -214,7 +214,7 @@ contains
     class(halo_comms_test_type), intent(inout) :: this
 
     type(halo_routing_type) :: halo_routing
-    type(function_space_type), pointer :: function_space => null()
+    type(function_space_type), pointer :: function_space
     integer(i_halo_index), allocatable :: global_dof_id(:)
     integer(i_def), allocatable :: halo_start(:)
     integer(i_def), allocatable :: halo_finish(:)
@@ -222,7 +222,7 @@ contains
     integer(i_def) :: last_owned_dof
     integer(i_def) :: ndata
     integer(i_def) :: result
-    type(mesh_type), pointer :: mesh => null()
+    type(mesh_type), pointer :: mesh
 
     mesh => mesh_collection%get_mesh(this%mesh_id)
 
