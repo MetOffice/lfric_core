@@ -96,7 +96,7 @@ Running ``make clean`` will remove the working, test and bin directories.
 After building an application from the command line, it can be useful to do a
 quick test to ensure it can run. Most applications in the lfric and lfric_apps
 repository hold a simple example configuration in their ``example`` directory
-(which is also included in the ``.gitignore`` file).
+(which is also included in the ``.gitignore`` file, so if you want to add or change files in the ``example`` directory, you will need to use ``git add -f ...``).
 
 After building, go into to the example directory and run the application, as
 follows:
