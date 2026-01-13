@@ -89,7 +89,7 @@ time you will want to commit changes to the upstream repository. A
 ``.gitignore`` file, found at the top-level of the directory tree, should
 prevent you inadvertently including build artefacts in your commit if you ever
 run a ``git add .`` command. But do use ``git status`` to be sure of what your
-changeset includes.
+changeset includes. Note that it is always safer to use ``git add <filename>`` on the specific files you want to add/change.
 
 Running ``make clean`` will remove the working, test and bin directories.
 
