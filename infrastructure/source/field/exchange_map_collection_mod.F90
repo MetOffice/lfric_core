@@ -141,7 +141,7 @@ function get_exchange_map( self, &
                                                                 lfric_fs, &
                                                                 ndata, &
                                                                 halo_depth ))
-    deallocate( halo_start, halo_finish )
+    deallocate( halo_start, halo_finish, global_dof_id )
 
     exchange_maps => get_exchange_maps_from_list( self, &
                                                 mesh, &
