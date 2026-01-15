@@ -83,9 +83,11 @@ module sci_wth_to_w0_average_kernel_mod
     ! Internal variables
     integer(kind=i_def) :: df, k
 
-    do k = 0, nlayers
-      do df = 1,4 ! Loop at the Bottom
-        field_w0(map_w0(df) + k) = field_w0(map_w0(df) + k) + field_wth(map_wtheta(1) + k)*rmultiplicity_w0(map_w0(df) + k)
+    do df = 1, 4 ! Use bottom four W0 DoFs in cell
+      do k = 0, nlayers
+        ! Use rmultiplicity from bottom layer to ensure appropriate average
+        field_w0(map_w0(df) + k) = field_w0(map_w0(df) + k)                    &
+          + field_wth(map_wtheta(1) + k)*rmultiplicity_w0(map_w0(df))
       end do
     end do
 
