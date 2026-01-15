@@ -1,19 +1,24 @@
 # LFRic Core
 
-[![ci](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml)
+Welcome to LFRic Core!
 
-Location for LFRic infrastructure source code and documentation
+LFRic Core provides the underlying infrastructure for the Momentum&reg; Atmosphere model and associated applications.
 
-On the Met Office Azure Spice machine the main LFRic module environment
-contains all the required packages to build the documentation. To build use
-`make html` in the documentation directory. `make help` will give you the other
-options available. Additionally, `make deploy` will build a copy of the
-documentation and deploy it to a directory in `$(HOME)/public_html` named after
-the git branch.
+|           |                                                                                                                                                             |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|:repeat: CI|[![Doc Deploy](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml)|
+|:speech_balloon: Community|[![Static Badge](https://img.shields.io/badge/GitHub-discussions-gold)](https://github.com/MetOffice/simulation-systems/discussions/categories/lfric)|
+|:package: Repo |[![GitHub License](https://img.shields.io/github/license/metoffice/lfric_core)](https://github.com/MetOffice/lfric_core?tab=BSD-3-Clause-1-ov-file#readme) [![GitHub Release](https://img.shields.io/github/v/release/metoffice/lfric_core?color=purple)](https://github.com/MetOffice/lfric_core/releases) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/metoffice/lfric_core/latest)  |
+|           |                                                                                                                                                             |
+
+## Getting Started
+
+Please find information on getting started using the LFRic Core infrastructure 
+in the [documentation](https://metoffice.github.io/lfric_core/). If you are 
+looking for the LFRic Atmosphere model this can be found in the
+[LFRic Apps](https://github.com/MetOffice/lfric_apps) repository.
 
 ## Contributing Guidelines
-
-Welcome!
 
 The following links are here to help set clear expectations for everyone
 contributing to this project. By working together under a shared understanding,
@@ -23,7 +28,7 @@ space for all contributors.
 ### Contributors Licence Agreement
 
 Please see the
-[Momentum Contributors Licence Agreement](https://github.com/MetOffice/Momentum/blob/main/CLA.md)
+[Momentum Contributors Licence Agreement.](https://github.com/MetOffice/Momentum/blob/main/CLA.md)
 
 Agreement of the CLA can be shown by adding yourself to the CONTRIBUTORS file
 alongside this one, and is a requirement for contributing to this project.
@@ -31,7 +36,7 @@ alongside this one, and is a requirement for contributing to this project.
 ### Code of Conduct
 
 Please be aware of and follow the
-[Momentum Code of Coduct](https://github.com/MetOffice/Momentum/blob/main/docs/CODE_OF_CONDUCT.md)
+[Momentum Code of Conduct.](https://github.com/MetOffice/Momentum/blob/main/docs/CODE_OF_CONDUCT.md)
 
 ### Working Practices
 
