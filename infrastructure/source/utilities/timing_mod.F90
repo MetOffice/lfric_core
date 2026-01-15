@@ -120,21 +120,25 @@ contains
 #ifdef TIMING_ON
 #ifdef VERNIER
     ! If Vernier is on then it will write to a file and then finalise
-    if ( LPROF ) call vernier_stop( global_timing_handle )
-    call vernier_write()
-    write(log_scratch_space, '(A)') 'Timing Mod: Vernier has written to file'
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    if ( LPROF ) then
+      call vernier_stop( global_timing_handle )
+      call vernier_write()
+      write(log_scratch_space, '(A)') 'Timing Mod: Vernier has written to file'
+      call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
 
-    call vernier_finalize()
-    write(log_scratch_space, '(A)') 'Timing Mod: Vernier finalised'
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+      call vernier_finalize()
+      write(log_scratch_space, '(A)') 'Timing Mod: Vernier finalised'
+      call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    end if
 
 #elif defined(LEGACY_TIMER)
-    call timer ( application_name )
-    call output_timer()
+    if ( LPROF ) then
+      call timer ( application_name )
+      call output_timer()
 
-    write(log_scratch_space, '(A)') 'Timing Mod: Legacy timing finalised'
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+      write(log_scratch_space, '(A)') 'Timing Mod: Legacy timing finalised'
+      call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    end if
 
 #endif
 #endif
