@@ -8,7 +8,7 @@
 !> @details Calls init, run and finalise routines from simple_diffusion driver module
 program simple_diffusion
 
-  use cli_mod,                     only : get_initial_filename
+  use cli_mod,                     only : parse_command_line
   use driver_collections_mod,      only : init_collections, final_collections
   use constants_mod,               only : precision_real
   use driver_comm_mod,             only : init_comm, final_comm
@@ -34,6 +34,7 @@ program simple_diffusion
   integer, parameter :: default_seed = 123456789
   type(random_number_generator_type), pointer :: rng
 
+  call parse_command_line( filename )
   call modeldb%values%initialise()
   call modeldb%configuration%initialise( program_name, table_len=10 )
 
@@ -43,7 +44,6 @@ program simple_diffusion
   call log_event( log_scratch_space, log_level_trace )
   modeldb%mpi => global_mpi
   call init_comm(program_name, modeldb)
-  call get_initial_filename( filename )
   call init_config( filename,                            &
                     simple_diffusion_required_namelists, &
                     modeldb%configuration )
