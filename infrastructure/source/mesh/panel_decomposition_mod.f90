@@ -879,7 +879,7 @@ contains
     ! If no meshes were found, return 1. This is relevant for JEDI where mesh
     ! initialisation is run twice.
     if ( shortest_panel_width < huge(0_i_def) ) then
-      mp = this_panel_width / shortest_panel_width
+      mp = max(1, this_panel_width / shortest_panel_width)
     else
       mp = 1
     end if
