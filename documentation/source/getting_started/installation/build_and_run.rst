@@ -19,56 +19,13 @@ A separate ``lfric_apps`` repository holds key science applications, such as
 ``lfric_atm``. The lfric_apps repository has a different set of instructions for
 building and testing apps, but largely they do the same thing.
 
-Check-out a working copy
-------------------------
+Obtain the code
+---------------
 
-To checkout a working copy of the code to a new directory, named ``trunk`` in
-this example, run this command:
+Obtain the code from the Github repository and install it on your machine.
 
-.. code-block::
-
-  fcm co https://code.metoffice.gov.uk/svn/lfric/LFRic/trunk trunk
-
-.. topic:: FCM Keywords
-
-   Users of FCM may take advantage of its support for keywords to shorten this.
-
-   Met Office developers should find they can use a site-wide keyword ``lfric.x``
-
-   .. code-block::
-
-      fcm co fcm:lfric.x-tr lfric_core_trunk
-
-   Those without these site-wide keywords can set up their own locally. In
-   ``~/.metomi/fcm/keyword.cfg`` just add the following lines:
-
-   .. code-block::
-
-     # LFRic repository
-     location{primary}[lfric] = https://code.metoffice.gov.uk/svn/lfric/LFRic
-
-   You may now use the shortened URL:
-
-   .. code-block::
-
-     fcm co fcm:lfric-tr
-
-If keywords are set up, to create a branch and check it out, run the following:
-
-.. code-block::
-
-   fcm bc MyBranchName fcm:lfric.x-tr
-
-The command will create a branch with your chosen name prefixed by the revision
-number of the head of trunk. Assuming the current trunk revision is ``1234``,
-the branch will be called ``r1234_MyBranchName``. The following checks the code
-out and puts it into a directory called a ``working copy``.
-
-.. code-block::
-
-   fcm co r1234_MyBranchName [working_copy_name]
-
-If the working copy name is not specified, it defaults to the name of the branch.
+The examples below assume you have cloned the repository or your fork of the
+repository and placed it into a directory called ``lfric_core``.
 
 Building an application
 -----------------------
@@ -79,14 +36,15 @@ within its directory.
 
 .. code-block::
 
-  cd r1234_MyBranchName/applications/simple_diffusion
+  cd lfric_core/applications/simple_diffusion
   make
 
 The ``make`` command will build the simple_diffusion executable and place it in
 the ``simple_diffusion/bin`` directory. It will also build and run any
-integration and unit tests that the application has. The make command uses the
-Makefile in the same directory as the application. The Makefile has a number of
-optional arguments:
+integration and unit tests that the application has.
+
+The make command uses the Makefile in the same directory as the application. The
+Makefile has a number of optional arguments:
 
   * ``make build`` builds just the application executable.
   * ``make unit-tests`` builds and runs any the unit tests.
@@ -98,10 +56,10 @@ optional arguments:
    lfric_apps repository, such as the lfric_atm atmosphere model, are
    different:
 
-   https://code.metoffice.gov.uk/trac/lfric_apps/wiki/local_builds
+   https://metoffice.github.io/lfric_apps/developer_guide/local_builds.html
 
-   The method is different because it needs to include steps to import external
-   code, including the LFRic core code.
+   The method is different because it includes steps to import external code,
+   including the LFRic core code.
 
 The Makefile has a number of optional variable settings that can be
 overridden. To see these, look in the file. More than one option can be supplied
@@ -126,11 +84,19 @@ executable, the build process creates a ``working`` directory to hold the
 products of an executable build and a ``test`` directory to hold products of a
 build of the unit and integration tests.
 
+If you are developing a change and testing builds within a branch, from time to
+time you will want to commit changes to the upstream repository. A
+``.gitignore`` file, found at the top-level of the directory tree, should
+prevent you inadvertently including build artefacts in your commit if you ever
+run a ``git add .`` command. But do use ``git status`` to be sure of what your
+changeset includes. Note that it is always safer to use ``git add <filename>`` on the specific files you want to add/change.
+
 Running ``make clean`` will remove the working, test and bin directories.
 
 After building an application from the command line, it can be useful to do a
 quick test to ensure it can run. Most applications in the lfric and lfric_apps
-repository hold a simple example configuration in their ``example`` directory.
+repository hold a simple example configuration in their ``example`` directory
+(which is also included in the ``.gitignore`` file, so if you want to add or change files in the ``example`` directory, you will need to use ``git add -f ...``).
 
 After building, go into to the example directory and run the application, as
 follows:
@@ -158,3 +124,17 @@ the top-level of the working copy:
 
    rose stem --group=developer
    cylc play <working_copy_name>
+
+Building the documentation
+--------------------------
+
+Documentation for the code exists as RST files in the documentation
+directory. The directory includes a Makefile that runs Sphinx (currently using
+v8.1.0 with the PyData Sphinx Theme 0.16.1) to generate html web pages. To build
+the documentation and then view it with the Firefox browser:
+
+.. code-block::
+
+   cd lfric_core/documentation
+   make html
+   firefox build/html/index.html

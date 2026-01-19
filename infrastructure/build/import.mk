@@ -39,7 +39,7 @@ import-infrastructure: $(WORKING_DIR)/field/field_real32_mod.f90 \
 
 $(WORKING_DIR)/field/field_%_mod.f90: $(LFRIC_INFRASTRUCTURE)/source/field/field_mod.t90 \
                                       | $(WORKING_DIR)/field
-	$(call MESSAGE, Templating, $<)
+	$(call MESSAGE,Templating, $<)
 	$Q$(TEMPLATE_TOOL) $< -o $@ -s type=$(TYPE_TABLE_$*) -s kind=$*
 
 $(WORKING_DIR)/field:
@@ -47,7 +47,7 @@ $(WORKING_DIR)/field:
 
 $(WORKING_DIR)/operator/operator_%_mod.f90: $(LFRIC_INFRASTRUCTURE)/source/operator/operator_mod.t90 \
                                             | $(WORKING_DIR)/operator
-	$(call MESSAGE, Templating, $<)
+	$(call MESSAGE,Templating, $<)
 	$Q$(TEMPLATE_TOOL) $< -o $@ -s kind=$*
 
 $(WORKING_DIR)/operator:
@@ -55,7 +55,7 @@ $(WORKING_DIR)/operator:
 
 $(WORKING_DIR)/scalar/scalar_%_mod.f90: $(LFRIC_INFRASTRUCTURE)/source/scalar/scalar_mod.t90 \
                                       | $(WORKING_DIR)/scalar
-	$(call MESSAGE, Templating, $<)
+	$(call MESSAGE,Templating, $<)
 	$Q$(TEMPLATE_TOOL) $< -o $@ -s type=$(TYPE_TABLE_$*) -s kind=$*
 
 $(WORKING_DIR)/scalar:
