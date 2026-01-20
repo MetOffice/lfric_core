@@ -877,7 +877,6 @@ contains
     end do
 
     ! If no meshes were found, or if this_panel_width < shortest_panel_width, then return 1.
-    ! This is relevant for JEDI where mesh initialisation is run twice.
     if ( shortest_panel_width < huge(0_i_def) ) then
       mp = max(1, this_panel_width / shortest_panel_width)
     else
