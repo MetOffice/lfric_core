@@ -7,3 +7,4 @@
 | jennyhickson    | Jenny Hickson    | Met Office  | 2025-12-10 |
 | mo-marqh        | Mark Hedley      | Met Office  | 2025-12-11 |
 | MatthewHambley  | Matthew Hambley  | Met Office  | 2025-12-15 |
+| tommbendall     | Thomas Bendall   | Met Office  | 2025-01-20 |
