@@ -109,16 +109,16 @@ $$(if $$(realpath $$(TEST_DIR)/$$(dir $$*)/iodef.xml), $$(BIN_DIR)/$$(dir $$*)/i
 
 do-integration-tests/resources/%: \
 | $$(if $$(realpath $$(TEST_DIR)/support/resources), do-integration-tests/resources/support/$$*)
-	$(call MESSAGE, Harvesting, $*)
+	$(call MESSAGE,Harvesting, $*)
 	$Qif [ -e $(TEST_DIR)/$(dir $*)resources ]; then rsync -a $(TEST_DIR)/$(dir $*)resources $(BIN_DIR)/$(dir $*); fi
 
 do-integration-tests/resources/support/%: $(BIN_DIR)/resources
-	$(call MESSAGE, Symlinking to, support/resources)
+	$(call MESSAGE,Symlinking to, support/resources)
 	$Qmkdir -p $(BIN_DIR)/$(dir $*)
 	$Qln -sf $(BIN_DIR)/resources $(BIN_DIR)/$(dir $*)shared-resources
 
 $(BIN_DIR)/resources:
-	$(call MESSAGE, Harvesting, support/resources)
+	$(call MESSAGE,Harvesting, support/resources)
 	$Qrsync -a $(TEST_DIR)/support/resources $(BIN_DIR)/
 
 $(BIN_DIR)/%.py: $(TEST_DIR)/%.py
@@ -127,7 +127,7 @@ $(BIN_DIR)/%.py: $(TEST_DIR)/%.py
 	$Qcp $< $@
 
 $(BIN_DIR)%iodef.xml: $(TEST_DIR)%iodef.xml
-	$(call MESSAGE, Copying, $<)
+	$(call MESSAGE,Copying, $<)
 	$Qmkdir -p $(dir $@)
 	$Qcp $< $@
 

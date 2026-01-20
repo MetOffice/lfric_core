@@ -8,7 +8,7 @@
 module test_db_mod
 
   use calendar_mod,                   only: calendar_type
-  use cli_mod,                        only: get_initial_filename
+  use cli_mod,                        only: parse_command_line
   use configuration_mod,              only: read_configuration
   use constants_mod,                  only: i_def, r_def, str_def, imdi, r_second, i_timestep
   use extrusion_mod,                  only: TWOD
@@ -103,6 +103,8 @@ contains
 
     real(r_second) :: timestep_length
 
+    call parse_command_line( filename )
+
     ! Initialise MPI & logging
     call create_comm(self%comm)
     call global_mpi%initialise(self%comm)
@@ -111,7 +113,6 @@ contains
     call log_set_level(LOG_LEVEL_TRACE)
 
     call self%config%initialise("lfric_xios_integration_tests", table_len=10)
-    call get_initial_filename(filename)
     call read_configuration(trim(adjustl(filename)), self%config)
     deallocate(filename)
 
