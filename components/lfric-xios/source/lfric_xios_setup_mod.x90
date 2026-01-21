@@ -165,6 +165,7 @@ contains
     type(field_type),           intent(in) :: panel_id
     type(field_type), optional, intent(in) :: alt_coords(:,:)
     type(field_type), optional, intent(in) :: alt_panel_ids(:)
+    type(field_type), optional, intent(in) :: panel_ids(:)
 
     integer(i_def) :: i
     type(mesh_type), pointer :: mesh => null()
