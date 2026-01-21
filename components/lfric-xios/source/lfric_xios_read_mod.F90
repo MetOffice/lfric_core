@@ -86,9 +86,9 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
 
   integer(i_def) :: undf
   integer(i_def) :: fs_id
-  integer(tik)   :: id
+  integer(tik)   :: timing_id
 
-  if ( LPROF ) call start_timing(id, 'lfric_xios.chkpt_readf')
+  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.chkpt_readf')
 
   ! We only read in up to undf for the partition
   undf = field_proxy%vspace%get_last_dof_owned()
@@ -108,7 +108,7 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
       call log_event( "Invalid type for input field proxy", LOG_LEVEL_ERROR )
 
   end select
-  if ( LPROF ) call stop_timing(id, 'lfric_xios.chkpt_readf')
+  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.chkpt_readf')
 
 end subroutine checkpoint_read_xios
 
@@ -120,9 +120,9 @@ subroutine checkpoint_read_value(io_value, value_name)
   character(*), optional, intent(in)  :: value_name
   character(str_def) :: restart_id
   integer(i_def)     :: array_dims
-  integer(tik)   :: id
+  integer(tik)   :: timing_id
 
-  if ( LPROF ) call start_timing(id, 'lfric_xios.chkpt_readv')
+  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.chkpt_readv')
 
   if(present(value_name)) then
     restart_id = trim(value_name)
@@ -138,7 +138,7 @@ subroutine checkpoint_read_value(io_value, value_name)
     call log_event( 'No XIOS field with id="'//trim(restart_id)//'" is defined', &
                     LOG_LEVEL_ERROR )
   end if
-  if ( LPROF ) call stop_timing(id, 'lfric_xios.chkpt_readv')
+  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.chkpt_readv')
 
 end subroutine checkpoint_read_value
 
@@ -178,9 +178,9 @@ subroutine read_field_generic(xios_field_name, field_proxy)
   integer(i_def) :: vdim          ! vertical dimension
   real(dp_xios), allocatable :: xios_data(:)
   logical(l_def) :: legacy
-  integer(tik)   :: id
+  integer(tik)   :: timing_id
 
-  if ( LPROF ) call start_timing(id, 'lfric_xios.read_fldg')
+  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.read_fldg')
 
   undf = field_proxy%vspace%get_last_dof_owned() ! total dimension
 
@@ -211,7 +211,7 @@ subroutine read_field_generic(xios_field_name, field_proxy)
 
   deallocate(xios_data)
 
-  if ( LPROF ) call stop_timing(id, 'lfric_xios.read_fldg')
+  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.read_fldg')
 
 end subroutine read_field_generic
 

@@ -120,13 +120,13 @@ subroutine write_field_generic(field_name, field_proxy)
   integer(i_def) :: vdim          ! vertical dimension
   real(dp_xios), allocatable :: xios_data(:)
   logical(l_def) :: legacy
-  integer(tik)   :: id
+  integer(tik)   :: timing_id
 
   ! If the field is not active in xios at this timestep, exit this routine
   ! without doing anything
   if (.not. field_is_active(field_name, .true.)) return
 
-  if ( LPROF ) call start_timing(id, 'lfric_xios.write_fldg')
+  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.write_fldg')
 
   undf = field_proxy%vspace%get_last_dof_owned() ! total dimension
 
@@ -157,7 +157,7 @@ subroutine write_field_generic(field_name, field_proxy)
 
   deallocate(xios_data)
 
-  if ( LPROF ) call stop_timing(id, 'lfric_xios.write_fldg')
+  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.write_fldg')
 
 end subroutine write_field_generic
 

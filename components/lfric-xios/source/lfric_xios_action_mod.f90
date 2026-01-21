@@ -50,7 +50,7 @@ contains
     type(lfric_xios_file_type),  pointer :: file => null()
     type(xios_context)                   :: xios_context_handle
     type(linked_list_type), pointer      :: filelist
-    integer(tik)                         :: id
+    integer(tik)                         :: timing_id
 
     ! Get the handle of the current context (Not necessarily the one passed to this routine).
     ! This is used to reset the context on return.
@@ -77,9 +77,9 @@ contains
       end if
 
       ! Update XIOS calendar
-      if ( LPROF ) call start_timing( id, 'xios.update_calendar' )
+      if ( LPROF ) call start_timing( timing_id, 'xios.update_calendar' )
       call xios_update_calendar( model_clock%get_step() - model_clock%get_first_step() + 1 )
-      if ( LPROF ) call stop_timing( id, 'xios.update_calendar' )
+      if ( LPROF ) call stop_timing( timing_id, 'xios.update_calendar' )
 
       ! Read all files that need to be read from
       filelist => context%get_filelist()
@@ -143,7 +143,7 @@ contains
     type(lfric_xios_file_type),  pointer :: file => null()
     type(xios_context)                   :: xios_context_handle
     type(linked_list_type), pointer      :: filelist
-    integer(tik)                         :: id
+    integer(tik)                         :: timing_id
 
     ! Get the handle of the current context (Not necessarily the one passed to this routine).
     ! This is used to reset the context on return.
@@ -154,9 +154,9 @@ contains
       call context%set_current()
       call context%tick_context_clock()
       ! Update XIOS calendar
-      if ( LPROF ) call start_timing( id, 'xios.update_calendar' )
+      if ( LPROF ) call start_timing( timing_id, 'xios.update_calendar' )
       call xios_update_calendar( context%get_context_clock_step() )
-      if ( LPROF ) call stop_timing( id, 'xios.update_calendar' )
+      if ( LPROF ) call stop_timing( timing_id, 'xios.update_calendar' )
 
       ! Read all files that need to be read from
       filelist => context%get_filelist()
