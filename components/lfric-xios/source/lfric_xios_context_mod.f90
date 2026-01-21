@@ -119,7 +119,7 @@ contains
     write(log_scratch_space, "(A)") &
         "Initialising XIOS context: " // this%get_context_name()
     call log_event(log_scratch_space, log_level_debug)
-    if ( LPROF ) call start_timing(idlx, 'lfric_xios_init_context')
+    if ( LPROF ) call start_timing(idlx, 'lfric_xios.init_context')
 
     if (present(start_at_zero)) then
       zero_start = start_at_zero
@@ -141,10 +141,10 @@ contains
 
     ! Close the context definition - no more I/O configuration operations
     ! can be defined after this point
-    if ( LPROF ) call start_timing(idxc, 'xios_close_context_definition')
+    if ( LPROF ) call start_timing(idxc, 'xios.close_context_definition')
     call log_event('XIOS context definition closing', log_level_debug)
     call xios_close_context_definition()
-    if ( LPROF ) call stop_timing(idxc, 'xios_close_context_definition')
+    if ( LPROF ) call stop_timing(idxc, 'xios.close_context_definition')
     call log_event('XIOS context definition closed', log_level_debug)
 
     this%xios_context_initialised = .true.
@@ -161,7 +161,7 @@ contains
         loop => loop%next
       end do
     end if
-    if ( LPROF ) call stop_timing(idlx, 'lfric_xios_init_context')
+    if ( LPROF ) call stop_timing(idlx, 'lfric_xios.init_context')
 
   end subroutine initialise_xios_context
 
@@ -185,7 +185,7 @@ contains
     type(lfric_xios_file_type),  pointer :: file => null()
     integer(tik) :: idlx, idxc
 
-    if ( LPROF ) call start_timing(idlx, 'lfric_xios_finalise_context')
+    if ( LPROF ) call start_timing(idlx, 'lfric_xios.finalise_context')
     if (this%xios_context_initialised) then
       ! Perform final write
       if (this%filelist%get_length() > 0) then
@@ -204,9 +204,9 @@ contains
       ! will be closed.
       write(log_scratch_space, "(A)") "Finalising XIOS context: " // this%get_context_name()
       call log_event(log_scratch_space, log_level_debug)
-      if ( LPROF ) call start_timing(idxc, 'xios_context_finalize')
+      if ( LPROF ) call start_timing(idxc, 'xios.context_finalize')
       call xios_context_finalize()
-      if ( LPROF ) call stop_timing(idxc, 'xios_context_finalize')
+      if ( LPROF ) call stop_timing(idxc, 'xios.context_finalize')
 
       ! We have closed the context on our end, but we need to make sure that XIOS
       ! has closed the files for all servers before we process them.
@@ -228,7 +228,7 @@ contains
     end if
     nullify(loop)
     nullify(file)
-    if ( LPROF ) call stop_timing(idlx, 'lfric_xios_finalise_context')
+    if ( LPROF ) call stop_timing(idlx, 'lfric_xios.finalise_context')
 
   end subroutine finalise_xios_context
 
