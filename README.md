@@ -18,6 +18,8 @@ in the [documentation](https://metoffice.github.io/lfric_core/). If you are
 looking for the LFRic Atmosphere model this can be found in the
 [LFRic Apps](https://github.com/MetOffice/lfric_apps) repository.
 
+[Andrew Coughtrie](mailto:andrew.coughtrie@metoffice.gov.uk)
+
 ## Contributing Guidelines
 
 The following links are here to help set clear expectations for everyone
