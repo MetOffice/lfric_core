@@ -43,7 +43,11 @@ class vn30_t238(MacroUpgrade):
         self.add_setting(
             config, ["namelist:finite_element", "coord_space"], "'Wchi'"
         )
+        coord_order = self.get_setting_value(
+            config, ["namelist:finite_element", "coord_order"]
+        )
         self.add_setting(
-            config, ["namelist:finite_element", "coord_order_multigrid"], "1"
+            config, ["namelist:finite_element", "coord_order_multigrid"],
+            coord_order
         )
         return config, self.reports
