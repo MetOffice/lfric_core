@@ -41,7 +41,7 @@ class vn30_t238(MacroUpgrade):
     def upgrade(self, config, meta_config=None):
         # Commands From: rose-meta/lfric-driver
         self.add_setting(
-            config, ["namelist:finite_element", "coord_space"], "Wchi"
+            config, ["namelist:finite_element", "coord_space"], "'Wchi'"
         )
         self.add_setting(
             config, ["namelist:finite_element", "coord_order_multigrid"], "1"
