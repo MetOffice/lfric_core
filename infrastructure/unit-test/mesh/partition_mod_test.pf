@@ -85,7 +85,7 @@ contains
 
   !> Test partition module functionality
   !>
-  @Test(npes=[1, 4] )
+  @Test(npes=[1, 3, 4] )
   subroutine test_partition_BiPeriodic( this )
 
     implicit none
@@ -119,6 +119,7 @@ contains
 
     integer(i_def) :: global_mesh_id
     integer(i_def) :: num_processes
+    integer(i_def) :: proc_num
 
     logical(l_def) :: generate_inner_halos
 
@@ -128,6 +129,9 @@ contains
     select case (num_processes)
       case (1)
         xproc = 1
+        yproc = 1
+      case (3)
+        xproc = 3
         yproc = 1
       case (4)
         xproc = 2
@@ -194,6 +198,70 @@ contains
 
         num_cells_ghost = partition%get_num_cells_ghost()
         @assertEqual( 0, num_cells_ghost )
+
+      case (3)
+! Testing over 3 partitions will produce uneven partitions, PE1 and PE2 will be
+! the same, but PE0 will be slightly smaller
+
+! Start with quantities that will be the same for all PEs
+        inner_depth = partition%get_inner_depth()
+        @assertEqual( 2, inner_depth )
+
+        halo_depth = partition%get_halo_depth()
+        @assertEqual( 2, halo_depth )
+
+        num_cells_halo = partition%get_num_cells_halo(1)
+        @assertEqual( 16, num_cells_halo )
+
+! Now check quantities that differ between PE0 and PE1/2
+        proc_num = this%getProcessRank()
+        select case (proc_num)
+          case(0)
+            num_cells_in_layer = partition%get_num_cells_in_layer()
+            @assertEqual( 48, num_cells_in_layer )
+
+            num_cells_inner = partition%get_num_cells_inner(1)
+            @assertEqual( 0, num_cells_inner )
+
+            last_inner_cell = partition%get_last_inner_cell(1)
+            @assertEqual( 0, last_inner_cell )
+
+            num_cells_edge = partition%get_num_cells_edge()
+            @assertEqual( 16, num_cells_edge )
+
+            last_edge_cell = partition%get_last_edge_cell()
+            @assertEqual( 16, last_edge_cell )
+
+            last_halo_cell = partition%get_last_halo_cell(1)
+            @assertEqual( 32, last_halo_cell )
+
+            num_cells_ghost = partition%get_num_cells_ghost()
+            @assertEqual( 16, num_cells_ghost )
+          case(1, 2)
+            num_cells_in_layer = partition%get_num_cells_in_layer()
+            @assertEqual( 56, num_cells_in_layer )
+
+            num_cells_inner = partition%get_num_cells_inner(1)
+            @assertEqual( 6, num_cells_inner )
+
+            last_inner_cell = partition%get_last_inner_cell(1)
+            @assertEqual( 6, last_inner_cell )
+
+            num_cells_edge = partition%get_num_cells_edge()
+            @assertEqual( 18, num_cells_edge )
+
+            last_edge_cell = partition%get_last_edge_cell()
+            @assertEqual( 24, last_edge_cell )
+
+            num_cells_halo = partition%get_num_cells_halo(1)
+            @assertEqual( 16, num_cells_halo )
+
+            last_halo_cell = partition%get_last_halo_cell(1)
+            @assertEqual( 40, last_halo_cell )
+
+            num_cells_ghost = partition%get_num_cells_ghost()
+            @assertEqual( 8, num_cells_ghost )
+        end select
 
       case (4)
         num_cells_in_layer = partition%get_num_cells_in_layer()
