@@ -37,7 +37,6 @@ program skeleton
   character(:), allocatable :: filename
 
   call parse_command_line( filename )
-  call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise(program_name)
 
   write(log_scratch_space,'(A)')                          &
@@ -49,7 +48,6 @@ program skeleton
 
   call init_comm( "skeleton", modeldb )
   call init_config( filename, skeleton_required_namelists, &
-                    configuration=modeldb%configuration,   &
                     config=modeldb%config )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )

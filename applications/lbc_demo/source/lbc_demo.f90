@@ -44,13 +44,12 @@ program lbc_demo
 
   ! The technical and scientific state
   modeldb%mpi => global_mpi
-  call modeldb%configuration%initialise( program_name, table_len=10 )
+
   call modeldb%config%initialise( program_name )
 
   call init_comm(program_name, modeldb)
 
-  call init_config(filename, required_namelists,        &
-                   configuration=modeldb%configuration, &
+  call init_config(filename, required_namelists, &
                    config=modeldb%config)
 
   ! Before anything else, test that the mesh provided was a regional domain.

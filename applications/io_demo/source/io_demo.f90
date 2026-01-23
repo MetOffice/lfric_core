@@ -36,7 +36,6 @@ program io_demo
 
   call parse_command_line( filename )
   call modeldb%values%initialise()
-  call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise(program_name)
 
   write(log_scratch_space,&
@@ -46,9 +45,8 @@ program io_demo
   modeldb%mpi => global_mpi
   call init_comm(program_name, modeldb)
 
-  call init_config(filename,                            &
-                   io_demo_required_namelists,          &
-                   configuration=modeldb%configuration, &
+  call init_config(filename,                   &
+                   io_demo_required_namelists, &
                    config=modeldb%config)
 
   deallocate( filename )

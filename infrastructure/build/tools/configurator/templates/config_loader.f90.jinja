@@ -9,9 +9,8 @@
 !
 module {{moduleName}}
 
-  use constants_mod, only : i_def, l_def, str_def, str_max_filename
+  use constants_mod, only : i_def, l_def, str_def, str_long, str_max_filename
   use lfric_mpi_mod, only : global_mpi
-  use log_mod,       only : log_scratch_space, log_event, LOG_LEVEL_ERROR
 
   use namelist_collection_mod, only: namelist_collection_type
   use namelist_mod,            only: namelist_type
@@ -65,10 +64,11 @@ contains
     integer(i_def) :: unit
 
     if (.not. present(configuration) .and. .not. present(config)) then
-      write(log_scratch_space,'(A)')                               &
-          'At least one optional argument must be provided for ' //&
-          'read_configuration.'
-      call log_event(log_scratch_space, log_level_error)
+      write(6,'(A)')                               &
+          'At least one optional argument must '// &
+          'be provided for read_configuration.'
+      flush(6)
+      stop
     end if
 
     local_rank = global_mpi%get_comm_rank()
@@ -175,14 +175,16 @@ contains
     logical(l_def), optional, intent(out) :: success_mask(:)
     logical(l_def)                        :: ensure_configuration
 
-    integer(i_def)    :: i
-    logical           :: configuration_found = .True.
+    integer(i_def)      :: i
+    logical             :: configuration_found = .True.
 
     if (present(success_mask) &
         .and. (size(success_mask, 1) /= size(names, 1))) then
-      call log_event( 'Arguments "names" and "success_mask" to function' &
-                      // '"ensure_configuration" are different shapes',  &
-                      LOG_LEVEL_ERROR )
+      write(6,'(A)')                                            &
+          'Arguments "names" and "success_mask" to function' // &
+          '"ensure_configuration" are different shapes.'
+      flush(6)
+      stop
     end if
 
     ensure_configuration = .True.
@@ -195,10 +197,11 @@ contains
 {%- endfor %}
 
       case default
-        write( log_scratch_space, '(A)' )               &
-            'Tried to ensure unrecognised namelist "'// &
+        write(6, '(A)' )                                 &
+            'Tried to ensure unrecognised namelist "' // &
             trim(names(i))//'" was loaded.'
-        call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        flush(6)
+        stop
       end select
 
       ensure_configuration = ensure_configuration .and. configuration_found
@@ -269,18 +272,20 @@ contains
 
             end if
           else
-            write( log_scratch_space, '(A)' )      &
+            write(6, '(A)')                        &
                 'Namelist "'//trim(namelists(i))// &
                 '" can not be read. Too many instances?'
-            call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+            flush(6)
+            stop
           end if
 {%- endfor %}
 
         case default
-          write( log_scratch_space, '(A)' )                   &
+          write(6, '(A)' )                                    &
               'Unrecognised namelist "'//trim(namelists(i))// &
               '" found in file '//trim(filename)//'.'
-          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+          flush(6)
+          stop
         end select
 
       end do ! Namelists

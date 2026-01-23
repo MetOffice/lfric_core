@@ -41,7 +41,7 @@ program planar_mesh_generator
                            log_scratch_space, LOG_LEVEL_INFO,    &
                            LOG_LEVEL_ERROR
 
-  use namelist_collection_mod, only: namelist_collection_type
+!  use namelist_collection_mod, only: namelist_collection_type
   use ncdf_quad_mod, only: ncdf_quad_type
   use omp_lib,       only: omp_get_thread_num
   use partition_mod, only: partition_type, partitioner_interface
@@ -138,7 +138,7 @@ program planar_mesh_generator
 
   ! Configuration variables
   type(config_type), save :: config
-  type(namelist_collection_type), save :: configuration
+!  type(namelist_collection_type), save :: configuration
 
   character(str_max_filename) :: mesh_file_prefix
 
@@ -211,11 +211,11 @@ program planar_mesh_generator
   local_rank  = global_mpi%get_comm_rank()
   call initialise_logging( communicator%get_comm_mpi_val(), "PlanarGen" )
 
-  call configuration%initialise( 'PlanarGen', table_len=10 )
+!  call configuration%initialise( 'PlanarGen', table_len=10 )
   call config%initialise( 'PlanarGen' )
 
   call read_configuration( filename,                    &
-                           configuration=configuration, &
+!                           configuration=configuration, &
                            config=config )
 
   deallocate( filename )
