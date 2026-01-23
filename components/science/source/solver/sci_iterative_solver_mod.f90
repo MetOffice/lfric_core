@@ -38,9 +38,9 @@ module sci_iterative_solver_mod
   type, public, abstract :: abstract_iterative_solver_type
      private
      !> Preconditioner
-     class(abstract_preconditioner_type),  pointer :: prec => null()
+     class(abstract_preconditioner_type), allocatable :: prec
      !> Linear operator
-     class(abstract_linear_operator_type), pointer :: lin_op => null()
+     class(abstract_linear_operator_type), allocatable :: lin_op
 
      ! relative tolerance
      real(kind=r_def)                              :: r_tol
@@ -475,8 +475,8 @@ contains
 
     type(conjugate_gradient_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate( self%lin_op, source = lin_op)
+    allocate( self%prec,   source = prec)
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
     self%max_iter              = max_iter
@@ -627,8 +627,8 @@ contains
 
     write(log_scratch_space,'(A)') "bicgstab_constructor:"
     call log_event(log_scratch_space, LOG_LEVEL_INFO)
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
     self%max_iter              = max_iter
@@ -810,8 +810,8 @@ contains
     logical(kind=l_def),                          intent(in) :: fail_on_non_converged
     type(gmres_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%gcrk                  = gcrk
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
@@ -1033,8 +1033,8 @@ contains
     logical(kind=l_def),                          intent(in) :: fail_on_non_converged
     type(fgmres_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%gcrk                  = gcrk
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
@@ -1267,8 +1267,8 @@ contains
     logical(kind=l_def),                          intent(in) :: fail_on_non_converged
     type(gcr_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%gcrk                  = gcrk
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
@@ -1438,8 +1438,8 @@ contains
     logical(kind=l_def),                          intent(in) :: fail_on_non_converged
     type(block_gcr_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%gcrk                  = gcrk
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
@@ -1646,8 +1646,8 @@ contains
     logical(kind=l_def),                          intent(in) :: monitor_convergence
     type(precondition_only_type) :: self
 
-    self%lin_op              => lin_op
-    self%prec                => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%monitor_convergence = monitor_convergence
 
     if( .not. self%monitor_convergence ) then
@@ -1726,8 +1726,8 @@ contains
     real(kind=r_def),                             intent(in) :: rho_relax
     type(jacobi_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
     self%max_iter              = max_iter
@@ -1848,8 +1848,8 @@ contains
     real(kind=r_def),                             intent(in) :: lmax
     type(chebyshev_type) :: self
 
-    self%lin_op                => lin_op
-    self%prec                  => prec
+    allocate(self%lin_op, source = lin_op )
+    allocate(self%prec,   source = prec )
     self%r_tol                 = r_tol
     self%a_tol                 = a_tol
     self%max_iter              = max_iter

@@ -53,13 +53,13 @@ end type restrict_w2h_kernel_type
 ! Contained functions/subroutines
 !-------------------------------------------------------------------------------
 
-public :: restrict_w2h_code
+public :: restrict_w2h_kernel_code
 
   ! Generic interface for real32 and real64 types
-  interface restrict_w2h_code
+  interface restrict_w2h_kernel_code
     module procedure  &
-      restrict_w2h_code_r_single, &
-      restrict_w2h_code_r_double
+      restrict_w2h_kernel_code_r_single, &
+      restrict_w2h_kernel_code_r_double
   end interface
 
 contains
@@ -93,22 +93,22 @@ contains
 
   ! R_SINGLE PRECISION
   ! ==================
-  subroutine restrict_w2h_code_r_single(nlayers,                 &
-                                        cell_map,                &
-                                        ncell_fine_per_coarse_x, &
-                                        ncell_fine_per_coarse_y, &
-                                        ncell_fine,              &
-                                        coarse_field,            &
-                                        fine_field,              &
-                                        face_selector_ew,        &
-                                        face_selector_ns,        &
-                                        undf_coarse,             &
-                                        map_coarse,              &
-                                        ndf,                     &
-                                        undf_fine,               &
-                                        map_fine,                &
-                                        undf_w3_2d,              &
-                                        map_w3_2d               )
+  subroutine restrict_w2h_kernel_code_r_single(nlayers,                 &
+                                               cell_map,                &
+                                               ncell_fine_per_coarse_x, &
+                                               ncell_fine_per_coarse_y, &
+                                               ncell_fine,              &
+                                               coarse_field,            &
+                                               fine_field,              &
+                                               face_selector_ew,        &
+                                               face_selector_ns,        &
+                                               undf_coarse,             &
+                                               map_coarse,              &
+                                               ndf,                     &
+                                               undf_fine,               &
+                                               map_fine,                &
+                                               undf_w3_2d,              &
+                                               map_w3_2d               )
 
     implicit none
 
@@ -224,26 +224,26 @@ contains
       end do
     end do
 
-  end subroutine restrict_w2h_code_r_single
+  end subroutine restrict_w2h_kernel_code_r_single
 
   ! R_DOUBLE PRECISION
   ! ==================
-  subroutine restrict_w2h_code_r_double(nlayers,                 &
-                                        cell_map,                &
-                                        ncell_fine_per_coarse_x, &
-                                        ncell_fine_per_coarse_y, &
-                                        ncell_fine,              &
-                                        coarse_field,            &
-                                        fine_field,              &
-                                        face_selector_ew,        &
-                                        face_selector_ns,        &
-                                        undf_coarse,             &
-                                        map_coarse,              &
-                                        ndf,                     &
-                                        undf_fine,               &
-                                        map_fine,                &
-                                        undf_w3_2d,              &
-                                        map_w3_2d               )
+  subroutine restrict_w2h_kernel_code_r_double(nlayers,                 &
+                                               cell_map,                &
+                                               ncell_fine_per_coarse_x, &
+                                               ncell_fine_per_coarse_y, &
+                                               ncell_fine,              &
+                                               coarse_field,            &
+                                               fine_field,              &
+                                               face_selector_ew,        &
+                                               face_selector_ns,        &
+                                               undf_coarse,             &
+                                               map_coarse,              &
+                                               ndf,                     &
+                                               undf_fine,               &
+                                               map_fine,                &
+                                               undf_w3_2d,              &
+                                               map_w3_2d               )
 
     implicit none
 
@@ -359,6 +359,6 @@ contains
       end do
     end do
 
-  end subroutine restrict_w2h_code_r_double
+  end subroutine restrict_w2h_kernel_code_r_double
 
 end module sci_restrict_w2h_kernel_mod
