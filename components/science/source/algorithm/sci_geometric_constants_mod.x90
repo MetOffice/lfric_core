@@ -1427,6 +1427,8 @@ contains
     call height_w2h_inventory_fv%clear()
     call height_w1_inventory_fe%clear()
     call height_w1_inventory_fv%clear()
+    call height_w0_inventory_fe%clear()
+    call height_w0_inventory_fv%clear()
     call dz_w3_inventory%clear()
     call panel_id_inventory%clear()
     call chi_inventory%clear()
