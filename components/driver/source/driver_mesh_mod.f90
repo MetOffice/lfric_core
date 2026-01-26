@@ -178,7 +178,7 @@ subroutine init_mesh( configuration,           &
     allocate( stencil_depths( size(mesh_names) ) )
     stencil_depths = stencil_depths_in
   else
-    write(log_scratch_space, '(A)')                   &
+    write(log_scratch_space, '(A)')                      &
         'Number of stencil depths specified does not '// &
         'match number of requested meshes.'
     call log_event(log_scratch_space, LOG_LEVEL_ERROR)
