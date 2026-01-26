@@ -100,6 +100,10 @@ subroutine convert_hdiv_native_code(nlayers,                                   &
 
   use sci_native_jacobian_mod, only: native_jacobian
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -149,10 +153,11 @@ subroutine convert_hdiv_native_code(nlayers,                                   &
   do df_w2 = 1, ndf_w2
 
     ! Compute Jacobian for whole column at this DoF
-    call native_jacobian(                                                      &
-            ndf_chi, nlayers, chi_1_e, chi_2_e, chi_3_e, ipanel,               &
-            basis_chi(:,:,df_w2),  diff_basis_chi(:,:,df_w2), jacobian, dj     &
-    )
+    call native_jacobian(                                        &
+            coord_system, geometry, topology, scaled_radius,     &
+            ndf_chi, nlayers, chi_1_e, chi_2_e, chi_3_e, ipanel, &
+            basis_chi(:,:,df_w2),  diff_basis_chi(:,:,df_w2),    &
+            jacobian, dj )
 
     ! Create vector of HDiv values at this point
     vector_in(:,:) = 0.0_r_def

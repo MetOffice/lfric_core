@@ -68,7 +68,7 @@ contains
                                       rehabilitate=.true.,               &
                                       coord_system=coord_system_xyz )
 
-    call init_chi_transforms()
+    call init_chi_transforms(geometry_planar,topology_fully_periodic)
 
   end subroutine setUp
 

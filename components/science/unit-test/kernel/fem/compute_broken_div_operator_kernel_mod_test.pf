@@ -7,7 +7,7 @@
 !>
 module compute_broken_div_operator_kernel_mod_test
 
-    use constants_mod, only : i_def, r_def
+    use constants_mod, only : i_def, r_def, imdi
     use get_unit_test_m3x3_dofmap_mod, &
       only : get_w0_m3x3_dofmap, &
              get_w3_m3x3_dofmap
@@ -63,7 +63,7 @@ contains
              element_order_v=1_i_def,                           &
              rehabilitate=.true. )
 
-    call init_chi_transforms()
+    call init_chi_transforms(imdi, imdi)
 
   end subroutine setUp
 
