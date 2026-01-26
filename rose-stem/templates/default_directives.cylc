@@ -16,7 +16,7 @@
     "mesh_cpus": 6,
     "tech-tests_memory": [6, "GB"],
     "tech-tests_wallclock": 20,
-    "tech-tests_cpus": 1,
+    "tech-tests_cpus": 6,
     } %}
 
 {% for item, value in defaults.items() %}
