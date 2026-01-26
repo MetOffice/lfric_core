@@ -28,7 +28,7 @@ module sci_coordinate_jacobian_mod
                                        topology_fully_periodic
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_system_native
-  use planet_config_mod,         only: scaled_radius
+! use planet_config_mod,         only: scaled_radius
 
   implicit none
 
