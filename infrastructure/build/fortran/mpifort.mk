@@ -4,20 +4,20 @@
 # under which the code may be used.
 ##############################################################################
 
-MPIF90_VN_STR := $(shell $(FC) --version)
-MPIF90_COMPILER := $(shell echo "$(MPIF90_VN_STR)" | awk '{print $$1}')
-$(info ** Chosen MPI Fortran compiler: $(MPIF90_COMPILER))
+MPIFORT_VN_STR := $(shell $(FC) --version)
+MPIFORT_COMPILER := $(shell echo "$(MPIFORT_VN_STR)" | awk '{print $$1}')
+$(info ** Chosen MPI Fortran compiler: $(MPIFORT_COMPILER))
 
-ifeq '$(MPIF90_COMPILER)' 'GNU'
+ifeq '$(MPIFORT_COMPILER)' 'GNU'
   FORTRAN_COMPILER = gfortran
-else ifeq '$(MPIF90_COMPILER)' 'ifort'
+else ifeq '$(MPIFORT_COMPILER)' 'ifort'
   FORTRAN_COMPILER = ifort
-else ifeq '$(MPIF90_COMPILER)' 'Cray'
+else ifeq '$(MPIFORT_COMPILER)' 'Cray'
   FORTRAN_COMPILER = crayftn
-else ifeq '$(MPIF90_COMPILER)' 'nvfortran'
+else ifeq '$(MPIFORT_COMPILER)' 'nvfortran'
   FORTRAN_COMPILER = nvfortran
 else
-  $(error Unrecognised mpif90 compiler option: "$(MPIF90_COMPILER)")
+  $(error Unrecognised mpifort compiler option: "$(MPIFORT_COMPILER)")
 endif
 
 include $(LFRIC_BUILD)/fortran/$(FORTRAN_COMPILER).mk
