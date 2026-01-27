@@ -30,7 +30,7 @@ applications/skeleton               mikehobson          stevemullerworth        
 components/driver                   mikehobson          stevemullerworth               core_capability_development
 components/inventory                stevemullerworth    mikehobson                     core_capability_development
 components/lfric-xios               andrewcoughtrie     stevemullerworth               core_capability_development
-components/science                  thomasbendall       thomasmelvin                   core_capability_development
+components/science                  thomasbendall       thomasmelvin                   dynamics_research
 infrastructure_configuration        rickywong           matthewhambley                 core_capability_development
 infrastructure_field                mikehobson          stevemullerworth               core_capability_development
 infrastructure_function_space       mikehobson          stevemullerworth               core_capability_development
