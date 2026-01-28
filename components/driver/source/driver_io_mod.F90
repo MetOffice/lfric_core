@@ -222,7 +222,6 @@ contains
       file_list => io_context%get_filelist()
       call populate_filelist(file_list, modeldb)
     end if
-    call io_context%set_timer_flag(subroutine_timers)
 
     ! ===============================
     ! Check that a mesh exists

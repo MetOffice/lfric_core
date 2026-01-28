@@ -19,6 +19,10 @@ module sci_compute_grad_operator_kernel_mod
   use fs_continuity_mod,       only: W0, W1
   use kernel_mod,              only: kernel_type
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   private
@@ -134,7 +138,8 @@ subroutine compute_grad_operator_code(cell, nlayers, ncell_3d,    &
       chi2_e(df) = chi2(map_chi(df) + k)
       chi3_e(df) = chi3(map_chi(df) + k)
     end do
-    call coordinate_jacobian(ndf_chi, nqp_h, nqp_v, chi1_e, chi2_e, chi3_e,  &
+    call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                             ndf_chi, nqp_h, nqp_v, chi1_e, chi2_e, chi3_e,   &
                              ipanel, basis_chi, diff_basis_chi, jac, dj)
     call coordinate_jacobian_inverse(nqp_h, nqp_v, jac, dj, jac_inv)
     do qp2 = 1, nqp_v

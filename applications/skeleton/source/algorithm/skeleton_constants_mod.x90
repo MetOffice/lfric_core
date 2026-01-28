@@ -29,7 +29,8 @@ module skeleton_constants_mod
   use operator_mod,                       only: operator_type
   use quadrature_xyoz_mod,                only: quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,       only: quadrature_rule_gaussian_type
-  use timer_mod,                          only: timer
+  use timing_mod,                         only: start_timing, stop_timing, &
+                                                tik, LPROF
 
   ! Kernels
   use sci_compute_derham_matrices_kernel_mod, only: compute_derham_matrices_kernel_type
@@ -106,19 +107,18 @@ contains
     type(function_space_type), pointer :: w3_fs
     type(function_space_type), pointer :: wtheta_fs
 
+    integer(tik) :: id
+
     integer(i_def) :: order_h, order_v
     integer(i_def) :: nqp_h_exact, nqp_v_exact
-    logical(l_def) :: subroutine_timers
+
+    if ( LPROF ) call start_timing( id, 'skeleton_constants_alg' )
+    call log_event( "Skeleton: creating runtime constants", LOG_LEVEL_INFO )
 
     order_h     = modeldb%config%finite_element%element_order_h()
     order_v     = modeldb%config%finite_element%element_order_v()
     nqp_h_exact = modeldb%config%finite_element%nqp_h_exact()
     nqp_v_exact = modeldb%config%finite_element%nqp_v_exact()
-
-    subroutine_timers = modeldb%config%io%subroutine_timers()
-
-    if ( subroutine_timers ) call timer('skeleton_constants_alg')
-    call log_event( "Skeleton: creating runtime constants", LOG_LEVEL_INFO )
 
     !=========== Create function spaces required for setup ==================!
 
@@ -180,7 +180,7 @@ contains
              mm_w0, mm_w1, mm_w2, mm_w2b, mm_w3, mm_wtheta, grad, curl, div, &
              broken_div )
 
-    if ( subroutine_timers ) call timer('skeleton_constants_alg')
+    if ( LPROF ) call stop_timing( id, 'skeleton_constants_alg' )
     call log_event( "Skeleton: created FEM constants", LOG_LEVEL_INFO )
 
   end subroutine create_skeleton_constants

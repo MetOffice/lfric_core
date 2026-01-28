@@ -26,7 +26,8 @@ module io_demo_constants_mod
   use log_mod,                            only: log_event, LOG_LEVEL_TRACE, &
                                                 LOG_LEVEL_ERROR
   use mesh_mod,                           only: mesh_type
-  use timer_mod,                          only: timer
+  use timing_mod,                         only: start_timing, stop_timing, &
+                                                tik, LPROF
 
   ! Kernels
   use sci_calc_dA_at_w2_kernel_mod,   only: calc_dA_at_w2_kernel_type
@@ -57,17 +58,12 @@ contains
     implicit none
 
     ! Arguments
-    type(modeldb_type), intent(in) :: modeldb
+    type(mesh_type),    pointer, intent(in) :: mesh
+    type(field_type),    target, intent(in) :: chi(:)
+    type(field_type),    target, intent(in) :: panel_id
+    integer(tik)                            :: id
 
-    type(mesh_type),  pointer, intent(in) :: mesh
-    type(field_type),  target, intent(in) :: chi(:)
-    type(field_type),  target, intent(in) :: panel_id
-
-    logical(l_def) :: subroutine_timers
-
-    subroutine_timers = modeldb%config%io%subroutine_timers()
-
-    if ( subroutine_timers ) call timer('io_demo_constants_alg')
+    if ( LPROF ) call start_timing( id, 'io_demo_constants_alg' )
     call log_event( "io_demo: creating runtime constants", LOG_LEVEL_TRACE )
 
     !============================= dx_at_w2 setup =============================!
@@ -77,7 +73,7 @@ contains
     call log_event( "io_demo: runtime constants created", LOG_LEVEL_TRACE )
 
 
-    if ( subroutine_timers ) call timer('io_demo_constants_alg')
+    if ( LPROF ) call stop_timing( id, 'io_demo_constants_alg' )
     call log_event( "io_demo: created FEM constants", LOG_LEVEL_TRACE )
 
   end subroutine create_io_demo_constants

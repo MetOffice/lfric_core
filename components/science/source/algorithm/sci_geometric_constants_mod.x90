@@ -24,12 +24,12 @@ module sci_geometric_constants_mod
   use integer_field_mod,                  only: integer_field_type
   use inventory_by_mesh_mod,              only: inventory_by_mesh_type
   use inventory_by_local_mesh_mod,        only: inventory_by_local_mesh_type
-  use io_config_mod,                      only: subroutine_timers
   use local_mesh_mod,                     only: local_mesh_type
   use log_mod,                            only: log_event, LOG_LEVEL_ERROR
   use mesh_collection_mod,                only: mesh_collection
   use mesh_mod,                           only: mesh_type
-  use timer_mod,                          only: timer
+  use timing_mod,                         only: start_timing, stop_timing, &
+                                                tik, LPROF
 
   ! Configuration
   use finite_element_config_mod,          only: element_order_h, &
@@ -164,8 +164,9 @@ contains
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: twod_fs
     integer(kind=i_def)                :: k_h, k_v
+    integer(tik)                       :: id
 
-    if ( subroutine_timers ) call timer('runtime_constants.geometric')
+    if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
     if (use_fe) then
       k_h = element_order_h
@@ -190,7 +191,7 @@ contains
                    setval_c(long, f_lon) )
     end if
 
-    if ( subroutine_timers ) call timer('runtime_constants.geometric')
+    if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
 
   end subroutine compute_latlon
 
@@ -217,8 +218,9 @@ contains
     type(integer_field_type)           :: face_counter
     type(function_space_type), pointer :: w2h_2d_fs
     type(function_space_type), pointer :: w3_2d_fs
+    integer(tik)                       :: id
 
-    if ( subroutine_timers ) call timer('runtime_constants.geometric')
+    if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
     twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
     local_mesh => mesh%get_local_mesh()
@@ -246,7 +248,7 @@ contains
                                            face_selector_ns,                   &
                                            face_counter ) )
 
-    if ( subroutine_timers ) call timer('runtime_constants.geometric')
+    if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
 
   end subroutine compute_face_selectors
 
@@ -315,6 +317,7 @@ contains
     type(field_type),          pointer :: chi(:)
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: wchi_fs
+    integer(tik)                       :: id
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. extended_chi_inventory%is_initialised()) then
@@ -329,7 +332,7 @@ contains
       chi => get_coordinates(mesh_id)
       panel_id => get_panel_id(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       wchi_fs => chi(1)%get_function_space()
       depth = mesh%get_halo_depth()
@@ -347,7 +350,7 @@ contains
       call invoke( extend_chi_field_kernel_type(extended_chi, chi,             &
                                                 panel_id, depth) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
       ! Otherwise, return existing constant
       call extended_chi_inventory%get_field_array(mesh, extended_chi)
@@ -374,6 +377,7 @@ contains
     type(field_type),          pointer :: chi(:)
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: w2_k0_fs
+    integer(tik)                       :: id
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. dA_at_w2_inventory%is_initialised()) then
@@ -388,7 +392,7 @@ contains
       chi => get_coordinates(mesh_id)
       panel_id => get_panel_id(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       w2_k0_fs => function_space_collection%get_fs(mesh, 0, 0, W2)
       call dA_at_w2_inventory%add_field(dA_at_w2, w2_k0_fs, mesh)
@@ -396,7 +400,7 @@ contains
       call invoke( setval_c(dA_at_w2, 0.0_r_def),                              &
                    calc_dA_at_w2_kernel_type(dA_at_w2, chi, panel_id) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
       ! Otherwise, return existing constant
       call dA_at_w2_inventory%get_field(mesh, dA_at_w2)
@@ -434,6 +438,7 @@ contains
     type(quadrature_xyoz_type)            :: qr
     logical(kind=l_def)                   :: extended_mesh
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
+    integer(tik)                          :: id
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -455,7 +460,7 @@ contains
       panel_id => get_panel_id(mesh_id)
 
       ! Create the object as it doesn't exist yet
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       w3_fs => function_space_collection%get_fs(mesh, element_order_h, &
                                                 element_order_v, W3)
@@ -476,7 +481,7 @@ contains
                    setval_c(detj_at_w3, 0.0_r_def),                            &
                    mm_diagonal_kernel_type(detj_at_w3, mm_w3) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Get existing constant
@@ -513,6 +518,7 @@ contains
     type(quadrature_xyoz_type)            :: qr
     logical(kind=l_def)                   :: extended_mesh
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
+    integer(tik)                          :: id
 
     ! Check inventory is initialised
     if (.not. detj_at_w3_inventory_fv%is_initialised()) then
@@ -528,7 +534,7 @@ contains
       panel_id => get_panel_id(mesh_id)
 
       ! Create the object as it doesn't exist yet
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
       call detj_at_w3_inventory_fv%add_field(detj_at_w3, w3_fs, mesh)
@@ -547,7 +553,7 @@ contains
                    setval_c(detj_at_w3, 0.0_r_def),                            &
                    mm_diagonal_kernel_type(detj_at_w3, mm_w3) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Get existing constant
@@ -573,6 +579,7 @@ contains
     type(field_type),             pointer :: panel_id
     type(field_type)                      :: multiplicity_w2
     type(function_space_type),    pointer :: w2_fs
+    integer(tik)                          :: id
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -594,7 +601,7 @@ contains
       panel_id => get_panel_id(mesh_id)
 
       ! Create the object as it doesn't exist yet
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       w2_fs => function_space_collection%get_fs(mesh, element_order_h, &
                                                 element_order_v, W2)
@@ -608,7 +615,7 @@ contains
                    setval_c(multiplicity_w2, 0.0_r_def),                       &
                    multiplicity_kernel_type(multiplicity_w2),                  &
                    inc_X_divideby_Y(detj_at_w2, multiplicity_w2) )
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Get existing constant
@@ -634,6 +641,7 @@ contains
     type(field_type),             pointer :: panel_id
     type(field_type)                      :: multiplicity_w2
     type(function_space_type),    pointer :: w2_fs
+    integer(tik)                          :: id
 
     ! Check inventory is initialised
     if (.not. detj_at_w2_inventory_fv%is_initialised()) then
@@ -649,7 +657,7 @@ contains
       panel_id => get_panel_id(mesh_id)
 
       ! Create the object as it doesn't exist yet
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       w2_fs => function_space_collection%get_fs(mesh, 0, 0, W2)
       call multiplicity_w2%initialise( w2_fs )
@@ -662,7 +670,7 @@ contains
                    setval_c(multiplicity_w2, 0.0_r_def),                       &
                    multiplicity_kernel_type(multiplicity_w2),                  &
                    inc_X_divideby_Y(detj_at_w2, multiplicity_w2) )
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Get existing constant
@@ -685,6 +693,7 @@ contains
     logical(kind=l_def)                :: constant_exists
     type(field_type),          pointer :: height_w2
     type(function_space_type), pointer :: w3_fs
+    integer(tik)                       :: id
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. dz_w3_inventory%is_initialised()) then
@@ -699,14 +708,14 @@ contains
       ! Get height first to avoid potentially timing twice
       height_w2 => get_height_fv(W2, mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
       call dz_w3_inventory%add_field(dz_w3, w3_fs, mesh)
 
       call invoke( get_dz_w3_kernel_type(dz_w3, height_w2) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
       ! Otherwise, return existing constant
       call dz_w3_inventory%get_field(mesh, dz_w3)
@@ -730,6 +739,7 @@ contains
     type(field_type),             pointer :: dx_at_w2
     type(field_type),             pointer :: delta_at_wtheta
     type(function_space_type),    pointer :: wt_k0_fs
+    integer(tik)                          :: id
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. delta_at_wtheta_inventory%is_initialised()) then
@@ -744,13 +754,13 @@ contains
       wt_k0_fs => function_space_collection%get_fs(mesh, 0, 0, Wtheta)
       dx_at_w2 => get_dx_at_w2(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       call delta_at_wtheta_inventory%add_field(delta_at_wtheta, wt_k0_fs, mesh)
 
       call invoke( calc_delta_at_wtheta_kernel_type(delta_at_wtheta, dx_at_w2) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Return constant
@@ -772,6 +782,7 @@ contains
     type(field_type),             pointer :: detj_at_w2
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: w2_fs
+    integer(tik)                          :: id
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dx_at_w2_inventory%is_initialised()) then
@@ -787,12 +798,12 @@ contains
       detj_at_w2 => get_detj_at_w2_fv(mesh_id)
       dA_at_w2 => get_dA_at_w2(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       call dx_at_w2_inventory%add_field(dx_at_w2, w2_fs, mesh)
       call invoke( X_divideby_Y(dx_at_w2, detj_at_w2, dA_at_w2) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Return constant
@@ -817,6 +828,7 @@ contains
     type(field_type),            pointer :: height_w3
     type(field_type),            pointer :: height_wth
     logical(kind=l_def)                  :: constant_exists
+    integer(tik)                         :: id
 
     ! Parameters of the cells
     integer(i_def), parameter :: n_centres = 1_i_def
@@ -836,7 +848,7 @@ contains
       height_w3 => get_height_fv(W3, mesh_id)
       height_wth => get_height_fv(Wtheta, mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       wtheta_k0_fs => function_space_collection%get_fs(mesh, 0, 0, Wtheta)
 
@@ -845,7 +857,7 @@ contains
       call invoke( calc_dz_face_kernel_type(dz_at_wtheta, height_w3,           &
                                             height_wth, n_centres, ign_surf) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Return constant
@@ -875,6 +887,7 @@ contains
     type(field_type),             pointer :: dA_msl_proj
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: fs
+    integer(tik)                          :: id
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dA_msl_proj_inventory%is_initialised()) then
@@ -893,14 +906,14 @@ contains
       fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
       dA_at_w2 => get_dA_at_w2(prime_mesh%get_id())
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       call dA_msl_proj_inventory%add_field(dA_msl_proj, fs, local_mesh)
       call invoke( calc_da_msl_proj_kernel_type(dA_at_w2, dA_msl_proj,         &
                                                 planet_radius, domain_height,  &
                                                 geometry, geometry_spherical) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     end if
 
     ! Return constant
@@ -1176,6 +1189,7 @@ contains
     type(field_type),             pointer :: chi(:)
     type(field_type),             pointer :: height
     character(len=str_def)                :: inventory_name
+    integer(tik)                          :: id
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -1217,7 +1231,7 @@ contains
       ! If this constant doesn't exist, create it
       chi => get_coordinates(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       space => function_space_collection%get_fs(mesh, element_order_h, &
                                                 element_order_v, space_id)
@@ -1225,7 +1239,7 @@ contains
 
       call invoke( get_height_kernel_type(height, chi, scaled_radius) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
       call inventory%get_field(mesh, height)
     end if
@@ -1252,6 +1266,7 @@ contains
     type(field_type),             pointer :: chi(:)
     type(field_type),             pointer :: height
     character(len=str_def)                :: inventory_name
+    integer(tik)                          :: id
 
     ! Determine inventory based on space
     select case (space_id)
@@ -1287,14 +1302,14 @@ contains
       ! If this constant doesn't exist, create it
       chi => get_coordinates(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
       space => function_space_collection%get_fs(mesh, 0, 0, space_id)
       call inventory%add_field(height, space, mesh)
 
       call invoke( get_height_kernel_type(height, chi, scaled_radius) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.geometric')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
       call inventory%get_field(mesh, height)
     end if

@@ -10,7 +10,8 @@ program io_demo
 
   use cli_mod,                     only : parse_command_line
   use driver_collections_mod,      only : init_collections, final_collections
-  use constants_mod,               only : precision_real
+  use constants_mod,               only : precision_real, l_def, &
+                                          str_max_filename
   use driver_comm_mod,             only : init_comm, final_comm
   use driver_config_mod,           only : init_config, final_config
   use driver_log_mod,              only : init_logger, final_logger
@@ -21,9 +22,9 @@ program io_demo
                                           log_level_trace, &
                                           log_scratch_space
   use random_number_generator_mod, only : random_number_generator_type
-
-  use io_demo_mod,        only: io_demo_required_namelists
-  use io_demo_driver_mod, only: initialise, step, finalise
+  use io_demo_mod,                 only : io_demo_required_namelists
+  use io_demo_driver_mod,          only : initialise, step, finalise
+  use timing_mod,                  only : init_timing, final_timing
 
   implicit none
 
@@ -31,7 +32,11 @@ program io_demo
   type(modeldb_type)        :: modeldb
   character(*), parameter   :: program_name = "io_demo"
   character(:), allocatable :: filename
-  integer, parameter        :: default_seed = 123456789
+
+  logical(l_def)              :: subroutine_timers
+  character(str_max_filename) :: timer_output_path
+  integer, parameter          :: default_seed = 123456789
+
   type(random_number_generator_type), pointer :: rng
 
   call parse_command_line( filename )
@@ -52,6 +57,13 @@ program io_demo
   deallocate( filename )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )
+
+  subroutine_timers = modeldb%config%io%subroutine_timers()
+  timer_output_path = modeldb%config%io%timer_output_path()
+
+  call init_timing( modeldb%mpi%get_comm(), subroutine_timers, &
+                    program_name, timer_output_path )
+
   call init_collections()
   call init_time(modeldb)
 
@@ -73,6 +85,7 @@ program io_demo
   call finalise( program_name, modeldb )
   call final_time(modeldb)
   call final_collections()
+  call final_timing( program_name )
   call final_logger( program_name )
   call final_config()
   call final_comm( modeldb )
