@@ -10,7 +10,7 @@
 !> @details Provides functionality for iteratively returning every member
 !>          of the defined namelist (bar) collection. The order of
 !>          the namelists returned is not defined and can change if the
-!>          implementation of the namelist collection is changes.
+!>          implementation of the namelist collection is changed.
 !
 module bar_nml_iterator_mod
 
