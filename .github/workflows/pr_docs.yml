@@ -4,8 +4,8 @@
 #  under which the code may be used.
 # ------------------------------------------------------------------------------
 
-name: pr
-run-name: Pull Request ${{github.event.pull_request.number}}
+name: Docs Build for Pull Requests
+run-name: Docs build
 on:
   pull_request:
     branches:

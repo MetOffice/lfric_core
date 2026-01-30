@@ -4,8 +4,8 @@
 #  under which the code may be used.
 # ------------------------------------------------------------------------------
 
-name: ci
-run-name: CI
+name: Documentation
+run-name: Docs Build and Deploy - ${{ github.ref_name }}
 
 on:
   push:
