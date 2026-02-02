@@ -52,7 +52,7 @@ contains
       ! TODO Deprecated, remove once old configuration access removed
       call read_configuration( filename, &
                                configuration=configuration )
-    else if (.not. present(configuration) .and. present(config)) then
+    else if (present(config) .and. .not. present(configuration)) then
       call read_configuration( filename, &
                                config=config )
     else

@@ -197,10 +197,6 @@ contains
 
     integer(i_def) :: num_meshes, i, j
 
-    logical(l_def) :: subroutine_timers
-
-    subroutine_timers = modeldb%config%io%subroutine_timers()
-
     mesh             => null()
     chi              => null()
     panel_id         => null()
@@ -222,7 +218,6 @@ contains
       file_list => io_context%get_filelist()
       call populate_filelist(file_list, modeldb)
     end if
-    call io_context%set_timer_flag(subroutine_timers)
 
     ! ===============================
     ! Check that a mesh exists

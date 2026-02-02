@@ -39,11 +39,6 @@ program skeleton
   call parse_command_line( filename )
   call modeldb%config%initialise(program_name)
 
-  write(log_scratch_space,'(A)')                          &
-      'Application built with '// trim(precision_real) // &
-      '-bit real numbers.'
-  call log_event( log_scratch_space, log_level_trace )
-
   modeldb%mpi => global_mpi
 
   call init_comm( "skeleton", modeldb )
@@ -51,6 +46,12 @@ program skeleton
                     config=modeldb%config )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )
+
+  write(log_scratch_space,'(A)')                          &
+      'Application built with '// trim(precision_real) // &
+      '-bit real numbers.'
+  call log_event( log_scratch_space, log_level_trace )
+
   call init_collections()
   call init_time( modeldb )
   deallocate( filename )
