@@ -65,7 +65,7 @@ contains
     type(mesh_type), pointer, intent(in) :: mesh
     type(field_type), target, intent(in) :: chi(:)
     type(field_type), target, intent(in) :: panel_id
-    
+
     integer(tik) :: id
 
     if ( LPROF ) call start_timing( id, 'simple_diffusion_constants_alg' )
