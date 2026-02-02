@@ -9,7 +9,7 @@
 !
 module {{moduleName}}
 
-  use constants_mod, only : i_def, l_def, str_def, str_long, str_max_filename
+  use constants_mod, only : i_def, l_def, str_def, str_max_filename
   use lfric_mpi_mod, only : global_mpi
 
   use namelist_collection_mod, only: namelist_collection_type
@@ -65,7 +65,7 @@ contains
 
     if (.not. present(configuration) .and. .not. present(config)) then
       write(6,'(A)')                               &
-          'At least one optional argument must '// &
+          'At least one optional argument must ' //&
           'be provided for read_configuration.'
       flush(6)
       stop
@@ -175,19 +175,19 @@ contains
     logical(l_def), optional, intent(out) :: success_mask(:)
     logical(l_def)                        :: ensure_configuration
 
-    integer(i_def)      :: i
-    logical             :: configuration_found = .True.
+    integer(i_def) :: i
+    logical        :: configuration_found = .true.
 
     if (present(success_mask) &
         .and. (size(success_mask, 1) /= size(names, 1))) then
-      write(6,'(A)')                                            &
-          'Arguments "names" and "success_mask" to function' // &
+      write(6, '(A)')                                          &
+          'Arguments "names" and "success_mask" to function' //&
           '"ensure_configuration" are different shapes.'
       flush(6)
       stop
     end if
 
-    ensure_configuration = .True.
+    ensure_configuration = .true.
 
     name_loop: do i = 1, size(names)
       select case(trim( names(i) ))
@@ -197,8 +197,8 @@ contains
 {%- endfor %}
 
       case default
-        write(6, '(A)' )                                 &
-            'Tried to ensure unrecognised namelist "' // &
+        write(6, '(A)')                                 &
+            'Tried to ensure unrecognised namelist "' //&
             trim(names(i))//'" was loaded.'
         flush(6)
         stop
@@ -273,7 +273,7 @@ contains
             end if
           else
             write(6, '(A)')                        &
-                'Namelist "'//trim(namelists(i))// &
+                'Namelist "'//trim(namelists(i)) //&
                 '" can not be read. Too many instances?'
             flush(6)
             stop
@@ -281,8 +281,8 @@ contains
 {%- endfor %}
 
         case default
-          write(6, '(A)' )                                    &
-              'Unrecognised namelist "'//trim(namelists(i))// &
+          write(6, '(A)')                                     &
+              'Unrecognised namelist "'//trim(namelists(i)) //&
               '" found in file '//trim(filename)//'.'
           flush(6)
           stop
