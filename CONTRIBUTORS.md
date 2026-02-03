@@ -1,6 +1,5 @@
 # Contributors
 
-=======
 | GitHub user      | Real Name         | Affiliation | Date       |
 | ---------------- | ----------------- | ----------- | ---------- |
 | andrewcoughtrie  | Andrew Coughtrie  | Met Office  | 2025.12.12 |
@@ -11,6 +10,7 @@
 | mo-rickywong     | Ricky Wong        | Met Office  | 2025-01-30 |
 | mike-hobson      | Mike Hobson       | Met Office  | 2025-12-17 |
 | MatthewHambley   | Matthew Hambley   | Met Office  | 2025-12-15 |
+| mo-lottieturner  | Lottie Turner     | Met Office  | 2025-12-16 |
 | tommbendall      | Thomas Bendall    | Met Office  | 2026-01-23 |
 | yaswant          | Yaswant Pradhan   | Met Office  | 2025-12-16 |
 | stevemullerworth | Steve Mullerworth | Met Office  | 2026-01-08 |
