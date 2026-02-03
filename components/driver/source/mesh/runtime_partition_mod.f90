@@ -15,8 +15,6 @@ module runtime_partition_mod
                                      log_level_error,   &
                                      log_level_debug
   use local_mesh_mod,          only: local_mesh_type
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
   use ncdf_quad_mod,           only: ncdf_quad_type
   use partition_mod,           only: partition_type,                 &
                                      partitioner_interface,          &

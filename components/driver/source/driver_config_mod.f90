@@ -5,9 +5,11 @@
 !-----------------------------------------------------------------------------
 module driver_config_mod
 
-  use configuration_mod,       only: ensure_configuration, &
-                                     final_configuration,  &
-                                     read_configuration
+  use config_mod,        only: config_type
+  use config_loader_mod, only: ensure_configuration, &
+                               final_configuration,  &
+                               read_configuration
+
   use namelist_collection_mod, only: namelist_collection_type
   use log_mod,                 only: log_event,       &
                                      log_level_debug, &
@@ -22,14 +24,15 @@ module driver_config_mod
 contains
 
   subroutine init_config( filename, required_namelists, &
-                          configuration )
+                          configuration, config )
 
     implicit none
 
     character(*), intent(in) :: filename
     character(*), intent(in) :: required_namelists(:)
 
-    type(namelist_collection_type), intent(inout) :: configuration
+    type(namelist_collection_type), optional, intent(inout) :: configuration
+    type(config_type),              optional, intent(inout) :: config
 
     logical, allocatable :: success_map(:)
     logical              :: success
@@ -40,9 +43,27 @@ contains
     call log_event( 'Loading configuration ...', &
                     log_level_debug )
 
-    call read_configuration( filename, configuration )
+    if (present(config) .and. present(configuration)) then
+      ! TODO Transistion, remove once old configuration access removed
+      call read_configuration( filename,                    &
+                               configuration=configuration, &
+                               config=config )
+    else if (.not. present(config) .and. present(configuration)) then
+      ! TODO Deprecated, remove once old configuration access removed
+      call read_configuration( filename, &
+                               configuration=configuration )
+    else if (present(config) .and. .not. present(configuration)) then
+      call read_configuration( filename, &
+                               config=config )
+    else
+      write(log_scratch_space,'(A)')                              &
+          'At least one optional argument must be provided for '//&
+          'init_config.'
+      call log_event(log_scratch_space, log_level_error)
+    end if
 
     success = ensure_configuration( required_namelists, success_map )
+
     if (.not. success) then
       write( log_scratch_space, &
              '("The following required namelists were not loaded:")' )

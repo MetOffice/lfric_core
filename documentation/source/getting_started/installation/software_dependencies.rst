@@ -12,18 +12,18 @@ LFRic Applications
 ------------------
 
 Given that most users of the LFRic core code are running applications such as
-``lfric_atm`` that are stored in the separate "LFRic applications" repository,
-`lfric_apps <https://code.metoffice.gov.uk/trac/lfric_apps/wiki>`_, it is worth
+``lfric_atm`` that are stored in the separate "LFRic applications" ,
+`lfric_apps <https://github.com/MetOffice/lfric_apps>`_, it is worth
 describing the relation between the two repositories.
 
 Currently, the development of the two code bases is done
 hand-in-hand. Therefore, certain revisions of the core code are tagged with the
-version number of the relevant ``lfric_apps`` release. For example, revision
-51381 is tagged ``core2.1`` and works with the 2.1 LFRic apps release.
+version number of the relevant ``lfric_apps`` release. For example, there exists
+a revision tagged ``2025.12.1`` which works with the 3.0 LFRic apps release.
 
 Note, also, that any given revision of ``lfric_apps`` includes a
-``dependencies.sh`` file in its top-level directory which references a specific
-revision of the LFRic core code against which it will be built.
+``dependencies.yaml`` file in its top-level directory which references a
+specific revision of the LFRic core code against which it should be built.
 
 Compiler versions
 -----------------
@@ -43,7 +43,8 @@ Software Stack
 
 To build and run typical LFRic applications, the following software will be
 required. The numbers in parenthesis identify versions in use at the Met Office
-for the revision of LFRic tagged ``core2.1``.
+for the revision of LFRic tagged ``2025.12.1``, referencing the year and month
+of the release.
 
 Common software which may already be installed on some HPC and research
 platforms:
@@ -56,20 +57,16 @@ platforms:
 More specialist software for developing, building and running LFRic
 applications:
 
- * FCM (2021.05.0). LFRic code is held in a Subversion repository. `FCM
-   <https://metomi.github.io/fcm/doc/user_guide>`_ is an application that wraps
-   Subversion commands to help impose standard development workflows for LFRic
-   development.
- * PSyclone (3.1.0), a code generation library used by LFRic for generating
+ * PSyclone (3.2.2), a code generation library used by LFRic for generating
    portable performance code. The `PSyclone documentation
    <https://psyclone.readthedocs.io/en/stable/>`_ list its own software
    dependencies, which include some Python packages and the following Fortran
    parser.
- * fparser (0.2.0), a Fortran parser used by PSyclone.
- * YAXT 0.10.0), an `MPI wrapper
+ * fparser (0.2.1), a Fortran parser used by PSyclone.
+ * YAXT 0.11.0), an `MPI wrapper
    <https://swprojects.dkrz.de/redmine/projects/yaxt>`_ which supports MPI data
    exchange in LFRic application.
- * XIOS (r2252) an `IO server library
+ * XIOS2 (r2701) an `IO server library
    <https://forge.ipsl.jussieu.fr/ioserver>`_ to support input and output of
    data to UGRID NetCDF files.
  * blitz (1.0.2), a `support library <https://github.com/blitzpp/blitz>`_
@@ -90,6 +87,8 @@ application tests, or for processing documentation:
    <https://github.com/Goddard-Fortran-Ecosystem/pFUnit>`_ framework.
  * stylist (0.4.1): A `code style-checker
    <https://github.com/MetOffice/stylist>`_.
+ * Sphinx v8.1.0, using the PyData Sphinx Theme 0.16.1 is used to generate the
+   Web documentation that is published alongside the code repository.
  * plantuml (1.2021.7): the LFRic repository holds formal descriptions of key
    LFRic classes using a format that can be rendered into UML diagrams by
    `plantuml <https://plantuml.com>`_.
@@ -100,5 +99,5 @@ application tests, or for processing documentation:
 Future releases
 ---------------
 
-About three releases of ``lfric_apps`` are planned to take place each year.  The
+About three releases of ``lfric_apps`` are planned to take place each year. The
 LFRic core code will be appropriately tagged against each such release.
