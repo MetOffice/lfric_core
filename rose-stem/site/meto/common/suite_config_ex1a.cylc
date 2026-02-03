@@ -44,13 +44,6 @@
             HYPERTHREADS    = 1
             CORES_PER_NODE  = 128
             NUMA_REGIONS_PER_NODE = 2
-        [[[directives]]]
-{% if site_vars.ex_trustzone == "collab" %}
-            -q=collabshared
-{% else %}
-            -q=shared
-{% endif %}
-
 
     [[EX1A_BUILD]]
         [[[environment]]]
