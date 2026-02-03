@@ -210,6 +210,7 @@ program planar_mesh_generator
   call initialise_logging( communicator%get_comm_mpi_val(), "PlanarGen" )
 
   call config%initialise( 'PlanarGen' )
+
   call read_configuration( filename, config=config )
 
   deallocate( filename )

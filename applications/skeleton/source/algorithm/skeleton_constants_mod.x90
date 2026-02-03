@@ -107,12 +107,13 @@ contains
     type(function_space_type), pointer :: w3_fs
     type(function_space_type), pointer :: wtheta_fs
 
-    integer(tik) :: id
-
     integer(i_def) :: order_h, order_v
     integer(i_def) :: nqp_h_exact, nqp_v_exact
 
+    integer(tik) :: id
+
     if ( LPROF ) call start_timing( id, 'skeleton_constants_alg' )
+
     call log_event( "Skeleton: creating runtime constants", LOG_LEVEL_INFO )
 
     order_h     = modeldb%config%finite_element%element_order_h()

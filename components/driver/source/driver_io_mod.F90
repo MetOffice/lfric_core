@@ -197,10 +197,6 @@ contains
 
     integer(i_def) :: num_meshes, i, j
 
-    logical(l_def) :: subroutine_timers
-
-    subroutine_timers = modeldb%config%io%subroutine_timers()
-
     mesh             => null()
     chi              => null()
     panel_id         => null()

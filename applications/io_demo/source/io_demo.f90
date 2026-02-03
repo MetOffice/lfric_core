@@ -10,7 +10,7 @@ program io_demo
 
   use cli_mod,                     only : parse_command_line
   use driver_collections_mod,      only : init_collections, final_collections
-  use constants_mod,               only : precision_real, l_def, &
+  use constants_mod,               only : precision_real,l_def, &
                                           str_max_filename
   use driver_comm_mod,             only : init_comm, final_comm
   use driver_config_mod,           only : init_config, final_config
@@ -22,9 +22,10 @@ program io_demo
                                           log_level_trace, &
                                           log_scratch_space
   use random_number_generator_mod, only : random_number_generator_type
-  use io_demo_mod,                 only : io_demo_required_namelists
-  use io_demo_driver_mod,          only : initialise, step, finalise
-  use timing_mod,                  only : init_timing, final_timing
+
+  use io_demo_mod,        only: io_demo_required_namelists
+  use io_demo_driver_mod, only: initialise, step, finalise
+  use timing_mod,         only: init_timing, final_timing
 
   implicit none
 
@@ -32,40 +33,38 @@ program io_demo
   type(modeldb_type)        :: modeldb
   character(*), parameter   :: program_name = "io_demo"
   character(:), allocatable :: filename
-
-  logical(l_def)              :: subroutine_timers
-  character(str_max_filename) :: timer_output_path
-  integer, parameter          :: default_seed = 123456789
+  integer, parameter        :: default_seed = 123456789
 
   type(random_number_generator_type), pointer :: rng
 
+  character(str_max_filename) :: timer_output_path
+  logical(l_def)              :: subroutine_timers
+
   call parse_command_line( filename )
-  call modeldb%values%initialise()
   call modeldb%config%initialise(program_name)
+  call modeldb%values%initialise()
+
+  modeldb%mpi => global_mpi
+
+  call init_comm(program_name, modeldb)
+  call init_config(filename, io_demo_required_namelists, &
+                   config=modeldb%config)
+
+  call init_logger( modeldb%mpi%get_comm(), program_name )
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &
         trim(precision_real)
   call log_event( log_scratch_space, log_level_trace )
-  modeldb%mpi => global_mpi
-  call init_comm(program_name, modeldb)
-
-  call init_config(filename,                   &
-                   io_demo_required_namelists, &
-                   config=modeldb%config)
-
-  deallocate( filename )
-
-  call init_logger( modeldb%mpi%get_comm(), program_name )
 
   subroutine_timers = modeldb%config%io%subroutine_timers()
   timer_output_path = modeldb%config%io%timer_output_path()
-
   call init_timing( modeldb%mpi%get_comm(), subroutine_timers, &
                     program_name, timer_output_path )
 
   call init_collections()
   call init_time(modeldb)
+  deallocate( filename )
 
   allocate(rng, source=random_number_generator_type(default_seed))
   call modeldb%values%add_key_value("rng", rng)

@@ -26,8 +26,8 @@ Loading the configuration
 =========================
 
 The Configurator generates a procedure (``read_configuration``) to read
-a configuration file based on an applications metadata file (``.json``).
-The configuration which entails one or more Fortran namelists, which
+a configuration file based on an application's metadata file (``.json``).
+The configuration entails one or more Fortran namelists, which
 are each read and stored in a namelist specific type
 (`<namelist_name>_nml_type`). These namelist objects are in turn stored
 in a configuration object (`config_type`).
