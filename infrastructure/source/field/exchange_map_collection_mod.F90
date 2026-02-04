@@ -1,3 +1,11 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!
+!> @brief Holds and manages a collection of exchange maps
+!
 module exchange_map_collection_mod
 
   use constants_mod,          only: i_def, i_halo_index, l_def
