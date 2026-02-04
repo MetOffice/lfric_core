@@ -20,11 +20,11 @@ SARGS = $(foreach key, $(SUBSTITUTIONS), $(foreach value, $(wordlist 2, 10, $(su
 generate-from-template: $(addprefix $(WORKING_DIR)/, $(FORTRAN_FILES))
 
 $(WORKING_DIR)/%.f90: $(SOURCE_DIR)/%.t90
-	$(call MESSAGE, Templating, $<)
+	$(call MESSAGE,Templating, $<)
 	$Q$(TOOL) $< -o $@ $(SARGS)
 
 $(WORKING_DIR)/%.F90: $(SOURCE_DIR)/%.T90
-	$(call MESSAGE, Templating, $<)
+	$(call MESSAGE,Templating, $<)
 	$Q$(TOOL) $< -o $@ $(SARGS)
 
 #include $(LFRIC_BUILD)/lfric.mk

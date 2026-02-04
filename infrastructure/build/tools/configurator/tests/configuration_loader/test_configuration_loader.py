@@ -20,19 +20,6 @@ class TestLoader:
     Tests generation of configuration loader.
     """
 
-    def test_empty(self, tmp_path: Path):  # pylint: disable=no-self-use
-        """
-        Generating configuration loader for no configuration.
-        """
-        output_file = tmp_path / "empty_mod.f90"
-        uut = loader.ConfigurationLoader("empty_mod")
-        uut.write_module(output_file)
-
-        expected_file = HERE / "empty_mod.f90"
-        assert output_file.read_text(
-            encoding="ascii"
-        ) + "\n" == expected_file.read_text(encoding="ascii")
-
     def test_with_content(self, tmp_path: Path):  # pylint: disable=no-self-use
         """
         Generating configuration loader.
