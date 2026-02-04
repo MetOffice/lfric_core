@@ -21,11 +21,12 @@ program io_demo
                                           log_level_trace, &
                                           log_scratch_space
   use random_number_generator_mod, only : random_number_generator_type
-  use io_demo_mod,                 only : io_demo_required_namelists
-  use io_demo_driver_mod,          only : initialise, step, finalise
-  use timing_mod,                  only : init_timing, final_timing
-  use io_config_mod,               only : timer_output_path
-  use namelist_mod,                only : namelist_type
+
+  use io_demo_mod,        only: io_demo_required_namelists
+  use io_demo_driver_mod, only: initialise, step, finalise
+  use timing_mod,         only: init_timing, final_timing
+  use io_config_mod,      only: timer_output_path
+  use namelist_mod,       only: namelist_type
 
   implicit none
 
@@ -41,6 +42,7 @@ program io_demo
   call parse_command_line( filename )
   call modeldb%values%initialise()
   call modeldb%configuration%initialise( program_name, table_len=10 )
+  call modeldb%config%initialise(program_name)
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &
@@ -48,9 +50,12 @@ program io_demo
   call log_event( log_scratch_space, log_level_trace )
   modeldb%mpi => global_mpi
   call init_comm(program_name, modeldb)
-  call init_config( filename,                            &
-                    io_demo_required_namelists, &
-                    modeldb%configuration )
+
+  call init_config(filename,                            &
+                   io_demo_required_namelists,          &
+                   configuration=modeldb%configuration, &
+                   config=modeldb%config)
+
   deallocate( filename )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )
