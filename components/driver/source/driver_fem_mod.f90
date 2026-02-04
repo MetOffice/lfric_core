@@ -79,10 +79,8 @@ contains
     ! Initialise coordinates
     ! ======================================================================== !
 
-    !if (geometry == geometry_spherical) then
-      ! Initialise coordinate transformations
-      call init_chi_transforms(mesh_collection)
-    !end if
+    ! Initialise coordinate transformations
+    call init_chi_transforms(mesh_collection)
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
