@@ -383,7 +383,7 @@ subroutine clear(self)
   ! Namlists which may have multiple instances per configuration
 {%- for i in range(namelists|length) %}
 {%-   if duplicates[i] %}
-  call self%{{namelists[i]}}%clear()
+  if (allocated(self%{{namelists[i]}})) call self%{{namelists[i]}}%clear()
 {%-   endif %}
 {%- endfor %}
 {%  for i in range(namelists|length) %}
