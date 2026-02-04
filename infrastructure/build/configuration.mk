@@ -19,13 +19,13 @@ $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR
 	$(call MESSAGE,Generating namelist configuration file.)
 	$(Q)mkdir -p $(dir $@)
 ifdef APPS_ROOT_DIR
-	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf    \
-	                -directory $(CONFIG_DIR)           \
-	                -include_dirs $(APPS_ROOT_DIR)/rose-meta     \
+	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
+	                -directory $(CONFIG_DIR)                 \
+	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
 else
-	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf    \
-	                -directory $(CONFIG_DIR)           \
+	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
+	                -directory $(CONFIG_DIR)        \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
 endif
 	# It's not clear why this is needed but as of 5/2/20 the diagnostic
@@ -35,9 +35,11 @@ endif
 .INTERMEDIATE: $(CONFIG_DIR)/build_config_loaders
 $(CONFIG_DIR)/build_config_loaders: $(CONFIG_DIR)/rose-meta.json
 	$(call MESSAGE,Generating namelist loading modules.)
-	$(Q)$(LFRIC_BUILD)/tools/GenerateNamelist $(VERBOSE_ARG) \
-                           $(CONFIG_DIR)/rose-meta.json          \
+	$(Q)$(LFRIC_BUILD)/tools/GenerateNamelistLoader \
+                           $(VERBOSE_ARG)               \
+                           $(CONFIG_DIR)/rose-meta.json \
                            -directory $(CONFIG_DIR)
+	$(Q)touch $(WORKING_DIR)/duplicate_namelists.txt
 	$(Q)touch $(CONFIG_DIR)/build_config_loaders
 
 # This recipe requires config_namelists.txt, although adding it to the dependencies
@@ -48,14 +50,26 @@ $(CONFIG_DIR)/build_config_loaders: $(CONFIG_DIR)/rose-meta.json
 $(WORKING_DIR)/configuration_mod.f90: $(CONFIG_DIR)/build_config_loaders
 	$(call MESSAGE,Generating configuration loader module,$(notdir $@))
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(LFRIC_BUILD)/tools/GenerateLoader $(VERBOSE_ARG) $@ $(shell cat $(CONFIG_DIR)/config_namelists.txt)
-
+	$(Q)$(LFRIC_BUILD)/tools/GenerateConfigLoader                      \
+                           $(VERBOSE_ARG)                                  \
+                           $(shell cat $(CONFIG_DIR)/config_namelists.txt) \
+                           -o $(WORKING_DIR)
+	$(Q)$(LFRIC_BUILD)/tools/GenerateExtendedNamelistType \
+                           $(VERBOSE_ARG)                     \
+                           $(CONFIG_DIR)/rose-meta.json       \
+                           -directory $(CONFIG_DIR)
+	$(Q)$(shell sed 's\^\-duplicate \' <$(CONFIG_DIR)/duplicate_namelists.txt >$(CONFIG_DIR)/duplicates.txt)
+	$(Q)$(LFRIC_BUILD)/tools/GenerateConfigType                        \
+                           $(VERBOSE_ARG)                                  \
+                           $(shell cat $(CONFIG_DIR)/config_namelists.txt) \
+                           $(shell cat $(CONFIG_DIR)/duplicates.txt)       \
+                           -o $(WORKING_DIR)
 
 .PRECIOUS: $(WORKING_DIR)/feign_config_mod.f90
 $(WORKING_DIR)/feign_config_mod.f90: $(CONFIG_DIR)/rose-meta.json
 	$(call MESSAGE,Generating namelist feigning module.)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(LFRIC_BUILD)/tools/GenerateFeigns        \
+	$(Q)$(LFRIC_BUILD)/tools/GenerateFeigns         \
                            $(CONFIG_DIR)/rose-meta.json \
                            -output $@
 

@@ -18,7 +18,8 @@ program planar_mesh_generator
   use cli_mod,             only: parse_command_line
   use constants_mod,       only: i_def, l_def, r_def, str_def, &
                                  cmdi, imdi, emdi, str_max_filename
-  use configuration_mod,   only: read_configuration, final_configuration
+  use config_loader_mod,   only: read_configuration, final_configuration
+  use config_mod,          only: config_type
   use coord_transform_mod, only: rebase_longitude_range
   use gen_lbc_mod,         only: gen_lbc_type
   use gen_planar_mod,      only: gen_planar_type, &
@@ -41,8 +42,6 @@ program planar_mesh_generator
                            LOG_LEVEL_ERROR
 
   use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
-
   use ncdf_quad_mod, only: ncdf_quad_type
   use omp_lib,       only: omp_get_thread_num
   use partition_mod, only: partition_type, partitioner_interface
@@ -138,8 +137,8 @@ program planar_mesh_generator
   integer(i_def) :: i, j, k, l, n_voids
 
   ! Configuration variables
-  type(namelist_collection_type) :: configuration
-  type(namelist_type), pointer   :: nml_obj
+  type(config_type), save :: config
+  type(namelist_collection_type), save :: configuration
 
   character(str_max_filename) :: mesh_file_prefix
 
@@ -185,7 +184,6 @@ program planar_mesh_generator
   character(9), parameter :: timer_file = 'timer.txt'
 
   nullify(partitioner_ptr)
-  nullify(nml_obj)
 
   !===================================================================
   ! Read in the control namelists from file.
@@ -214,55 +212,52 @@ program planar_mesh_generator
   call initialise_logging( communicator%get_comm_mpi_val(), "PlanarGen" )
 
   call configuration%initialise( 'PlanarGen', table_len=10 )
-  call read_configuration( filename, configuration )
+  call config%initialise( 'PlanarGen' )
+
+  call read_configuration( filename,                    &
+                           configuration=configuration, &
+                           config=config )
 
   deallocate( filename )
-  if (configuration%namelist_exists('mesh')) then
-    nml_obj => configuration%get_namelist('mesh')
-    call nml_obj%get_value( 'mesh_file_prefix', mesh_file_prefix )
-    call nml_obj%get_value( 'n_meshes',         n_meshes )
-    call nml_obj%get_value( 'mesh_names',       mesh_names )
-    call nml_obj%get_value( 'mesh_maps',        mesh_maps )
-    call nml_obj%get_value( 'partition_mesh',   partition_mesh )
-    call nml_obj%get_value( 'rotate_mesh',      rotate_mesh )
-    call nml_obj%get_value( 'coord_sys',        coord_sys )
-    call nml_obj%get_value( 'topology',         topology )
-    call nml_obj%get_value( 'geometry',         geometry )
+
+  mesh_file_prefix = config%mesh%mesh_file_prefix()
+
+  n_meshes       = config%mesh%n_meshes()
+  mesh_names     = config%mesh%mesh_names()
+  mesh_maps      = config%mesh%mesh_maps()
+  partition_mesh = config%mesh%partition_mesh()
+  rotate_mesh    = config%mesh%rotate_mesh()
+  coord_sys      = config%mesh%coord_sys()
+  topology       = config%mesh%topology()
+  geometry       = config%mesh%geometry()
+
+  edge_cells_x    = config%planar_mesh%edge_cells_x()
+  edge_cells_y    = config%planar_mesh%edge_cells_y()
+  periodic_x      = config%planar_mesh%periodic_x()
+  periodic_y      = config%planar_mesh%periodic_y()
+  domain_size     = config%planar_mesh%domain_size()
+  domain_centre   = config%planar_mesh%domain_centre()
+  create_lbc_mesh = config%planar_mesh%create_lbc_mesh()
+  lbc_rim_depth   = config%planar_mesh%lbc_rim_depth()
+  lbc_parent_mesh = config%planar_mesh%lbc_parent_mesh()
+
+  apply_stretch_transform = config%planar_mesh%apply_stretch_transform()
+
+  if (partition_mesh) then
+    max_stencil_depth    = config%partitions%max_stencil_depth()
+    n_partitions         = config%partitions%n_partitions()
+    partition_range      = config%partitions%partition_range()
+    generate_inner_halos = config%partitions%generate_inner_halos()
   end if
 
-  if (configuration%namelist_exists('partitions')) then
-    nml_obj => configuration%get_namelist('partitions')
-    call nml_obj%get_value( 'max_stencil_depth', max_stencil_depth )
-    call nml_obj%get_value( 'n_partitions', n_partitions )
-    call nml_obj%get_value( 'partition_range', partition_range )
-    call nml_obj%get_value( 'partition_range', partition_range )
-    call nml_obj%get_value( 'generate_inner_halos', generate_inner_halos )
+  if (rotate_mesh) then
+    rotation_target    = config%rotation%rotation_target()
+    target_north_pole  = config%rotation%target_north_pole()
+    target_null_island = config%rotation%target_null_island()
   end if
 
-  if (configuration%namelist_exists('rotation')) then
-    nml_obj => configuration%get_namelist('rotation')
-    call nml_obj%get_value( 'rotation_target', rotation_target )
-    call nml_obj%get_value( 'target_north_pole', target_north_pole )
-    call nml_obj%get_value( 'target_null_island', target_null_island )
-  end if
-
-  if (configuration%namelist_exists('planar_mesh')) then
-    nml_obj => configuration%get_namelist('planar_mesh')
-    call nml_obj%get_value( 'edge_cells_x', edge_cells_x )
-    call nml_obj%get_value( 'edge_cells_y', edge_cells_y )
-    call nml_obj%get_value( 'periodic_x', periodic_x )
-    call nml_obj%get_value( 'periodic_y', periodic_y )
-    call nml_obj%get_value( 'domain_size', domain_size )
-    call nml_obj%get_value( 'domain_centre', domain_centre )
-    call nml_obj%get_value( 'create_lbc_mesh', create_lbc_mesh )
-    call nml_obj%get_value( 'lbc_rim_depth', lbc_rim_depth )
-    call nml_obj%get_value( 'lbc_parent_mesh', lbc_parent_mesh )
-    call nml_obj%get_value( 'apply_stretch_transform', apply_stretch_transform )
-  end if
-
-  if (configuration%namelist_exists('stretch_transform')) then
-    nml_obj => configuration%get_namelist('stretch_transform')
-    call nml_obj%get_value( 'transform_mesh', transform_mesh )
+  if (apply_stretch_transform) then
+    transform_mesh = config%stretch_transform%transform_mesh()
   end if
 
   call init_timer(timer_file)

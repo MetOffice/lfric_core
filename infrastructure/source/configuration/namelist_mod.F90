@@ -436,17 +436,7 @@ contains
     class(namelist_type), intent(in) :: self
     character(*),         intent(in) :: name
 
-    !> @todo This was applied with #3547. This would have been
-    !>       similar to the scalar string: i.e.
-    !>
-    !>       character(*), allocatable, intent(out) :: value(:)
-    !>
-    !>       However, the revision of the Intel compiler on the XC40
-    !>       produced unexpected behaviour so the length has been
-    !>       limited to str_def. This should be revisited when the
-    !>       XC40 compilers are later than 17.0.0.098/5.
-    character(str_def), intent(out), &
-                        allocatable :: value(:)
+    character(*), intent(out), allocatable :: value(:)
 
     integer(i_def) :: i
 

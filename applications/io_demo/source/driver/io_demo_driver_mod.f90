@@ -36,10 +36,8 @@ module io_demo_driver_mod
   use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
-  use namelist_mod,               only : namelist_type
 
-  use io_demo_alg_mod,   only : io_demo_alg
-
+  use io_demo_alg_mod,            only : io_demo_alg
   use sci_field_minmax_alg_mod,   only : log_field_minmax
 
   !------------------------------------
@@ -47,14 +45,13 @@ module io_demo_driver_mod
   !------------------------------------
   use base_mesh_config_mod, only: GEOMETRY_SPHERICAL, &
                                   GEOMETRY_PLANAR
-  use io_config_mod,        only: write_diag
 
   implicit none
 
   private
 
-  type(inventory_by_mesh_type)          :: chi_inventory
-  type(inventory_by_mesh_type)          :: panel_id_inventory
+  type(inventory_by_mesh_type) :: chi_inventory
+  type(inventory_by_mesh_type) :: panel_id_inventory
 
   public initialise, step, finalise
 
@@ -63,28 +60,23 @@ contains
   !> Sets up required state in preparation for run.
   !> @param [in]     program_name An identifier given to the model being run
   !> @param [in,out] modeldb      The structure that holds model state
-    subroutine initialise( program_name, modeldb)
+    subroutine initialise(program_name, modeldb)
 
     implicit none
 
-    character(*),         intent(in)    :: program_name
-    type(modeldb_type),   intent(inout) :: modeldb
+    character(*),       intent(in)    :: program_name
+    type(modeldb_type), intent(inout) :: modeldb
 
     ! Coordinate field
-    type(field_type),             pointer :: chi(:) => null()
-    type(field_type),             pointer :: panel_id => null()
-    type(mesh_type),              pointer :: mesh => null()
+    type(field_type), pointer :: chi(:)
+    type(field_type), pointer :: panel_id
+    type(mesh_type),  pointer :: mesh
 
     character(str_def), allocatable :: base_mesh_names(:)
     character(str_def), allocatable :: twod_names(:)
 
     class(extrusion_type),        allocatable :: extrusion
     type(uniform_extrusion_type), allocatable :: extrusion_2d
-
-    type(namelist_type), pointer :: base_mesh_nml => null()
-    type(namelist_type), pointer :: planet_nml    => null()
-    type(namelist_type), pointer :: extrusion_nml => null()
-    type(namelist_type), pointer :: io_nml => null()
 
     character(str_def) :: prime_mesh_name
 
@@ -101,26 +93,20 @@ contains
     integer(i_def), parameter :: one_layer = 1_i_def
     integer(i_def) :: i
 
+    nullify(chi)
+    nullify(panel_id)
+    nullify(mesh)
+
     !=======================================================================
     ! Extract configuration variables
     !=======================================================================
-    base_mesh_nml => modeldb%configuration%get_namelist('base_mesh')
-    planet_nml    => modeldb%configuration%get_namelist('planet')
-    extrusion_nml => modeldb%configuration%get_namelist('extrusion')
-    io_nml        => modeldb%configuration%get_namelist('io')
-
-    call base_mesh_nml%get_value( 'prime_mesh_name', prime_mesh_name )
-    call base_mesh_nml%get_value( 'geometry', geometry )
-    call extrusion_nml%get_value( 'method', method )
-    call extrusion_nml%get_value( 'domain_height', domain_height )
-    call extrusion_nml%get_value( 'number_of_layers', number_of_layers )
-    call planet_nml%get_value( 'scaled_radius', scaled_radius )
-    call io_nml%get_value( 'multifile_io', multifile_io)
-
-    base_mesh_nml => null()
-    planet_nml    => null()
-    extrusion_nml => null()
-    io_nml        => null()
+    prime_mesh_name  = modeldb%config%base_mesh%prime_mesh_name()
+    geometry         = modeldb%config%base_mesh%geometry()
+    method           = modeldb%config%extrusion%method()
+    domain_height    = modeldb%config%extrusion%domain_height()
+    number_of_layers = modeldb%config%extrusion%number_of_layers()
+    scaled_radius    = modeldb%config%planet%scaled_radius()
+    multifile_io     = modeldb%config%io%multifile_io()
 
     !=======================================================================
     ! Mesh
@@ -191,7 +177,7 @@ contains
     !=======================================================================
     ! Setup multifile reading
     !=======================================================================
-    if(multifile_io) then
+    if (multifile_io) then
       call create_multifile_io_fields(modeldb)
       call init_multifile_io(modeldb)
     end if
@@ -210,7 +196,7 @@ contains
     mesh => mesh_collection%get_mesh(prime_mesh_name)
     call chi_inventory%get_field_array(mesh, chi)
     call panel_id_inventory%get_field(mesh, panel_id)
-    call init_io_demo( mesh, chi, panel_id, modeldb )
+    call init_io_demo(modeldb, mesh, chi, panel_id)
 
     nullify(mesh, chi, panel_id)
     deallocate(base_mesh_names)
@@ -227,16 +213,19 @@ contains
 
     character(*),       intent(in)    :: program_name
     type(modeldb_type), intent(inout) :: modeldb
+
     type( field_collection_type ), pointer :: depository
     type( field_collection_type ), pointer :: multifile_col
     type( field_type ),            pointer :: diffusion_field
     type( field_type ),            pointer :: multifile_field
-    type(namelist_type), pointer :: io_nml => null()
-    logical :: multifile_io
 
-    io_nml => modeldb%configuration%get_namelist('io')
-    call io_nml%get_value( 'multifile_io', multifile_io)
-    if( multifile_io ) then
+    logical :: multifile_io
+    logical :: write_diag
+
+    multifile_io = modeldb%config%io%multifile_io()
+    write_diag   = modeldb%config%io%write_diag()
+
+    if (multifile_io) then
       call step_multifile_io(modeldb, chi_inventory, panel_id_inventory)
       multifile_col => modeldb%fields%get_field_collection("multifile_io_fields")
       call multifile_col%get_field("multifile_field", multifile_field)
@@ -248,7 +237,7 @@ contains
 
     ! Call an algorithm
     call log_event(program_name//": Calculating diffusion", LOG_LEVEL_INFO)
-    call io_demo_alg(diffusion_field)
+    call io_demo_alg(modeldb, diffusion_field)
 
     if (write_diag) then
         ! Write out output file
@@ -268,23 +257,23 @@ contains
 
     character(*),       intent(in)    :: program_name
     type(modeldb_type), intent(inout) :: modeldb
+
     type( field_collection_type ), pointer :: depository
     type( field_type ),            pointer :: diffusion_field
     type( field_collection_type ), pointer :: multifile_col
     type( field_type ),            pointer :: multifile_field
 
-    type(namelist_type), pointer :: io_nml
     logical :: multifile_io
+
+    multifile_io = modeldb%config%io%multifile_io()
+
     !-------------------------------------------------------------------------
     ! Checksum output
     !-------------------------------------------------------------------------
     depository => modeldb%fields%get_field_collection("depository")
     call depository%get_field("diffusion_field", diffusion_field)
 
-    io_nml => modeldb%configuration%get_namelist('io')
-    call io_nml%get_value( 'multifile_io', multifile_io)
-
-    if( multifile_io ) then
+    if (multifile_io) then
       multifile_col => modeldb%fields%get_field_collection("multifile_io_fields")
       call multifile_col%get_field("multifile_field", multifile_field)
       call checksum_alg(program_name, &
