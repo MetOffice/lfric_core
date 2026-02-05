@@ -19,7 +19,7 @@
 /infrastructure/**/PSYKE/ @christophermaynard @teranivy
 /infrastructure/**/io/ @andrewcoughtrie @mo-rickywong
 /infrastructure/**/kernel_metadata/ @teranivy @stevemullerworth
-/infrastructure/**/kernel_metadata/ @matthewhambley @andrewcoughtrie
+/infrastructure/**/time/ @matthewhambley @andrewcoughtrie
 /infrastructure/integration-test/ @matthewhambley
 
 # Components

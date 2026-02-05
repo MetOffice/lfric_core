@@ -26,7 +26,7 @@ module mirth_config_mod
             mirth_is_loadable, mirth_is_loaded, &
             mirth_reset_load_status, &
             mirth_multiples_allowed, mirth_final, &
-            get_mirth_nml
+            get_mirth_nml, get_new_mirth_nml
 
   integer(i_def), parameter, public :: max_array_size = 500
 
@@ -145,17 +145,17 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(4)
 
-      call members(1)%initialise( &
-                  'chortle', chortle )
+    call members(1)%initialise( &
+                'chortle', chortle )
 
-      call members(2)%initialise( &
-                  'chuckle', chuckle )
+    call members(2)%initialise( &
+                'chuckle', chuckle )
 
-      call members(3)%initialise( &
-                  'guffaw', guffaw )
+    call members(3)%initialise( &
+                'guffaw', guffaw )
 
-      call members(4)%initialise( &
-                  'hysterics', hysterics )
+    call members(4)%initialise( &
+                'hysterics', hysterics )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -167,6 +167,41 @@ contains
     end if
 
   end function get_mirth_nml
+
+  !> @brief Returns a <<mirth_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<mirth_nml_type>> with current namelist contents.
+  function get_new_mirth_nml() result(namelist_obj)
+
+    use mirth_nml_mod, only: mirth_nml_type
+
+    implicit none
+
+    type(mirth_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(4)
+
+    call members(1)%initialise( &
+                'chortle', chortle )
+
+    call members(2)%initialise( &
+                'chuckle', chuckle )
+
+    call members(3)%initialise( &
+                'guffaw', guffaw )
+
+    call members(4)%initialise( &
+                'hysterics', hysterics )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_mirth_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

@@ -32,7 +32,7 @@ module coupled_driver_mod
                                          LOG_LEVEL_INFO
   use mesh_mod,                   only : mesh_type
   use mesh_collection_mod,        only : mesh_collection
-  use namelist_mod,               only : namelist_type
+
   use sci_checksum_alg_mod,       only : checksum_alg
 
   implicit none
@@ -69,10 +69,6 @@ contains
     class(extrusion_type),        allocatable :: extrusion
     type(uniform_extrusion_type), allocatable :: extrusion_2d
 
-    type(namelist_type), pointer :: base_mesh_nml
-    type(namelist_type), pointer :: planet_nml
-    type(namelist_type), pointer :: extrusion_nml
-
     character(str_def) :: prime_mesh_name
 
     integer(i_def) :: stencil_depth
@@ -89,18 +85,12 @@ contains
 
 
     ! Extract namelist variables
-    base_mesh_nml => modeldb%configuration%get_namelist('base_mesh')
-    planet_nml    => modeldb%configuration%get_namelist('planet')
-    extrusion_nml => modeldb%configuration%get_namelist('extrusion')
-    call base_mesh_nml%get_value( 'prime_mesh_name', prime_mesh_name )
-    call base_mesh_nml%get_value( 'geometry', geometry )
-    call extrusion_nml%get_value( 'method', method )
-    call extrusion_nml%get_value( 'domain_height', domain_height )
-    call extrusion_nml%get_value( 'number_of_layers', number_of_layers )
-    call planet_nml%get_value( 'scaled_radius', scaled_radius )
-    base_mesh_nml => null()
-    planet_nml    => null()
-    extrusion_nml => null()
+    prime_mesh_name  = modeldb%config%base_mesh%prime_mesh_name()
+    geometry         = modeldb%config%base_mesh%geometry()
+    method           = modeldb%config%extrusion%method()
+    domain_height    = modeldb%config%extrusion%domain_height()
+    number_of_layers = modeldb%config%extrusion%number_of_layers()
+    scaled_radius    = modeldb%config%planet%scaled_radius()
 
     ! Initialise mesh
     ! Determine the required meshes
@@ -118,7 +108,7 @@ contains
                       LOG_LEVEL_ERROR)
     end select
     allocate( extrusion, source=create_extrusion( method,           &
-                                                  domain_height,       &
+                                                  domain_height,    &
                                                   domain_bottom,    &
                                                   number_of_layers, &
                                                   PRIME_EXTRUSION ) )
