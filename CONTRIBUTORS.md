@@ -17,4 +17,5 @@
 | harry-shepherd   | Harry Shepherd    | Met Office  | 2026-01-08 |
 | EdHone           | Ed Hone           | Met Office  | 2026-01-09 |
 | tom-j-h          | Tom Hill          | Met Office  | 2026-01-19 |
+| t00sa            | Sam Clarke-Green  | Met Office  | 2026-01-27 |
 | MetBenjaminWent  | Benjamin Went     | Met Office  | 2026-01-30 |
