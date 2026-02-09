@@ -29,7 +29,11 @@ module gen_planar_mod
                                             coord_sys_ll, coord_sys_xyz, &
                                             topology_non_periodic,       &
                                             geometry_spherical
-  use planar_mesh_config_mod,         only: apply_stretch_transform
+  use planar_mesh_config_mod,         only: stretch_function,           &
+                                            stretch_function_uniform,   &
+                                            stretch_function_inflation, &
+                                            stretch_function_cubic,     &
+                                            stretch_function_cosine
   use reference_element_mod,          only: reference_element_type, &
                                             reference_cube_type,    &
                                             W, S, E, N,             &
@@ -41,6 +45,9 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
+  use apply_stretching_mod,           only: apply_uniform_resolution, &
+                                            apply_cubic_stretch,      &
+                                            apply_cosine_stretch
 
   implicit none
 
@@ -1565,10 +1572,10 @@ end subroutine assign_stretched_mesh_coords
 
 
 !-------------------------------------------------------------------------------
-!> @brief   Calculates the coordinates of vertices in the mesh.(private subroutine)
+!> @brief   Calculates the coordinates of vertices in the unit mesh. (private subroutine)
 !> @details Assigns an (x,y) coordinate in units of dx and dy to each mesh
-!>          vertex according to its Cartesian position in the mesh.
-!>
+!>          vertex according to its Cartesian position in the mesh and
+!>          assuming a unit mesh [-1,1].
 !-------------------------------------------------------------------------------
 subroutine calc_coords(self)
 
@@ -1581,13 +1588,15 @@ subroutine calc_coords(self)
   integer(i_def) :: ncells, edge_cells_x, edge_cells_y
   integer(i_def) :: cell, astat, row, column
 
-  real(r_def) :: x_coord
-  real(r_def) :: y_coord
-  real(r_def) :: offset(2)
+  real(r_def) :: x_coord, dx
+  real(r_def) :: y_coord, dy
 
   edge_cells_x = self%edge_cells_x
   edge_cells_y = self%edge_cells_y
   ncells = edge_cells_x*edge_cells_y
+
+  dx = 2.0_r_def / edge_cells_x
+  dy = 2.0_r_def / edge_cells_y
 
   allocate(vert_coords(2, self%n_nodes), stat=astat)
   if (astat /= 0) then
@@ -1611,41 +1620,38 @@ subroutine calc_coords(self)
 !
 !==========================================================
 
-  self%domain_extents(:,1) = [           0.0_r_def, -1.0_r_def*self%domain_size(2) ]
-  self%domain_extents(:,2) = [ self%domain_size(1), -1.0_r_def*self%domain_size(2) ]
-  self%domain_extents(:,3) = [ self%domain_size(1),            0.0_r_def ]
-  self%domain_extents(:,4) = [           0.0_r_def,            0.0_r_def ]
-
-  offset(1) = self%domain_centre(1) - (self%domain_size(1)*0.5_r_def)
-  offset(2) = self%domain_centre(2) + (self%domain_size(2)*0.5_r_def)
+  self%domain_extents(:,1) = [ -1.0_r_def, -1.0_r_def ]
+  self%domain_extents(:,2) = [  1.0_r_def, -1.0_r_def ]
+  self%domain_extents(:,3) = [  1.0_r_def,  1.0_r_def ]
+  self%domain_extents(:,4) = [ -1.0_r_def,  1.0_r_def ]
 
   ! The cells begin numbering in rows from NW corner of panel.
   cell=1
   do row=1, self%edge_cells_y
     do column=1, self%edge_cells_x
-      vert_coords(1, self%verts_on_cell(NW, cell)) = (column-1) * self%dx
-      vert_coords(2, self%verts_on_cell(NW, cell)) = (row-1)    * self%dy * (-1.0_r_def)
+      vert_coords(1, self%verts_on_cell(NW, cell)) = (column-1) * dx
+      vert_coords(2, self%verts_on_cell(NW, cell)) = (row-1)    * dy * (-1.0_r_def)
       cell=cell+1
     end do
   end do
 
   if (.not. self%periodic_xy(1)) then
     ! Vertices on east edge of panel.
-    x_coord = edge_cells_x*self%dx
+    x_coord = edge_cells_x*dx
     y_coord = 0.0_r_def
     do cell=1, size(self%east_cells)
       vert_coords(1, self%verts_on_cell(NE, self%east_cells(cell))) = x_coord
-      vert_coords(2, self%verts_on_cell(NE, self%east_cells(cell))) = y_coord - (self%dy*(cell-1))
+      vert_coords(2, self%verts_on_cell(NE, self%east_cells(cell))) = y_coord - (dy*(cell-1))
     end do
   end if
 
   ! Vertices on south edge of panel.
   if (.not. self%periodic_xy(2)) then
     x_coord = 0.0_r_def
-    y_coord = -1.0_r_def*edge_cells_y*self%dy
+    y_coord = -1.0_r_def*edge_cells_y*dy
 
     do cell=1, size(self%south_cells)
-      vert_coords(1, self%verts_on_cell(SW, self%south_cells(cell))) = x_coord + (self%dx*(cell-1))
+      vert_coords(1, self%verts_on_cell(SW, self%south_cells(cell))) = x_coord + (dx*(cell-1))
       vert_coords(2, self%verts_on_cell(SW, self%south_cells(cell))) = y_coord
     end do
   end if
@@ -1653,15 +1659,12 @@ subroutine calc_coords(self)
   ! Coords of SE panel vertex.
   if (.not. self%periodic_xy(1) .and. .not. self%periodic_xy(2)) then
     cell=ncells
-    vert_coords(1, self%verts_on_cell(SE, cell)) = self%dx * self%edge_cells_x
-    vert_coords(2, self%verts_on_cell(SE, cell)) = self%dy * self%edge_cells_y * (-1.0_r_def)
+    vert_coords(1, self%verts_on_cell(SE, cell)) = dx * self%edge_cells_x
+    vert_coords(2, self%verts_on_cell(SE, cell)) = dy * self%edge_cells_y * (-1.0_r_def)
   end if
 
-  vert_coords(1,:)    = vert_coords(1,:) + offset(1)
-  vert_coords(2,:)    = vert_coords(2,:) + offset(2)
-
-  self%domain_extents(1,:) = self%domain_extents(1,:) + offset(1)
-  self%domain_extents(2,:) = self%domain_extents(2,:) + offset(2)
+  vert_coords(1,:)    = vert_coords(1,:) - 1.0_r_def
+  vert_coords(2,:)    = vert_coords(2,:) + 1.0_r_def
 
   select case (self%coord_sys)
 
@@ -1670,21 +1673,51 @@ subroutine calc_coords(self)
     self%coord_units_y = 'm'
 
   case(coord_sys_ll)
-    self%coord_units_x = 'radians'
-    self%coord_units_y = 'radians'
+    self%coord_units_x = 'degrees'
+    self%coord_units_y = 'degrees'
 
   case default
     write(log_scratch_space,'(A,I0)') &
         'Unset coordinate system enumeration: ', self%coord_sys
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
 
-  end select
-
-  call move_alloc(vert_coords, self%vert_coords)
-
+ end select
+  
+    call move_alloc(vert_coords, self%vert_coords)
+    
   return
 end subroutine calc_coords
 
+!-------------------------------------------------------------------------------
+!> @brief   Apply a stretch transform to the vertices in the mesh.(private subroutine)
+!> @details Stretch transform could be uniform, or a more complicated
+!!          variable resolution type with a low resolution outer and high
+!!          resolution inner.
+!>
+!-------------------------------------------------------------------------------
+subroutine stretch_coords(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+
+  select case (stretch_function)
+    case (uniform)
+      call apply_uniform_resolution(self)
+
+    case (cubic)
+      call apply_cubic_stretch(self)
+
+    case (cosine)
+      call apply_cosine_stretch(self)
+       
+    case (inflation)
+       "print error message"
+
+    case default
+  end select
+
+end subroutine stretch_coords
 
 !-------------------------------------------------------------------------------
 !> @brief    Get the global cell id at a specified corner of the planar domain.
@@ -1927,10 +1960,15 @@ subroutine generate(self)
 
   if (self%nmaps > 0) call calc_global_mesh_maps(self)
 
-  if (apply_stretch_transform) then
+  ! Use a different routine if the mesh stretching is applied
+  ! at the same time that the mesh is generated. Otherwise use
+  ! calc_coords to generate a unit mesh and then apply a stretching
+  ! transform.
+  if (stretch_function == stretch_function_inflation) then
     call assign_stretched_mesh_coords(self)
   else
     call calc_coords(self)
+    call stretch_coords(self)
   end if
 
   ! NOTE that due to the way cell centres are calculated for periodic meshes
