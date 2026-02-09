@@ -15,8 +15,9 @@
 module io_demo_constants_mod
 
   ! Infrastructure
-  use constants_mod,                      only: i_def, r_def, &
+  use constants_mod,                      only: i_def, r_def, l_def, &
                                                 str_def, str_short
+  use driver_modeldb_mod,                 only: modeldb_type
   use field_collection_mod,               only: field_collection_type
   use field_mod,                          only: field_type
   use fs_continuity_mod,                  only: W2
@@ -29,16 +30,16 @@ module io_demo_constants_mod
                                                 tik, LPROF
 
   ! Kernels
-  use sci_calc_dA_at_w2_kernel_mod,           only: calc_dA_at_w2_kernel_type
-  use sci_calc_detj_at_w2_kernel_mod,         only: calc_detj_at_w2_kernel_type
-  use sci_multiplicity_kernel_mod,            only: multiplicity_kernel_type
+  use sci_calc_dA_at_w2_kernel_mod,   only: calc_dA_at_w2_kernel_type
+  use sci_calc_detj_at_w2_kernel_mod, only: calc_detj_at_w2_kernel_type
+  use sci_multiplicity_kernel_mod,    only: multiplicity_kernel_type
 
   implicit none
 
   private
 
   ! Objects for dx_at_w2 functionality
-  type(field_collection_type)      :: dx_at_w2_collection
+  type(field_collection_type) :: dx_at_w2_collection
 
   private :: add_dx_at_w2
 
@@ -48,22 +49,24 @@ module io_demo_constants_mod
 contains
 
   !> @brief Subroutine to create the finite element constants
+  !> @param[in] modeldb   Application state object
   !> @param[in] mesh      The prime model mesh
   !> @param[in] chi       Coordinate fields
   !> @param[in] panel_id  Panel_id field
-  subroutine create_io_demo_constants(mesh,    &
-                                       chi,     &
-                                       panel_id )
+  subroutine create_io_demo_constants(modeldb, mesh, chi, panel_id)
 
     implicit none
 
     ! Arguments
-    type(mesh_type),    pointer, intent(in) :: mesh
-    type(field_type),    target, intent(in) :: chi(:)
-    type(field_type),    target, intent(in) :: panel_id
-    integer(tik)                            :: id
+    type(modeldb_type),       intent(in) :: modeldb
+    type(mesh_type), pointer, intent(in) :: mesh
+    type(field_type), target, intent(in) :: chi(:)
+    type(field_type), target, intent(in) :: panel_id
+
+    integer(tik) :: id
 
     if ( LPROF ) call start_timing( id, 'io_demo_constants_alg' )
+
     call log_event( "io_demo: creating runtime constants", LOG_LEVEL_TRACE )
 
     !============================= dx_at_w2 setup =============================!

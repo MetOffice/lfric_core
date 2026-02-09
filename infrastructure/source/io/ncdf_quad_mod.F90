@@ -2873,9 +2873,9 @@ subroutine write_mesh( self,                                              &
   node_coordinates_ncdf(:,:) =  real( node_coordinates(:,:), kind=r_ncdf )
   face_coordinates_ncdf(:,:) =  real( face_coordinates(:,:), kind=r_ncdf )
 
-  self%geometry  = geometry
-  self%topology  = topology
-  self%coord_sys = coord_sys
+  self%geometry  = trim(geometry)
+  self%topology  = trim(topology)
+  self%coord_sys = trim(coord_sys)
   self%npanels   = npanels
 
   ! Determine if the contents of object is a global/regional model.
@@ -2899,7 +2899,7 @@ subroutine write_mesh( self,                                              &
     self%mesh_extents = GLOBAL_MESH_FLAG
   end if
 
-  self%mesh_name           = mesh_name
+  self%mesh_name           = trim(mesh_name)
   self%north_pole(:)       = north_pole(:)
   self%null_island(:)      = null_island(:)
   self%equatorial_latitude = equatorial_latitude

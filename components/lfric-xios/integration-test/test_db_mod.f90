@@ -9,8 +9,9 @@ module test_db_mod
 
   use calendar_mod,                   only: calendar_type
   use cli_mod,                        only: parse_command_line
-  use configuration_mod,              only: read_configuration
-  use constants_mod,                  only: i_def, r_def, str_def, imdi, r_second, i_timestep
+  use config_loader_mod,              only: read_configuration
+  use constants_mod,                  only: i_def, r_def, str_def, imdi, &
+                                            r_second, i_timestep
   use extrusion_mod,                  only: TWOD
   use field_collection_mod,           only: field_collection_type
   use field_parent_mod,               only: read_interface, write_interface
@@ -30,8 +31,7 @@ module test_db_mod
                                             finalise_logging,   &
                                             log_set_level, log_event, &
                                             LOG_LEVEL_TRACE, LOG_LEVEL_ERROR
-  use namelist_collection_mod,        only: namelist_collection_type
-  use namelist_mod,                   only: namelist_type
+  use config_mod,                     only: config_type
   use lfric_xios_read_mod,            only: read_field_generic
   use lfric_xios_write_mod,           only: write_field_generic
   use local_mesh_collection_mod,      only: local_mesh_collection_type, &
@@ -44,16 +44,15 @@ module test_db_mod
   use fs_continuity_mod,              only: Wchi, W0, W2H, W3
   use step_calendar_mod,              only: step_calendar_type
 
-
   implicit none
 
   !> Object containing infrastructure for testing LFRic-XIOS
   type, public :: test_db_type
     private
-    type(lfric_comm_type),   public :: comm
-    type(namelist_collection_type), public :: config
-    type(field_type), public :: chi(3)
-    type(field_type), public :: panel_id
+    type(lfric_comm_type), public :: comm
+    type(config_type),     public :: config
+    type(field_type),      public :: chi(3)
+    type(field_type),      public :: panel_id
     type(model_clock_type), public, allocatable :: clock
     class(calendar_type),   public, allocatable :: calendar
     type(field_collection_type), public :: temporal_fields
@@ -77,8 +76,6 @@ contains
     type(mesh_type), target :: mesh, twod_mesh
     type(mesh_type), pointer :: mesh_ptr
     type(mesh_type), pointer :: twod_mesh_ptr
-    type(namelist_type), pointer :: time_nml
-    type(namelist_type), pointer :: timestepping_nml
     type(function_space_type), pointer :: wchi_fs
     type(function_space_type), pointer :: tmp_fs
     type(field_proxy_type) :: chi_p(3), pid_p, rproxy
@@ -112,16 +109,15 @@ contains
     call initialise_logging(self%comm%get_comm_mpi_val(), 'lfric_xios_context_test')
     call log_set_level(LOG_LEVEL_TRACE)
 
-    call self%config%initialise("lfric_xios_integration_tests", table_len=10)
-    call read_configuration(trim(adjustl(filename)), self%config)
+    call self%config%initialise("lfric_xios_integration_tests")
+    call read_configuration(trim(adjustl(filename)), config=self%config)
+
     deallocate(filename)
 
-    time_nml => self%config%get_namelist('time')
-    timestepping_nml => self%config%get_namelist('timestepping')
-    call time_nml%get_value('calendar_start', start_date)
-    call time_nml%get_value('timestep_start', timestep_start)
-    call time_nml%get_value('timestep_end', timestep_end)
-    call timestepping_nml%get_value('dt', timestep_length)
+    start_date      = self%config%time%calendar_start()
+    timestep_start  = self%config%time%timestep_start()
+    timestep_end    = self%config%time%timestep_end()
+    timestep_length = self%config%timestepping%dt()
 
     ! Create top level mesh collection, function spaces & routing tables
     local_mesh_collection = local_mesh_collection_type()
@@ -227,7 +223,6 @@ contains
 
     nullify(local_mesh_ptr)
     nullify(mesh_ptr)
-    nullify(time_nml)
     nullify(twod_mesh_ptr)
     nullify(wchi_fs)
     nullify(tmp_fs)
