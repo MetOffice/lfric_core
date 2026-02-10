@@ -1,4 +1,14 @@
-module apply_stretching_mod
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2026 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> @brief   Module to define a coordinate transformation for a stretched
+!!          regional mesh.
+!> @details The coordinate transformation is defined using a cubic function.
+!>          
+module cubic_stretching_mod
 
   use constants_mod,         only: r_def, i_def, l_def
   
@@ -23,14 +33,14 @@ subroutine cubic_parameters( param_a, param_b, param_c, &
                              x_inner, x_outer, dx, direction )
 
   use stretch_transform_config_mod, &
-                                  only : cell_size_outer,           &
-                                         cell_size_inner,           &
-                                         n_cells_stretch,           &
+                                  only : cell_size_outer, &
+                                         cell_size_inner, &
+                                         n_cells_stretch, &
                                          n_cells_outer
   implicit none
 
   real(r_def), intent(inout) :: param_a, param_b, param_c, x_inner, x_outer
-  real(r_def), intent(in) :: dx
+  real(r_def),    intent(in) :: dx
   integer(i_def), intent(in) :: direction
   
   real(r_def) :: l_stretch
@@ -106,7 +116,8 @@ function cubic_stretch( x_coord, param_a, param_b, param_c, x_inner, x_outer ) &
   ! Define the total size or length of the stretch region
   l_stretch = x_outer - x_inner
 
-  ! Define a useful constant
+  ! Define a useful constant that describes the new coordinate at the
+  ! point between the stretch and outer regions.
   outer_constant = ( param_a * l_stretch **3 )  + ( param_b * x_outer )
       
   ! Use symmetry to define coords < 0
@@ -136,4 +147,4 @@ function cubic_stretch( x_coord, param_a, param_b, param_c, x_inner, x_outer ) &
   
 end function cubic_stretch
 
-end module apply_stretching_mod
+end module cubic_stretching_mod

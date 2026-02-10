@@ -45,7 +45,7 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
-  use apply_stretching_mod,           only: cubic_stretch, &
+  use cubic_stretching_mod,           only: cubic_stretch, &
                                             cubic_parameters
 
   implicit none
@@ -2487,7 +2487,9 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
 
 end subroutine set_partition_parameters
 
+!------------------------------------------------------------------------------
 !> @brief Apply the uniform resolution stretching to the unit mesh coordinates
+!------------------------------------------------------------------------------
 subroutine apply_uniform_resolution(self)
 
   implicit none
@@ -2524,7 +2526,9 @@ subroutine apply_uniform_resolution(self)
 
 end subroutine apply_uniform_resolution
 
+!-------------------------------------------------------------------------------
 !> @brief Apply the cubic stretching to the unit mesh coordinates
+!-------------------------------------------------------------------------------
 subroutine apply_cubic_stretch(self)
 
   implicit none
@@ -2565,14 +2569,5 @@ subroutine apply_cubic_stretch(self)
   return
   
 end subroutine apply_cubic_stretch
-
-!> @brief Apply the cosine stretching to the unit mesh coordinates
-subroutine apply_cosine_stretch(self)
-  
-  implicit none
-
-  class(gen_planar_type), intent(inout)  :: self
-
-end subroutine apply_cosine_stretch
 
 end module gen_planar_mod
