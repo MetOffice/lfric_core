@@ -32,8 +32,7 @@ module gen_planar_mod
   use planar_mesh_config_mod,         only: stretch_function,           &
                                             stretch_function_uniform,   &
                                             stretch_function_inflation, &
-                                            stretch_function_cubic,     &
-                                            stretch_function_cosine
+                                            stretch_function_cubic
   use reference_element_mod,          only: reference_element_type, &
                                             reference_cube_type,    &
                                             W, S, E, N,             &
@@ -1706,14 +1705,14 @@ subroutine stretch_coords(self)
 
     case (stretch_function_cubic)
       call apply_cubic_stretch(self)
-
-    case (stretch_function_cosine)
-      call apply_cosine_stretch(self)
        
     case (stretch_function_inflation)
-!       "print error message"
+       call log_event( "stretch_function inflation is not a transformation", &
+                      LOG_LEVEL_ERROR )
 
     case default
+        call log_event( "Unrecognised value of stretch_function", &
+                      LOG_LEVEL_ERROR )
   end select
 
 end subroutine stretch_coords

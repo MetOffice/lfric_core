@@ -31,3 +31,33 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+class vn30_t1(MacroUpgrade):
+    # Upgrade macro for <TICKET> by <Author>
+
+    BEFORE_TAG = "vn3.0"
+    AFTER_TAG = "vn3.0_t1"
+
+    def upgrade(self, config, meta_config=None):
+        # Add settings
+        nml = "namelist:planar_mesh"
+        apply_stretch_transform = self.get_setting_value(
+            config, [nml, "apply_stretch_transform"])
+        
+        if apply_stretch_transform = ".true.":
+            self.add_setting(
+                config,
+                [nml, "stretch_function"],
+                "'inflation'",
+            )
+        else:
+            self.add_setting(
+                config,
+                [nml, "stretch_function"],
+                "'uniform'",
+            )
+        self.remove_setting(
+            config, [nml, "apply_stretch_transform"]
+        )
+             
+        return config, self.reports
