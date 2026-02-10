@@ -19,7 +19,7 @@ looking for the LFRic Atmosphere model this can be found in the
 [LFRic Apps](https://github.com/MetOffice/lfric_apps) repository.
 
 The LFRic Core release schedule and deadlines can be viewed in the 
-[milestones](https://metoffice.github.io/lfric_apps/milestones).
+[milestones](https://metoffice.github.io/lfric_core/milestones).
 
 ## Contributing Guidelines
 
