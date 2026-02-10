@@ -172,11 +172,9 @@ program planar_mesh_generator
   logical :: periodic_y
   logical :: create_lbc_mesh
   integer(i_def) :: lbc_rim_depth
+  integer(i_def) :: stretch_function
 
   character(str_def) :: lbc_parent_mesh
-
-  logical :: apply_stretch_transform
-
   character(str_def) :: transform_mesh
 
   type(local_mesh_collection_type) :: local_mesh_collection
@@ -257,7 +255,7 @@ program planar_mesh_generator
     call nml_obj%get_value( 'create_lbc_mesh', create_lbc_mesh )
     call nml_obj%get_value( 'lbc_rim_depth', lbc_rim_depth )
     call nml_obj%get_value( 'lbc_parent_mesh', lbc_parent_mesh )
-    call nml_obj%get_value( 'apply_stretch_transform', apply_stretch_transform )
+    call nml_obj%get_value( 'stretch_function', stretch_function )
   end if
 
   if (configuration%namelist_exists('stretch_transform')) then
@@ -418,9 +416,9 @@ program planar_mesh_generator
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end if
 
-  if (apply_stretch_transform) then
-    ! This enables support meshes to be created with a variable
-    ! resolution stretching function.
+  ! This enables support meshes to be created with a variable
+  ! resolution stretching function.
+  if (configuration%namelist_exists('stretch_transform')) then
     do j=1, n_meshes
       if (trim(mesh_names(j)) == trim(transform_mesh)) then
         fine_mesh_edge_cells_x = edge_cells_x(j)
@@ -428,7 +426,7 @@ program planar_mesh_generator
       end if
     end do
   end if
-
+ 
   ! Perform a number of checks related to mesh map
   ! requests.
   if (n_mesh_maps > 0) then

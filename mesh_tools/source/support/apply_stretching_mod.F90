@@ -1,97 +1,13 @@
 module apply_stretching_mod
 
-  use constants_mod  :: r_def, i_def 
-  use gen_planar_mod :: gen_planar_type
+  use constants_mod,         only: r_def, i_def, l_def
   
   implicit none
 
-  private :: cubic_stretch, &
-             cubic_parameters
-
-  public :: apply_uniform_resolution, &
-            apply_cubic_stretch,      &
-            apply_cosine_stretch
+  public :: cubic_stretch, &
+            cubic_parameters
 
 contains
-
-!> @brief Apply the uniform resolution stretching to the unit mesh coordinates
-subroutine apply_uniform_resolution(self)
-
-  class(gen_planar_type), intent(inout) :: self
-
-  implicit none
-
-  real(r_def) :: dx, param_a
-  integer(i_def) :: nverts, vert, direction
-
-  do direction = 1, 2
-
-    if ( direction == 1 ) then
-      dx = 2.0_r_def / self%edge_cells_x
-      param_a = self%dx / dx
-    else
-      dx = 2.0_r_def / self%edge_cells_y
-      param_a = self%dy / dy
-    end if
-      
-    nverts = size(self%vert_coords(direction, :))
-      
-    do vert = 1, nverts
- 
-      self%vert_coords(direction, vert) = param_a * &
-                                          self%vert_coords(direction, vert)
-         
-    end do
-      
-  end do
-   
-  return
-
-end subroutine apply_uniform_resolution
-
-!> @brief Apply the cubic stretching to the unit mesh coordinates
-subroutine apply_cubic_stretch(self)
-
-  implicit none
-
-  class(gen_planar_type), intent(inout)  :: self
-
-  real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer
-  integer(i_def) :: nverts, vert, direction
-
-  do direction = 1, 2
-
-    ! Calculate the cell spacing and numeber of points of unit mesh
-    if ( direction == 1 ) then
-      dx = 2.0_r_def / self%edge_cells_x
-    else
-      dx = 2.0_r_def / self%edge_cells_y
-    end if
-
-    nverts = size(self%vert_coords(direction, :))
-
-    ! Calculate the parameters required for the stretching transform
-    call cubic_parameters( param_a, param_b, param_c, &
-                           x_inner, x_outer, dx, direction )
-     
-    ! Apply the transformation to each coordinate
-    do vert = 1, nverts
- 
-       self%vert_coords(direction, vert) = &
-            cubic_stretch(self%vert_coords(direction, vert), &
-                          param_a, param_b, param_c, x_inner, x_outer )
-         
-    end do
-      
-  end do
-  
-  return
-  
-end subroutine apply_cubic_stretch
-
-!> @brief Apply the cosine stretching to the unit mesh coordinates
-subroutine apply_cosine_stretch(self)
-end subroutine apply_cosine_stretch
 
 !> @brief Calculate the cubic stretching parameters
 !> @details In inner y = b x, in stretch y = a x^3 + b x
@@ -154,8 +70,10 @@ subroutine cubic_parameters( param_a, param_b, param_c, &
   ! dy_outer         = a dx ( 3x^2 + 3 dx x + dx^2 ) + b dx
   ! a = (dy - b dx) / dx( 3x^2 + 3 dx x + dx^2)
   
-  param_a = ( cell_size_outer(direction) - param_b * dx ) / &
-            ( dx * ( 3 * l_stretch ** 2  + 3 * l_stretch * dx + dx ** 2 ))
+  param_a = ( cell_size_outer(direction) - (param_b * dx) ) / &
+            ( dx * ( (3.0_r_def * l_stretch ** 2)  &
+            + (3.0_r_def * l_stretch * dx) &
+            + (dx ** 2) ))
 
   ! In outer region y = cx
   

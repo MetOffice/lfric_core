@@ -45,9 +45,8 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
-  use apply_stretching_mod,           only: apply_uniform_resolution, &
-                                            apply_cubic_stretch,      &
-                                            apply_cosine_stretch
+  use apply_stretching_mod,           only: cubic_stretch, &
+                                            cubic_parameters
 
   implicit none
 
@@ -1702,17 +1701,17 @@ subroutine stretch_coords(self)
   class(gen_planar_type), intent(inout)  :: self
 
   select case (stretch_function)
-    case (uniform)
+    case (stretch_function_uniform)
       call apply_uniform_resolution(self)
 
-    case (cubic)
+    case (stretch_function_cubic)
       call apply_cubic_stretch(self)
 
-    case (cosine)
+    case (stretch_function_cosine)
       call apply_cosine_stretch(self)
        
-    case (inflation)
-       "print error message"
+    case (stretch_function_inflation)
+!       "print error message"
 
     case default
   end select
@@ -2487,5 +2486,93 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
   call log_event( log_scratch_space, LOG_LEVEL_INFO )
 
 end subroutine set_partition_parameters
+
+!> @brief Apply the uniform resolution stretching to the unit mesh coordinates
+subroutine apply_uniform_resolution(self)
+
+  implicit none
+  
+  class(gen_planar_type), intent(inout) :: self
+
+  real(r_def) :: dx, param_a
+  integer(i_def) :: nverts, vert, direction
+
+  do direction = 1, 2
+
+    ! Calculate the cell spacing, scaling and number of points of unit mesh
+    if ( direction == 1 ) then
+      dx = 2.0_r_def / self%edge_cells_x
+      param_a = self%dx / dx
+    else
+      dx = 2.0_r_def / self%edge_cells_y
+      param_a = self%dx / dx
+    end if
+      
+    nverts = size(self%vert_coords(direction, :))
+
+    ! Apply the scaling transformation to each coordinate
+    do vert = 1, nverts
+ 
+      self%vert_coords(direction, vert) = param_a * &
+                                          self%vert_coords(direction, vert)
+         
+    end do
+      
+  end do
+   
+  return
+
+end subroutine apply_uniform_resolution
+
+!> @brief Apply the cubic stretching to the unit mesh coordinates
+subroutine apply_cubic_stretch(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+
+  real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer
+  integer(i_def) :: nverts, vert, direction
+
+  do direction = 1, 2
+
+    ! Calculate the cell spacing and number of points of unit mesh
+    ! of the fine mesh (fine mesh needed in case this is stretching
+    ! a multigrid mesh),
+    if ( direction == 1 ) then
+      dx = 2.0_r_def / self%fine_mesh_edge_cells_x
+    else
+      dx = 2.0_r_def / self%fine_mesh_edge_cells_y
+    end if
+
+    nverts = size(self%vert_coords(direction, :))
+
+    ! Calculate the parameters required for the stretching transform
+    call cubic_parameters( param_a, param_b, param_c, &
+         x_inner, x_outer, dx, direction )
+    
+    ! Apply the stretching transformation to each coordinate
+    do vert = 1, nverts
+ 
+       self%vert_coords(direction, vert) = &
+            cubic_stretch(self%vert_coords(direction, vert), &
+                          param_a, param_b, param_c, x_inner, x_outer )
+         
+    end do
+      
+  end do
+  
+  return
+  
+end subroutine apply_cubic_stretch
+
+!> @brief Apply the cosine stretching to the unit mesh coordinates
+subroutine apply_cosine_stretch(self)
+  
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+
+end subroutine apply_cosine_stretch
 
 end module gen_planar_mod

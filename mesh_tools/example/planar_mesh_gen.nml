@@ -60,7 +60,7 @@
   create_lbc_mesh = .true.
   lbc_rim_depth   = 1
   lbc_parent_mesh = 'mesh_A'
-  apply_stretch_transform = .false.
+  stretch_function = 'cubic'
 /
 
 &partitions
@@ -79,8 +79,8 @@
 /
 
 &stretch_transform
-  cell_size_inner = 2.0, 2.0
-  cell_size_outer = 3.0, 3.0
+  cell_size_inner = 0.0135,0.0135
+  cell_size_outer = 0.036,0.036
   n_cells_outer   = 2, 2
   n_cells_stretch = 5, 5
   stretching_on   = 'cell_centres'
