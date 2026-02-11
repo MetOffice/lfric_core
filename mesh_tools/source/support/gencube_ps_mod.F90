@@ -2050,9 +2050,28 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
     call log_event( "Using parallel cubed sphere partitioner", &
                      LOG_LEVEL_INFO )
 
+  else if( NPANELS == 6 .and.               &
+           (mod(n_partitions, 3) == 0) .or. &
+           (mod(n_partitions, 2) == 0 ) ) then
+    ! Use the parallel cubed-sphere partitioner
+    partitioner_ptr => partitioner_cubedsphere
+
+    select case(panel_decomposition)
+      case( panel_decomposition_custom )
+        decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
+      case default
+        call log_event( "Decomposing across 2 or 3 panels requires "// &
+                        "'custom' decomposition.", LOG_LEVEL_ERROR )
+    end select
+
+    call log_event( "Using parallel cubed sphere partitioner", &
+                     LOG_LEVEL_INFO )
+
   else
-    call log_event( "Number of partitions must be 1 "//      &
-                    "or a multiple of the number of panels", &
+    call log_event( "Number of partitions must be 1 "//         &
+                    "or a multiple of the number of panels "//  &
+                    "or a multiple of 2 or 3 for 6 panels "//   &
+                    "and using 'custom' decomposition",         &
                      LOG_LEVEL_ERROR )
   end if
 

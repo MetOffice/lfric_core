@@ -434,8 +434,8 @@ subroutine clear(self)
   class(config_type), intent(inout) :: self
 
   ! Namlists which may have multiple instances per configuration
-  call self%bar%clear()
-  call self%pot%clear()
+  if (allocated(self%bar)) call self%bar%clear()
+  if (allocated(self%pot)) call self%pot%clear()
 
   if (allocated(self%foo)) deallocate(self%foo)
   if (allocated(self%bar)) deallocate(self%bar)
