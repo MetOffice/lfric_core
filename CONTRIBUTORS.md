@@ -20,3 +20,4 @@
 | t00sa            | Sam Clarke-Green       | Met Office  | 2026-01-27 |
 | MetBenjaminWent  | Benjamin Went          | Met Office  | 2026-01-30 |
 | jcsmeto          | James Cunningham-Smith | Met Office  | 2026-02-06 |
+| thomasmelvin     | Thomas Melvin          | Met Office  | 2026-01-15 |
