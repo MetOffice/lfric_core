@@ -12,7 +12,12 @@
 module polynomial_stretching_mod
 
   use constants_mod,         only: r_def, i_def, l_def
-  
+  use stretch_transform_config_mod, &
+                             only : cell_size_outer, &
+                                    cell_size_inner, &
+                                    n_cells_stretch, &
+                                    n_cells_outer,   &
+                                    poly_power
   implicit none
 
   public :: polynomial_stretch, &
@@ -33,12 +38,6 @@ contains
 subroutine polynomial_parameters( param_a, param_b, param_c, &
                                   x_inner, x_outer, dx, direction )
 
-  use stretch_transform_config_mod, &
-                                  only : cell_size_outer, &
-                                         cell_size_inner, &
-                                         n_cells_stretch, &
-                                         n_cells_outer,   &
-                                         poly_power
   implicit none
 
   real(r_def), intent(inout) :: param_a, param_b, param_c, x_inner, x_outer

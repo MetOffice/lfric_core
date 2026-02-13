@@ -32,7 +32,7 @@ module gen_planar_mod
   use planar_mesh_config_mod,         only: stretch_function,           &
                                             stretch_function_uniform,   &
                                             stretch_function_inflation, &
-                                            stretch_function_cubic
+                                            stretch_function_polynomial
   use reference_element_mod,          only: reference_element_type, &
                                             reference_cube_type,    &
                                             W, S, E, N,             &
@@ -44,8 +44,8 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
-  use cubic_stretching_mod,           only: cubic_stretch, &
-                                            cubic_parameters
+  use polynomial_stretching_mod,      only: polynomial_stretch, &
+                                            polynomial_parameters
 
   implicit none
 
@@ -1703,8 +1703,8 @@ subroutine stretch_coords(self)
     case (stretch_function_uniform)
       call apply_uniform_resolution(self)
 
-    case (stretch_function_cubic)
-      call apply_cubic_stretch(self)
+    case (stretch_function_polynomial)
+      call apply_polynomial_stretch(self)
        
     case (stretch_function_inflation)
        call log_event( "stretch_function inflation is not a transformation", &
@@ -2526,9 +2526,9 @@ subroutine apply_uniform_resolution(self)
 end subroutine apply_uniform_resolution
 
 !-------------------------------------------------------------------------------
-!> @brief Apply the cubic stretching to the unit mesh coordinates
+!> @brief Apply the polynomial stretching to the unit mesh coordinates
 !-------------------------------------------------------------------------------
-subroutine apply_cubic_stretch(self)
+subroutine apply_polynomial_stretch(self)
 
   implicit none
 
@@ -2536,6 +2536,8 @@ subroutine apply_cubic_stretch(self)
 
   real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer
   integer(i_def) :: nverts, vert, direction
+
+  real(r_def) :: diff
 
   do direction = 1, 2
 
@@ -2551,15 +2553,22 @@ subroutine apply_cubic_stretch(self)
     nverts = size(self%vert_coords(direction, :))
 
     ! Calculate the parameters required for the stretching transform
-    call cubic_parameters( param_a, param_b, param_c, &
+    call polynomial_parameters( param_a, param_b, param_c, &
          x_inner, x_outer, dx, direction )
     
     ! Apply the stretching transformation to each coordinate
     do vert = 1, nverts
  
        self%vert_coords(direction, vert) = &
-            cubic_stretch(self%vert_coords(direction, vert), &
-                          param_a, param_b, param_c, x_inner, x_outer )
+            polynomial_stretch(self%vert_coords(direction, vert), &
+            param_a, param_b, param_c, x_inner, x_outer )
+
+       if ( vert > 1) then
+        diff = self%vert_coords(direction, vert) - self%vert_coords(direction, vert-1)
+        if (diff > 0.0_r_def) then 
+           print*, vert, self%vert_coords(direction, vert), diff
+        end if
+       end if
          
     end do
       
@@ -2567,6 +2576,6 @@ subroutine apply_cubic_stretch(self)
   
   return
   
-end subroutine apply_cubic_stretch
+end subroutine apply_polynomial_stretch
 
 end module gen_planar_mod
