@@ -849,11 +849,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
     src_idxlist = xt_idxvec_new( src_indices, size(src_indices) )
     tgt_idxlist = xt_idxvec_new( tgt_indices, size(tgt_indices) )
 
-    ! generate exchange map
-    comm = global_mpi%get_comm()
-    xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, &
-                                 comm%get_comm_mpi_val() )
-
     allocate(src_offsets( size(src_indices) ))
     allocate(tgt_offsets( size(tgt_indices) ))
 
@@ -865,7 +860,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
       tgt_offsets(i) = i + size(src_indices) - 1
     end do
 
-    datatype_mpi_val = datatype%get_datatype_mpi_val()
     redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype_mpi_val)
 
     deallocate(src_offsets)
