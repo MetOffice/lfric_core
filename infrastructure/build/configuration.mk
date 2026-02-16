@@ -25,8 +25,7 @@ ifdef APPS_ROOT_DIR
 	$(Q)for REPO in $(EXTRA_ROSE_META) ; do \
 		python $(APPS_ROOT_DIR)/build/extract/extract_science.py -r $$REPO -d $(APPS_ROOT_DIR)/dependencies.yaml -w $(WORKING_DIR) ; done
 else
-	$(call MESSAGE,Not expecting to extract external rose-meta when APPS_ROOT_DIR not defined)
-	exit 1
+	$(error Not expecting to extract external rose-meta when APPS_ROOT_DIR not defined)
 endif
 endif
 
