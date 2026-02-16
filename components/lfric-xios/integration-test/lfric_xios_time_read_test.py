@@ -10,7 +10,6 @@ then destroys it. This will also create an attached XIOS context.
 """
 from testframework import TestEngine, TestFailed
 from xiostest import LFRicXiosTest
-import subprocess
 import sys
 from pathlib import Path
 
@@ -22,10 +21,9 @@ class LfricXiosTimeReadTest(LFRicXiosTest):  # pylint: disable=too-few-public-me
     """
 
     def __init__(self, nprocs: int):
-        super().__init__(command=[sys.argv[1], "resources/configs/context.nml"], processes=nprocs)
-        test_data_dir = Path(Path.cwd(), 'resources/data')
-        Path('lfric_xios_time_read_data.nc').unlink(missing_ok=True)
-        self.gen_data(Path(test_data_dir, 'temporal_data.cdl'), Path('lfric_xios_time_read_data.nc'))
+        super().__init__(command=[sys.argv[1], "context.nml"], processes=nprocs)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_time_read_data.nc')
+        self.gen_config( "context.nml", "context.nml", {} )
         self.nprocs = nprocs
 
     def test(self, returncode: int, out: str, err: str):
