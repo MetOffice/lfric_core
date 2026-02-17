@@ -71,3 +71,5 @@ infrastructure/**/bin
 infrastructure/**/working
 infrastructure/**/test
 infrastructure/**/documents
+science/**/bin
+science/**/working

@@ -46,6 +46,7 @@ module argument_mod
   !> @defgroup argument_type Enumeration of argument type property descriptors.
   !> @{
   integer, public, parameter :: GH_SCALAR              = 397
+  integer, public, parameter :: GH_SCALAR_ARRAY        = 973
   integer, public, parameter :: GH_FIELD               = 507
   integer, public, parameter :: GH_OPERATOR            = 735
   integer, public, parameter :: GH_COLUMNWISE_OPERATOR = 841

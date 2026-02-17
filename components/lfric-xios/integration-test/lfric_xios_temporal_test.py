@@ -23,12 +23,9 @@ class LfricXiosFullNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-publ
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "resources/configs/non_cyclic_full.nml"], processes=1)
-        test_data_dir = Path(Path.cwd(), 'resources/data')
-        Path('lfric_xios_temporal_input.nc').unlink(missing_ok=True)
-        self.gen_data(Path(test_data_dir, 'temporal_data.cdl'), Path('lfric_xios_temporal_input.nc'))
-        self.gen_config( Path("resources/configs/non_cyclic_base.nml"),
-                         Path("resources/configs/non_cyclic_full.nml"), {} )
+        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"], processes=1)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_config( "non_cyclic_base.nml", "non_cyclic_full.nml", {} )
 
     def test(self, returncode: int, out: str, err: str):
         """
@@ -37,11 +34,11 @@ class LfricXiosFullNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-publ
 
         if returncode != 0:
             print(out)
-            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" + 
+            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
                              f"stderr:\n" +
                              f"{err}")
-        if not self.nc_data_match(Path('lfric_xios_temporal_input.nc'),
-                                  Path('lfric_xios_temporal_output.nc'),
+        if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
+                                  Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
                                   'temporal_field'):
             raise TestFailed("Output data does not match input data for same time values")
 
@@ -55,13 +52,9 @@ class LfricXiosNonCyclicHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "resources/configs/non_cyclic_high_freq.nml"], processes=1)
-        test_data_dir = Path(Path.cwd(), 'resources/data')
-        Path('lfric_xios_temporal_input.nc').unlink(missing_ok=True)
-        self.gen_data(Path(test_data_dir, 'temporal_data.cdl'), Path('lfric_xios_temporal_input.nc'))
-        self.gen_config( Path("resources/configs/non_cyclic_base.nml"),
-                         Path("resources/configs/non_cyclic_high_freq.nml"),
-                         {"dt":"10.0"} )
+        super().__init__(command=[sys.argv[1], "non_cyclic_high_freq.nml"], processes=1)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_config( "non_cyclic_base.nml", "non_cyclic_high_freq.nml", {"dt":10.0} )
 
     def test(self, returncode: int, out: str, err: str):
         """
@@ -70,11 +63,11 @@ class LfricXiosNonCyclicHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-
 
         if returncode != 0:
             print(out)
-            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" + 
+            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
                              f"stderr:\n" +
                              f"{err}")
-        if not self.nc_data_match(Path('lfric_xios_temporal_input.nc'),
-                                  Path('lfric_xios_temporal_output.nc'),
+        if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
+                                  Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
                                   'temporal_field'):
             raise TestFailed("Output data does not match input data for same time values")
 
@@ -88,13 +81,9 @@ class LfricXiosPartialNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-p
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "resources/configs/non_cyclic_mid.nml"], processes=1)
-        test_data_dir = Path(Path.cwd(), 'resources/data')
-        Path('lfric_xios_temporal_input.nc').unlink(missing_ok=True)
-        self.gen_data(Path(test_data_dir, 'temporal_data.cdl'), Path('lfric_xios_temporal_input.nc'))
-        self.gen_config( Path("resources/configs/non_cyclic_base.nml"),
-                         Path("resources/configs/non_cyclic_mid.nml"),
-                         {'calendar_start':"'2024-01-01 15:01:00'"} )
+        super().__init__(command=[sys.argv[1], "non_cyclic_mid.nml"], processes=1)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_config( "non_cyclic_base.nml", "non_cyclic_mid.nml", {'calendar_start':'2024-01-01 15:01:00'} )
 
     def test(self, returncode: int, out: str, err: str):
         """
@@ -102,12 +91,12 @@ class LfricXiosPartialNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-p
         """
 
         if returncode != 0:
-            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" + 
+            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
                              f"stderr:\n" +
                              f"{err}")
 
-        if not self.nc_data_match(Path('lfric_xios_temporal_input.nc'),
-                                  Path('lfric_xios_temporal_output.nc'),
+        if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
+                                  Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
                                   'temporal_field'):
             raise TestFailed("Output data does not match input data for same time values")
 
@@ -120,14 +109,10 @@ class LfricXiosNonCyclicFutureTest(LFRicXiosTest):  # pylint: disable=too-few-pu
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "resources/configs/non_cyclic_future.nml"], processes=1)
-        test_data_dir = Path(Path.cwd(), 'resources/data')
-        Path('lfric_xios_temporal_input.nc').unlink(missing_ok=True)
-        self.gen_data(Path(test_data_dir, 'temporal_data.cdl'), Path('lfric_xios_temporal_input.nc'))
-        self.gen_config( Path("resources/configs/non_cyclic_base.nml"),
-                         Path("resources/configs/non_cyclic_future.nml"),
-                         {'calendar_start':"'2024-01-01 10:00:00'",
-                          'calendar_origin':"'2024-01-01 10:00:00'"} )
+        super().__init__(command=[sys.argv[1], "non_cyclic_future.nml"], processes=1)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_config( "non_cyclic_base.nml", "non_cyclic_future.nml", {'calendar_start':'2024-01-01 10:00:00',
+                          'calendar_origin':'2024-01-01 10:00:00'} )
 
     def test(self, returncode: int, out: str, err: str):
         """
@@ -153,14 +138,10 @@ class LfricXiosNonCyclicPastTest(LFRicXiosTest):  # pylint: disable=too-few-publ
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "resources/configs/non_cyclic_past.nml"], processes=1)
-        test_data_dir = Path(Path.cwd(), 'resources/data')
-        Path('lfric_xios_temporal_input.nc').unlink(missing_ok=True)
-        self.gen_data(Path(test_data_dir, 'temporal_data.cdl'), Path('lfric_xios_temporal_input.nc'))
-        self.gen_config( Path("resources/configs/non_cyclic_base.nml"),
-                         Path("resources/configs/non_cyclic_past.nml"),
-                         {'calendar_start':"'2024-02-01 10:00:00'",
-                          'calendar_origin':"'2024-02-01 10:00:00'"} )
+        super().__init__(command=[sys.argv[1], "non_cyclic_past.nml"], processes=1)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_config( "non_cyclic_base.nml", "non_cyclic_past.nml", {'calendar_start':'2024-02-01 10:00:00',
+                          'calendar_origin':'2024-02-01 10:00:00'} )
 
     def test(self, returncode: int, out: str, err: str):
         """
@@ -178,8 +159,6 @@ class LfricXiosNonCyclicPastTest(LFRicXiosTest):  # pylint: disable=too-few-publ
 
 
         return "Expected error for past non-cyclic data reading..."
-
-
 
 
 ##############################################################################

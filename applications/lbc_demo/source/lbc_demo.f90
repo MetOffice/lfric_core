@@ -24,7 +24,6 @@ program lbc_demo
   use lfric_mpi_mod,       only: global_mpi
   use lbc_demo_mod,        only: required_namelists
   use lbc_demo_driver_mod, only: initialise, step, finalise
-  use namelist_mod,        only: namelist_type
 
   use base_mesh_config_mod, only: geometry_spherical, &
                                   topology_fully_periodic
@@ -35,7 +34,6 @@ program lbc_demo
   character(*), parameter   :: program_name = "lbc_demo"
   character(:), allocatable :: filename
 
-  type(namelist_type), pointer :: base_mesh_nml
   integer :: geometry, topology
 
   call parse_command_line( filename )
@@ -47,17 +45,18 @@ program lbc_demo
   ! The technical and scientific state
   modeldb%mpi => global_mpi
   call modeldb%configuration%initialise( program_name, table_len=10 )
+  call modeldb%config%initialise( program_name )
 
   call init_comm(program_name, modeldb)
-  call init_config( filename, required_namelists, &
-                    modeldb%configuration )
+
+  call init_config(filename, required_namelists,        &
+                   configuration=modeldb%configuration, &
+                   config=modeldb%config)
 
   ! Before anything else, test that the mesh provided was a regional domain.
   ! This application is not intended for cubed-sphere meshes.
-
-  base_mesh_nml => modeldb%configuration%get_namelist('base_mesh')
-  call base_mesh_nml%get_value( 'geometry',  geometry )
-  call base_mesh_nml%get_value( 'topology',  topology )
+  geometry = modeldb%config%base_mesh%geometry()
+  topology = modeldb%config%base_mesh%topology()
 
   if ( geometry == geometry_spherical .and. &
        topology == topology_fully_periodic ) then
