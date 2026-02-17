@@ -26,8 +26,8 @@ module polynomial_stretching_mod
 contains
 
 !> @brief Calculate the polynomial stretching parameters
-!> @details In inner y = b x, in stretch y = a x^n + b x
-!!          and in outer y = c x.
+!> @details In inner y = b x, in stretch y = a (x - xi) ^n + b x
+!!          and in outer y = yo + c (x - xo).
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
@@ -50,7 +50,8 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
   ! define new coordinates y such that in the outer and inner regions,
   ! the spacing is cell_size_outer and cell_size_inner and in the
   ! stretch region (in between the inner and outer) the coordinates
-  ! satisfy y = a x^n + bx
+  ! satisfy y = a ( x - xi) ^n + b x where xi is the boundary between the
+  ! inner and stretch region.
 
   ! We assume that the mesh is symmetrical and centred on (0,0)
   ! | OUTER | STRETCH | INNER | STRETCH | OUTER |
@@ -61,24 +62,23 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
                             n_cells_stretch(direction) ) * dx )
 
   ! Define the total size or length of the stretch region
-  l_stretch = x_outer - x_inner
+  l_stretch = ( x_outer - x_inner )
 
-  ! y = a x^n + bx
-  ! Derivative
-  ! y'   = n a x^(n-1) + b
-  
-  ! In inner region and at x = 0 (between inner and stretch)
-  ! dy/dx =b so b = target cell_size /dx
-  
-  param_b = cell_size_inner(direction) / dx
-
-  ! In outer region y = cx
+  ! In outer region y = c (x -xo)
+  ! y' = c so c = target cell_size / dx
   
   param_c = cell_size_outer(direction) / dx
   
-  ! At x = l_stretch (between stretch and outer)
-  ! Set n a x^(n-1) + b =c
-  ! So a = (c - b) / ( n l^(n-1) )
+  ! In inner region and at x = xi (between inner and stretch)
+  ! y' = b so b = target cell_size /dx
+  
+  param_b = cell_size_inner(direction) / dx
+
+  ! In stretch region y = a (x - xi) ^n + bx
+  ! Derivative y' = n a (x - xi) ^(n-1) + b
+  ! At x = xo (between stretch and outer), where xo - xi = l
+  ! Set n a (x - xi) ^(n-1) + b = c
+  ! So a = (c - b) / ( n l ^(n-1) )
 
   param_a = ( param_c - param_b ) / &
             ( poly_power * l_stretch ** (poly_power - 1_i_def) )
@@ -86,8 +86,8 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
 end subroutine polynomial_parameters
 
 !> @brief Apply a polynomial stretching transformation to a given coordinate
-!> @details In inner y = b x, in stretch y = a x^n + b x
-!!          and in outer y = c x
+!> @details In inner y = b x, in stretch y = a (x - xi) ^n + b x
+!!          and in outer y = yo + c x
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
@@ -104,17 +104,17 @@ function polynomial_stretch( x_coord, param_a, param_b, param_c, &
   real(r_def), intent(in) :: x_coord
   real(r_def), intent(in) :: param_a, param_b, param_c, x_inner, x_outer
   
-  real(r_def) :: y_coord, outer_constant, l_stretch, new_x_coord
+  real(r_def) :: y_coord, y_outer, l_stretch, new_x_coord
   
   logical(l_def) :: use_symmetry
 
   ! Define the total size or length of the stretch region
-  l_stretch = x_outer - x_inner
+  l_stretch =  x_outer - x_inner
 
   ! Define a useful constant that describes the new coordinate at the
   ! point between the stretch and outer regions.
-  outer_constant = ( param_a * l_stretch ** poly_power )  &
-                 + ( param_b * x_outer )
+  y_outer = ( param_a * l_stretch ** poly_power ) + &
+            ( param_b * x_outer )
       
   ! Use symmetry to define coords < 0
   if ( x_coord < 0.0_r_def ) then
@@ -125,18 +125,24 @@ function polynomial_stretch( x_coord, param_a, param_b, param_c, &
     new_x_coord = x_coord
   end if
 
-  if ( new_x_coord < x_outer ) then
-    ! In inner y = bx and in stretch y = ax^n + bx where ax^n >0
+  ! Assign new coordinates using transform y=f(x)
+  if ( new_x_coord < x_inner ) then
+    ! In inner y = b x 
+    y_coord = param_b * new_x_coord
+
+  else if ( new_x_coord >= x_inner .and. new_x_coord < x_outer ) then
+    ! In stretch y = a (x - xi) ^n + bx where a (x - xi) ^n >0
     y_coord = param_b * new_x_coord + &
-         max ( param_a * ( new_x_coord - x_inner ) ** poly_power, 0.0_r_def )
+              param_a * ( new_x_coord - x_inner ) ** poly_power
+
   else
-    ! In outer y = cx
-    y_coord = param_c * ( new_x_coord - x_outer ) + outer_constant  
+    ! In outer y = c (x - xo) + yo
+    y_coord = param_c * ( new_x_coord - x_outer ) + y_outer  
   end if
 
   ! To define coords <0
   if ( use_symmetry ) then
-     y_coord = -1.0_r_def * y_coord
+    y_coord = -1.0_r_def * y_coord
   end if
  
   return
