@@ -8,7 +8,7 @@
 !!          regional mesh.
 !> @details The coordinate transformation is defined using a polynomial
 !!          function.
-!>          
+!>
 module polynomial_stretching_mod
 
   use constants_mod,         only: r_def, i_def, l_def
@@ -43,7 +43,7 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
   real(r_def), intent(inout) :: param_a, param_b, param_c, x_inner, x_outer
   real(r_def),    intent(in) :: dx
   integer(i_def), intent(in) :: direction
-  
+
   real(r_def) :: l_stretch
 
   ! Given the coordinates x defined on [-1,1] with mesh size dx,
@@ -66,12 +66,12 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
 
   ! In outer region y = c (x -xo)
   ! y' = c so c = target cell_size / dx
-  
+
   param_c = cell_size_outer(direction) / dx
-  
+
   ! In inner region and at x = xi (between inner and stretch)
   ! y' = b so b = target cell_size /dx
-  
+
   param_b = cell_size_inner(direction) / dx
 
   ! In stretch region y = a (x - xi) ^n + bx
@@ -100,12 +100,12 @@ function polynomial_stretch( x_coord, param_a, param_b, param_c, &
                              result( y_coord )
 
   implicit none
-  
+
   real(r_def), intent(in) :: x_coord
   real(r_def), intent(in) :: param_a, param_b, param_c, x_inner, x_outer
-  
+
   real(r_def) :: y_coord, y_outer, l_stretch, new_x_coord
-  
+
   logical(l_def) :: use_symmetry
 
   ! Define the total size or length of the stretch region
@@ -115,7 +115,7 @@ function polynomial_stretch( x_coord, param_a, param_b, param_c, &
   ! point between the stretch and outer regions.
   y_outer = ( param_a * l_stretch ** poly_power ) + &
             ( param_b * x_outer )
-      
+
   ! Use symmetry to define coords < 0
   if ( x_coord < 0.0_r_def ) then
     use_symmetry = .true.
@@ -127,7 +127,7 @@ function polynomial_stretch( x_coord, param_a, param_b, param_c, &
 
   ! Assign new coordinates using transform y=f(x)
   if ( new_x_coord < x_inner ) then
-    ! In inner y = b x 
+    ! In inner y = b x
     y_coord = param_b * new_x_coord
 
   else if ( new_x_coord >= x_inner .and. new_x_coord < x_outer ) then
@@ -137,16 +137,16 @@ function polynomial_stretch( x_coord, param_a, param_b, param_c, &
 
   else
     ! In outer y = c (x - xo) + yo
-    y_coord = param_c * ( new_x_coord - x_outer ) + y_outer  
+    y_coord = param_c * ( new_x_coord - x_outer ) + y_outer
   end if
 
   ! To define coords <0
   if ( use_symmetry ) then
     y_coord = -1.0_r_def * y_coord
   end if
- 
+
   return
-  
+
 end function polynomial_stretch
 
 end module polynomial_stretching_mod

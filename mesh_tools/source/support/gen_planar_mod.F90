@@ -1680,9 +1680,9 @@ subroutine calc_coords(self)
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
 
  end select
-  
+
     call move_alloc(vert_coords, self%vert_coords)
-    
+
   return
 end subroutine calc_coords
 
@@ -1705,7 +1705,7 @@ subroutine stretch_coords(self)
 
     case (stretch_function_polynomial)
       call apply_polynomial_stretch(self)
-       
+
     case (stretch_function_inflation)
        call log_event( "stretch_function inflation is not a transformation", &
                       LOG_LEVEL_ERROR )
@@ -2492,7 +2492,7 @@ end subroutine set_partition_parameters
 subroutine apply_uniform_resolution(self)
 
   implicit none
-  
+
   class(gen_planar_type), intent(inout) :: self
 
   real(r_def) :: dx, param_a
@@ -2508,19 +2508,19 @@ subroutine apply_uniform_resolution(self)
       dx = 2.0_r_def / self%edge_cells_y
       param_a = self%dx / dx
     end if
-      
+
     nverts = size(self%vert_coords(direction, :))
 
     ! Apply the scaling transformation to each coordinate
     do vert = 1, nverts
- 
+
       self%vert_coords(direction, vert) = param_a * &
                                           self%vert_coords(direction, vert)
-         
+
     end do
-      
+
   end do
-   
+
   return
 
 end subroutine apply_uniform_resolution
@@ -2555,27 +2555,27 @@ subroutine apply_polynomial_stretch(self)
     ! Calculate the parameters required for the stretching transform
     call polynomial_parameters( param_a, param_b, param_c, &
          x_inner, x_outer, dx, direction )
-    
+
     ! Apply the stretching transformation to each coordinate
     do vert = 1, nverts
- 
+
        self%vert_coords(direction, vert) = &
             polynomial_stretch(self%vert_coords(direction, vert), &
             param_a, param_b, param_c, x_inner, x_outer )
 
        if ( vert > 1) then
         diff = self%vert_coords(direction, vert) - self%vert_coords(direction, vert-1)
-        if (diff > 0.0_r_def) then 
+        if (diff > 0.0_r_def) then
            print*, vert, self%vert_coords(direction, vert), diff
         end if
        end if
-         
+
     end do
-      
+
   end do
-  
+
   return
-  
+
 end subroutine apply_polynomial_stretch
 
 end module gen_planar_mod
