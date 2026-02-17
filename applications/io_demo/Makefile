@@ -16,8 +16,6 @@ PROFILE ?= fast-debug
 # Select option for PSyclone transformation. Select "none" for no transformation.
 export PSYCLONE_TRANSFORMATION ?= minimum
 
-export EXTRA_ROSE_META = jules
-
 export PROJECT_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 export CORE_ROOT_DIR    ?= ../..
 export INTERNAL_DEPENDENCIES = $(CORE_ROOT_DIR)/infrastructure \
