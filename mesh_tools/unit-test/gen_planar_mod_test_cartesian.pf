@@ -32,7 +32,7 @@ module gen_planar_mod_test_cartesian
                              topology_non_periodic, &
                              topology_channel,      &
                              topology_periodic
-  
+
   use planar_mesh_config_mod, only: stretch_function_uniform
 
   implicit none

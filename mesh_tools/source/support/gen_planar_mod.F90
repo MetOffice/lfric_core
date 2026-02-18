@@ -2529,7 +2529,7 @@ subroutine apply_uniform_resolution(self)
 
   self%domain_extents(1,:) = self%domain_extents(1,:) + self%domain_centre(1)
   self%domain_extents(2,:) = self%domain_extents(2,:) + self%domain_centre(2)
-  
+
   return
 
 end subroutine apply_uniform_resolution
