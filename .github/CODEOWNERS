@@ -25,7 +25,7 @@
 
 # Components
 /components/coupling/ @mike-hobson
-/components/science @tommbendall # @thomasmelvin
+/components/science/ @tommbendall # @thomasmelvin
 
 # Applications
 /applications/coupled/ @mike-hobson
