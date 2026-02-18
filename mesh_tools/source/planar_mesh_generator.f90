@@ -751,6 +751,7 @@ program planar_mesh_generator
                         periodic_y         = periodic_y,             &
                         domain_size        = domain_size,            &
                         domain_centre      = domain_centre,          &
+                        stretch_function   = stretch_function,       &
                         rotate_mesh        = rotate_mesh,            &
                         target_north_pole  = set_north_pole,         &
                         target_null_island = set_null_island )
@@ -787,6 +788,7 @@ program planar_mesh_generator
                         fine_mesh_edge_cells_y,                    &
                         periodic_x, periodic_y,                    &
                         domain_size, domain_centre,                &
+                        stretch_function    = stretch_function,    &
                         target_mesh_names   = target_mesh_names,   &
                         target_edge_cells_x = target_edge_cells_x, &
                         target_edge_cells_y = target_edge_cells_y, &

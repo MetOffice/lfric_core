@@ -29,8 +29,7 @@ module gen_planar_mod
                                             coord_sys_ll, coord_sys_xyz, &
                                             topology_non_periodic,       &
                                             geometry_spherical
-  use planar_mesh_config_mod,         only: stretch_function,           &
-                                            stretch_function_uniform,   &
+  use planar_mesh_config_mod,         only: stretch_function_uniform,   &
                                             stretch_function_inflation, &
                                             stretch_function_polynomial
   use reference_element_mod,          only: reference_element_type, &
@@ -95,6 +94,7 @@ module gen_planar_mod
     integer(i_def)     :: edge_cells_y
     integer(i_def)     :: fine_mesh_edge_cells_x
     integer(i_def)     :: fine_mesh_edge_cells_y
+    integer(i_def)     :: stretch_function
     integer(i_def)     :: npanels = NPANELS
     real(r_def)        :: domain_size(2)
     real(r_def)        :: domain_centre(2) = [0.0_r_def,0.0_r_def]
@@ -217,6 +217,7 @@ function gen_planar_constructor( reference_element,          &
                                  fine_mesh_edge_cells_y,     &
                                  periodic_x, periodic_y,     &
                                  domain_size, domain_centre, &
+                                 stretch_function,           &
                                  target_mesh_names,          &
                                  target_edge_cells_x,        &
                                  target_edge_cells_y,        &
@@ -236,6 +237,7 @@ function gen_planar_constructor( reference_element,          &
   integer(i_def),     intent(in) :: edge_cells_x, edge_cells_y
   integer(i_def),     intent(in) :: fine_mesh_edge_cells_x
   integer(i_def),     intent(in) :: fine_mesh_edge_cells_y
+  integer(i_def),     intent(in) :: stretch_function
   logical(l_def),     intent(in) :: periodic_x, periodic_y
   real(r_def),        intent(in) :: domain_size(2)
   real(r_def),        intent(in) :: domain_centre(2)
@@ -317,6 +319,7 @@ function gen_planar_constructor( reference_element,          &
   self%edge_cells_y = edge_cells_y
   self%fine_mesh_edge_cells_x = fine_mesh_edge_cells_x
   self%fine_mesh_edge_cells_y = fine_mesh_edge_cells_y
+  self%stretch_function = stretch_function
 
   self%nmaps          = 0_i_def
   self%periodic_xy(1) = periodic_x
@@ -1699,7 +1702,7 @@ subroutine stretch_coords(self)
 
   class(gen_planar_type), intent(inout)  :: self
 
-  select case (stretch_function)
+  select case (self%stretch_function)
     case (stretch_function_uniform)
       call apply_uniform_resolution(self)
 
@@ -1962,7 +1965,7 @@ subroutine generate(self)
   ! at the same time that the mesh is generated. Otherwise use
   ! calc_coords to generate a unit mesh and then apply a stretching
   ! transform.
-  if (stretch_function == stretch_function_inflation) then
+  if (self%stretch_function == stretch_function_inflation) then
     call assign_stretched_mesh_coords(self)
   else
     call calc_coords(self)

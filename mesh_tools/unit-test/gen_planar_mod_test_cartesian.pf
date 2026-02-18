@@ -32,6 +32,8 @@ module gen_planar_mod_test_cartesian
                              topology_non_periodic, &
                              topology_channel,      &
                              topology_periodic
+  
+  use planar_mesh_config_mod, only: stretch_function_uniform
 
   implicit none
 
@@ -1277,6 +1279,7 @@ contains
                                 fine_mesh_edge_cells_y=context%y_size, &
                                 periodic_x=context%x_periodic,         &
                                 periodic_y=context%y_periodic,         &
+                                stretch_function=stretch_function_uniform, &
                                 domain_size=context%domain_size,       &
                                 domain_centre=context%domain_centre )
 

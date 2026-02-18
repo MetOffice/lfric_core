@@ -24,6 +24,7 @@ module calc_global_cell_map_mod_test
                                       topology_channel,  &
                                       coord_sys_xyz,     &
                                       coord_sys_ll
+  use planar_mesh_config_mod,   only: stretch_function_uniform
 
   implicit none
 
@@ -198,6 +199,7 @@ contains
                              periodic_y   = .true.,                 &
                              domain_size  = this%domain_size,       &
                              domain_centre= this%domain_centre,     &
+                             stretch_function = stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
     mesh_name = 'fine_plane_bi'
@@ -216,6 +218,7 @@ contains
                              periodic_y   = .true.,                 &
                              domain_size  = this%domain_size,       &
                              domain_centre= this%domain_centre,     &
+                             stretch_function = stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
 
@@ -236,6 +239,7 @@ contains
                              periodic_y   = .false.,              &
                              domain_size  = this%domain_size,     &
                              domain_centre= this%domain_centre,   &
+                             stretch_function = stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
 
@@ -255,6 +259,7 @@ contains
                              periodic_y   = .false.,            &
                              domain_size  = this%domain_size,   &
                              domain_centre= this%domain_centre, &
+                             stretch_function = stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
     mesh_name = 'coarse_plane_periodic_y'
@@ -273,6 +278,7 @@ contains
                              periodic_y   = .true.,               &
                              domain_size  = this%domain_size,     &
                              domain_centre= this%domain_centre,   &
+                             stretch_function = stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
 
@@ -292,6 +298,7 @@ contains
                              periodic_y   = .true.,             &
                              domain_size  = this%domain_size,   &
                              domain_centre= this%domain_centre, &
+                             stretch_function = stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
     return

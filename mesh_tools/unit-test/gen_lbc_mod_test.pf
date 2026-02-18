@@ -21,6 +21,7 @@ module gen_lbc_mod_test
   use mesh_config_mod, only: coord_sys_xyz,   &
                              geometry_planar, &
                              topology_non_periodic
+  use planar_mesh_config_mod, only: stretch_function_uniform
 
   use funit
 
@@ -248,6 +249,7 @@ contains
                                       fine_mesh_edge_cells_y=edge_cells_y, &
                                       domain_size=domain_size,             &
                                       domain_centre=domain_centre,         &
+                                      stretch_function=stretch_function_uniform, &
                                       periodic_x=periodic_x,               &
                                       periodic_y=periodic_y )
 
@@ -411,6 +413,7 @@ contains
                                       periodic_y=periodic_y,               &
                                       domain_size=domain_size,             &
                                       domain_centre=domain_centre,         &
+                                      stretch_function=stretch_function_uniform, &
                                       edge_cells_x=edge_cells_x,           &
                                       edge_cells_y=edge_cells_y ,          &
                                       fine_mesh_edge_cells_x=edge_cells_x, &
@@ -550,6 +553,7 @@ contains
                                       fine_mesh_edge_cells_y=edge_cells_y, &
                                       domain_size=domain_size,             &
                                       domain_centre=domain_centre,         &
+                                      stretch_function=stretch_function_uniform, &
                                       periodic_x=periodic_x,               &
                                       periodic_y=periodic_y )
 
