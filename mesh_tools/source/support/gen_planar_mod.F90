@@ -1674,8 +1674,8 @@ subroutine calc_coords(self)
     self%coord_units_y = 'm'
 
   case(coord_sys_ll)
-    self%coord_units_x = 'degrees'
-    self%coord_units_y = 'degrees'
+    self%coord_units_x = 'radians' !'degrees'
+    self%coord_units_y = 'radians' !'degrees'
 
   case default
     write(log_scratch_space,'(A,I0)') &
@@ -2509,7 +2509,7 @@ subroutine apply_uniform_resolution(self)
       param_a = self%dx / dx
     else
       dx = 2.0_r_def / self%edge_cells_y
-      param_a = self%dx / dx
+      param_a = self%dy / dx
     end if
 
     nverts = size(self%vert_coords(direction, :))
@@ -2524,6 +2524,12 @@ subroutine apply_uniform_resolution(self)
 
   end do
 
+  self%vert_coords(1,:) =self%vert_coords(1,:) + self%domain_centre(1)
+  self%vert_coords(2,:) =self%vert_coords(2,:) + self%domain_centre(2)
+
+  self%domain_extents(1,:) = self%domain_extents(1,:) + self%domain_centre(1)
+  self%domain_extents(2,:) = self%domain_extents(2,:) + self%domain_centre(2)
+  
   return
 
 end subroutine apply_uniform_resolution
