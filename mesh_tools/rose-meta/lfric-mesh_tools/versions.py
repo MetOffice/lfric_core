@@ -44,7 +44,7 @@ class vn30_t1(MacroUpgrade):
         apply_stretch_transform = self.get_setting_value(
             config, [nml, "apply_stretch_transform"])
         
-        if apply_stretch_transform = ".true.":
+        if apply_stretch_transform == ".true.":
             self.add_setting(
                 config,
                 [nml, "stretch_function"],
