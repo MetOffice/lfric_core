@@ -841,7 +841,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
   integer(i_def), allocatable :: src_offsets(:)
   integer(i_def), allocatable :: tgt_offsets(:)
   integer(i_def) :: i
-  type(lfric_comm_type) :: comm
   integer(i_def) :: datatype_mpi_val
 
   if( global_mpi%is_comm_set() )then
@@ -860,6 +859,7 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
       tgt_offsets(i) = i + size(src_indices) - 1
     end do
 
+    datatype_mpi_val = datatype%get_datatype_mpi_val()
     redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype_mpi_val)
 
     deallocate(src_offsets)
