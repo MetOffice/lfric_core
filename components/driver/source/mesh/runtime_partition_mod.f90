@@ -111,13 +111,13 @@ end subroutine get_partition_strategy
 !>                                    and method
 !> @param[in]  generate_inner_halos   Generate inner halo regions
 !!                                    to overlap comms & compute
-!> @param[in]  stencil_depth          Depth of cells outside the base cell
-!!                                    of stencil.
+!> @param[in]  stencil_depths         Depth of cells outside the base cell
+!!                                    of stencil for each mesh.
 !> @param[in]  partitioner_ptr        Mesh partitioning strategy
 subroutine create_local_mesh( mesh_names,              &
                               local_rank, total_ranks, &
                               decomposition,           &
-                              stencil_depth,           &
+                              stencil_depths,          &
                               generate_inner_halos,    &
                               partitioner_ptr )
 
@@ -129,7 +129,7 @@ subroutine create_local_mesh( mesh_names,              &
 
   integer(i_def), intent(in) :: local_rank
   integer(i_def), intent(in) :: total_ranks
-  integer(i_def), intent(in) :: stencil_depth
+  integer(i_def), intent(in) :: stencil_depths(:)
 
   logical(l_def), intent(in) :: generate_inner_halos
 
@@ -152,7 +152,7 @@ subroutine create_local_mesh( mesh_names,              &
     partition = partition_type( global_mesh_ptr,      &
                                 partitioner_ptr,      &
                                 decomposition,        &
-                                stencil_depth,        &
+                                stencil_depths(i),    &
                                 generate_inner_halos, &
                                 local_rank,           &
                                 total_ranks,          &

@@ -30,7 +30,7 @@ applications/skeleton               mikehobson          stevemullerworth        
 components/driver                   mikehobson          stevemullerworth               core_capability_development
 components/inventory                stevemullerworth    mikehobson                     core_capability_development
 components/lfric-xios               andrewcoughtrie     stevemullerworth               core_capability_development
-components/science                  thomasbendall       thomasmelvin                   dynamics_research
+components/science                  tommbendall         thomasmelvin                   dynamics_research
 infrastructure_configuration        rickywong           matthewhambley                 core_capability_development
 infrastructure_field                mikehobson          stevemullerworth               core_capability_development
 infrastructure_function_space       mikehobson          stevemullerworth               core_capability_development
@@ -40,7 +40,7 @@ infrastructure_key_value            mikehobson          stevemullerworth        
 infrastructure_mesh                 rickywong           mikehobson                     core_capability_development
 infrastructure_operator             mikehobson          stevemullerworth               core_capability_development
 infrastructure_PSYKE                christophermaynard  ivakavcic                      technical_optimisation
-infrastructure_quadrature           thomasmelvin        thomasbendall                  dynamics_research
+infrastructure_quadrature           thomasmelvin        tommbendall                    dynamics_research
 infrastructure_scalar               mikehobson          stevemullerworth               core_capability_development
 infrastructure_time                 matthewhambley      andrewcoughtrie                core_capability_development
 infrastructure_utilities            matthewhambley      mikehobson                     core_capability_development
@@ -65,7 +65,7 @@ infrastructure/rose-stem            matthewhambley      stevemullerworth        
 
 {{{
 Area                                First Contact       Second Contact                 Team
-Docs                                jameskent           thomasbendall                  dynamics_research
+Docs                                jameskent           tommbendall                    dynamics_research
 GPL-utilities                       rickywong           lottieturner                   core_capability_development
 physics-dev(deprecated)             benshipway          --                             dynamics_research
 Spectator                           matthewhambley      --                             core_capability_development

@@ -19,11 +19,13 @@
 /infrastructure/**/PSYKE/ @christophermaynard @teranivy
 /infrastructure/**/io/ @andrewcoughtrie @mo-rickywong
 /infrastructure/**/kernel_metadata/ @teranivy @stevemullerworth
+/infrastructure/**/quadrature/  @thomasmelvin # @tommbendall
 /infrastructure/**/time/ @matthewhambley @andrewcoughtrie
 /infrastructure/integration-test/ @matthewhambley
 
 # Components
 /components/coupling/ @mike-hobson
+/components/science/ @tommbendall # @thomasmelvin
 
 # Applications
 /applications/coupled/ @mike-hobson
