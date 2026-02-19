@@ -25,7 +25,7 @@ module teapot_config_mod
             teapot_is_loadable, teapot_is_loaded, &
             teapot_reset_load_status, &
             teapot_multiples_allowed, teapot_final, &
-            get_teapot_nml
+            get_teapot_nml, get_new_teapot_nml
 
   real(r_def), public, protected :: bar = rmdi
   real(r_def), public, protected :: foo = rmdi
@@ -121,14 +121,14 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(3)
 
-      call members(1)%initialise( &
-                  'bar', bar )
+    call members(1)%initialise( &
+                'bar', bar )
 
-      call members(2)%initialise( &
-                  'foo', foo )
+    call members(2)%initialise( &
+                'foo', foo )
 
-      call members(3)%initialise( &
-                  'fum', fum )
+    call members(3)%initialise( &
+                'fum', fum )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -140,6 +140,38 @@ contains
     end if
 
   end function get_teapot_nml
+
+  !> @brief Returns a <<teapot_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<teapot_nml_type>> with current namelist contents.
+  function get_new_teapot_nml() result(namelist_obj)
+
+    use teapot_nml_mod, only: teapot_nml_type
+
+    implicit none
+
+    type(teapot_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(3)
+
+    call members(1)%initialise( &
+                'bar', bar )
+
+    call members(2)%initialise( &
+                'foo', foo )
+
+    call members(3)%initialise( &
+                'fum', fum )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_teapot_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

@@ -12,22 +12,19 @@
 module init_io_demo_mod
 
   use sci_assign_field_random_range_alg_mod,  only: assign_field_random_range
-  use constants_mod,                          only : i_def, r_def
+  use constants_mod,                          only : i_def, r_def, l_def
   use driver_modeldb_mod,                     only : modeldb_type
   use field_collection_mod,                   only : field_collection_type
   use field_mod,                              only : field_type
   use field_parent_mod,                       only : write_interface
-  use finite_element_config_mod,              only : element_order_h, &
-                                                     element_order_v
   use function_space_collection_mod,          only : function_space_collection
+  use function_space_mod,                     only : function_space_type
   use fs_continuity_mod,                      only : Wtheta
   use key_value_mod,                          only : abstract_value_type
   use log_mod,                                only : log_event,       &
                                                      LOG_LEVEL_TRACE, &
                                                      LOG_LEVEL_ERROR
   use mesh_mod,                               only : mesh_type
-  use io_config_mod,                          only : write_diag, &
-                                                     use_xios_io
   use lfric_xios_write_mod,                   only : write_field_generic
   use io_demo_constants_mod,                  only : create_io_demo_constants
   use random_number_generator_mod,            only : random_number_generator_type
@@ -37,20 +34,21 @@ module init_io_demo_mod
   contains
 
   !> @details Initialises everything needed to run the io_demo miniapp
+  !> @param[in,out] modeldb The structure that holds model state
   !> @param[in]     mesh Representation of the mesh the code will run on
   !> @param[in,out] chi The co-ordinate field
   !> @param[in,out] panel_id 2d field giving the id for cubed sphere panels
-  !> @param[in,out] modeldb The structure that holds model state
-  subroutine init_io_demo( mesh, chi, panel_id, modeldb)
+  subroutine init_io_demo(modeldb, mesh, chi, panel_id)
 
     implicit none
 
-    type(mesh_type), intent(in), pointer        :: mesh
+    type(modeldb_type), intent(inout)       :: modeldb
+    type(mesh_type),    intent(in), pointer :: mesh
 
     ! Coordinate field
-    type(field_type), intent(inout)             :: chi(:)
-    type(field_type), intent(inout)             :: panel_id
-    type(modeldb_type), intent(inout)           :: modeldb
+    type(field_type), intent(inout) :: chi(:)
+    type(field_type), intent(inout) :: panel_id
+
     class(abstract_value_type), pointer         :: abstract_value
     type(random_number_generator_type), pointer :: rng
     type(field_type)                            :: diffusion_field
@@ -59,7 +57,19 @@ module init_io_demo_mod
     real(kind=r_def), parameter                 :: min_val = 280.0_r_def
     real(kind=r_def), parameter                 :: max_val = 330.0_r_def
 
+    type(function_space_type), pointer :: fs
+
+    integer(i_def) :: order_h, order_v
+    logical(l_def) :: write_diag
+    logical(l_def) :: use_xios_io
+
     call log_event( 'io_demo: Initialising miniapp ...', LOG_LEVEL_TRACE )
+
+    order_h = modeldb%config%finite_element%element_order_h()
+    order_v = modeldb%config%finite_element%element_order_v()
+
+    write_diag  = modeldb%config%io%write_diag()
+    use_xios_io = modeldb%config%io%use_xios_io()
 
     ! seed the random number generator
     call modeldb%values%get_value("rng", abstract_value)
@@ -76,10 +86,8 @@ module init_io_demo_mod
 
     ! Create prognostic fields
     ! Creates a field in the Wtheta function space
-    call diffusion_field%initialise( vector_space = &
-                    function_space_collection%get_fs(mesh, element_order_h, &
-                                                     element_order_v, Wtheta), &
-                             name="diffusion_field")
+    fs => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
+    call diffusion_field%initialise(fs, name="diffusion_field")
 
     ! Set up field with an IO behaviour (XIOS only at present)
     if (write_diag .and. use_xios_io) then
@@ -98,7 +106,7 @@ module init_io_demo_mod
     ! Create io_demo runtime constants. This creates various things
     ! needed by the fem algorithms such as mass matrix operators, mass
     ! matrix diagonal fields and the geopotential field
-    call create_io_demo_constants(mesh, chi, panel_id)
+    call create_io_demo_constants(modeldb, mesh, chi, panel_id)
 
     call log_event( 'io_demo: Miniapp initialised', LOG_LEVEL_TRACE )
 

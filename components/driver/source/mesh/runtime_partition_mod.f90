@@ -15,8 +15,6 @@ module runtime_partition_mod
                                      log_level_error,   &
                                      log_level_debug
   use local_mesh_mod,          only: local_mesh_type
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
   use ncdf_quad_mod,           only: ncdf_quad_type
   use partition_mod,           only: partition_type,                 &
                                      partitioner_interface,          &
@@ -78,15 +76,15 @@ subroutine get_partition_strategy( mesh_selection, total_ranks, partitioner_ptr 
       call log_event( "Using serial cubed sphere partitioner", &
                       log_level_debug )
 
-    else if (mod(total_ranks,6) == 0) then
+    else if (mod(total_ranks,3) == 0 .or. mod(total_ranks,2) == 0) then
       ! Paralled run job
       partitioner_ptr => partitioner_cubedsphere
       call log_event( "Using parallel cubed sphere partitioner", &
                       log_level_debug )
 
     else
-      call log_event( "Total number of processors must be 1 (serial) "// &
-                      "or a multiple of 6 for a cubed-sphere domain.",   &
+      call log_event( "Total number of processors must be 1 (serial) "//    &
+                      "or a multiple of 2 or 3 for a cubed-sphere domain.", &
                       log_level_error )
     end if
 

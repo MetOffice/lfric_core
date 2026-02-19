@@ -7,14 +7,14 @@
 !>@brief Barebones algorithm to help the development of applications
 module skeleton_alg_mod
 
-  use constants_mod,                  only: i_def,r_def
-  use log_mod,                        only: log_event,         &
-                                            LOG_LEVEL_INFO
+  use constants_mod,                  only: r_def, i_def
+  use log_mod,                        only: log_event, log_level_info
   use mesh_mod,                       only: mesh_type
+  use driver_modeldb_mod,             only: modeldb_type
   use field_mod,                      only: field_type
-  use finite_element_config_mod,      only: element_order_h, element_order_v
   use fs_continuity_mod,              only: W2
   use function_space_collection_mod,  only: function_space_collection
+  use function_space_mod,             only: function_space_type
   use operator_mod,                   only: operator_type
   use matrix_vector_kernel_mod,       only: matrix_vector_kernel_type
   use skeleton_constants_mod,         only: get_div
@@ -29,30 +29,42 @@ module skeleton_alg_mod
 contains
 
   !> @details An algorithm for developing applications
+  !> @param[in]    modeldb  Application state object
   !> @param[inout] field_1  A prognostic field object
-  subroutine skeleton_alg(field_1)
+  subroutine skeleton_alg(modeldb, field_1)
 
     implicit none
 
+    type(modeldb_type), intent(in) :: modeldb
+
     ! Prognostic fields
-    type( field_type ), intent( inout ) :: field_1
+    type(field_type), intent(inout) :: field_1
 
     ! Diagnostic fields
-    type( field_type )                  :: field_2
+    type(field_type) :: field_2
 
-    real(r_def)                         :: s
-    type(mesh_type), pointer            :: mesh => null()
-    type( operator_type ), pointer      :: divergence => null()
+    type(mesh_type),           pointer :: mesh
+    type(operator_type),       pointer :: divergence
+    type(function_space_type), pointer :: fs
 
-    call log_event( "skeleton: Running algorithm", LOG_LEVEL_INFO )
+    real(r_def) :: s
+
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+
+    call log_event( "skeleton: Running algorithm", log_level_info )
+
+    order_h = modeldb%config%finite_element%element_order_h()
+    order_v = modeldb%config%finite_element%element_order_v()
 
     ! Create a new field on the W2 function space
-    mesh => field_1%get_mesh()
-    call field_2%initialise( function_space_collection%get_fs( mesh, element_order_h, &
-                                                               element_order_v, W2 ) )
+    mesh       => field_1%get_mesh()
+    divergence => get_div(mesh)
+
+    fs => function_space_collection%get_fs(mesh, order_h, order_v, W2)
+    call field_2%initialise(fs)
 
     ! Set the new field to a constant value and compute the divergence of it
-    divergence => get_div(mesh)
     s = 2.0_r_def
     call invoke( name = "compute_divergence",  &
                  setval_c(field_2, s        ), &
@@ -63,9 +75,7 @@ contains
     ! printing the min/max values in field_1
     call log_field_minmax( LOG_LEVEL_INFO, 'field_1', field_1 )
 
-    nullify(mesh)
-
-    call log_event( "skeleton: finished algorithm", LOG_LEVEL_INFO )
+    call log_event( "skeleton: finished algorithm", log_level_info )
 
   end subroutine skeleton_alg
 
