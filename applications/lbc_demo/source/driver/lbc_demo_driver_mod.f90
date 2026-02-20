@@ -82,7 +82,7 @@ subroutine initialise( program_name, modeldb)
   character(str_def) :: output_mesh_name
   character(str_def) :: context_name
 
-  integer(i_def) :: stencil_depth
+  integer(i_def) :: stencil_depth(1)
   integer(i_def) :: geometry
   integer(i_def) :: method
   integer(i_def) :: number_of_layers
