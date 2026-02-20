@@ -49,7 +49,7 @@ contains
 
   !> @brief Compute the Jacobian matrices at a 1D array of points (e.g. DoFs)
   !!        for a whole column, using the native coordinates of the mesh
-  !! @param[in] coord_system   Finite-element coordiante system enumeration.
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
   !! @param[in] geometry       Mesh geometry enumeration.
   !! @param[in] topology       Mesh topology enumeration.
   !! @param[in] scaled_radius  Scaled planetary radius.

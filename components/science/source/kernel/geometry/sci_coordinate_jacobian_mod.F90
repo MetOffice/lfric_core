@@ -120,7 +120,7 @@ contains
   !> J^{i,j} = \frac{\partial \chi_i} / {\partial \hat{\chi_j}}
   !> \f}
   !>
-  !! @param[in] coord_system   Finite-element coordiante system enumeration.
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
   !! @param[in] geometry       Mesh geometry enumeration.
   !! @param[in] topology       Mesh topology enumeration.
   !! @param[in] scaled_radius  Scaled planetary radius.
@@ -472,7 +472,7 @@ contains
   !> reference space \f[ \hat{\chi} \f] to physical space \f[ \chi \f]
   !> \f[ J^{i,j} = \frac{\partial \chi_i} / {\partial \hat{\chi_j}} \f]
   !> and the determinant det(J)
-  !! @param[in] coord_system   Finite-element coordiante system enumeration.
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
   !! @param[in] geometry       Mesh geometry enumeration.
   !! @param[in] topology       Mesh topology enumeration.
   !! @param[in] scaled_radius  Scaled planetary radius.
@@ -913,7 +913,7 @@ contains
   !> reference space \f[ \hat{\chi} \f] to physical space \f[ \chi \f]
   !> \f[ J^{i,j} = \frac{\partial \chi_i} / {\partial \hat{\chi_j}} \f]
   !> and the determinant det(J) for a single point
-  !! @param[in] coord_system   Finite-element coordiante system enumeration.
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
   !! @param[in] geometry       Mesh geometry enumeration.
   !! @param[in] topology       Mesh topology enumeration.
   !! @param[in] scaled_radius  Scaled planetary radius.
