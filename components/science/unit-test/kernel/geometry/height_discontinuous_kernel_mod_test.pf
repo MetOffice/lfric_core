@@ -7,7 +7,7 @@
 !> Test the get height kernel. Sets up a planar domain with quadratic height
 !> extrusion, and tests answer in W3 and Wtheta spaces
 !>
-module get_height_kernel_mod_test
+module height_discontinuous_kernel_mod_test
 
     use constants_mod,                       only : i_def, r_def
     use funit
@@ -26,13 +26,13 @@ module get_height_kernel_mod_test
   public :: test_all
 
   @TestCase
-  type, extends(TestCase), public :: get_height_kernel_test_type
+  type, extends(TestCase), public :: height_discontinuous_kernel_test_type
     private
   contains
     procedure setUp
     procedure tearDown
     procedure test_all
-  end type get_height_kernel_test_type
+  end type height_discontinuous_kernel_test_type
 
 contains
 
@@ -48,7 +48,7 @@ contains
 
     implicit none
 
-    class(get_height_kernel_test_type), intent(inout) :: this
+    class(height_discontinuous_kernel_test_type), intent(inout) :: this
 
     call feign_base_mesh_config( file_prefix='foo',                &
                                  prime_mesh_name='unit_test',      &
@@ -74,7 +74,7 @@ contains
 
     implicit none
 
-    class(get_height_kernel_test_type), intent(inout) :: this
+    class(height_discontinuous_kernel_test_type), intent(inout) :: this
 
     call final_configuration()
 
@@ -84,11 +84,11 @@ contains
   @Test
   subroutine test_all( this )
 
-    use sci_get_height_kernel_mod, only : get_height_code
+    use sci_height_discontinuous_kernel_mod, only : height_discontinuous_code
 
     implicit none
 
-    class(get_height_kernel_test_type), intent(inout) :: this
+    class(height_discontinuous_kernel_test_type), intent(inout) :: this
 
     real(r_def), parameter :: dx     = 4.0_r_def, &
                               dy     = 3.0_r_def, &
@@ -172,7 +172,7 @@ contains
     height_w3(:) = 0.0_r_def
     height_wtheta(:) = 0.0_r_def
 
-    call get_height_code(nlayers,                            &
+    call height_discontinuous_code(nlayers,                  &
                          height_w3,                          &
                          chi_1, chi_2, chi_3,                &
                          radius,                             &
@@ -180,7 +180,7 @@ contains
                          ndf_w0, undf_w0, map_w0(:,cell),    &
                          basis_w0_on_w3(:,:,:) )
 
-    call get_height_code(nlayers,                                     &
+    call height_discontinuous_code(nlayers,                           &
                          height_wtheta,                               &
                          chi_1, chi_2, chi_3,                         &
                          radius,                                      &
@@ -216,4 +216,4 @@ contains
 
   end subroutine test_all
 
-end module get_height_kernel_mod_test
+end module height_discontinuous_kernel_mod_test
