@@ -20,12 +20,16 @@
 
 # Infrastructure
 /infrastructure/                    @MetOffice/core-capability-development
-/infrastructure/**/mesh/            @mo-rickywong # @mike-hobson
 /infrastructure/**/configuration/   @mo-rickywong # @matthewhambley
-/infrastructure/**/PSYKE/           @christophermaynard # @teranivy
+/infrastructure/**/field/           @mike-hobson # @MetOffice/core-capability-development
+/infrastructure/**/function_space/  @mike-hobson # @MetOffice/core-capability-development
 /infrastructure/**/io/              @andrewcoughtrie # @mo-rickywong
+/infrastructure/**/key_value/       @mo-rickywong # @mike-hobson
 /infrastructure/**/kernel_metadata/ @teranivy # @stevemullerworth
+/infrastructure/**/mesh/            @mo-rickywong # @mike-hobson
+/infrastructure/**/PSYKE/           @christophermaynard # @teranivy
 /infrastructure/**/quadrature/      @thomasmelvin # @tommbendall
+/infrastructure/**/scalar/          @mike-hobson # @MetOffice/core-capability-development
 /infrastructure/**/time/            @matthewhambley # @andrewcoughtrie
 /infrastructure/integration-test/   @matthewhambley # @MetOffice/core-capability-development
 
@@ -35,7 +39,7 @@
 /lfric_build/                       @matthewhambley # @allynt
 
 # Documentation
-/documentation/                         # No code owner for most docs
+/documentation/**                       # No code owner for most docs
 /documentation/source/index.rst         @andrewcoughtrie @stevemullerworth
 /documentation/source/conf.py           @andrewcoughtrie # @allynt
 /documentation/templates/               @andrewcoughtrie # @allynt
@@ -43,7 +47,7 @@
 /documentation/source/accessibility.rst @stevemullerworth # @yaswant
 
 # System Components
-rose-stem                              @james-bruten-mo # @jennyhickson
+rose-stem/*                            @james-bruten-mo # @jennyhickson
 rose-stem/templates/                   @james-bruten-mo # @jennyhickson
 rose-stem/lib/                         @james-bruten-mo # @jennyhickson
 rose-stem/bin/                         @james-bruten-mo # @jennyhickson
