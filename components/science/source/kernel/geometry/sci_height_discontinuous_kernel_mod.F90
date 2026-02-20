@@ -98,7 +98,7 @@ subroutine height_discontinuous_code(                                          &
 
   ! Internal variables
   logical(kind=l_def) :: is_spherical_xyz
-  integer(kind=i_def) :: df_chi, df_h, k
+  integer(kind=i_def) :: df_chi, df_h
   integer(kind=i_def) :: h_b_idx, h_t_idx, chi_b_idx, chi_t_idx
   real(kind=r_def)    :: coord_1(nlayers), coord_2(nlayers), coord_3(nlayers)
   real(kind=r_def)    :: coord_radius(nlayers), basis_val
