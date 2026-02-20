@@ -87,16 +87,18 @@ contains
     real(kind=r_single), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
-    integer(kind=i_def) :: df, k, kk, ik, kend, df2
+    integer(kind=i_def) :: df, ik, df2, i1, i2, nl, k, kk, kend
 
-    do kk = 0, nlayers-1, BLOCK_SIZE
-      kend = min(kk+BLOCK_SIZE-1, nlayers-1)
-
-      do df = 1, ndf1
-        do df2 = 1, ndf2
-          do k = 0, kend
-            ik = (cell-1)*nlayers + kk + k + 1
-            lhs(map1(df)+kk+k) = lhs(map1(df)+kk+k) + matrix(ik,df,df2)*x(map2(df2)+kk+k)
+    nl = nlayers-1
+    do k = 0, nl, BLOCK_SIZE
+      ik = (cell-1)*nlayers + 1
+      kend = min(BLOCK_SIZE-1, nl-k)
+      do df2 = 1, ndf2
+        i2 = map2(df2)
+        do df = 1, ndf1
+          i1 = map1(df)
+          do kk = 0, kend
+            lhs(i1+kk+k) = lhs(i1+kk+k) + matrix(ik+kk+k,df,df2)*x(i2+kk+k)
           end do
         end do
       end do
@@ -129,16 +131,18 @@ contains
     real(kind=r_double), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
-    integer(kind=i_def) :: df, k, kk, ik, kend, df2
+    integer(kind=i_def) :: df, ik, df2, i1, i2, nl, k, kk, kend
 
-    do kk = 0, nlayers-1, BLOCK_SIZE
-      kend = min(kk+BLOCK_SIZE-1, nlayers-1)
-
-      do df = 1, ndf1
-        do df2 = 1, ndf2
-          do k = 0, kend
-            ik = (cell-1)*nlayers + kk + k + 1
-            lhs(map1(df)+kk+k) = lhs(map1(df)+kk+k) + matrix(ik,df,df2)*x(map2(df2)+kk+k)
+    nl = nlayers-1
+    do k = 0, nl, BLOCK_SIZE
+      ik = (cell-1)*nlayers + 1
+      kend = min(BLOCK_SIZE-1, nl-k)
+      do df2 = 1, ndf2
+        i2 = map2(df2)
+        do df = 1, ndf1
+          i1 = map1(df)
+          do kk = 0, kend
+            lhs(i1+kk+k) = lhs(i1+kk+k) + matrix(ik+kk+k,df,df2)*x(i2+kk+k)
           end do
         end do
       end do
