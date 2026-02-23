@@ -1232,7 +1232,7 @@ contains
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
-      case (W3)
+      case (W3, Wtheta)
         call invoke(                                                           &
             height_discontinuous_kernel_type(                                  &
                 height, chi, geometry, coord_system, scaled_radius             &
@@ -1333,7 +1333,7 @@ contains
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
-      case (W3)
+      case (W3, Wtheta)
         call invoke(                                                           &
             height_discontinuous_kernel_type(                                  &
                 height, chi, geometry, coord_system, scaled_radius             &
