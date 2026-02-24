@@ -80,7 +80,12 @@ contains
 !> @param[in] total_ranks       Total number of MPI ranks in this job.
 !> @param[in] mesh_names        Mesh names to load from the mesh input file(s).
 !> @param[in] extrusion         Extrusion object to be applied to meshes.
-!> @param[in] stencil_depth     Required stencil depth for the application.
+!> @param[in] stencil_depths_in Required stencil depth for each mesh for
+!!                              the application. If this array is of size 1 then
+!!                              the single value is applied to all meshes.
+!!                              Otherwise the array size must match the size
+!!                              the mesh name array, allowing different depths
+!!                              to be specified for different meshes.
 !> @param[in] check_partitions  Apply check for even partitions with the
 !>                              configured partition stratedy.
 !>                              (unpartitioned mesh input only)
@@ -90,7 +95,7 @@ contains
 subroutine init_mesh( configuration,           &
                       local_rank, total_ranks, &
                       mesh_names, extrusion,   &
-                      stencil_depth,           &
+                      stencil_depths_in,       &
                       check_partitions,        &
                       alt_names )
 
@@ -104,7 +109,7 @@ subroutine init_mesh( configuration,           &
   character(str_def),    intent(in) :: mesh_names(:)
   class(extrusion_type), intent(in) :: extrusion
 
-  integer(i_def),    intent(in) :: stencil_depth
+  integer(i_def),    intent(in) :: stencil_depths_in(:)
   logical(l_def),    intent(in) :: check_partitions
 
   character(str_def), optional, intent(in) :: alt_names(:)
@@ -132,12 +137,13 @@ subroutine init_mesh( configuration,           &
   character(str_def), allocatable :: names(:)
   character(str_def), allocatable :: tmp_mesh_names(:)
   character(str_max_filename)     :: input_mesh_file
+  integer(i_def),     allocatable :: stencil_depths(:)
 
   procedure(partitioner_interface), pointer :: partitioner_ptr
 
   class(panel_decomposition_type), allocatable :: decomposition
 
-  integer(i_def)     :: n_digit
+  integer(i_def)     :: i, n_digit
   character(str_def) :: fmt_str, number_str
 
   !============================================================================
@@ -160,12 +166,32 @@ subroutine init_mesh( configuration,           &
   !============================================================================
   ! 0.1 Some basic checks
   !============================================================================
-  ! Set up stencil depth
-  if (stencil_depth < 0_i_def) then
-    write(log_scratch_space,'(A)') &
-       'Standard partitioned meshes must support a not -ve stencil_depth'
+
+  if ( size(stencil_depths_in) == 1 ) then
+    ! Single stencil depth specified, apply to all meshes
+    allocate( stencil_depths( size(mesh_names) ) )
+    do i = 1, size(mesh_names)
+      stencil_depths(i) = stencil_depths_in(1)
+    end do
+  else if ( size(stencil_depths_in) == size(mesh_names) ) then
+    ! Stencil depths specified per mesh
+    allocate( stencil_depths( size(mesh_names) ) )
+    stencil_depths = stencil_depths_in
+  else
+    write(log_scratch_space, '(A)')                      &
+        'Number of stencil depths specified does not '// &
+        'match number of requested meshes.'
     call log_event(log_scratch_space, LOG_LEVEL_ERROR)
   end if
+
+  ! Check stencil depths are valid
+  do i = 1, size(stencil_depths)
+    if (stencil_depths(i) < 0_i_def) then
+      write(log_scratch_space,'(A)') &
+        'Standard partitioned meshes must support a not -ve stencil_depth'
+      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+    end if
+  end do
 
   ! Currently only quad elements are fully functional
   if (cellshape /= CELLSHAPE_QUADRILATERAL) then
@@ -240,8 +266,8 @@ subroutine init_mesh( configuration,           &
     !      meshes are suitable for the supplied application
     !      configuration.
     !===========================================================
-    call check_local_mesh( configuration, &
-                           stencil_depth, &
+    call check_local_mesh( configuration,  &
+                           stencil_depths, &
                            mesh_names )
 
     ! 2.1c Load and assign mesh maps.
@@ -300,7 +326,7 @@ subroutine init_mesh( configuration,           &
     call create_local_mesh( mesh_names,              &
                             local_rank, total_ranks, &
                             decomposition,           &
-                            stencil_depth,           &
+                            stencil_depths,          &
                             generate_inner_halos,    &
                             partitioner_ptr )
 
@@ -327,6 +353,8 @@ subroutine init_mesh( configuration,           &
   ! 4.0 Generate intergrid LiD-LiD maps and assign them to mesh objects.
   !============================================================================
   call assign_mesh_maps(mesh_names)
+
+  deallocate(stencil_depths)
 
 end subroutine init_mesh
 

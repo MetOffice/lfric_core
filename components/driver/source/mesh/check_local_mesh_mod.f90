@@ -31,19 +31,19 @@ contains
 
 !> @brief Basic validation that local meshes are suitable
 !!        for the specified configuration.
-!> @param[in]  configuration Configuration object.
-!> @param[in]  stencil_depth Stencil depth that local meshes
-!>                           need to support.
-!> @param[in]  mesh_names    Local meshes held in application
-!!                           local mesh collection object.
-subroutine check_local_mesh( configuration, &
-                             stencil_depth, &
+!> @param[in]  configuration  Configuration object.
+!> @param[in]  stencil_depths Stencil depths that each local mesh
+!>                            needs to support.
+!> @param[in]  mesh_names     Local meshes held in application
+!!                            local mesh collection object.
+subroutine check_local_mesh( configuration,  &
+                             stencil_depths, &
                              mesh_names )
 
   implicit none
 
   type(namelist_collection_type), intent(in) :: configuration
-  integer(i_def),                 intent(in) :: stencil_depth
+  integer(i_def),                 intent(in) :: stencil_depths(:)
   character(str_def),             intent(in) :: mesh_names(:)
 
   integer(i_def) :: topology
@@ -120,10 +120,10 @@ subroutine check_local_mesh( configuration, &
         !=====================================
         max_stencil_depth = local_mesh%get_max_stencil_depth()
 
-        if ( max_stencil_depth < stencil_depth ) then
+        if ( max_stencil_depth < stencil_depths(i) ) then
           write(log_scratch_space,'(2(A,I0),A)')                     &
               'Insufficient stencil depth, configuration requires ', &
-              stencil_depth, '. Mesh "'//trim(mesh_names(i))//       &
+              stencil_depths(i), '. Mesh "'//trim(mesh_names(i))//   &
               '" supports a maximum stencil depth of ',              &
               max_stencil_depth, '.'
           call log_event(log_scratch_space, log_level_error)

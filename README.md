@@ -4,12 +4,12 @@ Welcome to LFRic Core!
 
 LFRic Core provides the underlying infrastructure for the Momentum&reg; Atmosphere model and associated applications.
 
-|           |                                                                                                                                                             |
-|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|:repeat: CI|[![Doc Deploy](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci.yml)|
-|:speech_balloon: Community|[![Static Badge](https://img.shields.io/badge/GitHub-discussions-gold)](https://github.com/MetOffice/simulation-systems/discussions/categories/lfric)|
-|:package: Repo |[![GitHub License](https://img.shields.io/github/license/metoffice/lfric_core)](https://github.com/MetOffice/lfric_core?tab=BSD-3-Clause-1-ov-file#readme) [![GitHub Release](https://img.shields.io/github/v/release/metoffice/lfric_core?color=purple)](https://github.com/MetOffice/lfric_core/releases) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/metoffice/lfric_core/latest)  |
-|           |                                                                                                                                                             |
+|           |                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|:repeat: CI| [![Documentation](https://github.com/MetOffice/lfric_core/actions/workflows/ci_docs.yml/badge.svg)](https://github.com/MetOffice/lfric_core/actions/workflows/ci_docs.yml)                                                                                                                                                                                                                                                  |
+|:speech_balloon: Community| [![Static Badge](https://img.shields.io/badge/GitHub-discussions-gold)](https://github.com/MetOffice/simulation-systems/discussions/categories/lfric)                                                                                                                                                                                                                                                                       |
+|:package: Repo | [![GitHub License](https://img.shields.io/github/license/metoffice/lfric_core)](https://github.com/MetOffice/lfric_core?tab=BSD-3-Clause-1-ov-file#readme) [![GitHub Release](https://img.shields.io/github/v/release/metoffice/lfric_core?color=purple)](https://github.com/MetOffice/lfric_core/releases) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/metoffice/lfric_core/latest) |
+|           |                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## Getting Started
 
@@ -17,6 +17,9 @@ Please find information on getting started using the LFRic Core infrastructure
 in the [documentation](https://metoffice.github.io/lfric_core/). If you are 
 looking for the LFRic Atmosphere model this can be found in the
 [LFRic Apps](https://github.com/MetOffice/lfric_apps) repository.
+
+The LFRic Core release schedule and deadlines can be viewed in the 
+[milestones](https://github.com/metoffice/lfric_core/milestones).
 
 ## Contributing Guidelines
 

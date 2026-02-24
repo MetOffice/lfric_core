@@ -177,8 +177,12 @@ supplied to the partitioner through the use of a function passed in via
 a function pointer.
 
 For efficiency reasons, the algorithm for partitioning a cubed-sphere
-mesh is a specific algorithm that will only work for a cubed-sphere mesh
-(each panel of the cubed-sphere is split into rectangular partitions).
+mesh is a specific algorithm that will only work for a cubed-sphere mesh.
+By default each panel of the cubed-sphere is split into rectangular partitions,
+alternatively if the 'custom' decomposition type is used then sets of 2 or 3 
+cubed-sphere panels can be grouped together before these sets are decomposed into
+a number of rectangular panels. These restrictions mean that the total number of
+partitions for cubed-sphere meshes needs to be a multiple of 2 or 3.
 This specific partitioner could be replaced with a more general
 partitioner for use on fully unstructured meshes.
 

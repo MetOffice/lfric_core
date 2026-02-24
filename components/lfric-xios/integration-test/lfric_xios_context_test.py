@@ -20,7 +20,8 @@ class LfricXiosContextTest(LFRicXiosTest):
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "resources/configs/context.nml"], processes=1)
+        super().__init__(command=[sys.argv[1], "context.nml"], processes=1)
+        self.gen_config( "context.nml", "context.nml", {} )
 
     def test(self, returncode: int, out: str, err: str):
         """

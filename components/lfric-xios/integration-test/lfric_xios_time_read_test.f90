@@ -47,7 +47,7 @@ program lfric_xios_time_read_test
               xios_date(2024, 1, 1, 15, 8, 0), &
               xios_date(2024, 1, 1, 15, 9, 0), &
               xios_date(2024, 1, 1, 15, 10, 0) ]
-    result = read_time_data("lfric_xios_temporal_input")
+    result = read_time_data("lfric_xios_time_read_data")
 
     do t = 1, size(result)
         if (result(t) /= check(t)) then
