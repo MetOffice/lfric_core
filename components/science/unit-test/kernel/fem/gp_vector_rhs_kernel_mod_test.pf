@@ -71,7 +71,7 @@ contains
              element_order_v=0_i_def,           &
              rehabilitate=.true. )
 
-    call init_chi_transforms()
+    call init_chi_transforms(geometry_planar, topology_fully_periodic)
 
     qr = quadrature_xyoz_type(3, quadrature_rule)
 

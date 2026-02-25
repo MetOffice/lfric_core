@@ -106,9 +106,12 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                                          pointwise_coordinate_jacobian_inverse
   use sci_chi_transform_mod,   only: chi2llr
   use coord_transform_mod,     only: sphere2cart_vector
-  use base_mesh_config_mod,    only: geometry,           &
-                                     geometry_spherical, &
-                                     geometry_planar
+
+  use base_mesh_config_mod,      only: geometry, topology, &
+                                       geometry_spherical, &
+                                       geometry_planar
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -173,7 +176,9 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                        ipanel, llr(1), llr(2), llr(3))
         end if
 
-        call pointwise_coordinate_jacobian(ndf_wx, chi1_e, chi2_e, chi3_e,  &
+        call pointwise_coordinate_jacobian(coord_system, geometry,          &
+                                           topology, scaled_radius,         &
+                                           ndf_wx, chi1_e, chi2_e, chi3_e,  &
                                            ipanel, basis_wx(:,:,qp_h,qp_v), &
                                            diff_basis_wx(:,:,qp_h,qp_v),    &
                                            jac, detj)
