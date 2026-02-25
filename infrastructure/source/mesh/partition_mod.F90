@@ -729,7 +729,7 @@ contains
     void_cell   = global_mesh%get_void_cell()
     cross_panels = .false.
     n_cross_panels = 1
-    any_maps    = global_mesh%get_nmaps() > 0
+    any_maps    = global_mesh%get_nmaps() > 0 .and. global_mesh%get_partition_nmeshes()
 
     nullify( last )
     nullify( start_subsect )

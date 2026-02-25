@@ -157,6 +157,9 @@ module global_mesh_mod
   ! Collection of global mesh maps in global cell IDs
     type(global_mesh_map_collection_type), allocatable :: global_mesh_maps
 
+  ! Partition all meshes in the intergrid mesh maps or just the default
+    logical(l_def) :: partition_nmeshes
+
   !-------------------------------------------------------------
   ! Supplementary data: Only held for outputting to file.
   ! These may not actually be used in the main model though may
@@ -206,6 +209,8 @@ module global_mesh_mod
     procedure, public :: get_target_mesh_names
     procedure, public :: get_nmaps
     procedure, public :: get_mesh_maps
+    procedure, public :: get_partition_nmeshes
+    procedure, public :: set_partition_nmeshes
 
     procedure, public :: is_geometry_spherical
     procedure, public :: is_geometry_planar
@@ -404,6 +409,13 @@ contains
         allocate ( self%global_mesh_maps,        &
                     source = global_mesh_map_collection_type() )
 
+    ! Partition all meshes in the intergrid map by default
+    if (self%ntarget_meshes > 0) then
+      self%partition_nmeshes = .true.
+    else
+      self%partition_nmeshes = .false.
+    end if
+
   end function global_mesh_constructor
 
   !===========================================================================
@@ -459,6 +471,7 @@ contains
 
     self%void_cell = void
     self%ntarget_meshes = 0
+    self%partition_nmeshes = .false.
     self%domain_extents(:,1) = [ -2.0_r_def, -2.0_r_def ]
     self%domain_extents(:,2) = [  2.0_r_def, -2.0_r_def ]
     self%domain_extents(:,3) = [  2.0_r_def,  2.0_r_def ]
@@ -1214,6 +1227,36 @@ contains
 
   end function  get_mesh_maps
 
+  !---------------------------------------------------------------------------
+  !> @brief Returns if all meshes in the intergrid maps need to be partitioned
+  !>
+  !> @return True if all meshes in the intergrid maps need to be partitioned
+  !>
+  function get_partition_nmeshes( self ) result (partition_nmeshes)
+
+  implicit none
+
+  class(global_mesh_type), intent(in) :: self
+
+  logical(l_def) :: partition_nmeshes
+
+  partition_nmeshes = self%partition_nmeshes
+
+  end function get_partition_nmeshes
+
+  !---------------------------------------------------------------------------
+  !> @brief Sets the value of partition_nmeshes
+  !>
+  subroutine set_partition_nmeshes( self, partition_nmeshes )
+
+  implicit none
+
+  class(global_mesh_type), intent(inout) :: self
+  logical(l_def),          intent(in)    :: partition_nmeshes
+
+  self%partition_nmeshes = partition_nmeshes
+
+  end subroutine set_partition_nmeshes
 
   !---------------------------------------------------------------------------
   !> @brief   Gets the array of names of target meshes.
