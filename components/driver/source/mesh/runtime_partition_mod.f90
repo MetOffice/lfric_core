@@ -76,15 +76,15 @@ subroutine get_partition_strategy( mesh_selection, total_ranks, partitioner_ptr 
       call log_event( "Using serial cubed sphere partitioner", &
                       log_level_debug )
 
-    else if (mod(total_ranks,6) == 0) then
+    else if (mod(total_ranks,3) == 0 .or. mod(total_ranks,2) == 0) then
       ! Paralled run job
       partitioner_ptr => partitioner_cubedsphere
       call log_event( "Using parallel cubed sphere partitioner", &
                       log_level_debug )
 
     else
-      call log_event( "Total number of processors must be 1 (serial) "// &
-                      "or a multiple of 6 for a cubed-sphere domain.",   &
+      call log_event( "Total number of processors must be 1 (serial) "//    &
+                      "or a multiple of 2 or 3 for a cubed-sphere domain.", &
                       log_level_error )
     end if
 
@@ -111,13 +111,13 @@ end subroutine get_partition_strategy
 !>                                    and method
 !> @param[in]  generate_inner_halos   Generate inner halo regions
 !!                                    to overlap comms & compute
-!> @param[in]  stencil_depth          Depth of cells outside the base cell
-!!                                    of stencil.
+!> @param[in]  stencil_depths         Depth of cells outside the base cell
+!!                                    of stencil for each mesh.
 !> @param[in]  partitioner_ptr        Mesh partitioning strategy
 subroutine create_local_mesh( mesh_names,              &
                               local_rank, total_ranks, &
                               decomposition,           &
-                              stencil_depth,           &
+                              stencil_depths,          &
                               generate_inner_halos,    &
                               partitioner_ptr )
 
@@ -129,7 +129,7 @@ subroutine create_local_mesh( mesh_names,              &
 
   integer(i_def), intent(in) :: local_rank
   integer(i_def), intent(in) :: total_ranks
-  integer(i_def), intent(in) :: stencil_depth
+  integer(i_def), intent(in) :: stencil_depths(:)
 
   logical(l_def), intent(in) :: generate_inner_halos
 
@@ -152,7 +152,7 @@ subroutine create_local_mesh( mesh_names,              &
     partition = partition_type( global_mesh_ptr,      &
                                 partitioner_ptr,      &
                                 decomposition,        &
-                                stencil_depth,        &
+                                stencil_depths(i),    &
                                 generate_inner_halos, &
                                 local_rank,           &
                                 total_ranks,          &

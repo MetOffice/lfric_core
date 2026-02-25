@@ -75,7 +75,6 @@
     }) %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "azspice" %}
   {% do site_groups.update({
       "lbc_demo_developer": [
           "scripts",
@@ -98,7 +97,6 @@
           "lbc_demo_ex1a_canned",
       ],
       }) %}
-{% endif %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.lbc_demo_developer) %}

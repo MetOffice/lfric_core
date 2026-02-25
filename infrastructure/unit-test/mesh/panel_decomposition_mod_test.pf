@@ -1,0 +1,87 @@
+!-----------------------------------------------------------------------------
+! Copyright (c) 2026,  Met Office, on behalf of HMSO and Queen's Printer
+! For further details please refer to the file LICENCE which you
+! should have received as part of this distribution.
+!-----------------------------------------------------------------------------
+
+!> Test the panel decomposition module
+module panel_decomposition_mod_test
+
+  use pfunit
+  use constants_mod,           only: i_def
+  use panel_decomposition_mod, only: custom_decomposition_type,          &
+                                     auto_decomposition_type,            &
+                                     row_decomposition_type,             &
+                                     column_decomposition_type,          &
+                                     auto_nonuniform_decomposition_type, &
+                                     guided_nonuniform_decomposition_type
+
+  implicit none
+
+  private
+  public :: test_all
+
+contains
+
+  @test
+  subroutine test_all
+
+    implicit none
+
+    type(custom_decomposition_type)            :: custom_decomposition
+    type(auto_decomposition_type)              :: auto_decomposition
+    type(row_decomposition_type)               :: row_decomposition
+    type(column_decomposition_type)            :: column_decomposition
+    type(auto_nonuniform_decomposition_type)   :: auto_nonuniform_decomposition
+    type(guided_nonuniform_decomposition_type) :: guided_nonuniform_decomposition
+
+    integer(i_def), parameter :: xprocs = 3
+    integer(i_def), parameter :: yprocs = 4
+    integer(i_def)            :: nprocs(2)
+
+    ! Test the custom decomposition type
+    custom_decomposition = custom_decomposition_type(xprocs, yprocs)
+
+    nprocs = custom_decomposition%get_nprocs()
+    @assertEqual( xprocs, nprocs(1) )
+    @assertEqual( yprocs, nprocs(2) )
+
+    ! Test the auto decomposition type
+    auto_decomposition = auto_decomposition_type()
+
+    nprocs = auto_decomposition%get_nprocs()
+    @assertEqual( 1, nprocs(1) )
+    @assertEqual( 1, nprocs(2) )
+
+    ! Test the row decomposition type
+    row_decomposition = row_decomposition_type()
+
+    nprocs = row_decomposition%get_nprocs()
+    @assertEqual( 1, nprocs(1) )
+    @assertEqual( 1, nprocs(2) )
+
+    ! Test the column decomposition type
+    column_decomposition = column_decomposition_type()
+
+    nprocs = column_decomposition%get_nprocs()
+    @assertEqual( 1, nprocs(1) )
+    @assertEqual( 1, nprocs(2) )
+
+    ! Test the auto_nonuniform decomposition type
+    auto_nonuniform_decomposition = auto_nonuniform_decomposition_type()
+
+    nprocs = auto_nonuniform_decomposition%get_nprocs()
+    @assertEqual( 1, nprocs(1) )
+    @assertEqual( 1, nprocs(2) )
+
+    ! Test the guided_nonuniform decomposition type
+    guided_nonuniform_decomposition = guided_nonuniform_decomposition_type(xprocs)
+
+    nprocs = guided_nonuniform_decomposition%get_nprocs()
+    @assertEqual( 1, nprocs(1) )
+    @assertEqual( 1, nprocs(2) )
+
+  end subroutine test_all
+
+end module panel_decomposition_mod_test
+

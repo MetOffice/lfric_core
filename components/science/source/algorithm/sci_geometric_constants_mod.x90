@@ -18,7 +18,7 @@ module sci_geometric_constants_mod
   use constants_mod,                      only: i_def, r_def, l_def, str_def
   use extrusion_mod,                      only: TWOD, PRIME_EXTRUSION
   use field_mod,                          only: field_type
-  use fs_continuity_mod,                  only: W1, W2, W2H, W3, Wtheta
+  use fs_continuity_mod,                  only: W0, W1, W2, W2H, W3, Wtheta
   use function_space_collection_mod,      only: function_space_collection
   use function_space_mod,                 only: function_space_type
   use integer_field_mod,                  only: integer_field_type
@@ -77,6 +77,8 @@ module sci_geometric_constants_mod
   type(inventory_by_local_mesh_type), target :: long_w2h_inventory_fv
 
   ! Heights of DoFs
+  type(inventory_by_mesh_type),       target :: height_w0_inventory_fe
+  type(inventory_by_mesh_type),       target :: height_w0_inventory_fv
   type(inventory_by_mesh_type),       target :: height_w1_inventory_fe
   type(inventory_by_mesh_type),       target :: height_w1_inventory_fv
   type(inventory_by_mesh_type),       target :: height_w2_inventory_fe
@@ -1199,6 +1201,9 @@ contains
 
     ! Determine inventory based on space
     select case (space_id)
+    case (W0)
+      inventory => height_w0_inventory_fe
+      inventory_name = "height_w0_fe"
     case (W1)
       inventory => height_w1_inventory_fe
       inventory_name = "height_w1_fe"
@@ -1270,6 +1275,9 @@ contains
 
     ! Determine inventory based on space
     select case (space_id)
+    case (W0)
+      inventory => height_w0_inventory_fv
+      inventory_name = "height_w0_fv"
     case (W1)
       inventory => height_w1_inventory_fv
       inventory_name = "height_w1_fv"
@@ -1434,6 +1442,8 @@ contains
     call height_w2h_inventory_fv%clear()
     call height_w1_inventory_fe%clear()
     call height_w1_inventory_fv%clear()
+    call height_w0_inventory_fe%clear()
+    call height_w0_inventory_fv%clear()
     call dz_w3_inventory%clear()
     call panel_id_inventory%clear()
     call chi_inventory%clear()
