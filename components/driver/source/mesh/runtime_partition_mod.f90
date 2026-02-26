@@ -119,7 +119,8 @@ subroutine create_local_mesh( mesh_names,              &
                               decomposition,           &
                               stencil_depths,          &
                               generate_inner_halos,    &
-                              partitioner_ptr )
+                              partitioner_ptr,         &
+                              enforce_constraints )
 
   implicit none
 
@@ -133,6 +134,8 @@ subroutine create_local_mesh( mesh_names,              &
 
   logical(l_def), intent(in) :: generate_inner_halos
 
+  logical(l_def), intent(in), optional :: enforce_constraints
+
   procedure(partitioner_interface), intent(in), pointer :: partitioner_ptr
 
   type(global_mesh_type), pointer :: global_mesh_ptr
@@ -142,6 +145,14 @@ subroutine create_local_mesh( mesh_names,              &
   integer(i_def) :: local_mesh_id, i
   integer(i_def) :: mapping_factor
 
+  logical(l_def) :: enforce_constraints_choice
+
+  if (present(enforce_constraints)) then
+    enforce_constraints_choice = enforce_constraints
+  else
+    enforce_constraints_choice = .true.
+  end if
+
   do i=1, size(mesh_names)
 
     global_mesh_ptr => global_mesh_collection%get_global_mesh( mesh_names(i) )
@@ -149,14 +160,16 @@ subroutine create_local_mesh( mesh_names,              &
     mapping_factor = calc_mapping_factor( global_mesh_collection, global_mesh_ptr )
 
     ! Create partition
-    partition = partition_type( global_mesh_ptr,      &
-                                partitioner_ptr,      &
-                                decomposition,        &
-                                stencil_depths(i),    &
-                                generate_inner_halos, &
-                                local_rank,           &
-                                total_ranks,          &
+    partition = partition_type( global_mesh_ptr,             &
+                                partitioner_ptr,             &
+                                decomposition,               &
+                                stencil_depths(i),           &
+                                generate_inner_halos,        &
+                                enforce_constraints_choice,  &
+                                local_rank,                  &
+                                total_ranks,                 &
                                 mapping_factor )
+
     ! Create local_mesh
     call local_mesh%initialise( global_mesh_ptr, partition )
 

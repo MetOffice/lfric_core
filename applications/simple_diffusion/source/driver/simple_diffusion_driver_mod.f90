@@ -149,6 +149,7 @@ contains
     ! ---------------------------------------------------------
     stencil_depth = 1
     check_partitions = .false.
+
     call init_mesh( modeldb%configuration,       &
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
