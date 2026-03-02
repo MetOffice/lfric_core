@@ -104,6 +104,10 @@ subroutine dg_convert_hdiv_native_code(nlayers,                                &
 
   use sci_native_jacobian_mod, only: native_jacobian
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -137,7 +141,9 @@ subroutine dg_convert_hdiv_native_code(nlayers,                                &
   integer(kind=i_def) :: w2_idx, w3_idx, chi_idx
   real(kind=r_def) :: jacobian(nlayers,3,3), dj(nlayers)
   real(kind=r_def) :: vector_in(nlayers,3), vector_out(nlayers,3)
-  real(kind=r_def) :: chi_1_e(ndf_chi), chi_2_e(ndf_chi), chi_3_e(nlayers,ndf_chi)
+  real(kind=r_def) :: chi_1_e(ndf_chi)
+  real(kind=r_def) :: chi_2_e(ndf_chi)
+  real(kind=r_def) :: chi_3_e(nlayers,ndf_chi)
 
   integer(kind=i_def) :: ipanel
 
@@ -154,17 +160,18 @@ subroutine dg_convert_hdiv_native_code(nlayers,                                &
   end do
 
   ! Compute Jacobian for whole column
-  call native_jacobian(                                                        &
-          ndf_chi, nlayers, chi_1_e, chi_2_e, chi_3_e, ipanel,                 &
-          basis_chi(:,:,df_w3),  diff_basis_chi(:,:,df_w3), jacobian, dj       &
-  )
+  call native_jacobian(                                        &
+          coord_system, geometry, topology, scaled_radius,     &
+          ndf_chi, nlayers, chi_1_e, chi_2_e, chi_3_e, ipanel, &
+          basis_chi(:,:,df_w3),  diff_basis_chi(:,:,df_w3),    &
+          jacobian, dj )
 
   ! Create vector of W2 values
   vector_in(:,:) = 0.0_r_def
   do df_w2 = 1, ndf_w2
     w2_idx = map_w2(df_w2)
     do i = 1, 3
-      vector_in(:,i) = vector_in(:,i)                                          &
+      vector_in(:,i) = vector_in(:,i) &
           + hdiv_field(w2_idx : w2_idx+nlayers-1)*basis_w2(i,df_w2,1)
     end do
   end do
