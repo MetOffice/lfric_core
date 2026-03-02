@@ -13,7 +13,7 @@
 !>
 module {{moduleName}}
 
-  use, intrinsic :: iso_fortran_env, only : error_unit
+  use, intrinsic :: iso_fortran_env, only : error_unit, output_unit
 
   use constants_mod,   only: i_def, l_def, str_def, cmdi
   use linked_list_mod, only: linked_list_type, linked_list_item_type
@@ -173,9 +173,9 @@ subroutine add_namelist(self, namelist_obj)
   type is ( {{namelists[i]}}_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      write(error_unit, '(A)') 'Ignoring ' // trim(name) //&
+      write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
           ' namelist: missing profile name.'
-      flush(error_unit)
+      flush(output_unit)
     else if (self%namelist_exists(trim(full_name))) then
       write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
