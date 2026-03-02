@@ -13,6 +13,8 @@
 !>
 module {{moduleName}}
 
+  use, intrinsic :: iso_fortran_env, only : error_unit
+
   use constants_mod,   only: i_def, l_def, str_def, cmdi
   use linked_list_mod, only: linked_list_type, linked_list_item_type
 
@@ -100,11 +102,11 @@ subroutine initialise(self, name)
   character(*), optional, intent(in) :: name
 
   if (self%isinitialised) then
-    write(6, '(A)')                      &
+    write(error_unit, '(A)') &
         'Application configuration: [' //&
-         trim(self%config_name)        //&
+         trim(self%config_name) //&
         '] has already been initialised.'
-    flush(6)
+    flush(error_unit)
     stop
   end if
 
@@ -155,9 +157,9 @@ subroutine add_namelist(self, namelist_obj)
   type is( {{namelists[i]}}_nml_type )
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
-      write(6, '(A)') &
+      write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
-      flush(6)
+      flush(error_unit)
       stop
     else
       allocate(self%{{namelists[i]}}, source=namelist_obj)
@@ -171,13 +173,13 @@ subroutine add_namelist(self, namelist_obj)
   type is ( {{namelists[i]}}_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      write(6, '(A)') 'Ignoring ' // trim(name) // &
+      write(error_unit, '(A)') 'Ignoring ' // trim(name) //&
           ' namelist: missing profile name.'
-      flush(6)
+      flush(error_unit)
     else if (self%namelist_exists(trim(full_name))) then
-      write(6, '(A)') trim(name) // &
+      write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
-      flush(6)
+      flush(error_unit)
       stop
     else
       call self%{{namelists[i]}}%insert_item( namelist_obj )
@@ -186,10 +188,10 @@ subroutine add_namelist(self, namelist_obj)
 {%    endif %}
 {%- endfor %}
   class default
-    write(6, '(A)')                                 &
+    write(error_unit, '(A)') &
         ' Undefined namelist type(' // trim(name) //&
         '), for this configuration.'
-    flush(6)
+    flush(error_unit)
     stop
 
   end select
@@ -270,11 +272,11 @@ function {{namelists[i]}}_list(self, profile_name) result({{namelists[i]}}_nml_o
     ! reached without finding the namelist, fail with
     ! an error.
     if (.not. associated(loop)) then
-      write(6, '(A)') &
-          'Instance ' // trim(profile_name) // ' of ' // &
-          '{{namelists[i]}}_nml_type ' // &
+      write(error_unit, '(A)') &
+          'Instance ' // trim(profile_name) // ' of ' //&
+          '{{namelists[i]}}_nml_type ' //&
           'not found in configuration.'
-      flush(6)
+      flush(error_unit)
       stop
     end if
 
