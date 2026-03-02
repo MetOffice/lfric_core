@@ -12,8 +12,6 @@ module coordinate_jacobian_alphabetaz_mod_test
 
   use base_mesh_config_mod,      only : geometry_spherical, &
                                         topology_fully_periodic
-! use extrusion_config_mod,      only : method_uniform, &
-!                                       stretching_method_linear
   use finite_element_config_mod, only : coord_system_native
 
   implicit none
@@ -28,22 +26,9 @@ contains
   @before
   subroutine set_up()
 
-
-    !use feign_config_mod,          only : feign_base_mesh_config,      &
-    !                                      feign_extrusion_config,      &
-    !                                      feign_finite_element_config, &
-    !                                      feign_planet_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
-
-    !call feign_extrusion_config( method=method_uniform,                      &
-    !                             planet_radius=radius,                       &
-    !                             domain_height=10.0_r_def,                   &
-    !                             number_of_layers=5_i_def,                   &
-    !                             stretching_method=stretching_method_linear, &
-    !                             stretching_height=15.0_r_def,               &
-    !                             eta_values=(/0.5_r_def/) )
 
     call init_chi_transforms(geometry_spherical, topology_fully_periodic)
 
@@ -73,10 +58,6 @@ contains
                                         coordinate_jacobian_inverse,           &
                                         pointwise_coordinate_jacobian,         &
                                         pointwise_coordinate_jacobian_inverse
-
-!   use base_mesh_config_mod,      only : geometry_spherical, &
-!                                         topology_fully_periodic
-!   use finite_element_config_mod, only : coord_system_native
 
     implicit none
 

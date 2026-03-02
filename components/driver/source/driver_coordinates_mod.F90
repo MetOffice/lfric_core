@@ -167,18 +167,7 @@ contains
         'stretching factor is not 1 and mesh is not cubed-sphere',             &
         log_level_error                                                        &
       )
-   end if
-
-
-!   if ( geometry == geometry_spherical .and. &
-!        topology == topology_fully_periodic) then
-!      stretch_factor = get_stretch_factor()
-!   else
-!      stretch_factor = 1.0_r_def
-!   end if
-
-!   inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
-!   to_rotate = get_to_rotate()
+    end if
 
     panel_id_proxy%data = 1.0_r_def
 

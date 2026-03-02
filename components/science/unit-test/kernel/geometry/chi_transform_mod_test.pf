@@ -283,8 +283,8 @@ contains
     if ( this%source_coord_system == LLH_rot ) then
       north_pole(1) = PI/2.0_r_def
       north_pole(2) = 0.0_r_def
-      call init_chi_transforms(geometry_spherical,&
-                               topology,          &
+      call init_chi_transforms(geometry_spherical, &
+                               topology,           &
                                north_pole_arg=north_pole)
     else if ( this%source_coord_system == ABH_stretch_rot ) then
       north_pole(1) = -PI/2.0_r_def

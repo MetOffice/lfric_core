@@ -7,6 +7,8 @@
 !
 module content_mod
 
+  use, intrinsic :: iso_fortran_env, only : error_unit
+
   use constants_mod, only : i_def, l_def, str_def, str_max_filename
   use lfric_mpi_mod, only : global_mpi
 
@@ -56,10 +58,10 @@ contains
     integer(i_def) :: unit
 
     if (.not. present(configuration) .and. .not. present(config)) then
-      write(6,'(A)')                               &
+      write(error_unit, '(A)') &
           'At least one optional argument must ' //&
           'be provided for read_configuration.'
-      flush(6)
+      flush(error_unit)
       stop
     end if
 
@@ -172,10 +174,10 @@ contains
 
     if (present(success_mask) &
         .and. (size(success_mask, 1) /= size(names, 1))) then
-      write(6, '(A)')                                          &
+      write(error_unit, '(A)') &
           'Arguments "names" and "success_mask" to function' //&
           '"ensure_configuration" are different shapes.'
-      flush(6)
+      flush(error_unit)
       stop
     end if
 
@@ -187,10 +189,10 @@ contains
         configuration_found = foo_is_loaded()
 
       case default
-        write(6, '(A)')                                 &
+        write(error_unit, '(A)') &
             'Tried to ensure unrecognised namelist "' //&
             trim(names(i))//'" was loaded.'
-        flush(6)
+        flush(error_unit)
         stop
       end select
 
@@ -257,18 +259,18 @@ contains
 
             end if
           else
-            write(6, '(A)')                        &
+            write(error_unit, '(A)') &
                 'Namelist "'//trim(namelists(i)) //&
                 '" can not be read. Too many instances?'
-            flush(6)
+            flush(error_unit)
             stop
           end if
 
         case default
-          write(6, '(A)')                                     &
+          write(error_unit, '(A)') &
               'Unrecognised namelist "'//trim(namelists(i)) //&
               '" found in file '//trim(filename)//'.'
-          flush(6)
+          flush(error_unit)
           stop
         end select
 

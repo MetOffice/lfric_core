@@ -13,6 +13,8 @@
 !>
 module config_mod
 
+  use, intrinsic :: iso_fortran_env, only : error_unit, output_unit
+
   use constants_mod,   only: i_def, l_def, str_def, cmdi
   use linked_list_mod, only: linked_list_type, linked_list_item_type
 
@@ -89,11 +91,11 @@ subroutine initialise(self, name)
   character(*), optional, intent(in) :: name
 
   if (self%isinitialised) then
-    write(6, '(A)')                      &
+    write(error_unit, '(A)') &
         'Application configuration: [' //&
-         trim(self%config_name)        //&
+         trim(self%config_name) //&
         '] has already been initialised.'
-    flush(6)
+    flush(error_unit)
     stop
   end if
 
@@ -139,9 +141,9 @@ subroutine add_namelist(self, namelist_obj)
   type is( foo_nml_type )
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
-      write(6, '(A)') &
+      write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
-      flush(6)
+      flush(error_unit)
       stop
     else
       allocate(self%foo, source=namelist_obj)
@@ -151,9 +153,9 @@ subroutine add_namelist(self, namelist_obj)
   type is( moo_nml_type )
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
-      write(6, '(A)') &
+      write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
-      flush(6)
+      flush(error_unit)
       stop
     else
       allocate(self%moo, source=namelist_obj)
@@ -163,13 +165,13 @@ subroutine add_namelist(self, namelist_obj)
   type is ( bar_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      write(6, '(A)') 'Ignoring ' // trim(name) // &
+      write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
           ' namelist: missing profile name.'
-      flush(6)
+      flush(output_unit)
     else if (self%namelist_exists(trim(full_name))) then
-      write(6, '(A)') trim(name) // &
+      write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
-      flush(6)
+      flush(error_unit)
       stop
     else
       call self%bar%insert_item( namelist_obj )
@@ -179,13 +181,13 @@ subroutine add_namelist(self, namelist_obj)
   type is ( pot_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      write(6, '(A)') 'Ignoring ' // trim(name) // &
+      write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
           ' namelist: missing profile name.'
-      flush(6)
+      flush(output_unit)
     else if (self%namelist_exists(trim(full_name))) then
-      write(6, '(A)') trim(name) // &
+      write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
-      flush(6)
+      flush(error_unit)
       stop
     else
       call self%pot%insert_item( namelist_obj )
@@ -193,10 +195,10 @@ subroutine add_namelist(self, namelist_obj)
     end if
 
   class default
-    write(6, '(A)')                                 &
+    write(error_unit, '(A)') &
         ' Undefined namelist type(' // trim(name) //&
         '), for this configuration.'
-    flush(6)
+    flush(error_unit)
     stop
 
   end select
@@ -274,11 +276,11 @@ function bar_list(self, profile_name) result(bar_nml_obj)
     ! reached without finding the namelist, fail with
     ! an error.
     if (.not. associated(loop)) then
-      write(6, '(A)') &
-          'Instance ' // trim(profile_name) // ' of ' // &
-          'bar_nml_type ' // &
+      write(error_unit, '(A)') &
+          'Instance ' // trim(profile_name) // ' of ' //&
+          'bar_nml_type ' //&
           'not found in configuration.'
-      flush(6)
+      flush(error_unit)
       stop
     end if
 
@@ -324,11 +326,11 @@ function pot_list(self, profile_name) result(pot_nml_obj)
     ! reached without finding the namelist, fail with
     ! an error.
     if (.not. associated(loop)) then
-      write(6, '(A)') &
-          'Instance ' // trim(profile_name) // ' of ' // &
-          'pot_nml_type ' // &
+      write(error_unit, '(A)') &
+          'Instance ' // trim(profile_name) // ' of ' //&
+          'pot_nml_type ' //&
           'not found in configuration.'
-      flush(6)
+      flush(error_unit)
       stop
     end if
 
@@ -438,8 +440,8 @@ subroutine clear(self)
   class(config_type), intent(inout) :: self
 
   ! Namlists which may have multiple instances per configuration
-  call self%bar%clear()
-  call self%pot%clear()
+  if (allocated(self%bar)) call self%bar%clear()
+  if (allocated(self%pot)) call self%pot%clear()
 
   if (allocated(self%foo)) deallocate(self%foo)
   if (allocated(self%bar)) deallocate(self%bar)
