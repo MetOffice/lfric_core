@@ -454,11 +454,11 @@ contains
 
       else if (logger_uninitialised) then
 
-        write(unit,'(A)')'Log message received before logger initialised. Message is:'
-        write(unit,'(A)')trim( message )
+        write(error_unit,'(A)')'Log message received before logger initialised. Message is:'
+        write(error_unit,'(A)')trim( message )
         ! Let's assume a message now is a bad thing, and try to flush
         ! it before the model fails
-        flush(unit)
+        flush(error_unit)
 
       endif
 

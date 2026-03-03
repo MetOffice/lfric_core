@@ -34,9 +34,9 @@ is an option to configure the logger to ignore messages except for
 those written from rank 0.
 
 If an application outputs a log messages before the logging system has
-been initialised, the message is output to file but is prefixed by a
-warning message that states that the system has not yet been
-initialised.
+been initialised, the message is output to the standard unit for error
+reporting. The message is prefixed by a warning message that states
+that the system has not yet been initialised.
 
 As the uninitialised logging system has no knowledge of the
 application's parallelism, log messages written by multiple ranks of a
@@ -121,7 +121,7 @@ message prior to calling ``log_event``.
 Log Level Controlled Calculations
 ---------------------------------
 
-Where a log message is outputting a value that requires some computation, 
+Where a log message is outputting a value that requires some computation,
 a check against the ``log_at_level`` function may be used to find out if it's
 necessary.
 
