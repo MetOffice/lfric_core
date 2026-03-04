@@ -15,6 +15,7 @@ module io_demo_alg_mod
   use mesh_mod,                            only: mesh_type
 
   use field_mod,                           only: field_type
+  use field_collection_mod,                only: field_collection_type
   use fs_continuity_mod,                   only: Wtheta, W0, W2, W3
   use function_space_collection_mod,       only: function_space_collection
   use function_space_mod,                  only: function_space_type
@@ -38,20 +39,21 @@ contains
 
   !> @details Calculates the diffusion increment for a field, and adds it to said field.
   !> @param[in]    modeldb   Application state object
-  !> @param[inout] field_in  Input Wtheta field
+  !> @param[inout] depository  Collection of core IO_demo fields
   !> @param[in]    visc_in   Optional setting for viscosity value
-  subroutine io_demo_alg( modeldb, field_in, visc_in )
+  subroutine io_demo_alg( modeldb, depository, visc_in )
 
     implicit none
 
     type(modeldb_type), intent(in) :: modeldb
 
     ! Prognostic fields
-    type( field_type ),    intent( inout ) :: field_in
-    real(r_def), optional, intent( in )    :: visc_in
+    type( field_collection_type ), intent(inout) :: depository
+    real(r_def), optional,         intent(in)    :: visc_in
 
     ! Diagnostic fields
-    type( field_type )                  :: dfield_W0, dfield_W2, dfield_W3, dfield_Wth
+    type( field_type ), pointer         :: field_W0, field_W2, field_W3, field_Wth
+    type( field_type )                  :: dfield_Wth
     type( field_type )                  :: rmul_w2, rmul_w0
     type( field_type )                  :: visc
 
@@ -72,6 +74,11 @@ contains
 
     call log_event( "io_demo: Running algorithm", LOG_LEVEL_TRACE )
 
+    call depository%get_field("diffusion_field_Wtheta", field_Wth)
+    call depository%get_field("diffusion_field_W0", field_W0)
+    call depository%get_field("diffusion_field_W2", field_W2)
+    call depository%get_field("diffusion_field_W3", field_W3)
+
     order_h = modeldb%config%finite_element%element_order_h()
     order_v = modeldb%config%finite_element%element_order_v()
 
@@ -81,12 +88,8 @@ contains
     fs_wth => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
     fs_w0  => function_space_collection%get_fs(mesh, order_h, order_v, W0)
     fs_w2  => function_space_collection%get_fs(mesh, order_h, order_v, W2)
-    fs_w3  => function_space_collection%get_fs(mesh, order_h, order_v, W3)
 
     call dfield_Wth%initialise(fs_wth)
-    call dfield_W0%initialise(fs_w0)
-    call dfield_W2%initialise(fs_w2)
-    call dfield_W3%initialise(fs_w3)
     call rmul_w2%initialise(fs_w2)
     call rmul_w0%initialise(fs_w0)
     call visc%initialise(fs_wth)
@@ -100,21 +103,33 @@ contains
                                                   visc, &
                                                   dx_at_w2) )
 
+    ! Printing the min/max values in field_Wth and dfield_Wth
+    call log_field_minmax( LOG_LEVEL_INFO, 'dfield_Wth', dfield_Wth )
+
+    ! Increment Wtheta field
+    call invoke(inc_X_plus_Y( field_Wth, dfield_Wth ))
+
+    ! Sample diffusion field onto other function spaces
     call invoke( name = "sample_diffusion_on_all_fs", &
                  multiplicity_kernel_type(rmul_w2), &
                  multiplicity_kernel_type(rmul_w0), &
-                 sample_wtheta_to_w3_kernel_type(dfield_W3, dfield_Wth), &
-                 wth_to_w0_average_kernel_type(dfield_W0, dfield_Wth, rmul_w0), &
-                 w3_to_w2_average_kernel_type(dfield_W2, dfield_W3, rmul_w2) )
+                 setval_c(field_W0, 0.0_r_def), &
+                 setval_c(field_W2, 0.0_r_def), &
+                 sample_wtheta_to_w3_kernel_type(field_W3, field_Wth), &
+                 wth_to_w0_average_kernel_type(field_W0, field_Wth, rmul_w0), &
+                 w3_to_w2_average_kernel_type(field_W2, field_W3, rmul_w2) )
 
-    ! Printing the min/max values in field_Wth and dfield_Wth
-    call log_field_minmax( LOG_LEVEL_INFO, 'dfield_Wth', dfield_Wth )
     call log_field_minmax( LOG_LEVEL_INFO, 'field_Wth', field_Wth )
-
-    ! Incrementing field
-    call invoke( inc_X_plus_Y( field_Wth, dfield_Wth ) )
+    call log_field_minmax( LOG_LEVEL_INFO, 'rmul_w2', rmul_w2 )
+    call log_field_minmax( LOG_LEVEL_INFO, 'rmul_w0', rmul_w0 )
+    call log_field_minmax( LOG_LEVEL_INFO, 'field_W0', field_W0 )
+    call log_field_minmax( LOG_LEVEL_INFO, 'field_W2', field_W2 )
+    call log_field_minmax( LOG_LEVEL_INFO, 'field_W3', field_W3 )
 
     nullify(mesh)
+    nullify(dx_at_w2)
+    nullify(field_Wth, field_W0, field_W2, field_W3)
+    nullify(fs_wth, fs_w0, fs_w2, fs_w3)
 
     call log_event( "io_demo: finished algorithm", LOG_LEVEL_TRACE )
 

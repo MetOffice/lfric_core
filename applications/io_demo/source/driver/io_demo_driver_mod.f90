@@ -257,10 +257,10 @@ contains
     ! Diffusion algorithm unstable with high viscosity values at high
     ! resolution, so for io_benchmark mode we lower the viscosity
     if (io_benchmark) then
-      call io_demo_alg(modeldb, diffusion_field, visc_in=1000.0_r_def)
+      call io_demo_alg(modeldb, depository, visc_in=1000.0_r_def)
       call step_io_benchmark(modeldb)
     else
-      call io_demo_alg(modeldb, diffusion_field)
+      call io_demo_alg(modeldb, depository)
     end if
 
     if (write_diag) then

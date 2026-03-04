@@ -19,7 +19,7 @@ module init_io_demo_mod
   use field_parent_mod,                       only : write_interface
   use function_space_collection_mod,          only : function_space_collection
   use function_space_mod,                     only : function_space_type
-  use fs_continuity_mod,                      only : W0, W2H, W2V, W3, Wtheta, &
+  use fs_continuity_mod,                      only : W0, W2, W3, Wtheta, &
                                                      name_from_functionspace
   use key_value_mod,                          only : abstract_value_type
   use log_mod,                                only : log_event,       &
@@ -61,7 +61,7 @@ module init_io_demo_mod
     type(function_space_type), pointer :: fs
 
     integer(i_def) :: order_h, order_v, i
-    integer(i_def) :: fs_list(5) = [W0, W2H, W2V, W3, Wtheta]
+    integer(i_def) :: fs_list(4) = [W0, W2, W3, Wtheta]
     logical(l_def) :: write_diag
     logical(l_def) :: use_xios_io
     character(len=:), allocatable :: domain_fs_name
