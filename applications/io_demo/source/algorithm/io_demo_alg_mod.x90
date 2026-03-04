@@ -15,13 +15,17 @@ module io_demo_alg_mod
   use mesh_mod,                            only: mesh_type
 
   use field_mod,                           only: field_type
-  use fs_continuity_mod,                   only: Wtheta
+  use fs_continuity_mod,                   only: Wtheta, W0, W2, W3
   use function_space_collection_mod,       only: function_space_collection
   use function_space_mod,                  only: function_space_type
   use operator_mod,                        only: operator_type
   use matrix_vector_kernel_mod,            only: matrix_vector_kernel_type
   use io_demo_constants_mod,               only: get_dx_at_w2
   use tracer_tutorial_diff_kernel_mod,     only: tracer_tutorial_diff_kernel_type
+  use sci_sample_wtheta_to_w3_kernel_mod,  only: sample_wtheta_to_w3_kernel_type
+  use sci_wth_to_w0_average_kernel_mod,    only: wth_to_w0_average_kernel_type
+  use sci_w3_to_w2_average_kernel_mod,     only: w3_to_w2_average_kernel_type
+  use sci_multiplicity_kernel_mod,         only: multiplicity_kernel_type
   use sci_field_minmax_alg_mod,            only: log_field_minmax
 
   implicit none
@@ -47,7 +51,8 @@ contains
     real(r_def), optional, intent( in )    :: visc_in
 
     ! Diagnostic fields
-    type( field_type )                  :: dfield_in
+    type( field_type )                  :: dfield_W0, dfield_W2, dfield_W3, dfield_Wth
+    type( field_type )                  :: rmul_w2, rmul_w0
     type( field_type )                  :: visc
 
     real(r_def)                         :: visc_val
@@ -55,7 +60,7 @@ contains
 
     type(mesh_type),           pointer :: mesh
     type(field_type),          pointer :: dx_at_w2
-    type(function_space_type), pointer :: fs
+    type(function_space_type), pointer :: fs_wth, fs_w0, fs_w2, fs_w3
 
     integer(i_def) :: order_h, order_v
     ! Set viscosity to default value if not present
@@ -70,29 +75,44 @@ contains
     order_h = modeldb%config%finite_element%element_order_h()
     order_v = modeldb%config%finite_element%element_order_v()
 
-    mesh     => field_in%get_mesh()
+    mesh     => field_Wth%get_mesh()
     dx_at_w2 => get_dx_at_w2(mesh)
 
-    fs => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
+    fs_wth => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
+    fs_w0  => function_space_collection%get_fs(mesh, order_h, order_v, W0)
+    fs_w2  => function_space_collection%get_fs(mesh, order_h, order_v, W2)
+    fs_w3  => function_space_collection%get_fs(mesh, order_h, order_v, W3)
 
-    call dfield_in%initialise(fs)
-    call visc%initialise(fs)
+    call dfield_Wth%initialise(fs_wth)
+    call dfield_W0%initialise(fs_w0)
+    call dfield_W2%initialise(fs_w2)
+    call dfield_W3%initialise(fs_w3)
+    call rmul_w2%initialise(fs_w2)
+    call rmul_w0%initialise(fs_w0)
+    call visc%initialise(fs_wth)
 
     call invoke( name = "compute_diffusion", &
                  setval_c(visc, visc_val), &
-                 setval_c(dfield_in, 0.0_r_def), &
-                 tracer_tutorial_diff_kernel_type(dfield_in, &
-                                                  field_in, &
+                 setval_c(dfield_Wth, 0.0_r_def), &
+                 tracer_tutorial_diff_kernel_type(dfield_Wth, &
+                                                  field_Wth, &
                                                   stencil_depth, &
                                                   visc, &
                                                   dx_at_w2) )
 
-    ! Printing the min/max values in field_in and dfield_in
-    call log_field_minmax( LOG_LEVEL_INFO, 'dfield_in', dfield_in )
-    call log_field_minmax( LOG_LEVEL_INFO, 'field_in', field_in )
+    call invoke( name = "sample_diffusion_on_all_fs", &
+                 multiplicity_kernel_type(rmul_w2), &
+                 multiplicity_kernel_type(rmul_w0), &
+                 sample_wtheta_to_w3_kernel_type(dfield_W3, dfield_Wth), &
+                 wth_to_w0_average_kernel_type(dfield_W0, dfield_Wth, rmul_w0), &
+                 w3_to_w2_average_kernel_type(dfield_W2, dfield_W3, rmul_w2) )
+
+    ! Printing the min/max values in field_Wth and dfield_Wth
+    call log_field_minmax( LOG_LEVEL_INFO, 'dfield_Wth', dfield_Wth )
+    call log_field_minmax( LOG_LEVEL_INFO, 'field_Wth', field_Wth )
 
     ! Incrementing field
-    call invoke( inc_X_plus_Y( field_in, dfield_in ) )
+    call invoke( inc_X_plus_Y( field_Wth, dfield_Wth ) )
 
     nullify(mesh)
 
