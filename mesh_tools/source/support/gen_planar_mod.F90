@@ -2499,7 +2499,7 @@ subroutine apply_uniform_resolution(self)
   class(gen_planar_type), intent(inout) :: self
 
   real(r_def) :: dx, param_a
-  integer(i_def) :: nverts, vert, direction
+  integer(i_def) :: direction
 
   do direction = 1, 2
 
@@ -2512,23 +2512,10 @@ subroutine apply_uniform_resolution(self)
       param_a = self%dy / dx
     end if
 
-    nverts = size(self%vert_coords(direction, :))
-
-    ! Apply the scaling transformation to each coordinate
-    do vert = 1, nverts
-
-      self%vert_coords(direction, vert) = param_a * &
-                                          self%vert_coords(direction, vert)
-
-    end do
-
+    ! Apply the scaling transformation to each coordinate and add on the domain centre
+    self%domain_extents(direction,:) = param_a * self%domain_extents(direction,:) + self%domain_centre(direction)
+    self%vert_coords(direction,:) = param_a * self%vert_coords(direction,:) + self%domain_centre(direction)
   end do
-
-  self%vert_coords(1,:) =self%vert_coords(1,:) + self%domain_centre(1)
-  self%vert_coords(2,:) =self%vert_coords(2,:) + self%domain_centre(2)
-
-  self%domain_extents(1,:) = self%domain_extents(1,:) + self%domain_centre(1)
-  self%domain_extents(2,:) = self%domain_extents(2,:) + self%domain_centre(2)
 
   return
 
