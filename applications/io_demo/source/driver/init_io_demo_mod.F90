@@ -19,7 +19,8 @@ module init_io_demo_mod
   use field_parent_mod,                       only : write_interface
   use function_space_collection_mod,          only : function_space_collection
   use function_space_mod,                     only : function_space_type
-  use fs_continuity_mod,                      only : Wtheta
+  use fs_continuity_mod,                      only : W0, W2H, W2V, W3, Wtheta, &
+                                                     name_from_functionspace
   use key_value_mod,                          only : abstract_value_type
   use log_mod,                                only : log_event,       &
                                                      LOG_LEVEL_TRACE, &
@@ -51,7 +52,7 @@ module init_io_demo_mod
 
     class(abstract_value_type), pointer         :: abstract_value
     type(random_number_generator_type), pointer :: rng
-    type(field_type)                            :: diffusion_field
+    type(field_type), allocatable               :: io_demo_fields(:)
     type(field_collection_type), pointer        :: depository
     procedure(write_interface), pointer         :: tmp_ptr
     real(kind=r_def), parameter                 :: min_val = 280.0_r_def
@@ -59,9 +60,11 @@ module init_io_demo_mod
 
     type(function_space_type), pointer :: fs
 
-    integer(i_def) :: order_h, order_v
+    integer(i_def) :: order_h, order_v, i
+    integer(i_def) :: fs_list(5) = [W0, W2H, W2V, W3, Wtheta]
     logical(l_def) :: write_diag
     logical(l_def) :: use_xios_io
+    character(len=:), allocatable :: domain_fs_name
 
     call log_event( 'io_demo: Initialising miniapp ...', LOG_LEVEL_TRACE )
 
@@ -84,24 +87,24 @@ module init_io_demo_mod
     end select
     call rng%check_seed()
 
-    ! Create prognostic fields
-    ! Creates a field in the Wtheta function space
-    fs => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
-    call diffusion_field%initialise(fs, name="diffusion_field")
-
-    ! Set up field with an IO behaviour (XIOS only at present)
-    if (write_diag .and. use_xios_io) then
-       tmp_ptr => write_field_generic
-       call diffusion_field%set_write_behaviour(tmp_ptr)
-    end if
-
-    ! Add field to modeldb
     depository => modeldb%fields%get_field_collection("depository")
 
-    ! Initialising field
-    call assign_field_random_range( diffusion_field, min_val, max_val )
+    ! Create prognostic fields
+    ! Creates fields for all common function spaces
+    allocate(io_demo_fields(size(fs_list)))
+    do i = 1, size(fs_list)
+      fs => function_space_collection%get_fs(mesh, order_h, order_v, fs_list(i))
+      domain_fs_name = name_from_functionspace(fs_list(i))
+      call io_demo_fields(i)%initialise(fs, name="diffusion_field_"//trim(domain_fs_name))
 
-    call depository%add_field(diffusion_field)
+      tmp_ptr => write_field_generic
+      call io_demo_fields(i)%set_write_behaviour(tmp_ptr)
+
+      ! Initialising field
+      call assign_field_random_range( io_demo_fields(i), min_val, max_val )
+      call depository%add_field(io_demo_fields(i))
+
+    end do
 
     ! Create io_demo runtime constants. This creates various things
     ! needed by the fem algorithms such as mass matrix operators, mass

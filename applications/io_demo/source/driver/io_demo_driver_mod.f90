@@ -249,7 +249,7 @@ contains
     end if
 
     depository => modeldb%fields%get_field_collection("depository")
-    call depository%get_field("diffusion_field", diffusion_field)
+    call depository%get_field("diffusion_field_Wtheta", diffusion_field)
 
     ! Call an algorithm
     call log_event(program_name//": Calculating diffusion", LOG_LEVEL_INFO)
@@ -295,7 +295,7 @@ contains
     ! Checksum output
     !-------------------------------------------------------------------------
     depository => modeldb%fields%get_field_collection("depository")
-    call depository%get_field("diffusion_field", diffusion_field)
+    call depository%get_field("diffusion_field_Wtheta", diffusion_field)
 
     if (multifile_io) then
       multifile_col => modeldb%fields%get_field_collection("multifile_io_fields")
