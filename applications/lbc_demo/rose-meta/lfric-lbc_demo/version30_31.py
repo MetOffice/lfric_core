@@ -1,8 +1,8 @@
 import sys
 
-from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
+from metomi.rose.upgrade import MacroUpgrade
 
-from .version30_31 import *
+from .version22_30 import *
 
 
 class UpgradeError(Exception):
@@ -31,3 +31,13 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+
+class vn30_t306(MacroUpgrade):
+    # Upgrade macro for 306 by erica neininger
+
+    BEFORE_TAG = "vn3.0"
+    AFTER_TAG = "vn3.1"
+
+    def upgrade(self, config, meta_config=None):
+        return config, self.reports
