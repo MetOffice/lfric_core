@@ -32,11 +32,11 @@ class vnXX_txxx(MacroUpgrade):
         return config, self.reports
 """
 
-class vn30_t270(MacroUpgrade):
-    # Upgrade macro for <TICKET> by <Author>
+class vn31_t270(MacroUpgrade):
+    # Upgrade macro for #270 by cjohnson-pi
 
-    BEFORE_TAG = "vn3.0"
-    AFTER_TAG = "vn3.0_t270"
+    BEFORE_TAG = "vn3.1"
+    AFTER_TAG = "vn3.1_t270"
 
     def upgrade(self, config, meta_config=None):
         # Add settings
