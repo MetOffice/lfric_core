@@ -22,12 +22,16 @@ module io_value_mod
   !>        that can be stored in a key-value pair
   type, extends(abstract_value_type) :: io_value_type
     character(str_def)               :: io_id
+    ! TODO:
+    ! real(kind=r_def), private, allocatable :: data(:)
     real(kind=r_def),    allocatable :: data(:)
     procedure(io_operation_interface), pointer :: write_method => null()
     procedure(io_operation_interface), pointer :: checkpoint_read_method => null()
     procedure(io_operation_interface), pointer :: checkpoint_write_method => null()
   contains
     procedure, public :: init
+    procedure, public :: set_data
+    procedure, public :: get_data
     procedure, public :: set_write_behaviour
     procedure, public :: set_checkpoint_write_behaviour
     procedure, public :: set_checkpoint_read_behaviour
@@ -49,17 +53,40 @@ contains
 
 !> @brief Initialiser for the io_value_type
 !> @param[in] io_id The ID used for managing I/O operations
-!> @param[in] data  An array holding the data
-subroutine init(self, io_id, data)
+!> @param[in] data_value  An array holding the data
+subroutine init(self, io_id, data_value)
   class(io_value_type), intent(inout) :: self
 
   character(len=*),     intent(in) :: io_id
-  real(kind=r_def),     intent(in) :: data(:)
+  real(kind=r_def),     intent(in) :: data_value(:)
 
   self%io_id = io_id
-  allocate(self%data, source=data)
+  allocate(self%data, source=data_value)
 
 end subroutine init
+
+!> @brief Setter for the data array
+!> @param[in] data_value An array holding the data
+subroutine set_data(self, data_value)
+  class(io_value_type), intent(inout) :: self
+  real(kind=r_def), intent(in) :: data_value(:)
+
+  if (allocated(self%data)) then
+    deallocate(self%data)
+  end if
+  allocate(self%data, source=data_value)
+
+end subroutine set_data
+
+!> @brief Getter for the data array
+!> @return An array holding the data
+function get_data(self) result(data_value)
+  class(io_value_type), intent(in) :: self
+
+  real(kind=r_def), dimension(1:size(self%data)) :: data_value
+  data_value = self%data
+
+end function get_data
 
 !> @brief Sets the diagnostic write behaviour for io_value
 !> @param[in] write_behaviour Pointer to procedure implementing the write method

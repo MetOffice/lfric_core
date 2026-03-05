@@ -119,7 +119,7 @@ subroutine checkpoint_read_value(io_value, value_name)
   class(io_value_type), intent(inout) :: io_value
   character(*), optional, intent(in)  :: value_name
   character(str_def) :: restart_id
-  integer(i_def)     :: array_dims
+  real(kind=r_def), allocatable :: data_value(:)
   integer(tik)   :: timing_id
 
   if ( LPROF ) call start_timing(timing_id, 'lfric_xios.chkpt_readv')
@@ -129,11 +129,11 @@ subroutine checkpoint_read_value(io_value, value_name)
   else
     restart_id = "restart_" // trim(io_value%io_id)
   end if
-  array_dims = size(io_value%data)
+
+  allocate(data_value, source=io_value%get_data())
 
   if ( xios_is_valid_field(trim(restart_id)) ) then
-    call xios_recv_field( trim(restart_id), &
-                          io_value%data(1:array_dims) )
+    call xios_recv_field( trim(restart_id), data_value )
   else
     call log_event( 'No XIOS field with id="'//trim(restart_id)//'" is defined', &
                     LOG_LEVEL_ERROR )
