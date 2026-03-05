@@ -2559,7 +2559,7 @@ subroutine apply_polynomial_stretch(self)
             + self%domain_centre(direction)
 
     end do
-   
+
     ! Apply the stretching transformation to the domain extents
     do vert = 1,4
       self%domain_extents(direction, vert) = &
@@ -2567,7 +2567,7 @@ subroutine apply_polynomial_stretch(self)
             param_a, param_b, param_c, x_inner, x_outer ) &
             + self%domain_centre(direction)
    end do
-   
+
   end do
 
   return
