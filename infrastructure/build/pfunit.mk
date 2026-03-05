@@ -38,12 +38,12 @@ $(WORKING_DIR)/%.F90: $(SOURCE_DIR)/%.pf
 	$(Q)$(PFUNIT)/bin/funitproc $(QUIET_ARG_SINGLE) $< $@
 
 $(WORKING_DIR)/%.F90: $(WORKING_DIR)/%.pf
-	$(call MESSAGE, Generating unit test, $@)
+	$(call MESSAGE,Generating unit test, $@)
 	$Qmkdir -p $(dir $@)
 	$Q$(PFUNIT)/bin/funitproc $(QUIET_ARG_SINGLE) $< $@
 
 $(WORKING_DIR)/%.pf: $(SOURCE_DIR)/%.PF
-	$(call MESSAGE, Preprocessing unit test, $<)
+	$(call MESSAGE,Preprocessing unit test, $<)
 	$Qmkdir -p $(dir $@)
 	$Q$(FPP) $(addprefix -I, $(PRE_PROCESS_INCLUDE_DIRS)) \
 	         $(addprefix -D, $(PRE_PROCESS_MACROS)) \

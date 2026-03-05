@@ -39,12 +39,12 @@ module sci_mapping_constants_mod
   use operator_mod,                      only: operator_type
   use quadrature_xyoz_mod,               only: quadrature_xyoz_type
   use r_tran_field_mod,                  only: r_tran_field_type
-  use timer_mod,                         only: timer
+  use timing_mod,                        only: start_timing, stop_timing, &
+                                               tik, LPROF
 
   ! Configuration
   use finite_element_config_mod,         only: element_order_h, &
                                                element_order_v
-  use io_config_mod,                     only: subroutine_timers
 
   ! Other algorithms
   use sci_geometric_constants_mod,       only: get_coordinates, &
@@ -272,6 +272,7 @@ contains
     type(operator_type),         pointer :: u_lon_sample
     type(operator_type),         pointer :: u_lat_sample
     type(operator_type),         pointer :: u_up_sample
+    integer(tik)                         :: id
 
     if (.not. u_lon_sample_inventory%is_initialised()) then
       call u_lon_sample_inventory%initialise(name='u_lon_sample')
@@ -287,7 +288,7 @@ contains
     chi => get_coordinates(mesh_id)
     panel_id => get_panel_id(mesh_id)
 
-    if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
     ! Kernels only work for lowest order spaces so use finite volume
     w2_fs => function_space_collection%get_fs(mesh, 0, 0, W2)
@@ -304,7 +305,7 @@ contains
                                                   u_up_sample,                 &
                                                   chi, panel_id) )
 
-    if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
   end subroutine create_spherical_components_to_w2_sample
 
@@ -330,6 +331,7 @@ contains
     type(function_space_type), pointer        :: fs, coarse_fs, fine_fs
     type(quadrature_rule_segment_centre_type) :: quadrature_rule_sc
     type(quadrature_xyoz_type)                :: qr
+    integer(tik)                              :: id
 
     if (.not. scalar_inter_element_order_weights_inventory%is_initialised()) then
       call scalar_inter_element_order_weights_inventory%initialise(            &
@@ -337,7 +339,7 @@ contains
       )
     end if
 
-    if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
     k_h = element_order_h
     k_v = element_order_v
@@ -384,7 +386,7 @@ contains
            dummy_fine, dummy_coarse, weights_high_low, weights_low_high, qr    &
     )
 
-    if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
   end subroutine create_scalar_inter_element_order_weights
 
@@ -410,6 +412,7 @@ contains
     type(function_space_type), pointer        :: fs, coarse_fs, fine_fs
     type(quadrature_rule_newton_cotes_type)   :: quadrature_rule_newton_cotes
     type(quadrature_xyoz_type)                :: qr
+    integer(tik)                              :: id
 
     if (.not. w2_inter_element_order_weights_inventory%is_initialised()) then
       call w2_inter_element_order_weights_inventory%initialise(                &
@@ -417,7 +420,7 @@ contains
       )
     end if
 
-    if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
     k_h = element_order_h
     k_v = element_order_v
@@ -485,7 +488,7 @@ contains
            dummy_fine, dummy_coarse, weights_high_low, weights_low_high, qr    &
     )
 
-    if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
   end subroutine create_w2_inter_element_order_weights
 
@@ -517,6 +520,7 @@ contains
     type(field_type)                     :: dummy_theta
     integer(kind=i_def)                  :: k
     logical(kind=l_def)                  :: constant_exists
+    integer(tik)                         :: id
 
     ! Check inventory is initialised
     if (.not. proj_mr_to_sh_rho_inventory%is_initialised()) then
@@ -540,7 +544,7 @@ contains
       double_level_chi => get_coordinates(double_level_mesh%get_id())
       qr => get_qr_fv()
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       w3_fs => function_space_collection%get_fs(prime_extrusion_mesh, 0, 0, W3)
       wtheta_fs => function_space_collection%get_fs(prime_extrusion_mesh, 0, 0, Wtheta)
@@ -560,7 +564,7 @@ contains
                                                         dummy_theta,           &
                                                         qr) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Get existing constant
@@ -586,6 +590,7 @@ contains
     type(field_type)                     :: dummy_w2_field
     type(function_space_type),   pointer :: fine_w2_fs
     type(function_space_type),   pointer :: coarse_w2_fs
+    integer(tik)                         :: id
 
     ! Check inventory is initialised
     if (.not. intermesh_wghts_w2_inventory%is_initialised()) then
@@ -608,7 +613,7 @@ contains
         call log_event(log_scratch_space, LOG_LEVEL_ERROR)
       end if
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       coarse_w2_fs => function_space_collection%get_fs(coarse_mesh, 0, 0, W2)
       fine_w2_fs => function_space_collection%get_fs(fine_mesh, 0, 0, W2)
@@ -623,7 +628,7 @@ contains
       call invoke( setval_c(weights, 0.0_r_def),                               &
                    weights_prolong_w2_kernel_type(weights, dummy_w2_field) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Get existing constant
@@ -651,6 +656,7 @@ contains
     type(function_space_type),   pointer :: coarse_w3_fs
     type(field_type),            pointer :: mm_w3_fine
     type(field_type),            pointer :: mm_w3_coarse
+    integer(tik)                         :: id
 
     ! Check inventory is initialised
     if (.not. intermesh_wghts_rdef_w3_inventory%is_initialised()) then
@@ -679,7 +685,7 @@ contains
       mm_w3_fine => get_mass_matrix_diagonal_fv(W3, fine_mesh%get_id())
       mm_w3_coarse => get_mass_matrix_diagonal_fv(W3, coarse_mesh%get_id())
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       coarse_w3_fs => function_space_collection%get_fs(coarse_mesh, 0, 0, W3)
       fine_w3_fs => function_space_collection%get_fs(fine_mesh, 0, 0, W3)
@@ -692,7 +698,7 @@ contains
                                                     mm_w3_fine,                &
                                                     mm_w3_coarse) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Get existing constant
@@ -717,6 +723,7 @@ contains
     type(field_type),            pointer :: weights_rdef
     type(r_tran_field_type),     pointer :: weights_rtran
     type(function_space_type),   pointer :: fine_w3_fs
+    integer(tik)                         :: id
 
     ! Check inventory is initialised
     if (.not. intermesh_wghts_rtran_w3_inventory%is_initialised()) then
@@ -736,7 +743,7 @@ contains
       ! Create the object as it doesn't exist yet
       weights_rdef => get_intermesh_weights_w3_rdef(fine_mesh, coarse_mesh)
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       fine_w3_fs => function_space_collection%get_fs(fine_mesh, 0, 0, W3)
 
@@ -746,7 +753,7 @@ contains
 
       call copy_field(weights_rdef, weights_rtran)
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Get existing constant
@@ -1017,6 +1024,7 @@ contains
     type(field_type),           pointer :: panel_id
     type(quadrature_xyoz_type), pointer :: qr
     integer(kind=i_def),      parameter :: xdirection = 1_i_def
+    integer(tik)                        :: id
 
     ! Check inventory is initialised
     if (.not. project_lon_dot_to_w1_inventory%is_initialised()) then
@@ -1034,7 +1042,7 @@ contains
       panel_id => get_panel_id(mesh_id)
       qr => get_qr_fv()
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       w1_fs => function_space_collection%get_fs(mesh, 0, 0, W1)
       w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
@@ -1048,7 +1056,7 @@ contains
                                                          chi, panel_id,        &
                                                          xdirection, qr) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Return constant
@@ -1073,6 +1081,7 @@ contains
     type(field_type),           pointer :: panel_id
     type(quadrature_xyoz_type), pointer :: qr
     integer(kind=i_def),      parameter :: ydirection = 2_i_def
+    integer(tik)                        :: id
 
     ! Check inventory is initialised
     if (.not. project_lat_dot_to_w1_inventory%is_initialised()) then
@@ -1090,7 +1099,7 @@ contains
       panel_id => get_panel_id(mesh_id)
       qr => get_qr_fv()
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       w1_fs => function_space_collection%get_fs(mesh, 0, 0, W1)
       w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
@@ -1104,7 +1113,7 @@ contains
                                                          chi, panel_id,        &
                                                          ydirection, qr) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Return constant
@@ -1129,6 +1138,7 @@ contains
     type(field_type),           pointer :: panel_id
     type(quadrature_xyoz_type), pointer :: qr
     integer(kind=i_def),      parameter :: zdirection = 3_i_def
+    integer(tik)                        :: id
 
     ! Check inventory is initialised
     if (.not. project_r_dot_to_w1_inventory%is_initialised()) then
@@ -1144,7 +1154,7 @@ contains
       panel_id => get_panel_id(mesh_id)
       qr => get_qr_fv()
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
       w1_fs => function_space_collection%get_fs(mesh, 0, 0, W1)
       w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
@@ -1158,7 +1168,7 @@ contains
                                                          chi, panel_id,        &
                                                          zdirection, qr) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
     ! Return constant
@@ -1185,6 +1195,7 @@ contains
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: w2h_k0_fs
     type(function_space_type), pointer :: w3_k0_fs
+    integer(tik)                       :: id
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. w3_to_w2_displacement_inventory%is_initialised()) then
@@ -1208,7 +1219,7 @@ contains
       chi => get_coordinates(mesh_id)
       panel_id => get_panel_id(mesh_id)
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
       w2h_k0_fs => function_space_collection%get_fs(mesh, 0, 0, W2H)
       w3_k0_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
 
@@ -1220,7 +1231,7 @@ contains
                    w3_to_w2_displacement_kernel_type(w3_to_w2_displacement,    &
                                                      chi, panel_id, dummy_w3) )
 
-      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+      if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
 
   end function get_w3_to_w2_displacement

@@ -13,7 +13,7 @@
 
 program coupled
 
-  use cli_mod,                 only: get_initial_filename
+  use cli_mod,                 only: parse_command_line
   use constants_mod,           only: precision_real
   use driver_collections_mod,  only: init_collections, final_collections
   use driver_comm_mod,         only: init_comm, final_comm
@@ -38,11 +38,12 @@ program coupled
   character(:), allocatable :: cpl_component_name
   character(:), allocatable :: filename
 
-  call get_initial_filename( filename, component_name=cpl_component_name )
+  call parse_command_line( filename, component_name=cpl_component_name )
 
   call modeldb%values%initialise( 'values', 5 )
 
   call modeldb%configuration%initialise( program_name, table_len=10 )
+  call modeldb%config%initialise( program_name )
 
   write(log_scratch_space,'(A)')                          &
       'Application built with '// trim(precision_real) // &
@@ -53,8 +54,12 @@ program coupled
 
   call modeldb%values%add_key_value('cpl_name', cpl_component_name)
   call init_comm( "coupled", modeldb )
-  call init_config( filename, coupled_required_namelists, &
-                    modeldb%configuration )
+
+  call init_config( filename,                            &
+                    coupled_required_namelists,          &
+                    configuration=modeldb%configuration, &
+                    config=modeldb%config )
+
   call init_logger( modeldb%mpi%get_comm(), &
                     program_name//"_"//cpl_component_name )
   call init_collections()
