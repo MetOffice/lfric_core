@@ -2533,8 +2533,6 @@ subroutine apply_polynomial_stretch(self)
   real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer
   integer(i_def) :: nverts, vert, direction
 
-  real(r_def) :: diff
-
   do direction = 1, 2
 
     ! Calculate the cell spacing and number of points of unit mesh
@@ -2555,19 +2553,21 @@ subroutine apply_polynomial_stretch(self)
     ! Apply the stretching transformation to each coordinate
     do vert = 1, nverts
 
-       self%vert_coords(direction, vert) = &
+      self%vert_coords(direction, vert) = &
             polynomial_stretch(self%vert_coords(direction, vert), &
-            param_a, param_b, param_c, x_inner, x_outer )
-
-       if ( vert > 1) then
-        diff = self%vert_coords(direction, vert) - self%vert_coords(direction, vert-1)
-        if (diff > 0.0_r_def) then
-           print*, vert, self%vert_coords(direction, vert), diff
-        end if
-       end if
+            param_a, param_b, param_c, x_inner, x_outer ) &
+            + self%domain_centre(direction)
 
     end do
-
+   
+    ! Apply the stretching transformation to the domain extents
+    do vert = 1,4
+      self%domain_extents(direction, vert) = &
+            polynomial_stretch(self%domain_extents(direction, vert), &
+            param_a, param_b, param_c, x_inner, x_outer ) &
+            + self%domain_centre(direction)
+   end do
+   
   end do
 
   return

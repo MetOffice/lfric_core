@@ -71,6 +71,9 @@ program planar_mesh_generator
                                  key_from_geometry
   use rotation_config_mod, only: ROTATION_TARGET_NULL_ISLAND, &
                                  ROTATION_TARGET_NORTH_POLE
+  use planar_mesh_config_mod, &
+                           only: STRETCH_FUNCTION_INFLATION, &
+                                 STRETCH_FUNCTION_POLYNOMIAL
 
   implicit none
 
@@ -253,8 +256,8 @@ program planar_mesh_generator
     target_null_island = config%rotation%target_null_island()
   end if
 
-  if (stretch_function == stretch_function_inflation .or. &
-      stretch_function ==stretch_function_polynomial) then
+  if (stretch_function == STRETCH_FUNCTION_INFLATION .or. &
+      stretch_function == STRETCH_FUNCTION_POLYNOMIAL) then
     transform_mesh = config%stretch_transform%transform_mesh()
   end if
 

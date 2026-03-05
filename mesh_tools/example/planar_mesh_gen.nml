@@ -53,7 +53,7 @@
   edge_cells_x    = 48,24
   edge_cells_y    = 24,12
   domain_size     = 48.0, 24.0
-  domain_centre   = 0.0, 0.0
+  domain_centre   = 5.0, 10.0
   periodic_x      = .false.
   periodic_y      = .false.
   create_lbc_mesh = .true.
