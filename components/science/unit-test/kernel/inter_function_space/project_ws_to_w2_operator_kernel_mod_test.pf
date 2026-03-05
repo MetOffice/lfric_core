@@ -7,7 +7,7 @@
 !> Test the projection from a scalar space to W2
 module project_ws_to_w2_operator_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def
+  use constants_mod, only : i_def, r_def, imdi
   use funit
 
   implicit none
@@ -46,7 +46,7 @@ contains
              rehabilitate=.true.,               &
              coord_system=coord_system_xyz )
 
-    call init_chi_transforms()
+    call init_chi_transforms(imdi, imdi)
 
   end subroutine setUp
 

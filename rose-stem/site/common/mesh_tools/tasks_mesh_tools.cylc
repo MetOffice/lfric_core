@@ -20,7 +20,9 @@
         "opt_confs": task_ns.conf_name
     }) %}
 
-{% elif task_ns.conf_name == "cubedsphere-op" %}
+{% elif task_ns.conf_name == "cubedsphere-op" or
+        task_ns.conf_name == "cubedsphere-op-2panels" or
+        task_ns.conf_name == "cubedsphere-op-3panels" %}
 
     {% do task_dict.update({
         "resolution": "",

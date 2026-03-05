@@ -63,7 +63,7 @@ contains
 
     call feign_planet_config( scaling_factor=scaling )
 
-    call init_chi_transforms()
+    call init_chi_transforms(geometry_spherical, topology_non_periodic)
 
   end subroutine set_up
 
