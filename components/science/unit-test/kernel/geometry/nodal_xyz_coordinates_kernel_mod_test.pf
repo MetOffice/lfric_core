@@ -6,7 +6,7 @@
 
 module nodal_xyz_coordinates_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
+  use constants_mod, only : i_def, r_def, imdi
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w2_m3x3_q3x3x3_size, &
@@ -61,7 +61,7 @@ contains
         element_order_v=0_i_def,           &
         rehabilitate=.true. )
 
-    call init_chi_transforms()
+    call init_chi_transforms(imdi, imdi)
 
   end subroutine setUp
 

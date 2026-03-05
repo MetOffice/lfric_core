@@ -13,26 +13,22 @@
 !!          This gives a data access optimisation.
 module sci_native_jacobian_mod
 
-  use base_mesh_config_mod,      only: geometry,                 &
-                                       geometry_planar,          &
-                                       topology,                 &
-                                       topology_fully_periodic
   use constants_mod,             only: l_def, i_def, r_def, r_single
-  use finite_element_config_mod, only: coord_system,             &
-                                       coord_system_xyz,         &
-                                       coord_system_native
   use coord_transform_mod,       only: PANEL_ROT_MATRIX, &
                                        alphabetar2xyz,   &
                                        xyz2llr,          &
                                        xyz2ll,           &
                                        llr2xyz,          &
                                        schmidt_transform_lat
-
-  use planet_config_mod,         only: scaled_radius
   use sci_chi_transform_mod,     only: get_mesh_rotation_matrix, &
                                        get_to_stretch,           &
                                        get_to_rotate,            &
                                        get_stretch_factor
+
+  use finite_element_config_mod, only: coord_system_xyz, &
+                                       coord_system_native
+  use base_mesh_config_mod,      only: geometry_planar, &
+                                       topology_fully_periodic
 
   implicit none
 
@@ -53,21 +49,31 @@ contains
 
   !> @brief Compute the Jacobian matrices at a 1D array of points (e.g. DoFs)
   !!        for a whole column, using the native coordinates of the mesh
-  !> @param[in]     ndf_chi    Num DoFs per cell for coordinate fields
-  !> @param[in]     nlayers    Number of layers in the mesh
-  !> @param[in]     chi_1      First native coord field, for a single cell
-  !> @param[in]     chi_2      Second native coord field, for a single cell
-  !> @param[in]     chi_3      Third native coord field, for the whole column
-  !> @param[in]     panel_id   Mesh panel ID value for the column
-  !> @param[in]     basis      Wchi basis, evaluated at a 1D array of points
-  !> @param[in]     diff_basis Derivatives of Wchi basis functions, evaluated at
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
+  !! @param[in] geometry       Mesh geometry enumeration.
+  !! @param[in] topology       Mesh topology enumeration.
+  !! @param[in] scaled_radius  Scaled planetary radius.
+  !> @param[in] ndf_chi        Num DoFs per cell for coordinate fields
+  !> @param[in] nlayers        Number of layers in the mesh
+  !> @param[in] chi_1          First native coord field, for a single cell
+  !> @param[in] chi_2          Second native coord field, for a single cell
+  !> @param[in] chi_3          Third native coord field, for the whole column
+  !> @param[in] panel_id       Mesh panel ID value for the column
+  !> @param[in] basis          Wchi basis, evaluated at a 1D array of points
+  !> @param[in] diff_basis     Derivatives of Wchi basis functions, evaluated at
   !!                           a 1D array of points
   !> @param[in,out] jac        Array of Jacobian matrices to be calculated for
   !!                           a whole column
   !> @param[in,out] dj         Jacobian determinants for the whole column
-  subroutine native_jacobian(ndf_chi, nlayers, chi_1, chi_2, chi_3, panel_id,  &
+  subroutine native_jacobian(coord_system, geometry, topology, scaled_radius, &
+                             ndf_chi, nlayers, chi_1, chi_2, chi_3, panel_id, &
                              basis, diff_basis, jac, dj)
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def), intent(in)  :: ndf_chi
     integer(kind=i_def), intent(in)  :: nlayers

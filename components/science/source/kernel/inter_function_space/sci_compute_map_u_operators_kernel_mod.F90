@@ -113,12 +113,15 @@ subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
                         nqp_h, nqp_v, wqp_h, wqp_v                 &
                         )
 
-  use base_mesh_config_mod,       only : geometry,           &
-                                         geometry_spherical, &
-                                         geometry_planar
-  use sci_chi_transform_mod,      only : chi2llr
+  use sci_chi_transform_mod,       only : chi2llr
   use sci_coordinate_jacobian_mod, only : coordinate_jacobian
-  use coord_transform_mod,        only : sphere2cart_vector
+  use coord_transform_mod,         only : sphere2cart_vector
+
+  use finite_element_config_mod, only: coord_system
+  use base_mesh_config_mod,      only: geometry, topology, &
+                                       geometry_spherical, &
+                                       geometry_planar
+  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -173,7 +176,11 @@ subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
       chi_sph_3_cell(df) = chi_sph_3( map_chi_sph(df) + k )
     end do
 
-    call coordinate_jacobian(ndf_chi_sph,        &
+    call coordinate_jacobian(coord_system,       &
+                             geometry,           &
+                             topology,           &
+                             scaled_radius,      &
+                             ndf_chi_sph,        &
                              nqp_h,              &
                              nqp_v,              &
                              chi_sph_1_cell,     &

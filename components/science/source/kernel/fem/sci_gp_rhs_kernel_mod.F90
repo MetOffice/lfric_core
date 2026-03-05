@@ -96,6 +96,10 @@ subroutine gp_rhs_code(nlayers,                       &
 
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -135,7 +139,11 @@ subroutine gp_rhs_code(nlayers,                       &
       chi_2_cell(df) = chi_2( map_chi(df) + k )
       chi_3_cell(df) = chi_3( map_chi(df) + k )
     end do
-    call coordinate_jacobian(ndf_chi,        &
+    call coordinate_jacobian(coord_system,   &
+                             geometry,       &
+                             topology,       &
+                             scaled_radius,  &
+                             ndf_chi,        &
                              nqp_h,          &
                              nqp_v,          &
                              chi_1_cell,     &
