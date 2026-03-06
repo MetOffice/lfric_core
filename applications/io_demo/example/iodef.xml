@@ -12,7 +12,9 @@
       time_counter="none">
 
      <file id="lfric_diag" name="diffusion_diag" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
-      <field field_ref="diffusion_field" />
+      <field field_ref="diffusion_field_Wth" />
+      <field field_ref="diffusion_field_W0" />
+      <field field_ref="diffusion_field_W3" />
      </file>
 
     </file_definition>

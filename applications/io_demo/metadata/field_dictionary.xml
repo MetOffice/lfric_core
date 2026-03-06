@@ -1,8 +1,9 @@
 <field_definition>
 <field_group id="io_demo_fields" prec="8" operation="instant">
   <field id="diffusion_field_Wth" name="diffusion_field_Wth" long_name="diffusion_field_Wth" unit="1" grid_ref="full_level_face_grid" />
-  <field id="diffusion_field_W0" name="diffusion_field_W0" long_name="diffusion_field_W0" unit="1" grid_ref="full_level_node_grid" />
-  <!--field id="diffusion_field_W2" name="diffusion_field_W2" long_name="diffusion_field_W2" unit="1" grid_ref="full_level_face_grid" /-->
+  <field id="diffusion_field_W0" name="diffusion_field_W0" long_name="diffusion_field_W0" unit="1" grid_ref="node_grid" />
+  <field id="diffusion_field_W2H" name="diffusion_field_W2H" long_name="diffusion_field_W2H" unit="1" grid_ref="half_level_edge_grid" />
+  <field id="diffusion_field_W2V" name="diffusion_field_W2V" long_name="diffusion_field_W2V" unit="1" grid_ref="full_level_face_grid" />
   <field id="diffusion_field_W3" name="diffusion_field_W3" long_name="diffusion_field_W3" unit="1" grid_ref="half_level_face_grid" />
 </field_group>
 </field_definiton>

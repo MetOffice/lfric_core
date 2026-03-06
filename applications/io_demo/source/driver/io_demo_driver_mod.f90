@@ -232,7 +232,7 @@ contains
 
     type( field_collection_type ), pointer :: depository
     type( field_collection_type ), pointer :: multifile_col
-    type( field_type ),            pointer :: diffusion_field
+    type( field_type ),            pointer :: W0_field, W3_field, Wth_field
     type( field_type ),            pointer :: multifile_field
 
     logical :: write_diag, multifile_io, io_benchmark
@@ -249,10 +249,9 @@ contains
     end if
 
     depository => modeldb%fields%get_field_collection("depository")
-    call depository%get_field("diffusion_field_Wtheta", diffusion_field)
 
     ! Call an algorithm
-    call log_event(program_name//": Calculating diffusion", LOG_LEVEL_INFO)
+    call log_event(program_name//": Calculating diffusion for core fields", LOG_LEVEL_INFO)
 
     ! Diffusion algorithm unstable with high viscosity values at high
     ! resolution, so for io_benchmark mode we lower the viscosity
@@ -266,7 +265,12 @@ contains
     if (write_diag) then
         ! Write out output file
         call log_event(program_name//": Writing diagnostic output", LOG_LEVEL_INFO)
-        call diffusion_field%write_field('diffusion_field')
+        call depository%get_field("diffusion_field_Wtheta", Wth_field)
+        call depository%get_field("diffusion_field_W0", W0_field)
+        call depository%get_field("diffusion_field_W3", W3_field)
+        call Wth_field%write_field('diffusion_field_Wth')
+        call W0_field%write_field('diffusion_field_W0')
+        call W3_field%write_field('diffusion_field_W3')
     end if
 
   end subroutine step
@@ -283,7 +287,7 @@ contains
     type(modeldb_type), intent(inout) :: modeldb
 
     type( field_collection_type ), pointer :: depository
-    type( field_type ),            pointer :: diffusion_field
+    type( field_type ),            pointer :: W0_field, W3_field, Wth_field
     type( field_collection_type ), pointer :: multifile_col
     type( field_type ),            pointer :: multifile_field
 
@@ -295,17 +299,23 @@ contains
     ! Checksum output
     !-------------------------------------------------------------------------
     depository => modeldb%fields%get_field_collection("depository")
-    call depository%get_field("diffusion_field_Wtheta", diffusion_field)
+    call depository%get_field("diffusion_field_Wtheta", Wth_field)
+    call depository%get_field("diffusion_field_W0", W0_field)
+    call depository%get_field("diffusion_field_W3", W3_field)
 
     if (multifile_io) then
       multifile_col => modeldb%fields%get_field_collection("multifile_io_fields")
       call multifile_col%get_field("multifile_field", multifile_field)
       call checksum_alg(program_name, &
-                  diffusion_field, 'diffusion_field', &
+                  Wth_field, 'diffusion_field_Wtheta', &
+                  W0_field, 'diffusion_field_W0', &
+                  W3_field, 'diffusion_field_W3', &
                   multifile_field, 'multifile_field')
     else
       call checksum_alg(program_name, &
-                        diffusion_field, 'diffusion_field')
+                        Wth_field, 'diffusion_field_Wtheta', &
+                        W0_field, 'diffusion_field_W0', &
+                        W3_field, 'diffusion_field_W3')
     end if
 
     call log_event( program_name//': model completed', LOG_LEVEL_TRACE )
