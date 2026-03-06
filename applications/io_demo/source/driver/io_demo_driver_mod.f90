@@ -17,7 +17,7 @@ module io_demo_driver_mod
   use driver_mesh_mod,            only : init_mesh
   use driver_modeldb_mod,         only : modeldb_type
   use driver_fem_mod,             only : init_fem, final_fem
-  use driver_io_mod,              only : init_io, final_io
+  use driver_io_mod,              only : init_io, final_io, filelist_populator
   use extrusion_mod,              only : extrusion_type,         &
                                          uniform_extrusion_type, &
                                          TWOD, PRIME_EXTRUSION
@@ -36,7 +36,8 @@ module io_demo_driver_mod
   use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
-
+  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, setup_io_benchmark_files
+  use io_benchmark_step_mod,      only : step_io_benchmark
   use io_demo_alg_mod,            only : io_demo_alg
   use sci_field_minmax_alg_mod,   only : log_field_minmax
 
@@ -78,6 +79,7 @@ contains
     class(extrusion_type),        allocatable :: extrusion
     type(uniform_extrusion_type), allocatable :: extrusion_2d
 
+    procedure(filelist_populator), pointer :: files_init_ptr
     character(str_def) :: prime_mesh_name
 
     integer(i_def) :: stencil_depth(1)
@@ -89,6 +91,7 @@ contains
     real(r_def)    :: scaled_radius
     logical        :: check_partitions
     logical        :: multifile_io
+    logical        :: io_benchmark
 
     integer(i_def), parameter :: one_layer = 1_i_def
     integer(i_def) :: i
@@ -106,7 +109,8 @@ contains
     domain_height    = modeldb%config%extrusion%domain_height()
     number_of_layers = modeldb%config%extrusion%number_of_layers()
     scaled_radius    = modeldb%config%planet%scaled_radius()
-    multifile_io     = modeldb%config%io%multifile_io()
+    multifile_io     = modeldb%config%io_demo%multifile_io()
+    io_benchmark     = modeldb%config%io_demo%io_benchmark()
 
     !=======================================================================
     ! Mesh
@@ -177,17 +181,29 @@ contains
     !=======================================================================
     ! Setup multifile reading
     !=======================================================================
+    files_init_ptr => null()
     if (multifile_io) then
       call create_multifile_io_fields(modeldb)
       call init_multifile_io(modeldb)
+    end if
+
+    if (io_benchmark) then
+      call create_io_benchmark_fields(modeldb)
+      files_init_ptr => setup_io_benchmark_files
     end if
 
     !=======================================================================
     ! Setup general I/O system.
     !=======================================================================
     ! Initialise I/O context
-    call init_io( program_name, prime_mesh_name, modeldb, &
-                  chi_inventory, panel_id_inventory )
+    if (associated(files_init_ptr)) then
+      call init_io( program_name, prime_mesh_name, modeldb, &
+                    chi_inventory, panel_id_inventory,      &
+                    populate_filelist=files_init_ptr )
+    else
+      call init_io( program_name, prime_mesh_name, modeldb, &
+                    chi_inventory, panel_id_inventory )
+    end if
 
 
     !=======================================================================
@@ -219,11 +235,11 @@ contains
     type( field_type ),            pointer :: diffusion_field
     type( field_type ),            pointer :: multifile_field
 
-    logical :: multifile_io
-    logical :: write_diag
+    logical :: write_diag, multifile_io, io_benchmark
 
-    multifile_io = modeldb%config%io%multifile_io()
     write_diag   = modeldb%config%io%write_diag()
+    multifile_io = modeldb%config%io_demo%multifile_io()
+    io_benchmark = modeldb%config%io_demo%io_benchmark()
 
     if (multifile_io) then
       call step_multifile_io(modeldb, chi_inventory, panel_id_inventory)
@@ -237,7 +253,15 @@ contains
 
     ! Call an algorithm
     call log_event(program_name//": Calculating diffusion", LOG_LEVEL_INFO)
-    call io_demo_alg(modeldb, diffusion_field)
+
+    ! Diffusion algorithm unstable with high viscosity values at high
+    ! resolution, so for io_benchmark mode we lower the viscosity
+    if (io_benchmark) then
+      call io_demo_alg(modeldb, diffusion_field, visc_in=1000.0_r_def)
+      call step_io_benchmark(modeldb)
+    else
+      call io_demo_alg(modeldb, diffusion_field)
+    end if
 
     if (write_diag) then
         ! Write out output file
@@ -265,7 +289,7 @@ contains
 
     logical :: multifile_io
 
-    multifile_io = modeldb%config%io%multifile_io()
+    multifile_io = modeldb%config%io_demo%multifile_io()
 
     !-------------------------------------------------------------------------
     ! Checksum output

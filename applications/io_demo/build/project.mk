@@ -8,3 +8,5 @@
 # via the Makefile.
 
 $(info io_demo miniapp project specials)
+# Enable the use of the sleep() intrinsic for gfortran
+export FFLAGS_GNU_OPTIONS = -fall-intrinsics

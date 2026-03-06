@@ -47,7 +47,13 @@ coord_system='native'
   checkpoint_read       = .false.
   checkpoint_write      = .false.
   file_convention       = 'UGRID'
+/
+
+&io_demo
   multifile_io          = .false.
+  io_benchmark          = .false.
+  n_benchmark_fields    = 10
+  benchmark_sleep_time  = 0
 /
 
 &logging
