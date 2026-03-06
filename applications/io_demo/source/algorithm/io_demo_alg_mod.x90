@@ -111,17 +111,13 @@ contains
 
     ! Sample diffusion field onto other function spaces
     call invoke( name = "sample_diffusion_on_all_fs", &
-                 multiplicity_kernel_type(rmul_w2), &
-                 multiplicity_kernel_type(rmul_w0), &
-                 setval_c(field_W0, 0.0_r_def), &
-                 setval_c(field_W2, 0.0_r_def), &
+                 setval_c(rmul_w2, 1.0_r_def), &
+                 setval_c(rmul_w0, 1.0_r_def), &
                  sample_wtheta_to_w3_kernel_type(field_W3, field_Wth), &
                  wth_to_w0_average_kernel_type(field_W0, field_Wth, rmul_w0), &
                  w3_to_w2_average_kernel_type(field_W2, field_W3, rmul_w2) )
 
     call log_field_minmax( LOG_LEVEL_INFO, 'field_Wth', field_Wth )
-    call log_field_minmax( LOG_LEVEL_INFO, 'rmul_w2', rmul_w2 )
-    call log_field_minmax( LOG_LEVEL_INFO, 'rmul_w0', rmul_w0 )
     call log_field_minmax( LOG_LEVEL_INFO, 'field_W0', field_W0 )
     call log_field_minmax( LOG_LEVEL_INFO, 'field_W2', field_W2 )
     call log_field_minmax( LOG_LEVEL_INFO, 'field_W3', field_W3 )
