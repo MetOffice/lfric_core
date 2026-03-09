@@ -20,9 +20,11 @@ module runtime_partition_mod
                                      partitioner_interface,          &
                                      partitioner_cubedsphere_serial, &
                                      partitioner_cubedsphere,        &
-                                     partitioner_planar
+                                     partitioner_planar,             &
+                                     partitioner_lfric2lfric_lbc
 
-  use panel_decomposition_mod, only: panel_decomposition_type, &
+  use panel_decomposition_mod, only: panel_decomposition_type,           &
+                                     lfric2lfric_lbc_decomposition_type, &
                                      calc_mapping_factor
   use sci_query_mod, only: is_lbc
 
@@ -36,8 +38,9 @@ module runtime_partition_mod
   public :: create_local_mesh
   public :: create_local_mesh_maps
 
-  integer, public, parameter :: mesh_cubedsphere = 34
-  integer, public, parameter :: mesh_planar      = 28
+  integer, public, parameter :: mesh_cubedsphere     = 34
+  integer, public, parameter :: mesh_planar          = 28
+  integer, public, parameter :: mesh_lfric2lfric_lbc = 22
 
 contains
 
@@ -94,6 +97,12 @@ subroutine get_partition_strategy( mesh_selection, total_ranks, partitioner_ptr 
     call log_event( "Using planar mesh partitioner ", &
                     log_level_debug )
 
+  case (mesh_lfric2lfric_lbc)
+
+    partitioner_ptr => partitioner_lfric2lfric_lbc
+    call log_event( "Using lfric2lfric lbc mesh partitioner ", &
+                    log_level_debug )
+
   end select
 
 end subroutine get_partition_strategy
@@ -142,6 +151,8 @@ subroutine create_local_mesh( mesh_names,              &
   integer(i_def) :: local_mesh_id, i
   integer(i_def) :: mapping_factor
 
+  logical(l_def) :: lfric2lfric_lbc
+
   do i=1, size(mesh_names)
 
     global_mesh_ptr => global_mesh_collection%get_global_mesh( mesh_names(i) )
@@ -160,7 +171,14 @@ subroutine create_local_mesh( mesh_names,              &
     ! Create local_mesh
     call local_mesh%initialise( global_mesh_ptr, partition )
 
-    if ( .not. is_lbc(local_mesh) ) then
+    select type (decomposition)
+      type is (lfric2lfric_lbc_decomposition_type)
+        lfric2lfric_lbc = .true.
+      class default
+        lfric2lfric_lbc = .false.
+    end select
+
+    if ( .not. is_lbc(local_mesh) .or. lfric2lfric_lbc) then
       ! Make sure the local_mesh cell owner lookup is correct
       ! (Can only be done when the code is running on its full set of MPI tasks)
       call local_mesh%init_cell_owner()

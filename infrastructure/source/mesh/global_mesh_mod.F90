@@ -1096,8 +1096,10 @@ contains
   end do
   ! y_dist cells in the y-direction
   ! Since the direction may have changed we need to recompute
-  y_index = rotate(x_index)
-  if ( y_cells < 0 ) y_index = opposite(y_index)
+  if (check) then
+    y_index = rotate(x_index)
+    if ( y_cells < 0 ) y_index = opposite(y_index)
+  end if
 
   ! y_index and y_dist
   do i = 1,y_dist

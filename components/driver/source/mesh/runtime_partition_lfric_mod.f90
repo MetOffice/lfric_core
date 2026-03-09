@@ -18,12 +18,14 @@ module runtime_partition_lfric_mod
                                      row_decomposition_type,             &
                                      column_decomposition_type,          &
                                      custom_decomposition_type,          &
+                                     lfric2lfric_lbc_decomposition_type, &
                                      auto_nonuniform_decomposition_type, &
                                      guided_nonuniform_decomposition_type
   use partitioning_config_mod, only: panel_decomposition_auto,            &
                                      panel_decomposition_row,             &
                                      panel_decomposition_column,          &
                                      panel_decomposition_custom,          &
+                                     panel_decomposition_lfric2lfric_lbc, &
                                      panel_decomposition_auto_nonuniform, &
                                      panel_decomposition_guided_nonuniform
 
@@ -110,6 +112,9 @@ subroutine get_partition_parameters_nml( partitioning,   &
     call partitioning%get_value( 'panel_xproc', panel_xproc )
     call partitioning%get_value( 'panel_yproc', panel_yproc )
     decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
+
+  case ( panel_decomposition_lfric2lfric_lbc )
+    decomposition = lfric2lfric_lbc_decomposition_type()
 
   case ( panel_decomposition_auto_nonuniform )
     decomposition = auto_nonuniform_decomposition_type()
