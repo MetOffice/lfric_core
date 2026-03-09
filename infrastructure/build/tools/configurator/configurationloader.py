@@ -41,10 +41,14 @@ class ConfigurationLoader:
 
         :param module_file: Filename to use.
         """
+
+        if not self._namelists:
+            raise ValueError("No registered namelists to load.")
+
         inserts = {
             "moduleName": self._module_name,
             "namelists": self._namelists,
         }
 
-        template = self._engine.get_template("loader.f90.jinja")
+        template = self._engine.get_template("config_loader.f90.jinja")
         module_file.write_text(template.render(inserts))

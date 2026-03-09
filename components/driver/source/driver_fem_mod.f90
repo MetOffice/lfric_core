@@ -37,6 +37,8 @@ module driver_fem_mod
   use mesh_mod,                       only: mesh_type
   use mesh_collection_mod,            only: mesh_collection_type
 
+  use base_mesh_config_mod, only: geometry, topology
+
   implicit none
 
   private
@@ -78,7 +80,8 @@ contains
     ! ======================================================================== !
 
     ! Initialise coordinate transformations
-    call init_chi_transforms(mesh_collection)
+    call init_chi_transforms( geometry, topology, &
+                              mesh_collection=mesh_collection )
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names

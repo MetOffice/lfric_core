@@ -101,6 +101,10 @@ subroutine project_ws_to_w2_operator_code( cell, nlayers,              &
 
   use sci_coordinate_jacobian_mod, only: pointwise_coordinate_jacobian
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -146,7 +150,9 @@ subroutine project_ws_to_w2_operator_code( cell, nlayers,              &
     projection_operator(ik,:,:) = 0.0_r_def
     do qp_v = 1,nqp_v
       do qp_h = 1,nqp_h
-        call pointwise_coordinate_jacobian(ndf_wx, chi1_e, chi2_e, chi3_e,  &
+        call pointwise_coordinate_jacobian(coord_system, geometry,          &
+                                           topology, scaled_radius,         &
+                                           ndf_wx, chi1_e, chi2_e, chi3_e,  &
                                            ipanel, basis_wx(:,:,qp_h,qp_v), &
                                            diff_basis_wx(:,:,qp_h,qp_v),    &
                                            jac, detj)

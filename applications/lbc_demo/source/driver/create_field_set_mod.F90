@@ -6,11 +6,10 @@
 module create_field_set_mod
 
   use constants_mod,           only: i_def
+  use driver_modeldb_mod,      only: modeldb_type
   use field_collection_mod,    only: field_collection_type
   use field_mod,               only: field_type
   use integer_field_mod,       only: integer_field_type
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
   use mesh_collection_mod,     only: mesh_collection
   use mesh_mod,                only: mesh_type
   use fs_continuity_mod,       only: W0, W2H, W2V, W3, Wtheta
@@ -29,20 +28,18 @@ module create_field_set_mod
 contains
 
 !> @brief Instantiates field set for lbc_demo application
+!! @param[in, out]  modeldb          Application state object
 !! @param[in, out]  fld_collection   Field collection to add field set
 !! @param[in]       mesh             Mesh to use for field set
-!! @param[in]       configuration    Configuration namelist
-subroutine create_field_set( fld_collection, mesh, configuration )
+subroutine create_field_set(modeldb, fld_collection, mesh)
 
   implicit none
 
+  type(modeldb_type), intent(in)    :: modeldb
 
-  type(field_collection_type),    pointer, intent(inout) :: fld_collection
-  type(mesh_type),                pointer, intent(in)    :: mesh
-  type(namelist_collection_type),          intent(in)    :: configuration
+  type(field_collection_type), pointer, intent(inout) :: fld_collection
+  type(mesh_type),             pointer, intent(in)    :: mesh
 
-  type(namelist_type), pointer :: finite_element_nml
-  type(namelist_type), pointer :: lbc_demo_nml
 
   type(field_type)         :: fld
   type(integer_field_type) :: int_fld
@@ -57,12 +54,9 @@ subroutine create_field_set( fld_collection, mesh, configuration )
   ! Enumerations
   integer :: test_field_type
 
-  lbc_demo_nml       => configuration%get_namelist('lbc_demo')
-  finite_element_nml => configuration%get_namelist('finite_element')
-
-  call lbc_demo_nml%get_value( 'field_type', test_field_type )
-  call finite_element_nml%get_value( 'element_order_h', order_h )
-  call finite_element_nml%get_value( 'element_order_v', order_v )
+  test_field_type = modeldb%config%lbc_demo%field_type()
+  order_h = modeldb%config%finite_element%element_order_h()
+  order_v = modeldb%config%finite_element%element_order_v()
 
   mesh_2d => mesh_collection%get_mesh(mesh, twod)
 

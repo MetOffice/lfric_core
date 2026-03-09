@@ -10,14 +10,7 @@
 !> per panel for certain meshes such as cubed sphere.
 module sci_coordinate_jacobian_mod
 
-  use base_mesh_config_mod,      only: geometry,                 &
-                                       geometry_planar,          &
-                                       topology,                 &
-                                       topology_fully_periodic
-  use constants_mod,             only: l_def, i_def, r_double, r_single
-  use finite_element_config_mod, only: coord_system,             &
-                                       coord_system_xyz,         &
-                                       coord_system_native
+  use constants_mod,             only: l_def, i_def, r_def, r_double, r_single
   use coord_transform_mod,       only: PANEL_ROT_MATRIX, &
                                        alphabetar2xyz,   &
                                        xyz2llr,          &
@@ -25,11 +18,16 @@ module sci_coordinate_jacobian_mod
                                        llr2xyz,          &
                                        schmidt_transform_lat
 
-  use planet_config_mod,         only: scaled_radius
   use sci_chi_transform_mod,     only: get_mesh_rotation_matrix, &
                                        get_to_stretch,           &
                                        get_to_rotate,            &
                                        get_stretch_factor
+
+  ! Configuration modules
+  use base_mesh_config_mod,      only: geometry_planar, &
+                                       topology_fully_periodic
+  use finite_element_config_mod, only: coord_system_xyz, &
+                                       coord_system_native
 
   implicit none
 
@@ -39,6 +37,7 @@ module sci_coordinate_jacobian_mod
   public :: coordinate_jacobian_inverse
   public :: pointwise_coordinate_jacobian
   public :: pointwise_coordinate_jacobian_inverse
+
   ! Public for unit-testing
   public :: jacobian_stretched
 
@@ -120,19 +119,27 @@ contains
   !> J^{i,j} = \frac{\partial \chi_i} / {\partial \hat{\chi_j}}
   !> \f}
   !>
-  !! @param[in] ndf        Size of the chi arrays
-  !! @param[in] ngp_h      Number of quadrature points in horizontal direction
-  !! @param[in] ngp_v      Number of quadrature points in vertical direction
-  !! @param[in] chi_1      1st component of the coordinate field
-  !! @param[in] chi_2      2nd component of the coordinate field
-  !! @param[in] chi_3      3rd component of the coordinate field
-  !! @param[in] panel_id   An integer identifying the mesh panel
-  !! @param[in] basis      Wchi basis functions
-  !! @param[in] diff_basis Grad of Wchi basis functions
-  !! @param[out] jac       Jacobian on quadrature points
-  !! @param[out] dj        Determinant of the Jacobian on quadrature points
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
+  !! @param[in] geometry       Mesh geometry enumeration.
+  !! @param[in] topology       Mesh topology enumeration.
+  !! @param[in] scaled_radius  Scaled planetary radius.
+  !! @param[in] ndf            Size of the chi arrays
+  !! @param[in] ngp_h          Number of quadrature points in horizontal direction
+  !! @param[in] ngp_v          Number of quadrature points in vertical direction
+  !! @param[in] chi_1          1st component of the coordinate field
+  !! @param[in] chi_2          2nd component of the coordinate field
+  !! @param[in] chi_3          3rd component of the coordinate field
+  !! @param[in] panel_id       An integer identifying the mesh panel
+  !! @param[in] basis          Wchi basis functions
+  !! @param[in] diff_basis     Grad of Wchi basis functions
+  !! @param[out] jac           Jacobian on quadrature points
+  !! @param[out] dj            Determinant of the Jacobian on quadrature points
   !!
-  subroutine coordinate_jacobian_quadrature_r_single( &
+  subroutine coordinate_jacobian_quadrature_r_single(           &
+                                           coord_system,        &
+                                           geometry,            &
+                                           topology,            &
+                                           scaled_radius,       &
                                            ndf, ngp_h, ngp_v,   &
                                            chi_1, chi_2, chi_3, &
                                            panel_id, basis,     &
@@ -142,6 +149,11 @@ contains
   ! determinant det(J)
   !-----------------------------------------------------------------------------
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def),  intent(in) :: ndf, ngp_h, ngp_v
     integer(kind=i_def),  intent(in) :: panel_id
@@ -228,9 +240,9 @@ contains
           ! Apply stretching ---------------------------------------------------
           if (to_stretch) then
             ! Convert chi to spherical polar (un-stretched) coordinates
-            call alphabetar2xyz(alpha_vec(k), beta_vec(k), radius_vec(k), panel_id,                 &
+            call alphabetar2xyz(alpha_vec(k), beta_vec(k), radius_vec(k), panel_id, &
                                 native_x, native_y, native_z)
-            call xyz2ll(native_x, native_y, native_z,                          &
+            call xyz2ll(native_x, native_y, native_z, &
                         native_lon, native_lat)
             stretch_factor = real(get_stretch_factor(), r_single)
             jac_S = jacobian_stretched(native_lon, native_lat, radius_vec(k), stretch_factor)
@@ -286,7 +298,11 @@ contains
 
   end subroutine coordinate_jacobian_quadrature_r_single
 
-  subroutine coordinate_jacobian_quadrature_r_double( &
+  subroutine coordinate_jacobian_quadrature_r_double(           &
+                                           coord_system,        &
+                                           geometry,            &
+                                           topology,            &
+                                           scaled_radius,       &
                                            ndf, ngp_h, ngp_v,   &
                                            chi_1, chi_2, chi_3, &
                                            panel_id, basis,     &
@@ -296,6 +312,11 @@ contains
   ! determinant det(J)
   !-----------------------------------------------------------------------------
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def),  intent(in) :: ndf, ngp_h, ngp_v
     integer(kind=i_def),  intent(in) :: panel_id
@@ -382,9 +403,9 @@ contains
           ! Apply stretching ---------------------------------------------------
           if (to_stretch) then
             ! Convert chi to spherical polar (un-stretched) coordinates
-            call alphabetar2xyz(alpha_vec(k), beta_vec(k), radius_vec(k), panel_id,                 &
+            call alphabetar2xyz(alpha_vec(k), beta_vec(k), radius_vec(k), panel_id, &
                                 native_x, native_y, native_z)
-            call xyz2ll(native_x, native_y, native_z,                          &
+            call xyz2ll(native_x, native_y, native_z, &
                         native_lon, native_lat)
             stretch_factor = real(get_stretch_factor(), r_double)
             jac_S = jacobian_stretched(native_lon, native_lat, radius_vec(k), stretch_factor)
@@ -450,17 +471,25 @@ contains
   !> reference space \f[ \hat{\chi} \f] to physical space \f[ \chi \f]
   !> \f[ J^{i,j} = \frac{\partial \chi_i} / {\partial \hat{\chi_j}} \f]
   !> and the determinant det(J)
-  !! @param[in] ndf          Size of the chi arrays
-  !! @param[in] neval_points Number of points basis functions are evaluated on
-  !! @param[in] chi_1        1st component of the coordinate field
-  !! @param[in] chi_2        2nd component of the coordinate field
-  !! @param[in] chi_3        3rd component of the coordinate field
-  !! @param[in] panel_id     An integer identifying the mesh panel
-  !! @param[in] basis        Wchi basis functions
-  !! @param[in] diff_basis   Grad of Wchi basis functions
-  !! @param[out] jac         Jacobian on quadrature points
-  !! @param[out] dj          Determinant of the Jacobian on quadrature points
-  subroutine coordinate_jacobian_evaluator_r_single( &
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
+  !! @param[in] geometry       Mesh geometry enumeration.
+  !! @param[in] topology       Mesh topology enumeration.
+  !! @param[in] scaled_radius  Scaled planetary radius.
+  !! @param[in] ndf            Size of the chi arrays
+  !! @param[in] neval_points   Number of points basis functions are evaluated on
+  !! @param[in] chi_1          1st component of the coordinate field
+  !! @param[in] chi_2          2nd component of the coordinate field
+  !! @param[in] chi_3          3rd component of the coordinate field
+  !! @param[in] panel_id       An integer identifying the mesh panel
+  !! @param[in] basis          Wchi basis functions
+  !! @param[in] diff_basis     Grad of Wchi basis functions
+  !! @param[out] jac           Jacobian on quadrature points
+  !! @param[out] dj            Determinant of the Jacobian on quadrature points
+  subroutine coordinate_jacobian_evaluator_r_single(            &
+                                           coord_system,        &
+                                           geometry,            &
+                                           topology,            &
+                                           scaled_radius,       &
                                            ndf, neval_points,   &
                                            chi_1, chi_2, chi_3, &
                                            panel_id, basis,     &
@@ -470,6 +499,11 @@ contains
   ! determinant det(J)
   !-----------------------------------------------------------------------------
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def),  intent(in) :: ndf, neval_points
     integer(kind=i_def),  intent(in) :: panel_id
@@ -590,7 +624,11 @@ contains
 
   end subroutine coordinate_jacobian_evaluator_r_single
 
-  subroutine coordinate_jacobian_evaluator_r_double( &
+  subroutine coordinate_jacobian_evaluator_r_double(            &
+                                           coord_system,        &
+                                           geometry,            &
+                                           topology,            &
+                                           scaled_radius,       &
                                            ndf, neval_points,   &
                                            chi_1, chi_2, chi_3, &
                                            panel_id, basis,     &
@@ -600,6 +638,11 @@ contains
   ! determinant det(J)
   !-----------------------------------------------------------------------------
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def),  intent(in) :: ndf, neval_points
     integer(kind=i_def),  intent(in) :: panel_id
@@ -869,20 +912,31 @@ contains
   !> reference space \f[ \hat{\chi} \f] to physical space \f[ \chi \f]
   !> \f[ J^{i,j} = \frac{\partial \chi_i} / {\partial \hat{\chi_j}} \f]
   !> and the determinant det(J) for a single point
-  !! @param[in] ndf        Size of the chi arrays
-  !! @param[in] chi_1      Coordinate field
-  !! @param[in] chi_2      Coordinate field
-  !! @param[in] chi_3      Coordinate field
-  !! @param[in] panel_id   panel_id
-  !! @param[in] basis      Wchi basis functions
-  !! @param[in] diff_basis Grad of Wchi basis functions
-  !! @param[out] jac       Jacobian on quadrature points
-  !! @param[out] dj        Determinant of the Jacobian on quadrature points
-  subroutine pointwise_coordinate_jacobian_r_single( &
-                                       ndf, chi_1, chi_2, chi_3,      &
-                                       panel_id, basis, diff_basis,   &
-                                       jac, dj      )
+  !! @param[in] coord_system   Finite-element coordinate system enumeration.
+  !! @param[in] geometry       Mesh geometry enumeration.
+  !! @param[in] topology       Mesh topology enumeration.
+  !! @param[in] scaled_radius  Scaled planetary radius.
+  !! @param[in] ndf            Size of the chi arrays
+  !! @param[in] chi_1          Coordinate field
+  !! @param[in] chi_2          Coordinate field
+  !! @param[in] chi_3          Coordinate field
+  !! @param[in] panel_id       panel_id
+  !! @param[in] basis          Wchi basis functions
+  !! @param[in] diff_basis     Grad of Wchi basis functions
+  !! @param[out] jac           Jacobian on quadrature points
+  !! @param[out] dj            Determinant of the Jacobian on quadrature points
+  subroutine pointwise_coordinate_jacobian_r_single(                &
+                                       coord_system, geometry,      &
+                                       topology, scaled_radius,     &
+                                       ndf, chi_1, chi_2, chi_3,    &
+                                       panel_id, basis, diff_basis, &
+                                       jac, dj )
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def),  intent(in) :: ndf
     integer(kind=i_def),  intent(in) :: panel_id
@@ -990,11 +1044,18 @@ contains
 
   end subroutine pointwise_coordinate_jacobian_r_single
 
-  subroutine pointwise_coordinate_jacobian_r_double( &
-                                       ndf, chi_1, chi_2, chi_3,      &
-                                       panel_id, basis, diff_basis,   &
-                                       jac, dj      )
+  subroutine pointwise_coordinate_jacobian_r_double(                &
+                                       coord_system, geometry,      &
+                                       topology, scaled_radius,     &
+                                       ndf, chi_1, chi_2, chi_3,    &
+                                       panel_id, basis, diff_basis, &
+                                       jac, dj )
     implicit none
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
 
     integer(kind=i_def),  intent(in) :: ndf
     integer(kind=i_def),  intent(in) :: panel_id
