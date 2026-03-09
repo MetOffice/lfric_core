@@ -1,1 +1,62 @@
+# This CODEOWNERS file includes a primary codeowner and a deputy for each section.
+# Codeowners who are not in a comment will be automatically notified of changes
+# to the listed files. All codeowners listed are valid points of contact
+# for discussing changes and seeking approval for work.
+# By default anything not listed here will be owned by the
+# @MetOffice/core-capability-development team.
+
 * @MetOffice/core-capability-development
+
+# Applications
+/applications/           @MetOffice/core-capability-development
+/applications/coupled/   @mike-hobson # @MetOffice/core-capability-development
+/applications/lbc_demo/  @mo-rickywong # @MetOffice/core-capability-development
+/mesh_tools/             @mo-rickywong # @MetOffice/core-capability-development
+
+# Components
+/components/            @MetOffice/core-capability-development
+/components/coupling/   @mike-hobson # @MetOffice/core-capability-development
+/components/science/    @tommbendall # @thomasmelvin
+
+# Infrastructure
+/infrastructure/                    @MetOffice/core-capability-development
+/infrastructure/**/configuration/   @mo-rickywong # @matthewhambley
+/infrastructure/**/field/           @mike-hobson # @MetOffice/core-capability-development
+/infrastructure/**/function_space/  @mike-hobson # @MetOffice/core-capability-development
+/infrastructure/**/io/              @andrewcoughtrie # @mo-rickywong
+/infrastructure/**/key_value/       @mo-rickywong # @mike-hobson
+/infrastructure/**/kernel_metadata/ @teranivy # @stevemullerworth
+/infrastructure/**/mesh/            @mo-rickywong # @mike-hobson
+/infrastructure/**/PSYKE/           @christophermaynard # @teranivy
+/infrastructure/**/quadrature/      @thomasmelvin # @tommbendall
+/infrastructure/**/scalar/          @mike-hobson # @MetOffice/core-capability-development
+/infrastructure/**/time/            @matthewhambley # @andrewcoughtrie
+/infrastructure/integration-test/   @matthewhambley # @MetOffice/core-capability-development
+
+/infrastructure/build/              @matthewhambley # @stevemullerworth
+/infrastructure/build/tools/        @mo-rickywong @matthewhambley
+**/MakeFile                         @matthewhambley # @stevemullerworth
+/lfric_build/                       @matthewhambley # @allynt
+
+# Documentation
+/documentation/**                       # No code owner for most docs
+/documentation/source/index.rst         @andrewcoughtrie @stevemullerworth
+/documentation/source/conf.py           @andrewcoughtrie # @allynt
+/documentation/templates/               @andrewcoughtrie # @allynt
+/documentation/static/                  @andrewcoughtrie # @allynt
+/documentation/source/accessibility.rst @stevemullerworth # @yaswant
+
+# System Components
+rose-stem/*                            @james-bruten-mo # @jennyhickson
+rose-stem/templates/                   @james-bruten-mo # @jennyhickson
+rose-stem/lib/                         @james-bruten-mo # @jennyhickson
+rose-stem/bin/                         @james-bruten-mo # @jennyhickson
+rose-stem/site/meto/common/            @james-bruten-mo # @jennyhickson
+rose-stem/site/meto/macros/            @james-bruten-mo # @jennyhickson
+rose-stem/apps                         # Mostly updated by macros, no codeowner
+
+# Other
+/etc/psyclone.cfg   @teranivy # @MetOffice/ToolsCollabDev
+/.github/           @andrewcoughtrie # @yaswant
+LICENSE             @stevemullerworth # @yaswant
+

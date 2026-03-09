@@ -6,16 +6,18 @@
 
 !>@brief Module containing io_demo_alg
 module io_demo_alg_mod
+
   use constants_mod,                       only: i_def,r_def
+  use driver_modeldb_mod,                  only: modeldb_type
   use log_mod,                             only: log_event,         &
                                                  LOG_LEVEL_INFO,    &
                                                  LOG_LEVEL_TRACE
   use mesh_mod,                            only: mesh_type
+
   use field_mod,                           only: field_type
-  use finite_element_config_mod,           only: element_order_h,  &
-                                                 element_order_v
-  use fs_continuity_mod,                   only: Wtheta, W2
+  use fs_continuity_mod,                   only: Wtheta
   use function_space_collection_mod,       only: function_space_collection
+  use function_space_mod,                  only: function_space_type
   use operator_mod,                        only: operator_type
   use matrix_vector_kernel_mod,            only: matrix_vector_kernel_type
   use io_demo_constants_mod,               only: get_dx_at_w2
@@ -31,10 +33,13 @@ module io_demo_alg_mod
 contains
 
   !> @details Calculates the diffusion increment for a field, and adds it to said field.
+  !> @param[in]    modeldb   Application state object
   !> @param[inout] field_in  Input Wtheta field
-  subroutine io_demo_alg( field_in )
+  subroutine io_demo_alg( modeldb, field_in )
 
     implicit none
+
+    type(modeldb_type), intent(in) :: modeldb
 
     ! Prognostic fields
     type( field_type ), intent( inout ) :: field_in
@@ -44,20 +49,27 @@ contains
     type( field_type )                  :: visc
 
     real(r_def), parameter              :: visc_val = 100000.0_r_def
-    type(mesh_type), pointer            :: mesh => null()
     integer(kind=i_def), parameter      :: stencil_depth = 1_i_def
-    type( field_type ), pointer         :: dx_at_w2 => null()
 
+    type(mesh_type),           pointer :: mesh
+    type(field_type),          pointer :: dx_at_w2
+    type(function_space_type), pointer :: fs
+
+    integer(i_def) :: order_h, order_v
 
     call log_event( "io_demo: Running algorithm", LOG_LEVEL_TRACE )
-    mesh => field_in%get_mesh()
+
+    order_h = modeldb%config%finite_element%element_order_h()
+    order_v = modeldb%config%finite_element%element_order_v()
+
+    mesh     => field_in%get_mesh()
     dx_at_w2 => get_dx_at_w2(mesh)
-    call dfield_in%initialise( &
-      function_space_collection%get_fs( mesh, element_order_h, &
-                                        element_order_v, Wtheta))
-    call visc%initialise( &
-      function_space_collection%get_fs( mesh, element_order_h, &
-                                        element_order_v, Wtheta))
+
+    fs => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
+
+    call dfield_in%initialise(fs)
+    call visc%initialise(fs)
+
     call invoke( name = "compute_diffusion", &
                  setval_c(visc, visc_val), &
                  setval_c(dfield_in, 0.0_r_def), &

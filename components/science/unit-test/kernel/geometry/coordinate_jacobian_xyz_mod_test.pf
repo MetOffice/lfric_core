@@ -8,7 +8,7 @@
 module coordinate_jacobian_xyz_mod_test
 
   use funit
-  use constants_mod, only : r_def, i_def
+  use constants_mod, only : r_def, i_def, imdi
 
   implicit none
 
@@ -28,32 +28,21 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz
-    use feign_config_mod,          only : feign_finite_element_config
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
 
     class(jacobian_xyz_test_type), intent(inout) :: this
 
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
-
-    call init_chi_transforms()
+    call init_chi_transforms(imdi, imdi)
 
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use configuration_mod,        only: final_configuration
-    use sci_chi_transform_mod,    only: final_chi_transforms
+    use config_loader_mod,     only: final_configuration
+    use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
@@ -74,11 +63,20 @@ contains
                                         pointwise_coordinate_jacobian,         &
                                         pointwise_coordinate_jacobian_inverse
 
+    use finite_element_config_mod, only: coord_system_xyz
+    use base_mesh_config_mod,      only: geometry_planar, &
+                                         topology_non_periodic
+
     implicit none
 
     class(jacobian_xyz_test_type), intent(inout) :: this
 
     real(kind=r_def) :: tol, zero, one, two, eight
+
+    integer(i_def), parameter :: coord_system  = coord_system_xyz
+    integer(i_def), parameter :: geometry      = geometry_planar
+    integer(i_def), parameter :: topology      = topology_non_periodic
+    real(r_def),    parameter :: scaled_radius = 1.0_r_def
 
     integer :: ndf = 8
     integer :: ngp = 1
@@ -109,7 +107,8 @@ contains
 
     basis(:,:,:,:) = 0.125_r_def
 
-    call coordinate_jacobian(ndf, ngp, ngp, x, y, z, ipanel, basis,           &
+    call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                             ndf, ngp, ngp, x, y, z, ipanel, basis,           &
                              diff_basis, jac, dj)
     call coordinate_jacobian_inverse(ngp,ngp, jac, dj, jac_inv)
 
@@ -137,7 +136,9 @@ contains
     @assertEqual( zero, err, tol)
 
     ! Test the pointwise computations
-    call pointwise_coordinate_jacobian(ndf, x, y, z, ipanel, basis(:,:,1,1),  &
+    call pointwise_coordinate_jacobian(coord_system, geometry, topology,      &
+                                       scaled_radius,                         &
+                                       ndf, x, y, z, ipanel, basis(:,:,1,1),  &
                                        diff_basis(:,:,1,1), jac(:,:,1,1),     &
                                        dj(1,1))
 

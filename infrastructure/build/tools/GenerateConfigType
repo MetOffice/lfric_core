@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+##############################################################################
+# (C) Crown copyright 2025 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+##############################################################################
+# pylint: disable=invalid-name
+"""
+Takes a list of namelists and generates source defining a ConfigType based
+on the namelists. In addition, source code is generated for namelist iterators
+for any namelists identified as allowing multiple instances (duplicates).
+"""
+import argparse
+import logging
+import os
+
+from pathlib import Path
+
+from configurator import __version__
+import configurator.config_type as ConfigType
+
+
+def main():
+    """
+    Entry point. Handles command-line arguments.
+    """
+    parser = argparse.ArgumentParser(add_help=False,
+                                     description=__doc__)
+    parser.add_argument('-help', '-h', '--help', action='help',
+                        help='Show this help message and exit')
+    parser.add_argument('-version', action='version',
+                        version=f'%(prog)s {__version__}')
+    parser.add_argument('-verbose', action='store_true',
+                        help='Provide a running commentry')
+    parser.add_argument( "-o", "--output-dir", type=Path,
+                         default=os.getcwd(),
+                         help="Path to the output directory (default: current directory)" )
+    parser.add_argument('-duplicate', action='append', metavar='-duplicate', nargs=1,
+                        help='Enables multiple instances for the specified namellist.')
+    parser.add_argument('namelistNames', metavar='namelist',
+                        nargs='*',
+                        help='Namelists memebers of app configuration.')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        handler = logging.StreamHandler()
+        logging.getLogger('configurator').addHandler(handler)
+        logging.getLogger('configurator').setLevel(logging.WARNING)
+
+    moduleName = "config_mod"
+    generator = ConfigType.AppConfiguration(moduleName)
+
+    duplicate_namelists = []
+    if (args.duplicate):
+        for name in args.duplicate:
+            duplicate_namelists.extend(name)
+
+    for name in args.namelistNames:
+        duplicate=False
+        if name in duplicate_namelists:
+            duplicate=True
+
+        generator.add_namelist(name, duplicate)
+
+    outputFile = Path(str(args.output_dir.joinpath(moduleName)) + ".f90")
+    generator.write_module(outputFile)
+
+
+if __name__ == '__main__':
+    main()

@@ -16,6 +16,7 @@ module halo_comms_mod_test
   use halo_comms_mod,                 only : initialise_halo_comms, &
                                              finalise_halo_comms, &
                                              halo_routing_type, &
+                                             exchange_map_type, &
                                              halo_exchange_id_type, &
                                              perform_halo_exchange, &
                                              perform_halo_exchange_start, &
@@ -36,7 +37,7 @@ module halo_comms_mod_test
   implicit none
 
   private
-  public :: test_halo_routing, test_halo_comms
+  public :: test_halo_routing, test_halo_comms, test_exchange_map
   !
   ! pFUnit depends on symbol spill
   !
@@ -53,6 +54,7 @@ module halo_comms_mod_test
     procedure tearDown
     procedure get_local_mesh_ptr
     procedure test_halo_routing
+    procedure test_exchange_map
     procedure test_halo_comms
   end type halo_comms_test_type
 
@@ -118,6 +120,91 @@ contains
   end function get_local_mesh_ptr
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_exchange_map( this )
+
+    implicit none
+
+    class(halo_comms_test_type), intent(inout) :: this
+
+    type(exchange_map_type) :: exchange_map
+    type(function_space_type), pointer :: function_space
+    integer(i_halo_index), allocatable :: global_dof_id(:)
+    integer(i_def), allocatable :: halo_start(:)
+    integer(i_def), allocatable :: halo_finish(:)
+    integer(i_def) :: idepth
+    integer(i_def) :: last_owned_dof
+    integer(i_def) :: ndata
+    integer(i_def) :: result
+    type(mesh_type), pointer :: mesh
+
+    mesh => mesh_collection%get_mesh(this%mesh_id)
+
+    ndata = 2
+
+    ! Get indices of owned and halo cells
+    function_space => function_space_collection%get_fs( mesh, &
+                                                        0, 0,&
+                                                        W3, &
+                                                        ndata = ndata )
+
+    last_owned_dof = function_space%get_last_dof_owned()
+
+    ! Set up the global dof index array
+    call function_space%get_global_dof_id(global_dof_id)
+
+    ! Set up the boundaries of the different depths of halo
+    allocate( halo_start(mesh%get_halo_depth()) )
+    allocate( halo_finish(mesh%get_halo_depth()) )
+
+    do idepth = 1, mesh%get_halo_depth()
+
+      halo_start(idepth)  = function_space%get_last_dof_owned()+1
+      halo_finish(idepth) = function_space%get_last_dof_halo(idepth)
+      ! If this is a serial run (no halos), halo_start will be out of
+      ! bounds, so re-initialise halo_start and halo_finish specifically
+      ! for a serial run
+      if ( halo_start(idepth) > function_space%get_last_dof_halo(idepth) ) then
+        halo_start(idepth)  = function_space%get_last_dof_halo(idepth)
+        halo_finish(idepth) = halo_start(idepth) - 1
+      end if
+
+    end do
+
+    ! Create a exchange map object with a particular mesh_id, element_order_h,
+    ! element_order_v, lfric_fs, ndata
+    exchange_map = exchange_map_type(  global_dof_id, &
+                                       last_owned_dof, &
+                                       halo_start, &
+                                       halo_finish, &
+                                       this%mesh_id, &
+                                       0, 0, &
+                                       W3, &
+                                       ndata, &
+                                       mesh%get_halo_depth() )
+
+    deallocate( halo_finish )
+    deallocate( global_dof_id )
+
+    ! Test the getters on the exchange_map object return the correct values
+    result = exchange_map%get_exchange_map_mesh_id()
+    @assertEqual( this%mesh_id, result )
+
+    result = exchange_map%get_exchange_map_element_order_h()
+    @assertEqual( 0, result )
+
+    result = exchange_map%get_exchange_map_element_order_v()
+    @assertEqual( 0, result )
+
+    result = exchange_map%get_exchange_map_lfric_fs()
+    @assertEqual( W3, result )
+
+    result = exchange_map%get_exchange_map_ndata()
+    @assertEqual( 2, result )
+
+    mesh => null()
+
+  end subroutine test_exchange_map
 
   @Test( npes=[1] )
   subroutine test_halo_routing( this )
@@ -127,7 +214,7 @@ contains
     class(halo_comms_test_type), intent(inout) :: this
 
     type(halo_routing_type) :: halo_routing
-    type(function_space_type), pointer :: function_space => null()
+    type(function_space_type), pointer :: function_space
     integer(i_halo_index), allocatable :: global_dof_id(:)
     integer(i_def), allocatable :: halo_start(:)
     integer(i_def), allocatable :: halo_finish(:)
@@ -135,7 +222,7 @@ contains
     integer(i_def) :: last_owned_dof
     integer(i_def) :: ndata
     integer(i_def) :: result
-    type(mesh_type), pointer :: mesh => null()
+    type(mesh_type), pointer :: mesh
 
     mesh => mesh_collection%get_mesh(this%mesh_id)
 

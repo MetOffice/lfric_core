@@ -11,6 +11,7 @@ on:
 
 jobs:
   deploy:
+    if: ${{ github.repository == 'MetOffice/lfric_core' }}
     environment:
       name: github-pages
     permissions:

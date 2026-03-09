@@ -283,15 +283,20 @@ contains
     if ( this%source_coord_system == LLH_rot ) then
       north_pole(1) = PI/2.0_r_def
       north_pole(2) = 0.0_r_def
-      call init_chi_transforms(north_pole_arg=north_pole)
+      call init_chi_transforms(geometry_spherical, &
+                               topology,           &
+                               north_pole_arg=north_pole)
     else if ( this%source_coord_system == ABH_stretch_rot ) then
       north_pole(1) = -PI/2.0_r_def
       north_pole(2) = 0.0_r_def
       equatorial_latitude = PI/6.0_r_def
-      call init_chi_transforms(north_pole_arg=north_pole, equator_lat_arg=equatorial_latitude)
+      call init_chi_transforms(geometry_spherical,        &
+                               topology,                  &
+                               north_pole_arg=north_pole, &
+                               equator_lat_arg=equatorial_latitude)
     else
       ! Non-rotated or stretched case
-      call init_chi_transforms()
+      call init_chi_transforms(geometry_spherical, topology)
     end if
 
   end subroutine setUp
@@ -299,8 +304,8 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use sci_chi_transform_mod,    only: final_chi_transforms
-    use configuration_mod,        only: final_configuration
+    use sci_chi_transform_mod, only: final_chi_transforms
+    use config_loader_mod,     only: final_configuration
 
     implicit none
 

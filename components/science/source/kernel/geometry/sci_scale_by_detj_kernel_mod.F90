@@ -86,6 +86,10 @@ subroutine scale_by_detj_code(nlayers,                    &
 
   use sci_coordinate_jacobian_mod, only: pointwise_coordinate_jacobian
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -124,7 +128,9 @@ subroutine scale_by_detj_code(nlayers,                    &
 
     do df = 1,ndf_ws
       ! Compute detj at dof points
-      call pointwise_coordinate_jacobian(ndf_wx, chi1_e, chi2_e, chi3_e, &
+      call pointwise_coordinate_jacobian(coord_system, geometry,         &
+                                         topology, scaled_radius,        &
+                                         ndf_wx, chi1_e, chi2_e, chi3_e, &
                                          ipanel, basis_wx(:,:,df),       &
                                          diff_basis_wx(:,:,df),          &
                                          jac, detj)

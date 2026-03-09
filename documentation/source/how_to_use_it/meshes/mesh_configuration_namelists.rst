@@ -258,8 +258,19 @@ depending on generator.
 
       ``custom``
         Forces the partitioner to attempt to configure the panel into
-	partitions given by :ref:`panel_xproc<panel_xproc>` and
-	:ref:`panel_yproc<panel_yproc>`.
+        partitions given by :ref:`panel_xproc<panel_xproc>` and
+        :ref:`panel_yproc<panel_yproc>`.
+
+      ``auto_nonuniform``
+        The partitioner will attempt to group cells into partitions which
+        are square as possible but not necessarily uniform. This supports
+        numbers of partitions that do not neatly divide the mesh.
+
+      ``guided_nonuniform``
+        Forces the partitioner to divide the panel into a number of columns
+        given by :ref:`panel_xproc<panel_xproc>` then populate those columns
+        with partitions that are not necessarily uniform. This supports
+        numbers of partitions that do not neatly divide the mesh.
 
   .. _panel_xproc:
 
