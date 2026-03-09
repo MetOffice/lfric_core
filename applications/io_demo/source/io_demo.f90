@@ -3,6 +3,7 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+
 !> @page Miniapp io_demo program
 !> @brief Main program used to calculate diffusion of randomly initialised theta field
 !> @details Calls init, run and finalise routines from io_demo driver module
@@ -26,7 +27,6 @@ program io_demo
   use io_demo_driver_mod, only: initialise, step, finalise
   use timing_mod,         only: init_timing, final_timing
   use io_config_mod,      only: timer_output_path
-  use namelist_mod,       only: namelist_type
 
   implicit none
 
@@ -34,7 +34,6 @@ program io_demo
   type(modeldb_type)           :: modeldb
   character(*), parameter      :: program_name = "io_demo"
   character(:), allocatable    :: filename
-  type(namelist_type), pointer :: io_nml
   logical                      :: lsubroutine_timers
   integer, parameter           :: default_seed = 123456789
   type(random_number_generator_type), pointer :: rng
@@ -59,10 +58,8 @@ program io_demo
   deallocate( filename )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )
-  io_nml => modeldb%configuration%get_namelist('io')
-  call io_nml%get_value('subroutine_timers', lsubroutine_timers)
+  lsubroutine_timers = modeldb%config%io%subroutine_timers()
   call init_timing( modeldb%mpi%get_comm(), lsubroutine_timers, program_name, timer_output_path )
-  nullify( io_nml )
   call init_collections()
   call init_time(modeldb)
 
