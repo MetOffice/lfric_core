@@ -3,6 +3,7 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+
 !> @page Miniapp io_demo program
 !> @brief Main program used to calculate diffusion of randomly initialised theta field
 !> @details Calls init, run and finalise routines from io_demo driver module
@@ -41,30 +42,33 @@ program io_demo
   logical(l_def)              :: subroutine_timers
 
   call parse_command_line( filename )
-  call modeldb%config%initialise(program_name)
   call modeldb%values%initialise()
-
-  modeldb%mpi => global_mpi
-
-  call init_comm(program_name, modeldb)
-  call init_config(filename, io_demo_required_namelists, &
-                   config=modeldb%config)
-
-  call init_logger( modeldb%mpi%get_comm(), program_name )
+  call modeldb%configuration%initialise( program_name, table_len=10 )
+  call modeldb%config%initialise(program_name)
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &
         trim(precision_real)
   call log_event( log_scratch_space, log_level_trace )
+  modeldb%mpi => global_mpi
+  call init_comm(program_name, modeldb)
+
+  call init_config(filename,                            &
+                   io_demo_required_namelists,          &
+                   configuration=modeldb%configuration, &
+                   config=modeldb%config)
+
+  deallocate( filename )
+
+  call init_logger(modeldb%mpi%get_comm(), program_name)
 
   subroutine_timers = modeldb%config%io%subroutine_timers()
   timer_output_path = modeldb%config%io%timer_output_path()
-  call init_timing( modeldb%mpi%get_comm(), subroutine_timers, &
-                    program_name, timer_output_path )
 
+  call init_timing(modeldb%mpi%get_comm(), subroutine_timers, &
+                   program_name, timer_output_path)
   call init_collections()
   call init_time(modeldb)
-  deallocate( filename )
 
   allocate(rng, source=random_number_generator_type(default_seed))
   call modeldb%values%add_key_value("rng", rng)
