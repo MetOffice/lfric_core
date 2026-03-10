@@ -125,6 +125,10 @@ subroutine proj_mr_to_sh_rho_rhs_op_code(                                      &
 
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
 
+  use finite_element_config_mod, only: coord_system
+  use base_mesh_config_mod,      only: geometry, topology
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -184,10 +188,12 @@ subroutine proj_mr_to_sh_rho_rhs_op_code(                                      &
     end do
 
     ! Get detj for lower and upper half cells
-    call coordinate_jacobian(ndf_chi_dl, nqp_h, nqp_v, lower_chi_1_e, lower_chi_2_e, &
+    call coordinate_jacobian(coord_system, geometry, topology, scaled_radius,        &
+                             ndf_chi_dl, nqp_h, nqp_v, lower_chi_1_e, lower_chi_2_e, &
                              lower_chi_3_e, ipanel, chi_dl_basis, chi_dl_diff_basis, &
                              lower_jac, lower_dj)
-    call coordinate_jacobian(ndf_chi_dl, nqp_h, nqp_v, upper_chi_1_e, upper_chi_2_e, &
+    call coordinate_jacobian(coord_system, geometry, topology, scaled_radius,        &
+                             ndf_chi_dl, nqp_h, nqp_v, upper_chi_1_e, upper_chi_2_e, &
                              upper_chi_3_e, ipanel, chi_dl_basis, chi_dl_diff_basis, &
                              upper_jac, upper_dj)
 

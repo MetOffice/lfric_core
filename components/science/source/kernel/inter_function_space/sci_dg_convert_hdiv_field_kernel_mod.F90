@@ -100,6 +100,11 @@ subroutine dg_convert_hdiv_field_code(nlayers,                                 &
                                       ndf_pid, undf_pid, map_pid               &
                                    )
   use sci_coordinate_jacobian_mod, only: pointwise_coordinate_jacobian
+
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   ! Arguments
@@ -152,7 +157,9 @@ subroutine dg_convert_hdiv_field_code(nlayers,                                 &
         chi2_e(dfx) = chi2(map_chi(dfx) + k)
         chi3_e(dfx) = chi3(map_chi(dfx) + k)
       end do
-      call pointwise_coordinate_jacobian(ndf_chi, chi1_e, chi2_e, chi3_e,      &
+      call pointwise_coordinate_jacobian(coord_system, geometry,               &
+                                         topology, scaled_radius,              &
+                                         ndf_chi, chi1_e, chi2_e, chi3_e,      &
                                          ipanel, basis_chi(:,:,df),            &
                                          diff_basis_chi(:,:,df), jacobian, dj)
       vector_in(:) = 0.0_r_def
