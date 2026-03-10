@@ -41,27 +41,23 @@ program coupled
   call parse_command_line( filename, component_name=cpl_component_name )
 
   call modeldb%values%initialise( 'values', 5 )
-
-  call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise( program_name )
+  call modeldb%values%add_key_value('cpl_name', cpl_component_name)
+
+  modeldb%mpi => global_mpi
+
+  call init_comm( "coupled", modeldb )
+  call init_config( filename, coupled_required_namelists, &
+                    config=modeldb%config )
+
+  call init_logger( modeldb%mpi%get_comm(), &
+                    program_name//"_"//cpl_component_name )
 
   write(log_scratch_space,'(A)')                          &
       'Application built with '// trim(precision_real) // &
       '-bit real numbers.'
   call log_event( log_scratch_space, log_level_trace )
 
-  modeldb%mpi => global_mpi
-
-  call modeldb%values%add_key_value('cpl_name', cpl_component_name)
-  call init_comm( "coupled", modeldb )
-
-  call init_config( filename,                            &
-                    coupled_required_namelists,          &
-                    configuration=modeldb%configuration, &
-                    config=modeldb%config )
-
-  call init_logger( modeldb%mpi%get_comm(), &
-                    program_name//"_"//cpl_component_name )
   call init_collections()
   call init_time( modeldb )
   deallocate( filename )
