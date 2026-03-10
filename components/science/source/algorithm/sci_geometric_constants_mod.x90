@@ -1219,7 +1219,7 @@ contains
       inventory_name = "height_w2_fe"
     case (W2H)
       inventory => height_w2h_inventory_fe
-      inventory_name = "height_w2_fe"
+      inventory_name = "height_w2h_fe"
     case (W3)
       inventory => height_w3_inventory_fe
       inventory_name = "height_w3_fe"
@@ -1251,6 +1251,7 @@ contains
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
+      ! Horizontally discontinuous spaces
       case (W3, Wtheta)
         call invoke(                                                           &
             height_discontinuous_kernel_type(                                  &
@@ -1258,6 +1259,7 @@ contains
             )                                                                  &
         )
 
+      ! Horizontally continuous spaces
       case default
         ! Can't import multiplicity, so must calculate it
         call ones%initialise( space )
@@ -1326,7 +1328,7 @@ contains
       inventory_name = "height_w2_fv"
     case (W2H)
       inventory => height_w2h_inventory_fv
-      inventory_name = "height_w2_fv"
+      inventory_name = "height_w2h_fv"
     case (W3)
       inventory => height_w3_inventory_fv
       inventory_name = "height_w3_fv"
@@ -1356,6 +1358,7 @@ contains
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
+      ! Horizontally discontinuous spaces
       case (W3, Wtheta)
         call invoke(                                                           &
             height_discontinuous_kernel_type(                                  &
@@ -1363,6 +1366,7 @@ contains
             )                                                                  &
         )
 
+      ! Horizontally continuous spaces
       case default
         ! Can't import multiplicity, so must calculate it
         call ones%initialise( space )
