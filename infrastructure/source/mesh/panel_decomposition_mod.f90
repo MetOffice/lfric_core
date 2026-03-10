@@ -20,6 +20,7 @@ module panel_decomposition_mod
   type, public, abstract :: panel_decomposition_type
   contains
     procedure(get_partition_interface), deferred :: get_partition
+    procedure(get_nprocs_interface), deferred :: get_nprocs
   end type panel_decomposition_type
 
   !> @brief Decomposition that accepts user specified number of xprocs and yprocs
@@ -27,6 +28,7 @@ module panel_decomposition_mod
     integer(i_def) :: num_xprocs, num_yprocs
   contains
     procedure, public :: get_partition => get_custom_partition
+    procedure, public :: get_nprocs => get_custom_nprocs
   end type custom_decomposition_type
   ! Constructor
   interface custom_decomposition_type
@@ -37,24 +39,28 @@ module panel_decomposition_mod
   type, extends(panel_decomposition_type), public :: auto_decomposition_type
   contains
     procedure, public :: get_partition => get_auto_partition
+    procedure, public :: get_nprocs => get_auto_nprocs
   end type auto_decomposition_type
 
   !> @brief Decomposition only in x direction
   type, extends(panel_decomposition_type), public :: row_decomposition_type
   contains
     procedure, public :: get_partition => get_row_partition
+    procedure, public :: get_nprocs => get_row_nprocs
   end type row_decomposition_type
 
   !> @brief Decomposition only in y direction
   type, extends(panel_decomposition_type), public :: column_decomposition_type
   contains
     procedure, public :: get_partition => get_column_partition
+    procedure, public :: get_nprocs => get_column_nprocs
   end type column_decomposition_type
 
   !> @brief Decomposition that automatically generates a nonuniform decomposition
   type, extends(panel_decomposition_type), public :: auto_nonuniform_decomposition_type
   contains
     procedure, public :: get_partition => get_auto_nonuniform_partition
+    procedure, public :: get_nprocs => get_auto_nonuniform_nprocs
   end type auto_nonuniform_decomposition_type
 
   ! @brief Decomposition that accepts user specified number of xprocs to
@@ -63,6 +69,7 @@ module panel_decomposition_mod
     integer(i_def) :: num_xprocs
   contains
     procedure, public :: get_partition => get_guided_nonuniform_partition
+    procedure, public :: get_nprocs => get_guided_nonuniform_nprocs
   end type guided_nonuniform_decomposition_type
   ! Constructor
   interface guided_nonuniform_decomposition_type
@@ -102,6 +109,19 @@ module panel_decomposition_mod
                                        partition_y_pos
 
     end subroutine get_partition_interface
+
+  end interface
+
+  abstract interface
+
+    function get_nprocs_interface(self) result(nprocs)
+      use constants_mod, only: i_def
+      import :: panel_decomposition_type
+
+      class(panel_decomposition_type), intent(in) :: self
+
+      integer(i_def) :: nprocs(2)
+    end function get_nprocs_interface
 
   end interface
 
@@ -184,7 +204,6 @@ contains
 
   end subroutine get_custom_partition
 
-
   !> @brief Constructor for custom_decomposition_type
   !> @param[in] xprocs The requested number of partitions in the x direction
   !> @param[in] yprocs The requested number of partitions in the y direction
@@ -198,6 +217,19 @@ contains
     self%num_yprocs = yprocs
 
   end function custom_decomposition_constructor
+
+  !> @brief Get the number of processors in the x- and y-direction
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_custom_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(custom_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    nprocs(:) = (/ self%num_xprocs, self%num_yprocs /)
+
+  end function get_custom_nprocs
 
 
   !> @brief Partition the panel into an automatically determined number of x and
@@ -238,6 +270,8 @@ contains
                                      partition_height, &
                                      partition_x_pos,  &
                                      partition_y_pos
+
+    integer(i_def), parameter :: max_factor_iters = 10000
 
     integer(i_def) :: num_xprocs, num_yprocs
     integer(i_def) :: mp_num_cells_x, mp_num_cells_y
@@ -328,6 +362,24 @@ contains
 
   end subroutine get_auto_partition
 
+  !> @brief Get the number of processors in the x- and y-direction.
+  !!        For this class the function is not needed and so only
+  !!        returns default values
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_auto_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(auto_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    ! These values aren't needed for auto decomposition
+    ! (and aren't available until get_auto_partition has been called)
+    ! so just return something that won't break the code
+    nprocs(:) = (/ 1, 1 /)
+
+  end function get_auto_nprocs
+
 
   !> @brief Partition the panel only in the x direction
   !> @param[in]    relative_rank    The number of this rank in the order of all
@@ -400,6 +452,24 @@ contains
 
   end subroutine get_row_partition
 
+  !> @brief Get the number of processors in the x- and y-direction.
+  !!        For this class the function is not needed and so only
+  !!        returns default values
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_row_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(row_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    ! These values aren't needed for row decomposition
+    ! (and arenn't available until get_row_partition has been called)
+    ! so just return something that won't break the code
+    nprocs(:) = (/ 1, 1 /)
+
+  end function get_row_nprocs
+
 
   !> @brief Partition the panel only in the y direction
   !> @param[in]    relative_rank    The number of this rank in the order of all
@@ -471,6 +541,24 @@ contains
     call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
 
   end subroutine get_column_partition
+
+  !> @brief Get the number of processors in the x- and y-direction.
+  !!        For this class the function is not needed and so only
+  !!        returns default values
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_column_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(column_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    ! These values aren't needed for column decomposition
+    ! (and aren't available until get_column_partition has been called)
+    ! so just return something that won't break the code
+    nprocs(:) = (/ 1, 1 /)
+
+  end function get_column_nprocs
 
   !> @brief Partition the panel into an automatically determined number of
   !         columns of partitions of variable size.
@@ -570,6 +658,24 @@ contains
 
   end subroutine get_auto_nonuniform_partition
 
+  !> @brief Get the number of processors in the x- and y-direction.
+  !!        For this class the function is not needed and so only
+  !!        returns default values
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_auto_nonuniform_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(auto_nonuniform_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    ! These values aren't needed for auto_nonuniform decomposition
+    ! (and aren't available until get_auto_nonuniform_partition has been called)
+    ! so just return something that won't break the code
+    nprocs(:) = (/ 1, 1 /)
+
+  end function get_auto_nonuniform_nprocs
+
   !> @brief Partition the panel into a given number of columns of partitions of
   !         variable size.
   !> @param[in]    relative_rank    The number of this rank in the order of all
@@ -660,6 +766,24 @@ contains
     self%num_xprocs = xprocs
 
   end function guided_nonuniform_decomposition_constructor
+
+  !> @brief Get the number of processors in the x- and y-direction.
+  !!        For this class the function is not needed and so only
+  !!        returns default values
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_guided_nonuniform_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(guided_nonuniform_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    ! These values aren't needed for guided_nonuniform decomposition
+    ! (and aren't available until get_guided_nonuniform_partition has been called)
+    ! so just return something that won't break the code
+    nprocs(:) = (/ 1, 1 /)
+
+  end function get_guided_nonuniform_nprocs
 
 
   !> @brief Helper function for generating identical partitions arranged in a
@@ -876,10 +1000,9 @@ contains
       end if
     end do
 
-    ! If no meshes were found, return 1. This is relevant for JEDI where mesh
-    ! initialisation is run twice.
+    ! If no meshes were found, or if this_panel_width < shortest_panel_width, then return 1.
     if ( shortest_panel_width < huge(0_i_def) ) then
-      mp = this_panel_width / shortest_panel_width
+      mp = max(1, this_panel_width / shortest_panel_width)
     else
       mp = 1
     end if

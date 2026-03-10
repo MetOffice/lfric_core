@@ -25,6 +25,7 @@ module partition_mod
   use sort_mod,        only : bubble_sort
   use log_mod,         only : log_event,         &
                               log_scratch_space, &
+                              LOG_LEVEL_INFO,    &
                               LOG_LEVEL_ERROR,   &
                               LOG_LEVEL_DEBUG
   use constants_mod,   only: i_def, r_def, l_def
@@ -524,11 +525,6 @@ contains
     ! A cubed sphere has 6 panels
     num_panels = 6
 
-    !check that we have a number of ranks that is compatible with this partitioner
-    if( modulo(total_ranks,num_panels) /= 0 ) call log_event( &
-    'The cubed-sphere partitioner requires a multiple of six processors.', &
-    LOG_LEVEL_ERROR )
-
     call partitioner_rectangular_panels( global_mesh, &
                                         num_panels, &
                                         decomposition, &
@@ -676,18 +672,20 @@ contains
                                                                           ! but not in the partitioned domain
     logical(l_def),              intent(in)    :: generate_inner_halos   ! Flag to control the generation of inner halos
 
-    integer(i_def) :: face       ! which face of the cube is implied by local_rank (0->5)
-    integer(i_def) :: start_cell ! lowest cell id of the face implaced by local_rank
-    integer(i_def) :: start_rank ! The number of the first rank on the face implied by local_rank
-    integer(i_def) :: panel_ranks! The number of ranks per panel on the mesh
-    integer(i_def) :: relative_rank ! The position of the current rank relative to the first rank in its panel
-    integer(i_def) :: start_x    ! global cell id of start of the domain on this partition in x-dirn
-    integer(i_def) :: num_x      ! number of cells in the domain on this partition in x-dirn
-    integer(i_def) :: start_y    ! global cell id of start of the domain on this partition in y-dirn
-    integer(i_def) :: num_y      ! number of cells in the domain on this partition in y-dirn
-    integer(i_def) :: ix, iy     ! loop counters over cells on this partition in x- and y-dirns
-    integer(i_def) :: void_cell  ! Cell id that marks the cell as a cell outside of the partition.
-    logical        :: any_maps   ! Whether there exist maps between meshes, meaning their partitions must align.
+    integer(i_def) :: face               ! which face of the cube is implied by local_rank (0->5)
+    integer(i_def) :: start_cell         ! lowest cell id of the face implaced by local_rank
+    integer(i_def) :: start_rank         ! The number of the first rank on the face implied by local_rank
+    integer(i_def) :: panel_ranks        ! The number of ranks per panel on the mesh
+    integer(i_def) :: relative_rank      ! The position of the current rank relative to the first rank in its panel
+    integer(i_def) :: start_x            ! global cell id of start of the domain on this partition in x-dirn
+    integer(i_def) :: num_x              ! number of cells in the domain on this partition in x-dirn
+    integer(i_def) :: start_y            ! global cell id of start of the domain on this partition in y-dirn
+    integer(i_def) :: num_y              ! number of cells in the domain on this partition in y-dirn
+    integer(i_def) :: ix, iy             ! loop counters over cells on this partition in x- and y-dirns
+    integer(i_def) :: void_cell          ! Cell id that marks the cell as a cell outside of the partition.
+    logical        :: any_maps           ! Whether there exist maps between meshes, meaning their partitions must align.
+    integer(i_def) :: start1, end1, inc1 ! Loop indices for inserting cells into the partition
+    integer(i_def) :: start2, end2, inc2 ! Loop indices for inserting cells into the partition
 
     ! Create linked lists
 
@@ -699,32 +697,48 @@ contains
     type(linked_list_item_type), pointer :: insert_point  ! where to insert in a list
     type(linked_list_item_type), pointer :: loop          ! temp ptr to loop through list
 
-    integer :: i, j         ! loop counters
-    integer :: cells(4)     ! The cells around the vertex being queried
-    integer :: oth1, oth2   ! When querying a cell around a vertex, these are
-                            ! the indices of the other two cells
+    integer :: i, j                 ! loop counters
+    integer :: cells(4)             ! The cells around the vertex being queried
+    integer :: oth1, oth2           ! When querying a cell around a vertex, these are
+                                    ! the indices of the other two cells
     integer, allocatable :: sw_corner_cells(:)
-                            ! List of cells at the SW corner of the panels
-    integer :: panel        ! panel number
-    integer :: cell         ! starting point for num_cells_x calculation
-    integer :: cell_next(4) ! The cells around the cell being queried
-    integer :: cell_next_e  ! The cell to the east of the cell being queried
-    integer :: num_cells_x  ! number of cells across a panel in x-direction
-    integer :: num_cells_y  ! number of cells across a panel in y-direction
+                                    ! List of cells at the SW corner of the panels
+    integer :: panel                ! panel number
+    integer :: cell                 ! starting point for num_cells_x calculation
+    integer :: cell_next(4)         ! The cells around the cell being queried
+    integer :: cell_next_e          ! The cell to the east of the cell being queried
+    integer :: num_cells_x          ! number of cells across a panel in x-direction
+    integer :: num_cells_y          ! number of cells across a panel in y-direction
     integer :: start_sort, end_sort ! range over which to sort cells
-    integer :: depth        ! counter over the halo depths
-    integer :: orig_num_in_list ! number of cells in list before halos are added
+    integer :: depth                ! counter over the halo depths
+    integer :: orig_num_in_list     ! number of cells in list before halos are added
+    integer :: ncell                ! Number of cells
+    integer :: cell_id              ! Id of cell in the partition
+    logical :: cross_panels         ! Flag for partitioning across multiple cubed sphere panels
+    logical :: check_orientation    ! Check for orientation changes when getting cell id's
+    integer :: n_cross_panels       ! number of panels to decompose across
+    integer, allocatable :: face_of_combined_panels(:)
+                                    ! The first face in sections of combined cubed sphere panels
+    integer :: nprocs(2)            ! number of processors in the x- & y-direction
+    integer :: xproc                ! number of processsors in x-direction
+    integer :: yproc                ! number of processsors in y-direction
     integer(i_def) :: num_apply
     logical(l_def) :: periodic_xy(2) ! Periodic in the x/y-axes
 
     periodic_xy = global_mesh%get_mesh_periodicity()
     void_cell   = global_mesh%get_void_cell()
+    cross_panels = .false.
+    n_cross_panels = 1
     any_maps    = global_mesh%get_nmaps() > 0
 
     nullify( last )
     nullify( start_subsect )
     nullify( insert_point )
     nullify( loop )
+
+    nprocs = decomposition%get_nprocs()
+    xproc = nprocs(1)
+    yproc = nprocs(2)
 
     if (num_panels==1) then
       ! A single panelled mesh might be rectangluar - so find the dimensions
@@ -780,12 +794,55 @@ contains
       num_cells_y=global_mesh%get_ncells()/num_cells_x
 
     else
-      ! For multi-panel meshes, the panels must be square
-      num_cells_x = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
-                               real(num_panels, kind=r_def) ))
-      num_cells_y = num_cells_x
+      if( num_panels == 6 .and.              &
+          xproc*yproc*2 == total_ranks .and. &
+          modulo(total_ranks,2) == 0 ) then
+        ncell = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
+                                 real(num_panels, kind=r_def) ))
+        ! We will partition across 3 panels giving 2 'super' panels of 3 cubed-sphere panels each
+        cross_panels = .true.
+        n_cross_panels = 2
+        num_cells_x = ncell * 3
+        num_cells_y = ncell
+        allocate( face_of_combined_panels(n_cross_panels) )
+        ! Super panels consist of faces (1, 2, 3), (6, 4, 5)
+        ! In terms of the panel numbers used here is then
+        ! (3, 2, 6), (5, 4, 1)
+        face_of_combined_panels(:) = (/ 3, 5 /)
+      elseif( num_panels == 6 .and.              &
+              xproc*yproc*3 == total_ranks .and. &
+              modulo(total_ranks,3) == 0 ) then
+        ncell = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
+                                 real(num_panels, kind=r_def) ))
+        ! We will partition across 2 panels giving 3 'super' panels of 2 cubed-sphere panels each
+        cross_panels = .true.
+        n_cross_panels = 3
+        num_cells_x = ncell * 2
+        num_cells_y = ncell
+        allocate( face_of_combined_panels(n_cross_panels) )
+        ! Super panels consist of faces (1, 2), (4,5) & (6,3)
+        ! In terms of the panel numbers used here is then
+        ! (3, 2), (4, 1), (5, 6)
+        face_of_combined_panels(:) = (/ 3, 4, 5 /)
+      elseif( modulo(total_ranks,num_panels) == 0 ) then
+        ! For multi-panel meshes, the panels must be square
+        num_cells_x = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
+                                 real(num_panels, kind=r_def) ))
+        num_cells_y = num_cells_x
+      else
+        write(log_scratch_space,*) 'Unable to find a partition strategy. Total ranks (',&
+          total_ranks,') needs to either have a factor of ', num_panels, &
+          ' or if num_panels = 6 and custom decomposition is used then total ranks needs to have a factor of 2 or 3'
+        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      end if
 
       ! Calculate the South West corner cells of all the panels in the global mesh
+      ! Note the 'panel' numbers used here do not correspond to the panel numbers
+      ! used in the rest of the model as this uses the vertex index to find
+      ! the cell in the corner of each panel and it is not true that the first corner
+      ! cell found in this manner will correspond to panel 1.
+      ! In fact for the cubed sphere meshes used the relationship is:
+      ! SW corner cells are on panels: (5, 2, 1, 4, 6, 3)
       allocate(sw_corner_cells(num_panels))
       panel=1
       do i=1,global_mesh%get_nverts()
@@ -812,11 +869,18 @@ contains
 
     endif
 
-    face = ((num_panels * local_rank) / total_ranks) + 1
-    panel_ranks = total_ranks / num_panels
+    if ( cross_panels ) then
+      face = ((n_cross_panels * local_rank) / total_ranks) + 1
+      panel_ranks = total_ranks / n_cross_panels
+    else
+      face = ((num_panels * local_rank) / total_ranks) + 1
+      panel_ranks = total_ranks / num_panels
+    end if
     start_rank = panel_ranks * (face - 1)
     relative_rank = local_rank - start_rank + 1
 
+    ! Work out the start index and number of cells (in x- and y-dirn) for
+    ! the local partition
     call decomposition%get_partition( relative_rank,    &
                                       panel_ranks,      &
                                       mapping_factor,   &
@@ -829,7 +893,41 @@ contains
                                       start_y )
 
 
-    start_cell = sw_corner_cells(face)
+
+    ! Set up limits for finding cells
+    start1 = start_x
+    end1   = start_x + num_x - 1
+    inc1   = 1
+    start2 = start_y
+    end2   = start_y + num_y - 1
+    inc2   = 1
+
+    if ( cross_panels ) then
+      ! Generally we want the start cell to be the SW corner cell
+      ! but there is an exception when we are spanning 3 panels and looking
+      ! at cubed sphere panels (6,4,5) when we want to start in the NW corner.
+      ! Cubed sphere panels (6,4,5) correspond to the indices (5, 4, 1) of the
+      ! sw_corner_cells array since the sw_corner_cells array indices (1,..,6) do not
+      ! correspond to cubed sphere panels (1,..,6) and are in fact
+      ! ordered (5, 2, 1, 4, 6, 3)
+      start_cell = sw_corner_cells(face_of_combined_panels(face))
+      if (n_cross_panels == 2 .and. start_cell == sw_corner_cells(5) ) then
+        ! Start in the NW corner and go in (-y, x) direction
+        start_cell = global_mesh%get_cell_id(start_cell, 0, num_cells_y-1)
+
+        num_y   = num_cells_x / xproc
+        num_x   = num_cells_y / yproc
+        start1 = start_y
+        end1   = start1 + num_x - 1
+        inc1   = 1
+        start2 = -start_x + 2
+        end2   = start2 - num_y + 1
+        inc2   = -1
+      end if
+      deallocate( face_of_combined_panels )
+    else
+      start_cell = sw_corner_cells(face)
+    end if
     deallocate(sw_corner_cells)
 
     write(log_scratch_space,"(a,i0,a,i0,a,i0,a,i0)") "start_x ", start_x, &
@@ -837,53 +935,38 @@ contains
                                                     " num_x ",   num_x,   &
                                                     " num_y ",   num_y
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
+    write(log_scratch_space,"(a,i0,a,i0)") "Number of cells in partition ", num_x, " X ", num_y
+    call log_event( log_scratch_space, lOG_LEVEL_INFO )
 
-    ! Create a linked list of all cells that are part of this partition (not halos)
-
+    ! Create a linked list of all cells in the partition and at the same time
+    ! create a linked-list of all edge cells known to the partition, excluding halos.
     partition = linked_list_type()
+    known_cells = linked_list_type()
 
-    do iy = start_y, start_y+num_y - 1
-      do ix = start_x, start_x+num_x - 1
-        call partition%insert_item( linked_list_int_type( &
-                                global_mesh%get_cell_id(start_cell, ix-1, iy-1)))
+    ! We only need to check for orientation changes in the partition
+    ! covers multiple panels
+    check_orientation = cross_panels
+
+    do iy = start2, end2, inc2
+      do ix = start1, end1, inc1
+        cell_id = global_mesh%get_cell_id(start_cell, ix-1, iy-1, &
+                                          check_orientation)
+        call partition%insert_item( linked_list_int_type( cell_id ) )
+
+        ! If this is an edge cell then add it to the list of known edge cells
+        ! (if it is not already there)
+        if ( ix == start1 .or. ix == end1 .or. iy == start2 .or. iy == end2 ) then
+          if ( .not. known_cells%item_exists(cell_id) ) then
+            call known_cells%insert_item( linked_list_int_type( cell_id ) )
+          end if
+        end if
+
       end do
     end do
 
     ! Create a linked-list of all cells known to the partition, including halos.
     ! This will be ordered as:
     ! inner n, inner n-1 ... inner 1, edge, halo 1 ... halo n-1, halo n
-    !
-    ! Start with the edge cells - those cells owned by the partition - but are on
-    ! the edge of the partitioned domain, so may have dofs shared with halo cells
-
-    known_cells = linked_list_type()
-
-    ! Those cells along the top/bottom
-
-    do ix = start_x, start_x+num_x-1
-      ! start inserting the edge cells
-      call known_cells%insert_item(linked_list_int_type( &
-                          global_mesh%get_cell_id(start_cell, ix-1, start_y-1)))
-      ! insert but check for duplicates between start and end of known_cells list
-      if(.not. (known_cells%item_exists(global_mesh%get_cell_id( &
-                                    start_cell, ix-1, start_y+num_y-2)) ) ) then
-        call known_cells%insert_item( linked_list_int_type( &
-                    global_mesh%get_cell_id(start_cell, ix-1, start_y+num_y-2)))
-      end if
-    end do
-    ! Those along the left/right
-    do iy = start_y+1, start_y+num_y-2
-      if(.not. (known_cells%item_exists(global_mesh%get_cell_id( &
-                                        start_cell, start_x-1, iy-1)) )) then
-        call known_cells%insert_item( linked_list_int_type( &
-                          global_mesh%get_cell_id(start_cell, start_x-1, iy-1)))
-      end if
-      if(.not. (known_cells%item_exists(global_mesh%get_cell_id( &
-                                      start_cell, start_x+num_x-2, iy-1)) )) then
-        call known_cells%insert_item( linked_list_int_type( &
-                    global_mesh%get_cell_id(start_cell, start_x+num_x-2, iy-1)))
-      end if
-    end do
 
     ! get the number of edge cells currently stored in the known_cells list
     num_edge = known_cells%get_length()

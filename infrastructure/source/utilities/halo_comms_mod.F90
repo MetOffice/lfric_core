@@ -41,6 +41,60 @@ module halo_comms_mod
          perform_halo_exchange, perform_halo_exchange_start, &
          perform_halo_exchange_finish
 
+  !> @details A wrapper type for a YAXT xt_xmap object (which is used in the
+  !> generation of halo routing tables), along with metadata that describes
+  !> the fields for which it is valid
+  !
+  type, extends(linked_list_data_type), public :: exchange_map_type
+    private
+    !> Id of the mesh used in the function space that this information
+    !> is valid for
+    integer(i_def) :: mesh_id
+    !> Order of the function space that this information is valid for
+    !integer(i_def) :: element_order
+    integer(i_def) :: element_order_h, element_order_v
+    !> Enumerated value representing the continutity of the function space
+    !> that this information is valid for
+    integer(i_def) :: lfric_fs
+    !> The number of multidata values per dof location that this information
+    !> is valid for
+    integer(i_def) :: ndata
+    !> Depth of halo this routing is computed to
+    integer(i_def) :: halo_depth
+    !> Number of redistribution map objects
+    integer(i_def) :: max_depth
+    !> YAXT redistribution map
+#ifdef NO_MPI
+    ! If this is a non-mpi, serial build, redistribution maps are meaningless
+    ! so we don't need one, but we need something  for get_redist to return
+    ! so just use an integer
+    integer(i_def), allocatable :: xmaps(:)
+#else
+    type(xt_xmap), allocatable :: xmaps(:)
+#endif
+  contains
+    !> Gets the xmap that is used to create a redistrubution map
+    procedure, public :: get_xmap
+    !> Gets the mesh_id for which the halo_routing object is valid
+    procedure, public :: get_exchange_map_mesh_id
+    !> Gets the element_order_h for which the halo_routing object is valid
+    procedure, public :: get_exchange_map_element_order_h
+    !> Gets the element_order_v for which the halo_routing object is valid
+    procedure, public :: get_exchange_map_element_order_v
+    !> Gets the function space continuity type for which the halo_routing
+    !> object is valid
+    procedure, public :: get_exchange_map_lfric_fs
+    !> Gets the  number of multidata values per dof location for which the
+    !> halo_routing object is valid
+    procedure, public :: get_exchange_map_ndata
+    !> Get halo depth
+    procedure, public :: get_exchange_map_halo_depth
+  end type exchange_map_type
+
+  interface exchange_map_type
+    module procedure exchange_map_constructor
+  end interface
+
   !> @details A wrapper type for a YAXT xt_redist object (which holds a halo
   !> routing table), along with metadata that describes the fields for which
   !> that routing table is valid
@@ -143,6 +197,50 @@ module halo_comms_mod
   end interface
 contains
 
+  !contains
+  function exchange_map_constructor( global_dof_id, &
+                                     last_owned_dof, &
+                                     halo_start, &
+                                     halo_finish, &
+                                     mesh_id, &
+                                     element_order_h, &
+                                     element_order_v, &
+                                     lfric_fs, &
+                                     ndata, &
+                                     halo_depth) &
+                       result(self)
+    implicit none
+    integer(i_halo_index), intent(in) :: global_dof_id(:)
+    integer(i_def), intent(in) :: last_owned_dof
+    integer(i_def), intent(in) :: halo_start(:)
+    integer(i_def), intent(in) :: halo_finish(:)
+    integer(i_def), intent(in) :: mesh_id
+    integer(i_def), intent(in) :: ndata
+    integer(i_def), intent(in) :: halo_depth
+    type(exchange_map_type) :: self
+    integer(i_def) :: max_depth
+    integer(i_def) :: idepth
+    integer(i_def) :: element_order_h, element_order_v
+    integer(i_def) :: lfric_fs
+    self%mesh_id = mesh_id
+    self%element_order_h = element_order_h
+    self%element_order_v = element_order_v
+    self%lfric_fs = lfric_fs
+    self%ndata = ndata
+    self%halo_depth = halo_depth
+    max_depth = size(halo_start)
+    allocate( self%xmaps(max_depth) )
+#ifdef NO_MPI
+    self%xmaps(:) = 0
+    idepth=0 ! Set local variables to avoid unused variable errors
+#else
+    do idepth = 1 ,max_depth
+        self%xmaps(idepth) = generate_exchange_map(global_dof_id(1:last_owned_dof), &
+                                         global_dof_id( halo_start(idepth):halo_finish(idepth) ))
+    end do
+#endif
+  end function exchange_map_constructor
+
 !-----------------------------------------------------------------------
 ! Type bound procedures for the halo_routing type
 
@@ -167,6 +265,9 @@ contains
 !>                             information will be valid
 !> @param [in] fortran_kind    The Fortran kind of the data for which this
 !>                             information will be valid
+!> @param [in] halo_depth      Depth of halo this routing is computed to
+!> @param [in] xmaps           Array of xt_xmap exchange objects in case of MPI build.
+!>                             In case of Non-MPI build, it is defined as an array of integers.
 !> @return The new halo_routing object
 function halo_routing_constructor( global_dof_id,   &
                                    last_owned_dof,  &
@@ -179,7 +280,8 @@ function halo_routing_constructor( global_dof_id,   &
                                    ndata,           &
                                    fortran_type,    &
                                    fortran_kind,    &
-                                   halo_depth ) result(self)
+                                   halo_depth,      &
+                                   exchange_maps) result(self)
 
   implicit none
 
@@ -195,10 +297,16 @@ function halo_routing_constructor( global_dof_id,   &
   integer(i_def), intent(in) :: fortran_type
   integer(i_def), intent(in) :: fortran_kind
   integer(i_def), intent(in) :: halo_depth
+  type(exchange_map_type), intent(in), pointer, optional :: exchange_maps
 
-  type(halo_routing_type) :: self
-  integer(i_def) :: max_depth
-  integer(i_def) :: idepth
+  type(halo_routing_type)    :: self
+  integer(i_def)             :: max_depth
+  integer(i_def)             :: idepth
+#ifdef NO_MPI
+  integer(i_def)             :: xmap
+#else
+  type(xt_xmap)              :: xmap
+#endif
 
   max_depth = size(halo_start)
 
@@ -217,13 +325,22 @@ function halo_routing_constructor( global_dof_id,   &
 #ifdef NO_MPI
   self%redist(:) = 0
   idepth=0 ! Set local variables to avoid unused variable errors
+  xmap=0
 #else
-  do idepth = 1, max_depth
+do idepth = 1 ,max_depth
+
+    if (present(exchange_maps)) then
+      xmap = exchange_maps%get_xmap(idepth)
+    else
+      xmap = generate_exchange_map(global_dof_id(1:last_owned_dof), &
+                                       global_dof_id( halo_start(idepth):halo_finish(idepth) ))
+    end if
     ! Get the redistribution map objects for doing halo exchanges later
     self%redist(idepth) = generate_redistribution_map( &
                      global_dof_id(1:last_owned_dof), &
                      global_dof_id( halo_start(idepth):halo_finish(idepth) ), &
-                     get_lfric_datatype( fortran_type, fortran_kind ) )
+                     get_lfric_datatype( fortran_type, fortran_kind ), &
+                     xmap)
   end do
 #endif
 
@@ -354,6 +471,93 @@ function get_redist(self, depth) result (redist)
 
   return
 end function get_redist
+
+!----------------------------------------------------------------------
+! Getter functions for exchange map
+
+!> @brief Gets a YAXT xmap used to create the redistribution maps
+!> @param [in] depth The depth of halo exchange that the redistribution map
+!>                   will be used for
+!> @return The YAXT xmap for a particular depth of halo
+function get_xmap(self, depth) result (xmap)
+
+  implicit none
+
+  class(exchange_map_type), intent(in), target :: self
+  integer(i_def), intent(in) :: depth
+
+#ifdef NO_MPI
+  integer(i_def) :: xmap
+#else
+  type(xt_xmap)  :: xmap
+#endif
+
+  xmap = self%xmaps(depth)
+
+  return
+end function get_xmap
+
+!> @brief Gets the mesh_id for which this object is valid
+!> @return Id of the mesh that this information is valid for
+function get_exchange_map_mesh_id(self) result (mesh_id)
+  implicit none
+  class(exchange_map_type), intent(in) :: self
+  integer(i_def) :: mesh_id
+  mesh_id = self%mesh_id
+  return
+end function get_exchange_map_mesh_id
+
+!> @brief Gets the element_order_h for which this object is valid
+!> @return The element order that this information is valid for
+function get_exchange_map_element_order_h(self) result (element_order_h)
+  implicit none
+  class(exchange_map_type), intent(in) :: self
+  integer(i_def) :: element_order_h
+  element_order_h = self%element_order_h
+  return
+end function get_exchange_map_element_order_h
+
+!> @brief Gets the element_order_v for which this object is valid
+!> @return The element order that this information is valid for
+function get_exchange_map_element_order_v(self) result (element_order_v)
+  implicit none
+  class(exchange_map_type), intent(in) :: self
+  integer(i_def) :: element_order_v
+  element_order_v = self%element_order_v
+  return
+end function get_exchange_map_element_order_v
+
+!> @brief Gets the function space continuity type for which this object is valid
+!> @return The function space continuity type that this information is valid for
+function get_exchange_map_lfric_fs(self) result (lfric_fs)
+  implicit none
+  class(exchange_map_type), intent(in) :: self
+  integer(i_def) :: lfric_fs
+  lfric_fs = self%lfric_fs
+  return
+end function get_exchange_map_lfric_fs
+
+!> @brief Gets the number of multidata values per dof location for which this
+!>        object is valid
+!> @return The number of multidata values per dof location that this
+!>         information is valid for
+function get_exchange_map_ndata(self) result (ndata)
+  implicit none
+  class(exchange_map_type), intent(in) :: self
+  integer(i_def) :: ndata
+  ndata = self%ndata
+  return
+end function get_exchange_map_ndata
+
+!> @brief Gets the halo depth for which this object is valid
+!> @return The halo depth for which this object is valid
+function get_exchange_map_halo_depth(self) result (halo_depth)
+  implicit none
+  class(exchange_map_type), intent(in) :: self
+  integer(i_def) :: halo_depth
+  halo_depth = self%halo_depth
+  return
+end function get_exchange_map_halo_depth
 
 !-----------------------------------------------------------------------
 ! Non-type-bound halo comms functionality
@@ -609,25 +813,31 @@ end subroutine perform_halo_exchange_finish
 !>                    MPI task
 !> @param tgt_indices [in] The global indices of all the halo points in this
 !>                    MPI task
-!> @param datatype [in] The MPI datatype of a single element in the data to be
+!> @param xmap        [in] xt_xmap exchange object in case of MPI build.
+!>                    In case of Non-MPI build, it is defined as an integer.
+!> @param datatype    [in] The MPI datatype of a single element in the data to be
 !>                    exchanged
 !> @return redist     The halo exchange redistribution object
 !>
-function generate_redistribution_map(src_indices, tgt_indices, datatype) &
+function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
                                      result(redist)
   implicit none
 
   integer(i_halo_index),     intent(in) :: src_indices(:), tgt_indices(:)
   type(lfric_datatype_type), intent(in) :: datatype
 #ifdef NO_MPI
+  !  xmaps are meaningless in a non-mpi build, create an integer for tests
+  integer(i_def) :: xmap
+#else
+  type(xt_xmap) :: xmap
+#endif
+#ifdef NO_MPI
   !  Redistribution maps are meaningless in a non-mpi build, so just return 0
   integer(i_def) :: redist
-
   redist = 0
 #else
   type(xt_redist) :: redist
   type(xt_idxlist) :: src_idxlist, tgt_idxlist
-  type(xt_xmap) :: xmap
   integer(i_def), allocatable :: src_offsets(:)
   integer(i_def), allocatable :: tgt_offsets(:)
   integer(i_def) :: i
@@ -658,9 +868,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype) &
     datatype_mpi_val = datatype%get_datatype_mpi_val()
     redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype_mpi_val)
 
-    call xt_xmap_delete(xmap)
-    call xt_idxlist_delete(tgt_idxlist)
-    call xt_idxlist_delete(src_idxlist)
     deallocate(src_offsets)
     deallocate(tgt_offsets)
   else
@@ -671,5 +878,47 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype) &
 #endif
 
 end function generate_redistribution_map
+
+!> Private function to generate an exchange map between
+!> source and target indices.
+!>
+!> @param[in] src_indices  Array of source indices.
+!> @param[in] tgt_indices  Array of target indices.
+!>
+!> @return xmap  Exchange map (`xt_xmap`) or 0 if MPI is disabled.
+!>
+!> @note MPI must be initialised in an MPI-enabled build.
+!> @warning Logs an error if MPI is not initialised.
+function generate_exchange_map(src_indices, tgt_indices) result(xmap)
+  implicit none
+  integer(i_halo_index), intent(in) :: src_indices(:), tgt_indices(:)
+#ifdef NO_MPI
+  !  xmaps are meaningless in a non-mpi build, so just return 0
+  integer(i_def) :: xmap
+
+  xmap = 0
+#else
+  type(xt_xmap) :: xmap
+  type(xt_idxlist) :: src_idxlist, tgt_idxlist
+  type(lfric_comm_type) :: comm
+  if( global_mpi%is_comm_set() )then
+    ! create decomposition descriptors
+    src_idxlist = xt_idxvec_new( src_indices, size(src_indices) )
+    tgt_idxlist = xt_idxvec_new( tgt_indices, size(tgt_indices) )
+
+    ! generate exchange map
+    comm = global_mpi%get_comm()
+    xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, &
+                                    comm%get_comm_mpi_val() )
+    call xt_idxlist_delete(tgt_idxlist)
+    call xt_idxlist_delete(src_idxlist)
+  else
+    call log_event( &
+    'Call to generate_exchange_map failed. Must initialise mpi first',&
+    LOG_LEVEL_ERROR )
+  end if
+#endif
+
+end function generate_exchange_map
 
 end module halo_comms_mod

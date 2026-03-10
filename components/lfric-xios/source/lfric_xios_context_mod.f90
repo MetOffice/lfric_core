@@ -25,7 +25,8 @@ module lfric_xios_context_mod
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
   use model_clock_mod,      only : model_clock_type
-  use timer_mod,            only : timer
+  use timing_mod,           only : start_timing, stop_timing, &
+                                   tik, LPROF
   use xios,                 only : xios_context,                  &
                                    xios_context_initialize,       &
                                    xios_close_context_definition, &
@@ -56,8 +57,6 @@ module lfric_xios_context_mod
     procedure, public :: initialise_xios_context
     procedure, public :: get_filelist
     procedure, public :: set_current
-    procedure, public :: set_timer_flag
-    procedure, public :: get_timer_flag
     procedure, public :: tick_context_clock
     procedure, public :: get_context_clock_step
     procedure, public :: finalise_xios_context
@@ -115,10 +114,12 @@ contains
     type(linked_list_item_type), pointer :: loop => null()
     type(lfric_xios_file_type),  pointer :: file => null()
     logical :: zero_start
+    integer(tik) :: timing_idlx, timing_idxc
 
     write(log_scratch_space, "(A)") &
         "Initialising XIOS context: " // this%get_context_name()
     call log_event(log_scratch_space, log_level_debug)
+    if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.init_context')
 
     if (present(start_at_zero)) then
       zero_start = start_at_zero
@@ -138,9 +139,14 @@ contains
 
     if (associated(before_close)) call before_close(model_clock)
 
-    ! Close the context definition - no more I/O operations can be defined
-    ! after this point
+    ! Close the context definition - no more I/O configuration operations
+    ! can be defined after this point
+    if ( LPROF ) call start_timing(timing_idxc, 'xios.close_context_definition')
+    call log_event('XIOS context definition closing', log_level_debug)
     call xios_close_context_definition()
+    if ( LPROF ) call stop_timing(timing_idxc, 'xios.close_context_definition')
+    call log_event('XIOS context definition closed', log_level_debug)
+
     this%xios_context_initialised = .true.
 
     ! Read all files that need to be read from
@@ -155,6 +161,7 @@ contains
         loop => loop%next
       end do
     end if
+    if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.init_context')
 
   end subroutine initialise_xios_context
 
@@ -176,7 +183,9 @@ contains
 
     type(linked_list_item_type), pointer :: loop => null()
     type(lfric_xios_file_type),  pointer :: file => null()
+    integer(tik) :: timing_idlx, timing_idxc
 
+    if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.finalise_context')
     if (this%xios_context_initialised) then
       ! Perform final write
       if (this%filelist%get_length() > 0) then
@@ -195,7 +204,9 @@ contains
       ! will be closed.
       write(log_scratch_space, "(A)") "Finalising XIOS context: " // this%get_context_name()
       call log_event(log_scratch_space, log_level_debug)
+      if ( LPROF ) call start_timing(timing_idxc, 'xios.context_finalize')
       call xios_context_finalize()
+      if ( LPROF ) call stop_timing(timing_idxc, 'xios.context_finalize')
 
       ! We have closed the context on our end, but we need to make sure that XIOS
       ! has closed the files for all servers before we process them.
@@ -217,6 +228,7 @@ contains
     end if
     nullify(loop)
     nullify(file)
+    if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.finalise_context')
 
   end subroutine finalise_xios_context
 
@@ -246,38 +258,6 @@ contains
     call xios_set_current_context( this%handle )
 
   end subroutine set_current
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Tells I/O context whether to use subroutine timers
-  !>
-  !> @param[in] timer_flag
-  !>
-  subroutine set_timer_flag( this, timer_flag )
-
-    implicit none
-
-    class(lfric_xios_context_type), target, intent(inout) :: this
-    logical,                                intent(in)    :: timer_flag
-
-    this%uses_timer = timer_flag
-
-  end subroutine set_timer_flag
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> Returns whether the IO context uses timers
-  !>
-  !> @return timer_flag
-  !>
-  function get_timer_flag(this) result(timer_flag)
-
-    implicit none
-
-    class(lfric_xios_context_type), target, intent(in) :: this
-    logical :: timer_flag
-
-    timer_flag = this%uses_timer
-
-  end function get_timer_flag
 
   subroutine tick_context_clock(this)
     implicit none

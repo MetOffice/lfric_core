@@ -19,10 +19,13 @@ module halo_routing_collection_mod
   use function_space_collection_mod, &
                           only: function_space_collection_type, &
                                 function_space_collection
-  use halo_comms_mod,     only: halo_routing_type
+  use halo_comms_mod,     only: halo_routing_type, exchange_map_type
   use linked_list_mod,    only: linked_list_type, &
                                 linked_list_item_type
   use mesh_mod,           only: mesh_type
+  use exchange_map_collection_mod, only: exchange_map_collection_type
+  use timing_mod,         only: start_timing, stop_timing, &
+                                tik, LPROF
 
   implicit none
 
@@ -35,6 +38,8 @@ module halo_routing_collection_mod
     private
     !> Linked list which will hold the halo_routing objects
     type(linked_list_type) :: halo_routing_list
+    ! Cache of exchange maps
+    type(exchange_map_collection_type) :: exchange_map_collection
   contains
     !> Extracts a specific halo_routing object from the list
     procedure, public :: get_halo_routing
@@ -65,6 +70,8 @@ function halo_routing_collection_constructor() result(self)
   type(halo_routing_collection_type) :: self
 
   self%halo_routing_list = linked_list_type()
+
+  self%exchange_map_collection = exchange_map_collection_type()
 
 end function halo_routing_collection_constructor
 
@@ -114,9 +121,13 @@ function get_halo_routing( self,            &
   integer(i_halo_index), allocatable :: global_dof_id(:)
   integer(i_def), allocatable :: halo_start(:)
   integer(i_def), allocatable :: halo_finish(:)
+  type(exchange_map_type),  pointer :: exchange_maps
   integer(i_def) :: idepth
   integer(i_def) :: last_owned_dof
   integer(i_def) :: mesh_id
+  integer(tik) :: id
+
+  if ( LPROF ) call start_timing(id, 'halo_routing_creation')
 
   nullify( function_space )
 
@@ -164,18 +175,29 @@ function get_halo_routing( self,            &
 
     mesh_id = mesh%get_id()
 
-    call self%halo_routing_list%insert_item( halo_routing_type( global_dof_id,   &
-                                                                last_owned_dof,  &
-                                                                halo_start,      &
-                                                                halo_finish,     &
-                                                                mesh_id,         &
-                                                                element_order_h, &
-                                                                element_order_v, &
-                                                                lfric_fs,        &
-                                                                ndata,           &
-                                                                fortran_type,    &
-                                                                fortran_kind,    &
-                                                                halo_depth ) )
+    exchange_maps => self%exchange_map_collection%get_exchange_map( &
+                                                mesh,               &
+                                                element_order_h,    &
+                                                element_order_v,    &
+                                                lfric_fs,           &
+                                                ndata,              &
+                                                halo_depth )
+
+    call self%halo_routing_list%insert_item( &
+                             halo_routing_type( global_dof_id,   &
+                                                last_owned_dof,  &
+                                                halo_start,      &
+                                                halo_finish,     &
+                                                mesh_id,         &
+                                                element_order_h, &
+                                                element_order_v, &
+                                                lfric_fs,        &
+                                                ndata,           &
+                                                fortran_type,    &
+                                                fortran_kind,    &
+                                                halo_depth,      &
+                                                exchange_maps)   &
+                                              )
     deallocate( halo_start, halo_finish, global_dof_id )
 
     halo_routing => get_halo_routing_from_list( self,            &
@@ -189,6 +211,8 @@ function get_halo_routing( self,            &
                                                 halo_depth )
 
   end if
+
+  if ( LPROF ) call stop_timing(id, 'halo_routing_creation')
 
   return
 end function get_halo_routing
