@@ -53,7 +53,7 @@ program io_demo
 
   deallocate( filename )
 
-  call init_logger( modeldb%mpi%get_comm(), program_name )
+  call init_logger(modeldb%mpi%get_comm(), program_name)
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &
