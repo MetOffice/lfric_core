@@ -19,7 +19,6 @@ $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR
 	$(call MESSAGE,Generating namelist configuration file.)
 	$(Q)mkdir -p $(dir $@)
 
-ifdef APPS_ROOT_DIR
 ifdef EXTRACT_ROSE_META
     $(call MESSAGE,Getting metadata from external)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
@@ -27,13 +26,12 @@ ifdef EXTRACT_ROSE_META
 	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta \
 					-include_dirs $(WORKING_DIR)/../rose-meta
-else
+else ifdef APPS_ROOT_DIR
     $(call MESSAGE,Not using external)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
 	                -directory $(CONFIG_DIR)                 \
 	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
-endif
 else
 	$(call MESSAGE,Not lfric_apps)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
