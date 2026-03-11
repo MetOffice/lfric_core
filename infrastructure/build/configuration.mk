@@ -28,12 +28,14 @@ ifdef EXTRACT_ROSE_META
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta \
 					-include_dirs $(WORKING_DIR)/../rose-meta
 else
+    $(call MESSAGE,Not using external)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
 	                -directory $(CONFIG_DIR)                 \
 	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
 endif
 else
+	$(call MESSAGE,Not lfric_apps)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
 	                -directory $(CONFIG_DIR)        \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
