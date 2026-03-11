@@ -17,7 +17,7 @@ endif
 
 ifdef MPI_TESTS
   UNIT_TEST_PRE_PROCESS_MACROS = USE_MPI=YES
-  LAUNCHER = mpiexec -n 4
+  LAUNCHER = mpiexec -n 6
 else
   UNIT_TEST_PRE_PROCESS_MACROS = NO_MPI=no_mpi
   # It seems that the Cray 'ftn' wrapper always builds for MPI...

@@ -22,46 +22,7 @@ contains
   @before
   subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_spherical, &
-                                          topology_non_periodic
-    use extrusion_config_mod,      only : method_uniform, &
-                                          stretching_method_linear
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_native
-    use feign_config_mod,          only : feign_base_mesh_config,      &
-                                          feign_extrusion_config,      &
-                                          feign_finite_element_config, &
-                                          feign_planet_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
-
     implicit none
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_spherical,      &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_non_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_extrusion_config( method=method_uniform,                      &
-                                 planet_radius=radius,                       &
-                                 domain_height=10.0_r_def,                   &
-                                 number_of_layers=5_i_def,                   &
-                                 stretching_method=stretching_method_linear, &
-                                 stretching_height=15.0_r_def,               &
-                                 eta_values=(/0.5_r_def/) )
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_system=coord_system_native,  &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
-
-    call feign_planet_config( scaling_factor=1.0_r_def )
-
-    call init_chi_transforms()
 
   end subroutine set_up
 
@@ -69,8 +30,8 @@ contains
   @after
   subroutine tear_down()
 
-    use configuration_mod,        only: final_configuration
-    use sci_chi_transform_mod,    only: final_chi_transforms
+    use config_loader_mod,     only: final_configuration
+    use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
@@ -84,11 +45,16 @@ contains
   subroutine test_all()
 
     use, intrinsic :: iso_fortran_env, only: real64
+    use sci_chi_transform_mod,   only : init_chi_transforms
     use sci_coordinate_jacobian_mod,                                           &
                                  only : coordinate_jacobian,                   &
                                         coordinate_jacobian_inverse,           &
                                         pointwise_coordinate_jacobian,         &
                                         pointwise_coordinate_jacobian_inverse
+
+    use base_mesh_config_mod,      only: geometry_spherical, &
+                                         topology_non_periodic
+    use finite_element_config_mod, only: coord_system_native
 
     implicit none
 
@@ -103,6 +69,11 @@ contains
     real(kind=r_def) :: longitude(8), latitude(8), height(8), diff_basis(3,8,1,1)
     real(kind=r_def) :: basis(1,8,1,1), jac(3,3,1,1), dj(1,1), h
     real(kind=r_def) :: jac_inv(3,3,1,1), identity(3,3,1,1), err, answer(3,3)
+
+    integer(i_def),  parameter :: coord_system  = coord_system_native
+    integer(i_def),  parameter :: geometry      = geometry_spherical
+    integer(i_def),  parameter :: topology      = topology_non_periodic
+    real(r_def),     parameter :: scaled_radius = 270.0_r_def
 
     ! Box of length dlon, width dlat and height dh
     real(kind=r_def), parameter :: dlon = 0.2_r_def
@@ -163,7 +134,10 @@ contains
 
     basis(:,:,:,:) = 0.125_r_def
 
-    call coordinate_jacobian(ndf, ngp, ngp, longitude, latitude, height, &
+    call init_chi_transforms(geometry, topology)
+
+    call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                             ndf, ngp, ngp, longitude, latitude, height,      &
                              ipanel, basis, diff_basis, jac, dj)
     call coordinate_jacobian_inverse(ngp, ngp, jac, dj, jac_inv)
 
@@ -197,7 +171,9 @@ contains
     end do
 
     ! Test the pointwise computations
-    call pointwise_coordinate_jacobian(ndf, longitude, latitude, height, ipanel, &
+    call pointwise_coordinate_jacobian(coord_system, geometry,                   &
+                                       topology, scaled_radius,                  &
+                                       ndf, longitude, latitude, height, ipanel, &
                                        basis(:,:,1,1), diff_basis(:,:,1,1),      &
                                        jac(:,:,1,1), dj(1,1) )
     jac_inv(:,:,1,1) = pointwise_coordinate_jacobian_inverse(jac(:,:,1,1), dj(1,1))

@@ -197,7 +197,7 @@ subroutine w3_to_w2_correction_code(                                        &
             ! Add contribution to the averaged W2 field. Factor of 0.5 as there
             ! is a contribution from each face
             field_w2(map_w2(face)+k) = field_w2(map_w2(face)+k) -              &
-              0.5_r_def * gradient * displacement(map_w2h_2d(face)+k)
+              0.5_r_def * gradient * displacement(map_w2h_2d(face))
         end do
 
       else
@@ -210,7 +210,7 @@ subroutine w3_to_w2_correction_code(                                        &
           ! Add contribution to the averaged W2 field. Factor of 0.5 as there
           ! is a contribution from each face
           field_w2(map_w2(face)+k) = field_w2(map_w2(face)+k) -                &
-            0.5_r_def * gradient * displacement(map_w2h_2d(face)+k)
+            0.5_r_def * gradient * displacement(map_w2h_2d(face))
         end do
       end if
     end if

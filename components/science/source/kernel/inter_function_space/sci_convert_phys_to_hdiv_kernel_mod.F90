@@ -106,11 +106,15 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
                                       undf_pid,       &
                                       map_pid )
 
-  use base_mesh_config_mod,       only : geometry_spherical
   use sci_chi_transform_mod,      only : chi2llr
   use sci_coordinate_jacobian_mod, only : pointwise_coordinate_jacobian, &
                                           pointwise_coordinate_jacobian_inverse
   use coord_transform_mod,        only : sphere2cart_vector
+
+  use base_mesh_config_mod,      only: topology, &
+                                       geometry_spherical
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -163,7 +167,8 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
       end do
 
       ! Compute Jacobian at this W2 point
-      call pointwise_coordinate_jacobian(ndf_chi,                              &
+      call pointwise_coordinate_jacobian(coord_system, geometry, topology,     &
+                                         scaled_radius, ndf_chi,               &
                                          chi_1_cell, chi_2_cell, chi_3_cell,   &
                                          ipanel,                               &
                                          basis_chi(:,:,df_w2),                 &

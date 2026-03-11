@@ -20,7 +20,6 @@ module init_lam_fields_alg_mod
   use field_parent_mod,     only: field_parent_type
   use integer_field_mod,    only: integer_field_type
   use mesh_mod,             only: mesh_type
-  use namelist_mod,         only: namelist_type
 
   ! Procedures
   use create_field_set_mod, only: create_field_set
@@ -46,7 +45,6 @@ subroutine init_lam_fields( mesh, modeldb )
   class(field_parent_type), pointer :: field
   type(field_type),         pointer :: tmp_real_field
   type(integer_field_type), pointer :: tmp_int_field
-  type(namelist_type),      pointer :: io_nml
 
   logical :: use_xios_io
   logical :: write_diag
@@ -58,17 +56,15 @@ subroutine init_lam_fields( mesh, modeldb )
   real(r_def),    parameter :: lam_real_value = 9.0_r_def
   integer(i_def), parameter :: lam_int_value  = 9_i_def
 
-  io_nml => modeldb%configuration%get_namelist('io')
-
-  call io_nml%get_value('write_diag', write_diag)
-  call io_nml%get_value('use_xios_io', use_xios_io)
+  write_diag  = modeldb%config%io%write_diag()
+  use_xios_io = modeldb%config%io%use_xios_io()
 
   fld_collection => modeldb%fields%get_field_collection( field_collection_name )
 
   !=====================================
   ! Create LAM fields
   !=====================================
-  call create_field_set( fld_collection, mesh, modeldb%configuration )
+  call create_field_set(modeldb, fld_collection, mesh)
 
   !=====================================
   ! Set up field with an IO behaviour

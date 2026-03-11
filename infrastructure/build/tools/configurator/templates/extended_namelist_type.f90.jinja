@@ -1,0 +1,63 @@
+{#- This is the skeleton of the namelist loading module.                   -#}
+{#- The Jinja templating library is used to insert the actual code.        -#}
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2025 Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> Manages the {{listname}} namelist.
+!>
+module {{listname}}_nml_mod
+
+  use constants_mod, only: {{all_kinds | sort | join( ', &\n' + ' '*27 )}}
+
+  use namelist_mod, only: namelist_type
+
+  implicit none
+
+  private
+  public :: {{listname}}_nml_type
+
+  type, extends(namelist_type) :: {{listname}}_nml_type
+    private
+  contains
+
+{%- for name, parameter in parameters | dictsort %}
+{%-   if loop.first %}{{'\n'}}{%- endif %}
+    procedure :: {{parameter.name}}
+{%- endfor %}
+
+  end type {{listname}}_nml_type
+
+contains
+{%- for name, parameter in parameters | dictsort %}
+{%-   if loop.first %}{{'\n'}}{%- endif %}
+{%-   if name in arrays %}
+{# Template function to return an array namelist member #}
+  function {{parameter.name}}(self) result(answer)
+
+    implicit none
+
+    class({{listname}}_nml_type), intent(in) :: self
+    {{parameter.fortran_type.intrinsic_type}}({{parameter.fortran_type.kind}}), allocatable :: answer(:)
+
+    call self%get_value('{{name}}', answer)
+
+  end function {{parameter.name}}
+
+{%-   else %}
+{# Template function to return an scalar namelist member #}
+  function {{parameter.name}}(self) result(answer)
+
+    implicit none
+
+    class({{listname}}_nml_type), intent(in) :: self
+    {{parameter.fortran_type.intrinsic_type}}({{parameter.fortran_type.kind}}) :: answer
+
+    call self%get_value('{{name}}', answer)
+
+  end function {{parameter.name}}
+
+{%-   endif %}
+{%  endfor %}
+end module {{listname}}_nml_mod

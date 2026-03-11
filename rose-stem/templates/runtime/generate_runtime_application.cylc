@@ -52,7 +52,9 @@
     'touch $CYLC_TASK_WORK_DIR/tmp.m',
     'mv $CYLC_TASK_WORK_DIR/*.m $TASK_OUTPUT_DIR/results',
     'test -f $CYLC_TASK_WORK_DIR/timer.txt && '~
-        'cp $CYLC_TASK_WORK_DIR/timer.txt $TASK_OUTPUT_DIR || true'
+        'cp $CYLC_TASK_WORK_DIR/timer.txt $TASK_OUTPUT_DIR || true',
+    'test -f $CYLC_TASK_WORK_DIR/vernier-output* && '~
+        'cp $CYLC_TASK_WORK_DIR/vernier-output* $TASK_OUTPUT_DIR || true'
     ] %}
 
 {% if task_values["app_name"] == "canned_test" %}

@@ -11,6 +11,11 @@
 # Set the DSL Method in use to collect the correct transformation files.
 DSL = psykal
 #
+
+# Set default psyclone command additional options
+PSYCLONE_PSYKAL_EXTRAS ?= -l all
+#
+
 ALGORITHM_F_FILES := $(patsubst $(SOURCE_DIR)/%.X90, \
                                 $(WORKING_DIR)/%.f90, \
                                 $(shell find $(SOURCE_DIR) -name '*.X90' -print))
@@ -46,12 +51,14 @@ $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
 $(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@)
 	$(call MESSAGE,PSyclone - local optimisation,$(subst $(SOURCE_DIR)/,,$<))
 	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH psyclone -api lfric \
-	           -l all -d $(WORKING_DIR) \
+	           -d $(WORKING_DIR) \
 	           --config $(PSYCLONE_CONFIG_FILE) \
 	           -s $(OPTIMISATION_PATH)/$(DSL)/$*.py \
 	           -okern $(WORKING_DIR)/kernel \
 	           -oalg $(WORKING_DIR)/$*.f90 \
-	           -opsy $(WORKING_DIR)/$*_psy.f90 $<
+	           -opsy $(WORKING_DIR)/$*_psy.f90 \
+	           $(PSYCLONE_PSYKAL_EXTRAS) \
+	           $<
 
 # Where a global optimisation script exists, use it.
 #
@@ -59,12 +66,14 @@ $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
 $(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@)
 	$(call MESSAGE,PSyclone - global optimisation,$(subst $(SOURCE_DIR)/,,$<))
 	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH psyclone -api lfric \
-	           -l all -d $(WORKING_DIR) \
+	           -d $(WORKING_DIR) \
 	           --config $(PSYCLONE_CONFIG_FILE) \
 	           -s $(OPTIMISATION_PATH)/$(DSL)/global.py \
 	           -okern $(WORKING_DIR)/kernel \
 	           -oalg  $(WORKING_DIR)/$*.f90 \
-	           -opsy $(WORKING_DIR)/$*_psy.f90 $<
+	           -opsy $(WORKING_DIR)/$*_psy.f90 \
+	           $(PSYCLONE_PSYKAL_EXTRAS) \
+	           $<
 
 # Where no optimisation script exists, don't use it.
 #
@@ -76,7 +85,9 @@ $(WORKING_DIR)/%.x90 | $$(dir $$@)
 	           --config $(PSYCLONE_CONFIG_FILE) \
 	           -okern $(WORKING_DIR)/kernel \
 	           -oalg  $(WORKING_DIR)/$*.f90 \
-	           -opsy $(WORKING_DIR)/$*_psy.f90 $<
+	           -opsy $(WORKING_DIR)/$*_psy.f90 \
+	           $(PSYCLONE_PSYKAL_EXTRAS) \
+	           $<
 
 .PRECIOUS: $(WORKING_DIR)/%.x90
 # Perform preprocessing for big X90 files.

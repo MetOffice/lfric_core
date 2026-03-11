@@ -10,6 +10,10 @@ module coordinate_jacobian_alphabetaz_mod_test
   use funit
   use constants_mod, only : r_def, i_def
 
+  use base_mesh_config_mod,      only : geometry_spherical, &
+                                        topology_fully_periodic
+  use finite_element_config_mod, only : coord_system_native
+
   implicit none
 
   public :: set_up, tear_down, test_all
@@ -22,46 +26,11 @@ contains
   @before
   subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_spherical, &
-                                          topology_fully_periodic
-    use extrusion_config_mod,      only : method_uniform, &
-                                          stretching_method_linear
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_native
-    use feign_config_mod,          only : feign_base_mesh_config,      &
-                                          feign_extrusion_config,      &
-                                          feign_finite_element_config, &
-                                          feign_planet_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    call feign_extrusion_config( method=method_uniform,                      &
-                                 planet_radius=radius,                       &
-                                 domain_height=10.0_r_def,                   &
-                                 number_of_layers=5_i_def,                   &
-                                 stretching_method=stretching_method_linear, &
-                                 stretching_height=15.0_r_def,               &
-                                 eta_values=(/0.5_r_def/) )
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_spherical,      &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_finite_element_config(              &
-             cellshape=cellshape_quadrilateral,    &
-             coord_order=0_i_def,                  &
-             coord_system=coord_system_native,     &
-             element_order_h=0_i_def,              &
-             element_order_v=0_i_def,              &
-             rehabilitate=.true. )
-
-    call feign_planet_config( scaling_factor=1.0_r_def )
-
-    call init_chi_transforms()
+    call init_chi_transforms(geometry_spherical, topology_fully_periodic)
 
   end subroutine set_up
 
@@ -69,8 +38,8 @@ contains
   @after
   subroutine tear_down()
 
-    use configuration_mod,        only: final_configuration
-    use sci_chi_transform_mod,    only: final_chi_transforms
+    use config_loader_mod,     only: final_configuration
+    use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
@@ -108,6 +77,11 @@ contains
     real(kind=r_def), parameter :: a = 0.1_r_def
     real(kind=r_def), parameter :: b = 0.1_r_def
     real(kind=r_def), parameter :: h = 2.0_r_def
+
+    integer(i_def),  parameter :: coord_system  = coord_system_native
+    integer(i_def),  parameter :: geometry      = geometry_spherical
+    integer(i_def),  parameter :: topology      = topology_fully_periodic
+    real(r_def),     parameter :: scaled_radius = 1000.0_r_def
 
     ! We choose a box centred on alpha = 0, beta = 0
     alpha(:) = (/ -a, a, a, -a, -a, a, a, -a /)
@@ -147,7 +121,8 @@ contains
 
     basis(:,:,:,:) = 0.125_r_def
 
-    call coordinate_jacobian(ndf, ngp, ngp, alpha, beta, height, ipanel,      &
+    call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                             ndf, ngp, ngp, alpha, beta, height, ipanel,      &
                              basis, diff_basis, jac, dj)
     call coordinate_jacobian_inverse(ngp,ngp, jac, dj, jac_inv)
 
@@ -183,7 +158,9 @@ contains
     end do
 
     ! Test the pointwise computations
-    call pointwise_coordinate_jacobian(ndf, alpha, beta, height, ipanel,      &
+    call pointwise_coordinate_jacobian(coord_system, geometry,                &
+                                       topology, scaled_radius,               &
+                                       ndf, alpha, beta, height, ipanel,      &
                                        basis(:,:,1,1), diff_basis(:,:,1,1),   &
                                        jac(:,:,1,1), dj(1,1) )
     jac_inv(:,:,1,1) =  pointwise_coordinate_jacobian_inverse(jac(:,:,1,1),   &

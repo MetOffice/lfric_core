@@ -7,13 +7,13 @@ module check_local_mesh_mod
 
   use constants_mod,             only: i_def, str_def, &
                                        str_max_filename
+  use config_mod,                only: config_type
   use local_mesh_collection_mod, only: local_mesh_collection
   use local_mesh_mod,            only: local_mesh_type
   use log_mod,                   only: log_event,         &
                                        log_scratch_space, &
                                        log_level_error
-  use namelist_collection_mod,   only: namelist_collection_type
-  use namelist_mod,              only: namelist_type
+
   use sci_query_mod,             only: is_lbc, check_lbc
 
   use base_mesh_config_mod, only: key_from_geometry,       &
@@ -31,20 +31,20 @@ contains
 
 !> @brief Basic validation that local meshes are suitable
 !!        for the specified configuration.
-!> @param[in]  configuration Configuration object.
-!> @param[in]  stencil_depth Stencil depth that local meshes
-!>                           need to support.
-!> @param[in]  mesh_names    Local meshes held in application
-!!                           local mesh collection object.
-subroutine check_local_mesh( configuration, &
-                             stencil_depth, &
+!> @param[in]  config         Configuration object.
+!> @param[in]  stencil_depths Stencil depths that each local mesh
+!>                            needs to support.
+!> @param[in]  mesh_names     Local meshes held in application
+!!                            local mesh collection object.
+subroutine check_local_mesh( config,         &
+                             stencil_depths, &
                              mesh_names )
 
   implicit none
 
-  type(namelist_collection_type), intent(in) :: configuration
-  integer(i_def),                 intent(in) :: stencil_depth
-  character(str_def),             intent(in) :: mesh_names(:)
+  type(config_type),  intent(in) :: config
+  integer(i_def),     intent(in) :: stencil_depths(:)
+  character(str_def), intent(in) :: mesh_names(:)
 
   integer(i_def) :: topology
   integer(i_def) :: geometry
@@ -52,18 +52,13 @@ subroutine check_local_mesh( configuration, &
   logical :: valid_geometry
   logical :: valid_topology
 
-  type(local_mesh_type), pointer :: local_mesh    => null()
-  type(namelist_type),   pointer :: base_mesh_nml => null()
-
   integer(i_def) :: i
   integer(i_def) :: max_stencil_depth
 
-  base_mesh_nml => configuration%get_namelist('base_mesh')
+  type(local_mesh_type), pointer :: local_mesh
 
-  call base_mesh_nml%get_value( 'geometry', geometry )
-  call base_mesh_nml%get_value( 'topology', topology )
-
-  base_mesh_nml => null()
+  geometry = config%base_mesh%geometry()
+  topology = config%base_mesh%topology()
 
   do i=1, size(mesh_names)
 
@@ -120,10 +115,10 @@ subroutine check_local_mesh( configuration, &
         !=====================================
         max_stencil_depth = local_mesh%get_max_stencil_depth()
 
-        if ( max_stencil_depth < stencil_depth ) then
+        if ( max_stencil_depth < stencil_depths(i) ) then
           write(log_scratch_space,'(2(A,I0),A)')                     &
               'Insufficient stencil depth, configuration requires ', &
-              stencil_depth, '. Mesh "'//trim(mesh_names(i))//       &
+              stencil_depths(i), '. Mesh "'//trim(mesh_names(i))//   &
               '" supports a maximum stencil depth of ',              &
               max_stencil_depth, '.'
           call log_event(log_scratch_space, log_level_error)
