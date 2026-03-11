@@ -42,14 +42,16 @@ program io_demo
   logical(l_def)              :: subroutine_timers
 
   call parse_command_line( filename )
-  call modeldb%config%initialise(program_name)
   call modeldb%values%initialise()
+  call modeldb%config%initialise(program_name)
 
   modeldb%mpi => global_mpi
 
   call init_comm(program_name, modeldb)
   call init_config(filename, io_demo_required_namelists, &
                    config=modeldb%config)
+
+  deallocate( filename )
 
   call init_logger( modeldb%mpi%get_comm(), program_name )
 
@@ -60,14 +62,11 @@ program io_demo
 
   subroutine_timers = modeldb%config%io%subroutine_timers()
   timer_output_path = modeldb%config%io%timer_output_path()
-  call init_timing( modeldb%mpi%get_comm(), subroutine_timers, &
-                    program_name, timer_output_path )
 
   call init_timing(modeldb%mpi%get_comm(), subroutine_timers, &
                    program_name, timer_output_path)
   call init_collections()
   call init_time(modeldb)
-  deallocate( filename )
 
   allocate(rng, source=random_number_generator_type(default_seed))
   call modeldb%values%add_key_value("rng", rng)
