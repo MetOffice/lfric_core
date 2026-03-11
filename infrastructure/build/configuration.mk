@@ -6,7 +6,6 @@
 #
 # Run this make file to generate configuration found in SOURCE_DIR
 # to WORKING_DIR. Uses PROJECT to know what to call master files.
-# Extracts rose-metadata from repos in EXTRACT_ROSE_META
 #
 
 export CONFIG_DIR=$(WORKING_DIR)/configuration
@@ -20,25 +19,19 @@ $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR
 	$(call MESSAGE,Generating namelist configuration file.)
 	$(Q)mkdir -p $(dir $@)
 
-ifdef EXTRA_ROSE_META
 ifdef APPS_ROOT_DIR
-	$(Q)for REPO in $(EXTRA_ROSE_META) ; do \
-		python $(APPS_ROOT_DIR)/build/extract/extract_science.py \
-			-r $$REPO \
-			-d $(APPS_ROOT_DIR)/dependencies.yaml \
-			-w $(WORKING_DIR) \
-		; done
-else
-	$(error Not expecting to extract external rose-meta when APPS_ROOT_DIR not defined)
-endif
-endif
-
-ifdef APPS_ROOT_DIR
+ifdef EXTRACT_ROSE_META
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
 	                -directory $(CONFIG_DIR)                 \
 	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
 	                -include_dirs $(CORE_ROOT_DIR)/rose-meta \
 					-include_dirs $(WORKING_DIR)/../rose-meta
+else
+	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
+	                -directory $(CONFIG_DIR)                 \
+	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
+	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
+endif
 else
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
 	                -directory $(CONFIG_DIR)        \
