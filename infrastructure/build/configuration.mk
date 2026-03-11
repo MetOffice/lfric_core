@@ -21,6 +21,7 @@ $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR
 
 ifdef APPS_ROOT_DIR
 ifdef EXTRACT_ROSE_META
+    $(call MESSAGE,Getting metadata from external)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
 	                -directory $(CONFIG_DIR)                 \
 	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
