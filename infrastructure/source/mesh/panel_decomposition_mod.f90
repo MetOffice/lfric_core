@@ -632,11 +632,13 @@ contains
     ! length of cells within the partition
     partition_y_pos = nint(real(lbc_length) / real(panel_ranks))
     
+    ! if the number of ranks does not divide exactly the length
+    ! of the lbc rim, assign the last rank a different size
+    ! to completely fill the lbc rim length
     if (panel_ranks*partition_y_pos /= lbc_length) then
-      write(log_scratch_space, "(a,i0,a,i0)") &
-        " Length of lbc rim:",  lbc_length, &
-        " not divisible by total ranks:", panel_ranks 
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      if (relative_rank == panel_ranks) then
+        partition_y_pos = lbc_length - (panel_ranks-1)*partition_y_pos
+      end if
     end if
  
     ! first cell position in the partition
