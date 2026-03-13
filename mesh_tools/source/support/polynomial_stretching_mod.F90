@@ -13,53 +13,103 @@ module polynomial_stretching_mod
 
   use constants_mod,         only: r_def, i_def, l_def
   use stretch_transform_config_mod, &
-                             only : cell_size_outer, &
-                                    cell_size_inner, &
-                                    n_cells_stretch, &
-                                    n_cells_outer,   &
+                             only : cell_size_outer,      &
+                                    cell_size_inner,      &
+                                    n_cells_stretch_nsew, &
+                                    n_cells_outer_nsew,   &
                                     poly_power
   implicit none
 
-  public :: polynomial_stretch, &
+  public :: calculate_offset, &
+            polynomial_stretch, &
             polynomial_parameters
 
 contains
 
+function associated_direction( boundary ) result(direction)
+
+  implicit none
+  
+  integer(i_def) :: boundary
+  integer(i_def) :: direction
+
+  if (boundary == 1 .or. boundary == 2) then
+    ! North-South
+    direction = 2
+  else
+    ! East-West
+    direction = 1
+ end if
+ 
+end function associated_direction
+
+!> @brief Calculate the offset to apply before the polynomial stretching
+!> @details If the number of cells in the outer/stretch region on one boundary
+!! e.g. the North, is not the same as the number of cells on the other boundary
+!! (the South) then calculate the offset so that the high resolution
+!! interior will be centred at (0,0).
+!> @param direction Direction (N-S) or (E-W)
+function calculate_offset( direction ) result(offset) 
+
+  integer(i_def) :: direction
+  real(r_def) :: dx, offset
+
+  dx = cell_size_inner(direction)
+  if ( direction == 2 ) then
+    ! North-South
+    offset = (n_cells_outer_nsew(1) + n_cells_stretch_nsew(1)) - &
+             (n_cells_outer_nsew(2) + n_cells_stretch_nsew(2))
+    offset = 0.5_r_def * dx * offset
+  else
+    ! East-West
+    offset = (n_cells_outer_nsew(3) + n_cells_stretch_nsew(3)) - &
+             (n_cells_outer_nsew(4) + n_cells_stretch_nsew(4))
+    offset = 0.5_r_def * dx * offset
+ end if
+  print*, 'offset', offset
+ 
+end function calculate_offset
+  
 !> @brief Calculate the polynomial stretching parameters
 !> @details In inner y = b x, in stretch y = a (x - xi) ^n + b x
 !!          and in outer y = yo + c (x - xo).
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
-!> @param x_inner   Unit mesh coordinate betwen inner and stretch
-!> @param x_outer   Unit mesh coordinate between stretch and outer
-!> @param dx        Unit mesh cell size
-!> @param direction North-south or East-west
+!> @param x_domain  Uniform mesh coordinate at the end of the mesh
+!> @param x_inner   Uniform mesh coordinate betwen inner and stretch
+!> @param x_outer   Uniform mesh coordinate between stretch and outer
+!> @param dx        Uniform mesh cell size
+!> @param boundary  1 North, 2 South, 3 East or 4 West
 subroutine polynomial_parameters( param_a, param_b, param_c, &
-                                  x_inner, x_outer, dx, direction )
+                                  x_domain, x_inner, x_outer, dx, boundary )
 
   implicit none
 
   real(r_def), intent(inout) :: param_a, param_b, param_c, x_inner, x_outer
-  real(r_def),    intent(in) :: dx
-  integer(i_def), intent(in) :: direction
+  real(r_def),    intent(in) :: x_domain, dx
+  integer(i_def), intent(in) :: boundary
 
   real(r_def) :: l_stretch
+  integer(i_def) :: direction
 
-  ! Given the coordinates x defined on [-1,1] with mesh size dx,
+  ! Given the coordinates x with mesh size dx,
   ! define new coordinates y such that in the outer and inner regions,
   ! the spacing is cell_size_outer and cell_size_inner and in the
   ! stretch region (in between the inner and outer) the coordinates
   ! satisfy y = a ( x - xi) ^n + b x where xi is the boundary between the
   ! inner and stretch region.
 
-  ! We assume that the mesh is symmetrical and centred on (0,0)
-  ! | OUTER | STRETCH | INNER | STRETCH | OUTER |
+  direction = associated_direction(boundary)
+  
+  ! We only consider the region [0,x_domain]
+  ! | INNER    | STRETCH   |    OUTER   |
+  !         x_inner     x_outer      x_domain
 
-  ! Considering the region [0,1], define the edges of the stretch region
-  x_outer = 1.0_r_def - ( n_cells_outer(direction) * dx )
-  x_inner = 1.0_r_def - ( ( n_cells_outer(direction) + &
-                            n_cells_stretch(direction) ) * dx )
+  ! Define the edges of the stretch region
+  x_outer = x_domain - ( n_cells_outer_nsew(boundary) * dx )
+  x_inner = x_domain - ( ( n_cells_outer_nsew(boundary) + &
+                           n_cells_stretch_nsew(boundary) ) * dx )
 
   ! Define the total size or length of the stretch region
   l_stretch = ( x_outer - x_inner )

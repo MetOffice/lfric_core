@@ -43,7 +43,9 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
-  use polynomial_stretching_mod,      only: polynomial_stretch, &
+  use polynomial_stretching_mod,      only: associated_direction, &
+                                            calculate_offset,     &
+                                            polynomial_stretch,   &
                                             polynomial_parameters
 
   implicit none
@@ -1704,10 +1706,13 @@ subroutine stretch_coords(self)
 
   select case (self%stretch_function)
     case (stretch_function_uniform)
-      call apply_uniform_resolution(self)
+       call apply_uniform_resolution(self)
+       call apply_domain_centre(self)
 
-    case (stretch_function_polynomial)
+    case (stretch_function_polynomial)  
       call apply_polynomial_stretch(self)
+      call apply_shift(self)
+      call apply_domain_centre(self)
 
     case (stretch_function_inflation)
        call log_event( "stretch_function inflation is not a transformation", &
@@ -2513,13 +2518,65 @@ subroutine apply_uniform_resolution(self)
     end if
 
     ! Apply the scaling transformation to each coordinate and add on the domain centre
-    self%domain_extents(direction,:) = param_a * self%domain_extents(direction,:) + self%domain_centre(direction)
-    self%vert_coords(direction,:) = param_a * self%vert_coords(direction,:) + self%domain_centre(direction)
+    self%domain_extents(direction,:) = param_a * self%domain_extents(direction,:)
+    self%vert_coords(direction,:) = param_a * self%vert_coords(direction,:)
   end do
 
   return
 
 end subroutine apply_uniform_resolution
+
+!-------------------------------------------------------------------------------
+!> @brief Recentre the mesh from (0,0) to the domain_centre.
+!> @details For variable resolution meshes this centres the centre of the
+!!        high resolution region at the domain_centre.
+!-------------------------------------------------------------------------------
+subroutine apply_domain_centre(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+  integer(i_def) :: direction
+
+  do direction = 1, 2
+    self%domain_extents(direction,:) = self%domain_extents(direction,:) &
+                                     + self%domain_centre(direction)
+    self%vert_coords(direction,:) = self%vert_coords(direction,:) &
+                                  + self%domain_centre(direction)
+  end do  
+
+  return
+
+end subroutine apply_domain_centre
+
+!-------------------------------------------------------------------------------
+!> @brief Apply a shift to the mesh coordinates
+!> @details This is applied after the polynomial stretching so that the high
+!!        resolution region is centred on (0,0). This allows for a
+!!        non-symmetric variable resolution mesh e.g. with a larger outer
+!!        region in the North than the South.
+!-------------------------------------------------------------------------------
+subroutine apply_shift(self)
+     
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+  
+  integer(i_def) :: direction
+  real(r_def) :: offset
+
+  do direction = 1, 2
+
+    offset = calculate_offset( direction )
+    
+    self%vert_coords(direction, :) = self%vert_coords(direction, :) &
+                                   + offset
+    self%domain_extents(direction, :) = self%domain_extents(direction, :) &
+                                      + offset
+
+  enddo
+ 
+end subroutine apply_shift
 
 !-------------------------------------------------------------------------------
 !> @brief Apply the polynomial stretching to the unit mesh coordinates
@@ -2530,11 +2587,29 @@ subroutine apply_polynomial_stretch(self)
 
   class(gen_planar_type), intent(inout)  :: self
 
-  real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer
-  integer(i_def) :: nverts, vert, direction
+  real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer, x_domain(4)
+  integer(i_def) :: nverts, vert, boundary, direction
 
-  do direction = 1, 2
+  ! Save the domain extents for each boundary. As we only consider the positive
+  ! direction for each boundary, this should be 1 for a unit mesh for all
+  ! boundaries.
+  do boundary = 1, 4 !(N, S, E, W)
 
+    direction = associated_direction(boundary)
+
+    if (boundary == 2 .or. boundary == 3) then
+      ! S or E
+      x_domain(boundary) = self%domain_extents(direction,3)
+    else
+      ! N or W
+      x_domain(boundary) = -1.0_r_def * self%domain_extents(direction,1)
+   end if
+  end do
+  
+  do boundary = 1, 4 !(N, S, E, W)
+
+    direction = associated_direction(boundary)
+     
     ! Calculate the cell spacing and number of points of unit mesh
     ! of the fine mesh (fine mesh needed in case this is stretching
     ! a multigrid mesh),
@@ -2545,18 +2620,25 @@ subroutine apply_polynomial_stretch(self)
     end if
 
     nverts = size(self%vert_coords(direction, :))
-
+    
     ! Calculate the parameters required for the stretching transform
     call polynomial_parameters( param_a, param_b, param_c, &
-         x_inner, x_outer, dx, direction )
+         x_domain(boundary), x_inner, x_outer, dx, boundary )
 
     ! Apply the stretching transformation to each coordinate
     do vert = 1, nverts
 
-      self%vert_coords(direction, vert) = &
-            polynomial_stretch(self%vert_coords(direction, vert), &
-            param_a, param_b, param_c, x_inner, x_outer ) &
-            + self%domain_centre(direction)
+      ! Apply to positive coordinates for N or E
+      ! Apply to negative coordinates for S or W
+      if ( ( ( boundary == 1 .or. boundary == 3)  .and. &
+               self%vert_coords(direction, vert) > 0.0_r_def ) .or. &
+           ( ( boundary == 2 .or. boundary == 4 ) .and. &
+             self%vert_coords(direction, vert) < 0.0_r_def ) ) then
+
+        self%vert_coords(direction, vert) = &
+             polynomial_stretch(self%vert_coords(direction, vert), &
+             param_a, param_b, param_c, x_inner, x_outer )
+      end if
 
     end do
 
@@ -2564,9 +2646,8 @@ subroutine apply_polynomial_stretch(self)
     do vert = 1,4
       self%domain_extents(direction, vert) = &
             polynomial_stretch(self%domain_extents(direction, vert), &
-            param_a, param_b, param_c, x_inner, x_outer ) &
-            + self%domain_centre(direction)
-   end do
+            param_a, param_b, param_c, x_inner, x_outer )
+    end do
 
   end do
 

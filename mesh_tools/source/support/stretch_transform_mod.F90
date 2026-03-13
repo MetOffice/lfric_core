@@ -443,6 +443,10 @@ subroutine stretch_transform( cell, node_coord,           &
                                                   ' cell-node-coord = ', node_coord
   call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
 
+  print*, 'cell = ', cell, &
+            ' stretch-coord = ', stretching_coord, &
+           ' cell-node-coord = ', node_coord
+  
 end subroutine stretch_transform
 
 end module stretch_transform_mod

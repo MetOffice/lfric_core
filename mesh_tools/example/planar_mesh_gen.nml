@@ -50,13 +50,13 @@
 !       be a factor of the other.
 
 &planar_mesh
-  edge_cells_x    = 48,24
-  edge_cells_y    = 24,12
-  domain_size     = 48.0, 24.0
-  domain_centre   = 5.0, 10.0
+  edge_cells_x    = 24
+  edge_cells_y    = 24
+  domain_size     = 48.0, 48.0
+  domain_centre   = 30.0, 10.0
   periodic_x      = .false.
   periodic_y      = .false.
-  create_lbc_mesh = .true.
+  create_lbc_mesh = .false.
   lbc_rim_depth   = 1
   lbc_parent_mesh = 'mesh_A'
   stretch_function = 'polynomial'
@@ -80,8 +80,9 @@
 &stretch_transform
   cell_size_inner = 0.0135,0.0135
   cell_size_outer = 0.036,0.036
-  n_cells_outer   = 5, 5
-  n_cells_stretch = 5, 5
+  n_cells_outer_nsew   = 1, 8, 5, 1
+  n_cells_stretch_nsew = 1, 1, 1, 1
   poly_power      = 3
   transform_mesh  = 'mesh_A'
+  stretching_on   = 'cell_nodes'
 /
