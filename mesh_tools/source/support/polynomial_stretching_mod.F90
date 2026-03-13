@@ -29,7 +29,7 @@ contains
 function associated_direction( boundary ) result(direction)
 
   implicit none
-  
+
   integer(i_def) :: boundary
   integer(i_def) :: direction
 
@@ -40,7 +40,7 @@ function associated_direction( boundary ) result(direction)
     ! East-West
     direction = 1
  end if
- 
+
 end function associated_direction
 
 !> @brief Calculate the offset to apply before the polynomial stretching
@@ -49,7 +49,7 @@ end function associated_direction
 !! (the South) then calculate the offset so that the high resolution
 !! interior will be centred at (0,0).
 !> @param direction Direction (N-S) or (E-W)
-function calculate_offset( direction ) result(offset) 
+function calculate_offset( direction ) result(offset)
 
   integer(i_def) :: direction
   real(r_def) :: dx, offset
@@ -67,9 +67,9 @@ function calculate_offset( direction ) result(offset)
     offset = 0.5_r_def * dx * offset
  end if
   print*, 'offset', offset
- 
+
 end function calculate_offset
-  
+
 !> @brief Calculate the polynomial stretching parameters
 !> @details In inner y = b x, in stretch y = a (x - xi) ^n + b x
 !!          and in outer y = yo + c (x - xo).
@@ -101,7 +101,7 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
   ! inner and stretch region.
 
   direction = associated_direction(boundary)
-  
+
   ! We only consider the region [0,x_domain]
   ! | INNER    | STRETCH   |    OUTER   |
   !         x_inner     x_outer      x_domain

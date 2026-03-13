@@ -1709,7 +1709,7 @@ subroutine stretch_coords(self)
        call apply_uniform_resolution(self)
        call apply_domain_centre(self)
 
-    case (stretch_function_polynomial)  
+    case (stretch_function_polynomial)
       call apply_polynomial_stretch(self)
       call apply_shift(self)
       call apply_domain_centre(self)
@@ -2543,7 +2543,7 @@ subroutine apply_domain_centre(self)
                                      + self%domain_centre(direction)
     self%vert_coords(direction,:) = self%vert_coords(direction,:) &
                                   + self%domain_centre(direction)
-  end do  
+  end do
 
   return
 
@@ -2557,25 +2557,25 @@ end subroutine apply_domain_centre
 !!        region in the North than the South.
 !-------------------------------------------------------------------------------
 subroutine apply_shift(self)
-     
+
   implicit none
 
   class(gen_planar_type), intent(inout)  :: self
-  
+
   integer(i_def) :: direction
   real(r_def) :: offset
 
   do direction = 1, 2
 
     offset = calculate_offset( direction )
-    
+
     self%vert_coords(direction, :) = self%vert_coords(direction, :) &
                                    + offset
     self%domain_extents(direction, :) = self%domain_extents(direction, :) &
                                       + offset
 
   enddo
- 
+
 end subroutine apply_shift
 
 !-------------------------------------------------------------------------------
@@ -2605,11 +2605,11 @@ subroutine apply_polynomial_stretch(self)
       x_domain(boundary) = -1.0_r_def * self%domain_extents(direction,1)
    end if
   end do
-  
+
   do boundary = 1, 4 !(N, S, E, W)
 
     direction = associated_direction(boundary)
-     
+
     ! Calculate the cell spacing and number of points of unit mesh
     ! of the fine mesh (fine mesh needed in case this is stretching
     ! a multigrid mesh),
@@ -2620,7 +2620,7 @@ subroutine apply_polynomial_stretch(self)
     end if
 
     nverts = size(self%vert_coords(direction, :))
-    
+
     ! Calculate the parameters required for the stretching transform
     call polynomial_parameters( param_a, param_b, param_c, &
          x_domain(boundary), x_inner, x_outer, dx, boundary )

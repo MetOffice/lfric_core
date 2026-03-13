@@ -446,7 +446,7 @@ subroutine stretch_transform( cell, node_coord,           &
   print*, 'cell = ', cell, &
             ' stretch-coord = ', stretching_coord, &
            ' cell-node-coord = ', node_coord
-  
+
 end subroutine stretch_transform
 
 end module stretch_transform_mod
