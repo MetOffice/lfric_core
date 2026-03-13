@@ -13,6 +13,7 @@ from typing import List, Optional
 
 from testframework import MpiTest
 import xarray as xr
+import matplotlib.pyplot as plt
 
 
 ##############################################################################
@@ -75,9 +76,9 @@ class LFRicXiosTest(MpiTest):
             for i in range(len(config)):
                 if key in config[i]:
                     if type(new_config[key]) == str:
-                        config[i] = f"  {key}='{new_config[key]}'\n"
+                        config[i] = f"  {key}='{new_config[key]}'"
                     else:
-                        config[i] = f"  {key}={new_config[key]}\n"
+                        config[i] = f"  {key}={new_config[key]}"
 
         Path(self.test_working_dir, config_out).write_text('\n'.join(config) + '\n')
 
@@ -119,10 +120,41 @@ class LFRicXiosTest(MpiTest):
         ds_in_comp = ds_in.sel(time=slice(comparison_window[0], comparison_window[1]))
         ds_out_comp = ds_out.sel(time=slice(comparison_window[0], comparison_window[1]))
 
-        result = [(ds_in_comp['time'] == ds_out_comp['time']).values.all(),
-                (ds_in_comp[varname] == ds_out_comp[varname]).values.all()]
+        if ds_in_comp['time'].size == 0:
+            return False
+        else:
+            result = [(ds_in_comp['time'] == ds_out_comp['time']).values.all(),
+                    (ds_in_comp[varname] == ds_out_comp[varname]).values.all()]
+            return all(result)
 
-        return all(result)
+    def plot_output(self, in_file: Path, out_file: Path, varname: str):
+        """
+        Visually compare input and output data.
+        """
+
+        def get_ts_data(file_path, field_id):
+
+            ds = xr.open_dataset(file_path, engine='netcdf4', decode_timedelta=False)
+            ts = ds[field_id].mean(ds[field_id].dims[1::])
+            time = ds[field_id].coords['time']
+
+            return ts, time
+
+        input_ts, input_time = get_ts_data(in_file, varname)
+        output_ts, output_time = get_ts_data(out_file, varname)
+
+        plt.rcParams["font.family"] = "serif"
+        _, ax = plt.subplots(figsize=([10.8, 4.8]))
+        ax.scatter(output_time, output_ts, c='C0', s=50)
+        ax.plot(output_time, output_ts, linestyle='--', lw=2, label="Model output data")
+        ax.scatter(input_time, input_ts, c='C3', marker='s', s=100, label="Input data")
+
+        ax.set_xlabel("Date/Time")
+        ax.set_ylabel("Mean model data")
+
+        plt.legend(frameon=False)
+        plt.savefig(f"{self.test_working_dir}/{type(self).__name__}.png", bbox_inches="tight")
+        plt.close()
 
     def post_execution(self, return_code):
         """
