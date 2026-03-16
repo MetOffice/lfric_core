@@ -12,14 +12,12 @@ module runtime_partition_lfric_mod
   use namelist_collection_mod, only: namelist_collection_type
   use namelist_mod,            only: namelist_type
   use partition_mod,           only: partitioner_interface
-  use runtime_partition_mod,   only: get_partition_strategy, &
-                                     mesh_lfric2lfric_lbc
+  use runtime_partition_mod,   only: get_partition_strategy
   use panel_decomposition_mod, only: panel_decomposition_type,           &
                                      auto_decomposition_type,            &
                                      row_decomposition_type,             &
                                      column_decomposition_type,          &
                                      custom_decomposition_type,          &
-                                     lfric2lfric_lbc_decomposition_type, &
                                      auto_nonuniform_decomposition_type, &
                                      guided_nonuniform_decomposition_type
   use partitioning_config_mod, only: panel_decomposition_auto,            &
@@ -95,41 +93,37 @@ subroutine get_partition_parameters_nml( partitioning,   &
 
   integer :: panel_decomposition
 
-  if (mesh_selection == mesh_lfric2lfric_lbc) then
-    decomposition = lfric2lfric_lbc_decomposition_type()
-  else
-    call partitioning%get_value( 'panel_decomposition', panel_decomposition )
+  call partitioning%get_value( 'panel_decomposition', panel_decomposition )
 
-    select case (panel_decomposition)
+  select case (panel_decomposition)
 
-    case ( panel_decomposition_auto )
-      decomposition = auto_decomposition_type()
+  case ( panel_decomposition_auto )
+    decomposition = auto_decomposition_type()
 
-    case ( panel_decomposition_row )
-      decomposition = row_decomposition_type()
+  case ( panel_decomposition_row )
+    decomposition = row_decomposition_type()
 
-    case ( panel_decomposition_column )
-      decomposition = column_decomposition_type()
+  case ( panel_decomposition_column )
+    decomposition = column_decomposition_type()
 
-    case ( panel_decomposition_custom )
-      call partitioning%get_value( 'panel_xproc', panel_xproc )
-      call partitioning%get_value( 'panel_yproc', panel_yproc )
-      decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
+  case ( panel_decomposition_custom )
+    call partitioning%get_value( 'panel_xproc', panel_xproc )
+    call partitioning%get_value( 'panel_yproc', panel_yproc )
+    decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
 
-    case ( panel_decomposition_auto_nonuniform )
-      decomposition = auto_nonuniform_decomposition_type()
+  case ( panel_decomposition_auto_nonuniform )
+    decomposition = auto_nonuniform_decomposition_type()
 
-    case ( panel_decomposition_guided_nonuniform )
-      call partitioning%get_value( 'panel_xproc', panel_xproc )
-      decomposition = guided_nonuniform_decomposition_type( panel_xproc )
+  case ( panel_decomposition_guided_nonuniform )
+    call partitioning%get_value( 'panel_xproc', panel_xproc )
+    decomposition = guided_nonuniform_decomposition_type( panel_xproc )
 
-    case default
-      ! Not clear it's possible to still error at this point but no harm in checking
-      call log_event( "Missing entry for panel decomposition, "// &
+  case default
+    ! Not clear it's possible to still error at this point but no harm in checking
+    call log_event( "Missing entry for panel decomposition, "// &
                     "specify 'auto' if unsure.", LOG_LEVEL_ERROR )
 
-    end select
-  end if
+  end select
 
   call get_partition_strategy(mesh_selection, total_ranks, partitioner_ptr)
 
