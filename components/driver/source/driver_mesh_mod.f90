@@ -127,6 +127,14 @@ subroutine init_mesh( config,                  &
   integer :: topology
   integer :: mesh_selection
 
+  ! Multigrid related
+  character(str_def), allocatable :: chain_mesh_tags(:)
+  logical(l_def) :: inner_halo_tiles
+  logical(l_def) :: coarsen_multigrid_tiles
+  integer(i_def) :: tile_size_x
+  integer(i_def) :: tile_size_y
+  integer(i_def) :: max_tiled_multigrid_level
+
   ! Local variables
   character(str_def), allocatable :: names(:)
   character(str_def), allocatable :: tmp_mesh_names(:)
@@ -146,6 +154,15 @@ subroutine init_mesh( config,                  &
   prepartitioned = config%base_mesh%prepartitioned()
   file_prefix    = config%base_mesh%file_prefix()
   cellshape      = config%finite_element%cellshape()
+
+  ! Temporary extraction, These configuration varaibles need
+  ! to be refactored out.
+  chain_mesh_tags  = config%multigrid% chain_mesh_tags()
+  inner_halo_tiles = config%partitioning%inner_halo_tiles()
+  tile_size_x      = config%partitioning%tile_size_x()
+  tile_size_y      = config%partitioning%tile_size_y()
+  max_tiled_multigrid_level = config%partitioning%max_tiled_multigrid_level()
+  coarsen_multigrid_tiles   = config%partitioning%coarsen_multigrid_tiles()
 
   if ( .not. prepartitioned ) then
     generate_inner_halos = config%partitioning%generate_inner_halos()
@@ -327,12 +344,17 @@ subroutine init_mesh( config,                  &
 
   end if  ! prepartitioned
 
-
   !============================================================================
   ! 3.0 Extrude the specified meshes from local mesh objects into
   !     mesh objects on the given extrusion.
   !============================================================================
-  call create_mesh( mesh_names, extrusion, alt_name=names )
+  call create_mesh( mesh_names, extrusion, alt_name=names, &
+                    chain_mesh_tags  = chain_mesh_tags, &
+                    inner_halo_tiles = inner_halo_tiles, &
+                    tile_size_x      = tile_size_x, &
+                    tile_size_y      = tile_size_y, &
+                    max_tiled_multigrid_level = max_tiled_multigrid_level, &
+                    coarsen_multigrid_tiles = coarsen_multigrid_tiles )
 
 
   !============================================================================

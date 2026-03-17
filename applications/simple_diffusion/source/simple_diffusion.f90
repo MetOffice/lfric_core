@@ -45,7 +45,7 @@ program simple_diffusion
                     simple_diffusion_required_namelists, &
                     config=modeldb%config )
 
-  call init_logger( modeldb%mpi%get_comm(), program_name )
+  call init_logger( modeldb, program_name )
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &

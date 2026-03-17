@@ -7,24 +7,23 @@
 !> @brief  Module to assign the values of the coordinates of the mesh to a field.
 module driver_coordinates_mod
 
-  use base_mesh_config_mod,      only: geometry,                &
-                                       geometry_planar,         &
-                                       geometry_spherical,      &
-                                       topology,                &
-                                       topology_fully_periodic, &
-                                       topology_non_periodic
-  use constants_mod,             only: r_def, i_def, l_def, &
-                                       radians_to_degrees,  &
-                                       i_halo_index, eps, pi
-  use log_mod,                   only: log_event, log_scratch_space, &
-                                       log_level_error
-  use planet_config_mod,         only: scaled_radius
-  use coord_transform_mod,       only: xyz2llr, llr2xyz, identify_panel, &
-                                       xyz2alphabetar, alphabetar2xyz,   &
-                                       schmidt_transform_xyz,            &
-                                       inverse_schmidt_transform_xyz
-  use finite_element_config_mod, only: coord_system,            &
-                                       coord_system_xyz
+  use constants_mod,       only: r_def, i_def, l_def, &
+                                 radians_to_degrees,  &
+                                 i_halo_index, eps, pi
+  use driver_modeldb_mod,  only: modeldb_type
+  use log_mod,             only: log_event, log_scratch_space, &
+                                 log_level_error
+  use coord_transform_mod, only: xyz2llr, llr2xyz, identify_panel, &
+                                 xyz2alphabetar, alphabetar2xyz,   &
+                                 schmidt_transform_xyz,            &
+                                 inverse_schmidt_transform_xyz
+
+  ! Configuration modules
+  use base_mesh_config_mod, only: geometry_planar,         &
+                                  geometry_spherical,      &
+                                  topology_fully_periodic, &
+                                  topology_non_periodic
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -53,10 +52,11 @@ contains
   !!           from the mesh generator and then 'assign_coordinate' on a column by
   !!           column basis.
   !>
+  !> @param[in]     modeldb  Model state object
   !> @param[in,out] chi      Model coordinate array of size 3 of fields
   !> @param[in]     panel_id Field giving the ID of mesh panels
   !> @param[in]     mesh     Mesh on which this field is attached
-  subroutine assign_coordinate_field(chi, panel_id, mesh)
+  subroutine assign_coordinate_field(modeldb, chi, panel_id, mesh)
 
     use domain_mod,            only: domain_type
     use field_mod,             only: field_type, field_proxy_type
@@ -69,14 +69,16 @@ contains
 
     implicit none
 
+    type(modeldb_type), intent(in) :: modeldb
+
     type( field_type ),  intent( inout )        :: chi(3)
     type( field_type ),  intent( inout )        :: panel_id
     type( mesh_type  ),  intent( in ),  pointer :: mesh
 
-    integer(i_def),                     pointer :: map(:,:)          => null()
-    integer(i_def),                     pointer :: map_pid(:,:)      => null()
-    real(kind=r_def),                   pointer :: dof_coords(:,:)   => null()
-    class(reference_element_type),      pointer :: reference_element => null()
+    integer(i_def),                pointer :: map(:,:)
+    integer(i_def),                pointer :: map_pid(:,:)
+    real(kind=r_def),              pointer :: dof_coords(:,:)
+    class(reference_element_type), pointer :: reference_element
 
     type(field_proxy_type) :: chi_proxy(3)
     type(field_proxy_type) :: panel_id_proxy
@@ -105,6 +107,18 @@ contains
     logical(l_def)   :: to_rotate
     real(kind=r_def) :: inverse_rot_matrix(3,3)
     real(kind=r_def) :: stretch_factor
+
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = modeldb%config%base_mesh%geometry()
+    topology      = modeldb%config%base_mesh%topology()
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
+
+    nullify( map, map_pid, dof_coords, reference_element )
 
     ! Break encapsulation and get the proxy.
     chi_proxy(1) = chi(1)%get_proxy()
@@ -176,12 +190,14 @@ contains
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
-        call calc_panel_id( nlayers_pid,           &
-                            ndf_pid, undf_pid,     &
-                            map_pid(:,cell),       &
-                            panel_id_proxy%data,   &
-                            global_dof_id,         &
-                            panel_ncells    )
+        call calc_panel_id( nlayers_pid,         &
+                            ndf_pid, undf_pid,   &
+                            map_pid(:,cell),     &
+                            panel_id_proxy%data, &
+                            geometry,            &
+                            topology,            &
+                            global_dof_id,       &
+                            panel_ncells )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -200,6 +216,9 @@ contains
                                     domain_max_x,        &
                                     domain_min_y,        &
                                     panel_id_proxy%data, &
+                                    geometry,            &
+                                    topology,            &
+                                    scaled_radius,       &
                                     ndf_pid,             &
                                     undf_pid,            &
                                     map_pid(:,cell)      )
@@ -210,32 +229,34 @@ contains
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
-        call calc_panel_id( nlayers_pid,           &
-                            ndf_pid, undf_pid,     &
-                            map_pid(:,cell),       &
-                            panel_id_proxy%data,   &
-                            global_dof_id,         &
-                            panel_ncells   )
+        call calc_panel_id( nlayers_pid,         &
+                            ndf_pid, undf_pid,   &
+                            map_pid(:,cell),     &
+                            panel_id_proxy%data, &
+                            geometry, topology,  &
+                            global_dof_id,       &
+                            panel_ncells )
 
         call mesh%get_column_coords(cell,column_coords)
 
-        call assign_coordinate_lonlatz( nlayers,                 &
-                                        ndf,                     &
-                                        nverts,                  &
-                                        undf,                    &
-                                        map(:,cell),             &
-                                        chi_proxy(1)%data,       &
-                                        chi_proxy(2)%data,       &
-                                        chi_proxy(3)%data,       &
-                                        column_coords,           &
-                                        dof_coords,              &
-                                        vertex_coords,           &
-                                        to_rotate,               &
-                                        inverse_rot_matrix,      &
-                                        panel_id_proxy%data,     &
-                                        ndf_pid,                 &
-                                        undf_pid,                &
-                                        map_pid(:,cell)          )
+        call assign_coordinate_lonlatz( nlayers,             &
+                                        ndf,                 &
+                                        nverts,              &
+                                        undf,                &
+                                        map(:,cell),         &
+                                        chi_proxy(1)%data,   &
+                                        chi_proxy(2)%data,   &
+                                        chi_proxy(3)%data,   &
+                                        column_coords,       &
+                                        dof_coords,          &
+                                        vertex_coords,       &
+                                        to_rotate,           &
+                                        inverse_rot_matrix,  &
+                                        panel_id_proxy%data, &
+                                        scaled_radius,       &
+                                        ndf_pid,             &
+                                        undf_pid,            &
+                                        map_pid(:,cell) )
       end do
 
     else if ( geometry == geometry_spherical .and. &
@@ -243,33 +264,35 @@ contains
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
-        call calc_panel_id( nlayers_pid,           &
-                            ndf_pid, undf_pid,     &
-                            map_pid(:,cell),       &
-                            panel_id_proxy%data,   &
-                            global_dof_id,         &
-                            panel_ncells    )
+        call calc_panel_id( nlayers_pid,         &
+                            ndf_pid, undf_pid,   &
+                            map_pid(:,cell),     &
+                            panel_id_proxy%data, &
+                            geometry, topology,  &
+                            global_dof_id,       &
+                            panel_ncells )
 
         call mesh%get_column_coords(cell,column_coords)
 
-        call assign_coordinate_alphabetaz( nlayers,                 &
-                                           ndf,                     &
-                                           nverts,                  &
-                                           undf,                    &
-                                           map(:,cell),             &
-                                           chi_proxy(1)%data,       &
-                                           chi_proxy(2)%data,       &
-                                           chi_proxy(3)%data,       &
-                                           column_coords,           &
-                                           dof_coords,              &
-                                           vertex_coords,           &
-                                           to_rotate,               &
-                                           inverse_rot_matrix,      &
-                                           stretch_factor,          &
-                                           panel_id_proxy%data,     &
-                                           ndf_pid,                 &
-                                           undf_pid,                &
-                                           map_pid(:,cell)          )
+        call assign_coordinate_alphabetaz( nlayers,             &
+                                           ndf,                 &
+                                           nverts,              &
+                                           undf,                &
+                                           map(:,cell),         &
+                                           chi_proxy(1)%data,   &
+                                           chi_proxy(2)%data,   &
+                                           chi_proxy(3)%data,   &
+                                           column_coords,       &
+                                           dof_coords,          &
+                                           vertex_coords,       &
+                                           to_rotate,           &
+                                           inverse_rot_matrix,  &
+                                           stretch_factor,      &
+                                           panel_id_proxy%data, &
+                                           scaled_radius,       &
+                                           ndf_pid,             &
+                                           undf_pid,            &
+                                           map_pid(:,cell) )
       end do
 
     else
@@ -299,6 +322,8 @@ contains
   !> @param[in]   undf_pid            Universal number of DoFs for the panel_id field
   !> @param[in]   map_pid             DoF map for the panel_id field
   !> @param[out]  panel_id            Field (to be calculated) with the ID of cubed sphere panels
+  !> @param[in]   geometry
+  !> @param[in]   topology
   !> @param[in]   global_dof_id       Array of global id's
   !> @param[in]   panel_ncells        Number of cells per cubed sphere panel
   subroutine calc_panel_id( nlayers,            &
@@ -306,6 +331,7 @@ contains
                             undf_pid,           &
                             map_pid,            &
                             panel_id,           &
+                            geometry, topology, &
                             global_dof_id,      &
                             panel_ncells )
 
@@ -319,6 +345,10 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: vert, k
+
+    integer(i_def), intent(in) :: geometry
+    integer(i_def), intent(in) :: topology
+
 
     if ( geometry == geometry_spherical .and. &
          topology == topology_fully_periodic ) then
@@ -351,6 +381,9 @@ contains
   !> @param[in]   domain_x       Domain extent in x direction for planar mesh
   !> @param[in]   domain_y       Domain extent in y direction for planar mesh
   !> @param[in]   panel_id       Field giving IDs of mesh panels
+  !> @param[in]   geometry
+  !> @param[in]   topology
+  !> @param[in]   scaled_radius
   !> @param[in]   ndf_pid        Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid       Number of universal DoFs for panel_id space
   !> @param[in]   map_pid        DoF map for panel_id space
@@ -369,6 +402,9 @@ contains
                                     domain_x,      &
                                     domain_y,      &
                                     panel_id,      &
+                                    geometry,      &
+                                    topology,      &
+                                    scaled_radius, &
                                     ndf_pid,       &
                                     undf_pid,      &
                                     map_pid        )
@@ -387,6 +423,8 @@ contains
     real(kind=r_def),    intent(in)  :: chi_hat_node(3,ndf), chi_hat_vert(nverts,3)
     real(kind=r_def),    intent(in)  :: domain_x, domain_y
     real(kind=r_def),    intent(in)  :: panel_id(undf_pid)
+    integer(i_def),      intent(in)  :: geometry, topology
+    real(r_def),         intent(in)  :: scaled_radius
 
     ! Internal variables
     integer(kind=i_def) :: k, df, dfk, vert
@@ -471,6 +509,7 @@ contains
   !!                                 Cartesian coordinates from physical ones
   !> @param[in]   stretch_factor     Stretch factor for Schmidt transform
   !> @param[in]   panel_id           Field giving IDs of mesh panels
+  !> @param[in]   scaled_radius
   !> @param[in]   ndf_pid            Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid           Number of universal DoFs for panel_id space
   !> @param[in]   map_pid            DoF map for panel_id space
@@ -489,6 +528,7 @@ contains
                                            inverse_rot_matrix, &
                                            stretch_factor,     &
                                            panel_id,           &
+                                           scaled_radius,      &
                                            ndf_pid,            &
                                            undf_pid,           &
                                            map_pid             )
@@ -507,6 +547,7 @@ contains
     integer(kind=i_def), intent(in)  :: ndf_pid, undf_pid
     integer(kind=i_def), intent(in)  :: map_pid(ndf_pid)
     real(kind=r_def),    intent(in)  :: panel_id(undf_pid)
+    real(kind=r_def),    intent(in)  :: scaled_radius
 
     ! Internal variables
     integer(kind=i_def) :: k, df, dfk, vert
@@ -587,6 +628,7 @@ contains
   !> @param[in]   inverse_rot_matrix Rotation matrix to apply to obtain native
   !!                                 Cartesian coordinates from physical ones
   !> @param[in]   panel_id           Field giving IDs of mesh panels
+  !> @param[in]   scaled_radius
   !> @param[in]   ndf_pid            Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid           Number of universal DoFs for panel_id space
   !> @param[in]   map_pid            DoF map for panel_id space
@@ -604,6 +646,7 @@ contains
                                         to_rotate,          &
                                         inverse_rot_matrix, &
                                         panel_id,           &
+                                        scaled_radius,      &
                                         ndf_pid,            &
                                         undf_pid,           &
                                         map_pid             )
@@ -621,6 +664,7 @@ contains
     integer(kind=i_def), intent(in)  :: ndf_pid, undf_pid
     integer(kind=i_def), intent(in)  :: map_pid(ndf_pid)
     real(kind=r_def),    intent(in)  :: panel_id(undf_pid)
+    real(kind=r_def),    intent(in)  :: scaled_radius
 
     ! Internal variables
     integer(kind=i_def) :: k, df, dfk, vert

@@ -15,8 +15,8 @@ module driver_fem_mod
   use sci_chi_transform_mod,          only: init_chi_transforms, &
                                             final_chi_transforms
   use constants_mod,                  only: i_def, l_def, str_def
+  use driver_modeldb_mod,             only: modeldb_type
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
-  use finite_element_config_mod,      only: coord_order
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
   use function_space_mod,             only: function_space_type
@@ -35,9 +35,7 @@ module driver_fem_mod
                                             LOG_LEVEL_ERROR,   &
                                             log_scratch_space
   use mesh_mod,                       only: mesh_type
-  use mesh_collection_mod,            only: mesh_collection_type
-
-  use base_mesh_config_mod, only: geometry, topology
+  use mesh_collection_mod,            only: mesh_collection
 
   implicit none
 
@@ -48,40 +46,45 @@ contains
 
   !> @brief  Initialises the coordinate fields (chi) and FEM components.
   !>
-  !> @param[in]      mesh_collection      Collection of all meshes to set up
+  !> @param[in]      modeldb              Model state object
   !!                                      coordinates for
   !> @param[in,out]  chi_inventory        Inventory object, containing all of
   !!                                      the chi fields indexed by mesh
   !> @param[in,out]  panel_id_inventory   Inventory object, containing all of
   !!                                      the fields with the ID of mesh panels
-  subroutine init_fem( mesh_collection, chi_inventory, panel_id_inventory )
+  subroutine init_fem( modeldb, chi_inventory, panel_id_inventory )
 
     implicit none
 
     ! Coordinate field
-    type(mesh_collection_type),    intent(in)    :: mesh_collection
-    type(inventory_by_mesh_type),  intent(inout) :: chi_inventory
-    type(inventory_by_mesh_type),  intent(inout) :: panel_id_inventory
+    type(modeldb_type), target, intent(in) :: modeldb
+
+    type(inventory_by_mesh_type), intent(inout) :: chi_inventory
+    type(inventory_by_mesh_type), intent(inout) :: panel_id_inventory
 
     character(str_def),    allocatable :: all_mesh_names(:)
-    type(mesh_type),           pointer :: mesh => null()
-    type(mesh_type),           pointer :: twod_mesh => null()
+    type(mesh_type),           pointer :: mesh
+    type(mesh_type),           pointer :: twod_mesh
     type(field_type)                   :: chi(3)
     type(field_type)                   :: panel_id
-    type(function_space_type), pointer :: fs => null()
-    integer(kind=i_def)                :: chi_space, coord, i
+    type(function_space_type), pointer :: fs
+    integer(i_def)                     :: chi_space, coord, i
 
     character(str_def) :: mesh_name
+    integer(i_def)     :: coord_order
 
     call log_event( 'FEM specifics: creating function spaces...', log_level_info )
+
+    coord_order = modeldb%config%finite_element%coord_order()
+
+    nullify(mesh, twod_mesh, fs)
 
     ! ======================================================================== !
     ! Initialise coordinates
     ! ======================================================================== !
 
     ! Initialise coordinate transformations
-    call init_chi_transforms( geometry, topology, &
-                              mesh_collection=mesh_collection )
+    call init_chi_transforms( modeldb )
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
@@ -125,7 +128,7 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(chi, panel_id, mesh)
+        call assign_coordinate_field(modeldb, chi, panel_id, mesh)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)
@@ -143,11 +146,11 @@ contains
   !> @param[in]      mesh_collection      Collection of all meshes to set up
   !!                                      coordinates for
   !> @param[in]      multigrid_mesh_names Names of the multigrid meshes
-  subroutine init_function_space_chains( mesh_collection, multigrid_mesh_names )
+  subroutine init_function_space_chains( multigrid_mesh_names )
 
     implicit none
 
-    type(mesh_collection_type), intent(in) :: mesh_collection
+!   type(mesh_collection_type), intent(in) :: mesh_collection
     character(str_def),         intent(in) :: multigrid_mesh_names(:)
 
     type(mesh_type),               pointer :: mesh => null()

@@ -34,13 +34,13 @@ module create_mesh_mod
                                   method_geometric, &
                                   method_quadratic
 
-  use multigrid_config_mod, only: chain_mesh_tags
+!  use multigrid_config_mod, only: chain_mesh_tags
 
-  use partitioning_config_mod, only: tile_size_x,               &
-                                     tile_size_y,               &
-                                     inner_halo_tiles,          &
-                                     max_tiled_multigrid_level, &
-                                     coarsen_multigrid_tiles
+!  use partitioning_config_mod, only: tile_size_x,               &
+!                                     tile_size_y,               &
+!                                     inner_halo_tiles,          &
+!                                     max_tiled_multigrid_level, &
+!                                     coarsen_multigrid_tiles
 
   implicit none
 
@@ -106,8 +106,13 @@ end function create_extrusion
 !!                               extruded meshes, defaults to local_mesh_names
 !!                               if absent.
 subroutine create_mesh_multiple( local_mesh_names, &
-                                 extrusion,        &
-                                 alt_name )
+                                 extrusion, &
+                                 alt_name, &
+                                 chain_mesh_tags, &
+                                 tile_size_x,tile_size_y, &
+                                 max_tiled_multigrid_level, &
+                                 inner_halo_tiles, &
+                                 coarsen_multigrid_tiles )
   implicit none
 
   character(str_def),    intent(in) :: local_mesh_names(:)
@@ -115,12 +120,16 @@ subroutine create_mesh_multiple( local_mesh_names, &
   character(str_def),    intent(in), &
                          optional   :: alt_name(:)
 
+ character(str_def), intent(in), optional :: chain_mesh_tags(:)
+  integer(i_def),     intent(in), optional :: max_tiled_multigrid_level, tile_size_x,tile_size_y
+  logical(l_def),     intent(in), optional :: inner_halo_tiles
+  logical(l_def),     intent(in), optional :: coarsen_multigrid_tiles
+
   ! Local variables
   integer(i_def) :: i
   character(str_def), allocatable :: names(:)
 
   if (present(alt_name)) then
-
     if ( size(alt_name) /= size(local_mesh_names) ) then
       write(log_scratch_space, '(A)')                          &
           'Number of alternative mesh names does not match '// &
@@ -129,17 +138,19 @@ subroutine create_mesh_multiple( local_mesh_names, &
     end if
 
     allocate(names, source=alt_name)
-
   else
-
     allocate(names, source=local_mesh_names)
-
   end if
 
   do i=1, size(local_mesh_names)
-    call create_mesh_single( local_mesh_names(i), &
-                             extrusion,           &
-                             alt_name=names(i) )
+    call create_mesh_single( local_mesh_names(i), extrusion, &
+                             alt_name=names(i),   &
+                             chain_mesh_tags=chain_mesh_tags, &
+                             tile_size_x=tile_size_x, &
+                             tile_size_y=tile_size_y, &
+                             max_tiled_multigrid_level=max_tiled_multigrid_level, &
+                             inner_halo_tiles=inner_halo_tiles, &
+                             coarsen_multigrid_tiles=coarsen_multigrid_tiles )
   end do
 
   deallocate(names)
@@ -157,16 +168,29 @@ end subroutine create_mesh_multiple
 !> @param[in]  alt_name         Optional, Alternative name for the
 !!                              extruded mesh, defaults to local_mesh_name
 !!                              if absent.
-subroutine create_mesh_single( local_mesh_name, &
-                               extrusion,       &
-                               alt_name )
+!! @param[in] max_tiled_multigrid_level  [optional], needs to be refactored out as its multigrid
+!! @param[in] chain_mesh_tags            [optional], needs to be refactored out as its multigrid
+!! @param[in] coarsen_multigrid_tiles    [optional], needs to be refactored out as its multigrid
+subroutine create_mesh_single( local_mesh_name,           &
+                               extrusion,                 &
+                               alt_name,                  &
+                               chain_mesh_tags,           &
+                               tile_size_x, tile_size_y,  &
+                               max_tiled_multigrid_level, &
+                               inner_halo_tiles, &
+                               coarsen_multigrid_tiles )
 
   implicit none
 
   character(str_def),    intent(in) :: local_mesh_name
   class(extrusion_type), intent(in) :: extrusion
-  character(str_def),    intent(in), &
-                         optional   :: alt_name
+
+  character(str_def), intent(in), optional :: alt_name
+  character(str_def), intent(in), optional :: chain_mesh_tags(:)
+  integer(i_def),     intent(in), optional :: max_tiled_multigrid_level
+  integer(i_def),     intent(in), optional :: tile_size_x,tile_size_y
+  logical(l_def),     intent(in), optional :: inner_halo_tiles
+  logical(l_def),     intent(in), optional :: coarsen_multigrid_tiles
 
   type(local_mesh_type), pointer :: local_mesh_ptr => null()
 
@@ -233,19 +257,27 @@ subroutine create_mesh_single( local_mesh_name, &
   if ( extrusion%get_id() == PRIME_EXTRUSION .or. &
        extrusion%get_id() == SHIFTED         .or. &
        extrusion%get_id() == DOUBLE_LEVEL ) then
-    if ( allocated(chain_mesh_tags) ) then
-      ! Multigrid setup - use tiling if multigrid level is allowed, and
-      ! if mesh name includes the mesh tag at that level
-      do multigrid_level = 1, SIZE(chain_mesh_tags)
-        if ( index( trim(name), trim(chain_mesh_tags(multigrid_level)) ) > 0 &
-             .and. multigrid_level <= max_multigrid_level ) then
-          set_tile_size = .true.
-          exit
-        end if
-      end do
+
+    if ( present(chain_mesh_tags) ) then
+      if (size(chain_mesh_tags) > 1)  then
+        ! Multigrid setup - use tiling if multigrid level is allowed, and
+        ! if mesh name includes the mesh tag at that level
+        do multigrid_level = 1, SIZE(chain_mesh_tags)
+          if ( index( trim(name), trim(chain_mesh_tags(multigrid_level)) ) > 0 &
+               .and. multigrid_level <= max_multigrid_level ) then
+            set_tile_size = .true.
+            exit
+          end if
+        end do
+      else
+        set_tile_size = .true.
+      end if
+
     else
+
       ! Not a multigrid setup - use tiling
       set_tile_size = .true.
+
     end if
   end if
 
@@ -255,17 +287,22 @@ subroutine create_mesh_single( local_mesh_name, &
   if ( set_tile_size ) then
     if ( tile_size_x /= imdi ) tile_size(1) = tile_size_x
     if ( tile_size_y /= imdi ) tile_size(2) = tile_size_y
-    if ( coarsen_multigrid_tiles .and. allocated( chain_mesh_tags ) ) then
-      do multigrid_level = 1, SIZE(chain_mesh_tags)
-        if ( index( trim(name), &
-                    trim(chain_mesh_tags(multigrid_level)) ) > 0 ) exit
-        tile_size = max( tile_size / 2, 1 )
-      end do
+
+    if ( present(chain_mesh_tags) ) then
+      if (size(chain_mesh_tags) > 1 .and. coarsen_multigrid_tiles) then
+        do multigrid_level = 1, SIZE(chain_mesh_tags)
+          if ( index( trim(name), &
+                      trim(chain_mesh_tags(multigrid_level)) ) > 0 ) exit
+          tile_size = max( tile_size / 2, 1 )
+        end do
+      end if
     end if
+
   end if
 
   mesh = mesh_type( local_mesh_ptr, extrusion, mesh_name=name, &
-                    tile_size=tile_size, inner_halo_tiles=inner_halo_tiles )
+                    tile_size=tile_size, &
+                    inner_halo_tiles=inner_halo_tiles )
 
   mesh_id = mesh_collection%add_new_mesh( mesh )
   call mesh%clear()

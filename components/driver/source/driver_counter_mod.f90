@@ -7,10 +7,9 @@
 !>
 module driver_counter_mod
 
-  use count_mod,     only : count_type, halo_calls
-  use io_config_mod, only : subroutine_counters, &
-                            counter_output_suffix
-  use timer_mod,     only : timer, output_timer, init_timer
+  use count_mod,          only: count_type, halo_calls
+  use driver_modeldb_mod, only: modeldb_type
+  use timer_mod,          only: timer, output_timer, init_timer
 
   implicit none
 
@@ -26,13 +25,18 @@ contains
   !>
   !> @param[in] identifier Top level halo name.
   !>
-  subroutine init_counters( identifier )
+  subroutine init_counters( modeldb, identifier )
 
     implicit none
 
-    character(*), intent(in) :: identifier
+    type(modeldb_type), intent(in) :: modeldb
+    character(*),       intent(in) :: identifier
 
-    if (subroutine_counters) then
+    logical(l_def) :: subroutine_counters
+
+    subroutine_counters = modeldb%config%io%subroutine_counters()
+
+    if ( subroutine_counters ) then
       allocate( halo_calls, source=count_type('halo_calls') )
       call halo_calls%counter( identifier )
     end if
@@ -50,13 +54,20 @@ contains
   !>
   !> @param[in] identifier Top level counter name.
   !>
-  subroutine final_counters( identifier )
+  subroutine final_counters(modeldb, identifier )
 
     implicit none
 
-    character(*), intent(in) :: identifier
+    type(modeldb_type), intent(in) :: modeldb
+    character(*),       intent(in) :: identifier
 
-    if ( subroutine_counters ) then
+    logical(l_def)     :: subroutine_counters
+    character(str_def) :: counter_output_suffix
+
+    subroutine_counters   = modeldb%config%io%subroutine_counters()
+    counter_output_suffix = modeldb%config%io%counter_output_suffix()
+
+    if (subroutine_counters) then
       call halo_calls%counter( identifier )
       call halo_calls%output_counters( counter_output_suffix )
     end if

@@ -1,0 +1,48 @@
+  !! @param[in] coord_system   Finite-element coordiante system enumeration.
+  !! @param[in] geometry       Mesh geometry enumeration.
+  !! @param[in] topology       Mesh topology enumeration.
+  !! @param[in] scaled_radius  Scaled planetary radius.
+
+                                           coord_system,        &
+                                           geometry,            &
+                                           topology,            &
+                                           scaled_radius,       &
+
+    integer(kind=i_def),  intent(in) :: coord_system
+    integer(kind=i_def),  intent(in) :: geometry
+    integer(kind=i_def),  intent(in) :: topology
+    real(kind=r_def),     intent(in) :: scaled_radius
+
+coord_system, geometry, topology, scaled_radius, &
+
+coord_system,  &
+geometry,      &
+topology,      &
+scaled_radius, &
+
+coord_system, geometry,  &
+topology, scaled_radius, &
+
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
+
+integer(i_def),  parameter :: coord_system
+integer(i_def),  parameter :: geometry
+integer(i_def),  parameter :: topology
+real(r_def),     parameter :: scaled_radius
+
+
+
+
+
+  use base_mesh_config_mod,      only: geometry, topology, &
+                                       geometry_spherical, &
+                                       geometry_planar
+
+geometry, topology, &
+
+geometry, topology
+
+imdi, imdi
