@@ -120,7 +120,7 @@ contains
     ! Create the required meshes
     stencil_depth = 1
     apply_partition_check = .false.
-    call init_mesh( modeldb%configuration,       &
+    call init_mesh( modeldb%config,              &
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
                     base_mesh_names, extrusion,  &
