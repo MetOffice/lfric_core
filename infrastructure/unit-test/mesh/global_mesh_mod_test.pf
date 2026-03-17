@@ -118,11 +118,32 @@ contains
     @assertTrue(periodic_xy(1))
     @assertTrue(periodic_xy(2))
 
-    ! Generate the global_mesh
+    ! Check getting cell id from an x- and y-distance from a starting cell.
+    ! First test that providing zero distances gives same id
     cell_id = global_mesh%get_cell_id( 1, 0, 0 )
     @assertEqual( 1, cell_id )
-    !
-    ! Test functionality of the global_mesh object we've just created
+
+    ! Check cell id from 1 cell away in all directions
+    cell_id = global_mesh%get_cell_id( 28, 1, 1 )
+    @assertEqual( 21, cell_id )
+    cell_id = global_mesh%get_cell_id( 28, 1, 0 )
+    @assertEqual( 29, cell_id )
+    cell_id = global_mesh%get_cell_id( 28, 1,-1 )
+    @assertEqual( 37, cell_id )
+    cell_id = global_mesh%get_cell_id( 28, 0, 1 )
+    @assertEqual( 20, cell_id )
+    cell_id = global_mesh%get_cell_id( 28, 0, 0 )
+    @assertEqual( 28, cell_id )
+    cell_id = global_mesh%get_cell_id( 28, 0,-1 )
+    @assertEqual( 36, cell_id )
+    cell_id = global_mesh%get_cell_id( 28,-1, 1 )
+    @assertEqual( 19, cell_id )
+    cell_id = global_mesh%get_cell_id( 28,-1, 0 )
+    @assertEqual( 27, cell_id )
+    cell_id = global_mesh%get_cell_id( 28,-1,-1 )
+    @assertEqual( 35, cell_id )
+
+    ! Check cell id from a cell over the biperiodic wrap-around
     cell_id = global_mesh%get_cell_id( 1, 2, 2 )
     @assertEqual( 51, cell_id )
 
@@ -246,14 +267,30 @@ contains
     global_mesh_id2 = global_mesh%get_id()
     @assertTrue(global_mesh_id2 > 0)
 
-    !
-    ! Generate the global_mesh
+    ! Check getting a cell id from an x- and y-distance from a starting cell.
+    ! First test that providing zero distances gives same id
     cell_id = global_mesh%get_cell_id( 1, 0, 0 )
     @assertEqual( 1, cell_id )
-    !
-    ! Test functionality of the global_mesh object we've just created
+
+    ! Get cell id from within a single panel
+    cell_id = global_mesh%get_cell_id( 10, 1, 1 )
+    @assertEqual( 7, cell_id )
+
+    ! Check cell id across a panel boundary where orientation doesn't change
+    ! (shouldn't need to check orientation - but it shouldn't harm, either)
     cell_id = global_mesh%get_cell_id( 1, 2, 2 )
     @assertEqual( 74, cell_id )
+    cell_id = global_mesh%get_cell_id( 1, 2, 2, check_orientation=.true. )
+    @assertEqual( 74, cell_id )
+
+    ! Check cell id across a panel boundary where orientation DOES change
+    cell_id = global_mesh%get_cell_id( 28, 2, 2, check_orientation=.true. )
+    @assertEqual( 34, cell_id )
+
+    ! Check cell id across a panel boundary where orientation DOES change
+    ! but with negative x- and y- distances
+    cell_id = global_mesh%get_cell_id( 5, -2, -2, check_orientation=.true. )
+    @assertEqual( 63, cell_id )
 
     call global_mesh%get_vert_on_cell( 6, verts )
     @assertEqual( 10, verts(1) )
