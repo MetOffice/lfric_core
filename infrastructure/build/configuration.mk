@@ -9,6 +9,7 @@
 #
 
 export CONFIG_DIR=$(WORKING_DIR)/configuration
+export ROSE_META_DIRS += $(CORE_ROOT_DIR)/rose-meta
 
 .PHONY: configuration_files
 configuration_files: $(WORKING_DIR)/config_loader_mod.f90 \
@@ -16,25 +17,12 @@ configuration_files: $(WORKING_DIR)/config_loader_mod.f90 \
 
 .INTERMEDIATE: $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt
 $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR)/rose-meta.conf
-	$(call MESSAGE,Generating namelist configuration file.)
+	$(call MESSAGE,Generating namelist configuration file)
 	$(Q)mkdir -p $(dir $@)
-
-ifdef EXTRA_ROSE_META
-	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
-					-directory $(CONFIG_DIR)                 \
-					-include_dirs $(APPS_ROOT_DIR)/rose-meta \
-					-include_dirs $(CORE_ROOT_DIR)/rose-meta \
-					-include_dirs $(WORKING_DIR)/../rose-meta
-else ifdef APPS_ROOT_DIR
-	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf          \
-	                -directory $(CONFIG_DIR)                 \
-	                -include_dirs $(APPS_ROOT_DIR)/rose-meta \
-	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
-else
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
 	                -directory $(CONFIG_DIR)        \
-	                -include_dirs $(CORE_ROOT_DIR)/rose-meta
-endif
+	                $(addprefix -include_dirs ,$(ROSE_META_DIRS))
+
 	# It's not clear why this is needed but as of 5/2/20 the diagnostic
 	# application test suite fails without it.
 	$(Q)sleep 20
