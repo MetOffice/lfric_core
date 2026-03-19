@@ -51,6 +51,7 @@
     {# * config_dump_checker #}
     {# * style_checker #}
     {# * site_validator #}
+    {# * fortitude_linter #}
     {# * rose-stem_lint_checker #}
     {# * validate_rose_meta #}
     {# * global_variables_checker #}
