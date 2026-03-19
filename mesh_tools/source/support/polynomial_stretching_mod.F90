@@ -53,7 +53,7 @@ end function associated_direction
 function calculate_offset( direction ) result(offset)
 
   integer(i_def), intent(in) :: direction
-  real(r_def),   intent(out) :: offset
+  real(r_def) :: offset
   real(r_def) :: dx
 
   dx = cell_size_inner(direction)
