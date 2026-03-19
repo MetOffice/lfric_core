@@ -17,7 +17,7 @@ configuration_files: $(WORKING_DIR)/config_loader_mod.f90 \
 
 .INTERMEDIATE: $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt
 $(CONFIG_DIR)/rose-meta.json $(CONFIG_DIR)/config_namelists.txt: $(META_FILE_DIR)/rose-meta.conf
-	$(call MESSAGE,Generating namelist configuration file)
+	$(call MESSAGE,Generating namelist configuration file.)
 	$(Q)mkdir -p $(dir $@)
 	$(Q)rose_picker $(META_FILE_DIR)/rose-meta.conf \
 	                -directory $(CONFIG_DIR)        \
