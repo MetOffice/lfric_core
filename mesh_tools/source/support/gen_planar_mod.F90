@@ -2630,13 +2630,13 @@ subroutine apply_polynomial_stretch(self)
 
       ! Apply to positive coordinates for N or E
       ! Apply to negative coordinates for S or W
-      if ( ( ( boundary == 1 .or. boundary == 3)  .and. &
+      if ( ( ( boundary == 1 .or. boundary == 3)  .and.             &
                self%vert_coords(direction, vert) > 0.0_r_def ) .or. &
-           ( ( boundary == 2 .or. boundary == 4 ) .and. &
+           ( ( boundary == 2 .or. boundary == 4 ) .and.             &
              self%vert_coords(direction, vert) < 0.0_r_def ) ) then
 
-        self%vert_coords(direction, vert) = &
-             polynomial_stretch(self%vert_coords(direction, vert), &
+        self%vert_coords(direction, vert) =                         &
+             polynomial_stretch(self%vert_coords(direction, vert),  &
              param_a, param_b, param_c, x_inner, x_outer )
       end if
 
@@ -2644,7 +2644,7 @@ subroutine apply_polynomial_stretch(self)
 
     ! Apply the stretching transformation to the domain extents
     do vert = 1,4
-      self%domain_extents(direction, vert) = &
+      self%domain_extents(direction, vert) =                         &
             polynomial_stretch(self%domain_extents(direction, vert), &
             param_a, param_b, param_c, x_inner, x_outer )
     end do

@@ -184,22 +184,23 @@ contains
                                coord_sys  = coord_sys_ll )
 
     mesh_name = 'coarse_plane_bi'
-    this%coarse_plane_bi = gen_planar_type                          &
-                           ( reference_element = cube_element,      &
-                             mesh_name    = mesh_name,              &
-                             geometry     = geometry_planar,        &
-                             topology     = topology_periodic,      &
-                             edge_cells_x = this%coarse_ncells_x,   &
-                             edge_cells_y = this%coarse_ncells_y,   &
-                             fine_mesh_edge_cells_x =               &
-                                            this%coarse_ncells_x,   &
-                             fine_mesh_edge_cells_y =               &
-                                            this%coarse_ncells_y,   &
-                             periodic_x   = .true.,                 &
-                             periodic_y   = .true.,                 &
-                             domain_size  = this%domain_size,       &
-                             domain_centre= this%domain_centre,     &
-                             stretch_function = stretch_function_uniform, &
+    this%coarse_plane_bi = gen_planar_type                            &
+                           ( reference_element = cube_element,        &
+                             mesh_name    = mesh_name,                &
+                             geometry     = geometry_planar,          &
+                             topology     = topology_periodic,        &
+                             edge_cells_x = this%coarse_ncells_x,     &
+                             edge_cells_y = this%coarse_ncells_y,     &
+                             fine_mesh_edge_cells_x =                 &
+                                            this%coarse_ncells_x,     &
+                             fine_mesh_edge_cells_y =                 &
+                                            this%coarse_ncells_y,     &
+                             periodic_x   = .true.,                   &
+                             periodic_y   = .true.,                   &
+                             domain_size  = this%domain_size,         &
+                             domain_centre= this%domain_centre,       &
+                             stretch_function =                       &
+                                            stretch_function_uniform, &
                              coord_sys    = coord_sys_xyz )
 
     mesh_name = 'fine_plane_bi'

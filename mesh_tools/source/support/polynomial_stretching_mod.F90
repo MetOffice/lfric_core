@@ -20,8 +20,9 @@ module polynomial_stretching_mod
                                     poly_power
   implicit none
 
-  public :: calculate_offset, &
-            polynomial_stretch, &
+  public :: associated_direction, &
+            calculate_offset,     &
+            polynomial_stretch,   &
             polynomial_parameters
 
 contains
@@ -45,14 +46,15 @@ end function associated_direction
 
 !> @brief Calculate the offset to apply before the polynomial stretching
 !> @details If the number of cells in the outer/stretch region on one boundary
-!! e.g. the North, is not the same as the number of cells on the other boundary
-!! (the South) then calculate the offset so that the high resolution
-!! interior will be centred at (0,0).
+!!          e.g. the North, is not the same as the number of cells on the other
+!!          boundary (the South) then calculate the offset so that the high
+!!          resolution interior will be centred at (0,0).
 !> @param direction Direction (N-S) or (E-W)
 function calculate_offset( direction ) result(offset)
 
-  integer(i_def) :: direction
-  real(r_def) :: dx, offset
+  integer(i_def), intent(in) :: direction
+  real(r_def),   intent(out) :: offset
+  real(r_def) :: dx
 
   dx = cell_size_inner(direction)
   if ( direction == 2 ) then
@@ -66,7 +68,6 @@ function calculate_offset( direction ) result(offset)
              (n_cells_outer_nsew(4) + n_cells_stretch_nsew(4))
     offset = 0.5_r_def * dx * offset
  end if
-  print*, 'offset', offset
 
 end function calculate_offset
 
