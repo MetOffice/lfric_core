@@ -42,10 +42,10 @@ type, public, extends(kernel_type) :: project_ws_to_w1_operator_kernel_type
        arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   Wchi),                          &
        arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     &
        arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &
-       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! geometry
-       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! topology
-       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! coord_system
-       arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                           &! scaled_radius
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! geometry
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! topology
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! coord_system
+       arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                                   &! scaled_radius
    /)
   type(func_type) :: meta_funcs(3) = (/                              &
        func_type(W1,                        GH_BASIS),               &
@@ -79,6 +79,10 @@ contains
 !> @param[in]     chi3                3rd coordinate field in Wchi
 !> @param[in]     panel_id            Field giving the ID for mesh panels.
 !> @param[in]     direction           Index of the vector component (1,2 or 3) to project
+!> @param[in]     geometry
+!> @param[in]     topology
+!> @param[in]     coord_system
+!> @param[in]     scaled_radius
 !> @param[in]     ndf_w1              Number of degrees of freedom per cell for vector space
 !> @param[in]     basis_w1            Basis functions for the vector space at quadrature points
 !> @param[in]     ndf_ws              Number of degrees of freedom per cell for scalar space
@@ -101,10 +105,10 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                                            chi1, chi2, chi3,           &
                                            panel_id,                   &
                                            direction,                  &
-  geometry,       &
- topology, &
- coord_system, &
- scaled_radius, &
+                                           geometry,                   &
+                                           topology,                   &
+                                           coord_system,               &
+                                           scaled_radius,              &
                                            ndf_w1, basis_w1,           &
                                            ndf_ws, basis_ws,           &
                                            ndf_wx, undf_wx, map_wx,    &
@@ -181,12 +185,9 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
 
           llr(:) = 0.0_r_def
 
-          call chi2llr(coords(1), coords(2), coords(3), &
-                       ipanel,   geometry,&
- topology,&
- coord_system,&
- scaled_radius,&
-llr(1), llr(2), llr(3))
+          call chi2llr(coords(1), coords(2), coords(3), ipanel,         &
+                       geometry, topology, coord_system, scaled_radius, &
+                       llr(1), llr(2), llr(3))
         end if
 
         call pointwise_coordinate_jacobian(coord_system, geometry,          &

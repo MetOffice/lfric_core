@@ -15,6 +15,7 @@
 module sci_mapping_constants_mod
 
   ! Infrastructure
+  use config_mod,                        only: config_type
   use constants_mod,                     only: i_def, r_def, l_def, str_def
   use copy_field_alg_mod,                only: copy_field
   use extrusion_mod,                     only: PRIME_EXTRUSION, &

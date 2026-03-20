@@ -53,7 +53,6 @@ module chi_transform_mod_test
     real(r_def)    :: target_chi_2
     real(r_def)    :: target_chi_3
 
-
     integer(i_def) :: src_coord_system
     integer(i_def) :: topology
     integer(i_def) :: geometry
@@ -207,13 +206,13 @@ contains
                         chi_parameters_type(LLH, XYZ, panel_id,             &
                                             lon, lat, height,               &
                                             X, Y, Z),                       &
-                        chi_parameters_type(LLH_rot, LLH, panel_id,         &!!!!!!!F
+                        chi_parameters_type(LLH_rot, LLH, panel_id,         &
                                             lon_rot, lat_rot, height,       &
                                             lon, lat, radius),              &
-                        chi_parameters_type(LLH_rot, XYZ, panel_id,         &!!!! F
+                        chi_parameters_type(LLH_rot, XYZ, panel_id,         &
                                             lon_rot, lat_rot, height,       &
                                             X, Y, Z),                       &
-                        chi_parameters_type(XYZ, ABH, panel_id,             &!! Abort
+                        chi_parameters_type(XYZ, ABH, panel_id,             &
                                             X, Y, Z,                        &
                                             alpha, beta, radius),           &
                         chi_parameters_type(XYZ, LLH, panel_id,             &
@@ -235,35 +234,13 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-!!$    use feign_config_mod,          only : feign_base_mesh_config,      &
-!!$                                          feign_extrusion_config,      &
-!!$                                          feign_finite_element_config, &
-!!$                                          feign_planet_config
-
     use sci_chi_transform_mod, only: init_chi_transforms
-
-!!$    use base_mesh_config_mod, only: geometry_spherical,      &
-!!$                                    geometry_planar,         &
-!!$                                    topology_fully_periodic, &
-!!$                                    topology_non_periodic
-!!$
-!!$    use finite_element_config_mod, only: coord_system_native, &
-!!$                                         coord_system_xyz
 
     implicit none
 
     class(chi_transform_mod_test_type), intent(inout) :: this
 
-!    integer(i_def) :: coord_system, topology
     real(r_def)    :: north_pole(2), equatorial_latitude
-
-!!$    call feign_extrusion_config( method=method_uniform,                      &
-!!$                                 planet_radius=planet_radius,                &
-!!$                                 domain_height=10.0_r_def,                   &
-!!$                                 number_of_layers=5_i_def,                   &
-!!$                                 stretching_method=stretching_method_linear, &
-!!$                                 stretching_height=15.0_r_def,               &
-!!$                                 eta_values=(/0.5_r_def/) )
 
     select case ( this%source_coord_system )
     case ( XYZ )
@@ -280,25 +257,8 @@ contains
       this%topology          = topology_fully_periodic
     end select
 
-      this%geometry      = geometry_spherical
-      this%scaled_radius = planet_radius*scaling
-
-!!$    call feign_base_mesh_config( file_prefix='foo',                &
-!!$                                 prime_mesh_name='unit_test',      &
-!!$                                 geometry=geometry_spherical,      &
-!!$                                 prepartitioned=.false.,           &
-!!$                                 topology=topology,                &
-!!$                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-!!$    call feign_finite_element_config(           &
-!!$             cellshape=cellshape_quadrilateral, &
-!!$             element_order_h=0_i_def,           &
-!!$             element_order_v=0_i_def,           &
-!!$             rehabilitate=.true.,               &
-!!$             coord_order=0_i_def,               &
-!!$             coord_system=coord_system )
-
-!!    call feign_planet_config( scaling_factor=scaling )
+    this%geometry      = geometry_spherical
+    this%scaled_radius = planet_radius*scaling
 
     if ( this%source_coord_system == LLH_rot ) then
       north_pole(1) = PI/2.0_r_def
@@ -343,17 +303,6 @@ contains
   subroutine test_all( this )
 
     use sci_chi_transform_mod,     only : chi2abr, chi2llr, chi2xyz, chir2xyz
-!!$    use finite_element_config_mod, only : coord_system
-!!$    use base_mesh_config_mod,      only : geometry_spherical,      &
-!!$                                          geometry_planar,         &
-!!$                                          topology_fully_periodic, &
-!!$                                          topology_non_periodic
-!!$    use extrusion_config_mod,      only : method_uniform, &
-!!$                                          stretching_method_linear
-!!$    use finite_element_config_mod, only : cellshape_quadrilateral, &
-!!$                                          coord_system_native,     &
-!!$                                          coord_system_xyz
-
 
     implicit none
 
@@ -361,46 +310,26 @@ contains
 
     real(kind=r_def) :: tol, new_coord_1, new_coord_2, new_coord_3
 
-!!$  integer(i_def), parameter :: geometry
-!!$  integer(i_def), parameter :: topology
-!!$  integer(i_def), parameter :: coord_system
-!!$  real(r_def),    parameter :: scaled_radius
-
     select case ( this%target_coord_system )
     case ( ABH )
-print*,'debug: chump'
       call chi2abr(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id,         &
-                   this%geometry,         &
-                   this%topology,         &
-                   this%src_coord_system, &
-                   this%scaled_radius,    &
-                   new_coord_1, new_coord_2, new_coord_3  )
+                   this%panel_id, this%geometry, this%topology,             &
+                   this%src_coord_system, this%scaled_radius,               &
+                   new_coord_1, new_coord_2, new_coord_3)
     case ( LLH )
-print*,'debug: welly'
       call chi2llr(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id,  &
-                   this%geometry,         &
-                   this%topology,         &
-                   this%src_coord_system, &
-                   this%scaled_radius,    &
+                   this%panel_id, this%geometry, this%topology,             &
+                   this%src_coord_system, this%scaled_radius,               &
                    new_coord_1, new_coord_2, new_coord_3  )
     case ( XYZ )
-print*,'debug: wanger'
       call chi2xyz(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id,  &
-                   this%geometry,         &
-                   this%topology,         &
-                   this%src_coord_system, &
-                   this%scaled_radius,    &
+                   this%panel_id, this%geometry, this%topology,             &
+                   this%src_coord_system, this%scaled_radius,               &
                    new_coord_1, new_coord_2, new_coord_3  )
     case ( R2XYZ )
-print*,'debug: chimp'
       call chir2xyz(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                    this%panel_id, &
-                   this%geometry,         &
-                   this%topology,         &
-                   this%src_coord_system, &
+                    this%panel_id, this%geometry, this%topology,             &
+                    this%src_coord_system,                                   &
                     new_coord_1, new_coord_2, new_coord_3  )
     end select
 

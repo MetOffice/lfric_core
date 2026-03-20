@@ -74,6 +74,8 @@ contains
 !------------------------------------------------------------------------------
 !> @brief  Initialise the coordinate transform information
 !!
+!> @param[in] geometry
+!> @param[in] topology
 !> @param[in] mesh_collection    Optional: a collection of meshes, which contain
 !!                               metadata used to determine the rotation matrix
 !!                               and stretching factors.
@@ -244,6 +246,11 @@ end subroutine final_chi_transforms
 !! @param[in]   chi_2      The second coordinate field in
 !! @param[in]   chi_3      The third coordinate field in
 !! @param[in]   panel_id   The mesh panel ID
+!! @param[in]   geometry
+!! @param[in]   topology
+!! @param[in]   coord_system
+!! @param[in]   scaled_radius
+!! @param[in]   panel_id   The mesh panel ID
 !! @param[out]  x          The first coordinate field out (global Cartesian X)
 !! @param[out]  y          The second coordinate field out (global Cartesian Y)
 !! @param[out]  z          The third coordinate field out (global Cartesian Z)
@@ -333,6 +340,9 @@ end subroutine chi2xyz
 !! @param[in]   chi_2      The second coordinate field in
 !! @param[in]   chi_3      The third coordinate field in
 !! @param[in]   panel_id   The mesh panel ID
+!! @param[in]   geometry
+!! @param[in]   topology
+!! @param[in]   coord_system
 !! @param[out]  x          The first coordinate field out (global Cartesian X)
 !! @param[out]  y          The second coordinate field out (global Cartesian Y)
 !! @param[out]  z          The third coordinate field out (global Cartesian Z)
@@ -418,6 +428,10 @@ end subroutine chir2xyz
 !! @param[in]   chi_2      The second coordinate field in
 !! @param[in]   chi_3      The third coordinate field in
 !! @param[in]   panel_id   The mesh panel ID
+!! @param[in]   geometry
+!! @param[in]   topology
+!! @param[in]   coord_system
+!! @param[in]   scaled_radius
 !! @param[out]  longitude  The first coordinate field out (longitude)
 !! @param[out]  latitude   The second coordinate field out (latitude)
 !! @param[out]  radius     The third coordinate field out (radius)
@@ -497,6 +511,10 @@ end subroutine chi2llr
 !! @param[in]   chi_2      The second coordinate field in
 !! @param[in]   chi_3      The third coordinate field in
 !! @param[in]   panel_id   The mesh panel ID
+!! @param[in]   geometry
+!! @param[in]   topology
+!! @param[in]   coord_system
+!! @param[in]   scaled_radius
 !! @param[out]  alpha      The first coordinate field out (alpha)
 !! @param[out]  beta       The second coordinate field out (beta)
 !! @param[out]  radius     The third coordinate field out (radius)

@@ -174,12 +174,14 @@ contains
     type(mesh_type), pointer :: mesh => null()
 
     ! Initialise XIOS prime mesh
-    call init_xios_mesh( config, chi, panel_id, prime_mesh=.true. )
+    call init_xios_mesh(config, chi, panel_id, prime_mesh=.true.)
 
     ! Initialise additional meshes
     if (present(alt_coords) .and. present(alt_panel_ids)) then
       do i = 1, size(alt_panel_ids)
-        call init_xios_mesh( config, alt_coords(i,:), alt_panel_ids(i), prime_mesh=.false. )
+        call init_xios_mesh( config, alt_coords(i,:), &
+                             alt_panel_ids(i),        &
+                             prime_mesh=.false. )
       end do
     end if
 

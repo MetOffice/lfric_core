@@ -43,10 +43,10 @@ module sci_convert_phys_to_hdiv_kernel_mod
          arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
          arg_type(GH_FIELD*3, GH_REAL,    GH_READ,  ANY_SPACE_9),               &
          arg_type(GH_FIELD,   GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! geometry
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! topology
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! coord_system
-         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                           &! scaled_radius
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             &! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             &! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             &! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                              &! scaled_radius
          /)
     type(func_type) :: meta_funcs(2) = (/                                       &
          func_type(W2, GH_BASIS),                                               &
@@ -76,6 +76,9 @@ contains
 !> @param[in]     chi_3          3rd coordinate field
 !> @param[in]     panel_id       Field giving the ID for mesh panels
 !> @param[in]     geometry       Integer indicating the domain geometry
+!> @param[in]     topology
+!> @param[in]     coord_system
+!> @param[in]     scaled_radius
 !> @param[in]     ndf_w2         Number of DoFs per cell for W2
 !> @param[in]     undf_w2        Number of DoFs for W2 for this partition
 !> @param[in]     map_w2         Map of DoFs for lowest-layer cells for W2
@@ -99,10 +102,9 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
                                       chi_3,          &
                                       panel_id,       &
                                       geometry,       &
-
- topology, &
- coord_system, &
- scaled_radius, &
+                                      topology,       &
+                                      coord_system,   &
+                                      scaled_radius,  &
                                       ndf_w2,         &
                                       undf_w2,        &
                                       map_w2,         &
@@ -127,7 +129,6 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
   integer(kind=i_def), intent(in) :: nlayers
   integer(kind=i_def), intent(in) :: ndf_w2, ndf_pid, ndf_chi
   integer(kind=i_def), intent(in) :: undf_w2, undf_pid, undf_chi
-!  integer(kind=i_def), intent(in) :: geometry
 
   integer(kind=i_def), intent(in) :: map_w2(ndf_w2)
   integer(kind=i_def), intent(in) :: map_chi(ndf_chi)
@@ -205,11 +206,9 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
         ! Convert coordinates from whatever coordinate system the model uses
         ! into spherical-polar coordinates
         call chi2llr(coords(1), coords(2), coords(3), &
-                     ipanel,  geometry,&
- topology,&
- coord_system,&
- scaled_radius,&
-llr(1), llr(2), llr(3))
+                     ipanel,  geometry, topology,     &
+                     coord_system, scaled_radius,     &
+                     llr(1), llr(2), llr(3))
 
         u_spherical(1) = u_lon(map_w2(df_w2) + k)
         u_spherical(2) = u_lat(map_w2(df_w2) + k)

@@ -29,6 +29,8 @@ module sci_compute_map_u_operators_kernel_mod
   use kernel_mod,              only : kernel_type
   use log_mod,                 only : log_event, LOG_LEVEL_ERROR, LOG_LEVEL_INFO
 
+  use base_mesh_config_mod, only: geometry_spherical, geometry_planar
+
   implicit none
 
   private
@@ -85,6 +87,10 @@ contains
 !! @param[in] chi_sph_2 2nd coordinate in spherical Wchi
 !! @param[in] chi_sph_3 3rd coordinate in spherical Wchi
 !! @param[in] panel_id Field giving the ID for mesh panels
+!! @param[in] geometry
+!! @param[in] topology
+!! @param[in] coord_system
+!! @param[in] scaled_radius
 !! @param[in] ndf_w2 Number of degrees of freedom per cell for w2
 !! @param[in] basis_w2 W2 basis functions evaluated at quadrature points
 !! @param[in] ndf_w3 Number of degrees of freedom per cell for w3
@@ -123,8 +129,6 @@ subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
   use sci_chi_transform_mod,       only : chi2llr
   use sci_coordinate_jacobian_mod, only : coordinate_jacobian
   use coord_transform_mod,         only : sphere2cart_vector
-
-  use base_mesh_config_mod, only: geometry_spherical, geometry_planar
 
   implicit none
 

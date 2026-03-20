@@ -326,13 +326,13 @@ contains
   !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The coordinate field array
-  function get_extended_coordinates(coord_system, mesh_id) result(extended_chi)
+  function get_extended_coordinates(config, mesh_id) result(extended_chi)
 
     use sci_extend_chi_field_kernel_mod, only: extend_chi_field_kernel_type
 
     implicit none
 
-    integer(kind=i_def),    intent(in) :: coord_system
+    type(config_type),      intent(in) :: config
     integer(kind=i_def),    intent(in) :: mesh_id
 
     type(mesh_type),           pointer :: mesh
@@ -342,7 +342,11 @@ contains
     type(field_type),          pointer :: chi(:)
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: wchi_fs
-    integer(tik)                       :: id
+
+    integer(tik)   :: id
+    integer(i_def) :: coord_system
+
+    coord_system = config%finite_element%coord_system()
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. extended_chi_inventory%is_initialised()) then

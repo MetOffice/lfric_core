@@ -262,8 +262,8 @@ contains
       deallocate(alt_coords)
       deallocate(alt_panel_ids)
     else
-      call io_context%initialise_xios_context( modeldb%config,&
- modeldb%mpi%get_comm(), &
+      call io_context%initialise_xios_context( modeldb%config,         &
+                                               modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &

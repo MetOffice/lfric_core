@@ -8,29 +8,17 @@ module compute_sample_u_ops_kernel_mod_test
 
   use constants_mod,         only : i_def, r_def
   use reference_element_mod, only : W, S, E, N, B, T
-  use funit
-
 
   use base_mesh_config_mod,      only: geometry_spherical, &
                                        topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
 
-!!$    use extrusion_config_mod,      only : method_uniform, &
-!!$                                          stretching_method_linear
-!!$    use finite_element_config_mod, only : cellshape_quadrilateral, &
-!!$                                          coord_system_native
-!!$    use feign_config_mod,          only : feign_base_mesh_config,      &
-!!$                                          feign_extrusion_config,      &
-!!$                                          feign_finite_element_config, &
-!!$                                          feign_planet_config
+  use funit
 
   implicit none
 
   private
   public :: set_up, tear_down, test_all
-
-!  real(r_def), parameter :: radius = 6000000.0_r_def real(r_def),
-!  parameter :: scaling = 1.0_r_def
 
 contains
 
@@ -38,44 +26,9 @@ contains
   @before
   subroutine set_up()
 
-!!$    use base_mesh_config_mod,      only : geometry_spherical, &
-!!$                                          topology_non_periodic
-!!$    use extrusion_config_mod,      only : method_uniform, &
-!!$                                          stretching_method_linear
-!!$    use finite_element_config_mod, only : cellshape_quadrilateral, &
-!!$                                          coord_system_native
-!!$    use feign_config_mod,          only : feign_base_mesh_config,      &
-!!$                                          feign_extrusion_config,      &
-!!$                                          feign_finite_element_config, &
-!!$                                          feign_planet_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
-
-!!$    call feign_base_mesh_config( file_prefix='foo',                &
-!!$                                 prime_mesh_name='unit_test',      &
-!!$                                 geometry=geometry_spherical,      &
-!!$                                 prepartitioned=.false.,           &
-!!$                                 topology=topology_non_periodic,   &
-!!$                                 fplane=.false., f_lat_deg=0.0_r_def )
-!!$
-!!$    call feign_extrusion_config( method=method_uniform,                      &
-!!$                                 planet_radius=radius,                       &
-!!$                                 domain_height=10.0_r_def,                   &
-!!$                                 number_of_layers=5_i_def,                   &
-!!$                                 stretching_method=stretching_method_linear, &
-!!$                                 stretching_height=15.0_r_def,               &
-!!$                                 eta_values=(/0.5_r_def/) )
-!!$
-!!$    call feign_finite_element_config(           &
-!!$             cellshape=cellshape_quadrilateral, &
-!!$             element_order_h=0_i_def,           &
-!!$             element_order_v=0_i_def,           &
-!!$             rehabilitate=.true.,               &
-!!$             coord_order = 0_i_def,             &
-!!$             coord_system=coord_system_native )
-!!$
-!!$    call feign_planet_config( scaling_factor=scaling )
 
     call init_chi_transforms(geometry_spherical, topology_non_periodic)
 
@@ -85,12 +38,10 @@ contains
   @after
   subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tear_down
@@ -138,7 +89,7 @@ contains
     integer(i_def),parameter :: geometry = geometry_spherical
     integer(i_def),parameter :: topology = topology_non_periodic
     integer(i_def),parameter :: coord_system = coord_system_native
-    real(r_def),  parameter  :: scaled_radius = scaling*radius
+    real(r_def),   parameter :: scaled_radius = scaling*radius
 
     integer(i_def) :: cell, ncols_x, ncols_y, ncols_2d, ncells_3d
 
@@ -298,10 +249,10 @@ contains
                                       chi_data(:,2),                           &
                                       chi_data(:,3),                           &
                                       panel_id_data,                           &
-geometry,&
-topology,&
-coord_system,&
-scaled_radius,&
+                                      geometry,                                &
+                                      topology,                                &
+                                      coord_system,                            &
+                                      scaled_radius,                           &
                                       ndf_w2b, ndf_w3, ndf_wt,                 &
                                       ndf_wchi, undf_wchi, map_wchi(:,cell),   &
                                       basis_wchi, diff_basis_wchi,             &
