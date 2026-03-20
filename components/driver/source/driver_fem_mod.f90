@@ -15,8 +15,9 @@ module driver_fem_mod
   use sci_chi_transform_mod,          only: init_chi_transforms, &
                                             final_chi_transforms
   use constants_mod,                  only: i_def, l_def, str_def
+  use driver_modeldb_mod,             only: modeldb_type
+
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
-  use finite_element_config_mod,      only: coord_order
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
   use function_space_mod,             only: function_space_type
@@ -35,9 +36,7 @@ module driver_fem_mod
                                             LOG_LEVEL_ERROR,   &
                                             log_scratch_space
   use mesh_mod,                       only: mesh_type
-  use mesh_collection_mod,            only: mesh_collection_type
-
-  use base_mesh_config_mod, only: geometry, topology
+  use mesh_collection_mod,            only: mesh_collection
 
   implicit none
 
@@ -48,47 +47,55 @@ contains
 
   !> @brief  Initialises the coordinate fields (chi) and FEM components.
   !>
-  !> @param[in]      mesh_collection      Collection of all meshes to set up
-  !!                                      coordinates for
+  !> @param[in]      modeldb              Model state object
   !> @param[in,out]  chi_inventory        Inventory object, containing all of
   !!                                      the chi fields indexed by mesh
   !> @param[in,out]  panel_id_inventory   Inventory object, containing all of
   !!                                      the fields with the ID of mesh panels
-  subroutine init_fem( mesh_collection, chi_inventory, panel_id_inventory )
+  subroutine init_fem( modeldb, chi_inventory, panel_id_inventory )
 
     implicit none
 
     ! Coordinate field
-    type(mesh_collection_type),    intent(in)    :: mesh_collection
-    type(inventory_by_mesh_type),  intent(inout) :: chi_inventory
-    type(inventory_by_mesh_type),  intent(inout) :: panel_id_inventory
+    type(modeldb_type), intent(in) :: modeldb
+
+    type(inventory_by_mesh_type), intent(inout) :: chi_inventory
+    type(inventory_by_mesh_type), intent(inout) :: panel_id_inventory
 
     character(str_def),    allocatable :: all_mesh_names(:)
-    type(mesh_type),           pointer :: mesh => null()
-    type(mesh_type),           pointer :: twod_mesh => null()
+    type(mesh_type),           pointer :: mesh
+    type(mesh_type),           pointer :: twod_mesh
     type(field_type)                   :: chi(3)
     type(field_type)                   :: panel_id
-    type(function_space_type), pointer :: fs => null()
-    integer(kind=i_def)                :: chi_space, coord, i
+    type(function_space_type), pointer :: fs
+    integer(i_def)                     :: chi_space, coord, i
 
     character(str_def) :: mesh_name
+    integer(i_def)     :: coord_order, geometry, topology
 
-    call log_event( 'FEM specifics: creating function spaces...', log_level_info )
+    call log_event( 'FEM specifics: creating function spaces...', &
+                    log_level_info )
+
+    nullify(mesh, twod_mesh, fs)
+
+    coord_order = modeldb%config%finite_element%coord_order()
+    geometry    = modeldb%config%base_mesh%geometry()
+    topology    = modeldb%config%base_mesh%topology()
 
     ! ======================================================================== !
     ! Initialise coordinates
     ! ======================================================================== !
 
     ! Initialise coordinate transformations
-    call init_chi_transforms( geometry, topology, &
-                              mesh_collection=mesh_collection )
+    call init_chi_transforms( geometry, topology, mesh_collection=mesh_collection )
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
     all_mesh_names = mesh_collection%get_mesh_names()
 
-    call chi_inventory%initialise(name="chi", table_len=SIZE(all_mesh_names))
-    call panel_id_inventory%initialise(name="panel_id", table_len=SIZE(all_mesh_names))
+    call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))
+    call panel_id_inventory%initialise(name="panel_id", &
+                                       table_len=size(all_mesh_names))
 
     ! ======================================================================== !
     ! Loop through all 3D meshes
@@ -104,24 +111,29 @@ contains
         ! Initialise panel ID field object ---------------------------------------
         twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
         fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
-        call panel_id%initialise( vector_space = fs, halo_depth = twod_mesh%get_halo_depth() )
+        call panel_id%initialise( vector_space=fs, &
+                                  halo_depth=twod_mesh%get_halo_depth() )
 
         ! Initialise chi field object --------------------------------------------
         if ( coord_order == 0 ) then
           chi_space = W0
           write(log_scratch_space,'(A)') &
-              'Computing W0 coordinate fields for ' // trim(mesh_name) // 'mesh'
+              'Computing W0 coordinate fields for ' // &
+              trim(mesh_name) // 'mesh'
           call log_event( log_scratch_space, log_level_info )
         else
           chi_space = Wchi
           write(log_scratch_space,'(A)') &
-              'Computing Wchi coordinate fields for ' // trim(mesh_name) // 'mesh'
+              'Computing Wchi coordinate fields for ' // &
+              trim(mesh_name) // 'mesh'
           call log_event( log_scratch_space, log_level_info )
         end if
-        fs => function_space_collection%get_fs(mesh, coord_order, coord_order, chi_space)
+        fs => function_space_collection%get_fs( mesh, coord_order, &
+                                                coord_order, chi_space )
 
         do coord = 1, size(chi)
-          call chi(coord)%initialise(vector_space = fs, halo_depth = twod_mesh%get_halo_depth() )
+          call chi(coord)%initialise( vector_space=fs, &
+                                      halo_depth=twod_mesh%get_halo_depth() )
         end do
 
         ! Set coordinate fields --------------------------------------------------
@@ -140,22 +152,24 @@ contains
   end subroutine init_fem
 
   !> @brief  Initialises the function space chains used in multigrid.
-  !> @param[in]      mesh_collection      Collection of all meshes to set up
-  !!                                      coordinates for
-  !> @param[in]      multigrid_mesh_names Names of the multigrid meshes
-  subroutine init_function_space_chains( mesh_collection, multigrid_mesh_names )
+  !> @param[in] multigrid_mesh_names  Names of the multigrid meshes
+  subroutine init_function_space_chains(multigrid_mesh_names)
 
     implicit none
 
-    type(mesh_collection_type), intent(in) :: mesh_collection
-    character(str_def),         intent(in) :: multigrid_mesh_names(:)
+    character(str_def),  intent(in) :: multigrid_mesh_names(:)
 
-    type(mesh_type),               pointer :: mesh => null()
-    type(mesh_type),               pointer :: twod_mesh => null()
-    type(function_space_type),     pointer :: fs => null()
-    integer(kind=i_def)                    :: i
+    type(mesh_type), pointer :: mesh
+    type(mesh_type), pointer :: twod_mesh
 
-    call log_event( 'FEM specifics: creating function space chains...', LOG_LEVEL_INFO )
+    type(function_space_type), pointer :: fs
+
+    integer(i_def) :: i
+
+    nullify(mesh, twod_mesh, fs)
+
+    call log_event( 'FEM specifics: creating function space chains...', &
+                    log_level_info )
 
     ! ======================================================================== !
     ! Create function space chains
@@ -167,7 +181,7 @@ contains
     w2h_multigrid_function_space_chain    = function_space_chain_type()
     wtheta_multigrid_function_space_chain = function_space_chain_type()
 
-    write(log_scratch_space,'(A,I1,A)')                      &
+    write(log_scratch_space,'(A,I1,A)') &
         'Initialising MultiGrid ', size(multigrid_mesh_names), &
         '-level function space chain.'
     call log_event( log_scratch_space, LOG_LEVEL_INFO )

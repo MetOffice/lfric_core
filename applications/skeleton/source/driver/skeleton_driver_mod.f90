@@ -160,7 +160,7 @@ contains
     ! Build the FEM function spaces and coordinate fields
     !=======================================================================
     ! Create FEM specifics (function spaces and chi field)
-    call init_fem(mesh_collection, chi_inventory, panel_id_inventory)
+    call init_fem(modeldb, chi_inventory, panel_id_inventory)
 
     !=======================================================================
     ! Create and initialise prognostic fields

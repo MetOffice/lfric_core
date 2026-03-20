@@ -199,13 +199,16 @@ contains
 
   !> @brief Create the operators for projecting spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
+  !> @param[in] config Configuration object
   !> @param[in] mesh   The mesh to compute the operators for
-  subroutine create_spherical_components_to_w2_projection(mesh)
+  subroutine create_spherical_components_to_w2_projection(config, mesh)
 
     use sci_compute_map_u_operators_kernel_mod, &
                                       only: compute_map_u_operators_kernel_type
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type(mesh_type), pointer, intent(in) :: mesh
     integer(kind=i_def)                  :: mesh_id
@@ -248,19 +251,26 @@ contains
                                                      u_lat_map,                &
                                                      u_up_map,                 &
                                                      chi, panel_id,            &
+                                                     config%base_mesh%geometry(),          &
+                                                     config%base_mesh%topology(),          &
+                                                     config%finite_element%coord_system(), &
+                                                     config%planet%scaled_radius(),        &
                                                      qr) )
 
   end subroutine create_spherical_components_to_w2_projection
 
   !> @brief Create the operators for sampling spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
+  !> @param[in] config Configuration object
   !> @param[in] mesh   The mesh to compute the operators for
-  subroutine create_spherical_components_to_w2_sample(mesh)
+  subroutine create_spherical_components_to_w2_sample(config, mesh)
 
     use sci_compute_sample_u_ops_kernel_mod, &
                                       only: compute_sample_u_ops_kernel_type
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type(mesh_type), pointer, intent(in) :: mesh
     integer(kind=i_def)                  :: mesh_id
@@ -303,7 +313,11 @@ contains
                  compute_sample_u_ops_kernel_type(u_lon_sample,                &
                                                   u_lat_sample,                &
                                                   u_up_sample,                 &
-                                                  chi, panel_id) )
+                                                  chi, panel_id,               &
+                                                  config%base_mesh%geometry(), &
+                                                  config%base_mesh%topology(), &
+                                                  config%finite_element%coord_system(), &
+                                                  config%planet%scaled_radius() ) )
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
@@ -1008,11 +1022,14 @@ contains
   end function get_u_up_sample
 
   !> @brief Returns a pointer to the operator projection from lon dot to W1
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_lon_dot_to_w1(mesh_id) result(proj_op)
+  function get_project_lon_dot_to_w1(config, mesh_id) result(proj_op)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),     intent(in) :: mesh_id
     type(mesh_type),            pointer :: mesh
@@ -1054,7 +1071,12 @@ contains
       call invoke( name='proj_lon_dot_to_w1_op',                               &
                    project_ws_to_w1_operator_kernel_type(proj_op,              &
                                                          chi, panel_id,        &
-                                                         xdirection, qr) )
+                                                         xdirection,           &
+                                                         config%base_mesh%geometry(),          &
+                                                         config%base_mesh%topology(),          &
+                                                         config%finite_element%coord_system(), &
+                                                         config%planet%scaled_radius(),        &
+                                                         qr) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
@@ -1065,11 +1087,14 @@ contains
   end function get_project_lon_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from lat dot to W1
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config   Configuration object
+  !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_lat_dot_to_w1(mesh_id) result(proj_op)
+  function get_project_lat_dot_to_w1(config, mesh_id) result(proj_op)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),     intent(in) :: mesh_id
     type(mesh_type),            pointer :: mesh
@@ -1111,7 +1136,12 @@ contains
       call invoke( name='proj_lat_dot_to_w1_op',                               &
                    project_ws_to_w1_operator_kernel_type(proj_op,              &
                                                          chi, panel_id,        &
-                                                         ydirection, qr) )
+                                                         ydirection,           &
+                                                         config%base_mesh%geometry(),          &
+                                                         config%base_mesh%topology(),          &
+                                                         config%finite_element%coord_system(), &
+                                                         config%planet%scaled_radius(),        &
+                                                         qr) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
@@ -1122,11 +1152,14 @@ contains
   end function get_project_lat_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from r dot to W1
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config   Configuration object
+  !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_r_dot_to_w1(mesh_id) result(proj_op)
+  function get_project_r_dot_to_w1(config, mesh_id) result(proj_op)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),     intent(in) :: mesh_id
     type(mesh_type),            pointer :: mesh
@@ -1166,7 +1199,12 @@ contains
       call invoke( name='proj_r_dot_to_w1_op',                                 &
                    project_ws_to_w1_operator_kernel_type(proj_op,              &
                                                          chi, panel_id,        &
-                                                         zdirection, qr) )
+                                                         zdirection,           &
+                                                         config%base_mesh%geometry(),          &
+                                                         config%base_mesh%topology(),          &
+                                                         config%finite_element%coord_system(), &
+                                                         config%planet%scaled_radius(),        &
+                                                         qr) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if
@@ -1177,13 +1215,16 @@ contains
   end function get_project_r_dot_to_w1
 
   !> @brief Returns the displacement when averaging from W3 to W2
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config   Configuration object
+  !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The displacement field used for correcting mappings from W3 to W2
-  function get_w3_to_w2_displacement(mesh_id) result(w3_to_w2_displacement)
+  function get_w3_to_w2_displacement(config, mesh_id) result(w3_to_w2_displacement)
 
     use sci_w3_to_w2_displacement_kernel_mod, &
                                   only: w3_to_w2_displacement_kernel_type
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),    intent(in) :: mesh_id
     type(mesh_type),           pointer :: mesh
@@ -1229,7 +1270,11 @@ contains
       call dummy_w3%initialise( w3_k0_fs )
       call invoke( setval_c(w3_to_w2_displacement, 0.0_r_def),                 &
                    w3_to_w2_displacement_kernel_type(w3_to_w2_displacement,    &
-                                                     chi, panel_id, dummy_w3) )
+                                                     chi, panel_id, dummy_w3,  &
+                                                     config%base_mesh%geometry(), &
+                                                     config%base_mesh%topology(), &
+                                                     config%finite_element%coord_system(), &
+                                                     config%planet%scaled_radius() ) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if

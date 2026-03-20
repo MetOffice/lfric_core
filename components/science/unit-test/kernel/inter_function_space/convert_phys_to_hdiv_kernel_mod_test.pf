@@ -7,8 +7,11 @@
 !! W2 wind field
 module convert_phys_to_hdiv_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
+  use constants_mod, only: i_def, r_def, rmdi
   use funit
+
+  use base_mesh_config_mod,      only: geometry_planar, topology_fully_periodic
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -29,32 +32,32 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use base_mesh_config_mod,      only : geometry_planar,    &
-                                          topology_fully_periodic
+!!$    use base_mesh_config_mod,      only : geometry_planar,    &
+!!$                                          topology_fully_periodic
     use sci_chi_transform_mod,     only : init_chi_transforms
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz
-    use feign_config_mod,          only : feign_finite_element_config, &
-                                          feign_base_mesh_config
+!!$    use finite_element_config_mod, only : cellshape_quadrilateral, &
+!!$                                          coord_system_xyz
+!!$    use feign_config_mod,          only : feign_finite_element_config, &
+!!$                                          feign_base_mesh_config
 
     implicit none
 
     class(convert_phys_to_hdiv_test_type), intent(inout) :: this
 
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_planar,         &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
+!!$    call feign_base_mesh_config( file_prefix='foo',                &
+!!$                                 prime_mesh_name='unit_test',      &
+!!$                                 geometry=geometry_planar,         &
+!!$                                 prepartitioned=.false.,           &
+!!$                                 topology=topology_fully_periodic, &
+!!$                                 fplane=.false., f_lat_deg=0.0_r_def )
 
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
+!!$    call feign_finite_element_config(           &
+!!$             cellshape=cellshape_quadrilateral, &
+!!$             coord_order=0_i_def,               &
+!!$             coord_system=coord_system_xyz,     &
+!!$             element_order_h=0_i_def,           &
+!!$             element_order_v=0_i_def,           &
+!!$             rehabilitate=.true. )
 
     call init_chi_transforms(geometry_planar, topology_fully_periodic)
 
@@ -94,9 +97,8 @@ contains
                                                    get_w2_w2nodal_basis
 
     use get_unit_test_3x3x3_chi_mod,         only: get_w0_3x3x3_field
-    use base_mesh_config_mod,                only: geometry_planar
 
-   implicit none
+    implicit none
 
     class(convert_phys_to_hdiv_test_type), intent(inout) :: this
 
@@ -107,6 +109,11 @@ contains
     real(r_def), parameter :: u_zonal = 5.0_r_def
     real(r_def), parameter :: u_meridional = 3.0_r_def
     real(r_def), parameter :: u_radial = 0.4_r_def
+
+    integer(i_def), parameter :: geometry = geometry_planar
+    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     real(r_def) :: answer
 
@@ -192,7 +199,10 @@ contains
                                     chi_data(:,2),                           &
                                     chi_data(:,3),                           &
                                     panel_id_data,                           &
-                                    geometry_planar,                         &
+                            geometry,    &
+  topology,     &
+  coord_system, &
+  scaled_radius,&
                                     ndf_w2, undf_w2,                         &
                                     map_w2(:,cell), basis_w2,                &
                                     ndf_w0, undf_w0,                         &

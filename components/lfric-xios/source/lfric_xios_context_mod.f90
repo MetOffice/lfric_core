@@ -9,6 +9,7 @@ module lfric_xios_context_mod
 
   use calendar_mod,         only : calendar_type
   use clock_mod,            only : clock_type
+  use config_mod,           only : config_type
   use constants_mod,        only : i_def, &
                                    r_second, i_timestep, &
                                    l_def
@@ -81,6 +82,7 @@ contains
 
   !> @brief Set up an XIOS context.
   !>
+  !> @param [in]     config            Configuration object.
   !> @param [in]     communicator      MPI communicator used by context.
   !> @param [in]     chi               Array of coordinate fields
   !> @param [in]     panel_id          Panel ID field
@@ -89,7 +91,8 @@ contains
   !> @param [in]     before_close      Routine to be called before context closes
   !> @param [in]     alt_coords        Array of coordinate fields for alternative meshes
   !> @param [in]     alt_panel_ids     Panel ID fields for alternative meshes
-  subroutine initialise_xios_context( this, communicator,    &
+  subroutine initialise_xios_context( this,                  &
+                                      config, communicator,  &
                                       chi, panel_id,         &
                                       model_clock, calendar, &
                                       before_close,          &
@@ -100,6 +103,8 @@ contains
     implicit none
 
     class(lfric_xios_context_type), intent(inout) :: this
+
+    type(config_type),              intent(in)    :: config
     type(lfric_comm_type),          intent(in)    :: communicator
     type(field_type),               intent(in)    :: chi(:)
     type(field_type),               intent(in)    :: panel_id
@@ -134,7 +139,7 @@ contains
 
     ! Run XIOS setup routines
     call init_xios_calendar(model_clock, calendar, zero_start, this%context_clock_step)
-    call init_xios_dimensions(chi, panel_id, alt_coords, alt_panel_ids)
+    call init_xios_dimensions(config, chi, panel_id, alt_coords, alt_panel_ids)
     if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist)
 
     if (associated(before_close)) call before_close(model_clock)

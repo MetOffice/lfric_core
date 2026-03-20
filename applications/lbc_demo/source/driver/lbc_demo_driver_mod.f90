@@ -205,7 +205,7 @@ subroutine initialise( program_name, modeldb)
   !=======================================================================
   ! Build the FEM function spaces and coordinate fields
   !=======================================================================
-  call init_fem( mesh_collection, chi_inventory, panel_id_inventory )
+  call init_fem( modeldb, chi_inventory, panel_id_inventory )
 
   !=======================================================================
   ! Setup general I/O system.

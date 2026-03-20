@@ -10,6 +10,7 @@ module lfric_xios_setup_mod
 
   use calendar_mod,                  only: calendar_type
   use clock_mod,                     only: clock_type
+  use config_mod,                    only: config_type
   use constants_mod,                 only: i_def, i_halo_index, i_timestep, &
                                            r_def, l_def, str_def,           &
                                            radians_to_degrees
@@ -153,12 +154,15 @@ contains
   !!           of XIOS dimensionality (domains, axes, etc) and initialised the
   !!           corresponding XIOS objects.
   !>
+  !> @param[in]  config        Configuration object
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
   !>
-  subroutine init_xios_dimensions(chi, panel_id, alt_coords, alt_panel_ids)
+  subroutine init_xios_dimensions(config, chi, panel_id, alt_coords, alt_panel_ids)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     ! Arguments
     type(field_type),           intent(in) :: chi(:)
@@ -170,12 +174,12 @@ contains
     type(mesh_type), pointer :: mesh => null()
 
     ! Initialise XIOS prime mesh
-    call init_xios_mesh( chi, panel_id, prime_mesh=.true. )
+    call init_xios_mesh( config, chi, panel_id, prime_mesh=.true. )
 
     ! Initialise additional meshes
     if (present(alt_coords) .and. present(alt_panel_ids)) then
       do i = 1, size(alt_panel_ids)
-        call init_xios_mesh( alt_coords(i,:), alt_panel_ids(i), prime_mesh=.false. )
+        call init_xios_mesh( config, alt_coords(i,:), alt_panel_ids(i), prime_mesh=.false. )
       end do
     end if
 
@@ -193,14 +197,17 @@ contains
   !!           of XIOS dimensionality (domains, axes, etc) and initialised the
   !!           corresponding XIOS objects.
   !>
+  !> @param[in]  config        Configuration object
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
   !> @param[in]  prime_mesh    Logical flag denoting if the mesh is the primary
   !!                           I/O mesh
   !>
-  subroutine init_xios_mesh(chi, panel_id, prime_mesh)
+  subroutine init_xios_mesh(config, chi, panel_id, prime_mesh)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     ! Arguments
     type(field_type),  intent(in) :: chi(:)
@@ -262,6 +269,16 @@ contains
 
     logical :: mesh_is_prime_mesh
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Set optional prime_mesh_flag
     if (present(prime_mesh)) then
       mesh_is_prime_mesh = prime_mesh
@@ -277,7 +294,7 @@ contains
      r2d = radians_to_degrees
     else
      r2d = 1.0_r_def
-    endif
+    end if
 
     ! Set up fields to hold the output coordinates
     output_field_fs => function_space_collection%get_fs( mesh, 0, 0, W0 )
@@ -295,7 +312,7 @@ contains
      r2d = radians_to_degrees
     else
      r2d = 1.0_r_def
-    endif
+    end if
 
     ! Calculate the local size of a W2H fs in order to determine
     ! how many edge dofs for the current partition
@@ -316,7 +333,9 @@ contains
         call sample_chi(i)%initialise( vector_space = output_field_fs )
       end do
       ! Convert to (X,Y,Z) coordinates
-      call invoke(nodal_xyz_coordinates_kernel_type(sample_chi, chi, panel_id))
+      call invoke(nodal_xyz_coordinates_kernel_type(sample_chi, chi, panel_id, &
+                                                    geometry, topology,        &
+                                                    coord_system, scaled_radius))
     else
       ! For planar geometries just re-use existing chi which are already (X,Y,Z)
       do i = 1,3

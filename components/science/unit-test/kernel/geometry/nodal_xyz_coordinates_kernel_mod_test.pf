@@ -6,7 +6,7 @@
 
 module nodal_xyz_coordinates_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, imdi
+  use constants_mod, only : i_def, r_def, imdi, rmdi
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w2_m3x3_q3x3x3_size, &
@@ -36,30 +36,27 @@ module nodal_xyz_coordinates_kernel_mod_test
     procedure test_all
   end type nodal_xyz_coordinates_test_type
 
-  integer(i_def), parameter :: element_order_h = 0
-  integer(i_def), parameter :: element_order_v = 0
-
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use sci_chi_transform_mod,      only : init_chi_transforms
-    use feign_config_mod,           only : feign_finite_element_config
-    use finite_element_config_mod,  only : cellshape_quadrilateral, &
-                                           coord_system_xyz
+    use sci_chi_transform_mod, only: init_chi_transforms
+!    use feign_config_mod,           only : feign_finite_element_config
+!    use finite_element_config_mod,  only : cellshape_quadrilateral, &
+!                                           coord_system_xyz
 
     implicit none
 
     class(nodal_xyz_coordinates_test_type), intent(inout) :: this
 
-    call feign_finite_element_config(      &
-        cellshape=cellshape_quadrilateral, &
-        coord_order=0_i_def,               &
-        coord_system=coord_system_xyz,     &
-        element_order_h=0_i_def,           &
-        element_order_v=0_i_def,           &
-        rehabilitate=.true. )
+!!$    call feign_finite_element_config(      &
+!!$        cellshape=cellshape_quadrilateral, &
+!!$        coord_order=0_i_def,               &
+!!$        coord_system=coord_system_xyz,     &
+!!$        element_order_h=0_i_def,           &
+!!$        element_order_v=0_i_def,           &
+!!$        rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -86,6 +83,7 @@ contains
   subroutine test_all( this )
 
     use sci_nodal_xyz_coordinates_kernel_mod, only: nodal_xyz_coordinates_code
+    use finite_element_config_mod, only: coord_system_xyz
 
     implicit none
 
@@ -95,6 +93,14 @@ contains
     real(r_def), parameter :: dy = 1000.0_r_def
     real(r_def), parameter :: dz = 2000.0_r_def
     real(r_def), parameter :: tol = 1.0e-6_r_def
+
+!    integer(i_def), parameter :: element_order_h = 0
+!    integer(i_def), parameter :: element_order_v = 0
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Fields
     real(r_def), allocatable :: nodal1(:), nodal2(:), nodal3(:)
@@ -119,6 +125,8 @@ contains
     integer(kind=i_def) :: undf_w0, undf_w2, undf_w3
     integer(kind=i_def) :: dim_space, dim_space_diff
     integer(kind=i_def) :: nqp_h, nqp_v
+
+
 
     nlayers = 3
     call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells,   &
@@ -171,6 +179,10 @@ contains
                                     chi2,            &
                                     chi3,            &
                                     panel_id,        &
+ geometry, &
+  topology, &
+  coord_system, &
+  scaled_radius, &
                                     ndf_w2, undf_w2, &
                                     map_w2(:,cell),  &
                                     ndf_w0, undf_w0, &
