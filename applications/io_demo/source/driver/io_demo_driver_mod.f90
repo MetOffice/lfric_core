@@ -36,7 +36,8 @@ module io_demo_driver_mod
   use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
-  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, setup_io_benchmark_files
+  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, &
+                                         setup_io_benchmark_files
   use io_benchmark_step_mod,      only : step_io_benchmark
   use io_demo_alg_mod,            only : io_demo_alg
   use sci_field_minmax_alg_mod,   only : log_field_minmax
@@ -86,12 +87,16 @@ contains
     integer(i_def) :: geometry
     integer(i_def) :: method
     integer(i_def) :: number_of_layers
+    integer(i_def) :: tile_size(2)
     real(r_def)    :: domain_bottom
     real(r_def)    :: domain_height
     real(r_def)    :: scaled_radius
-    logical        :: check_partitions
-    logical        :: multifile_io
-    logical        :: io_benchmark
+
+    logical :: check_partitions
+    logical :: inner_halo_tiles
+    logical :: prepartitioned
+    logical :: multifile_io
+    logical :: io_benchmark
 
     integer(i_def), parameter :: one_layer = 1_i_def
     integer(i_def) :: i
@@ -109,8 +114,19 @@ contains
     domain_height    = modeldb%config%extrusion%domain_height()
     number_of_layers = modeldb%config%extrusion%number_of_layers()
     scaled_radius    = modeldb%config%planet%scaled_radius()
+    prepartitioned   = modeldb%config%base_mesh%prepartitioned()
     multifile_io     = modeldb%config%io_demo%multifile_io()
     io_benchmark     = modeldb%config%io_demo%io_benchmark()
+
+    if (prepartitioned) then
+      tile_size(1) = 1
+      tile_size(2) = 1
+      inner_halo_tiles = .false.
+    else
+      tile_size(1) = modeldb%config%partitioning%tile_size_x()
+      tile_size(2) = modeldb%config%partitioning%tile_size_y()
+      inner_halo_tiles = modeldb%config%partitioning%inner_halo_tiles()
+    end if
 
     !=======================================================================
     ! Mesh
@@ -163,6 +179,7 @@ contains
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
                     base_mesh_names, extrusion,  &
+                    inner_halo_tiles, tile_size, &
                     stencil_depth, check_partitions )
 
     allocate( twod_names, source=base_mesh_names )
@@ -170,6 +187,7 @@ contains
       twod_names(i) = trim(twod_names(i))//'_2d'
     end do
     call create_mesh( base_mesh_names, extrusion_2d, &
+                      inner_halo_tiles, tile_size,   &
                       alt_name=twod_names )
     call assign_mesh_maps(twod_names)
 

@@ -137,7 +137,7 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(chi, panel_id, mesh)
+        call assign_coordinate_field(modeldb, chi, panel_id, mesh)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)

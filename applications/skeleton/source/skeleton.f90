@@ -45,7 +45,7 @@ program skeleton
   call init_config( filename, skeleton_required_namelists, &
                     config=modeldb%config )
 
-  call init_logger( modeldb%mpi%get_comm(), program_name )
+  call init_logger( modeldb, program_name )
 
   write(log_scratch_space,'(A)')                          &
       'Application built with '// trim(precision_real) // &

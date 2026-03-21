@@ -94,6 +94,8 @@ contains
 subroutine init_mesh( config,                  &
                       local_rank, total_ranks, &
                       mesh_names, extrusion,   &
+                      inner_halo_tiles,        &
+                      tile_size,               &
                       stencil_depths_in,       &
                       check_partitions,        &
                       alt_names )
@@ -107,10 +109,20 @@ subroutine init_mesh( config,                  &
   character(str_def),    intent(in) :: mesh_names(:)
   class(extrusion_type), intent(in) :: extrusion
 
-  integer(i_def),    intent(in) :: stencil_depths_in(:)
-  logical(l_def),    intent(in) :: check_partitions
+  logical(l_def), intent(in) :: inner_halo_tiles
+  integer(i_def), intent(in) :: tile_size(2)
+  integer(i_def), intent(in) :: stencil_depths_in(:)
+  logical(l_def), intent(in) :: check_partitions
 
   character(str_def), optional, intent(in) :: alt_names(:)
+
+  ! Optional, tile_size which overrides settings in configuration
+  ! Only here to provide continuity with multigrid tiling.
+  ! Should be removed in future as application/user should be
+  ! responsible for setting the correctly desired tiling
+  !option in the config object
+
+
 
   ! Parameters
   character(len=9), parameter :: routine_name = 'init_mesh'
@@ -127,6 +139,14 @@ subroutine init_mesh( config,                  &
   integer :: topology
   integer :: mesh_selection
 
+!!$  ! Multigrid related
+!!$  character(str_def), allocatable :: chain_mesh_tags(:)
+
+!!$  logical(l_def) :: coarsen_multigrid_tiles
+!  integer(i_def) :: tile_size(2)
+!!$  integer(i_def) :: tile_size_y
+!!$  integer(i_def) :: max_tiled_multigrid_level
+
   ! Local variables
   character(str_def), allocatable :: names(:)
   character(str_def), allocatable :: tmp_mesh_names(:)
@@ -137,15 +157,47 @@ subroutine init_mesh( config,                  &
 
   class(panel_decomposition_type), allocatable :: decomposition
 
-  integer(i_def)     :: i, n_digit
   character(str_def) :: fmt_str, number_str
+
+  integer(i_def) :: i, n_digit
+!!$  integer(i_def) :: tile_size_x
+!!$  integer(i_def) :: tile_size_y
+!!$  integer(i_def) :: tiling(2)
 
   !============================================================================
   ! Extract configuration variables
   !============================================================================
-  prepartitioned = config%base_mesh%prepartitioned()
-  file_prefix    = config%base_mesh%file_prefix()
-  cellshape      = config%finite_element%cellshape()
+  prepartitioned   = config%base_mesh%prepartitioned()
+  file_prefix      = config%base_mesh%file_prefix()
+  cellshape        = config%finite_element%cellshape()
+
+!!$  if (prepartitioned) then
+!!$    tile_size_x      = 1
+!!$    tile_size_y      = 1
+!!$    inner_halo_tiles = .false.
+!!$  else
+!!$    tile_size_x      = config%partitioning%tile_size_x()
+!!$    tile_size_y      = config%partitioning%tile_size_y()
+!!$    inner_halo_tiles = config%partitioning%inner_halo_tiles()
+!!$  end if
+!!$
+!!$  if (present(tile_size)) then
+!!$    tiling = tile_size
+!!$  else
+!!$    tiling = [tile_size_x, tile_size_y]
+!!$  end if
+! tile_size(:) = 1
+! if ( tile_size_x /= imdi ) tile_size(1) = tile_size_x
+! if ( tile_size_y /= imdi ) tile_size(2) = tile_size_y
+
+
+  ! Temporary extraction, These configuration varaibles need
+  ! to be refactored out.
+!!$  chain_mesh_tags  = config%multigrid% chain_mesh_tags()
+!!$  inner_halo_tiles = config%partitioning%inner_halo_tiles()
+
+!!$  max_tiled_multigrid_level = config%partitioning%max_tiled_multigrid_level()
+!!$  coarsen_multigrid_tiles   = config%partitioning%coarsen_multigrid_tiles()
 
   if ( .not. prepartitioned ) then
     generate_inner_halos = config%partitioning%generate_inner_halos()
@@ -183,7 +235,7 @@ subroutine init_mesh( config,                  &
   end do
 
   ! Currently only quad elements are fully functional
-  if (cellshape /= CELLSHAPE_QUADRILATERAL) then
+  if (cellshape /= cellshape_quadrilateral) then
     call log_event( "Reference_element must be QUAD for now...", &
                     LOG_LEVEL_ERROR )
   end if
@@ -327,12 +379,17 @@ subroutine init_mesh( config,                  &
 
   end if  ! prepartitioned
 
+!!$  inner_halo_tiles = config%partitioning%inner_halo_tiles()
+!!$  tile_size(1)     = config%partitioning%tile_size_x()
+!!$  tile_size(2)     = config%partitioning%tile_size_y()
 
   !============================================================================
   ! 3.0 Extrude the specified meshes from local mesh objects into
   !     mesh objects on the given extrusion.
   !============================================================================
-  call create_mesh( mesh_names, extrusion, alt_name=names )
+  call create_mesh( mesh_names, extrusion,       &
+                    inner_halo_tiles, tile_size, &
+                    alt_name=names )
 
 
   !============================================================================
