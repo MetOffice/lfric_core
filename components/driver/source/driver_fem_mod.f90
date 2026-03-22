@@ -14,9 +14,8 @@ module driver_fem_mod
 
   use sci_chi_transform_mod,          only: init_chi_transforms, &
                                             final_chi_transforms
+  use config_mod,                     only: config_type
   use constants_mod,                  only: i_def, l_def, str_def
-  use driver_modeldb_mod,             only: modeldb_type
-
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
@@ -47,17 +46,17 @@ contains
 
   !> @brief  Initialises the coordinate fields (chi) and FEM components.
   !>
-  !> @param[in]      modeldb              Model state object
+  !> @param[in]      config               Configuration object
   !> @param[in,out]  chi_inventory        Inventory object, containing all of
   !!                                      the chi fields indexed by mesh
   !> @param[in,out]  panel_id_inventory   Inventory object, containing all of
   !!                                      the fields with the ID of mesh panels
-  subroutine init_fem( modeldb, chi_inventory, panel_id_inventory )
+  subroutine init_fem(config, chi_inventory, panel_id_inventory)
 
     implicit none
 
     ! Coordinate field
-    type(modeldb_type), intent(in) :: modeldb
+    type(config_type), intent(in) :: config
 
     type(inventory_by_mesh_type), intent(inout) :: chi_inventory
     type(inventory_by_mesh_type), intent(inout) :: panel_id_inventory
@@ -78,9 +77,9 @@ contains
 
     nullify(mesh, twod_mesh, fs)
 
-    coord_order = modeldb%config%finite_element%coord_order()
-    geometry    = modeldb%config%base_mesh%geometry()
-    topology    = modeldb%config%base_mesh%topology()
+    coord_order = config%finite_element%coord_order()
+    geometry    = config%base_mesh%geometry()
+    topology    = config%base_mesh%topology()
 
     ! ======================================================================== !
     ! Initialise coordinates
@@ -137,7 +136,7 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(modeldb, chi, panel_id, mesh)
+        call assign_coordinate_field(config, chi, panel_id, mesh)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)

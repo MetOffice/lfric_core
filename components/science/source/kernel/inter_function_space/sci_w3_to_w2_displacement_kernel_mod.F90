@@ -42,7 +42,7 @@ module sci_w3_to_w2_displacement_kernel_mod
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! geometry
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! topology
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! coord_system
-         arg_type(GH_SCALAR,  GH_REAL, GH_READ)                              &! scaled_radius
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                           &! scaled_radius
          /)
     type(func_type) :: meta_funcs(1) = (/                                    &
          func_type(Wchi, GH_BASIS)                                           &

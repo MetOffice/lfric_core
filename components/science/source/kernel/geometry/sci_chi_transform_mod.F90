@@ -255,8 +255,9 @@ end subroutine final_chi_transforms
 !! @param[out]  y          The second coordinate field out (global Cartesian Y)
 !! @param[out]  z          The third coordinate field out (global Cartesian Z)
 !-------------------------------------------------------------------------------
-subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id,                   &
-                    geometry, topology, coord_system, scaled_radius, &
+subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id, &
+                    geometry, topology,            &
+                    coord_system, scaled_radius,   &
                     x, y, z )
 
   implicit none
@@ -436,8 +437,9 @@ end subroutine chir2xyz
 !! @param[out]  latitude   The second coordinate field out (latitude)
 !! @param[out]  radius     The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
-subroutine chi2llr( chi_1, chi_2, chi_3, panel_id,                   &
-                    geometry, topology, coord_system, scaled_radius, &
+subroutine chi2llr( chi_1, chi_2, chi_3, panel_id, &
+                    geometry, topology,            &
+                    coord_system, scaled_radius,   &
                     lon, lat, radius )
 
   implicit none
@@ -519,8 +521,9 @@ end subroutine chi2llr
 !! @param[out]  beta       The second coordinate field out (beta)
 !! @param[out]  radius     The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
-subroutine chi2abr( chi_1, chi_2, chi_3, panel_id,                   &
-                    geometry, topology, coord_system, scaled_radius, &
+subroutine chi2abr( chi_1, chi_2, chi_3, panel_id, &
+                    geometry, topology,            &
+                    coord_system, scaled_radius,   &
                     alpha, beta, radius )
 
   implicit none

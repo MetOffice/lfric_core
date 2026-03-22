@@ -139,7 +139,6 @@ contains
     integer(i_def)                              :: xyprocs(2)
     integer(i_def)                              :: max_stencil_depth
     logical(l_def)                              :: generate_inner_halos
-!   integer(i_def)                              :: tile_size(2)
     character(str_max_filename), parameter      :: filename = &
                                              'data/mesh_BiP8x8-750x250.nc'
     character(str_def), parameter               :: mesh_name = 'unit_test'
@@ -155,19 +154,6 @@ contains
                                       max_stencil_depth, generate_inner_halos, &
                                       0_i_def, 1_i_def)
 
-!!$    call feign_partitioning_config( coarsen_multigrid_tiles   = .false., &
-!!$                                    generate_inner_halos      = .true.,  &
-!!$                                    inner_halo_tiles          = .false., &
-!!$                                    max_tiled_multigrid_level = 1_i_def, &
-!!$                                    panel_decomposition       =          &
-!!$                                               panel_decomposition_auto, &
-!!$                                    panel_xproc               = 1_i_def, &
-!!$                                    panel_yproc               = 1_i_def, &
-!!$                                    partitioner               =          &
-!!$                                                     partitioner_planar, &
-!!$                                    tile_size_x               = 1_i_def, &
-!!$                                    tile_size_y               = 1_i_def )
-
     allocate( extrusion, source=create_extrusion( METHOD_UNIFORM,   &
                                                   100.0_r_def,      &
                                                   10000.0_r_def,    &
@@ -176,7 +162,7 @@ contains
 
     ! Check that exactly one mesh is added to the collection
     @assertEqual( mesh_collection%n_meshes(), 0 )
-!    tile_size = [1,1]
+
     call create_mesh( mesh_name, extrusion, &
                       inner_halo_tiles=.false., &
                       tile_size=[1,1] )

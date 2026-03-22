@@ -6,7 +6,6 @@
 !> @brief Functions/Routines related to creating a <mesh_object_type>
 module create_mesh_mod
 
-!  use config_mod,    only: config_type
   use constants_mod, only: i_def, str_def, r_def, l_def, imdi, &
                            str_max_filename
   use log_mod,       only: log_event,         &
@@ -93,9 +92,10 @@ end function create_extrusion
 !!           held in the application local_mesh_collection and the
 !!           specified extrusion.
 !!
-!> @param[in]  config            Model configuration object
 !> @param[in]  local_mesh_names  Names of the local_mesh_types to extrude.
 !> @param[in]  extrusion         Extrusion to employ.
+!> @param[in]  local_halo_tiles
+!> @param[in]  tile_size
 !> @param[in]  alt_name          Optional, Alternative names for the
 !!                               extruded meshes, defaults to local_mesh_names
 !!                               if absent.

@@ -7,9 +7,9 @@
 !>
 module driver_counter_mod
 
-  use count_mod,          only: count_type, halo_calls
-  use driver_modeldb_mod, only: modeldb_type
-  use timer_mod,          only: timer, output_timer, init_timer
+  use config_mod, only: config_type
+  use count_mod,  only: count_type, halo_calls
+  use timer_mod,  only: timer, output_timer, init_timer
 
   implicit none
 
@@ -23,18 +23,19 @@ contains
   !> As well as initialising the system a "top level" counter is set up
   !? for tracking halo calls.
   !>
+  !> @param[in] config     Configuration object
   !> @param[in] identifier Top level halo name.
   !>
-  subroutine init_counters( modeldb, identifier )
+  subroutine init_counters(config, identifier)
 
     implicit none
 
-    type(modeldb_type), intent(in) :: modeldb
-    character(*),       intent(in) :: identifier
+    type(config_type), intent(in) :: config
+    character(*),      intent(in) :: identifier
 
     logical(l_def) :: subroutine_counters
 
-    subroutine_counters = modeldb%config%io%subroutine_counters()
+    subroutine_counters = config%io%subroutine_counters()
 
     if ( subroutine_counters ) then
       allocate( halo_calls, source=count_type('halo_calls') )
@@ -52,20 +53,21 @@ contains
   !> @todo Reconsider the existance of the simple counter system once the
   !>       profiler is integrated.
   !>
+  !> @param[in] config     Configuration object
   !> @param[in] identifier Top level counter name.
   !>
-  subroutine final_counters(modeldb, identifier )
+  subroutine final_counters(config, identifier)
 
     implicit none
 
-    type(modeldb_type), intent(in) :: modeldb
-    character(*),       intent(in) :: identifier
+    type(config_type), intent(in) :: config
+    character(*),      intent(in) :: identifier
 
     logical(l_def)     :: subroutine_counters
     character(str_def) :: counter_output_suffix
 
-    subroutine_counters   = modeldb%config%io%subroutine_counters()
-    counter_output_suffix = modeldb%config%io%counter_output_suffix()
+    subroutine_counters   = config%io%subroutine_counters()
+    counter_output_suffix = config%io%counter_output_suffix()
 
     if (subroutine_counters) then
       call halo_calls%counter( identifier )

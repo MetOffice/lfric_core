@@ -223,6 +223,16 @@ contains
     type(operator_type),         pointer :: u_lat_map
     type(operator_type),         pointer :: u_up_map
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     if (.not. u_lon_map_inventory%is_initialised()) then
       call u_lon_map_inventory%initialise(name='u_lon_map')
     end if
@@ -247,15 +257,14 @@ contains
     call u_lat_map_inventory%add_operator(u_lat_map, w2_fs, w3_fs, mesh)
     call u_up_map_inventory%add_operator(u_up_map, w2_fs, wtheta_fs, mesh)
 
-    call invoke( name="compute_lonlatr_galerkin_operators",                    &
-                 compute_map_u_operators_kernel_type(u_lon_map,                &
-                                                     u_lat_map,                &
-                                                     u_up_map,                 &
-                                                     chi, panel_id,            &
-                                                     config%base_mesh%geometry(),          &
-                                                     config%base_mesh%topology(),          &
-                                                     config%finite_element%coord_system(), &
-                                                     config%planet%scaled_radius(),        &
+    call invoke( name="compute_lonlatr_galerkin_operators",              &
+                 compute_map_u_operators_kernel_type(u_lon_map,          &
+                                                     u_lat_map,          &
+                                                     u_up_map,           &
+                                                     chi, panel_id,      &
+                                                     geometry, topology, &
+                                                     coord_system,       &
+                                                     scaled_radius,      &
                                                      qr) )
 
   end subroutine create_spherical_components_to_w2_projection
@@ -285,6 +294,16 @@ contains
     type(operator_type),         pointer :: u_up_sample
     integer(tik)                         :: id
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     if (.not. u_lon_sample_inventory%is_initialised()) then
       call u_lon_sample_inventory%initialise(name='u_lon_sample')
     end if
@@ -310,15 +329,14 @@ contains
     call u_lat_sample_inventory%add_operator(u_lat_sample, w2_fs, w3_fs, mesh)
     call u_up_sample_inventory%add_operator(u_up_sample, w2_fs, wtheta_fs, mesh)
 
-    call invoke( name="compute_lonlatr_sample_operators",                      &
-                 compute_sample_u_ops_kernel_type(u_lon_sample,                &
-                                                  u_lat_sample,                &
-                                                  u_up_sample,                 &
-                                                  chi, panel_id,               &
-                                                  config%base_mesh%geometry(), &
-                                                  config%base_mesh%topology(), &
-                                                  config%finite_element%coord_system(), &
-                                                  config%planet%scaled_radius() ) )
+    call invoke( name="compute_lonlatr_sample_operators",             &
+                 compute_sample_u_ops_kernel_type(u_lon_sample,       &
+                                                  u_lat_sample,       &
+                                                  u_up_sample,        &
+                                                  chi, panel_id,      &
+                                                  geometry, topology, &
+                                                  coord_system,       &
+                                                  scaled_radius) )
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
@@ -1044,6 +1062,16 @@ contains
     integer(kind=i_def),      parameter :: xdirection = 1_i_def
     integer(tik)                        :: id
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Check inventory is initialised
     if (.not. project_lon_dot_to_w1_inventory%is_initialised()) then
       call project_lon_dot_to_w1_inventory%initialise(                         &
@@ -1069,14 +1097,13 @@ contains
               proj_op, w1_fs, w3_fs, mesh                                      &
       )
 
-      call invoke( name='proj_lon_dot_to_w1_op',                               &
-                   project_ws_to_w1_operator_kernel_type(proj_op,              &
-                                                         chi, panel_id,        &
-                                                         xdirection,           &
-                                                         config%base_mesh%geometry(),          &
-                                                         config%base_mesh%topology(),          &
-                                                         config%finite_element%coord_system(), &
-                                                         config%planet%scaled_radius(),        &
+      call invoke( name='proj_lon_dot_to_w1_op',                             &
+                   project_ws_to_w1_operator_kernel_type(proj_op,            &
+                                                         chi, panel_id,      &
+                                                         xdirection,         &
+                                                         geometry, topology, &
+                                                         coord_system,       &
+                                                         scaled_radius,      &
                                                          qr) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
@@ -1109,6 +1136,16 @@ contains
     integer(kind=i_def),      parameter :: ydirection = 2_i_def
     integer(tik)                        :: id
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Check inventory is initialised
     if (.not. project_lat_dot_to_w1_inventory%is_initialised()) then
       call project_lat_dot_to_w1_inventory%initialise(                         &
@@ -1134,14 +1171,13 @@ contains
               proj_op, w1_fs, w3_fs, mesh                                      &
       )
 
-      call invoke( name='proj_lat_dot_to_w1_op',                               &
-                   project_ws_to_w1_operator_kernel_type(proj_op,              &
-                                                         chi, panel_id,        &
-                                                         ydirection,           &
-                                                         config%base_mesh%geometry(),          &
-                                                         config%base_mesh%topology(),          &
-                                                         config%finite_element%coord_system(), &
-                                                         config%planet%scaled_radius(),        &
+      call invoke( name='proj_lat_dot_to_w1_op',                             &
+                   project_ws_to_w1_operator_kernel_type(proj_op,            &
+                                                         chi, panel_id,      &
+                                                         ydirection,         &
+                                                         geometry, topology, &
+                                                         coord_system,       &
+                                                         scaled_radius,      &
                                                          qr) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
@@ -1174,6 +1210,16 @@ contains
     integer(kind=i_def),      parameter :: zdirection = 3_i_def
     integer(tik)                        :: id
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Check inventory is initialised
     if (.not. project_r_dot_to_w1_inventory%is_initialised()) then
       call project_r_dot_to_w1_inventory%initialise(name='project_r_dot_to_w1')
@@ -1197,14 +1243,13 @@ contains
               proj_op, w1_fs, w3_fs, mesh                                      &
       )
 
-      call invoke( name='proj_r_dot_to_w1_op',                                 &
-                   project_ws_to_w1_operator_kernel_type(proj_op,              &
-                                                         chi, panel_id,        &
-                                                         zdirection,           &
-                                                         config%base_mesh%geometry(),          &
-                                                         config%base_mesh%topology(),          &
-                                                         config%finite_element%coord_system(), &
-                                                         config%planet%scaled_radius(),        &
+      call invoke( name='proj_r_dot_to_w1_op',                               &
+                   project_ws_to_w1_operator_kernel_type(proj_op,            &
+                                                         chi, panel_id,      &
+                                                         zdirection,         &
+                                                         geometry, topology, &
+                                                         coord_system,       &
+                                                         scaled_radius,      &
                                                          qr) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
@@ -1239,6 +1284,16 @@ contains
     type(function_space_type), pointer :: w3_k0_fs
     integer(tik)                       :: id
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Initialise inventory if this is the first time getting this constant
     if (.not. w3_to_w2_displacement_inventory%is_initialised()) then
       call w3_to_w2_displacement_inventory%initialise(                         &
@@ -1269,13 +1324,12 @@ contains
                                                      w2h_k0_fs, local_mesh)
 
       call dummy_w3%initialise( w3_k0_fs )
-      call invoke( setval_c(w3_to_w2_displacement, 0.0_r_def),                 &
-                   w3_to_w2_displacement_kernel_type(w3_to_w2_displacement,    &
-                                                     chi, panel_id, dummy_w3,  &
-                                                     config%base_mesh%geometry(), &
-                                                     config%base_mesh%topology(), &
-                                                     config%finite_element%coord_system(), &
-                                                     config%planet%scaled_radius() ) )
+      call invoke( setval_c(w3_to_w2_displacement, 0.0_r_def),                &
+                   w3_to_w2_displacement_kernel_type(w3_to_w2_displacement,   &
+                                                     chi, panel_id, dummy_w3, &
+                                                     geometry, topology,      &
+                                                     coord_system,            &
+                                                     scaled_radius) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if

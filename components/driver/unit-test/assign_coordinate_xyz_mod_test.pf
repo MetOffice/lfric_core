@@ -8,33 +8,26 @@
 module assign_coordinate_xyz_mod_test
 
   use constants_mod, only : r_def, i_def
+
+  use base_mesh_config_mod, only: geometry_planar, topology_fully_periodic
   use funit
 
   implicit none
 
   private
-  public :: assign_coordinate_xyz_test_type, test_all
-
-  @TestCase
-  type, extends(TestCase) :: assign_coordinate_xyz_test_type
-    private
-  contains
-    procedure test_all
-  end type assign_coordinate_xyz_test_type
+  public :: test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use driver_coordinates_mod, only : assign_coordinate_xyz
 
-    use base_mesh_config_mod, only: geometry_planar, topology_fully_periodic
+
 
     implicit none
-
-    class(assign_coordinate_xyz_test_type), intent(inout) :: this
 
     real(kind=r_def), parameter :: tol = 1.0e-3_r_def, &
                                    one = 1.0_r_def
