@@ -17,10 +17,10 @@ module create_mesh_mod
   use extrusion_mod,       only: extrusion_type,           &
                                  uniform_extrusion_type,   &
                                  geometric_extrusion_type, &
-                                 quadratic_extrusion_type, &
-                                 PRIME_EXTRUSION,          &
-                                 SHIFTED,                  &
-                                 DOUBLE_LEVEL
+                                 quadratic_extrusion_type!, &
+!                                 PRIME_EXTRUSION,          &
+!                                 SHIFTED,                  &
+!                                 DOUBLE_LEVEL
   use local_mesh_mod,      only: local_mesh_type
   use mesh_mod,            only: mesh_type
   use sci_query_mod,       only: check_lbc
