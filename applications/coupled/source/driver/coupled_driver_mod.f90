@@ -119,7 +119,7 @@ contains
 
     ! Create the required meshes
     stencil_depth = 1
-    apply_partition_check = .false.
+    check_partitions = .false.
     call init_mesh( modeldb%config,              &
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
