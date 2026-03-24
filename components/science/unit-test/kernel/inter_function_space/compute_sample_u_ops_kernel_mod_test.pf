@@ -147,8 +147,8 @@ contains
     real(r_def), allocatable :: u_lat_op(:,:,:)
     real(r_def), allocatable :: u_up_op(:,:,:)
 
-    loginal(l_def)           :: is_planar_geometry
-    loginal(l_def)           :: is_periodic_topology
+    logical(l_def)           :: is_planar_geometry
+    logical(l_def)           :: is_periodic_topology
 
     ! ------------------------------------------------------------------------ !
     ! Make mesh and function space details
