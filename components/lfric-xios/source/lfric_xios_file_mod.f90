@@ -424,8 +424,8 @@ subroutine register_with_context(self)
       ! the temporal object initialiser which will tell XIOS which time entry
       ! to start reading from
       call xios_set_attr(self%handle, cyclic=self%cyclic)
-      call self%temporal%initialise( self%path, self%fields, self%frequency, &
-                                     self%cyclic, record_offset )
+      call self%temporal%initialise( self%xios_id, self%path, self%fields, &
+                                     self%frequency, self%cyclic, record_offset )
       call xios_set_attr(self%handle, record_offset=record_offset)
     end if
 
@@ -498,6 +498,12 @@ subroutine recv_fields(self)
       call self%fields(i)%recv()
     end do
 
+    ! Shift the read index forward for temporal reading
+    if ( (self%io_mode == FILE_MODE_READ) .and. &
+        (self%operation == OPERATION_TIMESERIES) ) then
+      call self%temporal%shift_read_index(self%fields)
+    end if
+
     ! If file should only be operated on once, close it, else set the time for
     ! the next operation
     if (self%operation == OPERATION_ONCE) then
@@ -506,14 +512,14 @@ subroutine recv_fields(self)
       self%next_operation = self%next_operation + self%frequency
     end if
 
-    ! Advance the time axis if present
-    if ( (self%io_mode == FILE_MODE_READ) .and. &
-         (self%operation == OPERATION_TIMESERIES) ) then
-      if (.not. self%temporal%advance()) call self%file_close()
-    end if
-
     self%context_init_read = .false.
 
+  end if
+
+  ! Advance the time axis if present
+  if ( (self%io_mode == FILE_MODE_READ) .and. &
+        (self%operation == OPERATION_TIMESERIES) ) then
+    if (.not. self%temporal%advance(self%fields)) call self%file_close()
   end if
 
 end subroutine recv_fields

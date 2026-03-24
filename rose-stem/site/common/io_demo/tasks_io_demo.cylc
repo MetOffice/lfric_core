@@ -21,6 +21,29 @@
         "tsteps": 90,
     }) %}
 
+{% elif task_ns.conf_name == "benchmark-C24" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["benchmark"],
+        "resolution": "C24",
+        "tsteps": 24,
+        "kgo_checks": [],
+    }) %}
+
+{% elif task_ns.conf_name == "benchmark-nwp-C224" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["benchmark-nwp"],
+        "resolution": "C224",
+        "tsteps": 24,
+        "kgo_checks": [],
+        "mpi_parts": 384,
+        "mpi_parts_xios": 6,
+        "xios_nodes": 1,
+        "xios_server_mode": true,
+        "xios_server_ranks": 6,
+    }) %}
+
 {% elif task_ns.conf_name == "unit_tests" %}
 
     {% do task_dict.update({

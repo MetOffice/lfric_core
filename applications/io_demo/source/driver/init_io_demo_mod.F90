@@ -106,7 +106,7 @@ module init_io_demo_mod
     ! Create io_demo runtime constants. This creates various things
     ! needed by the fem algorithms such as mass matrix operators, mass
     ! matrix diagonal fields and the geopotential field
-    call create_io_demo_constants(modeldb, mesh, chi, panel_id)
+    call create_io_demo_constants(mesh, chi, panel_id)
 
     call log_event( 'io_demo: Miniapp initialised', LOG_LEVEL_TRACE )
 
