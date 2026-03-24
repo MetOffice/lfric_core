@@ -303,7 +303,9 @@ contains
                  compute_sample_u_ops_kernel_type(u_lon_sample,                &
                                                   u_lat_sample,                &
                                                   u_up_sample,                 &
-                                                  chi, panel_id) )
+                                                  chi, panel_id,               &
+                                                  mesh%is_geometry_planar(),   &
+                                                  mesh%is_topology_periodic()) )
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 

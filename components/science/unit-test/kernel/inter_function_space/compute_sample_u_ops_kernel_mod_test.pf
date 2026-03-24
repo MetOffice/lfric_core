@@ -275,6 +275,7 @@ contains
                                       chi_data(:,2),                           &
                                       chi_data(:,3),                           &
                                       panel_id_data,                           &
+                                      .false., .false.,                        &
                                       ndf_w2b, ndf_w3, ndf_wt,                 &
                                       ndf_wchi, undf_wchi, map_wchi(:,cell),   &
                                       basis_wchi, diff_basis_wchi,             &
