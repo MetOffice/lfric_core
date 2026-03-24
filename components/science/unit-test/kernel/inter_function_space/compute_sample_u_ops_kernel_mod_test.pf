@@ -6,7 +6,7 @@
 
 module compute_sample_u_ops_kernel_mod_test
 
-  use constants_mod,         only : i_def, r_def
+  use constants_mod,         only : i_def, r_def, l_def
   use reference_element_mod, only : W, S, E, N, B, T
   use funit
 
@@ -147,6 +147,9 @@ contains
     real(r_def), allocatable :: u_lat_op(:,:,:)
     real(r_def), allocatable :: u_up_op(:,:,:)
 
+    loginal(l_def)           :: is_planar_geometry
+    loginal(l_def)           :: is_periodic_topology
+
     ! ------------------------------------------------------------------------ !
     ! Make mesh and function space details
     ! ------------------------------------------------------------------------ !
@@ -218,6 +221,8 @@ contains
     u_up_op(:,:,:)  = 0.0_r_def
     u_w2_data(:) = 0.0_r_def
     u_w2b_data(:) = 0.0_r_def
+    is_planar_geometry = .false.
+    is_periodic_topology = .false.
 
     ! Set values for components, that vary with column and layer
     do k = 0, nlayers - 1
@@ -275,7 +280,8 @@ contains
                                       chi_data(:,2),                           &
                                       chi_data(:,3),                           &
                                       panel_id_data,                           &
-                                      .false., .false.,                        &
+                                      is_planar_geometry,                      &
+                                      is_periodic_topology,                    &
                                       ndf_w2b, ndf_w3, ndf_wt,                 &
                                       ndf_wchi, undf_wchi, map_wchi(:,cell),   &
                                       basis_wchi, diff_basis_wchi,             &
