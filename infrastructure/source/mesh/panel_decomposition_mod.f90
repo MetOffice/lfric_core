@@ -885,7 +885,7 @@ contains
 
     ! Equal divisions are only required if there are maps between meshes
     if (check_constraints) then
-      call log_event("Performing partition constraints.", log_level_debug)
+      call log_event("Checking partition constraints.", log_level_debug)
       if ( mod(num_cells_x, num_xprocs) /= 0 ) then
         write(log_scratch_space, "(2(A,I0))")                      &
           "Requested number of ranks in x direction ", num_xprocs, &
