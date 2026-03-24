@@ -440,22 +440,22 @@ contains
   !> @brief Returns the (finite element) Det(J) values at W3 dof locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The Det(J) field
-  function get_detj_at_w3_fe(mesh_id) result(detj_at_w3)
+  function get_detj_at_w3_fe(config, mesh_id) result(detj_at_w3)
 
     ! @TODO #4487: update these imports
     ! use sci_calc_detj_at_w3_kernel_mod, only: calc_detj_at_w3_kernel_type
     use sci_compute_mass_matrix_kernel_w_scalar_mod, &
                                       only: compute_mass_matrix_kernel_w_scalar_type
     use sci_mm_diagonal_kernel_mod,   only: mm_diagonal_kernel_type
-    use finite_element_config_mod,    only: nqp_h_exact, &
-                                            nqp_v_exact
     use operator_mod,                 only: operator_type
     use quadrature_xyoz_mod,          only: quadrature_xyoz_type
     use quadrature_rule_gaussian_mod, only: quadrature_rule_gaussian_type
 
     implicit none
 
+    type(config_type),         intent(in) :: config
     integer(kind=i_def),       intent(in) :: mesh_id
+
     type(mesh_type),              pointer :: mesh
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3
@@ -469,8 +469,17 @@ contains
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
 
+    integer(i_def) :: nqp_h_exact, nqp_v_exact
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
+    nqp_h_exact = config%finite_element%nqp_h_exact()
+    nqp_v_exact = config%finite_element%nqp_v_exact()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       detj_at_w3 => get_detj_at_w3_fv(mesh_id)
       return
     end if
@@ -491,8 +500,7 @@ contains
       ! Create the object as it doesn't exist yet
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      w3_fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                                element_order_v, W3)
+      w3_fs => function_space_collection%get_fs(mesh, order_h, order_v, W3)
       call detj_at_w3_inventory_fe%add_field(detj_at_w3, w3_fs, mesh)
 
       ! @TODO #4487: it is inefficient to calculate this via mass matrices
@@ -593,14 +601,16 @@ contains
   !> @brief Returns the (finite element) Det(J) values at W2 dof locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The Det(J) field
-  function get_detj_at_w2_fe(mesh_id) result(detj_at_w2)
+  function get_detj_at_w2_fe(config, mesh_id) result(detj_at_w2)
 
     use sci_calc_detj_at_w2_kernel_mod, only: calc_detj_at_w2_kernel_type
     use sci_multiplicity_kernel_mod,    only: multiplicity_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),              pointer :: mesh
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w2
@@ -610,8 +620,13 @@ contains
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
 
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       detj_at_w2 => get_detj_at_w2_fv(mesh_id)
       return
     end if
@@ -632,8 +647,7 @@ contains
       ! Create the object as it doesn't exist yet
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      w2_fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                                element_order_v, W2)
+      w2_fs => function_space_collection%get_fs(mesh, order_h, order_v, W2)
       call multiplicity_w2%initialise( w2_fs )
       call detj_at_w2_inventory_fe%add_field(detj_at_w2, w2_fs, mesh)
 
@@ -710,13 +724,15 @@ contains
   !> @brief Returns a pointer to the vertical grid spacing, located at W3 DoFs
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The physical height difference of layers, at W3
-  function get_dz_w3(mesh_id) result(dz_w3)
+  function get_dz_w3(config, mesh_id) result(dz_w3)
 
     use sci_get_dz_w3_kernel_mod,           only: get_dz_w3_kernel_type
 
     implicit none
 
-    integer(kind=i_def),    intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),           pointer :: mesh
     type(field_type),          pointer :: dz_w3
     logical(kind=l_def)                :: constant_exists
@@ -735,7 +751,7 @@ contains
     if (.not. constant_exists) then
       ! If this constant doesn't exist, create it
       ! Get height first to avoid potentially timing twice
-      height_w2 => get_height_fv(W2, mesh_id)
+      height_w2 => get_height_fv(config, W2, mesh_id)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
@@ -844,13 +860,15 @@ contains
   !> @brief Returns the 1/dz values at lowest-order Wtheta DoF locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The dz_at_wtheta field
-  function get_dz_at_wtheta(mesh_id) result(dz_at_wtheta)
+  function get_dz_at_wtheta(config, mesh_id) result(dz_at_wtheta)
 
     use sci_calc_dz_face_kernel_mod, only: calc_dz_face_kernel_type
 
     implicit none
 
-    integer(kind=i_def),      intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),             pointer :: mesh
     type(field_type),            pointer :: dz_at_wtheta
     type(function_space_type),   pointer :: wtheta_k0_fs
@@ -874,8 +892,8 @@ contains
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       ! NB: this assumes heights are in the lowest-order space
-      height_w3 => get_height_fv(W3, mesh_id)
-      height_wth => get_height_fv(Wtheta, mesh_id)
+      height_w3  => get_height_fv(config, W3, mesh_id)
+      height_wth => get_height_fv(config, Wtheta, mesh_id)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
@@ -898,15 +916,15 @@ contains
   !>        i.e. ignoring the orographic effect on the area
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The dA_msl_proj field
-  function get_dA_msl_proj(mesh_id) result(dA_msl_proj)
+  function get_dA_msl_proj(config, mesh_id) result(dA_msl_proj)
 
-    use base_mesh_config_mod,            only: geometry, geometry_spherical
-    use extrusion_config_mod,            only: planet_radius, domain_height
     use sci_calc_da_msl_proj_kernel_mod, only: calc_da_msl_proj_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type),   intent(in) :: config
+    integer(kind=i_def), intent(in) :: mesh_id
+
     integer(kind=i_def)                   :: local_mesh_id
     type(mesh_type),              pointer :: mesh
     type(mesh_type),              pointer :: prime_mesh
@@ -917,6 +935,14 @@ contains
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: fs
     integer(tik)                          :: id
+
+    integer(i_def) :: geometry
+    real(r_def)    :: planet_radius
+    real(r_def)    :: domain_height
+
+    geometry      = config%base_mesh%geometry()
+    planet_radius = config%extrusion%planet_radius()
+    domain_height = config%extrusion%domain_height()
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dA_msl_proj_inventory%is_initialised()) then
@@ -975,9 +1001,14 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      long_ptr => get_longitude_fv(space_id, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      long_ptr => get_longitude_fv(config, space_id, mesh_id)
       return
     end if
 
@@ -1103,9 +1134,14 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      lat_ptr => get_latitude_fv(space_id, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      lat_ptr => get_latitude_fv(config, space_id, mesh_id)
       return
     end if
 
@@ -1214,16 +1250,15 @@ contains
   !> @param[in] space   The space of the desired height field
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return A height field
-  function get_height_fe(space_id, mesh_id) result(height)
+  function get_height_fe(config, space_id, mesh_id) result(height)
 
     use sci_height_continuous_kernel_mod, only: height_continuous_kernel_type
     use sci_height_discontinuous_kernel_mod,                                   &
                                           only: height_discontinuous_kernel_type
-    use base_mesh_config_mod,             only: geometry
-    use finite_element_config_mod,        only: coord_system
-    use planet_config_mod,                only: scaled_radius
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),       intent(in) :: space_id
     integer(kind=i_def),       intent(in) :: mesh_id
@@ -1239,9 +1274,19 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
+    real(r_def)    :: scaled_radius
+    integer(i_def) :: geometry, coord_system
+    integer(i_def) :: order_h, order_v
+
+    order_h       = config%finite_element%element_order_h()
+    order_v       = config%finite_element%element_order_v()
+    coord_system  = config%finite_element%coord_system()
+    geometry      = config%base_mesh%geometry()
+    scaled_radius = config%planet%scaled_radius()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      height => get_height_fv(space_id, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      height => get_height_fv(config, space_id, mesh_id)
       return
     end if
 
@@ -1284,9 +1329,8 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      space => function_space_collection%get_fs(                               &
-          mesh, element_order_h, element_order_v, space_id                     &
-      )
+      space => function_space_collection%get_fs(mesh, order_h, order_v, &
+                                                space_id)
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
@@ -1329,16 +1373,15 @@ contains
   !> @param[in] space   The space of the desired height field
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return A height field
-  function get_height_fv(space_id, mesh_id) result(height)
+  function get_height_fv(config, space_id, mesh_id) result(height)
 
     use sci_height_continuous_kernel_mod, only: height_continuous_kernel_type
     use sci_height_discontinuous_kernel_mod,                                   &
                                           only: height_discontinuous_kernel_type
-    use base_mesh_config_mod,             only: geometry
-    use finite_element_config_mod,        only: coord_system
-    use planet_config_mod,                only: scaled_radius
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),       intent(in) :: space_id
     integer(kind=i_def),       intent(in) :: mesh_id
@@ -1353,6 +1396,13 @@ contains
     type(field_type)                      :: ones
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
+
+    real(r_def)    :: scaled_radius
+    integer(i_def) :: geometry, coord_system
+
+    coord_system  = config%finite_element%coord_system()
+    geometry      = config%base_mesh%geometry()
+    scaled_radius = config%planet%scaled_radius()
 
     ! Determine inventory based on space
     select case (space_id)

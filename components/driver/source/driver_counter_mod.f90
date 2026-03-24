@@ -7,9 +7,10 @@
 !>
 module driver_counter_mod
 
-  use config_mod, only: config_type
-  use count_mod,  only: count_type, halo_calls
-  use timer_mod,  only: timer, output_timer, init_timer
+  use config_mod,    only: config_type
+  use constants_mod, only: str_max_filename, l_def
+  use count_mod,     only: count_type, halo_calls
+  use timer_mod,     only: timer, output_timer, init_timer
 
   implicit none
 
@@ -63,8 +64,8 @@ contains
     type(config_type), intent(in) :: config
     character(*),      intent(in) :: identifier
 
-    logical(l_def)     :: subroutine_counters
-    character(str_def) :: counter_output_suffix
+    logical(l_def)              :: subroutine_counters
+    character(str_max_filename) :: counter_output_suffix
 
     subroutine_counters   = config%io%subroutine_counters()
     counter_output_suffix = config%io%counter_output_suffix()
