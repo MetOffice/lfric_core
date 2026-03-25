@@ -144,17 +144,15 @@ subroutine add_namelist(self, namelist_obj)
   character(str_def), allocatable :: name
   character(:), allocatable :: profile_name
   character(str_def), allocatable :: full_name
-{{-'\n'}}
-{%-   if duplicates|max -%}
-  character(str_def), dimension(:), allocatable :: duplicated_profiles
-  logical :: has_printed
-  integer :: next
+! {{-'\n'}}
+! {%-   if duplicates|max -%}
+!   character(str_def), allocatable :: duplicated_profiles(100)
+!   logical :: has_printed
+!   integer :: next
 
-  next = 1
-  has_printed = .false.
-  ! Shouldn't be more than 100 unique namelists hopefully
-  allocate(duplicated_profiles(100))
-{%   endif %}
+!   next = 1
+!   has_printed = .false.
+! {%   endif %}
 
   ! Check namelist name is valid, if not then exit with error
   full_name    = namelist_obj%get_full_name()
@@ -182,23 +180,24 @@ subroutine add_namelist(self, namelist_obj)
 {%- for i in range(namelists|length) %}
 {%-   if duplicates[i] %}
   type is ( {{namelists[i]}}_nml_type )
-    ! Multiple instances: ALLOWED
-    if (trim(profile_name) == cmdi) then
-      has_printed = any(duplicated_profiles == name)
-      if (.not. has_printed) then
-        ! Executes if profile name not in list of profiles already printed
-        duplicated_profiles(next) = name
-        next = next + 1
-        write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
-            ' namelist: missing profile name.'
-        flush(output_unit)
-      end if
-    else if (self%namelist_exists(trim(full_name))) then
+    ! ! Multiple instances: ALLOWED
+    ! if (trim(profile_name) == cmdi) then
+    !   ! has_printed = any(duplicated_profiles == name)
+    !   ! if (.not. has_printed) then
+    !   !   ! Executes if profile name not in list of profiles already printed
+    !   !   duplicated_profiles(next) = name
+    !   !   next = next + 1
+    !   !   write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
+    !   !       ' namelist: missing profile name.'
+    !   !   flush(output_unit)
+    !   ! end if
+    !   continue
+    if (self%namelist_exists(trim(full_name))) then
       write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
       flush(error_unit)
       stop
-    else
+    else if (trim(profile_name) /= cmdi) then
       call self%{{namelists[i]}}%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
     end if
@@ -212,10 +211,10 @@ subroutine add_namelist(self, namelist_obj)
     stop
 
   end select
-{{-'\n'}}
-{%-   if duplicates|max -%}
-  deallocate(duplicated_profiles)
-{%   endif %}
+! {{-'\n'}}
+! {%-   if duplicates|max -%}
+!   deallocate(duplicated_profiles)
+! {%   endif %}
 
 end subroutine add_namelist
 
