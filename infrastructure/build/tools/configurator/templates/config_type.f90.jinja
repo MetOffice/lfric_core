@@ -141,9 +141,9 @@ subroutine add_namelist(self, namelist_obj)
 
   class(namelist_type), intent(in) :: namelist_obj
 
-  character(str_def), allocatable :: name
+  character(:), allocatable :: name
   character(:), allocatable :: profile_name
-  character(str_def), allocatable :: full_name
+  character(:), allocatable :: full_name
 
   ! Check namelist name is valid, if not then exit with error
   full_name    = namelist_obj%get_full_name()
@@ -171,7 +171,7 @@ subroutine add_namelist(self, namelist_obj)
 {%- for i in range(namelists|length) %}
 {%-   if duplicates[i] %}
   type is ( {{namelists[i]}}_nml_type )
-    ! ! Multiple instances: ALLOWED
+    ! Multiple instances: ALLOWED
     if (self%namelist_exists(trim(full_name))) then
       write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
