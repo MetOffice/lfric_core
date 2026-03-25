@@ -16,7 +16,7 @@ module sci_compute_sample_u_ops_kernel_mod
 
   use argument_mod,            only : arg_type, func_type,         &
                                       GH_FIELD, GH_SCALAR, GH_REAL,&
-                                      GH_LOGICAL, GH_OPERATOR,     &
+                                      GH_INTEGER, GH_OPERATOR,     &
                                       GH_INC, GH_READ, GH_WRITE,   &
                                       ANY_DISCONTINUOUS_SPACE_3,   &
                                       GH_BASIS, GH_DIFF_BASIS,     &
@@ -34,9 +34,7 @@ module sci_compute_sample_u_ops_kernel_mod
 
   use finite_element_config_mod, only: coord_system
   use base_mesh_config_mod,      only: geometry_spherical,      &
-                                       geometry_planar,         &
-                                       topology_fully_periodic, &
-                                       topology_non_periodic
+                                       geometry_planar
   use planet_config_mod,         only: scaled_radius
 
   implicit none
@@ -57,8 +55,8 @@ module sci_compute_sample_u_ops_kernel_mod
          arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, WTHETA),           &
          arg_type(GH_FIELD*3,   GH_REAL, GH_READ,  Wchi),                       &
          arg_type(GH_FIELD,     GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3),  &
-         arg_type(GH_SCALAR, GH_LOGICAL, GH_READ),                              &
-         arg_type(GH_SCALAR, GH_LOGICAL, GH_READ)                               &
+         arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                              &
+         arg_type(GH_SCALAR, GH_INTEGER, GH_READ)                               &
          /)
     type(func_type) :: meta_funcs(1) = (/                                      &
          func_type(Wchi, GH_BASIS, GH_DIFF_BASIS)                              &
@@ -92,8 +90,8 @@ contains
 !> @param[in]     chi2                     Coordinates in the second direction
 !> @param[in]     chi3                     Coordinates in the third direction
 !> @param[in]     panel_id                 A field giving the ID for mesh panels
-!> @param[in]     is_planar_geometry       A logical saying if the mesh geometry is planar
-!> @param[in]     is_periodic_topology     A logical saying if the mesh topology is periodic
+!> @param[in]     geometry                 Mesh geometry type
+!> @param[in]     topology                 Mesh topology type
 !> @param[in]     ndf_w2b                  Number of DoFs per cell for broken W2
 !> @param[in]     ndf_w3                   Number of DoFs per cell for W3
 !> @param[in]     ndf_wt                   Number of DoFs per cell for Wtheta
@@ -115,8 +113,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
                                       ncell_3d_3, u_rad_op,           &
                                       chi1, chi2, chi3,               &
                                       panel_id,                       &
-                                      is_planar_geometry,             &
-                                      is_periodic_topology,           &
+                                      geometry, topology,             &
                                       ndf_w2b, ndf_w3, ndf_wt,        &
                                       ndf_chi, undf_chi, map_chi,     &
                                       chi_basis, chi_diff_basis,      &
@@ -144,8 +141,8 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
   ! Fields
   real(kind=r_def), dimension(undf_pid), intent(in) :: panel_id
   real(kind=r_def), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-  logical(kind=l_def),                   intent(in) :: is_planar_geometry
-  logical(kind=l_def),                   intent(in) :: is_periodic_topology
+  integer(kind=i_def),                   intent(in) :: geometry
+  integer(kind=i_def),                   intent(in) :: topology
 
   ! Operators
   real(kind=r_def), dimension(ncell_3d_1,ndf_w2b,ndf_w3), intent(inout) :: u_lon_op
@@ -153,7 +150,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
   real(kind=r_def), dimension(ncell_3d_3,ndf_w2b,ndf_wt), intent(inout) :: u_rad_op
 
   ! Internal variables
-  integer(kind=i_def) :: df_w2, df_wt, df_chi, k, ipanel, cell_3d, topology
+  integer(kind=i_def) :: df_w2, df_wt, df_chi, k, ipanel, cell_3d
   real(kind=r_def), dimension(3,3,ndf_w2b) :: jacobian, jac_inv
   real(kind=r_def), dimension(ndf_w2b)     :: dj
   real(kind=r_def), dimension(3)           :: llr, X_vector, Y_vector, Z_vector
@@ -166,15 +163,10 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
 
   ipanel = int(panel_id(map_pid(1)), i_def)
 
-  if (is_periodic_topology) then
-    topology = topology_fully_periodic
-  else
-    topology = topology_non_periodic
-  end if
-
   ! For spherical geometry, need to rotate from (lon,lat,r) components
   ! For planar geometry, components should already be in (X,Y,Z) coordinates
-  if ( is_planar_geometry ) then
+  select case ( geometry )
+  case ( geometry_planar )
 
     X_vector = (/ 1.0_r_def, 0.0_r_def, 0.0_r_def /)
     Y_vector = (/ 0.0_r_def, 1.0_r_def, 0.0_r_def /)
@@ -194,10 +186,9 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
         chi3_e(df_chi) = chi3(map_chi(df_chi) + k)
       end do
 
-      call coordinate_jacobian(coord_system, geometry_planar, topology, &
-                               scaled_radius, ndf_chi, ndf_w2b, chi1_e, &
-                               chi2_e, chi3_e, ipanel, chi_basis,       &
-                               chi_diff_basis, jacobian, dj)
+      call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e, &
+                               ipanel, chi_basis, chi_diff_basis, jacobian, dj)
       call coordinate_jacobian_inverse(ndf_w2b, jacobian, dj, jac_inv)
 
       ! X and Y components contribute equally to all W2 DoFs
@@ -225,7 +216,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
 
     end do
 
-  else
+  case ( geometry_spherical )
 
     lon_vector_llr = (/ 1.0_r_def, 0.0_r_def, 0.0_r_def /)
     lat_vector_llr = (/ 0.0_r_def, 1.0_r_def, 0.0_r_def /)
@@ -245,10 +236,9 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
         chi3_e(df_chi) = chi3(map_chi(df_chi) + k)
       end do
 
-      call coordinate_jacobian(coord_system, geometry_spherical, topology, &
-                               scaled_radius, ndf_chi, ndf_w2b, chi1_e,    &
-                               chi2_e, chi3_e, ipanel, chi_basis,          &
-                               chi_diff_basis, jacobian, dj)
+      call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e, &
+                               ipanel, chi_basis, chi_diff_basis, jacobian, dj)
       call coordinate_jacobian_inverse(ndf_w2b, jacobian, dj, jac_inv)
 
       ! Convert (lon,lat,r) vectors into (X,Y,Z) components
@@ -300,7 +290,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
 
     end do
 
-  end if
+  end select
 
   ! Enforce boundary condition at bottom and top
   cell_3d = 1 + (col-1)*nlayers

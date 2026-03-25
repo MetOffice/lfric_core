@@ -43,6 +43,11 @@ module sci_mapping_constants_mod
                                                tik, LPROF
 
   ! Configuration
+  use base_mesh_config_mod,              only: geometry_spherical,      &
+                                               geometry_planar,         &
+                                               topology_channel,        &
+                                               topology_fully_periodic, &
+                                               topology_non_periodic
   use finite_element_config_mod,         only: element_order_h, &
                                                element_order_v
 
@@ -273,6 +278,8 @@ contains
     type(operator_type),         pointer :: u_lat_sample
     type(operator_type),         pointer :: u_up_sample
     integer(tik)                         :: id
+    integer(kind=i_def)                  :: geometry
+    integer(kind=i_def)                  :: topology
 
     if (.not. u_lon_sample_inventory%is_initialised()) then
       call u_lon_sample_inventory%initialise(name='u_lon_sample')
@@ -287,6 +294,20 @@ contains
     mesh_id = mesh%get_id()
     chi => get_coordinates(mesh_id)
     panel_id => get_panel_id(mesh_id)
+
+    if (mesh%is_geometry_planar()) then
+      geometry = geometry_planar
+    else
+      geometry = geometry_spherical
+    end if
+
+    if (mesh%is_topology_non_periodic()) then
+      topology = topology_non_periodic
+    else if (mesh%is_topology_periodic) then
+      topology = topology_fully_periodic
+    else if (mesh%is_topology_channel) then
+      topology = topology_channel
+    end if
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
@@ -304,8 +325,7 @@ contains
                                                   u_lat_sample,                &
                                                   u_up_sample,                 &
                                                   chi, panel_id,               &
-                                                  mesh%is_geometry_planar(),   &
-                                                  mesh%is_topology_periodic()) )
+                                                  geometry, topology) )
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
