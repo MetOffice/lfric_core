@@ -141,12 +141,12 @@ subroutine add_namelist(self, namelist_obj)
 
   class(namelist_type), intent(in) :: namelist_obj
 
-  character(:), allocatable :: name
+  character(str_def), allocatable :: name
   character(:), allocatable :: profile_name
-  character(:), allocatable :: full_name
+  character(str_def), allocatable :: full_name
 {{-'\n'}}
 {%-   if duplicates|max -%}
-  character(str_def), allocatable :: duplicated_profiles(:)
+  character(str_def), dimension(:), allocatable :: duplicated_profiles
   logical :: has_printed
   integer :: next
 
@@ -184,16 +184,13 @@ subroutine add_namelist(self, namelist_obj)
   type is ( {{namelists[i]}}_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      has_printed = any(trim(duplicated_profiles) == trim(name))
-      if (not(has_printed)) then
+      has_printed = any(duplicated_profiles == name)
+      if (.not. has_printed) then
         ! Executes if profile name not in list of profiles already printed
         duplicated_profiles(next) = name
         next = next + 1
         write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
             ' namelist: missing profile name.'
-        flush(output_unit)
-      else
-        write(output_unit, '(A)') trim(name) // ' has already been printed.'
         flush(output_unit)
       end if
     else if (self%namelist_exists(trim(full_name))) then
