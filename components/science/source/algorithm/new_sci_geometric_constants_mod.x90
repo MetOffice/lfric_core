@@ -148,7 +148,7 @@ contains
   subroutine compute_latlon(config, long_inventory, lat_inventory, &
                             mesh, fs_id, use_fe)
 
-    use sci_compute_latlon_kernel_mod, only: compute_latlon_kernel_type
+    use new_sci_compute_latlon_kernel_mod, only: compute_latlon_kernel_type
 
     implicit none
 
