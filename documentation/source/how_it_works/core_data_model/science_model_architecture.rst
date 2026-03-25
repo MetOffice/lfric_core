@@ -956,7 +956,7 @@ will be described when the :ref:`PSy layer code generation example
 <psy example>` is introduced.  All of the arguments and the
 order of the arguments derive entirely from the kernel metadata. In
 fact, the PSyclone toolset includes a stub generator 
-:ref:`psyclone:psyclone-kern` which will generate the following 
+:ref:`psyclone:stub-generation` which will generate the following 
 subroutine call and all the argument declarations based on the above 
 metadata. See the PSyclone documentation for details.
 
