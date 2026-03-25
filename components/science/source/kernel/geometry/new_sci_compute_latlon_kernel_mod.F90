@@ -17,7 +17,7 @@ module new_sci_compute_latlon_kernel_mod
                                   CELL_COLUMN, GH_EVALUATOR
   use constants_mod,        only: r_def, i_def
   use kernel_mod,           only: kernel_type
-  use sci_chi_transform_mod, only: chi2llr
+  use new_sci_chi_transform_mod, only: chi2llr
 
   implicit none
 

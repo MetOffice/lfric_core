@@ -19,7 +19,7 @@ use argument_mod,            only : arg_type, func_type,       &
                                     GH_BASIS, CELL_COLUMN,     &
                                     GH_EVALUATOR
 use constants_mod,           only : r_def, i_def
-use sci_chi_transform_mod,   only : chi2xyz
+use new_sci_chi_transform_mod,   only : chi2xyz
 
 implicit none
 

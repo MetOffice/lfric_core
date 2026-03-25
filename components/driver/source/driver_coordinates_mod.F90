@@ -63,9 +63,9 @@ contains
     use reference_element_mod, only: reference_element_type
     use mesh_mod,              only: mesh_type
     use local_mesh_mod,        only: local_mesh_type
-    use sci_chi_transform_mod, only: get_inverse_mesh_rotation_matrix, &
-                                     get_to_rotate,                    &
-                                     get_stretch_factor
+    use new_sci_chi_transform_mod, only: get_inverse_mesh_rotation_matrix, &
+                                         get_to_rotate,                    &
+                                         get_stretch_factor
 
     implicit none
 

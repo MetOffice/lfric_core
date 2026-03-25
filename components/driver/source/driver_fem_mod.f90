@@ -12,7 +12,7 @@
 !>           * Initialises function space chains for use by the model.
 module driver_fem_mod
 
-  use sci_chi_transform_mod,          only: init_chi_transforms, &
+  use new_sci_chi_transform_mod,      only: init_chi_transforms, &
                                             final_chi_transforms
   use config_mod,                     only: config_type
   use constants_mod,                  only: i_def, l_def, str_def
