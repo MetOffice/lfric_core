@@ -296,10 +296,9 @@ contains
 
     if (mesh%is_geometry_planar()) then
       geometry = geometry_planar
-    else
+    else if (mesh%is_geometry_spherical()) then
       geometry = geometry_spherical
     end if
-
     if (mesh%is_topology_non_periodic()) then
       topology = topology_non_periodic
     else if (mesh%is_topology_periodic()) then

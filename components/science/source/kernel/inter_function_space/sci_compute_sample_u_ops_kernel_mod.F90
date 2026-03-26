@@ -23,7 +23,7 @@ module sci_compute_sample_u_ops_kernel_mod
                                       CELL_COLUMN, GH_EVALUATOR,   &
                                       reference_element_data_type, &
                                       normals_to_faces
-  use constants_mod,           only : r_def, i_def, l_def
+  use constants_mod,           only : r_def, i_def
   use fs_continuity_mod,       only : W2broken, W3, Wtheta, Wchi
   use kernel_mod,              only : kernel_type
   use sci_chi_transform_mod,   only : chi2llr
@@ -33,7 +33,7 @@ module sci_compute_sample_u_ops_kernel_mod
   use reference_element_mod,   only : W, S, N, E, T, B
 
   use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry_spherical,      &
+  use base_mesh_config_mod,      only: geometry_spherical, &
                                        geometry_planar
   use planet_config_mod,         only: scaled_radius
 
@@ -187,7 +187,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
       end do
 
       call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
-                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e, &
+                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e,        &
                                ipanel, chi_basis, chi_diff_basis, jacobian, dj)
       call coordinate_jacobian_inverse(ndf_w2b, jacobian, dj, jac_inv)
 
@@ -237,7 +237,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
       end do
 
       call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
-                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e, &
+                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e,        &
                                ipanel, chi_basis, chi_diff_basis, jacobian, dj)
       call coordinate_jacobian_inverse(ndf_w2b, jacobian, dj, jac_inv)
 
