@@ -82,7 +82,7 @@ contains
     implicit none
 
     type(chi_parameters_type), intent(in) :: test_parameter
-    type(chi_transform_mod_test_type)     :: new_test
+    type(chi_transform_mod_test_type) :: new_test
 
     new_test%source_coord_system = test_parameter%source_coord_system
     new_test%target_coord_system = test_parameter%target_coord_system
@@ -240,7 +240,7 @@ contains
 
     class(chi_transform_mod_test_type), intent(inout) :: this
 
-    real(r_def)    :: north_pole(2), equatorial_latitude
+    real(r_def) :: north_pole(2), equatorial_latitude
 
     select case ( this%source_coord_system )
     case ( XYZ )
@@ -249,8 +249,7 @@ contains
 
     case ( LLH, LLH_rot )
       this%src_coord_system  = coord_system_native
-     this%topology          = topology_non_periodic
-!     this%topology          = topology_fully_periodic
+      this%topology          = topology_non_periodic
 
     case ( ABH, ABH_stretch_rot )
       this%src_coord_system  = coord_system_native
@@ -287,7 +286,7 @@ contains
   subroutine tearDown( this )
 
     use sci_chi_transform_mod, only: final_chi_transforms
-    use config_loader_mod,     only: final_configuration
+    use config_loader_mod,         only: final_configuration
 
     implicit none
 
@@ -302,7 +301,7 @@ contains
   @Test
   subroutine test_all( this )
 
-    use sci_chi_transform_mod, only : chi2abr, chi2llr, chi2xyz, chir2xyz
+    use sci_chi_transform_mod, only: chi2abr, chi2llr, chi2xyz, chir2xyz
 
     implicit none
 
@@ -313,16 +312,24 @@ contains
     select case ( this%target_coord_system )
     case ( ABH )
       call chi2abr(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id, new_coord_1, new_coord_2, new_coord_3)
+                   this%panel_id, this%geometry, this%topology,             &
+                   this%src_coord_system, this%scaled_radius,               &
+                   new_coord_1, new_coord_2, new_coord_3)
     case ( LLH )
       call chi2llr(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id, new_coord_1, new_coord_2, new_coord_3  )
+                   this%panel_id, this%geometry, this%topology,             &
+                   this%src_coord_system, this%scaled_radius,               &
+                   new_coord_1, new_coord_2, new_coord_3  )
     case ( XYZ )
       call chi2xyz(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id, new_coord_1, new_coord_2, new_coord_3  )
+                   this%panel_id, this%geometry, this%topology,             &
+                   this%src_coord_system, this%scaled_radius,               &
+                   new_coord_1, new_coord_2, new_coord_3  )
     case ( R2XYZ )
       call chir2xyz(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                    this%panel_id, new_coord_1, new_coord_2, new_coord_3  )
+                    this%panel_id, this%geometry, this%topology,             &
+                    this%src_coord_system,                                   &
+                    new_coord_1, new_coord_2, new_coord_3  )
     end select
 
     ! Check if answers are correct

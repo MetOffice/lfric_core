@@ -29,7 +29,7 @@ module init_coupled_mod
                                              LOG_LEVEL_ERROR
   use mesh_mod,                       only : mesh_type
   use pure_abstract_field_mod,        only : pure_abstract_field_type
-  use new_sci_compute_latlon_kernel_mod,  only : compute_latlon_kernel_type
+  use sci_compute_latlon_kernel_mod,  only : compute_latlon_kernel_type
 
   implicit none
 

@@ -48,7 +48,7 @@ module sci_mapping_constants_mod
                                                element_order_v
 
   ! Other algorithms
-  use sci_geometric_constants_mod,       only: get_coordinates, &
+  use sci_geometric_constants_mod,   only: get_coordinates, &
                                                get_panel_id
 
   ! Kernels

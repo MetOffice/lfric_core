@@ -38,13 +38,13 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use base_mesh_config_mod,      only : geometry_planar, &
-                                          topology_fully_periodic
-    use new_sci_chi_transform_mod, only : init_chi_transforms
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz
-    use feign_config_mod,          only : feign_finite_element_config, &
-                                          feign_base_mesh_config
+    use base_mesh_config_mod,      only: geometry_planar, &
+                                         topology_fully_periodic
+    use sci_chi_transform_mod,     only: init_chi_transforms
+    use finite_element_config_mod, only: cellshape_quadrilateral, &
+                                         coord_system_xyz
+    use feign_config_mod,          only: feign_finite_element_config, &
+                                         feign_base_mesh_config
 
     implicit none
 
@@ -89,7 +89,7 @@ contains
   subroutine tearDown( this )
 
     use config_loader_mod, only: final_configuration
-    use new_sci_chi_transform_mod, only: final_chi_transforms
+    use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 

@@ -15,25 +15,26 @@
 module sci_geometric_constants_mod
 
   ! Infrastructure
-  use constants_mod,                      only: i_def, r_def, l_def, str_def
-  use extrusion_mod,                      only: TWOD, PRIME_EXTRUSION
-  use field_mod,                          only: field_type
-  use fs_continuity_mod,                  only: W0, W1, W2, W2H, W3, Wtheta
-  use function_space_collection_mod,      only: function_space_collection
-  use function_space_mod,                 only: function_space_type
-  use integer_field_mod,                  only: integer_field_type
-  use inventory_by_mesh_mod,              only: inventory_by_mesh_type
-  use inventory_by_local_mesh_mod,        only: inventory_by_local_mesh_type
-  use local_mesh_mod,                     only: local_mesh_type
-  use log_mod,                            only: log_event, LOG_LEVEL_ERROR
-  use mesh_collection_mod,                only: mesh_collection
-  use mesh_mod,                           only: mesh_type
-  use timing_mod,                         only: start_timing, stop_timing, &
-                                                tik, LPROF
+  use config_mod,                    only: config_type
+  use constants_mod,                 only: i_def, r_def, l_def, str_def
+  use extrusion_mod,                 only: TWOD, PRIME_EXTRUSION
+  use field_mod,                     only: field_type
+  use fs_continuity_mod,             only: W0, W1, W2, W2H, W3, Wtheta
+  use function_space_collection_mod, only: function_space_collection
+  use function_space_mod,            only: function_space_type
+  use integer_field_mod,             only: integer_field_type
+  use inventory_by_mesh_mod,         only: inventory_by_mesh_type
+  use inventory_by_local_mesh_mod,   only: inventory_by_local_mesh_type
+  use local_mesh_mod,                only: local_mesh_type
+  use log_mod,                       only: log_event, LOG_LEVEL_ERROR
+  use mesh_collection_mod,           only: mesh_collection
+  use mesh_mod,                      only: mesh_type
+  use timing_mod,                    only: start_timing, stop_timing, &
+                                           tik, LPROF
 
   ! Configuration
-  use finite_element_config_mod,          only: element_order_h, &
-                                                element_order_v
+  use base_mesh_config_mod,      only: geometry_spherical
+  use finite_element_config_mod, only: coord_system_native
 
   implicit none
 
@@ -101,15 +102,20 @@ module sci_geometric_constants_mod
   public :: final_geometric_constants
   public :: get_panel_id
   public :: get_coordinates
-  public :: get_extended_coordinates
   public :: get_dA_at_w2
-  public :: get_detj_at_w3_fe
   public :: get_detj_at_w3_fv
-  public :: get_detj_at_w2_fe
   public :: get_detj_at_w2_fv
-  public :: get_dz_w3
   public :: get_delta_at_wtheta
   public :: get_dx_at_w2
+  public :: get_face_selector_ew
+  public :: get_face_selector_ns
+  public :: get_chi_inventory
+  public :: get_panel_id_inventory
+
+  public :: get_extended_coordinates
+  public :: get_detj_at_w3_fe
+  public :: get_detj_at_w2_fe
+  public :: get_dz_w3
   public :: get_dz_at_wtheta
   public :: get_dA_msl_proj
   public :: get_height_fe
@@ -118,10 +124,6 @@ module sci_geometric_constants_mod
   public :: get_latitude_fv
   public :: get_longitude_fe
   public :: get_longitude_fv
-  public :: get_face_selector_ew
-  public :: get_face_selector_ns
-  public :: get_chi_inventory
-  public :: get_panel_id_inventory
 
   ! Private routines for creating constants
   private :: compute_latlon
@@ -134,6 +136,7 @@ contains
   ! ========================================================================== !
 
   !> @brief Private routine for computing longitude and latitude fields
+  !> @param[in]     config           Configuration object
   !> @param[in,out] long_inventory   Inventory containing longitude fields
   !> @param[in,out] lat_inventory    Inventory containing latitude fields
   !> @param[in]     mesh             Mesh used to determine local mesh for
@@ -142,14 +145,14 @@ contains
   !!                                 longitude and latitude fields for
   !> @param[in]     use_fe           Flag to indicate whether to use finite
   !!                                 element or finite volume cells
-  subroutine compute_latlon(long_inventory, lat_inventory, mesh, fs_id, use_fe)
+  subroutine compute_latlon(config, long_inventory, lat_inventory, &
+                            mesh, fs_id, use_fe)
 
-    use base_mesh_config_mod,               only: f_lat, geometry, &
-                                                  geometry_spherical
-    use idealised_config_mod,               only: f_lon
-    use sci_compute_latlon_kernel_mod,      only: compute_latlon_kernel_type
+    use sci_compute_latlon_kernel_mod, only: compute_latlon_kernel_type
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type(inventory_by_local_mesh_type), intent(inout) :: long_inventory
     type(inventory_by_local_mesh_type), intent(inout) :: lat_inventory
@@ -168,11 +171,28 @@ contains
     integer(kind=i_def)                :: k_h, k_v
     integer(tik)                       :: id
 
+    integer(i_def) :: geometry, topology
+    integer(i_def) :: order_h, order_v
+    integer(i_def) :: coord_system
+    real(r_def)    :: f_lat, f_lon
+    real(r_def)    :: scaled_radius
+
+
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    order_h       = config%finite_element%element_order_h()
+    order_v       = config%finite_element%element_order_v()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
+    f_lat = config%base_mesh%f_lat()
+    f_lon = config%idealised%f_lon()
+
     if (use_fe) then
-      k_h = element_order_h
-      k_v = element_order_v
+      k_h = order_h
+      k_v = order_v
     else
       k_h = 0
       k_v = 0
@@ -187,15 +207,18 @@ contains
     if ( geometry == geometry_spherical ) then
       chi => get_coordinates(mesh%get_id())
       panel_id => get_panel_id(mesh%get_id())
-      call invoke( compute_latlon_kernel_type(lat, long, chi, panel_id) )
+      call invoke( compute_latlon_kernel_type(lat, long, chi, panel_id, &
+                                              geometry, topology,       &
+                                              coord_system, scaled_radius) )
     else
-      call invoke( setval_c(lat, f_lat),                                       &
+      call invoke( setval_c(lat, f_lat), &
                    setval_c(long, f_lon) )
     end if
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
 
   end subroutine compute_latlon
+
 
   !> @brief Private routine for computing face selectors fields
   !> @param[in,out] ew_inventory     Inventory containing East-West selectors
@@ -301,17 +324,20 @@ contains
 
   end function get_coordinates
 
+
   !> @brief Returns a pointer to the extended coordinate field array
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The coordinate field array
-  function get_extended_coordinates(mesh_id) result(extended_chi)
+  function get_extended_coordinates(config, mesh_id) result(extended_chi)
 
-    use finite_element_config_mod,       only: coord_system, coord_system_native
     use sci_extend_chi_field_kernel_mod, only: extend_chi_field_kernel_type
 
     implicit none
 
+    type(config_type),      intent(in) :: config
     integer(kind=i_def),    intent(in) :: mesh_id
+
     type(mesh_type),           pointer :: mesh
     type(field_type),          pointer :: extended_chi(:)
     logical(kind=l_def)                :: constant_exists
@@ -319,7 +345,11 @@ contains
     type(field_type),          pointer :: chi(:)
     type(field_type),          pointer :: panel_id
     type(function_space_type), pointer :: wchi_fs
-    integer(tik)                       :: id
+
+    integer(tik)   :: id
+    integer(i_def) :: coord_system
+
+    coord_system = config%finite_element%coord_system()
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. extended_chi_inventory%is_initialised()) then
@@ -360,6 +390,7 @@ contains
 
   end function get_extended_coordinates
 
+
   ! ========================================================================== !
   ! GETTERS FOR BASIC GEOMETRIC ENTITIES
   ! ========================================================================== !
@@ -368,7 +399,7 @@ contains
   !> @return The dA field
   function get_dA_at_w2(mesh_id) result(dA_at_w2)
 
-    use sci_calc_da_at_w2_kernel_mod,       only: calc_dA_at_w2_kernel_type
+    use sci_calc_da_at_w2_kernel_mod, only: calc_dA_at_w2_kernel_type
 
     implicit none
 
@@ -410,25 +441,27 @@ contains
 
   end function get_dA_at_w2
 
+
   !> @brief Returns the (finite element) Det(J) values at W3 dof locations
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The Det(J) field
-  function get_detj_at_w3_fe(mesh_id) result(detj_at_w3)
+  function get_detj_at_w3_fe(config, mesh_id) result(detj_at_w3)
 
     ! @TODO #4487: update these imports
     ! use sci_calc_detj_at_w3_kernel_mod, only: calc_detj_at_w3_kernel_type
     use sci_compute_mass_matrix_kernel_w_scalar_mod, &
                                       only: compute_mass_matrix_kernel_w_scalar_type
     use sci_mm_diagonal_kernel_mod,   only: mm_diagonal_kernel_type
-    use finite_element_config_mod,    only: nqp_h_exact, &
-                                            nqp_v_exact
     use operator_mod,                 only: operator_type
     use quadrature_xyoz_mod,          only: quadrature_xyoz_type
     use quadrature_rule_gaussian_mod, only: quadrature_rule_gaussian_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),              pointer :: mesh
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3
@@ -442,8 +475,17 @@ contains
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
 
+    integer(i_def) :: nqp_h_exact, nqp_v_exact
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
+    nqp_h_exact = config%finite_element%nqp_h_exact()
+    nqp_v_exact = config%finite_element%nqp_v_exact()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       detj_at_w3 => get_detj_at_w3_fv(mesh_id)
       return
     end if
@@ -464,8 +506,7 @@ contains
       ! Create the object as it doesn't exist yet
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      w3_fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                                element_order_v, W3)
+      w3_fs => function_space_collection%get_fs(mesh, order_h, order_v, W3)
       call detj_at_w3_inventory_fe%add_field(detj_at_w3, w3_fs, mesh)
 
       ! @TODO #4487: it is inefficient to calculate this via mass matrices
@@ -490,6 +531,7 @@ contains
     call detj_at_w3_inventory_fe%get_field(mesh, detj_at_w3)
 
   end function get_detj_at_w3_fe
+
 
   !> @brief Returns the (finite volume) Det(J) values at W3 dof locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
@@ -563,17 +605,21 @@ contains
 
   end function get_detj_at_w3_fv
 
+
   !> @brief Returns the (finite element) Det(J) values at W2 dof locations
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The Det(J) field
-  function get_detj_at_w2_fe(mesh_id) result(detj_at_w2)
+  function get_detj_at_w2_fe(config, mesh_id) result(detj_at_w2)
 
     use sci_calc_detj_at_w2_kernel_mod, only: calc_detj_at_w2_kernel_type
     use sci_multiplicity_kernel_mod,    only: multiplicity_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),              pointer :: mesh
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w2
@@ -583,8 +629,13 @@ contains
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
 
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       detj_at_w2 => get_detj_at_w2_fv(mesh_id)
       return
     end if
@@ -605,8 +656,7 @@ contains
       ! Create the object as it doesn't exist yet
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      w2_fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                                element_order_v, W2)
+      w2_fs => function_space_collection%get_fs(mesh, order_h, order_v, W2)
       call multiplicity_w2%initialise( w2_fs )
       call detj_at_w2_inventory_fe%add_field(detj_at_w2, w2_fs, mesh)
 
@@ -624,6 +674,7 @@ contains
     call detj_at_w2_inventory_fe%get_field(mesh, detj_at_w2)
 
   end function get_detj_at_w2_fe
+
 
   !> @brief Returns the (finite volume) Det(J) values at W2 dof locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
@@ -680,16 +731,20 @@ contains
 
   end function get_detj_at_w2_fv
 
+
   !> @brief Returns a pointer to the vertical grid spacing, located at W3 DoFs
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The physical height difference of layers, at W3
-  function get_dz_w3(mesh_id) result(dz_w3)
+  function get_dz_w3(config, mesh_id) result(dz_w3)
 
-    use sci_get_dz_w3_kernel_mod,           only: get_dz_w3_kernel_type
+    use sci_get_dz_w3_kernel_mod, only: get_dz_w3_kernel_type
 
     implicit none
 
-    integer(kind=i_def),    intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),           pointer :: mesh
     type(field_type),          pointer :: dz_w3
     logical(kind=l_def)                :: constant_exists
@@ -708,7 +763,7 @@ contains
     if (.not. constant_exists) then
       ! If this constant doesn't exist, create it
       ! Get height first to avoid potentially timing twice
-      height_w2 => get_height_fv(W2, mesh_id)
+      height_w2 => get_height_fv(config, W2, mesh_id)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
@@ -724,6 +779,7 @@ contains
     end if
 
   end function get_dz_w3
+
 
   !> @brief Returns the delta_at_wtheta values at Wtheta DoF locations
   !> @param[in] mesh_id The ID of the mesh to get the object for
@@ -815,15 +871,18 @@ contains
 
 
   !> @brief Returns the 1/dz values at lowest-order Wtheta DoF locations
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The dz_at_wtheta field
-  function get_dz_at_wtheta(mesh_id) result(dz_at_wtheta)
+  function get_dz_at_wtheta(config, mesh_id) result(dz_at_wtheta)
 
     use sci_calc_dz_face_kernel_mod, only: calc_dz_face_kernel_type
 
     implicit none
 
-    integer(kind=i_def),      intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),             pointer :: mesh
     type(field_type),            pointer :: dz_at_wtheta
     type(function_space_type),   pointer :: wtheta_k0_fs
@@ -847,8 +906,8 @@ contains
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       ! NB: this assumes heights are in the lowest-order space
-      height_w3 => get_height_fv(W3, mesh_id)
-      height_wth => get_height_fv(Wtheta, mesh_id)
+      height_w3  => get_height_fv(config, W3, mesh_id)
+      height_wth => get_height_fv(config, Wtheta, mesh_id)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
@@ -867,19 +926,21 @@ contains
 
   end function get_dz_at_wtheta
 
+
   !> @brief Returns the surface area of a cell projected to mean sea level
   !>        i.e. ignoring the orographic effect on the area
+  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The dA_msl_proj field
-  function get_dA_msl_proj(mesh_id) result(dA_msl_proj)
+  function get_dA_msl_proj(config, mesh_id) result(dA_msl_proj)
 
-    use base_mesh_config_mod,            only: geometry, geometry_spherical
-    use extrusion_config_mod,            only: planet_radius, domain_height
     use sci_calc_da_msl_proj_kernel_mod, only: calc_da_msl_proj_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: mesh_id
+
     integer(kind=i_def)                   :: local_mesh_id
     type(mesh_type),              pointer :: mesh
     type(mesh_type),              pointer :: prime_mesh
@@ -890,6 +951,14 @@ contains
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: fs
     integer(tik)                          :: id
+
+    integer(i_def) :: geometry
+    real(r_def)    :: planet_radius
+    real(r_def)    :: domain_height
+
+    geometry      = config%base_mesh%geometry()
+    planet_radius = config%extrusion%planet_radius()
+    domain_height = config%extrusion%domain_height()
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dA_msl_proj_inventory%is_initialised()) then
@@ -923,20 +992,23 @@ contains
 
   end function get_dA_msl_proj
 
+
   ! ========================================================================== !
   ! PHYSICAL COORDINATES OF DOFs
   ! ========================================================================== !
-
   !> @brief Returns a pointer to the longitude of finite element DoFs
+  !> @param[in] config     Configuration object
   !> @param[in] space_id   The space for which to get the longitude of DoFs for
   !> @param[in] mesh_id    The ID of the mesh to get the object for
   !> @return The longitude field
-  function get_longitude_fe(space_id, mesh_id) result(long_ptr)
+  function get_longitude_fe(config, space_id, mesh_id) result(long_ptr)
 
     implicit none
 
-    integer(kind=i_def),             intent(in) :: space_id
-    integer(kind=i_def),             intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),                    pointer :: mesh
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -945,9 +1017,14 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      long_ptr => get_longitude_fv(space_id, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      long_ptr => get_longitude_fv(config, space_id, mesh_id)
       return
     end if
 
@@ -983,8 +1060,8 @@ contains
     constant_exists = long_inventory%paired_object_exists(local_mesh%get_id())
 
     if (.not. constant_exists) then
-      call compute_latlon(long_inventory, lat_inventory, mesh, space_id, &
-                          use_fe=.true.)
+      call compute_latlon(config, long_inventory, lat_inventory, &
+                          mesh, space_id, use_fe=.true.)
     end if
 
     call long_inventory%get_field(local_mesh, long_ptr)
@@ -992,15 +1069,18 @@ contains
   end function get_longitude_fe
 
   !> @brief Returns a pointer to the longitude of finite volume DoFs
+  !> @param[in] config     Configuration object
   !> @param[in] space_id   The space for which to get the longitude of DoFs for
   !> @param[in] mesh_id    The ID of the mesh to get the object for
   !> @return The longitude field
-  function get_longitude_fv(space_id, mesh_id) result(long_ptr)
+  function get_longitude_fv(config, space_id, mesh_id) result(long_ptr)
 
     implicit none
 
-    integer(kind=i_def),             intent(in) :: space_id
-    integer(kind=i_def),             intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),                    pointer :: mesh
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1041,21 +1121,25 @@ contains
     constant_exists = long_inventory%paired_object_exists(local_mesh%get_id())
 
     if (.not. constant_exists) then
-      call compute_latlon(long_inventory, lat_inventory, mesh, space_id, &
-                          use_fe=.false.)
+      call compute_latlon(config, long_inventory, lat_inventory, &
+                          mesh, space_id, use_fe=.false.)
     end if
 
     call long_inventory%get_field(local_mesh, long_ptr)
 
   end function get_longitude_fv
 
+
   !> @brief Returns a pointer to the latitude of finite element DoFs
+  !> @param[in] config     Configuration object
   !> @param[in] space_id   The space for which to get the latitude of DoFs for
   !> @param[in] mesh_id    The ID of the mesh to get the object for
   !> @return The latitude field
-  function get_latitude_fe(space_id, mesh_id) result(lat_ptr)
+  function get_latitude_fe(config, space_id, mesh_id) result(lat_ptr)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     integer(kind=i_def),             intent(in) :: space_id
     integer(kind=i_def),             intent(in) :: mesh_id
@@ -1067,9 +1151,14 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    integer(i_def) :: order_h, order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      lat_ptr => get_latitude_fv(space_id, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      lat_ptr => get_latitude_fv(config, space_id, mesh_id)
       return
     end if
 
@@ -1105,24 +1194,29 @@ contains
     constant_exists = lat_inventory%paired_object_exists(local_mesh%get_id())
 
     if (.not. constant_exists) then
-      call compute_latlon(long_inventory, lat_inventory, mesh, space_id, &
-                          use_fe=.true.)
+      call compute_latlon(config, long_inventory, lat_inventory, &
+                          mesh, space_id, use_fe=.true.)
     end if
 
     call lat_inventory%get_field(local_mesh, lat_ptr)
 
   end function get_latitude_fe
 
+
+
   !> @brief Returns a pointer to the latitude of finite volume DoFs
+  !> @param[in] config     Configuration object
   !> @param[in] space_id   The space for which to get the latitude of DoFs for
   !> @param[in] mesh_id    The ID of the mesh to get the object for
   !> @return The latitude field
-  function get_latitude_fv(space_id, mesh_id) result(lat_ptr)
+  function get_latitude_fv(config, space_id, mesh_id) result(lat_ptr)
 
     implicit none
 
-    integer(kind=i_def),             intent(in) :: space_id
-    integer(kind=i_def),             intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),                    pointer :: mesh
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1163,31 +1257,33 @@ contains
     constant_exists = lat_inventory%paired_object_exists(local_mesh%get_id())
 
     if (.not. constant_exists) then
-      call compute_latlon(long_inventory, lat_inventory, mesh, space_id, &
-                          use_fe=.false.)
+      call compute_latlon(config, long_inventory, lat_inventory, &
+                          mesh, space_id, use_fe=.false.)
     end if
 
     call lat_inventory%get_field(local_mesh, lat_ptr)
 
   end function get_latitude_fv
 
+
   !> @brief Returns a pointer to a finite element height field
-  !> @param[in] space   The space of the desired height field
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config   Configuration object
+  !> @param[in] space_id The space of the desired height field
+  !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return A height field
-  function get_height_fe(space_id, mesh_id) result(height)
+  function get_height_fe(config, space_id, mesh_id) result(height)
+
 
     use sci_height_continuous_kernel_mod, only: height_continuous_kernel_type
     use sci_height_discontinuous_kernel_mod,                                   &
                                           only: height_discontinuous_kernel_type
-    use base_mesh_config_mod,             only: geometry
-    use finite_element_config_mod,        only: coord_system
-    use planet_config_mod,                only: scaled_radius
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space_id
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),              pointer :: mesh
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1200,9 +1296,19 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
+    real(r_def)    :: scaled_radius
+    integer(i_def) :: geometry, coord_system
+    integer(i_def) :: order_h, order_v
+
+    order_h       = config%finite_element%element_order_h()
+    order_v       = config%finite_element%element_order_v()
+    coord_system  = config%finite_element%coord_system()
+    geometry      = config%base_mesh%geometry()
+    scaled_radius = config%planet%scaled_radius()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      height => get_height_fv(space_id, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      height => get_height_fv(config, space_id, mesh_id)
       return
     end if
 
@@ -1245,9 +1351,10 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      space => function_space_collection%get_fs(                               &
-          mesh, element_order_h, element_order_v, space_id                     &
-      )
+      space => function_space_collection%get_fs(mesh,    &
+                                                order_h, &
+                                                order_v, &
+                                                space_id)
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
@@ -1286,23 +1393,24 @@ contains
 
   end function get_height_fe
 
+
   !> @brief Returns a pointer to a finite volume height field
-  !> @param[in] space   The space of the desired height field
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config   Configuration object
+  !> @param[in] space_id The space of the desired height field
+  !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return A height field
-  function get_height_fv(space_id, mesh_id) result(height)
+  function get_height_fv(config, space_id, mesh_id) result(height)
 
     use sci_height_continuous_kernel_mod, only: height_continuous_kernel_type
     use sci_height_discontinuous_kernel_mod,                                   &
                                           only: height_discontinuous_kernel_type
-    use base_mesh_config_mod,             only: geometry
-    use finite_element_config_mod,        only: coord_system
-    use planet_config_mod,                only: scaled_radius
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space_id
-    integer(kind=i_def),       intent(in) :: mesh_id
+    type(config_type), intent(in) :: config
+    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in) :: mesh_id
+
     type(mesh_type),              pointer :: mesh
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1314,6 +1422,13 @@ contains
     type(field_type)                      :: ones
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
+
+    real(r_def)    :: scaled_radius
+    integer(i_def) :: geometry, coord_system
+
+    coord_system  = config%finite_element%coord_system()
+    geometry      = config%base_mesh%geometry()
+    scaled_radius = config%planet%scaled_radius()
 
     ! Determine inventory based on space
     select case (space_id)
@@ -1392,6 +1507,7 @@ contains
     end if
 
   end function get_height_fv
+
 
   ! ========================================================================== !
   ! FACE SELECTORS
