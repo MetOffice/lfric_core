@@ -302,7 +302,7 @@ contains
   @Test
   subroutine test_all( this )
 
-    use sci_chi_transform_mod,     only : chi2abr, chi2llr, chi2xyz, chir2xyz
+    use sci_chi_transform_mod, only : chi2abr, chi2llr, chi2xyz, chir2xyz
 
     implicit none
 
@@ -313,24 +313,16 @@ contains
     select case ( this%target_coord_system )
     case ( ABH )
       call chi2abr(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id, this%geometry, this%topology,             &
-                   this%src_coord_system, this%scaled_radius,               &
-                   new_coord_1, new_coord_2, new_coord_3)
+                   this%panel_id, new_coord_1, new_coord_2, new_coord_3)
     case ( LLH )
       call chi2llr(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id, this%geometry, this%topology,             &
-                   this%src_coord_system, this%scaled_radius,               &
-                   new_coord_1, new_coord_2, new_coord_3  )
+                   this%panel_id, new_coord_1, new_coord_2, new_coord_3  )
     case ( XYZ )
       call chi2xyz(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                   this%panel_id, this%geometry, this%topology,             &
-                   this%src_coord_system, this%scaled_radius,               &
-                   new_coord_1, new_coord_2, new_coord_3  )
+                   this%panel_id, new_coord_1, new_coord_2, new_coord_3  )
     case ( R2XYZ )
       call chir2xyz(this%source_chi_1, this%source_chi_2, this%source_chi_3, &
-                    this%panel_id, this%geometry, this%topology,             &
-                    this%src_coord_system,                                   &
-                    new_coord_1, new_coord_2, new_coord_3  )
+                    this%panel_id, new_coord_1, new_coord_2, new_coord_3  )
     end select
 
     ! Check if answers are correct
