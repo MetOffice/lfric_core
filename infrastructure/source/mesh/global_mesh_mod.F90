@@ -272,7 +272,7 @@ contains
     character(str_def) :: topology
     character(str_def) :: coord_sys
 
-    integer(i_def) :: null_island(2)
+    real(r_def) :: null_island(2)
 
     ! loop counter over entities (vertices or edges).
     integer(i_def) :: ientity
@@ -347,7 +347,7 @@ contains
     end select
 
     ! null island will exist only on a spherical lat-lon mesh
-    if (is_geometry_spherical .and. is_coord_sys_ll) then
+    if ( self%is_geometry_spherical() .and. self%is_coord_sys_ll() ) then
       self%null_island = null_island
     end if
 
