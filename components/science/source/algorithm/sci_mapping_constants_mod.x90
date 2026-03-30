@@ -43,11 +43,7 @@ module sci_mapping_constants_mod
                                                tik, LPROF
 
   ! Configuration
-  use base_mesh_config_mod,              only: geometry_spherical,      &
-                                               geometry_planar,         &
-                                               topology_fully_periodic, &
-                                               topology_non_periodic, &
-                                               geometry, topology
+  use base_mesh_config_mod,              only: geometry, topology
   use finite_element_config_mod,         only: element_order_h, &
                                                element_order_v
 
