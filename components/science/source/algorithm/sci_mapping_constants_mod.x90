@@ -46,7 +46,8 @@ module sci_mapping_constants_mod
   use base_mesh_config_mod,              only: geometry_spherical,      &
                                                geometry_planar,         &
                                                topology_fully_periodic, &
-                                               topology_non_periodic
+                                               topology_non_periodic, &
+                                               geometry, topology
   use finite_element_config_mod,         only: element_order_h, &
                                                element_order_v
 
@@ -277,8 +278,6 @@ contains
     type(operator_type),         pointer :: u_lat_sample
     type(operator_type),         pointer :: u_up_sample
     integer(tik)                         :: id
-    integer(kind=i_def)                  :: geometry
-    integer(kind=i_def)                  :: topology
 
     if (.not. u_lon_sample_inventory%is_initialised()) then
       call u_lon_sample_inventory%initialise(name='u_lon_sample')
@@ -294,16 +293,6 @@ contains
     chi => get_coordinates(mesh_id)
     panel_id => get_panel_id(mesh_id)
 
-    if (mesh%is_geometry_planar()) then
-      geometry = geometry_planar
-    else if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    end if
-    if (mesh%is_topology_non_periodic()) then
-      topology = topology_non_periodic
-    else if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    end if
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
