@@ -109,7 +109,7 @@ subroutine create_mesh_multiple( local_mesh_names, extrusion, &
   character(str_def),    intent(in) :: local_mesh_names(:)
   class(extrusion_type), intent(in) :: extrusion
   logical(l_def),        intent(in) :: inner_halo_tiles
-  integer(i_def),        intent(in) :: tile_size(2)
+  integer(i_def),        intent(in) :: tile_size(:,:)
 
   character(str_def),    intent(in), &
                          optional   :: alt_name(:)
@@ -132,8 +132,8 @@ subroutine create_mesh_multiple( local_mesh_names, extrusion, &
   end if
 
   do i=1, size(local_mesh_names)
-    call create_mesh_single( local_mesh_names(i), extrusion, &
-                             inner_halo_tiles, tile_size,    &
+    call create_mesh_single( local_mesh_names(i), extrusion,   &
+                             inner_halo_tiles, tile_size(:,i), &
                              alt_name=names(i) )
   end do
 

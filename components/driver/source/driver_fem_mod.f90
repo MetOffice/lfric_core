@@ -12,10 +12,8 @@
 !>           * Initialises function space chains for use by the model.
 module driver_fem_mod
 
-  use sci_chi_transform_mod,      only: init_chi_transforms, &
-                                        final_chi_transforms
   use config_mod,                     only: config_type
-  use constants_mod,                  only: i_def, l_def, str_def
+  use constants_mod,                  only: i_def, r_def, l_def, str_def
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
@@ -36,6 +34,9 @@ module driver_fem_mod
                                             log_scratch_space
   use mesh_mod,                       only: mesh_type
   use mesh_collection_mod,            only: mesh_collection
+
+  use sci_chi_transform_mod, only: init_chi_transforms, &
+                                   final_chi_transforms
 
   implicit none
 
@@ -70,16 +71,19 @@ contains
     integer(i_def)                     :: chi_space, coord, i
 
     character(str_def) :: mesh_name
-    integer(i_def)     :: coord_order, geometry, topology
+    integer(i_def)     :: coord_order, geometry, topology, coord_system
+    real(r_def)        :: scaled_radius
 
     call log_event( 'FEM specifics: creating function spaces...', &
                     log_level_info )
 
     nullify(mesh, twod_mesh, fs)
 
-    coord_order = config%finite_element%coord_order()
-    geometry    = config%base_mesh%geometry()
-    topology    = config%base_mesh%topology()
+    geometry      = config%base_mesh%geometry()
+    topology      = config%base_mesh%topology()
+    coord_system  = config%finite_element%coord_system()
+    coord_order   = config%finite_element%coord_order()
+    scaled_radius = config%planet%scaled_radius()
 
     ! ======================================================================== !
     ! Initialise coordinates
@@ -136,7 +140,9 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(config, chi, panel_id, mesh)
+        call assign_coordinate_field(chi, panel_id, mesh, &
+                                     geometry, topology, &
+                                     coord_system, scaled_radius)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)

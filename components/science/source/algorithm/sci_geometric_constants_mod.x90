@@ -161,7 +161,7 @@ contains
     logical(kind=l_def),                   intent(in) :: use_fe
 
     integer(i_def), intent(in) :: geometry, topology
-    integer(i_def), intent(in) :: order_h, order_v
+    integer(i_def), intent(in) :: element_order_h, element_order_v
     integer(i_def), intent(in) :: coord_system
     real(r_def), intent(in)    :: f_lat, f_lon
     real(r_def), intent(in)    :: scaled_radius
@@ -180,8 +180,8 @@ contains
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
     if (use_fe) then
-      k_h = order_h
-      k_v = order_v
+      k_h = element_order_h
+      k_v = element_order_v
     else
       k_h = 0
       k_v = 0
@@ -318,7 +318,7 @@ contains
   !> @param[in] coord_system  Finite-Element coordinate system enumeration
   !> @param[in] mesh_id       The ID of the mesh to get the object for
   !> @return The coordinate field array
-  function get_extended_coordinates(coord_system, mesh_id) result(extended_chi)
+  function get_extended_coordinates(mesh_id, coord_system) result(extended_chi)
 
     use sci_extend_chi_field_kernel_mod, only: extend_chi_field_kernel_type
 
@@ -336,7 +336,6 @@ contains
     type(function_space_type), pointer :: wchi_fs
 
     integer(tik)   :: id
-    integer(i_def) :: coord_system
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. extended_chi_inventory%is_initialised()) then
@@ -617,8 +616,6 @@ contains
     type(field_type)                      :: multiplicity_w2
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
-
-    integer(i_def) :: order_h, order_v
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -934,7 +931,8 @@ contains
   !>        i.e. ignoring the orographic effect on the area
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The dA_msl_proj field
-  function get_dA_msl_proj( mesh_id, geometry, planet_radius, domain_height ) &
+  function get_dA_msl_proj( mesh_id, &
+                            geometry, planet_radius, domain_height ) &
                     result( dA_msl_proj )
 
     use sci_calc_da_msl_proj_kernel_mod, only: calc_da_msl_proj_kernel_type
@@ -1024,6 +1022,8 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    logical(l_def), parameter :: use_fe = .true.
+
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
       long_ptr => get_longitude_fv( space_id, mesh_id, &
@@ -1067,7 +1067,7 @@ contains
 
     if (.not. constant_exists) then
       call compute_latlon( long_inventory, lat_inventory, &
-                           mesh, space_id, use_fe=.true., &
+                           mesh, space_id, use_fe, &
                            geometry, topology, &
                            element_order_h, element_order_v, &
                            coord_system, f_lat, f_lon, &
@@ -1109,6 +1109,8 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    logical(l_def), parameter :: use_fe = .false.
+
     ! NB: Longitude and latitude fields are computed simultaneously
     ! Determine inventory based on space
     select case (space_id)
@@ -1142,7 +1144,7 @@ contains
 
     if (.not. constant_exists) then
       call compute_latlon( long_inventory, lat_inventory, &
-                           mesh, space_id, use_fe=.false., &
+                           mesh, space_id, use_fe, &
                            geometry, topology, &
                            element_order_h, element_order_v, &
                            coord_system, f_lat, f_lon, &
@@ -1185,6 +1187,8 @@ contains
     type(field_type),                   pointer :: lat_ptr
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
+
+    logical(l_def), parameter :: use_fe = .true.
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -1229,7 +1233,7 @@ contains
 
     if (.not. constant_exists) then
       call compute_latlon( long_inventory, lat_inventory, &
-                           mesh, space_id, use_fe=.true., &
+                           mesh, space_id, use_fe, &
                            geometry, topology, &
                            element_order_h, element_order_v, &
                            coord_system, f_lat, f_lon, &
@@ -1273,6 +1277,8 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
+    logical(l_def), parameter :: use_fe = .false.
+
     ! NB: Longitude and latitude fields are computed simultaneously
     ! Determine inventory based on space
     select case (space_id)
@@ -1306,7 +1312,7 @@ contains
 
     if (.not. constant_exists) then
       call compute_latlon( long_inventory, lat_inventory, &
-                           mesh, space_id, use_fe=.false., &
+                           mesh, space_id, use_fe, &
                            geometry, topology, &
                            element_order_h, element_order_v, &
                            coord_system, f_lat, f_lon, &

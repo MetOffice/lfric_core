@@ -9,7 +9,8 @@ module multigrid_mod
   use extrusion_mod, only: extrusion_type, prime_extrusion, &
                            shifted, double_level
   use config_mod,    only: config_type
-  use constants_mod, only: i_def, l_def, str_def
+  use constants_mod, only: i_def, l_def, str_def, imdi
+  use log_mod,       only: log_event, log_level_error
 
   implicit none
 
@@ -27,18 +28,19 @@ contains
 !>
 !> @return tile_size
 !>
-subroutine get_multigrid_tile_size( config, local_mesh_names, extrusion, &
-                                    tile_size )
+!!$subroutine get_multigrid_tile_size( config, local_mesh_names, extrusion, &
+!!$                                    tile_size )
+
+function get_multigrid_tile_size( config, local_mesh_names, extrusion) &
+                         result ( tile_size )
 
   implicit none
 
-  type(config_type),    intent(in) :: config
-  character(str_def),   intent(in) :: local_mesh_names(:)
-  type(extrusion_type), intent(in) :: extrusion
+  type(config_type),     intent(in) :: config
+  character(str_def),    intent(in) :: local_mesh_names(:)
+  class(extrusion_type), intent(in) :: extrusion
 
-  integer(i_def), intent(inout) :: tile_size(:,:)
-
-
+  integer(i_def), allocatable :: tile_size(:,:)
 
   integer(i_def) :: multigrid_level
   integer(i_def) :: max_multigrid_level
@@ -46,6 +48,9 @@ subroutine get_multigrid_tile_size( config, local_mesh_names, extrusion, &
   logical(l_def) :: set_tile_size
 
   character(str_def), allocatable :: chain_mesh_tags(:)
+
+  integer(i_def)     :: extrusion_id, i
+  character(str_def) :: name
 
   !=========================================================================
   ! This whole section should probably be in gungho science. It allows the
@@ -74,6 +79,10 @@ subroutine get_multigrid_tile_size( config, local_mesh_names, extrusion, &
       if (max_multigrid_level == imdi) then
         call log_event('no max multigrid level set', log_level_error)
       end if
+
+      if (allocated(tile_size)) deallocate(tile_size)
+      allocate(tile_size(2,(size(local_mesh_names))))
+      tile_size = imdi
 
       do i=1, size(local_mesh_names)
         set_tile_size = .false.
@@ -107,6 +116,6 @@ subroutine get_multigrid_tile_size( config, local_mesh_names, extrusion, &
 
   end if ! Coarsen multigrid_tiles
 
-end subroutine get_multigrid_tile_size
+end function get_multigrid_tile_size
 
 end module multigrid_mod

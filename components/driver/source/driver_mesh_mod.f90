@@ -110,7 +110,7 @@ subroutine init_mesh( config,                  &
   class(extrusion_type), intent(in) :: extrusion
 
   logical(l_def), intent(in) :: inner_halo_tiles
-  integer(i_def), intent(in) :: tile_size(2)
+  integer(i_def), intent(in) :: tile_size(:,:)
   integer(i_def), intent(in) :: stencil_depths_in(:)
   logical(l_def), intent(in) :: check_partitions
 

@@ -7,7 +7,7 @@
 !> @brief  Module to assign the values of the coordinates of the mesh to a field.
 module driver_coordinates_mod
 
-  use config_mod,          only: config_type
+!  use config_mod,          only: config_type
   use constants_mod,       only: r_def, i_def, l_def, &
                                  radians_to_degrees,  &
                                  i_halo_index, eps, pi
@@ -56,7 +56,9 @@ contains
   !> @param[in,out] chi      Model coordinate array of size 3 of fields
   !> @param[in]     panel_id Field giving the ID of mesh panels
   !> @param[in]     mesh     Mesh on which this field is attached
-  subroutine assign_coordinate_field(config, chi, panel_id, mesh)
+  subroutine assign_coordinate_field(chi, panel_id, mesh, &
+                                     geometry, topology, &
+                                     coord_system, scaled_radius )
 
     use domain_mod,            only: domain_type
     use field_mod,             only: field_type, field_proxy_type
@@ -69,11 +71,16 @@ contains
 
     implicit none
 
-    type(config_type), intent(in) :: config
+!    type(config_type), intent(in) :: config
 
     type( field_type ),  intent( inout )        :: chi(3)
     type( field_type ),  intent( inout )        :: panel_id
     type( mesh_type  ),  intent( in ),  pointer :: mesh
+
+    integer(i_def), intent(in) :: geometry
+    integer(i_def), intent(in) :: topology
+    integer(i_def), intent(in) :: coord_system
+    real(r_def),    intent(in) :: scaled_radius
 
     integer(i_def),                pointer :: map(:,:)
     integer(i_def),                pointer :: map_pid(:,:)
@@ -108,15 +115,10 @@ contains
     real(kind=r_def) :: inverse_rot_matrix(3,3)
     real(kind=r_def) :: stretch_factor
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
-
-    geometry      = config%base_mesh%geometry()
-    topology      = config%base_mesh%topology()
-    coord_system  = config%finite_element%coord_system()
-    scaled_radius = config%planet%scaled_radius()
+!!$    geometry      = config%base_mesh%geometry()
+!!$    topology      = config%base_mesh%topology()
+!!$    coord_system  = config%finite_element%coord_system()
+!!$    scaled_radius = config%planet%scaled_radius()
 
     nullify( map, map_pid, dof_coords, reference_element )
 
