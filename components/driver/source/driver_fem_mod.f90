@@ -13,7 +13,7 @@
 module driver_fem_mod
 
   use config_mod,                     only: config_type
-  use constants_mod,                  only: i_def, r_def, l_def, str_def
+  use constants_mod,                  only: i_def, r_def, l_def, str_def, imdi
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
@@ -79,8 +79,14 @@ contains
 
     nullify(mesh, twod_mesh, fs)
 
-    geometry      = config%base_mesh%geometry()
-    topology      = config%base_mesh%topology()
+    if (config%namelist_exists('base_mesh')) then
+      geometry = config%base_mesh%geometry()
+      topology = config%base_mesh%topology()
+    else
+      geometry = imdi
+      topology = imdi
+    end if
+
     coord_system  = config%finite_element%coord_system()
     coord_order   = config%finite_element%coord_order()
     scaled_radius = config%planet%scaled_radius()

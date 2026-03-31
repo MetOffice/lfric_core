@@ -66,11 +66,14 @@ function get_multigrid_tile_size( config, local_mesh_names, extrusion) &
   max_multigrid_level     = config%multigrid%max_tiled_multigrid_level()
   chain_mesh_tags         = config%multigrid%chain_mesh_tags()
 
-  extrusion_id = extrusion%get_id()
-
   !=========================================================================
+  if (allocated(tile_size)) deallocate(tile_size)
+  allocate(tile_size(2,(size(local_mesh_names))))
+  tile_size = imdi
+
   if (coarsen_multigrid_tiles) then
 
+    extrusion_id = extrusion%get_id()
     select case (extrusion_id)
     case(prime_extrusion, shifted, double_level)
 
@@ -79,10 +82,6 @@ function get_multigrid_tile_size( config, local_mesh_names, extrusion) &
       if (max_multigrid_level == imdi) then
         call log_event('no max multigrid level set', log_level_error)
       end if
-
-      if (allocated(tile_size)) deallocate(tile_size)
-      allocate(tile_size(2,(size(local_mesh_names))))
-      tile_size = imdi
 
       do i=1, size(local_mesh_names)
         set_tile_size = .false.

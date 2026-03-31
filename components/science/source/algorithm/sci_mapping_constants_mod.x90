@@ -1259,7 +1259,9 @@ contains
   !> @param[in] config   Configuration object
   !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_r_dot_to_w1( mesh_id, geometry, topology, coord_system, scaled_radius ) result(proj_op)
+  function get_project_r_dot_to_w1( mesh_id, &
+                                    geometry, topology, &
+                                    coord_system, scaled_radius ) result(proj_op)
 
     implicit none
 
