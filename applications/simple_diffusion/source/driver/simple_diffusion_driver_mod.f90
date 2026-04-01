@@ -84,7 +84,8 @@ contains
     integer(i_def) :: geometry
     integer(i_def) :: method
     integer(i_def) :: number_of_layers
-    integer(i_def) :: tile_size(2)
+    integer(i_def) :: tile_size_x
+    integer(i_def) :: tile_size_y
     real(r_def)    :: domain_bottom
     real(r_def)    :: domain_height
     real(r_def)    :: scaled_radius
@@ -93,6 +94,7 @@ contains
     logical :: inner_halo_tiles
     logical :: prepartitioned
 
+    integer(i_def), allocatable :: tile_size(:,:)
     integer(i_def), parameter :: one_layer = 1_i_def
     integer(i_def) :: i
 
@@ -108,12 +110,12 @@ contains
     prepartitioned   = modeldb%config%base_mesh%prepartitioned()
 
     if (prepartitioned) then
-      tile_size(1) = 1
-      tile_size(2) = 1
+      tile_size_x = 1
+      tile_size_y = 1
       inner_halo_tiles = .false.
     else
-      tile_size(1) = modeldb%config%partitioning%tile_size_x()
-      tile_size(2) = modeldb%config%partitioning%tile_size_y()
+      tile_size_x = modeldb%config%partitioning%tile_size_x()
+      tile_size_y = modeldb%config%partitioning%tile_size_y()
       inner_halo_tiles = modeldb%config%partitioning%inner_halo_tiles()
     end if
 
@@ -164,6 +166,10 @@ contains
     ! ---------------------------------------------------------
     stencil_depth = 1
     check_partitions = .false.
+    allocate(tile_size(2,size(base_mesh_names)))
+    tile_size(1,:) = tile_size_x
+    tile_size(2,:) = tile_size_y
+
     call init_mesh( modeldb%config,              &
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
