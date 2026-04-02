@@ -9,6 +9,7 @@ module test_db_mod
 
   use calendar_mod,                   only: calendar_type
   use cli_mod,                        only: parse_command_line
+  use config_mod,                     only: config_type
   use config_loader_mod,              only: read_configuration
   use constants_mod,                  only: i_def, r_def, str_def, imdi, &
                                             r_second, i_timestep
@@ -31,7 +32,6 @@ module test_db_mod
                                             finalise_logging,   &
                                             log_set_level, log_event, &
                                             LOG_LEVEL_TRACE, LOG_LEVEL_ERROR
-  use config_mod,                     only: config_type
   use lfric_xios_read_mod,            only: read_field_generic
   use lfric_xios_write_mod,           only: write_field_generic
   use local_mesh_collection_mod,      only: local_mesh_collection_type, &

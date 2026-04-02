@@ -10,7 +10,7 @@
 !>
 module driver_io_mod
 
-  use constants_mod,           only: str_def, i_def, l_def
+  use constants_mod,           only: str_def, i_def, l_def, r_def
   use driver_modeldb_mod,      only: modeldb_type
   use driver_model_data_mod,   only: model_data_type
   use empty_io_context_mod,    only: empty_io_context_type
@@ -197,6 +197,11 @@ contains
 
     integer(i_def) :: num_meshes, i, j
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
     mesh             => null()
     chi              => null()
     panel_id         => null()
@@ -206,6 +211,11 @@ contains
     mesh => mesh_collection%get_mesh(mesh_name)
 
     !==============================================================
+
+    geometry      = modeldb%config%base_mesh%geometry()
+    topology      = modeldb%config%base_mesh%topology()
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     call tmp_io_context%initialise(context_name)
     call modeldb%io_contexts%add_context(tmp_io_context)
@@ -251,23 +261,27 @@ contains
         call alt_panel_id_ptr%copy_field_serial(alt_panel_ids(i))
       end do
 
-      call io_context%initialise_xios_context( modeldb%config,         &
-                                               modeldb%mpi%get_comm(), &
+      call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
                                                before_close,           &
+                                               geometry, topology,     &
+                                               coord_system,           &
+                                               scaled_radius,          &
                                                alt_coords,             &
                                                alt_panel_ids )
       deallocate(alt_coords)
       deallocate(alt_panel_ids)
     else
-      call io_context%initialise_xios_context( modeldb%config,         &
-                                               modeldb%mpi%get_comm(), &
+      call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
-                                               before_close )
+                                               before_close,           &
+                                               geometry, topology,     &
+                                               coord_system,           &
+                                               scaled_radius )
     end if
 
     ! Attach context advancement to the model's clock

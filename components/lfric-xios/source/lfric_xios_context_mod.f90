@@ -9,8 +9,7 @@ module lfric_xios_context_mod
 
   use calendar_mod,         only : calendar_type
   use clock_mod,            only : clock_type
-  use config_mod,           only : config_type
-  use constants_mod,        only : i_def, &
+  use constants_mod,        only : i_def, r_def, &
                                    r_second, i_timestep, &
                                    l_def
   use field_mod,            only : field_type
@@ -82,20 +81,26 @@ contains
 
   !> @brief Set up an XIOS context.
   !>
-  !> @param [in]     config            Configuration object.
   !> @param [in]     communicator      MPI communicator used by context.
   !> @param [in]     chi               Array of coordinate fields
   !> @param [in]     panel_id          Panel ID field
   !> @param [in]     model_clock       The model clock.
   !> @param [in]     calendar          The model calendar.
   !> @param [in]     before_close      Routine to be called before context closes
+  !> @param [in]     geometry
+  !> @param [in]     topology
+  !> @param [in]     coord_system
+  !> @param [in]     scaled_radius
   !> @param [in]     alt_coords        Array of coordinate fields for alternative meshes
   !> @param [in]     alt_panel_ids     Panel ID fields for alternative meshes
   subroutine initialise_xios_context( this,                  &
-                                      config, communicator,  &
+                                      communicator,          &
                                       chi, panel_id,         &
                                       model_clock, calendar, &
                                       before_close,          &
+                                      geometry, topology,    &
+                                      coord_system,          &
+                                      scaled_radius,         &
                                       alt_coords,            &
                                       alt_panel_ids,         &
                                       start_at_zero )
@@ -104,7 +109,6 @@ contains
 
     class(lfric_xios_context_type), intent(inout) :: this
 
-    type(config_type),              intent(in)    :: config
     type(lfric_comm_type),          intent(in)    :: communicator
     type(field_type),               intent(in)    :: chi(:)
     type(field_type),               intent(in)    :: panel_id
@@ -112,6 +116,12 @@ contains
     class(calendar_type),           intent(in)    :: calendar
     procedure(callback_clock_arg), pointer, &
                                     intent(in)    :: before_close
+
+    integer(i_def), intent(in) :: geometry
+    integer(i_def), intent(in) :: topology
+    integer(i_def), intent(in) :: coord_system
+    real(r_def),    intent(in) :: scaled_radius
+
     type(field_type),     optional, intent(in)    :: alt_coords(:,:)
     type(field_type),     optional, intent(in)    :: alt_panel_ids(:)
     logical,              optional, intent(in)    :: start_at_zero
@@ -139,7 +149,9 @@ contains
 
     ! Run XIOS setup routines
     call init_xios_calendar(model_clock, calendar, zero_start, this%context_clock_step)
-    call init_xios_dimensions(config, chi, panel_id, alt_coords, alt_panel_ids)
+    call init_xios_dimensions( chi, panel_id, geometry, topology, &
+                               coord_system, scaled_radius,       &
+                               alt_coords, alt_panel_ids )
     if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist)
 
     if (associated(before_close)) call before_close(model_clock)
