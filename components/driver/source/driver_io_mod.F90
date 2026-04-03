@@ -68,9 +68,11 @@ contains
                       modeldb,            &
                       chi_inventory,      &
                       panel_id_inventory, &
+                      geometry, topology, &
                       populate_filelist,  &
                       alt_mesh_names,     &
                       before_close )
+
 
     implicit none
 
@@ -79,6 +81,10 @@ contains
     class(modeldb_type),              intent(inout) :: modeldb
     type(inventory_by_mesh_type),     intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),     intent(in)    :: panel_id_inventory
+
+    integer(i_def), intent(in) :: geometry
+    integer(i_def), intent(in) :: topology
+
     procedure(filelist_populator), &
                    pointer, optional, intent(in)    :: populate_filelist
     character(len=str_def), optional, intent(in)    :: alt_mesh_names(:)
@@ -105,6 +111,7 @@ contains
                                  chi_inventory,      &
                                  panel_id_inventory, &
                                  before_close_ptr,   &
+                                 geometry, topology, &
                                  populate_filelist,  &
                                  alt_mesh_names )
 #else
@@ -165,6 +172,7 @@ contains
                                    chi_inventory,      &
                                    panel_id_inventory, &
                                    before_close,       &
+                                   geometry, topology, &
                                    populate_filelist,  &
                                    alt_mesh_names )
 
@@ -176,6 +184,10 @@ contains
     type(inventory_by_mesh_type),        intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),        intent(in)    :: panel_id_inventory
     procedure(callback_clock_arg), pointer, intent(in) :: before_close
+
+    integer(i_def), intent(in) :: geometry
+    integer(i_def), intent(in) :: topology
+
     procedure(filelist_populator), &
                    pointer, optional,    intent(in)    :: populate_filelist
     character(len=str_def), optional,    intent(in)    :: alt_mesh_names(:)
@@ -197,8 +209,6 @@ contains
 
     integer(i_def) :: num_meshes, i, j
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
     integer(i_def) :: coord_system
     real(r_def)    :: scaled_radius
 
@@ -212,8 +222,6 @@ contains
 
     !==============================================================
 
-    geometry      = modeldb%config%base_mesh%geometry()
-    topology      = modeldb%config%base_mesh%topology()
     coord_system  = modeldb%config%finite_element%coord_system()
     scaled_radius = modeldb%config%planet%scaled_radius()
 

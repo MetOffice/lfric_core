@@ -85,6 +85,7 @@ contains
 
     integer(i_def) :: stencil_depth(1)
     integer(i_def) :: geometry
+    integer(i_def) :: topology
     integer(i_def) :: method
     integer(i_def) :: number_of_layers
     integer(i_def) :: tile_size_x
@@ -112,6 +113,7 @@ contains
     !=======================================================================
     prime_mesh_name  = modeldb%config%base_mesh%prime_mesh_name()
     geometry         = modeldb%config%base_mesh%geometry()
+    topology         = modeldb%config%base_mesh%topology()
     method           = modeldb%config%extrusion%method()
     domain_height    = modeldb%config%extrusion%domain_height()
     number_of_layers = modeldb%config%extrusion%number_of_layers()
@@ -222,10 +224,11 @@ contains
     if (associated(files_init_ptr)) then
       call init_io( program_name, prime_mesh_name, modeldb, &
                     chi_inventory, panel_id_inventory,      &
-                    populate_filelist=files_init_ptr )
+                    geometry, topology, populate_filelist=files_init_ptr )
     else
       call init_io( program_name, prime_mesh_name, modeldb, &
-                    chi_inventory, panel_id_inventory )
+                    chi_inventory, panel_id_inventory,      &
+                    geometry, topology )
     end if
 
 

@@ -250,7 +250,8 @@ subroutine initialise( program_name, modeldb)
     call log_event(log_scratch_space, log_level_info)
 
     call init_io( context_name, output_mesh_name, modeldb, &
-                  chi_inventory, panel_id_inventory )
+                  chi_inventory, panel_id_inventory,       &
+                  geometry, topology )
   end if
 
   !=======================================================================
