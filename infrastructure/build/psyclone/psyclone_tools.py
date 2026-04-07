@@ -13,13 +13,14 @@ their application in PSyclone optimisations scripts.
 
 from psyclone.domain.lfric import LFRicConstants
 from psyclone.psyGen import InvokeSchedule
-from psyclone.psyir.nodes import Loop, Routine, Directive
+from psyclone.psyir.nodes import Loop, Routine, Directive, Container
 from psyclone.transformations import (
     Dynamo0p3ColourTrans,
     Dynamo0p3OMPLoopTrans,
     Dynamo0p3RedundantComputationTrans,
     OMPParallelTrans,
 )
+from psyclone.psyir.transformations import ProfileTrans
 
 # List of allowed 'setval_*' built-ins for redundant computation transformation
 SETVAL_BUILTINS = ["setval_c"]
@@ -75,6 +76,7 @@ def colour_loops(psyir, enable_tiling=False):
     It creates the instance of `Dynamo0p3ColourTrans` only once.
 
     :param psyir: the PSyIR of the PSy-layer.
+    :param enable_tiling: a bool to enable tiling. Default False.
     :type psyir: :py:class:`psyclone.psyir.nodes.FileContainer`
 
     """
@@ -94,6 +96,39 @@ def colour_loops(psyir, enable_tiling=False):
             ):
                 ctrans.apply(child, options={"tiling": enable_tiling})
 
+# -----------------------------------------------------------------------------
+def profile_loops(psyir,colours_only=True):
+    """
+    Applies timing calipers to kernels during the psyclone build. The default
+    is to only profile coloured loops but colours_only can be set to False to
+    profile every instance of a coded kernel.
+
+    :param psyir: the PSyIR of the PSy-layer.
+    :param colours_only: profile only the coloured kernels. Default True.
+    :type psyir: :py:class:`psyclone.psyir.nodes.FileContainer`
+
+    """
+    profile_trans = ProfileTrans()
+    leave_loops = ["cells_in_colour",
+                   "tiles_in_colour",
+                   "cells_in_tile"]
+
+    # Loop over all the InvokeSchedule in the PSyIR object
+    for subroutine in psyir.walk(InvokeSchedule):
+        # Add timing calipers to coloured loops. This should be done
+        # before the application of the openmp transformation.
+        count = 0
+        for loop in subroutine.loops():
+            if not loop.coded_kernels():
+                continue
+            # Insert profiler calls before loop over colours
+            if (not colours_only and not loop.loop_type in leave_loops) or loop.loop_type == "colours":
+                k_name = loop.ancestor(InvokeSchedule).coded_kernels()[count].name
+                invoke_name = loop.ancestor(InvokeSchedule).invoke.name
+                file_name = loop.ancestor(Container).name
+                options = {"region_name": (file_name,invoke_name + ":" + k_name + "_k"  + str(count))}
+                profile_trans.apply(loop,options=options)
+                count += 1
 
 # -----------------------------------------------------------------------------
 def openmp_parallelise_loops(psyir):
