@@ -232,9 +232,9 @@ subroutine checkpoint_write_r_def_value(io_value, value_name)
   array_dims = size(io_value%data)
   if ( xios_is_valid_field(trim(checkpoint_id)) ) then
     allocate(dp_equiv(array_dims))
+    dp_equiv = real(io_value%data, dp_xios)
     call xios_send_field( trim(checkpoint_id), &
-                    reshape(io_value%data, (/ 1, array_dims /)) )
-    io_value%data = real(dp_equiv,r_def)
+                    reshape(dp_equiv, (/ 1, array_dims /)) )
     deallocate(dp_equiv)
   else
     call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
