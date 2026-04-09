@@ -7,11 +7,17 @@
 !>
 module lfric_xios_write_mod_test
 
-  use constants_mod,                  only : i_def
+  use constants_mod,                  only : i_def, r_def
   use lfric_xios_constants_mod,       only : dp_xios
   use lfric_xios_utils_mod,           only : set_prime_io_mesh
   use halo_routing_collection_mod,    only : halo_routing_collection_type, &
                                              halo_routing_collection
+  use io_value_mod,                   only : io_value_type,          &
+                                             io_operation_interface, &
+                                             get_io_value
+  use integer_io_value_mod,           only : integer_io_value_type,          &
+                                             integer_io_operation_interface, &
+                                             get_integer_io_value
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use local_mesh_mod,                 only : local_mesh_type
@@ -38,6 +44,8 @@ module lfric_xios_write_mod_test
     type(function_space_type), pointer :: w2h_fs => null()
     type(function_space_type), pointer :: wth_fs => null()
     type(function_space_type), pointer :: w3_fs => null()
+    type(io_value_type)                :: value_real
+    type(integer_io_value_type)        :: value_integer
     type(mesh_type),           pointer :: mesh   => null()
     type(local_mesh_type)              :: unit_test_local_mesh
 
@@ -124,7 +132,9 @@ contains
   @Test
   subroutine test_lfric_xios_write( this )
 
-    use lfric_xios_write_mod,     only: write_field_generic,         &
+    use lfric_xios_write_mod,     only: write_field_generic,            &
+                                        checkpoint_write_r_def_value,   &
+                                        checkpoint_write_integer_value, &
                                         write_state
 
     implicit none
@@ -134,8 +144,12 @@ contains
     ! Fields to be written
     type(field_type) :: W0_field, W2H_field, WTheta_field, W3_field
     type(field_proxy_type) :: test_proxy
-    real(dp_xios), allocatable :: W0_data(:), W2H_data(:), WTheta_data(:), W3_data(:)
+    real(r_def), allocatable :: W0_data(:), W2H_data(:), WTheta_data(:), W3_data(:)
+    ! Return values from XIOS might be different from r_def
     real(dp_xios), allocatable :: W0_result(:), W2H_result(:), WTheta_result(:), W3_result(:)
+    integer(i_def), allocatable :: int_data(:), int_result(:)
+    procedure( io_operation_interface ), pointer :: io_op_write_ptr
+    integer(i_def) :: i
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Setup expected data arrays
@@ -209,6 +223,41 @@ contains
     @assertEqual( test_proxy%data(::3), W3_result(1:9) )
 
     deallocate( W0_result, W2H_result, WTheta_result, W3_result )
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Test writing io_value_type
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    ! Reuse the above arrays for testing io_value_type and writing of arrays
+    allocate( int_data(size(W0_data)) )
+    ! API converts integers to XIOS real kind (real64) and back, which is OK for
+    ! int32 and real64. But if conversion were to use real32, some integers
+    ! greater than 2**24 get rounded to different values. So, we test for this.
+    do i = 1,size(W0_data)
+      int_data(i) = 2**25 + i
+    end do
+
+    call this%value_real%init("my_real",W0_data)
+    call this%value_integer%init("my_integer",int_data)
+
+    @assertEqual(this%value_real%data(2),W0_data(2))
+    @assertEqual(this%value_integer%data(2),int_data(2))
+
+    allocate(W0_result(size(W0_data)))
+    allocate(int_result(size(int_data)))
+    call checkpoint_write_r_def_value(this%value_real)
+
+    W0_result = -999.0_dp_xios
+    call get_latest_data(W0_result)
+    ! Allow for IO value data to be a real32 XIOS reals
+    @assertEqual(real(this%value_real%data(2), dp_xios),W0_result(2))
+
+    ! Underlying code converts this to real for writing to XIOS
+    call checkpoint_write_integer_value(this%value_integer)
+    call get_latest_data(W0_result)
+    ! The read process would convert back to integer
+    int_result = int(W0_result,i_def)
+    @assertEqual(this%value_integer%data,int_result)
 
   end subroutine test_lfric_xios_write
 
