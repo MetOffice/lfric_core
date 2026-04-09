@@ -1177,8 +1177,12 @@ contains
   !> @return A height field
   function get_height_fe(space_id, mesh_id) result(height)
 
-    use sci_get_height_kernel_mod,          only: get_height_kernel_type
-    use planet_config_mod,                  only: scaled_radius
+    use sci_height_continuous_kernel_mod, only: height_continuous_kernel_type
+    use sci_height_discontinuous_kernel_mod,                                   &
+                                          only: height_discontinuous_kernel_type
+    use base_mesh_config_mod,             only: geometry
+    use finite_element_config_mod,        only: coord_system
+    use planet_config_mod,                only: scaled_radius
 
     implicit none
 
@@ -1190,6 +1194,9 @@ contains
     type(function_space_type),    pointer :: space
     type(field_type),             pointer :: chi(:)
     type(field_type),             pointer :: height
+    type(field_type)                      :: rmultiplicity
+    type(field_type)                      :: nodal_multiplicity
+    type(field_type)                      :: ones
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
@@ -1212,7 +1219,7 @@ contains
       inventory_name = "height_w2_fe"
     case (W2H)
       inventory => height_w2h_inventory_fe
-      inventory_name = "height_w2_fe"
+      inventory_name = "height_w2h_fe"
     case (W3)
       inventory => height_w3_inventory_fe
       inventory_name = "height_w3_fe"
@@ -1238,11 +1245,39 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      space => function_space_collection%get_fs(mesh, element_order_h, &
-                                                element_order_v, space_id)
+      space => function_space_collection%get_fs(                               &
+          mesh, element_order_h, element_order_v, space_id                     &
+      )
       call inventory%add_field(height, space, mesh)
 
-      call invoke( get_height_kernel_type(height, chi, scaled_radius) )
+      select case (space_id)
+      ! Horizontally discontinuous spaces
+      case (W3, Wtheta)
+        call invoke(                                                           &
+            height_discontinuous_kernel_type(                                  &
+                height, chi, geometry, coord_system, scaled_radius             &
+            )                                                                  &
+        )
+
+      ! Horizontally continuous spaces
+      case default
+        ! Can't import multiplicity, so must calculate it
+        call ones%initialise( space )
+        call nodal_multiplicity%initialise( space )
+        call rmultiplicity%initialise( space )
+
+        call invoke(                                                           &
+            setval_c(ones, 1.0_r_def),                                         &
+            setval_c(nodal_multiplicity, 0.0_r_def),                           &
+            multiplicity_kernel_type(nodal_multiplicity),                      &
+            X_divideby_Y(rmultiplicity, ones, nodal_multiplicity),             &
+            setval_c(height, 0.0_r_def),                                       &
+            height_continuous_kernel_type(                                     &
+                height, chi, rmultiplicity,                                    &
+                geometry, coord_system, scaled_radius                          &
+            )                                                                  &
+        )
+      end select
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
@@ -1257,8 +1292,12 @@ contains
   !> @return A height field
   function get_height_fv(space_id, mesh_id) result(height)
 
-    use sci_get_height_kernel_mod,          only: get_height_kernel_type
-    use planet_config_mod,                  only: scaled_radius
+    use sci_height_continuous_kernel_mod, only: height_continuous_kernel_type
+    use sci_height_discontinuous_kernel_mod,                                   &
+                                          only: height_discontinuous_kernel_type
+    use base_mesh_config_mod,             only: geometry
+    use finite_element_config_mod,        only: coord_system
+    use planet_config_mod,                only: scaled_radius
 
     implicit none
 
@@ -1270,6 +1309,9 @@ contains
     type(function_space_type),    pointer :: space
     type(field_type),             pointer :: chi(:)
     type(field_type),             pointer :: height
+    type(field_type)                      :: rmultiplicity
+    type(field_type)                      :: nodal_multiplicity
+    type(field_type)                      :: ones
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
@@ -1286,7 +1328,7 @@ contains
       inventory_name = "height_w2_fv"
     case (W2H)
       inventory => height_w2h_inventory_fv
-      inventory_name = "height_w2_fv"
+      inventory_name = "height_w2h_fv"
     case (W3)
       inventory => height_w3_inventory_fv
       inventory_name = "height_w3_fv"
@@ -1315,7 +1357,34 @@ contains
       space => function_space_collection%get_fs(mesh, 0, 0, space_id)
       call inventory%add_field(height, space, mesh)
 
-      call invoke( get_height_kernel_type(height, chi, scaled_radius) )
+      select case (space_id)
+      ! Horizontally discontinuous spaces
+      case (W3, Wtheta)
+        call invoke(                                                           &
+            height_discontinuous_kernel_type(                                  &
+                height, chi, geometry, coord_system, scaled_radius             &
+            )                                                                  &
+        )
+
+      ! Horizontally continuous spaces
+      case default
+        ! Can't import multiplicity, so must calculate it
+        call ones%initialise( space )
+        call nodal_multiplicity%initialise( space )
+        call rmultiplicity%initialise( space )
+
+        call invoke(                                                           &
+            setval_c(ones, 1.0_r_def),                                         &
+            setval_c(nodal_multiplicity, 0.0_r_def),                           &
+            multiplicity_kernel_type(nodal_multiplicity),                      &
+            X_divideby_Y(rmultiplicity, ones, nodal_multiplicity),             &
+            setval_c(height, 0.0_r_def),                                       &
+            height_continuous_kernel_type(                                     &
+                height, chi, rmultiplicity,                                    &
+                geometry, coord_system, scaled_radius                          &
+            )                                                                  &
+        )
+      end select
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
     else
