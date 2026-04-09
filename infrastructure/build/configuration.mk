@@ -7,6 +7,11 @@
 # Run this make file to generate configuration found in SOURCE_DIR
 # to WORKING_DIR. Uses PROJECT to know what to call master files.
 #
+# Sets CONFIG_DIR as WORKING_DIR/configuration to store configuration output in
+#
+# Reads ROSE_META_DIRS for list of directories to read rose metadata from. Will
+# always append CORE_ROOT_DIR/rose-meta to this variable
+#
 
 export CONFIG_DIR=$(WORKING_DIR)/configuration
 export ROSE_META_DIRS += $(CORE_ROOT_DIR)/rose-meta
