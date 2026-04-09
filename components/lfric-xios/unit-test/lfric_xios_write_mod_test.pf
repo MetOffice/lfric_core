@@ -135,6 +135,7 @@ contains
     use lfric_xios_write_mod,     only: write_field_generic,            &
                                         checkpoint_write_r_def_value,   &
                                         checkpoint_write_integer_value, &
+                                        write_value_generic,            &
                                         write_state
 
     implicit none
@@ -267,17 +268,31 @@ contains
     allocate( int_result(size(int_data)) )
     W0_result = -999.0_dp_xios
 
+    ! Test the checkpoint write methods
     call checkpoint_write_r_def_value(this%value_real)
+    call get_latest_data(W0_result)
+    ! In applications, the read process would convert back to r_def
+    @assertEqual(this%value_real%data,real(W0_result, r_def))
+
+    ! Underlying code converts this to a real for writing to XIOS
+    call checkpoint_write_integer_value(this%value_integer)
+    call get_latest_data(W0_result)
+    ! In applications, the read process would convert back to integer
+    int_result = int(W0_result,i_def)
+    @assertEqual(this%value_integer%data,int_result)
+
+    ! Test the generic write methods
+    W0_result = -999.0_dp_xios
+    call write_value_generic(this%value_real)
     call get_latest_data(W0_result)
     ! Allow for IO value data to be a real32 XIOS reals
     @assertEqual(real(this%value_real%data, dp_xios),W0_result)
 
-    ! Underlying code converts this to real for writing to XIOS
-    call checkpoint_write_integer_value(this%value_integer)
+    W0_result = -999.0_dp_xios
+    call write_value_generic(this%value_integer)
     call get_latest_data(W0_result)
-    ! The read process would convert back to integer
-    int_result = int(W0_result,i_def)
-    @assertEqual(this%value_integer%data,int_result)
+    ! Allow for IO value data to be a real32 XIOS reals
+    @assertEqual(this%value_integer%data, int(W0_result))
 
     deallocate(W0_result, int_result, int_data)
 
