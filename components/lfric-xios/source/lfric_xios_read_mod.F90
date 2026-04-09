@@ -121,8 +121,9 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
 
 end subroutine checkpoint_read_xios
 
-!> @brief Read the data from an XIOS checkpoint file into the io_value
+!> @brief Read r_def data from an XIOS checkpoint file into the io_value
 !> @param[in,out] io_value The io_value to read data into
+!> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine checkpoint_read_r_def_value(io_value, value_name)
   class(io_value_type), intent(inout) :: io_value
@@ -156,8 +157,9 @@ subroutine checkpoint_read_r_def_value(io_value, value_name)
 
 end subroutine checkpoint_read_r_def_value
 
-!> @brief Read the data from an XIOS checkpoint file into the io_value
+!> @brief Read int data from an XIOS checkpoint file into the io_value
 !> @param[in,out] io_value The io_value to read data into
+!> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine checkpoint_read_integer_value(io_value, value_name)
   class(integer_io_value_type), intent(inout) :: io_value

@@ -85,10 +85,11 @@ contains
 !> @brief Write io_value data via XIOS
 !> @details This routine assumes there is a XIOS field defined
 !>          with a field id the same as the io_value id
-!> @param[in,out] io_value The io_value to write data from
+!> @param[out] io_value The io_value to write data from
+!> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine write_value_generic(io_value, value_name)
-  class(abstract_value_type), intent(inout) :: io_value
+  class(abstract_value_type), intent(out) :: io_value
   character(*), optional, intent(in) :: value_name
 
   integer(i_def)              :: array_dims
@@ -216,13 +217,14 @@ subroutine write_empty_field(field_name, field_proxy)
 
 end subroutine write_empty_field
 
-!> @brief Checkpoint an io_value with XIOS
+!> @brief Checkpoint an r_def io_value with XIOS
 !> @details This routine assumes there is an XIOS field
 !>          with the "checkpoint_" prefix
-!> @param[in,out] io_value The io_value to write data from
+!> @param[out] io_value The io_value to write data from
+!> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine checkpoint_write_r_def_value(io_value, value_name)
-  class(io_value_type), intent(inout) :: io_value
+  class(io_value_type), intent(out) :: io_value
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
@@ -248,13 +250,14 @@ subroutine checkpoint_write_r_def_value(io_value, value_name)
 
 end subroutine checkpoint_write_r_def_value
 
-!> @brief Checkpoint an io_value with XIOS
+!> @brief Checkpoint an integer io_value with XIOS
 !> @details This routine assumes there is an XIOS field
 !>          with the "checkpoint_" prefix
-!> @param[in,out] io_value The io_value to write data from
+!> @param[out] io_value The io_value to write data from
+!> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine checkpoint_write_integer_value(io_value, value_name)
-  class(integer_io_value_type), intent(inout) :: io_value
+  class(integer_io_value_type), intent(out) :: io_value
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
@@ -263,8 +266,10 @@ subroutine checkpoint_write_integer_value(io_value, value_name)
 
   if(present(value_name)) then
     checkpoint_id = trim(value_name)
+    write(10,*)'SDM 1 checkpoint write value name ',trim(value_name)
   else
     checkpoint_id = trim(io_value%io_id)
+    write(10,*)'SDM 2 checkpoint write value name ',trim(io_value%io_id)
   end if
   array_dims = size(io_value%data)
   if ( xios_is_valid_field(trim(checkpoint_id)) ) then
