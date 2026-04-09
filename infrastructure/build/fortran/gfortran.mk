@@ -44,9 +44,6 @@ FFLAGS_FASTD_RUNTIME      = $(FFLAGS_RUNTIME)
 # Option for checking code meets Fortran standard - currently 2008
 FFLAGS_FORTRAN_STANDARD   = -std=f2008
 
-# Add compiler-specific project option
-FFLAGS_COMPILER += $(FFLAGS_GNU_OPTIONS)
-
 LDFLAGS_COMPILER =
 
 utilities/traceback_mod.o utilities/traceback_mod.mod: private FFLAGS_EXTRA = -fall-intrinsics
