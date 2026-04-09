@@ -33,7 +33,7 @@ def setup_script_gnu(build_config: BuildConfig,
             return
 
     if gfortran.get_version() < (4, 9):
-        raise RuntimeError(f"GFortran is too old to build dynamo. "
+        raise RuntimeError(f"GFortran is too old to build LFRic. "
                            f"Must be at least 4.9.0, it is "
                            f"'{gfortran.get_version_string()}'.")
 
