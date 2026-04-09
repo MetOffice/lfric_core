@@ -105,8 +105,12 @@ subroutine write_value_generic(io_value, value_name)
 
     array_dims = size(io_value%data)
     if ( xios_is_valid_field(trim(value_id)) ) then
+      ! Support 32-bit and 64-bit input by converting to XIOS real kind
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%data, dp_xios)
       call xios_send_field( trim(value_id), &
-                      reshape(io_value%data, (/ 1, array_dims /)) )
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
     else
       call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
                       LOG_LEVEL_ERROR )
@@ -120,6 +124,7 @@ subroutine write_value_generic(io_value, value_name)
 
     array_dims = size(io_value%data)
     if ( xios_is_valid_field(trim(value_id)) ) then
+      ! Integers must be converted to XIOS real kind
       allocate(dp_equiv(array_dims))
       dp_equiv = real(io_value%data,dp_xios)
       call xios_send_field( trim(value_id), &
