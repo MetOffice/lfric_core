@@ -266,10 +266,8 @@ subroutine checkpoint_write_integer_value(io_value, value_name)
 
   if(present(value_name)) then
     checkpoint_id = trim(value_name)
-    write(10,*)'SDM 1 checkpoint write value name ',trim(value_name)
   else
     checkpoint_id = trim(io_value%io_id)
-    write(10,*)'SDM 2 checkpoint write value name ',trim(io_value%io_id)
   end if
   array_dims = size(io_value%data)
   if ( xios_is_valid_field(trim(checkpoint_id)) ) then
