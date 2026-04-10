@@ -12,12 +12,8 @@ module lfric_xios_write_mod_test
   use lfric_xios_utils_mod,           only : set_prime_io_mesh
   use halo_routing_collection_mod,    only : halo_routing_collection_type, &
                                              halo_routing_collection
-  use io_value_mod,                   only : io_value_type,          &
-                                             io_operation_interface, &
-                                             get_io_value
-  use integer_io_value_mod,           only : integer_io_value_type,          &
-                                             integer_io_operation_interface, &
-                                             get_integer_io_value
+  use io_value_mod,                   only : io_value_type
+  use integer_io_value_mod,           only : integer_io_value_type
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use local_mesh_mod,                 only : local_mesh_type
