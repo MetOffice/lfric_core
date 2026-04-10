@@ -16,16 +16,17 @@ module integer_io_value_mod
 
   private
 
-  public :: integer_io_value_type, get_integer_io_value, integer_io_operation_interface
+  public :: integer_io_value_type, get_integer_io_value
+  public :: integer_io_read_interface, integer_io_write_interface
 
   !> @brief Value with associated I/O methods
   !>        that can be stored in a key-value pair
   type, extends(abstract_value_type) :: integer_io_value_type
     character(str_def)               :: io_id
     integer(kind=i_def), allocatable :: data(:)
-    procedure(integer_io_operation_interface), pointer :: write_method => null()
-    procedure(integer_io_operation_interface), pointer :: checkpoint_read_method => null()
-    procedure(integer_io_operation_interface), pointer :: checkpoint_write_method => null()
+    procedure(integer_io_write_interface), pointer :: write_method => null()
+    procedure(integer_io_read_interface),  pointer :: checkpoint_read_method => null()
+    procedure(integer_io_write_interface), pointer :: checkpoint_write_method => null()
   contains
     procedure, public :: init
     procedure, public :: set_write_behaviour
@@ -38,11 +39,19 @@ module integer_io_value_mod
   end type integer_io_value_type
 
   abstract interface
-    subroutine integer_io_operation_interface(self, value_name)
+    subroutine integer_io_read_interface(self, value_name)
       import integer_io_value_type
       class(integer_io_value_type), intent(inout) :: self
       character(*), optional, intent(in) :: value_name
-    end subroutine integer_io_operation_interface
+    end subroutine integer_io_read_interface
+  end interface
+
+  abstract interface
+    subroutine integer_io_write_interface(self, value_name)
+      import integer_io_value_type
+      class(integer_io_value_type), intent(in) :: self
+      character(*), optional, intent(in) :: value_name
+    end subroutine integer_io_write_interface
   end interface
 
 contains
@@ -65,7 +74,7 @@ end subroutine init
 !> @param[in] write_behaviour Pointer to procedure implementing the write method
 subroutine set_write_behaviour(self, write_behaviour)
   class(integer_io_value_type), intent(inout) :: self
-  procedure(integer_io_operation_interface), pointer, intent(in) :: write_behaviour
+  procedure(integer_io_write_interface), pointer, intent(in) :: write_behaviour
 
   self%write_method => write_behaviour
 end subroutine set_write_behaviour
@@ -74,7 +83,7 @@ end subroutine set_write_behaviour
 !> @param[in] write_behaviour A pointer to the checkpoint write behaviour
 subroutine set_checkpoint_write_behaviour(self, write_behaviour)
   class(integer_io_value_type), intent(inout) :: self
-  procedure(integer_io_operation_interface), pointer, intent(in) :: write_behaviour
+  procedure(integer_io_write_interface), pointer, intent(in) :: write_behaviour
 
   self%checkpoint_write_method => write_behaviour
 end subroutine set_checkpoint_write_behaviour
@@ -83,7 +92,7 @@ end subroutine set_checkpoint_write_behaviour
 !> @param[in] read_behaviour A pointer to the checkpoint read behaviour
 subroutine set_checkpoint_read_behaviour(self, read_behaviour)
   class(integer_io_value_type), intent(inout) :: self
-  procedure(integer_io_operation_interface), pointer, intent(in) :: read_behaviour
+  procedure(integer_io_read_interface), pointer, intent(in) :: read_behaviour
 
   self%checkpoint_read_method => read_behaviour
 end subroutine set_checkpoint_read_behaviour

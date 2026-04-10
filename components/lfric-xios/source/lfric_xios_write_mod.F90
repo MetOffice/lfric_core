@@ -85,11 +85,11 @@ contains
 !> @brief Write io_value data via XIOS
 !> @details This routine assumes there is a XIOS field defined
 !>          with a field id the same as the io_value id
-!> @param[out] io_value The io_value to write data from
+!> @param[in]  io_value The io_value to write data from
 !> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine write_value_generic(io_value, value_name)
-  class(abstract_value_type), intent(out) :: io_value
+  class(abstract_value_type), intent(in) :: io_value
   character(*), optional, intent(in) :: value_name
 
   integer(i_def)              :: array_dims
@@ -220,11 +220,11 @@ end subroutine write_empty_field
 !> @brief Checkpoint an r_def io_value with XIOS
 !> @details This routine assumes there is an XIOS field
 !>          with the "checkpoint_" prefix
-!> @param[out] io_value The io_value to write data from
+!> @param[in]  io_value The io_value to write data from
 !> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine checkpoint_write_r_def_value(io_value, value_name)
-  class(io_value_type), intent(out) :: io_value
+  class(io_value_type), intent(in)   :: io_value
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
@@ -253,11 +253,11 @@ end subroutine checkpoint_write_r_def_value
 !> @brief Checkpoint an integer io_value with XIOS
 !> @details This routine assumes there is an XIOS field
 !>          with the "checkpoint_" prefix
-!> @param[out] io_value The io_value to write data from
+!> @param[in] io_value The io_value to write data from
 !> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine checkpoint_write_integer_value(io_value, value_name)
-  class(integer_io_value_type), intent(out) :: io_value
+  class(integer_io_value_type), intent(in) :: io_value
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
