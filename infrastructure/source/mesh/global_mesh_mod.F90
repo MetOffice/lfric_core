@@ -73,11 +73,11 @@ module global_mesh_mod
     real(r_def) :: domain_extents(2,4) = rmdi
 
   ! Real-world location of mesh North Pole,
-  ! only valid for spherical geometry on lon-lat cordinate-system.
+  ! only valid for spherical geometry on lon-lat coordinate-system.
     real(r_def) :: north_pole(2) = rmdi
 
   ! Real-world location of mesh null island,
-  ! only valid for spherical geometry on lon-lat cordinate-system.
+  ! only valid for spherical geometry on lon-lat coordinate-system.
     real(r_def) :: null_island(2) = rmdi
 
   ! Latitude of equator of mesh following stretching
@@ -272,6 +272,8 @@ contains
     character(str_def) :: topology
     character(str_def) :: coord_sys
 
+    real(r_def) :: null_island(2)
+
     ! loop counter over entities (vertices or edges).
     integer(i_def) :: ientity
 
@@ -294,7 +296,7 @@ contains
                                    self%cell_coords, &
                                    self%coord_units_xy, &
                                    self%north_pole, &
-                                   self%null_island, &
+                                   null_island, &
                                    self%equatorial_latitude, &
                                    self%constructor_inputs, &
                                    self%rim_depth, &
@@ -344,6 +346,10 @@ contains
 
     end select
 
+    ! null island will exist only on a spherical lat-lon mesh
+    if ( self%is_geometry_spherical() .and. self%is_coord_sys_ll() ) then
+      self%null_island = null_island
+    end if
 
     ! CF Standard for longitude/latitude is in degrees
     ! though many functions assume radians. Convert
@@ -1097,6 +1103,7 @@ contains
   ! y_dist cells in the y-direction
   ! Since the direction may have changed we need to recompute
   y_index = rotate(x_index)
+  if ( x_cells < 0 ) y_index = opposite(y_index)
   if ( y_cells < 0 ) y_index = opposite(y_index)
 
   ! y_index and y_dist
