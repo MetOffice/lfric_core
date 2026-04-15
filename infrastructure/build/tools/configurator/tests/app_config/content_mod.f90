@@ -96,7 +96,7 @@ subroutine initialise(self, name)
          trim(self%config_name) //&
         '] has already been initialised.'
     flush(error_unit)
-    stop
+    stop 1
   end if
 
   if (present(name)) then
@@ -144,7 +144,7 @@ subroutine add_namelist(self, namelist_obj)
       write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
       flush(error_unit)
-      stop
+      stop 1
     else
       allocate(self%foo, source=namelist_obj)
       call self%update_contents(trim(name))
@@ -156,7 +156,7 @@ subroutine add_namelist(self, namelist_obj)
       write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
       flush(error_unit)
-      stop
+      stop 1
     else
       allocate(self%moo, source=namelist_obj)
       call self%update_contents(trim(name))
@@ -172,7 +172,7 @@ subroutine add_namelist(self, namelist_obj)
       write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
       flush(error_unit)
-      stop
+      stop 1
     else
       call self%bar%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
@@ -188,7 +188,7 @@ subroutine add_namelist(self, namelist_obj)
       write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
       flush(error_unit)
-      stop
+      stop 1
     else
       call self%pot%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
@@ -199,7 +199,7 @@ subroutine add_namelist(self, namelist_obj)
         ' Undefined namelist type(' // trim(name) //&
         '), for this configuration.'
     flush(error_unit)
-    stop
+    stop 1
 
   end select
 
@@ -281,7 +281,7 @@ function bar_list(self, profile_name) result(bar_nml_obj)
           'bar_nml_type ' //&
           'not found in configuration.'
       flush(error_unit)
-      stop
+      stop 1
     end if
 
     ! Otherwise 'cast' to a bar_namelist_type
@@ -331,7 +331,7 @@ function pot_list(self, profile_name) result(pot_nml_obj)
           'pot_nml_type ' //&
           'not found in configuration.'
       flush(error_unit)
-      stop
+      stop 1
     end if
 
     ! Otherwise 'cast' to a pot_namelist_type
