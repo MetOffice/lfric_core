@@ -265,6 +265,7 @@ contains
     integer(i_def)         :: order_h, order_v
     real(r_def)            :: test_sum, test_min, test_max
     logical                :: dirty
+    integer(i_def)         :: clean_depth
     type(lfric_mpi_type)   :: f1_mpi
 
     ! Make a field with a function space
@@ -326,6 +327,15 @@ contains
     call f1_p%set_clean(1)
     dirty=f1_p%is_dirty(1)
     @assertFalse ( dirty )
+
+    call f1_p%set_dirty()
+    clean_depth = f1_p%get_clean_depth()
+    @assertEqual( -1, clean_depth )
+
+    call f1_p%set_dirty()
+    call f1_p%set_clean(2)
+    clean_depth = f1_p%get_clean_depth()
+    @assertEqual( 2, clean_depth )
 
     ! check that the mpi object associated with f1 is valid
     f1_mpi = f1_p%get_mpi()

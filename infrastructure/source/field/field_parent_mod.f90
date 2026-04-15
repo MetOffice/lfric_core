@@ -129,6 +129,9 @@ module field_parent_mod
     !> Flags all the halos up the given depth as clean
     !! @param[in] depth The depth up to which to set the halo to clean
     procedure, public :: set_clean
+    !> Returns the depth of halos that are currently clean
+    !! @return depth The depth up to which the halos are currently clean
+    procedure, public :: get_clean_depth
     !> Perform a blocking halo exchange operation on the field
     procedure(halo_exchange_interface), deferred :: halo_exchange
     !> Returns the mpi object used for this field
@@ -488,6 +491,27 @@ contains
     end if
 
   end subroutine set_clean
+
+  ! Returns the depth of halos that are currently clean.
+  ! Halo depth counting starts from zero but this is only used for optimisation
+  ! Returns -1 if no halos are clean.
+  function get_clean_depth(self) result(depth)
+
+    implicit none
+
+    class(field_parent_proxy_type), intent(in) :: self
+
+    integer(i_def) :: depth
+
+    if (self%halo_dirty(1) == 1) then
+      depth = -1
+    else
+      do depth=1,self%field_halo_depth-1
+        if (self%halo_dirty(depth+1) == 1) exit
+      enddo
+    end if
+
+  end function get_clean_depth
 
   !> Returns the mpi object this field is built on
   function get_mpi(self) result(mpi)
