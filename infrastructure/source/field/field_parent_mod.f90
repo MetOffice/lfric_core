@@ -29,7 +29,7 @@ module field_parent_mod
   private
 
   character(10), parameter :: name_none = 'none'  ! reserved for undefined field names
-  integer(i_def), public, parameter :: all_halos_dirty = -99
+  integer(i_def), public, parameter :: all_halos_dirty = -99_i_def
 
   !> Abstract field type that is the parent of any field type in the field
   !> object hierarchy
