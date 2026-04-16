@@ -29,6 +29,7 @@ module field_parent_mod
   private
 
   character(10), parameter :: name_none = 'none'  ! reserved for undefined field names
+  integer(i_def), public, parameter :: all_halos_dirty = -99
 
   !> Abstract field type that is the parent of any field type in the field
   !> object hierarchy
@@ -505,7 +506,7 @@ contains
     integer(i_def) :: depth
 
     if (self%halo_dirty(1) == 1) then
-      depth = -1
+      depth = all_halos_dirty
     else
       do depth=1,self%field_halo_depth-1
         if (self%halo_dirty(depth+1) == 1) exit

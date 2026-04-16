@@ -1058,12 +1058,9 @@ contains
     ! should be the same as the total number of dofs
     @assertEqual ( undf, last_dof_halo )
 
-    last_dof_halo = test_fs%get_last_dof_halo(-1)
-    ! The last dof in the halo depth "-1" is actually the last owned dof
-    @assertEqual ( last_dof_owned, last_dof_halo )
-
     last_dof_halo = test_fs%get_last_dof_halo(0)
-    ! The last dof in the halo depth zero is actually the last annexed dof
+    ! The last dof at the halo depth zero should be the last dof before the
+    ! first halo - i.e. that last annexed dof
     @assertEqual ( last_dof_annexed, last_dof_halo )
 
     call test_fs%clear()
