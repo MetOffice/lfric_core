@@ -248,6 +248,7 @@ contains
   subroutine test_field_proxy( this )
 
     use field_mod,             only: field_type, field_proxy_type
+    use field_parent_mod,      only: all_halos_dirty
 
     implicit none
 
@@ -330,7 +331,7 @@ contains
 
     call f1_p%set_dirty()
     clean_depth = f1_p%get_clean_depth()
-    @assertEqual( -1, clean_depth )
+    @assertEqual( all_halos_dirty, clean_depth )
 
     call f1_p%set_dirty()
     call f1_p%set_clean(2)
