@@ -496,7 +496,7 @@ contains
   ! Returns the depth of halos that are currently clean.
   ! Halo depth counting starts from zero but the zeroth halo is currently
   ! only used for optimisation so is not checked here
-  ! Returns -1 if no halos are clean.
+  ! Returns the parameter "all_halos_dirty" if no halos are clean.
   function get_clean_depth(self) result(depth)
 
     implicit none
