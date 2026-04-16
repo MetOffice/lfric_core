@@ -571,7 +571,7 @@ contains
     allocate(self%dof_cell_owner( self%ndof_cell, 0:ncells_2d_with_ghost ))
     allocate(self%dof_column_height( self%ndof_cell, 0:ncells_2d_with_ghost ))
 
-    allocate(self%last_dof_halo (0 : self%mesh % get_halo_depth()))
+    allocate(self%last_dof_halo (-1 : self%mesh % get_halo_depth()))
 
     call dofmap_setup ( self%mesh,                                             &
                         self%fs,                                               &

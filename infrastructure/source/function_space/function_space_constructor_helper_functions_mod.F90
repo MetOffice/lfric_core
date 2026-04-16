@@ -1741,7 +1741,7 @@ contains
     ! Output
     integer(i_def), intent(out) :: last_dof_owned
     integer(i_def), intent(out) :: last_dof_annexed
-    integer(i_def), intent(out) :: last_dof_halo(0:)
+    integer(i_def), intent(out) :: last_dof_halo(-1:)
 
     integer(i_def), intent(out) :: dofmap(ndof_cell, 0:ncells_2d_with_ghost)
     integer(i_def), intent(out) :: dof_cell_owner(ndof_cell, 0:ncells_2d_with_ghost)
@@ -2177,8 +2177,9 @@ contains
 
     end do halo_loop
 
-    ! The zeroth depth halo contains no dofs, so set the last dof to be the
-    ! same as the last dof before it in memory - i.e. the last annexed dof
+    ! The zeroth depth halo contains the annexed dofs - which makes the last
+    ! -1th halo dof, the dof before the annexed dofs - i.e. the last owned dof
+    last_dof_halo(-1) = last_dof_owned
     last_dof_halo(0) = last_dof_annexed
 
     ! Copy from the dofmap_dn arrays into one dofmap array
