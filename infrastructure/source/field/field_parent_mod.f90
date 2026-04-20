@@ -505,6 +505,8 @@ contains
 
     integer(i_def) :: depth
 
+    ! If the first halo depth is dirty return the "all dirty" flag.
+    ! Otherwise, start at depth 2 looking for the first dirty halo depth
     if (self%halo_dirty(1) == 1) then
       depth = all_halos_dirty
     else
