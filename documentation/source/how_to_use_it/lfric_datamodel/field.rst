@@ -74,7 +74,7 @@ rather than adopting the name of the original field.
    take advantage of any shared memory parallelism. Therefore, use of
    ``copy_field_serial`` is not advised. If the data needs to be
    copied, then use the ``setval_x`` `built-in
-   <https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#setting-to-a-value>`_
+   <https://psyclone.readthedocs.io/en/stable/user_guide/lfric.html#setting-to-a-value>`_
    after the field is initialised. Initialising new fields with
    ``setval_x`` allows PSyclone to optimise the copy.
 
@@ -270,7 +270,7 @@ The infrastructure supports 32-bit integer fields:
 ``integer_field_type``. Their creation and usage is essentially the
 same as for real fields. One key difference is that real fields and
 integer fields have their own set of `PSyclone built-in operations
-<https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#built-in-operations-on-integer-valued-fields>`_.
+<https://psyclone.readthedocs.io/en/stable/user_guide/lfric.html#built-in-operations-on-integer-valued-fields>`_.
 
 Currently, there is no known requirement for 64-bit integer fields, so
 a 64-bit integer field is not supported.
