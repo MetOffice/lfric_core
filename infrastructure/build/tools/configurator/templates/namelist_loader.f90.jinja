@@ -144,7 +144,7 @@ contains
               'Key ' // trim(adjustl(key)) // ' not recognised for ' // &
               '{{name}} in {{listname}} namelist.'
           flush(error_unit)
-          stop
+          stop 1
         end if
       end if
     end do
@@ -270,7 +270,7 @@ contains
       write(error_unit, '(A)') &
           'Unable to allocate temporary array for "{{name}}"'
       flush(error_unit)
-      stop
+      stop 1
     end if
 {%-     endif %}
 {%-   endfor %}
@@ -301,7 +301,7 @@ contains
       if (condition /= 0) then
         write(error_unit, '(A)') trim(log_scratch_space)
         flush(error_unit)
-        stop
+        stop 1
       end if
 
 {%- for name in enumerations | sort %}
