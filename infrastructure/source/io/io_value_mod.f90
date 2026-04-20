@@ -6,7 +6,7 @@
 
 module io_value_mod
 
-  use constants_mod,            only : str_def, r_def, r_double, l_def
+  use constants_mod,            only : str_def, r_def, r_double, l_def, i_def
   use key_value_mod,            only : abstract_value_type
   use key_value_collection_mod, only : key_value_collection_type
   use log_mod,                  only : log_event, &
@@ -22,12 +22,15 @@ module io_value_mod
   !>        that can be stored in a key-value pair
   type, extends(abstract_value_type) :: io_value_type
     character(str_def)               :: io_id
-    real(kind=r_def),    allocatable :: data(:)
+    real(kind=r_def), private, allocatable :: data(:)
     procedure(io_operation_interface), pointer :: write_method => null()
     procedure(io_operation_interface), pointer :: checkpoint_read_method => null()
     procedure(io_operation_interface), pointer :: checkpoint_write_method => null()
   contains
     procedure, public :: init
+    procedure, public :: set_data
+    procedure, public :: get_data
+    procedure, public :: get_data_size
     procedure, public :: set_write_behaviour
     procedure, public :: set_checkpoint_write_behaviour
     procedure, public :: set_checkpoint_read_behaviour
@@ -49,17 +52,52 @@ contains
 
 !> @brief Initialiser for the io_value_type
 !> @param[in] io_id The ID used for managing I/O operations
-!> @param[in] data  An array holding the data
-subroutine init(self, io_id, data)
+!> @param[in] data_value  An array holding the data
+subroutine init(self, io_id, data_value)
   class(io_value_type), intent(inout) :: self
 
   character(len=*),     intent(in) :: io_id
-  real(kind=r_def),     intent(in) :: data(:)
+  real(kind=r_def),     intent(in) :: data_value(:)
 
   self%io_id = io_id
-  allocate(self%data, source=data)
+  allocate(self%data, source=data_value)
 
 end subroutine init
+
+!> @brief Sets the data attribute for io_value
+!> @param[in] data_value An array holding the data
+subroutine set_data(self, data_value)
+  class(io_value_type), intent(inout) :: self
+  real(kind=r_def), intent(in) :: data_value(:)
+
+  if ( allocated(self%data) ) then
+     deallocate(self%data)
+  end if
+  allocate(self%data, source=data_value)
+
+end subroutine set_data
+
+!> @brief Gets the data from io_value
+!> @return array holding the data
+function get_data(self) result(data_value)
+  class(io_value_type), intent(in) :: self
+
+  real(kind=r_def), dimension(1:size(self%data)) :: data_value
+
+  data_value = self%data
+
+end function get_data
+
+!> @brief Gets the size of the data from io_value
+!> @return integer specifying the size of the data
+function get_data_size(self) result(data_size)
+  class(io_value_type), intent(in) :: self
+
+  integer(i_def) :: data_size
+
+  data_size = size(self%data)
+
+end function get_data_size
 
 !> @brief Sets the diagnostic write behaviour for io_value
 !> @param[in] write_behaviour Pointer to procedure implementing the write method

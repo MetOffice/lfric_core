@@ -83,8 +83,8 @@ subroutine write_value_generic(io_value, value_name)
   class(io_value_type), intent(inout) :: io_value
   character(*), optional, intent(in) :: value_name
 
-  integer(i_def) :: array_dims
   character(:), allocatable :: value_id
+  real(kind=r_def), allocatable :: data_value(:)
 
   if (present(value_name)) then
     value_id = value_name
@@ -92,10 +92,10 @@ subroutine write_value_generic(io_value, value_name)
     value_id = io_value%io_id
   end if
 
-  array_dims = size(io_value%data)
   if ( xios_is_valid_field(trim(value_id)) ) then
+    allocate(data_value, source=io_value%get_data())
     call xios_send_field( trim(value_id), &
-                          reshape(io_value%data, (/ 1, array_dims /)) )
+                          reshape(data_value, (/ 1, size(data_value) /)) )
   else
     call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
                     LOG_LEVEL_ERROR )
@@ -191,17 +191,18 @@ subroutine checkpoint_write_value(io_value, value_name)
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
-  integer(i_def)     :: array_dims
+  real(kind=r_def), allocatable :: data_value(:)
 
   if(present(value_name)) then
     checkpoint_id = trim(value_name)
   else
     checkpoint_id = trim(io_value%io_id)
   end if
-  array_dims = size(io_value%data)
+
   if ( xios_is_valid_field(trim(checkpoint_id)) ) then
+    allocate(data_value, source=io_value%get_data())
     call xios_send_field( trim(checkpoint_id), &
-                          reshape(io_value%data, (/ 1, array_dims /)) )
+                          reshape(data_value, (/ 1, size(data_value) /)) )
   else
     call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
                     LOG_LEVEL_ERROR )
