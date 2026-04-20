@@ -11,7 +11,7 @@
 
 module sci_map_inter_element_order_alg_mod
 
-  use constants_mod,               only: i_def
+  use constants_mod,               only: i_def, r_def
   use field_mod,                   only: field_type
   use integer_field_mod,           only: integer_field_type
   use fs_continuity_mod,           only: W3, Wtheta, W2

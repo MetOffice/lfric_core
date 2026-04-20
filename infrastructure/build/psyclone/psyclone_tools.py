@@ -14,11 +14,16 @@ their application in PSyclone optimisations scripts.
 from psyclone.domain.lfric import LFRicConstants
 from psyclone.psyGen import InvokeSchedule
 from psyclone.psyir.nodes import Loop, Routine, Directive
+try:
+    from psyclone.psyir.transformations import OMPParallelTrans
+except ImportError:
+    # Support for psyclone < 3.3
+    from psyclone.transformations import OMPParallelTrans
+
 from psyclone.transformations import (
-    Dynamo0p3ColourTrans,
-    Dynamo0p3OMPLoopTrans,
-    Dynamo0p3RedundantComputationTrans,
-    OMPParallelTrans,
+    LFRicColourTrans,
+    LFRicOMPLoopTrans,
+    LFRicRedundantComputationTrans,
 )
 
 # List of allowed 'setval_*' built-ins for redundant computation transformation
@@ -50,7 +55,7 @@ def redundant_computation_setval(psyir):
 
     """
     # Import redundant computation transformation
-    rtrans = Dynamo0p3RedundantComputationTrans()
+    rtrans = LFRicRedundantComputationTrans()
 
     # Loop over all the InvokeSchedule in the PSyIR object
     for subroutine in psyir.walk(InvokeSchedule):
@@ -72,14 +77,14 @@ def colour_loops(psyir, enable_tiling=False):
     """
     Applies the colouring transformation to all applicable loops and optionally
     enables tiling.
-    It creates the instance of `Dynamo0p3ColourTrans` only once.
+    It creates the instance of `LFRicColourTrans` only once.
 
     :param psyir: the PSyIR of the PSy-layer.
     :type psyir: :py:class:`psyclone.psyir.nodes.FileContainer`
 
     """
     const = LFRicConstants()
-    ctrans = Dynamo0p3ColourTrans()
+    ctrans = LFRicColourTrans()
 
     # Loop over all the subroutines in the PSyIR object
     for subroutine in psyir.walk(Routine):
@@ -104,7 +109,7 @@ def openmp_parallelise_loops(psyir):
     :type psyir: :py:class:`psyclone.psyir.nodes.FileContainer`
 
     """
-    otrans = Dynamo0p3OMPLoopTrans()
+    otrans = LFRicOMPLoopTrans()
     oregtrans = OMPParallelTrans()
 
     # Loop over all the InvokeSchedule in the PSyIR object

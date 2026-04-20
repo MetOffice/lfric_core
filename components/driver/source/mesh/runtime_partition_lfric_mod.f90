@@ -63,6 +63,9 @@ subroutine get_partition_parameters( partitioning_nml, &
   panel_xproc = partitioning_nml%panel_xproc()
   panel_yproc = partitioning_nml%panel_yproc()
 
+  ! Deallocation needed to prevent nvfortran compiler issue
+  if (allocated(decomposition)) deallocate(decomposition)
+
   select case (panel_decomposition)
 
   case ( panel_decomposition_auto )
