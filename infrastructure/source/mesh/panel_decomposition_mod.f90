@@ -56,6 +56,13 @@ module panel_decomposition_mod
     procedure, public :: get_nprocs => get_column_nprocs
   end type column_decomposition_type
 
+  !> @brief Decomposition for lfric2lfric lbc meshes
+  type, extends(panel_decomposition_type), public :: lfric2lfric_lbc_decomposition_type
+  contains
+    procedure, public :: get_partition => get_lfric2lfric_lbc_partition
+    procedure, public :: get_nprocs => get_lfric2lfric_lbc_nprocs
+  end type lfric2lfric_lbc_decomposition_type
+
   !> @brief Decomposition that automatically generates a nonuniform decomposition
   type, extends(panel_decomposition_type), public :: auto_nonuniform_decomposition_type
   contains
@@ -559,6 +566,109 @@ contains
     nprocs(:) = (/ 1, 1 /)
 
   end function get_column_nprocs
+
+  !> @brief Partition the panel into an automatically determined number of x and
+  !>        y processes for lbc meshes in lfric2lfric jobs
+  !> @details The lbc mesh just contains a rim of cells of width rim_width,
+  !>          and no cells in the interior of the regional mesh.
+  !>          We will partition the lbc mesh in rows or columns of withd equal
+  !>          to the rim width: there are two columns of length num_cells_y -
+  !>          rim_width, and two columns of length num_cells_x - rim_width.
+  !>          The cells are arranged in a line starting from the SW corner
+  !>          and moving in anticlockwise order.
+  !> @param[in]    relative_rank    The number of this rank in the order of all
+  !>                                ranks on the panel
+  !> @param[in]    panel_ranks      The total number of ranks on the panel
+  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x      The panel's size in the x direction
+  !> @param[in]    num_cells_y      The panel's size in the y direction
+  !> @param[in]    any_maps         Whether there exist maps between meshes that
+  !>                                must having aligning partitions, .false. by
+  !>                                default in this partitioning strategy
+  !> @param[inout] partition_width  The width of the lbc rim
+  !> @param[inout] partition_height The partition's size in the y direction
+  !> @param[inout] partition_x_pos  Position along the rim starting in the
+  !>                                SW corner
+  !> @param[inout] partition_y_pos  Length of partition cells along the rim
+  subroutine get_lfric2lfric_lbc_partition( self,             &
+                                            relative_rank,    &
+                                            panel_ranks,      &
+                                            mapping_factor,   &
+                                            num_cells_x,      &
+                                            num_cells_y,      &
+                                            any_maps,         &
+                                            partition_width,  &
+                                            partition_height, &
+                                            partition_x_pos,  &
+                                            partition_y_pos )
+    implicit none
+ 
+    class(lfric2lfric_lbc_decomposition_type), intent(in) :: self
+    integer(i_def), intent(in)    :: relative_rank,    &
+                                     panel_ranks,      &
+                                     mapping_factor,   &
+                                     num_cells_x,      &
+                                     num_cells_y
+    logical,        intent(in)    :: any_maps
+    integer(i_def), intent(inout) :: partition_width,  &
+                                     partition_height, &
+                                     partition_x_pos,  &
+                                     partition_y_pos
+ 
+    integer(i_def) :: lbc_length
+ 
+    call log_event("Using lfric2lfric lbc decomposition", LOG_LEVEL_INFO)
+ 
+    ! Try to partition the lbc rim in segments of the same size
+    lbc_length = 2*(num_cells_x+num_cells_y-2*partition_width)
+ 
+    if (panel_ranks > lbc_length) then
+      write(log_scratch_space, "(a,i0,a,i0)") &
+        " Too many ranks: ",  panel_ranks, &
+        " to decompose lbc of length:",  lbc_length
+      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+    end if
+ 
+    ! length of cells within the partition
+    partition_y_pos = nint(real(lbc_length) / real(panel_ranks))
+    
+    ! if the number of ranks does not divide exactly the length
+    ! of the lbc rim, assign the last rank a different size
+    ! to completely fill the lbc rim length
+    if (panel_ranks*partition_y_pos /= lbc_length) then
+      if (relative_rank == panel_ranks) then
+        partition_y_pos = lbc_length - (panel_ranks-1)*partition_y_pos
+      end if
+    end if
+ 
+    ! first cell position in the partition
+    partition_x_pos = (relative_rank - 1) * partition_y_pos + 1
+ 
+    write(log_scratch_space, "(a,i0,a,i0,a,i0,a,i0)") &
+      " partition_x_pos ",  partition_x_pos, &
+      " partition length",  partition_y_pos, &
+      " partition_height ", partition_width
+    call log_event(log_scratch_space, LOG_LEVEL_INFO)
+ 
+  end subroutine get_lfric2lfric_lbc_partition
+
+  !> @brief Get the number of processors in the x- and y-direction.
+  !!        For this class the function is not needed and so only
+  !!        returns default values
+  !> @result nprocs Number of processors (x-dir, y-dir)
+  function get_lfric2lfric_lbc_nprocs(self) result(nprocs)
+    use constants_mod, only: i_def
+
+    class(lfric2lfric_lbc_decomposition_type), intent(in) :: self
+
+    integer(i_def) :: nprocs(2)
+
+    ! These values aren't needed for column decomposition
+    ! (and aren't available until get_column_partition has been called)
+    ! so just return something that won't break the code
+    nprocs(:) = (/ 1, 1 /)
+
+  end function get_lfric2lfric_lbc_nprocs
 
   !> @brief Partition the panel into an automatically determined number of
   !         columns of partitions of variable size.

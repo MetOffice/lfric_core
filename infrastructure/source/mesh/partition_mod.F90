@@ -38,6 +38,7 @@ module partition_mod
   public :: partitioner_cubedsphere, &
             partitioner_planar, &
             partitioner_cubedsphere_serial, &
+            partitioner_lfric2lfric_lbc, &
             partitioner_interface
 
   type, public :: partition_type
@@ -627,6 +628,216 @@ contains
   end subroutine partitioner_cubedsphere_serial
 
   !-------------------------------------------------------------------------------
+  ! Helper routine that creates a linked-list of all cells known to the partition,
+  ! including halos.
+  ! This will be ordered as:
+  ! inner n, inner n-1 ... inner 1, edge, halo 1 ... halo n-1, halo n
+  !-------------------------------------------------------------------------------
+  subroutine get_known_cells_halos( global_mesh,           &
+                                    known_cells,           &
+                                    partition,             &
+                                    max_stencil_depth,     &
+                                    generate_inner_halos,  &
+                                    partitioned_cells,     &
+                                    num_inner,             &
+                                    num_edge,              &
+                                    num_halo,              &
+                                    num_ghost )
+
+    use linked_list_int_mod,   only : linked_list_int_type
+    use linked_list_mod,       only : linked_list_type, &
+                                      linked_list_item_type, &
+                                      before
+
+    implicit none
+
+    type(global_mesh_type), pointer, intent(in)    :: global_mesh            ! A global mesh object
+    type(linked_list_type),          intent(inout) :: known_cells            ! a list of cells known to the partition
+    type(linked_list_type),          intent(in)    :: partition              ! a list of all cells in the partition
+    integer(i_def),                  intent(in)    :: max_stencil_depth      ! The maximum depth of stencil that will be used
+    logical(l_def),                  intent(in)    :: generate_inner_halos   ! Flag to control the generation of inner halos
+    integer(i_def), allocatable,     intent(inout) :: partitioned_cells( : ) ! Returned array that holds the global ids of
+                                                                             ! all cells in local partition
+    integer(i_def),                  intent(out)   :: num_inner( : )         ! Number of cells that are inner halo cells.
+    integer(i_def),                  intent(out)   :: num_edge               ! Number of cells that are owned by the partition,
+    integer(i_def),                  intent(out)   :: num_halo( : )          ! Number of cells that are halo cells.
+    integer(i_def),                  intent(out)   :: num_ghost              ! Number of cells that are ghost cells - surrounding,
+
+    ! local variables
+ 
+    ! Create linked lists
+    type(linked_list_item_type), pointer :: last          ! location of the last added cell in the list of cells
+    type(linked_list_item_type), pointer :: start_subsect ! start position when looping over subsections of cells
+    type(linked_list_item_type), pointer :: insert_point  ! where to insert in a list
+    type(linked_list_item_type), pointer :: loop          ! temp ptr to loop through list
+
+    integer(i_def) :: start_sort, end_sort ! range over which to sort cells
+    integer(i_def) :: depth                ! counter over the halo depths
+    integer(i_def) :: orig_num_in_list     ! number of cells in list before halos are added
+
+    integer(i_def) :: num_apply
+    integer(i_def) :: i
+
+
+    nullify( last )
+    nullify( start_subsect )
+    nullify( insert_point )
+    nullify( loop )
+
+    ! get the number of edge cells currently stored in the known_cells list
+    num_edge = known_cells%get_length()
+
+    ! Add all cells from the halos (up to max_stencil_depth) that are in a
+    ! stencil around each of the owned cells, but are not part of the partition.
+    ! Also add a "ghost" halo (max_stencil_depth+1) - used later to work out
+    ! dof ownerships
+    start_subsect => known_cells%get_head() ! start at the beginning
+                                            ! of known_cells list
+    ! num cells to apply stencil to is the number of edge cells
+    num_apply=num_edge
+    ! get a pointer to the known_cells list
+    !known_cells_ptr => known_cells
+    ! insert point is end of current list
+    insert_point => known_cells%get_tail()
+    do depth = 1,max_stencil_depth +1
+      ! update number of cells currently in known_cells
+      orig_num_in_list = known_cells%get_length()
+      last => known_cells%get_tail() ! point at tail of current known_cells list
+      call apply_stencil( global_mesh, &
+                          known_cells, & ! the current list of known cells
+                          start_subsect, & ! where we want to start applying stencil in known_cells
+                          num_apply, & ! the number of items in known_cells to iterate over
+                          insert_point=insert_point, & ! where to insert in list
+                          exclude=partition ) ! exclude cells in partition
+      if(depth <= max_stencil_depth)then
+        num_halo(depth) = known_cells%get_length() - orig_num_in_list ! num halo cells at this depth
+                                                                      ! is the number we just added
+        ! if cells were added at this depth, reset start point to previous end of known_cells list
+        if (num_halo(depth) > 0) then
+          start_subsect => last%next
+        end if
+        ! reset insert point to current end of list
+        insert_point => known_cells%get_tail()
+        ! num cells to apply stencil to next is the number of cells just added to known_cells
+        num_apply = num_halo(depth)
+      else
+        ! num ghost cells is the number we just added to known_cells at max_stencil_depth + 1
+        num_ghost = known_cells%get_length() - orig_num_in_list
+      end if
+    end do
+
+    ! Add all cells from the inner halos (up to max_stencil_depth) that are in a
+    ! stencil around each of the owned cells, but are not part of the outer halos
+    if ( generate_inner_halos ) then
+      call log_event( 'Generating Inner Halos', LOG_LEVEL_DEBUG )
+      ! Point to start of known_cells list
+      start_subsect => known_cells%get_head()
+      ! insert point is head of known cells list as we want to insert before it
+      insert_point => known_cells%get_head()
+      ! num cells to apply stencil to is the number of edge cells only (not halo cells)
+      num_apply=num_edge
+      do depth = 1,max_stencil_depth-1
+        ! update number of cells currently in known_cells
+        orig_num_in_list = known_cells%get_length()
+        call apply_stencil( global_mesh, &
+                            known_cells, &
+                            start_subsect, &
+                            num_apply, &
+                            insert_point=insert_point, & ! where to insert in list
+                            placement=before )
+        ! num inner halo cells at this depth is the number we just added to known_cells
+        num_inner(depth) = known_cells%get_length()  - orig_num_in_list
+        ! num cells to apply stencil to next is the number of cells just added to known_cells
+        num_apply = num_inner(depth)
+        ! reset start point to current head of known_cells list
+        start_subsect => known_cells%get_head()
+        ! and reset insert point also
+        insert_point => known_cells%get_head()
+      end do
+    !Cells of depth max_stencil_depth
+    num_inner(max_stencil_depth)=0
+    else
+      ! Do not create any inner halos
+      num_inner(:) = 0
+    end if
+
+    ! Now check partition list for any cells not yet added. These must be inner halo
+    ! update number of cells currently in known_cells
+    orig_num_in_list = known_cells%get_length()
+    ! point at head of partition list
+    loop => partition%get_head()
+    ! update insert point to head of known_cells list
+    insert_point => known_cells%get_head()
+    if (partition%get_length() > 0) then
+
+      do i = 1,partition%get_length()
+
+        if(.not. (known_cells%item_exists(loop%payload%get_id()))) then
+
+          call known_cells%insert_item( linked_list_int_type(loop%payload%get_id()), &
+                                        insert_point=insert_point, placement=before)
+        end if
+        ! update insert point to head of known_cells list
+        insert_point => known_cells%get_head()
+        loop => loop%next
+      end do
+      ! update num_inner cells added
+      num_inner(max_stencil_depth)=known_cells%get_length()  - orig_num_in_list
+    end if
+
+    allocate(partitioned_cells(known_cells%get_length()))
+    ! reset loop to start of known_cells
+    loop => known_cells%get_head()
+
+
+    ! Copy cell ids from known_cells list to partitioned_cells array
+    do i = 1,known_cells%get_length()
+      partitioned_cells(i) = loop%payload%get_id()
+      if ( .not. associated(loop%next) ) exit !finished
+      loop => loop%next
+    end do
+
+
+    ! Deallocate the known_cells list
+    call known_cells%clear()
+
+    ! Cell ids within the separate groups have to be in numerical order.
+    ! so (bubble) sort the separate groups
+    !
+    ! Sort the individual depths of inner halo cells
+    end_sort=0
+    do depth = max_stencil_depth, 1, -1
+      start_sort = end_sort + 1
+      end_sort = start_sort + num_inner(depth) - 1
+      call bubble_sort( end_sort-start_sort+1, &
+                        partitioned_cells(start_sort:end_sort) )
+    end do
+    !
+    ! Sort edge cells
+    start_sort = end_sort + 1
+    end_sort = start_sort + num_edge - 1
+    call bubble_sort( end_sort-start_sort+1, &
+                      partitioned_cells(start_sort:end_sort) )
+    !
+    ! Sort the individual depths of halo cells
+    do depth = 1,max_stencil_depth
+      start_sort = end_sort + 1
+      end_sort = start_sort + num_halo(depth) - 1
+      call bubble_sort( end_sort-start_sort+1, &
+                        partitioned_cells(start_sort:end_sort) )
+    end do
+    !
+    ! Sort the ghost halo
+    start_sort = end_sort + 1
+    end_sort = start_sort + num_ghost - 1
+    call bubble_sort( end_sort-start_sort+1, &
+                      partitioned_cells(start_sort:end_sort) )
+
+    nullify( last, start_subsect, insert_point, loop )
+
+  end subroutine get_known_cells_halos
+
+  !-------------------------------------------------------------------------------
   ! Helper routine that partitions a mesh that is formed from a number
   ! of rectangular panels.
   !-------------------------------------------------------------------------------
@@ -645,9 +856,7 @@ contains
                                              num_ghost )
 
     use linked_list_int_mod,   only : linked_list_int_type
-    use linked_list_mod,       only : linked_list_type, &
-                                      linked_list_item_type, &
-                                      before
+    use linked_list_mod,       only : linked_list_type
     use reference_element_mod, only : W, S, E, N
 
     implicit none
@@ -692,11 +901,6 @@ contains
     type(linked_list_type)         :: partition   ! a list of all cells in the partition
     type(linked_list_type), target :: known_cells ! a list of cells known to this partition
 
-    type(linked_list_item_type), pointer :: last          ! location of the last added cell in the list of cells
-    type(linked_list_item_type), pointer :: start_subsect ! start position when looping over subsections of cells
-    type(linked_list_item_type), pointer :: insert_point  ! where to insert in a list
-    type(linked_list_item_type), pointer :: loop          ! temp ptr to loop through list
-
     integer :: i, j                 ! loop counters
     integer :: cells(4)             ! The cells around the vertex being queried
     integer :: oth1, oth2           ! When querying a cell around a vertex, these are
@@ -709,9 +913,6 @@ contains
     integer :: cell_next_e          ! The cell to the east of the cell being queried
     integer :: num_cells_x          ! number of cells across a panel in x-direction
     integer :: num_cells_y          ! number of cells across a panel in y-direction
-    integer :: start_sort, end_sort ! range over which to sort cells
-    integer :: depth                ! counter over the halo depths
-    integer :: orig_num_in_list     ! number of cells in list before halos are added
     integer :: ncell                ! Number of cells
     integer :: cell_id              ! Id of cell in the partition
     logical :: cross_panels         ! Flag for partitioning across multiple cubed sphere panels
@@ -722,7 +923,6 @@ contains
     integer :: nprocs(2)            ! number of processors in the x- & y-direction
     integer :: xproc                ! number of processsors in x-direction
     integer :: yproc                ! number of processsors in y-direction
-    integer(i_def) :: num_apply
     logical(l_def) :: periodic_xy(2) ! Periodic in the x/y-axes
 
     periodic_xy = global_mesh%get_mesh_periodicity()
@@ -730,11 +930,6 @@ contains
     cross_panels = .false.
     n_cross_panels = 1
     any_maps    = global_mesh%get_nmaps() > 0
-
-    nullify( last )
-    nullify( start_subsect )
-    nullify( insert_point )
-    nullify( loop )
 
     nprocs = decomposition%get_nprocs()
     xproc = nprocs(1)
@@ -967,159 +1162,466 @@ contains
     ! Create a linked-list of all cells known to the partition, including halos.
     ! This will be ordered as:
     ! inner n, inner n-1 ... inner 1, edge, halo 1 ... halo n-1, halo n
+    call get_known_cells_halos( global_mesh, known_cells, partition,      &
+                                max_stencil_depth, generate_inner_halos,  &
+                                partitioned_cells, num_inner,             &
+                                num_edge, num_halo, num_ghost )
+
+  end subroutine partitioner_rectangular_panels
+
+  !---------------------------------------------------------------------------
+  !> @brief Partitions a lbc mesh on a plane for lfric2lfric. It returns
+  !>        the global IDs of the cells in the given partition.
+  !> @details The lbc mesh just contains a rim of cells of width rim_width,
+  !>          and no cells in the interior of the regional mesh.
+  !>          We will partition the lbc mesh in rows or columns of withd equal
+  !>          to the rim width: there are two columns of length num_cells_y -
+  !>          rim_width, and two rows of length num_cells_x - rim_width.
+  !>          The cells are arranged in a line starting from the SW corner
+  !>          and moving in anticlockwise order.
+  !>
+  !>               N
+  !>         ||///////////
+  !>         ||         ||
+  !>         ||         ||
+  !>       W ||         || E
+  !>         ||         ||
+  !>         ///////////||
+  !>        0->    S
+  !> 
+  !> @param[in] global_mesh  A global mesh object that describes the layout
+  !>                         of the global mesh
+  !> @param[out] num_panels  Number of panels in the 3D mesh: 1 by default
+  !> @param [in] decomposition  Object containing decomposition parameters and
+  !>                            method
+  !> @param[in] local_rank  Local MPI rank number.
+  !> @param[in] total_ranks  Total number of MPI ranks.
+  !> @param[in] max_stencil_depth  The maximum depth of stencil that will be
+  !>                               used with this partition.
+  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
+  !>                             mesh
+  !> @param [in] generate_inner_halos Flag to control the generation of inner
+  !>                                   halos
+  !> @param[inout] partitioned_cells  Returned array that holds the global IDs
+  !>                                  of all cells in local partition.
+  !> @param[out] num_inner  Number of cells that are inner halo cells.
+  !> @param[out] num_edge  Number of cells that are owned by the partition,
+  !>                       but may have dofs that are also owned by halo cells.
+  !> @param[out] num_halo  Number of cells that are halo cells.
+  !> @param[out] num_ghost  Number of "ghost" cells. These are cells in an
+  !>                        extra halo around the outermost actual halo and
+  !>                        are not in the partitioned domain, but are
+  !>                        required to fully describe the cells in the
+  !>                        partitioned domain.
+  !>
+  subroutine partitioner_lfric2lfric_lbc( global_mesh,           &
+                                          num_panels,            &
+                                          decomposition,         &
+                                          local_rank,            &
+                                          total_ranks,           &
+                                          max_stencil_depth,     &
+                                          mapping_factor,        &
+                                          generate_inner_halos,  &
+                                          partitioned_cells,     &
+                                          num_inner,             &
+                                          num_edge,              &
+                                          num_halo,              &
+                                          num_ghost )
+
+    use linked_list_int_mod,   only : linked_list_int_type
+    use linked_list_mod,       only : linked_list_type, &
+                                      linked_list_item_type
+    use reference_element_mod, only : W, S, E, N
+
+    implicit none
+
+    type(global_mesh_type), pointer, intent(in) :: global_mesh            ! A global mesh object
+    class(panel_decomposition_type), intent(in) :: decomposition          ! An object specifying how to decompose the panel
+
+    integer(i_def),              intent(out)   :: num_panels              ! Number of panels that make up the mesh
+    integer(i_def),              intent(in)    :: local_rank              ! Local MPI rank number
+    integer(i_def),              intent(in)    :: total_ranks             ! Total number of MPI ranks
+    integer(i_def),              intent(in)    :: max_stencil_depth       ! The maximum depth of stencil that will be used
+                                                                          ! with this partition
+    integer(i_def),              intent(in)    :: mapping_factor          ! The ratio of number of edge cells between this and the
+                                                                          ! coarsest recursively mapped mesh
+    integer(i_def), allocatable, intent(inout) :: partitioned_cells( : )  ! Returned array that holds the global ids of
+                                                                          ! all cells in local partition
+    integer(i_def),              intent(out)   :: num_inner( : )          ! Number of cells that are inner halo cells.
+    integer(i_def),              intent(out)   :: num_edge                ! Number of cells that are owned by the partition,
+                                                                          ! but may have dofs that are also owned by halo cells.
+    integer(i_def),              intent(out)   :: num_halo( : )           ! Number of cells that are halo cells.
+    integer(i_def),              intent(out)   :: num_ghost               ! Number of cells that are ghost cells - surrounding,
+                                                                          ! but not in the partitioned domain
+    logical(l_def),              intent(in)    :: generate_inner_halos   ! Flag to control the generation of inner halos
+
+    integer(i_def) :: face       ! which face of the cube is implied by local_rank (0->5)
+    integer(i_def) :: start_cell ! lowest cell id of the face implaced by local_rank
+    integer(i_def) :: start_rank ! The number of the first rank on the face implied by local_rank
+    integer(i_def) :: panel_ranks! The number of ranks per panel on the mesh
+    integer(i_def) :: relative_rank ! The position of the current rank relative to the first rank in its panel
+    integer(i_def) :: start_x    ! global cell id of start of the domain on this partition in x-dirn
+    integer(i_def) :: num_x      ! number of cells in the domain on this partition in x-dirn
+    integer(i_def) :: start_y    ! global cell id of start of the domain on this partition in y-dirn
+    integer(i_def) :: num_y      ! number of cells in the domain on this partition in y-dirn
+    integer(i_def) :: rim_width  ! rim width of the lbc mesh
+    integer(i_def) :: ix, iy     ! loop counters over cells on this partition in x- and y-dirns
+    integer(i_def) :: void_cell  ! Cell id that marks the cell as a cell outside of the partition.
+    logical        :: any_maps   ! Whether there exist maps between meshes, meaning their partitions must align.
+
+    ! Create linked lists
+
+    type(linked_list_type)         :: partition   ! a list of all cells in the partition
+    type(linked_list_type), target :: known_cells ! a list of cells known to this partition
+
+    integer, allocatable :: sw_corner_cells(:)
+                            ! List of cells at the SW corner of the panels
+    integer :: cell         ! starting point for num_cells_x calculation
+    integer :: cell_next(4) ! The cells around the cell being queried
+    integer :: cell_next_e  ! The cell to the east of the cell being queried
+    integer :: cell_next_n  ! The cell to the north of the cell being queried
+    integer :: num_cells_x  ! number of cells across a panel in x-direction
+    integer :: num_cells_y  ! number of cells across a panel in y-direction
+    integer :: ncells
+    logical(l_def) :: periodic_xy(2) ! Periodic in the x/y-axes
+
+    periodic_xy = global_mesh%get_mesh_periodicity()
+    void_cell   = global_mesh%get_void_cell()
+    any_maps    = global_mesh%get_nmaps() > 0
+    num_panels  = 1
+
+    ! A single panelled mesh might be rectangular - so find the dimensions
+    ! First determine the southwest corner cell depending on periodicity. If
+    ! biperiodic, cell ID 1 can be used as mesh conectivity loops round
+    cell = 1
+    call global_mesh%get_cell_next(cell,cell_next)
+    if ( .not. periodic_xy(1) ) then
+      ! If not periodic in E-W direction then walk West until you reach mesh
+      ! edge defined by the void cell.
+      do while (cell_next(W) /= void_cell)
+        cell = cell_next(W)
+        call global_mesh%get_cell_next(cell,cell_next)
+      end do
+    end if
+
+    if ( .not. periodic_xy(2) ) then
+      ! If not periodic in N-S direction then walk South until you reach mesh
+      ! edge defined by the void cell.
+      do while (cell_next(S) /= void_cell)
+        cell = cell_next(S)
+        call global_mesh%get_cell_next(cell,cell_next)
+      end do
+    else
+      ! To make multigrid mesh partitions line up correctly in the periodic
+      ! case, the SW corners of all mesh domains need to be lined up. The
+      ! mesh generator currently generates meshes with cell no.1 at the NW
+      ! corner, so find the SW corner by moving one cell north from cell 1
+      ! (across the wrap-around)
+      cell = 1
+      call global_mesh%get_cell_next(cell,cell_next)
+      cell = cell_next(N)
+    end if
+
+    ! Assign cell ID of SW corner of mesh
+    allocate(sw_corner_cells(1))
+    sw_corner_cells(1) = cell
+
+    ! Work out number of cells in the x direction
+    num_cells_x = 1
+
+    ! Starting in the SW corner of the mesh so must walk East on non-periodic
+    ! meshes to determine number of cells in the x direction
+    ncells=global_mesh%get_ncells()
+    call global_mesh%get_cell_next(sw_corner_cells(1),cell_next)
+    cell_next_e = cell_next(E)
+    do while (cell_next_e /= sw_corner_cells(1) .and. cell_next_e /= void_cell)
+      num_cells_x=num_cells_x+1
+      call global_mesh%get_cell_next(cell_next_e, cell_next)
+      cell_next_e = cell_next(E)
+    end do
+
+    ! Work out number of cells in the y direction
+    num_cells_y = 1
+
+    ! Starting in the SW corner of the mesh so must walk North on non-periodic
+    ! meshes to determine number of cells in the y direction
+    call global_mesh%get_cell_next(sw_corner_cells(1),cell_next)
+    cell_next_n = cell_next(N)
+    do while (cell_next_n /= sw_corner_cells(1) .and. cell_next_n /= void_cell)
+      num_cells_y=num_cells_y+1
+      call global_mesh%get_cell_next(cell_next_n, cell_next)
+      cell_next_n = cell_next(N)
+    end do
+
+    ! Calculate rim width: solution of a quadratic equation
+    rim_width = nint(0.25*((num_cells_x+num_cells_y) - &
+                sqrt((num_cells_x+num_cells_y)*(num_cells_x+num_cells_y) - &
+                     4.0*ncells)))
+
+    face = (local_rank / total_ranks) + 1
+    panel_ranks = total_ranks
+    start_rank = panel_ranks * (face - 1)
+    relative_rank = local_rank - start_rank + 1
+
+    call decomposition%get_partition( relative_rank,    &
+                                      panel_ranks,      &
+                                      mapping_factor,   &
+                                      num_cells_x,      &
+                                      num_cells_y,      &
+                                      any_maps,         &
+                                      rim_width,        &
+                                      num_y,            &
+                                      start_x,          &
+                                      start_y )
+
+
+    start_cell = sw_corner_cells(face)
+    deallocate(sw_corner_cells)
+
+    ! Create a linked list of all cells that are part of this partition (not halos)
+    partition = linked_list_type()
+
+    ! Find also those cells owned by the partition - but are on
+    ! the edge of the partitioned domain, so may have dofs shared with halo cells
+    known_cells = linked_list_type()
+
+    ! South cells
+    if (start_x <= num_cells_x - rim_width) then
+      ! if processing more number of cells than are in the
+      ! bottom row, process only the bottom row for the moment
+      if (start_x + start_y > num_cells_x - rim_width) then
+        num_y = num_cells_x - rim_width - 1
+      else
+        num_y = start_x + start_y - 1
+      end if
+      do iy = 0, rim_width-1
+        do ix = start_x-1, num_y
+          call partition%insert_item( linked_list_int_type( &
+                                  global_mesh%get_cell_id(start_cell, ix, iy)))
+        end do
+      end do
+
+      ! left edge of the domain
+      do iy = 0, rim_width-1
+        call known_cells%insert_item(linked_list_int_type( &
+                            global_mesh%get_cell_id(start_cell, start_x-1, iy)))
+      end do
+      ! right edge of the domain
+      if (start_x + start_y <= num_cells_x - rim_width .and. &
+          start_x-1 /= num_y) then
+        do iy = 0, rim_width-1
+          call known_cells%insert_item(linked_list_int_type( &
+                              global_mesh%get_cell_id(start_cell, num_y, iy)))
+        end do
+      end if
+    end if
+
+    ! East cells
+    if ( (start_x > num_cells_x - rim_width .and.                            &
+          start_x + start_y <= num_cells_x + num_cells_y - 2*rim_width) .or. &
+          start_x + start_y >  num_cells_x + num_cells_y - 2*rim_width ) then
+      ! if processing more number of cells that are in the East column,
+      ! process only the East column for the moment
+      if (start_x + start_y > num_cells_x + num_cells_y - 2*rim_width) then
+        num_y = num_cells_y - rim_width - 1
+      else
+        num_y = start_x + start_y - num_cells_x + rim_width
+      end if
+      if (start_x <= num_cells_x - rim_width) then
+        num_x = 0
+      else
+        num_x = start_x - num_cells_x + rim_width - 1
+      end if
+      do iy = num_x, num_y
+        do ix = num_cells_x-rim_width, num_cells_x-1
+          call partition%insert_item( linked_list_int_type( &
+                                  global_mesh%get_cell_id(start_cell, ix, iy)))
+        end do
+      end do
+
+      ! bottom edge of the domain
+      if (start_x > num_cells_x - rim_width) then
+        if (start_x >= num_cells_x) then
+          do ix = num_cells_x-rim_width, num_cells_x-1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, num_x)))
+          end do
+        else if (start_x == num_cells_x - rim_width + 1) then
+          ! only a left edge
+          do iy = 0, rim_width -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, start_x-1, iy)))
+          end do
+        else
+          ! the edge has a L-shape:
+          ! left edge
+          do iy = num_x+1, rim_width -1 
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, num_cells_x-rim_width, iy)))
+          end do
+          ! bottom edge
+          do ix = num_cells_x-rim_width, num_cells_x-1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, num_x)))
+          end do
+        end if
+      end if
+      ! top edge of the domain
+      if (start_x + start_y <= num_cells_x + num_cells_y - 2*rim_width .and. &
+          num_x /= num_y) then
+        do ix = num_cells_x-rim_width, num_cells_x-1
+          call known_cells%insert_item(linked_list_int_type( &
+                              global_mesh%get_cell_id(start_cell, ix, num_y)))
+        end do
+      end if
+
+    end if
+
+    ! Because a lbc mesh is empty in the middle, to deal with north and west
+    ! cells we will start advancing from the NE cell, which we have to find
+    cell = 1
+    call global_mesh%get_cell_next(cell,cell_next)
+    if ( .not. periodic_xy(1) ) then
+      ! If not periodic in E-W direction then walk East until you reach mesh
+      ! edge defined by the void cell.
+      do while (cell_next(E) /= void_cell)
+        cell = cell_next(E)
+        call global_mesh%get_cell_next(cell,cell_next)
+      end do
+    end if
+
+    if ( .not. periodic_xy(2) ) then
+      ! If not periodic in N-S direction then walk North until you reach mesh
+      ! edge defined by the void cell.
+      do while (cell_next(N) /= void_cell)
+        cell = cell_next(N)
+        call global_mesh%get_cell_next(cell,cell_next)
+      end do
+    end if
+    start_cell = cell
+
+    ! North cells
+    if ( (start_x > num_cells_x + num_cells_y - 2*rim_width .and.              &
+          start_x + start_y <= 2*num_cells_x + num_cells_y - 3*rim_width) .or. &
+          start_x + start_y >  2*num_cells_x + num_cells_y - 3*rim_width ) then
+      if (start_x + start_y >  2*num_cells_x + num_cells_y - 3*rim_width) then
+        num_y = num_cells_y - rim_width - 1
+      else
+        num_y = start_x + start_y - (num_cells_x + num_cells_y - 2*rim_width + 1)
+      end if
+      if (start_x <= num_cells_x + num_cells_y - 2*rim_width) then
+        num_x = 0
+      else
+        num_x = start_x - (num_cells_x + num_cells_y - 2*rim_width + 1)
+      end if
+      do iy = 0, 1 - rim_width, -1
+        do ix = -num_x, -num_y, -1
+          call partition%insert_item( linked_list_int_type( &
+                                  global_mesh%get_cell_id(start_cell, ix, iy)))
+        end do
+      end do
+
+      ! right edge of the domain
+      if (start_x > num_cells_x + num_cells_y - 2*rim_width) then
+        if (start_x >= num_cells_x + num_cells_y - rim_width) then
+          do iy = 0, 1 - rim_width, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, -num_x, iy)))
+          end do
+        else if (start_x == num_cells_x + num_cells_y - 2*rim_width + 1) then
+          ! only a bottom edge
+          do ix = 0, 1 - rim_width, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, 1-rim_width)))
+          end do
+        else
+          ! the edge has a L-shape:
+          ! bottom edge
+          do ix = 0, -num_x+1, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, 1-rim_width)))
+          end do
+          ! right edge
+          do iy = 0, 1 - rim_width, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, -num_x, iy)))
+          end do
+        end if
+      end if
+      ! left edge of the domain
+      if (start_x + start_y <= 2*num_cells_x + num_cells_y - 3*rim_width .and. &
+          num_x /= num_y) then
+        do iy = 0, 1 - rim_width, -1
+          call known_cells%insert_item(linked_list_int_type( &
+                              global_mesh%get_cell_id(start_cell, -num_y, iy)))
+        end do
+      end if
+    end if
+
+    ! West cells
+    if ( start_x > 2*num_cells_x + num_cells_y - 3*rim_width .or. &
+          start_x + start_y >  2*num_cells_x + num_cells_y - 3*rim_width ) then
+      num_y = start_x + start_y - (2*num_cells_x + num_cells_y - 3*rim_width + 1) - 1
+      if (start_x + start_y >  2*num_cells_x + num_cells_y - 3*rim_width) then
+        num_x = 0
+      else
+        num_x = start_x - (2*num_cells_x + num_cells_y - 3*rim_width + 1)
+      end if
+      do iy = -num_x, -num_y, -1
+        do ix = rim_width - num_cells_x, 1 - num_cells_x, -1
+          call partition%insert_item( linked_list_int_type( &
+                                  global_mesh%get_cell_id(start_cell, ix, iy)))
+        end do
+      end do
+
+      ! top edge of the domain
+      if (start_x > 2*num_cells_x + num_cells_y - 3*rim_width) then
+        if (start_x >= 2*num_cells_x + num_cells_y - 2*rim_width) then
+          do ix = rim_width - num_cells_x, 1 - num_cells_x, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, -num_x)))
+          end do
+        else if (start_x + start_y == 2*num_cells_x + num_cells_y - 3*rim_width) then
+          ! only a top edge
+          do ix = rim_width - num_cells_x, 1 - num_cells_x, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, 0)))
+          end do
+        else
+          ! the edge has a L-shape:
+          ! right edge
+          do iy = 0, -num_x+1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, rim_width-num_cells_x, iy)))
+          end do
+          ! top edge
+          do ix = rim_width - num_cells_x, 1 - num_cells_x, -1
+            call known_cells%insert_item(linked_list_int_type( &
+                                global_mesh%get_cell_id(start_cell, ix, -num_x)))
+          end do
+        end if
+      end if
+      ! bottom edge of the domain
+      if (num_x /= num_y) then
+        do ix = rim_width - num_cells_x, 1 - num_cells_x, -1
+          call known_cells%insert_item(linked_list_int_type( &
+                              global_mesh%get_cell_id(start_cell, ix, -num_y)))
+        end do
+      end if
+    end if
 
     ! get the number of edge cells currently stored in the known_cells list
     num_edge = known_cells%get_length()
 
-    ! Add all cells from the halos (up to max_stencil_depth) that are in a
-    ! stencil around each of the owned cells, but are not part of the partition.
-    ! Also add a "ghost" halo (max_stencil_depth+1) - used later to work out
-    ! dof ownerships
-    start_subsect => known_cells%get_head() ! start at the beginning
-                                            ! of known_cells list
-    ! num cells to apply stencil to is the number of edge cells
-    num_apply=num_edge
-    ! get a pointer to the known_cells list
-    !known_cells_ptr => known_cells
-    ! insert point is end of current list
-    insert_point => known_cells%get_tail()
-    do depth = 1,max_stencil_depth +1
-      ! update number of cells currently in known_cells
-      orig_num_in_list = known_cells%get_length()
-      last => known_cells%get_tail() ! point at tail of current known_cells list
-      call apply_stencil( global_mesh, &
-                          known_cells, & ! the current list of known cells
-                          start_subsect, & ! where we want to start applying stencil in known_cells
-                          num_apply, & ! the number of items in known_cells to iterate over
-                          insert_point=insert_point, & ! where to insert in list
-                          exclude=partition ) ! exclude cells in partition
-      if(depth <= max_stencil_depth)then
-        num_halo(depth) = known_cells%get_length() - orig_num_in_list ! num halo cells at this depth
-                                                                      ! is the number we just added
-        ! if cells were added at this depth, reset start point to previous end of known_cells list
-        if (num_halo(depth) > 0) then
-          start_subsect => last%next
-        end if
-        ! reset insert point to current end of list
-        insert_point => known_cells%get_tail()
-        ! num cells to apply stencil to next is the number of cells just added to known_cells
-        num_apply = num_halo(depth)
-      else
-        ! num ghost cells is the number we just added to known_cells at max_stencil_depth + 1
-        num_ghost = known_cells%get_length() - orig_num_in_list
-      end if
-    end do
+    ! Create a linked-list of all cells known to the partition, including halos.
+    ! This will be ordered as:
+    ! inner n, inner n-1 ... inner 1, edge, halo 1 ... halo n-1, halo n
+    call get_known_cells_halos( global_mesh, known_cells, partition,      &
+                                max_stencil_depth, generate_inner_halos,  &
+                                partitioned_cells, num_inner,             &
+                                num_edge, num_halo, num_ghost )
 
-    ! Add all cells from the inner halos (up to max_stencil_depth) that are in a
-    ! stencil around each of the owned cells, but are not part of the outer halos
-    if ( generate_inner_halos ) then
-      call log_event( 'Generating Inner Halos', LOG_LEVEL_DEBUG )
-      ! Point to start of known_cells list
-      start_subsect => known_cells%get_head()
-      ! insert point is head of known cells list as we want to insert before it
-      insert_point => known_cells%get_head()
-      ! num cells to apply stencil to is the number of edge cells only (not halo cells)
-      num_apply=num_edge
-      do depth = 1,max_stencil_depth-1
-        ! update number of cells currently in known_cells
-        orig_num_in_list = known_cells%get_length()
-        call apply_stencil( global_mesh, &
-                            known_cells, &
-                            start_subsect, &
-                            num_apply, &
-                            insert_point=insert_point, & ! where to insert in list
-                            placement=before )
-        ! num inner halo cells at this depth is the number we just added to known_cells
-        num_inner(depth) = known_cells%get_length()  - orig_num_in_list
-        ! num cells to apply stencil to next is the number of cells just added to known_cells
-        num_apply = num_inner(depth)
-        ! reset start point to current head of known_cells list
-        start_subsect => known_cells%get_head()
-        ! and reset insert point also
-        insert_point => known_cells%get_head()
-      end do
-    !Cells of depth max_stencil_depth
-    num_inner(max_stencil_depth)=0
-    else
-      ! Do not create any inner halos
-      num_inner(:) = 0
-    end if
-
-    ! Now check partition list for any cells not yet added. These must be inner halo
-    ! update number of cells currently in known_cells
-    orig_num_in_list = known_cells%get_length()
-    ! point at head of partition list
-    loop => partition%get_head()
-    ! update insert point to head of known_cells list
-    insert_point => known_cells%get_head()
-    if (partition%get_length() > 0) then
-
-      do i = 1,partition%get_length()
-
-        if(.not. (known_cells%item_exists(loop%payload%get_id()))) then
-
-          call known_cells%insert_item( linked_list_int_type(loop%payload%get_id()), &
-                                        insert_point=insert_point, placement=before)
-        end if
-        ! update insert point to head of known_cells list
-        insert_point => known_cells%get_head()
-        loop => loop%next
-      end do
-      ! update num_inner cells added
-      num_inner(max_stencil_depth)=known_cells%get_length()  - orig_num_in_list
-    end if
-
-    allocate(partitioned_cells(known_cells%get_length()))
-    ! reset loop to start of known_cells
-    loop => known_cells%get_head()
-
-
-    ! Copy cell ids from known_cells list to partitioned_cells array
-    do i = 1,known_cells%get_length()
-      partitioned_cells(i) = loop%payload%get_id()
-      if ( .not. associated(loop%next) ) exit !finished
-      loop => loop%next
-    end do
-
-
-    ! Deallocate the known_cells list
-    call known_cells%clear()
-
-    ! Cell ids within the separate groups have to be in numerical order.
-    ! so (bubble) sort the separate groups
-    !
-    ! Sort the individual depths of inner halo cells
-    end_sort=0
-    do depth = max_stencil_depth, 1, -1
-      start_sort = end_sort + 1
-      end_sort = start_sort + num_inner(depth) - 1
-      call bubble_sort( end_sort-start_sort+1, &
-                        partitioned_cells(start_sort:end_sort) )
-    end do
-    !
-    ! Sort edge cells
-    start_sort = end_sort + 1
-    end_sort = start_sort + num_edge - 1
-    call bubble_sort( end_sort-start_sort+1, &
-                      partitioned_cells(start_sort:end_sort) )
-    !
-    ! Sort the individual depths of halo cells
-    do depth = 1,max_stencil_depth
-      start_sort = end_sort + 1
-      end_sort = start_sort + num_halo(depth) - 1
-      call bubble_sort( end_sort-start_sort+1, &
-                        partitioned_cells(start_sort:end_sort) )
-    end do
-    !
-    ! Sort the ghost halo
-    start_sort = end_sort + 1
-    end_sort = start_sort + num_ghost - 1
-    call bubble_sort( end_sort-start_sort+1, &
-                      partitioned_cells(start_sort:end_sort) )
-
-    nullify( last, start_subsect, insert_point, loop )
-
-  end subroutine partitioner_rectangular_panels
+  end subroutine partitioner_lfric2lfric_lbc
 
   !---------------------------------------------------------------------------
   ! Applies a stencil around a collection of cells.
