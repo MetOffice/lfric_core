@@ -128,17 +128,17 @@ module panel_decomposition_mod
 contains
 
   !> @brief Partition the panel into a given number of x and y processes
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    check_constaints Check meshes have aligned partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
   subroutine get_custom_partition( self,              &
                                    relative_rank,     &
                                    panel_ranks,       &
@@ -236,17 +236,17 @@ contains
 
   !> @brief Partition the panel into an automatically determined number of x and
   !         y processes
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    check_constaints Check meshes have aligned partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
   subroutine get_auto_partition( self,              &
                                  relative_rank,     &
                                  panel_ranks,       &
@@ -383,17 +383,17 @@ contains
 
 
   !> @brief Partition the panel only in the x direction
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    check_constaints Check meshes have aligned partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
   subroutine get_row_partition( self,              &
                                 relative_rank,     &
                                 panel_ranks,       &
@@ -472,17 +472,17 @@ contains
 
 
   !> @brief Partition the panel only in the y direction
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    check_constaints Check meshes have aligned partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
   subroutine get_column_partition( self,              &
                                    relative_rank,     &
                                    panel_ranks,       &
@@ -561,17 +561,17 @@ contains
 
   !> @brief Partition the panel into an automatically determined number of
   !         columns of partitions of variable size.
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    check_constaints Check meshes have aligned partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
   subroutine get_auto_nonuniform_partition( self,              &
                                             relative_rank,     &
                                             panel_ranks,       &
@@ -678,17 +678,17 @@ contains
 
   !> @brief Partition the panel into a given number of columns of partitions of
   !         variable size.
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    check_constaints Check meshes have aligned partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
   subroutine get_guided_nonuniform_partition( self,              &
                                               relative_rank,     &
                                               panel_ranks,       &
@@ -845,7 +845,7 @@ contains
   !> @param[in] num_yprocs  The number of partitions in the y direction
   !> @param[in] panel_ranks       The number of ranks the panel is to be
   !>                              split into
-  !> @param[in] check_constaints  Check meshes have aligned partitions
+  !> @param[in] check_constraints Check meshes have aligned partitions
   subroutine xy_defensive_checks( num_cells_x, &
                                   num_cells_y, &
                                   num_xprocs,  &
@@ -885,7 +885,7 @@ contains
 
     ! Equal divisions are only required if there are maps between meshes
     if (check_constraints) then
-      call log_event("Checking partition constraints.", log_level_debug)
+
       if ( mod(num_cells_x, num_xprocs) /= 0 ) then
         write(log_scratch_space, "(2(A,I0))")                      &
           "Requested number of ranks in x direction ", num_xprocs, &

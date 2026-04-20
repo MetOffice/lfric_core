@@ -132,7 +132,9 @@ module partition_mod
     !> @param[in]  mapping_factor  Ratio between this and coarsest associated
     !>                             mesh
     !> @param[in] generate_inner_halos Flag to control the generation of inner
-    !>                                  halos
+    !>                                 halos
+    !> @param[in] enforce_constraints  Apply defensive checking for multigrid
+    !>                                 configurations.
     !> @param[inout] global_cell_id  Holds the global IDs of all cells in
     !>                               local partition.
     !> @param[out] num_inner  Number of cells that are inner halo cells.
@@ -190,17 +192,21 @@ contains
   !-------------------------------------------------------------------------------
   !> @brief Constructs a <code>partition_type</code> object
   !>
-  !> @param [in] global_mesh A global mesh object that describes the layout
-  !>                         of the global mesh
-  !> @param [in] partitioner A function pointer to the function that will perform
-  !>                         the partitioning
-  !> @param [in] decomposition  Object containing decomposition parameters and
-  !>                            method
-  !> @param [in] halo_depth The depth to which halos will be created
-  !> @param [in] local_rank Number of the local process rank
-  !> @param [in] total_ranks Total number of process ranks available
-  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
-  !>                             mesh
+  !> @param[in] global_mesh   A global mesh object that describes the layout
+  !>                          of the global mesh
+  !> @param[in] partitioner   A function pointer to the function that will
+  !>                          perform the partitioning
+  !> @param[in] decomposition Object containing decomposition parameters and
+  !>                          method
+  !> @param[in] max_stencil_depth    The depth to which halos will be created
+  !> @param[in] generate_inner_halos Flag to control the generation of inner
+  !>                                 halos
+  !> @param[in] enforce_constraints  Apply defensive checking for multigrid
+  !>                                 configurations.
+  !> @param[in] local_rank     Number of the local process rank
+  !> @param[in] total_ranks    Total number of process ranks available
+  !> @param[in] mapping_factor Ratio between this and coarsest associated mesh
+  !>                           (Optional)
   !> @return self the partition object
   !-------------------------------------------------------------------------------
   function partition_constructor( global_mesh, &
@@ -561,23 +567,26 @@ contains
   !> @brief Partitions a cubed-sphere mesh into a single partition for use
   !>        when running the code serialially.
   !>
-  !> @param[in]  global_mesh  Global mesh objectto be partitioned.
-  !> @param [in] decomposition  Object containing decomposition parameters and
-  !>                            method
-  !> @param[in]  local_rank  Local MPI rank number.
-  !> @param[in]  total_ranks  Total number of MPI ranks.
-  !> @param[in]  max_stencil_depth  Maximum depth of stencil that will be used
-  !>                                with this partition.
-  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
-  !>                             mesh
-  !> @param [in] generate_inner_halos Flag to control the generation of inner
-  !>                                   halos
+  !> @param[in] global_mesh   Global mesh objectto be partitioned.
+  !> @param[in] decomposition Object containing decomposition parameters and
+  !>                          method
+  !> @param[in] local_rank    Local MPI rank number.
+  !> @param[in] total_ranks   Total number of MPI ranks.
+  !> @param[in] max_stencil_depth  Maximum depth of stencil that will be used
+  !>                               with this partition.
+  !> @param[in] mapping_factor  Ratio between this and coarsest associated
+  !>                            mesh
+  !> @param[in] generate_inner_halos Flag to control the generation of inner
+  !>                                 halos
+  !> @param[in] enforce_constraints  Apply defensive checking for multigrid
+  !>                                 configurations.
   !> @param[inout] partitioned_cells  Holds the global IDs of all cells in
   !>                                  local partition.
   !> @param[out] num_inner  Number of cells that are inner halo cells.
-  !> @param[out] num_edge  Number of cells that are owned by the partition,
-  !>                       but may have dofs that are also owned by halo cells.
-  !> @param[out] num_halo  Number of cells that are halo cells.
+  !> @param[out] num_edge   Number of cells that are owned by the partition,
+  !>                        but may have dofs that are also owned by halo
+  !>                        cells.
+  !> @param[out] num_halo   Number of cells that are halo cells.
   !> @param[out] num_ghost  Number of "ghost" cells. These are cells in an
   !>                        extra halo around the outermost actaul halo and
   !>                        are not in the partitioned domain, but are

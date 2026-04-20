@@ -114,6 +114,8 @@ end subroutine get_partition_strategy
 !> @param[in]  stencil_depths         Depth of cells outside the base cell
 !!                                    of stencil for each mesh.
 !> @param[in]  partitioner_ptr        Mesh partitioning strategy
+!> @param[in]  enforce_constraints    Apply defensive checking for multigrid
+!>                                    configurations (Optional).
 subroutine create_local_mesh( mesh_names,              &
                               local_rank, total_ranks, &
                               decomposition,           &
