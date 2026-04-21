@@ -6,6 +6,8 @@
 
 module compute_sample_u_ops_kernel_mod_test
 
+  use base_mesh_config_mod,  only : geometry_spherical, &
+                                    topology_non_periodic
   use constants_mod,         only : i_def, r_def
   use reference_element_mod, only : W, S, E, N, B, T
   use funit
@@ -24,26 +26,17 @@ contains
   @before
   subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_spherical, &
-                                          topology_non_periodic
     use extrusion_config_mod,      only : method_uniform, &
                                           stretching_method_linear
     use finite_element_config_mod, only : cellshape_quadrilateral, &
                                           coord_system_native
-    use feign_config_mod,          only : feign_base_mesh_config,      &
-                                          feign_extrusion_config,      &
+    use feign_config_mod,          only : feign_extrusion_config,      &
                                           feign_finite_element_config, &
                                           feign_planet_config
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
 
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_spherical,      &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_non_periodic,   &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
 
     call feign_extrusion_config( method=method_uniform,                      &
                                  planet_radius=radius,                       &
@@ -85,8 +78,6 @@ contains
   @test
   subroutine test_all()
 
-    use base_mesh_config_mod,                only : geometry_spherical, &
-                                                    topology_non_periodic
     use matrix_vector_kernel_mod,            only : matrix_vector_code
     use sci_average_w2b_to_w2_kernel_mod,    only : average_w2b_to_w2_code
     use sci_compute_sample_u_ops_kernel_mod, only : compute_sample_u_ops_code
