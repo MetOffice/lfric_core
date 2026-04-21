@@ -4,7 +4,7 @@
 # under which the code may be used.
 ##############################################################################
 
-$(info ** Chosen GNU C++ compiler)
+$(info ** Chosen AMD Clang C++ compiler)
 
 CXX_RUNTIME_LIBRARY=stdc++
 
