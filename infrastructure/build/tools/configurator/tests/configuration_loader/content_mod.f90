@@ -62,7 +62,7 @@ contains
           'At least one optional argument must ' //&
           'be provided for read_configuration.'
       flush(error_unit)
-      stop
+      stop 1
     end if
 
     local_rank = global_mpi%get_comm_rank()
@@ -178,7 +178,7 @@ contains
           'Arguments "names" and "success_mask" to function' //&
           '"ensure_configuration" are different shapes.'
       flush(error_unit)
-      stop
+      stop 1
     end if
 
     ensure_configuration = .true.
@@ -193,7 +193,7 @@ contains
             'Tried to ensure unrecognised namelist "' //&
             trim(names(i))//'" was loaded.'
         flush(error_unit)
-        stop
+        stop 1
       end select
 
       ensure_configuration = ensure_configuration .and. configuration_found
@@ -263,7 +263,7 @@ contains
                 'Namelist "'//trim(namelists(i)) //&
                 '" can not be read. Too many instances?'
             flush(error_unit)
-            stop
+            stop 1
           end if
 
         case default
@@ -271,7 +271,7 @@ contains
               'Unrecognised namelist "'//trim(namelists(i)) //&
               '" found in file '//trim(filename)//'.'
           flush(error_unit)
-          stop
+          stop 1
         end select
 
       end do ! Namelists

@@ -107,7 +107,7 @@ subroutine initialise(self, name)
          trim(self%config_name) //&
         '] has already been initialised.'
     flush(error_unit)
-    stop
+    stop 1
   end if
 
   if (present(name)) then
@@ -160,7 +160,7 @@ subroutine add_namelist(self, namelist_obj)
       write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
       flush(error_unit)
-      stop
+      stop 1
     else
       allocate(self%{{namelists[i]}}, source=namelist_obj)
       call self%update_contents(trim(name))
@@ -180,7 +180,7 @@ subroutine add_namelist(self, namelist_obj)
       write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
       flush(error_unit)
-      stop
+      stop 1
     else
       call self%{{namelists[i]}}%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
@@ -192,7 +192,7 @@ subroutine add_namelist(self, namelist_obj)
         ' Undefined namelist type(' // trim(name) //&
         '), for this configuration.'
     flush(error_unit)
-    stop
+    stop 1
 
   end select
 
@@ -277,7 +277,7 @@ function {{namelists[i]}}_list(self, profile_name) result({{namelists[i]}}_nml_o
           '{{namelists[i]}}_nml_type ' //&
           'not found in configuration.'
       flush(error_unit)
-      stop
+      stop 1
     end if
 
     ! Otherwise 'cast' to a {{namelists[i]}}_namelist_type
