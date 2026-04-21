@@ -23,7 +23,7 @@ module driver_fem_mod
   use constants_mod,                  only: i_def, l_def, str_def
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
   use finite_element_config_mod,      only: coord_order,                       &
-                                            coord_order_multigrid,             &
+                                            coord_order_nonprime,              &
                                             coord_system,                      &
                                             coord_system_xyz,                  &
                                             coord_space,                       &
@@ -129,7 +129,7 @@ contains
         if (all_mesh_names(i) == prime_mesh_name) then
           this_coord_order = coord_order
         else
-          this_coord_order = coord_order_multigrid
+          this_coord_order = coord_order_nonprime
         end if
 
         ! Determine coordinate space
