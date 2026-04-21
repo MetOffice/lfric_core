@@ -259,7 +259,6 @@ contains
       case default
         mm_op => null()
         call log_event("Mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -372,7 +371,6 @@ contains
       case default
         mm_op => null()
         call log_event("Mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -477,7 +475,6 @@ contains
       case default
         diagonal_mm => null()
         call log_event("Diagonal mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -552,7 +549,6 @@ contains
       case default
         diagonal_mm => null()
         call log_event("Diagonal mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -623,7 +619,6 @@ contains
       case default
         mm_linv => null()
         call log_event("Lumped inverse mass matrix does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -702,7 +697,6 @@ contains
       case default
         mm_linv => null()
         call log_event("Lumped inverse mass matrix does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -783,7 +777,6 @@ contains
       case default
         mm_inv => null()
         call log_event("Inverse mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -847,7 +840,6 @@ contains
       case default
         mm_inv => null()
         call log_event("Inverse mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -1240,7 +1232,6 @@ contains
       case default
         rmultiplicity => null()
         call log_event( "Reciprocal multiplicity field does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -1314,7 +1305,6 @@ contains
       case default
         rmultiplicity => null()
         call log_event( "Reciprocal multiplicity field does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant

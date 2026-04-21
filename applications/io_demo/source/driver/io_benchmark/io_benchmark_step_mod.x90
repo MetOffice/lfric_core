@@ -17,6 +17,7 @@ module io_benchmark_step_mod
   use log_mod,              only: log_event,         &
                                   log_scratch_space, &
                                   LOG_LEVEL_INFO
+  use sleep_mod,            only: c_sleep
 
   implicit none
 
@@ -69,7 +70,7 @@ contains
 
       write(log_scratch_space,'(A,I0,A)') "io_demo: sleeping for ", sleep_duration, " seconds"
       call log_event(log_scratch_space, LOG_LEVEL_INFO)
-      call sleep(sleep_duration)
+      call c_sleep(sleep_duration)
 
       nullify(step_field)
       nullify(kernel_field)
