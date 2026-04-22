@@ -153,10 +153,12 @@ contains
   !!           of XIOS dimensionality (domains, axes, etc) and initialised the
   !!           corresponding XIOS objects.
   !>
-  !> @param[in]  config        Configuration object
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
-  !>
+  !> @param[in]  geometry      Mesh geometry enumeration value
+  !> @param[in]  topology      Mesh topology enumeration value
+  !> @param[in]  coord_system  Finite-element coord-system enumeration value
+  !> @param[in]  scaled_radius Planet scaled radius
   subroutine init_xios_dimensions( chi, panel_id,               &
                                    geometry, topology,          &
                                    coord_system, scaled_radius, &
@@ -207,9 +209,12 @@ contains
   !!           of XIOS dimensionality (domains, axes, etc) and initialised the
   !!           corresponding XIOS objects.
   !>
-  !> @param[in]  config        Configuration object
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
+  !> @param[in]  geometry      Mesh geometry enumeration value
+  !> @param[in]  topology      Mesh topology enumeration value
+  !> @param[in]  coord_system  Finite-element coord-system enumeration value
+  !> @param[in]  scaled_radius Planet scaled radius
   !> @param[in]  prime_mesh    Logical flag denoting if the mesh is the primary
   !!                           I/O mesh
   !>

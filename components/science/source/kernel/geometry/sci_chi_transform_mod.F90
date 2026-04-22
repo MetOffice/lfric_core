@@ -31,8 +31,8 @@ use log_mod,                   only : log_event,               &
 use matrix_invert_mod,         only : matrix_invert_3x3
 
 ! Configuration modules
-use base_mesh_config_mod,      only: geometry_spherical,     &
-                                     geometry_planar,        &
+use base_mesh_config_mod,      only: geometry_spherical, &
+                                     geometry_planar,    &
                                      topology_fully_periodic
 use finite_element_config_mod, only: coord_system_xyz, &
                                      coord_system_native
@@ -89,10 +89,10 @@ contains
 !!                               argument, and ideally should only be used for
 !!                               unit-testing.
 !------------------------------------------------------------------------------
-subroutine init_chi_transforms( geometry,        &
-                                topology,        &
-                                mesh_collection, &
-                                north_pole_arg, equator_lat_arg )
+subroutine init_chi_transforms( geometry, topology, &
+                                mesh_collection,    &
+                                north_pole_arg,     &
+                                equator_lat_arg )
 
   use local_mesh_mod,      only: local_mesh_type
   use mesh_collection_mod, only: mesh_collection_type
@@ -118,6 +118,7 @@ subroutine init_chi_transforms( geometry,        &
   ! -------------------------------------------------------------------------- !
   ! Extract stretching and rotation information from mesh
   ! -------------------------------------------------------------------------- !
+
   ! Begin by assuming no stretching and no rotation
   to_stretch = .false.
   to_rotate = .false.
@@ -250,14 +251,12 @@ end subroutine final_chi_transforms
 !! @param[in]   topology
 !! @param[in]   coord_system
 !! @param[in]   scaled_radius
-!! @param[in]   panel_id   The mesh panel ID
 !! @param[out]  x          The first coordinate field out (global Cartesian X)
 !! @param[out]  y          The second coordinate field out (global Cartesian Y)
 !! @param[out]  z          The third coordinate field out (global Cartesian Z)
 !-------------------------------------------------------------------------------
-subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id, &
-                    geometry, topology,            &
-                    coord_system, scaled_radius,   &
+subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id,                   &
+                    geometry, topology, coord_system, scaled_radius, &
                     x, y, z )
 
   implicit none
@@ -354,15 +353,15 @@ subroutine chir2xyz( chi_1, chi_2, chi_3, panel_id,    &
 
   implicit none
 
-  integer(kind=i_def), intent(in)  :: panel_id
-  real(kind=r_def),    intent(in)  :: chi_1, chi_2, chi_3
-  real(kind=r_def),    intent(out) :: x, y, z
+  integer(kind=i_def), intent(in) :: panel_id
+  real(kind=r_def),    intent(in) :: chi_1, chi_2, chi_3
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+
+  real(kind=r_def), intent(out) :: x, y, z
 
   real(kind=r_def) :: xyz(3)
-
-  integer(i_def), intent(in) :: geometry
-  integer(i_def), intent(in) :: topology
-  integer(i_def), intent(in) :: coord_system
 
   if (coord_system == coord_system_xyz .or. geometry == geometry_planar) then
     ! chi already uses (geocentric) Cartesian coordinates
@@ -437,23 +436,22 @@ end subroutine chir2xyz
 !! @param[out]  latitude   The second coordinate field out (latitude)
 !! @param[out]  radius     The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
-subroutine chi2llr( chi_1, chi_2, chi_3, panel_id, &
-                    geometry, topology,            &
-                    coord_system, scaled_radius,   &
+subroutine chi2llr( chi_1, chi_2, chi_3, panel_id,                   &
+                    geometry, topology, coord_system, scaled_radius, &
                     lon, lat, radius )
 
   implicit none
 
-  integer(kind=i_def), intent(in)  :: panel_id
-  real(kind=r_def),    intent(in)  :: chi_1, chi_2, chi_3
-  real(kind=r_def),    intent(out) :: lon, lat, radius
+  integer(kind=i_def), intent(in) :: panel_id
+  real(kind=r_def),    intent(in) :: chi_1, chi_2, chi_3
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
+
+  real(kind=r_def), intent(out) :: lon, lat, radius
 
   real(kind=r_def) :: xyz(3)
-
-  integer(i_def), intent(in) :: geometry
-  integer(i_def), intent(in) :: topology
-  integer(i_def), intent(in) :: coord_system
-  real(r_def),    intent(in) :: scaled_radius
 
   if (geometry == geometry_planar .or. coord_system == coord_system_xyz) then
     ! chi uses (geocentric) Cartesian coordinates
@@ -521,23 +519,22 @@ end subroutine chi2llr
 !! @param[out]  beta       The second coordinate field out (beta)
 !! @param[out]  radius     The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
-subroutine chi2abr( chi_1, chi_2, chi_3, panel_id, &
-                    geometry, topology,            &
-                    coord_system, scaled_radius,   &
+subroutine chi2abr( chi_1, chi_2, chi_3, panel_id,                   &
+                    geometry, topology, coord_system, scaled_radius, &
                     alpha, beta, radius )
 
   implicit none
 
-  integer(kind=i_def), intent(in)  :: panel_id
-  real(kind=r_def),    intent(in)  :: chi_1, chi_2, chi_3
-  real(kind=r_def),    intent(out) :: alpha, beta, radius
+  integer(kind=i_def), intent(in) :: panel_id
+  real(kind=r_def),    intent(in) :: chi_1, chi_2, chi_3
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
+
+  real(kind=r_def), intent(out) :: alpha, beta, radius
 
   real(kind=r_def) :: xyz(3)
-
-  integer(i_def), intent(in) :: geometry
-  integer(i_def), intent(in) :: topology
-  integer(i_def), intent(in) :: coord_system
-  real(r_def),    intent(in) :: scaled_radius
 
   if (topology /= topology_fully_periodic .or. geometry /= geometry_spherical) then
 

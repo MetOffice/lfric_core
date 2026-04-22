@@ -20,17 +20,17 @@ module multigrid_mod
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!> @brief
+!> @brief Routine returns tile sizes for supplied mesh names/extrusion where
+!>        applicable to the multigrid configuration.
 !>
-!> @param[in] config
-!> @param[in] local_mesh_name
-!> @param[in] extrusion
+!> @param[in] config           Application configuration object
+!> @param[in] local_mesh_names Meshes to set multigrid tile sizes
+!> @param[in] extrusion        Extrusion object being applied to meshes.
 !>
-!> @return tile_size
-!>
-!!$subroutine get_multigrid_tile_size( config, local_mesh_names, extrusion, &
-!!$                                    tile_size )
-
+!> @return tile_size  Updated tile sizes for multigrid, if applicable.
+!>                    Missing data indicator is returned for where the local
+!>                    mesh tile size is not to be updated for multigrid.
+!
 function get_multigrid_tile_size( config, local_mesh_names, extrusion) &
                          result ( tile_size )
 

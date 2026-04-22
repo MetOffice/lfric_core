@@ -44,11 +44,11 @@ module sci_compute_map_u_operators_kernel_mod
   type, public, extends(kernel_type) :: compute_map_u_operators_kernel_type
     private
     type(arg_type) :: meta_args(9) = (/                                     &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                  &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                  &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, WTHETA),              &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                  &! u_lon_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                  &! u_lat_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, WTHETA),              &! u_up_op
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               &! chi_sph_1, chi_sph_2, chi_sph_3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), &! panel_id
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! geometry
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! topology
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! coord_system
@@ -111,20 +111,19 @@ contains
 !! @param[in] nqp_v Number of quadrature points in the vertical
 !! @param[in] wqp_h Horizontal quadrature weights
 !! @param[in] wqp_v Vertical quadrature weights
-subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
-                        u_lon_op, ncell_3d_2, u_lat_op,            &
-                        ncell_3d_3, u_up_op,                       &
-                        chi_sph_1, chi_sph_2, chi_sph_3, panel_id, &
-                        geometry, topology,                        &
-                        coord_system, scaled_radius,               &
-                        ndf_w2, basis_w2,                          &
-                        ndf_w3, basis_w3,                          &
-                        ndf_wt, basis_wt,                          &
-                        ndf_chi_sph, undf_chi_sph, map_chi_sph,    &
-                        chi_sph_basis, chi_sph_diff_basis,         &
-                        ndf_pid, undf_pid, map_pid,                &
-                        nqp_h, nqp_v, wqp_h, wqp_v                 &
-                        )
+subroutine compute_map_u_operators_code( cell, nlayers, ncell_3d_1, &
+                         u_lon_op, ncell_3d_2, u_lat_op,            &
+                         ncell_3d_3, u_up_op,                       &
+                         chi_sph_1, chi_sph_2, chi_sph_3, panel_id, &
+                         geometry, topology,                        &
+                         coord_system, scaled_radius,               &
+                         ndf_w2, basis_w2,                          &
+                         ndf_w3, basis_w3,                          &
+                         ndf_wt, basis_wt,                          &
+                         ndf_chi_sph, undf_chi_sph, map_chi_sph,    &
+                         chi_sph_basis, chi_sph_diff_basis,         &
+                         ndf_pid, undf_pid, map_pid,                &
+                         nqp_h, nqp_v, wqp_h, wqp_v )
 
   use sci_chi_transform_mod,       only : chi2llr
   use sci_coordinate_jacobian_mod, only : coordinate_jacobian

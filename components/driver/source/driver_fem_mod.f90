@@ -146,9 +146,9 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(chi, panel_id, mesh, &
-                                     geometry, topology, &
-                                     coord_system, scaled_radius)
+        call assign_coordinate_field( chi, panel_id, mesh, &
+                                      geometry, topology,  &
+                                      coord_system, scaled_radius )
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)

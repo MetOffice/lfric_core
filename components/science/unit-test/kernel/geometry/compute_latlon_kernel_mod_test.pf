@@ -107,10 +107,8 @@ contains
                              latitude, longitude,             &
                              chi_1, chi_2, chi_3,             &
                              panel_id,                        &
-                             geometry,                        &
-                             topology,                        &
-                             coord_system,                    &
-                             scaled_radius,                   &
+                             geometry, topology,              &
+                             coord_system, scaled_radius,     &
                              ndf_w3, undf_w3, map_w3(:,1),    &
                              ndf_chi, undf_chi, map_chi(:,1), &
                              basis_chi(:,:,1,:),              &

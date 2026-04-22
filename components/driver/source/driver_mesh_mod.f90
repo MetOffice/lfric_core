@@ -79,6 +79,8 @@ contains
 !> @param[in] total_ranks       Total number of MPI ranks in this job.
 !> @param[in] mesh_names        Mesh names to load from the mesh input file(s).
 !> @param[in] extrusion         Extrusion object to be applied to meshes.
+!> @param[in] inner_halo_tiles  Apply tiling to inner halos.
+!> @param[in] tile_size         Tile sizes to apply to inner halos if applicable.
 !> @param[in] stencil_depths_in Required stencil depth for each mesh for
 !!                              the application. If this array is of size 1 then
 !!                              the single value is applied to all meshes.

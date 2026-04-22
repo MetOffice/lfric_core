@@ -48,11 +48,11 @@ module sci_compute_sample_u_ops_kernel_mod
   type, public, extends(kernel_type) :: compute_sample_u_ops_kernel_type
     private
     type(arg_type) :: meta_args(9) = (/                                       &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, WTHETA),          &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  Wchi),                      &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              &! u_lon_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              &! u_lat_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, WTHETA),          &! u_rad_op
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  Wchi),                      &! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &! panel_id
          arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! geometry
          arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! topology
          arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! coord_system
@@ -109,20 +109,18 @@ contains
 !> @param[in]     map_pid                  DoF map for the column's base cell for panel ID field
 !> @param[in]     nfaces                   Number of cell faces
 !> @param[in]     face_normals             The normal vectors to each face
-subroutine compute_sample_u_ops_code( col, nlayers,                   &
-                                      ncell_3d_1, u_lon_op,           &
-                                      ncell_3d_2, u_lat_op,           &
-                                      ncell_3d_3, u_rad_op,           &
-                                      chi1, chi2, chi3,               &
-                                      panel_id,                       &
-                                      geometry, topology,             &
-                                      coord_system, scaled_radius,    &
-                                      ndf_w2b, ndf_w3, ndf_wt,        &
-                                      ndf_chi, undf_chi, map_chi,     &
-                                      chi_basis, chi_diff_basis,      &
-                                      ndf_pid, undf_pid, map_pid,     &
-                                      nfaces, face_normals            &
-                                    )
+subroutine compute_sample_u_ops_code( col, nlayers,                 &
+                                      ncell_3d_1, u_lon_op,         &
+                                      ncell_3d_2, u_lat_op,         &
+                                      ncell_3d_3, u_rad_op,         &
+                                      chi1, chi2, chi3,             &
+                                      panel_id, geometry, topology, &
+                                      coord_system, scaled_radius,  &
+                                      ndf_w2b, ndf_w3, ndf_wt,      &
+                                      ndf_chi, undf_chi, map_chi,   &
+                                      chi_basis, chi_diff_basis,    &
+                                      ndf_pid, undf_pid, map_pid,   &
+                                      nfaces, face_normals )
 
   implicit none
 

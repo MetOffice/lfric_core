@@ -15,7 +15,6 @@
 module sci_mapping_constants_mod
 
   ! Infrastructure
-!  use config_mod,                        only: config_type
   use constants_mod,                     only: i_def, r_def, l_def, str_def
   use copy_field_alg_mod,                only: copy_field
   use extrusion_mod,                     only: PRIME_EXTRUSION, &
@@ -46,8 +45,9 @@ module sci_mapping_constants_mod
   ! Configuration
   use finite_element_config_mod,         only: element_order_h, &
                                                element_order_v
+
   ! Other algorithms
-  use sci_geometric_constants_mod,   only: get_coordinates, &
+  use sci_geometric_constants_mod,       only: get_coordinates, &
                                                get_panel_id
 
   ! Kernels
@@ -199,10 +199,12 @@ contains
 
   !> @brief Create the operators for projecting spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
-  !> @param[in] config Configuration object
-  !> @param[in] mesh   The mesh to compute the operators for
-  subroutine create_spherical_components_to_w2_projection( mesh, &
-                                                           geometry, topology, &
+  !> @param[in] mesh          The mesh to compute the operators for
+  !> @param[in] geometry
+  !> @param[in] topology
+  !> @param[in] coord-system
+  !> @param[in] scaled_radius
+  subroutine create_spherical_components_to_w2_projection( mesh, geometry, topology, &
                                                            coord_system, scaled_radius )
 
     use sci_compute_map_u_operators_kernel_mod, &
@@ -210,9 +212,8 @@ contains
 
     implicit none
 
-!    type(config_type), intent(in) :: config
-
     type(mesh_type), pointer, intent(in) :: mesh
+
     integer(i_def), intent(in) :: geometry
     integer(i_def), intent(in) :: topology
     integer(i_def), intent(in) :: coord_system
@@ -228,13 +229,6 @@ contains
     type(operator_type),         pointer :: u_lon_map
     type(operator_type),         pointer :: u_lat_map
     type(operator_type),         pointer :: u_up_map
-
-
-
-!!$    geometry      = config%base_mesh%geometry()
-!!$    topology      = config%base_mesh%topology()
-!!$    coord_system  = config%finite_element%coord_system()
-!!$    scaled_radius = config%planet%scaled_radius()
 
     if (.not. u_lon_map_inventory%is_initialised()) then
       call u_lon_map_inventory%initialise(name='u_lon_map')
@@ -274,18 +268,14 @@ contains
 
   !> @brief Create the operators for sampling spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
-  !> @param[in] config Configuration object
   !> @param[in] mesh   The mesh to compute the operators for
-  subroutine create_spherical_components_to_w2_sample( mesh,               &
-                                                       geometry, topology, &
+  subroutine create_spherical_components_to_w2_sample( mesh, geometry, topology, &
                                                        coord_system, scaled_radius )
 
     use sci_compute_sample_u_ops_kernel_mod, &
                                       only: compute_sample_u_ops_kernel_type
 
     implicit none
-
-!    type(config_type), intent(in) :: config
 
     type(mesh_type), pointer, intent(in) :: mesh
 
@@ -304,11 +294,6 @@ contains
     type(operator_type),         pointer :: u_lat_sample
     type(operator_type),         pointer :: u_up_sample
     integer(tik)                         :: id
-
-!!$    geometry      = config%base_mesh%geometry()
-!!$    topology      = config%base_mesh%topology()
-!!$    coord_system  = config%finite_element%coord_system()
-!!$    scaled_radius = config%planet%scaled_radius()
 
     if (.not. u_lon_sample_inventory%is_initialised()) then
       call u_lon_sample_inventory%initialise(name='u_lon_sample')
@@ -887,8 +872,9 @@ contains
   !> @brief Returns a pointer to the u_lon mapping operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The mapping operator for u_lon to W2
-  function get_u_lon_map(mesh_id, geometry, topology, &
-                         coord_system, scaled_radius ) result(u_lon_map_op)
+  function get_u_lon_map( mesh_id, geometry, topology,  &
+                          coord_system, scaled_radius ) &
+                  result( u_lon_map_op )
 
     implicit none
 
@@ -923,8 +909,9 @@ contains
   !> @brief Returns a pointer to the u_lat mapping operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The mapping operator for u_lat to W2
-  function get_u_lat_map(mesh_id, geometry, topology, &
-                         coord_system, scaled_radius) result(u_lat_map_op)
+  function get_u_lat_map( mesh_id, geometry, topology,  &
+                          coord_system, scaled_radius ) &
+                  result( u_lat_map_op )
 
     implicit none
 
@@ -947,8 +934,7 @@ contains
     constant_exists = u_lat_map_inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
-      call create_spherical_components_to_w2_projection(mesh, &
-                                                        geometry, topology, &
+      call create_spherical_components_to_w2_projection(mesh, geometry, topology, &
                                                         coord_system, scaled_radius)
     end if
 
@@ -960,8 +946,9 @@ contains
   !> @brief Returns a pointer to the u_up mapping operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The mapping operator for u_up to W2
-  function get_u_up_map(mesh_id, geometry, topology, &
-                         coord_system, scaled_radius) result(u_up_map_op)
+  function get_u_up_map( mesh_id, geometry, topology,  &
+                         coord_system, scaled_radius ) &
+                 result( u_up_map_op )
 
     implicit none
 
@@ -984,9 +971,8 @@ contains
     constant_exists = u_up_map_inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
-      call create_spherical_components_to_w2_projection( mesh, &
-                                                         geometry, topology, &
-                                                         coord_system, scaled_radius )
+      call create_spherical_components_to_w2_projection(mesh, geometry, topology, &
+                                                        coord_system, scaled_radius)
     end if
 
     ! Return constant
@@ -997,10 +983,9 @@ contains
   !> @brief Returns a pointer to the u_lon sampling operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The sampling operator for u_lon to W2
-  function get_u_lon_sample(mesh_id, &
-                            geometry, topology, &
-                            coord_system, scaled_radius) &
-                     result(u_lon_sample_op)
+  function get_u_lon_sample( mesh_id, geometry, topology,  &
+                             coord_system, scaled_radius ) &
+                     result( u_lon_sample_op )
 
     implicit none
 
@@ -1023,8 +1008,7 @@ contains
     constant_exists = u_lon_sample_inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
-      call create_spherical_components_to_w2_sample(mesh, &
-                                                    geometry, topology, &
+      call create_spherical_components_to_w2_sample(mesh, geometry, topology, &
                                                     coord_system, scaled_radius)
     end if
 
@@ -1036,9 +1020,9 @@ contains
   !> @brief Returns a pointer to the u_lat sampling operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The sampling operator for u_lat to W2
-  function get_u_lat_sample(mesh_id,               &
-                            geometry, topology, &
-                            coord_system, scaled_radius) result(u_lat_sample_op)
+  function get_u_lat_sample( mesh_id, geometry, topology,  &
+                             coord_system, scaled_radius ) &
+                     result( u_lat_sample_op )
 
     implicit none
 
@@ -1061,8 +1045,7 @@ contains
     constant_exists = u_lat_sample_inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
-      call create_spherical_components_to_w2_sample(mesh, &
-                                                    geometry, topology, &
+      call create_spherical_components_to_w2_sample(mesh, geometry, topology, &
                                                     coord_system, scaled_radius)
     end if
 
@@ -1074,9 +1057,9 @@ contains
   !> @brief Returns a pointer to the u_up sampling operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The sampling operator for u_up to W2
-  function get_u_up_sample(mesh_id,               &
-                           geometry, topology, &
-                           coord_system, scaled_radius) result(u_up_sample_op)
+  function get_u_up_sample( mesh_id, geometry, topology, &
+                            coord_system, scaled_radius) &
+                    result( u_up_sample_op )
 
     implicit none
 
@@ -1099,8 +1082,7 @@ contains
     constant_exists = u_up_sample_inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
-      call create_spherical_components_to_w2_sample( mesh, &
-                                                     geometry, topology, &
+      call create_spherical_components_to_w2_sample( mesh, geometry, topology, &
                                                      coord_system, scaled_radius )
     end if
 
@@ -1110,10 +1092,11 @@ contains
   end function get_u_up_sample
 
   !> @brief Returns a pointer to the operator projection from lon dot to W1
-  !> @param[in] config  Configuration object
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_lon_dot_to_w1( mesh_id, geometry, topology, coord_system, scaled_radius ) result( proj_op )
+  function get_project_lon_dot_to_w1( mesh_id, geometry, topology,  &
+                                      coord_system, scaled_radius ) &
+                              result( proj_op )
 
     implicit none
 
@@ -1177,14 +1160,13 @@ contains
   end function get_project_lon_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from lat dot to W1
-  !> @param[in] config   Configuration object
   !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_lat_dot_to_w1( mesh_id, geometry, topology, coord_system, scaled_radius ) result( proj_op )
+  function get_project_lat_dot_to_w1( mesh_id, geometry, topology,  &
+                                      coord_system, scaled_radius ) &
+                              result( proj_op )
 
     implicit none
-
-!   type(config_type), intent(in) :: config
 
     integer(i_def), intent(in) :: mesh_id
     integer(i_def), intent(in) :: geometry
@@ -1202,16 +1184,6 @@ contains
     type(quadrature_xyoz_type), pointer :: qr
     integer(kind=i_def),      parameter :: ydirection = 2_i_def
     integer(tik)                        :: id
-
-!!$    integer(i_def) :: geometry
-!!$    integer(i_def) :: topology
-!!$    integer(i_def) :: coord_system
-!!$    real(r_def)    :: scaled_radius
-!!$
-!!$    geometry      = config%base_mesh%geometry()
-!!$    topology      = config%base_mesh%topology()
-!!$    coord_system  = config%finite_element%coord_system()
-!!$    scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
     if (.not. project_lat_dot_to_w1_inventory%is_initialised()) then
@@ -1256,16 +1228,13 @@ contains
   end function get_project_lat_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from r dot to W1
-  !> @param[in] config   Configuration object
   !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The projection operator
-  function get_project_r_dot_to_w1( mesh_id, &
-                                    geometry, topology, &
-                                    coord_system, scaled_radius ) result(proj_op)
+  function get_project_r_dot_to_w1( mesh_id, geometry, topology,  &
+                                    coord_system, scaled_radius ) &
+                            result( proj_op )
 
     implicit none
-
-!    type(config_type), intent(in) :: config
 
     integer(i_def), intent(in) :: mesh_id
     integer(i_def), intent(in) :: geometry
@@ -1283,12 +1252,6 @@ contains
     type(quadrature_xyoz_type), pointer :: qr
     integer(kind=i_def),      parameter :: zdirection = 3_i_def
     integer(tik)                        :: id
-!!$
-!!$
-!!$    geometry      = config%base_mesh%geometry()
-!!$    topology      = config%base_mesh%topology()
-!!$    coord_system  = config%finite_element%coord_system()
-!!$    scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
     if (.not. project_r_dot_to_w1_inventory%is_initialised()) then
@@ -1331,21 +1294,15 @@ contains
   end function get_project_r_dot_to_w1
 
   !> @brief Returns the displacement when averaging from W3 to W2
-  !> @param[in] config   Configuration object
   !> @param[in] mesh_id  The ID of the mesh to get the object for
   !> @return The displacement field used for correcting mappings from W3 to W2
-  function get_w3_to_w2_displacement(mesh_id,&
- geometry,&
- topology,&
- coord_system,&
-  scaled_radius) result(w3_to_w2_displacement)
+  function get_w3_to_w2_displacement( mesh_id, geometry, topology,  &
+                                      coord_system, scaled_radius ) &
+                              result( w3_to_w2_displacement )
 
     use sci_w3_to_w2_displacement_kernel_mod, &
                                   only: w3_to_w2_displacement_kernel_type
     implicit none
-
-!    type(config_type), intent(in) :: config
-
 
     integer(i_def), intent(in) :: mesh_id
     integer(i_def), intent(in) :: geometry
@@ -1363,11 +1320,6 @@ contains
     type(function_space_type), pointer :: w2h_k0_fs
     type(function_space_type), pointer :: w3_k0_fs
     integer(tik)                       :: id
-!!$
-!!$    geometry      = config%base_mesh%geometry()
-!!$    topology      = config%base_mesh%topology()
-!!$    coord_system  = config%finite_element%coord_system()
-!!$    scaled_radius = config%planet%scaled_radius()
 
     ! Initialise inventory if this is the first time getting this constant
     if (.not. w3_to_w2_displacement_inventory%is_initialised()) then

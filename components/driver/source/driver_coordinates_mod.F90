@@ -7,7 +7,6 @@
 !> @brief  Module to assign the values of the coordinates of the mesh to a field.
 module driver_coordinates_mod
 
-!  use config_mod,          only: config_type
   use constants_mod,       only: r_def, i_def, l_def, &
                                  radians_to_degrees,  &
                                  i_halo_index, eps, pi
@@ -52,10 +51,13 @@ contains
   !!           from the mesh generator and then 'assign_coordinate' on a column by
   !!           column basis.
   !>
-  !> @param[in]     config   Configuration object
   !> @param[in,out] chi      Model coordinate array of size 3 of fields
   !> @param[in]     panel_id Field giving the ID of mesh panels
   !> @param[in]     mesh     Mesh on which this field is attached
+  !> @param[in]     geometry Mesh geometry enumeration value
+  !> @param[in]     topology Mesh topology enumeration value
+  !> @param[in]     coord_system Finite-element coordinate syatem enumeration value
+  !> @param[in]     scaled_radius Scaled planet radius
   subroutine assign_coordinate_field(chi, panel_id, mesh, &
                                      geometry, topology, &
                                      coord_system, scaled_radius )
@@ -70,8 +72,6 @@ contains
                                      get_stretch_factor
 
     implicit none
-
-!    type(config_type), intent(in) :: config
 
     type( field_type ),  intent( inout )        :: chi(3)
     type( field_type ),  intent( inout )        :: panel_id
@@ -95,7 +95,7 @@ contains
     real(kind=r_def) :: domain_min_y
 
     real(kind=r_def), allocatable :: column_coords(:,:,:)
-    real(kind=r_def), allocatable :: dz(:)  ! dz(nlayers) array
+    real(kind=r_def), allocatable :: dz(:)
     real(kind=r_def), allocatable :: vertex_coords(:,:)
 
     integer(i_def) :: cell
@@ -114,11 +114,6 @@ contains
     logical(l_def)   :: to_rotate
     real(kind=r_def) :: inverse_rot_matrix(3,3)
     real(kind=r_def) :: stretch_factor
-
-!!$    geometry      = config%base_mesh%geometry()
-!!$    topology      = config%base_mesh%topology()
-!!$    coord_system  = config%finite_element%coord_system()
-!!$    scaled_radius = config%planet%scaled_radius()
 
     nullify( map, map_pid, dof_coords, reference_element )
 
@@ -319,15 +314,15 @@ contains
   !!           be the panel IDs which are calculated from the coordinates.
   !!           For planar geometry the ID is just 1 everywhere.
   !>
-  !> @param[in]   nlayers             Number of layers for the panel_id field
-  !> @param[in]   ndf_pid             Number of DoFs per cell for the panel_id field
-  !> @param[in]   undf_pid            Universal number of DoFs for the panel_id field
-  !> @param[in]   map_pid             DoF map for the panel_id field
-  !> @param[out]  panel_id            Field (to be calculated) with the ID of cubed sphere panels
-  !> @param[in]   geometry
-  !> @param[in]   topology
-  !> @param[in]   global_dof_id       Array of global id's
-  !> @param[in]   panel_ncells        Number of cells per cubed sphere panel
+  !> @param[in]   nlayers        Number of layers for the panel_id field
+  !> @param[in]   ndf_pid        Number of DoFs per cell for the panel_id field
+  !> @param[in]   undf_pid       Universal number of DoFs for the panel_id field
+  !> @param[in]   map_pid        DoF map for the panel_id field
+  !> @param[out]  panel_id       Field (to be calculated) with the ID of cubed sphere panels
+  !> @param[in]   geometry       Mesh geometry enumeration value
+  !> @param[in]   topology       Mesh topology enumeration value
+  !> @param[in]   global_dof_id  Array of global id's
+  !> @param[in]   panel_ncells   Number of cells per cubed sphere panel
   subroutine calc_panel_id( nlayers,            &
                             ndf_pid,            &
                             undf_pid,           &
@@ -342,15 +337,13 @@ contains
     integer(kind=i_def), intent(in)  :: nlayers, ndf_pid, undf_pid
     integer(kind=i_def), intent(in)  :: map_pid(ndf_pid)
     real(kind=r_def),    intent(out) :: panel_id(undf_pid)
+    integer(kind=i_def), intent(in)  :: geometry
+    integer(kind=i_def), intent(in)  :: topology
     integer(kind=i_def), intent(in)  :: global_dof_id(undf_pid)
     integer(kind=i_def), intent(in)  :: panel_ncells
 
     ! Internal variables
     integer(kind=i_def) :: vert, k
-
-    integer(i_def), intent(in) :: geometry
-    integer(i_def), intent(in) :: topology
-
 
     if ( geometry == geometry_spherical .and. &
          topology == topology_fully_periodic ) then
@@ -383,9 +376,9 @@ contains
   !> @param[in]   domain_x       Domain extent in x direction for planar mesh
   !> @param[in]   domain_y       Domain extent in y direction for planar mesh
   !> @param[in]   panel_id       Field giving IDs of mesh panels
-  !> @param[in]   geometry
-  !> @param[in]   topology
-  !> @param[in]   scaled_radius
+  !> @param[in]   geometry       Mesh geometry enumeration value
+  !> @param[in]   topology       Mesh topology enumeration value
+  !> @param[in]   scaled_radius  Scaled planet radius
   !> @param[in]   ndf_pid        Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid       Number of universal DoFs for panel_id space
   !> @param[in]   map_pid        DoF map for panel_id space
@@ -511,7 +504,7 @@ contains
   !!                                 Cartesian coordinates from physical ones
   !> @param[in]   stretch_factor     Stretch factor for Schmidt transform
   !> @param[in]   panel_id           Field giving IDs of mesh panels
-  !> @param[in]   scaled_radius
+  !> @param[in]   scaled_radius      Scaled planet radius
   !> @param[in]   ndf_pid            Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid           Number of universal DoFs for panel_id space
   !> @param[in]   map_pid            DoF map for panel_id space
@@ -630,7 +623,7 @@ contains
   !> @param[in]   inverse_rot_matrix Rotation matrix to apply to obtain native
   !!                                 Cartesian coordinates from physical ones
   !> @param[in]   panel_id           Field giving IDs of mesh panels
-  !> @param[in]   scaled_radius
+  !> @param[in]   scaled_radius      Scaled planet radius
   !> @param[in]   ndf_pid            Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid           Number of universal DoFs for panel_id space
   !> @param[in]   map_pid            DoF map for panel_id space

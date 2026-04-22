@@ -34,18 +34,18 @@ module sci_w3_to_w2_displacement_kernel_mod
   !> The type declaration for the kernel. Contains the metadata needed by the PSy layer
   type, public, extends(kernel_type) :: w3_to_w2_displacement_kernel_type
     private
-    type(arg_type) :: meta_args(8) = (/                                      &
-         arg_type(GH_FIELD,   GH_REAL, GH_INC,   W2H),                       &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  Wchi),                      &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ,  W3),                        &
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! geometry
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! topology
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! coord_system
-         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                           &! scaled_radius
+    type(arg_type) :: meta_args(8) = (/                                     &
+         arg_type(GH_FIELD,   GH_REAL, GH_INC,  W2H),                       &! displacement
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, Wchi),                      &! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), &! panel_id
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, W3),                        &! dummy_w3
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          &! scaled_radius
          /)
-    type(func_type) :: meta_funcs(1) = (/                                    &
-         func_type(Wchi, GH_BASIS)                                           &
+    type(func_type) :: meta_funcs(1) = (/                                   &
+         func_type(Wchi, GH_BASIS)                                          &
          /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_EVALUATOR

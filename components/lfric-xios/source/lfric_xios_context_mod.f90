@@ -81,18 +81,18 @@ contains
 
   !> @brief Set up an XIOS context.
   !>
-  !> @param [in]     communicator      MPI communicator used by context.
-  !> @param [in]     chi               Array of coordinate fields
-  !> @param [in]     panel_id          Panel ID field
-  !> @param [in]     model_clock       The model clock.
-  !> @param [in]     calendar          The model calendar.
-  !> @param [in]     before_close      Routine to be called before context closes
-  !> @param [in]     geometry
-  !> @param [in]     topology
-  !> @param [in]     coord_system
-  !> @param [in]     scaled_radius
-  !> @param [in]     alt_coords        Array of coordinate fields for alternative meshes
-  !> @param [in]     alt_panel_ids     Panel ID fields for alternative meshes
+  !> @param [in]  communicator   MPI communicator used by context.
+  !> @param [in]  chi            Array of coordinate fields
+  !> @param [in]  panel_id       Panel ID field
+  !> @param [in]  model_clock    The model clock.
+  !> @param [in]  calendar       The model calendar.
+  !> @param [in]  before_close   Routine to be called before context closes
+  !> @param [in]  geometry       Mesh geometry enumeration value.
+  !> @param [in]  topology       Mesh topology enumeration value.
+  !> @param [in]  coord_system   Finite-element coord-system enumeration value
+  !> @param [in]  scaled_radius  Planet scaled radius
+  !> @param [in]  alt_coords     Array of coordinate fields for alternative meshes
+  !> @param [in]  alt_panel_ids  Panel ID fields for alternative meshes
   subroutine initialise_xios_context( this,                  &
                                       communicator,          &
                                       chi, panel_id,         &

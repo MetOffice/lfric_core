@@ -56,6 +56,8 @@ contains
   !> @param[inout] modeldb               Model state
   !> @param[in] chi_inventory            Contains the model's coordinate fields
   !> @param[in] panel_id_inventory       Contains the model's panel ID fields
+  !> @param[in] geometry                 Mesh geometry enumeration value
+  !> @param[in] topology                 Mesh topology enumeration value
   !> @param[in] populate_filelist        Optional procedure for creating a list of
   !!                                     file descriptions used by the model I/O
 
@@ -76,14 +78,13 @@ contains
 
     implicit none
 
-    character(*),                     intent(in)    :: context_name
-    character(*),                     intent(in)    :: mesh_name
-    class(modeldb_type),              intent(inout) :: modeldb
-    type(inventory_by_mesh_type),     intent(in)    :: chi_inventory
-    type(inventory_by_mesh_type),     intent(in)    :: panel_id_inventory
-
-    integer(i_def), intent(in) :: geometry
-    integer(i_def), intent(in) :: topology
+    character(*),                 intent(in)    :: context_name
+    character(*),                 intent(in)    :: mesh_name
+    class(modeldb_type),          intent(inout) :: modeldb
+    type(inventory_by_mesh_type), intent(in)    :: chi_inventory
+    type(inventory_by_mesh_type), intent(in)    :: panel_id_inventory
+    integer(i_def),               intent(in)    :: geometry
+    integer(i_def),               intent(in)    :: topology
 
     procedure(filelist_populator), &
                    pointer, optional, intent(in)    :: populate_filelist
@@ -162,6 +163,8 @@ contains
   !> @param[in] chi_inventory       Contains the model's coordinate fields
   !> @param[in] panel_id_inventory  Contains the model's panel ID fields
   !> @param[in] before_close        Routine to be called before context closes
+  !> @param[in] geometry            Mesh geometry enumeration value
+  !> @param[in] topology            Mesh topology enumeration value
   !> @param[in] populate_filelist   Optional procedure for creating a list of
   !!                                file descriptions used by the model I/O
   !> @param[in] alt_mesh_names      Optional array of names for other meshes
@@ -178,15 +181,14 @@ contains
 
     implicit none
 
-    character(*),                        intent(in)    :: context_name
-    character(*),                        intent(in)    :: mesh_name
-    class(modeldb_type),                 intent(inout) :: modeldb
-    type(inventory_by_mesh_type),        intent(in)    :: chi_inventory
-    type(inventory_by_mesh_type),        intent(in)    :: panel_id_inventory
-    procedure(callback_clock_arg), pointer, intent(in) :: before_close
-
-    integer(i_def), intent(in) :: geometry
-    integer(i_def), intent(in) :: topology
+    character(*),                  intent(in)    :: context_name
+    character(*),                  intent(in)    :: mesh_name
+    class(modeldb_type),           intent(inout) :: modeldb
+    type(inventory_by_mesh_type),  intent(in)    :: chi_inventory
+    type(inventory_by_mesh_type),  intent(in)    :: panel_id_inventory
+    procedure(callback_clock_arg), intent(in), pointer :: before_close
+    integer(i_def),                intent(in)    :: geometry
+    integer(i_def),                intent(in)    :: topology
 
     procedure(filelist_populator), &
                    pointer, optional,    intent(in)    :: populate_filelist

@@ -37,12 +37,12 @@ module sci_convert_phys_to_hdiv_kernel_mod
   type, public, extends(kernel_type) :: convert_phys_to_hdiv_kernel_type
     private
     type(arg_type) :: meta_args(10) = (/                                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_WRITE, W2),                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
-         arg_type(GH_FIELD*3, GH_REAL,    GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
+         arg_type(GH_FIELD,   GH_REAL,    GH_WRITE, W2),                        &! u_hdiv
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &! u_lon
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &! u_lat
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &! u_up
+         arg_type(GH_FIELD*3, GH_REAL,    GH_READ,  ANY_SPACE_9),               &! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &! panel_id
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             &! geometry
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             &! topology
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             &! coord_system

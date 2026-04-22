@@ -32,10 +32,10 @@ module sci_compute_latlon_kernel_mod
   type, public, extends(kernel_type) :: compute_latlon_kernel_type
     private
     type(arg_type) :: meta_args(8) = (/                                      &
-         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1),               &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
+         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1),               &! latitude
+         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1),               &! longitude
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               &! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &! panel_id
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! geometry
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! topology
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          &! coord_system
@@ -82,17 +82,16 @@ contains
 !> @param[in]     ndf_pid   Number of degrees of freedom per cell for panel_id
 !> @param[in]     undf_pid  Number of unique degrees of freedom for panel_id
 !> @param[in]     map_pid   Dofmap for the cell at the base of the column for panel_id
-subroutine compute_latlon_code(nlayers,                         &
-                               latitude, longitude,             &
-                               chi_1, chi_2, chi_3,             &
-                               panel_id,                        &
-                               geometry, topology,              &
-                               coord_system, scaled_radius,     &
-                               ndf_x, undf_x, map_x,            &
-                               ndf_chi, undf_chi, map_chi,      &
-                               basis_chi,                       &
-                               ndf_pid, undf_pid, map_pid       &
-                               )
+subroutine compute_latlon_code( nlayers,                     &
+                                latitude, longitude,         &
+                                chi_1, chi_2, chi_3,         &
+                                panel_id,                    &
+                                geometry, topology,          &
+                                coord_system, scaled_radius, &
+                                ndf_x, undf_x, map_x,        &
+                                ndf_chi, undf_chi, map_chi,  &
+                                basis_chi,                   &
+                                ndf_pid, undf_pid, map_pid )
 
   implicit none
 
