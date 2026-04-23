@@ -97,7 +97,9 @@ contains
     type(local_mesh_type), pointer :: local_mesh_ptr1,  local_mesh_ptr2
     integer(i_def) :: local_mesh_id
     integer(i_def) :: unit_test_local_mesh_id
+
     logical(l_def) :: generate_inner_halos
+    logical(l_def), parameter :: enforce_constraints = .false.
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
     mesh_name = 'unit_test'
@@ -117,6 +119,7 @@ contains
                                 decomposition,         &
                                 max_stencil_depth,     &
                                 generate_inner_halos,  &
+                                enforce_constraints,   &
                                 this%getProcessRank(), &
                                 this%getNumProcesses() )
 

@@ -85,7 +85,7 @@ contains
     real(r_def)    :: domain_height
     real(r_def)    :: scaled_radius
 
-    logical :: apply_partition_check
+    logical :: check_partitions
     logical :: inner_halo_tiles
     logical :: prepartitioned
 
@@ -157,7 +157,7 @@ contains
     ! Create the required meshes
     !-----------------------------------------------------------------------
     stencil_depth = 1
-    apply_partition_check = .false.
+    check_partitions = .false.
     allocate(tile_size(2,size(base_mesh_names)))
     tile_size(1,:) = tile_size_x
     tile_size(2,:) = tile_size_y
@@ -167,7 +167,7 @@ contains
                     modeldb%mpi%get_comm_size(), &
                     base_mesh_names, extrusion,  &
                     inner_halo_tiles, tile_size, &
-                    stencil_depth, apply_partition_check )
+                    stencil_depth, check_partitions )
 
     allocate( twod_names, source=base_mesh_names )
     do i=1, size(twod_names)

@@ -132,7 +132,9 @@ module partition_mod
     !> @param[in]  mapping_factor  Ratio between this and coarsest associated
     !>                             mesh
     !> @param[in] generate_inner_halos Flag to control the generation of inner
-    !>                                  halos
+    !>                                 halos
+    !> @param[in] enforce_constraints  Apply defensive checking for multigrid
+    !>                                 configurations.
     !> @param[inout] global_cell_id  Holds the global IDs of all cells in
     !>                               local partition.
     !> @param[out] num_inner  Number of cells that are inner halo cells.
@@ -154,6 +156,7 @@ module partition_mod
                                       max_stencil_depth, &
                                       mapping_factor, &
                                       generate_inner_halos, &
+                                      enforce_constraints, &
                                       global_cell_id, &
                                       num_inner, &
                                       num_edge, &
@@ -170,12 +173,15 @@ module partition_mod
                                                     total_ranks
       integer(i_def), intent(in)                 :: max_stencil_depth
       integer(i_def), intent(in)                 :: mapping_factor
-      logical(l_def), intent(in)                 :: generate_inner_halos
       integer(i_def), intent(inout), allocatable :: global_cell_id(:)
       integer(i_def), intent(out)                :: num_inner(:), &
                                                     num_edge,     &
                                                     num_halo(:),  &
                                                     num_ghost
+
+      logical(l_def), intent(in) :: generate_inner_halos
+      logical(l_def), intent(in) :: enforce_constraints
+
     end subroutine partitioner_interface
   end interface
 
@@ -186,17 +192,21 @@ contains
   !-------------------------------------------------------------------------------
   !> @brief Constructs a <code>partition_type</code> object
   !>
-  !> @param [in] global_mesh A global mesh object that describes the layout
-  !>                         of the global mesh
-  !> @param [in] partitioner A function pointer to the function that will perform
-  !>                         the partitioning
-  !> @param [in] decomposition  Object containing decomposition parameters and
-  !>                            method
-  !> @param [in] halo_depth The depth to which halos will be created
-  !> @param [in] local_rank Number of the local process rank
-  !> @param [in] total_ranks Total number of process ranks available
-  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
-  !>                             mesh
+  !> @param[in] global_mesh   A global mesh object that describes the layout
+  !>                          of the global mesh
+  !> @param[in] partitioner   A function pointer to the function that will
+  !>                          perform the partitioning
+  !> @param[in] decomposition Object containing decomposition parameters and
+  !>                          method
+  !> @param[in] max_stencil_depth    The depth to which halos will be created
+  !> @param[in] generate_inner_halos Flag to control the generation of inner
+  !>                                 halos
+  !> @param[in] enforce_constraints  Apply defensive checking for multigrid
+  !>                                 configurations.
+  !> @param[in] local_rank     Number of the local process rank
+  !> @param[in] total_ranks    Total number of process ranks available
+  !> @param[in] mapping_factor Ratio between this and coarsest associated mesh
+  !>                           (Optional)
   !> @return self the partition object
   !-------------------------------------------------------------------------------
   function partition_constructor( global_mesh, &
@@ -204,6 +214,7 @@ contains
                                   decomposition, &
                                   max_stencil_depth, &
                                   generate_inner_halos, &
+                                  enforce_constraints, &
                                   local_rank, &
                                   total_ranks, &
                                   mapping_factor ) result(self)
@@ -216,8 +227,10 @@ contains
   integer(i_def),                   intent(in) :: max_stencil_depth
   integer(i_def),                   intent(in) :: local_rank
   integer(i_def),                   intent(in) :: total_ranks
-  logical(l_def),                   intent(in) :: generate_inner_halos
   integer(i_def), optional,         intent(in) :: mapping_factor
+
+  logical(l_def), intent(in) :: generate_inner_halos
+  logical(l_def), intent(in) :: enforce_constraints
 
   type(partition_type), target :: self
 
@@ -250,6 +263,7 @@ contains
                     self%max_stencil_depth, &
                     mf_actual, &
                     generate_inner_halos, &
+                    enforce_constraints, &
                     self%global_cell_id, &
                     self%num_inner, &
                     self%num_edge, &
@@ -420,6 +434,7 @@ contains
                                  max_stencil_depth,     &
                                  mapping_factor,        &
                                  generate_inner_halos,  &
+                                 enforce_constraints,   &
                                  partitioned_cells,     &
                                  num_inner,             &
                                  num_edge,              &
@@ -440,7 +455,9 @@ contains
     integer(i_def),              intent(out)   :: num_edge
     integer(i_def),              intent(out)   :: num_halo( : )
     integer(i_def),              intent(out)   :: num_ghost
-    logical(l_def),              intent(in)    :: generate_inner_halos
+
+    logical(l_def), intent(in) :: generate_inner_halos
+    logical(l_def), intent(in) :: enforce_constraints
 
     ! A biperiodic mesh has 1 panel
     num_panels = 1
@@ -453,6 +470,7 @@ contains
                                         max_stencil_depth, &
                                         mapping_factor, &
                                         generate_inner_halos, &
+                                        enforce_constraints, &
                                         partitioned_cells, &
                                         num_inner, &
                                         num_edge, &
@@ -500,6 +518,7 @@ contains
                                       max_stencil_depth,      &
                                       mapping_factor,         &
                                       generate_inner_halos,   &
+                                      enforce_constraints,    &
                                       partitioned_cells,      &
                                       num_inner,              &
                                       num_edge,               &
@@ -520,7 +539,9 @@ contains
     integer(i_def),              intent(out)   :: num_edge
     integer(i_def),              intent(out)   :: num_halo( : )
     integer(i_def),              intent(out)   :: num_ghost
-    logical(l_def),              intent(in)    :: generate_inner_halos
+
+    logical(l_def), intent(in) :: generate_inner_halos
+    logical(l_def), intent(in) :: enforce_constraints
 
     ! A cubed sphere has 6 panels
     num_panels = 6
@@ -533,6 +554,7 @@ contains
                                         max_stencil_depth, &
                                         mapping_factor, &
                                         generate_inner_halos, &
+                                        enforce_constraints, &
                                         partitioned_cells, &
                                         num_inner, &
                                         num_edge, &
@@ -545,23 +567,26 @@ contains
   !> @brief Partitions a cubed-sphere mesh into a single partition for use
   !>        when running the code serialially.
   !>
-  !> @param[in]  global_mesh  Global mesh objectto be partitioned.
-  !> @param [in] decomposition  Object containing decomposition parameters and
-  !>                            method
-  !> @param[in]  local_rank  Local MPI rank number.
-  !> @param[in]  total_ranks  Total number of MPI ranks.
-  !> @param[in]  max_stencil_depth  Maximum depth of stencil that will be used
-  !>                                with this partition.
-  !> @param[in]  mapping_factor  Ratio between this and coarsest associated
-  !>                             mesh
-  !> @param [in] generate_inner_halos Flag to control the generation of inner
-  !>                                   halos
+  !> @param[in] global_mesh   Global mesh objectto be partitioned.
+  !> @param[in] decomposition Object containing decomposition parameters and
+  !>                          method
+  !> @param[in] local_rank    Local MPI rank number.
+  !> @param[in] total_ranks   Total number of MPI ranks.
+  !> @param[in] max_stencil_depth  Maximum depth of stencil that will be used
+  !>                               with this partition.
+  !> @param[in] mapping_factor  Ratio between this and coarsest associated
+  !>                            mesh
+  !> @param[in] generate_inner_halos Flag to control the generation of inner
+  !>                                 halos
+  !> @param[in] enforce_constraints  Apply defensive checking for multigrid
+  !>                                 configurations.
   !> @param[inout] partitioned_cells  Holds the global IDs of all cells in
   !>                                  local partition.
   !> @param[out] num_inner  Number of cells that are inner halo cells.
-  !> @param[out] num_edge  Number of cells that are owned by the partition,
-  !>                       but may have dofs that are also owned by halo cells.
-  !> @param[out] num_halo  Number of cells that are halo cells.
+  !> @param[out] num_edge   Number of cells that are owned by the partition,
+  !>                        but may have dofs that are also owned by halo
+  !>                        cells.
+  !> @param[out] num_halo   Number of cells that are halo cells.
   !> @param[out] num_ghost  Number of "ghost" cells. These are cells in an
   !>                        extra halo around the outermost actaul halo and
   !>                        are not in the partitioned domain, but are
@@ -576,6 +601,7 @@ contains
                                              max_stencil_depth,     &
                                              mapping_factor,        &
                                              generate_inner_halos,  &
+                                             enforce_constraints,   &
                                              partitioned_cells,     &
                                              num_inner,             &
                                              num_edge,              &
@@ -586,6 +612,7 @@ contains
   ! partition per cubed-sphere "face". In order to run the code serially
   ! a special case for creating a single partition with all points is required.
   ! So here. we just return one big partition that holds everything
+
     implicit none
 
     type(global_mesh_type), pointer, intent(in) :: global_mesh
@@ -601,7 +628,9 @@ contains
     integer(i_def),              intent(out)   :: num_edge
     integer(i_def),              intent(out)   :: num_halo( : )
     integer(i_def),              intent(out)   :: num_ghost
-    logical(l_def),              intent(in)    :: generate_inner_halos
+
+    logical(l_def), intent(in) :: generate_inner_halos
+    logical(l_def), intent(in) :: enforce_constraints
 
     integer(i_def) :: i
 
@@ -638,6 +667,7 @@ contains
                                              max_stencil_depth,     &
                                              mapping_factor,        &
                                              generate_inner_halos,  &
+                                             enforce_constraints,   &
                                              partitioned_cells,     &
                                              num_inner,             &
                                              num_edge,              &
@@ -670,7 +700,9 @@ contains
     integer(i_def),              intent(out)   :: num_halo( : )           ! Number of cells that are halo cells.
     integer(i_def),              intent(out)   :: num_ghost               ! Number of cells that are ghost cells - surrounding,
                                                                           ! but not in the partitioned domain
-    logical(l_def),              intent(in)    :: generate_inner_halos   ! Flag to control the generation of inner halos
+
+    logical(l_def),              intent(in)    :: generate_inner_halos    ! Flag to control the generation of inner halos
+    logical(l_def),              intent(in)    :: enforce_constraints     ! Apply contraints on the partitoner solutions
 
     integer(i_def) :: face               ! which face of the cube is implied by local_rank (0->5)
     integer(i_def) :: start_cell         ! lowest cell id of the face implaced by local_rank
@@ -683,9 +715,11 @@ contains
     integer(i_def) :: num_y              ! number of cells in the domain on this partition in y-dirn
     integer(i_def) :: ix, iy             ! loop counters over cells on this partition in x- and y-dirns
     integer(i_def) :: void_cell          ! Cell id that marks the cell as a cell outside of the partition.
-    logical        :: any_maps           ! Whether there exist maps between meshes, meaning their partitions must align.
     integer(i_def) :: start1, end1, inc1 ! Loop indices for inserting cells into the partition
     integer(i_def) :: start2, end2, inc2 ! Loop indices for inserting cells into the partition
+
+    logical(l_def) :: any_maps           ! Whether there exist maps between meshes, meaning their partitions must align.
+    logical(l_def) :: check_constraints
 
     ! Create linked lists
 
@@ -730,6 +764,12 @@ contains
     cross_panels = .false.
     n_cross_panels = 1
     any_maps    = global_mesh%get_nmaps() > 0
+
+    if (any_maps .and. enforce_constraints) then
+      check_constraints = .true.
+    else
+      check_constraints = .false.
+    end if
 
     nullify( last )
     nullify( start_subsect )
@@ -881,15 +921,15 @@ contains
 
     ! Work out the start index and number of cells (in x- and y-dirn) for
     ! the local partition
-    call decomposition%get_partition( relative_rank,    &
-                                      panel_ranks,      &
-                                      mapping_factor,   &
-                                      num_cells_x,      &
-                                      num_cells_y,      &
-                                      any_maps,         &
-                                      num_x,            &
-                                      num_y,            &
-                                      start_x,          &
+    call decomposition%get_partition( relative_rank,     &
+                                      panel_ranks,       &
+                                      mapping_factor,    &
+                                      num_cells_x,       &
+                                      num_cells_y,       &
+                                      check_constraints, &
+                                      num_x,             &
+                                      num_y,             &
+                                      start_x,           &
                                       start_y )
 
 

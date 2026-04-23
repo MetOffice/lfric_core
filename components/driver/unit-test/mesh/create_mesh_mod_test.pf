@@ -93,6 +93,8 @@ contains
     procedure(partitioner_interface), pointer     :: partitioner_ptr
     integer(i_def)                                :: local_mesh_id
 
+    logical(l_def), parameter :: enforce_constraints = .true.
+
     ! Reset in case of repeated initialisation
     call mesh_collection%clear()
     call global_mesh_collection%clear()
@@ -115,6 +117,7 @@ contains
                                 decomposition,        &
                                 max_stencil_depth,    &
                                 generate_inner_halos, &
+                                enforce_constraints,  &
                                 local_rank,           &
                                 total_ranks )
 
