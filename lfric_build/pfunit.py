@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 
 from fab.tools.tool import Tool
+from fab.tools.category import Category
 
 
 logger = logging.getLogger(__name__)
@@ -33,8 +34,11 @@ class PfUnit(Tool):
                          "likely not work.")
         self._pfunit_home = Path(pfunit_home)
 
+        # Create a new category of pFUnit
+        Category("PFUNIT")
         exec_name = self._pfunit_home / "bin" / "funitproc"
-        super().__init__("funitproc", exec_name=exec_name, category="pfunit",
+        super().__init__("funitproc", exec_name=exec_name,
+                         category=Category.PFUNIT,
                          availability_option="-v")
 
     def get_root_path(self) -> Path:

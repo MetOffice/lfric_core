@@ -122,7 +122,8 @@ class PfUnitMixin:
             ArtefactSet.INITIAL_SOURCE_FILES,
             PfUnitMixin.PF_SOURCE,
             suffixes=[".pf", ".PF"])
-        pfunit = self.config.tool_box.get_tool("pfunit")
+
+        pfunit = self.config.tool_box.get_tool(Category.PFUNIT)
         driver_f90 = pfunit.get_driver_f90()
         # TODO: fab_base needs a `name` property
         driver_f90 = driver_f90.replace("program main",
@@ -146,7 +147,7 @@ class PfUnitMixin:
         """
 
         pf_files = self.config.artefact_store[PfUnitMixin.PF_SOURCE]
-        pfunit = self.config.tool_box.get_tool("pfunit")
+        pfunit = self.config.tool_box.get_tool(Category.PFUNIT)
         all_tests = []
         for pf_file in pf_files:
             all_tests.append(pf_file.stem)
