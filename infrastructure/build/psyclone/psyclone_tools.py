@@ -13,12 +13,23 @@ their application in PSyclone optimisations scripts.
 
 from psyclone.domain.lfric import LFRicConstants
 from psyclone.psyGen import InvokeSchedule
-from psyclone.psyir.nodes import Loop, Routine, Directive, Container
+from psyclone.psyir.nodes import (
+    Loop, 
+    Routine, 
+    Directive, 
+    Container, 
+    OMPParallelDirective,
+    OMPParallelDoDirective,
+    OMPDoDirective,
+    FileContainer,
+    ProfileNode
+)
 from psyclone.transformations import (
     Dynamo0p3ColourTrans,
     Dynamo0p3OMPLoopTrans,
     Dynamo0p3RedundantComputationTrans,
     OMPParallelTrans,
+    TransformationError
 )
 from psyclone.psyir.transformations import ProfileTrans
 
@@ -27,7 +38,7 @@ SETVAL_BUILTINS = ["setval_c"]
 
 
 # -----------------------------------------------------------------------------
-def redundant_computation_setval(psyir):
+def redundant_computation_setval(psyir: FileContainer):
     """
     Applies the redundant computation transformation to loops over DoFs
     for the initialision built-ins, 'setval_*'.
@@ -69,7 +80,7 @@ def redundant_computation_setval(psyir):
 
 
 # -----------------------------------------------------------------------------
-def colour_loops(psyir, enable_tiling=False):
+def colour_loops(psyir: FileContainer, enable_tiling=False):
     """
     Applies the colouring transformation to all applicable loops and optionally
     enables tiling.
@@ -88,6 +99,10 @@ def colour_loops(psyir, enable_tiling=False):
         # Colour loops over cells unless they are on discontinuous
         # spaces or over DoFs
         for child in subroutine.children:
+            # Check if the profiling calipers have been added before the colouring.
+            if isinstance(child, ProfileNode):
+                raise TransformationError(
+                "Must apply colour_loops BEFORE profile_loops function in optimisation script.")
             if (
                 isinstance(child, Loop)
                 and child.iteration_space.endswith("cell_column")
@@ -97,7 +112,7 @@ def colour_loops(psyir, enable_tiling=False):
                 ctrans.apply(child, options={"tiling": enable_tiling})
 
 # -----------------------------------------------------------------------------
-def profile_loops(psyir,colours_only=True):
+def profile_loops(psyir: FileContainer,colours_only=True):
     """
     Applies timing calipers to kernels during the psyclone build. The default
     is to only profile coloured loops but colours_only can be set to False to
@@ -123,6 +138,11 @@ def profile_loops(psyir,colours_only=True):
                 continue
             # Insert profiler calls before loop over colours
             if (not colours_only and not loop.loop_type in leave_loops) or loop.loop_type == "colours":
+                # First check that the transformation is not being made inside an OMP region.
+                if loop.ancestor(OMPParallelDirective) or loop.ancestor(OMPParallelDoDirective) \
+                    or loop.ancestor(OMPDoDirective):
+                    raise TransformationError(
+                        "Must apply profile_loops BEFORE openmp_parellelise_loops function in optimisation script.")
                 k_name = loop.ancestor(InvokeSchedule).coded_kernels()[count].name
                 invoke_name = loop.ancestor(InvokeSchedule).invoke.name
                 file_name = loop.ancestor(Container).name
@@ -131,7 +151,7 @@ def profile_loops(psyir,colours_only=True):
                 count += 1
 
 # -----------------------------------------------------------------------------
-def openmp_parallelise_loops(psyir):
+def openmp_parallelise_loops(psyir: FileContainer):
     """
     Applies OpenMP Loop transformation to each applicable loop.
 
@@ -155,7 +175,7 @@ def openmp_parallelise_loops(psyir):
 
 
 # -----------------------------------------------------------------------------
-def view_transformed_schedule(psyir):
+def view_transformed_schedule(psyir: FileContainer):
     """
     Provides view of transformed Invoke schedule in the PSy-layer.
 
