@@ -74,8 +74,8 @@ contains
 !------------------------------------------------------------------------------
 !> @brief  Initialise the coordinate transform information
 !!
-!> @param[in] geometry
-!> @param[in] topology
+!> @param[in] geometry           Mesh geometry enumeration value
+!> @param[in] topology           Mesh topology enumeration value
 !> @param[in] mesh_collection    Optional: a collection of meshes, which contain
 !!                               metadata used to determine the rotation matrix
 !!                               and stretching factors.
@@ -243,17 +243,17 @@ end subroutine final_chi_transforms
 !>        will be added to the height to give the radius before the coordinates
 !>        are transformed to (X,Y,Z) coordinates.
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[in]   geometry
-!! @param[in]   topology
-!! @param[in]   coord_system
-!! @param[in]   scaled_radius
-!! @param[out]  x          The first coordinate field out (global Cartesian X)
-!! @param[out]  y          The second coordinate field out (global Cartesian Y)
-!! @param[out]  z          The third coordinate field out (global Cartesian Z)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!> @param[in]   scaled_radius Planet scaled radius
+!! @param[out]  x             The first coordinate field out (global Cartesian X)
+!! @param[out]  y             The second coordinate field out (global Cartesian Y)
+!! @param[out]  z             The third coordinate field out (global Cartesian Z)
 !-------------------------------------------------------------------------------
 subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id,                   &
                     geometry, topology, coord_system, scaled_radius, &
@@ -336,16 +336,16 @@ end subroutine chi2xyz
 !>        function from chi2xyz above). Therefore this will not add the
 !>        scaled_radius to transform.
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[in]   geometry
-!! @param[in]   topology
-!! @param[in]   coord_system
-!! @param[out]  x          The first coordinate field out (global Cartesian X)
-!! @param[out]  y          The second coordinate field out (global Cartesian Y)
-!! @param[out]  z          The third coordinate field out (global Cartesian Z)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!! @param[out]  x             The first coordinate field out (global Cartesian X)
+!! @param[out]  y             The second coordinate field out (global Cartesian Y)
+!! @param[out]  z             The third coordinate field out (global Cartesian Z)
 !-------------------------------------------------------------------------------
 subroutine chir2xyz( chi_1, chi_2, chi_3, panel_id,    &
                      geometry, topology, coord_system, &
@@ -424,17 +424,17 @@ end subroutine chir2xyz
 !> @brief Transforms a coordinate field chi from any system into spherical polar
 !>        (longitude, latitude, radius) coordinates
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[in]   geometry
-!! @param[in]   topology
-!! @param[in]   coord_system
-!! @param[in]   scaled_radius
-!! @param[out]  longitude  The first coordinate field out (longitude)
-!! @param[out]  latitude   The second coordinate field out (latitude)
-!! @param[out]  radius     The third coordinate field out (radius)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!> @param[in]   scaled_radius Planet scaled radius
+!! @param[out]  longitude     The first coordinate field out (longitude)
+!! @param[out]  latitude      The second coordinate field out (latitude)
+!! @param[out]  radius        The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
 subroutine chi2llr( chi_1, chi_2, chi_3, panel_id,                   &
                     geometry, topology, coord_system, scaled_radius, &
@@ -507,17 +507,17 @@ end subroutine chi2llr
 !> @brief Transforms a coordinate field chi from any system into *native*
 !!        equiangular cubed sphere (alpha,beta,radius) coordinates
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[in]   geometry
-!! @param[in]   topology
-!! @param[in]   coord_system
-!! @param[in]   scaled_radius
-!! @param[out]  alpha      The first coordinate field out (alpha)
-!! @param[out]  beta       The second coordinate field out (beta)
-!! @param[out]  radius     The third coordinate field out (radius)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!> @param[in]   scaled_radius Planet scaled radius
+!! @param[out]  alpha         The first coordinate field out (alpha)
+!! @param[out]  beta          The second coordinate field out (beta)
+!! @param[out]  radius        The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
 subroutine chi2abr( chi_1, chi_2, chi_3, panel_id,                   &
                     geometry, topology, coord_system, scaled_radius, &

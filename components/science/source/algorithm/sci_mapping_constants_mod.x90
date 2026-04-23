@@ -200,10 +200,10 @@ contains
   !> @brief Create the operators for projecting spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
   !> @param[in] mesh          The mesh to compute the operators for
-  !> @param[in] geometry
-  !> @param[in] topology
-  !> @param[in] coord-system
-  !> @param[in] scaled_radius
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   subroutine create_spherical_components_to_w2_projection( mesh, geometry, topology, &
                                                            coord_system, scaled_radius )
 
@@ -268,7 +268,11 @@ contains
 
   !> @brief Create the operators for sampling spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
-  !> @param[in] mesh   The mesh to compute the operators for
+  !> @param[in] mesh          The mesh to compute the operators for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   subroutine create_spherical_components_to_w2_sample( mesh, geometry, topology, &
                                                        coord_system, scaled_radius )
 
@@ -870,7 +874,11 @@ contains
   end function get_project_zdot_to_w2
 
   !> @brief Returns a pointer to the u_lon mapping operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The mapping operator for u_lon to W2
   function get_u_lon_map( mesh_id, geometry, topology,  &
                           coord_system, scaled_radius ) &
@@ -907,7 +915,11 @@ contains
   end function get_u_lon_map
 
   !> @brief Returns a pointer to the u_lat mapping operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The mapping operator for u_lat to W2
   function get_u_lat_map( mesh_id, geometry, topology,  &
                           coord_system, scaled_radius ) &
@@ -944,7 +956,11 @@ contains
   end function get_u_lat_map
 
   !> @brief Returns a pointer to the u_up mapping operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The mapping operator for u_up to W2
   function get_u_up_map( mesh_id, geometry, topology,  &
                          coord_system, scaled_radius ) &
@@ -981,7 +997,11 @@ contains
   end function get_u_up_map
 
   !> @brief Returns a pointer to the u_lon sampling operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The sampling operator for u_lon to W2
   function get_u_lon_sample( mesh_id, geometry, topology,  &
                              coord_system, scaled_radius ) &
@@ -1018,7 +1038,11 @@ contains
   end function get_u_lon_sample
 
   !> @brief Returns a pointer to the u_lat sampling operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The sampling operator for u_lat to W2
   function get_u_lat_sample( mesh_id, geometry, topology,  &
                              coord_system, scaled_radius ) &
@@ -1055,7 +1079,11 @@ contains
   end function get_u_lat_sample
 
   !> @brief Returns a pointer to the u_up sampling operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The sampling operator for u_up to W2
   function get_u_up_sample( mesh_id, geometry, topology, &
                             coord_system, scaled_radius) &
@@ -1063,7 +1091,7 @@ contains
 
     implicit none
 
-    integer(i_def),   intent(in) :: mesh_id
+    integer(i_def), intent(in) :: mesh_id
     integer(i_def), intent(in) :: geometry
     integer(i_def), intent(in) :: topology
     integer(i_def), intent(in) :: coord_system
@@ -1092,7 +1120,11 @@ contains
   end function get_u_up_sample
 
   !> @brief Returns a pointer to the operator projection from lon dot to W1
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The projection operator
   function get_project_lon_dot_to_w1( mesh_id, geometry, topology,  &
                                       coord_system, scaled_radius ) &
@@ -1160,7 +1192,11 @@ contains
   end function get_project_lon_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from lat dot to W1
-  !> @param[in] mesh_id  The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The projection operator
   function get_project_lat_dot_to_w1( mesh_id, geometry, topology,  &
                                       coord_system, scaled_radius ) &
@@ -1228,7 +1264,11 @@ contains
   end function get_project_lat_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from r dot to W1
-  !> @param[in] mesh_id  The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The projection operator
   function get_project_r_dot_to_w1( mesh_id, geometry, topology,  &
                                     coord_system, scaled_radius ) &
@@ -1294,7 +1334,11 @@ contains
   end function get_project_r_dot_to_w1
 
   !> @brief Returns the displacement when averaging from W3 to W2
-  !> @param[in] mesh_id  The ID of the mesh to get the object for
+  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] geometry      Mesh geometry enumeration value
+  !> @param[in] topology      Mesh topology enumeration value
+  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] scaled_radius Planet scaled radius
   !> @return The displacement field used for correcting mappings from W3 to W2
   function get_w3_to_w2_displacement( mesh_id, geometry, topology,  &
                                       coord_system, scaled_radius ) &
