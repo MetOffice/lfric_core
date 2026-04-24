@@ -21,7 +21,7 @@ module log_field_mod_test
   use local_mesh_mod,                 only : local_mesh_type
   use log_field_mod,                  only : log_field
   use log_mod,                        only : initialise_logging, finalise_logging, &
-                                             log_set_level, log_level_trace
+                                             log_set_level, log_level_info
   use mesh_collection_mod,            only : mesh_collection_type, &
                                              mesh_collection
   use mesh_mod,                       only : mesh_type, PLANE_BI_PERIODIC
@@ -180,8 +180,7 @@ contains
     real(r_def)       :: expected_value
 
     call initialise_logging( this%getMpiCommunicator(), name )
-    call log_set_level(log_level_trace)
-    call log_field(this%field)
+    call log_field(this%field, log_level=log_level_info)
     call finalise_logging()
 
     write( filename, '("PET",i1,".", A, ".Log")') this%getProcessRank(), name
@@ -225,8 +224,7 @@ contains
     real(r_def)       :: expected_value
 
     call initialise_logging( this%getMpiCommunicator(), name )
-    call log_set_level(log_level_trace)
-    call log_field(this%field, start_dof=10, end_dof=20)
+    call log_field(this%field, log_level=log_level_info, start_dof=10, end_dof=20)
     call finalise_logging()
 
     write( filename, '("PET",i1,".", A, ".Log")') this%getProcessRank(), name
