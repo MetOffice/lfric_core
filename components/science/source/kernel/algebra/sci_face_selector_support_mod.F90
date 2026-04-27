@@ -10,6 +10,8 @@ module sci_face_selector_support_mod
 use constants_mod,         only: i_def
 use reference_element_mod, only: W, S, E, N
 
+implicit none
+
 private
 
 public :: compute_face_selector, face_from_face_selector
@@ -120,6 +122,15 @@ function face_from_face_selector(                                              &
   ! 1: for E/W faces, 0: for N/S faces
   ew_or_ns = (1 + SIGN(1, ABS(face_selector_ew) - idx)) / 2
 
+  ! Faces are looped over from 1 to ABS(face_selector_ew)+ABS(face_selector_ns)
+  ! This equation forms a unique mapping from the loop index and face selector
+  ! values to the faces (W,S,E,N) respectively, where the face selectors take
+  ! the values:
+  ! 1: W face / S face
+  ! -1: E face / N face
+  ! 0: no faces
+  ! 2: W and E faces / S and N faces
+  ! Faces are always iterated over in the order W,E,S,N
   face = (                                                                     &
       -1                                                                       &
       + ew_or_ns * 2*(idx - MIN(0, face_selector_ew))                          &
