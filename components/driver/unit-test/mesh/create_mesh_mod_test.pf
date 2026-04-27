@@ -97,6 +97,7 @@ contains
     logical(l_def), intent(in)                    :: generate_inner_halos
     integer(i_def), intent(in)                    :: local_rank
     integer(i_def), intent(in)                    :: total_ranks
+
     ! Local variables
     type(ugrid_mesh_data_type)                    :: ugrid_mesh_data
     type(global_mesh_type)                        :: global_mesh
@@ -106,6 +107,8 @@ contains
     type(custom_decomposition_type)               :: decomposition
     procedure(partitioner_interface), pointer     :: partitioner_ptr
     integer(i_def)                                :: local_mesh_id
+
+    logical(l_def), parameter :: enforce_constraints = .true.
 
     ! Reset in case of repeated initialisation
     call mesh_collection%clear()
@@ -129,6 +132,7 @@ contains
                                 decomposition,        &
                                 max_stencil_depth,    &
                                 generate_inner_halos, &
+                                enforce_constraints,  &
                                 local_rank,           &
                                 total_ranks )
 
