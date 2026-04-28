@@ -36,7 +36,8 @@ module io_demo_driver_mod
   use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
-  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, setup_io_benchmark_files
+  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, &
+                                         setup_io_benchmark_files
   use io_benchmark_step_mod,      only : step_io_benchmark
   use io_demo_alg_mod,            only : io_demo_alg
   use sci_field_minmax_alg_mod,   only : log_field_minmax
