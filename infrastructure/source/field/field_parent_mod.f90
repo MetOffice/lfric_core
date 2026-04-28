@@ -505,14 +505,20 @@ contains
 
     integer(i_def) :: depth
 
-    ! If the first halo depth is dirty return the "all dirty" flag.
-    ! Otherwise, start at depth 2 looking for the first dirty halo depth
-    if (self%halo_dirty(1) == 1) then
-      depth = all_halos_dirty
+    if (self%field_halo_depth > 0) then
+      ! If the first halo depth is dirty return the "all dirty" flag.
+      ! Otherwise, start at depth 2 looking for the first dirty halo depth
+      if (self%halo_dirty(1) == 1) then
+        depth = all_halos_dirty
+      else
+        do depth=1,self%field_halo_depth-1
+          if (self%halo_dirty(depth+1) == 1) exit
+        enddo
+      end if
     else
-      do depth=1,self%field_halo_depth-1
-        if (self%halo_dirty(depth+1) == 1) exit
-      enddo
+      ! Halo depth is less than 1 - i.e. no halos - so return the
+      ! "can't find a clean halo" flag
+      depth = all_halos_dirty
     end if
 
   end function get_clean_depth
