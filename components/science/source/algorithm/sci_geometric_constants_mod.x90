@@ -204,10 +204,9 @@ contains
   !!                                 computing the fields for
   subroutine compute_face_selectors(mesh)
 
-    use sci_psykal_light_mod, only: invoke_face_selector_kernel_type,          &
-                                    invoke_face_selector_halo_kernel_type,     &
-                                    invoke_deep_int_setval_c,                  &
-                                    invoke_int_set_clean
+    use sci_psykal_light_mod,              only: invoke_deep_int_setval_c
+    use sci_face_selector_kernel_mod,      only: face_selector_kernel_type
+    use sci_face_selector_halo_kernel_mod, only: face_selector_halo_kernel_type
 
     implicit none
 
@@ -259,12 +258,13 @@ contains
     ! halo DoFs are set to the correct value
     call invoke_deep_int_setval_c(face_counter, 1, max_halo_depth)
     call invoke( int_setval_c(face_counter, 0) )
-    call invoke_int_set_clean(face_counter, max_halo_depth)
 
     ! Compute face selector in owned cell region
-    call invoke_face_selector_kernel_type(                                     &
+    call invoke(                                                               &
+        face_selector_kernel_type(                                             &
             face_selector_ew, face_selector_ns,                                &
             face_counter                                                       &
+        )                                                                      &
     )
 
     ! ------------------------------------------------------------------------ !
@@ -277,16 +277,15 @@ contains
     ! halo DoFs are set to the correct value
     call invoke_deep_int_setval_c(face_counter, 0, max_halo_depth)
     call invoke( int_setval_c(face_counter, 1) )
-    call invoke_int_set_clean(face_counter, max_halo_depth)
 
     ! Loop through different halo depths, setting the face selectors in the
     ! halos at each depth as we go
     do depth = 1, max_halo_depth
-      ! Set the face counter to be clean, so that no halo exchange is forced
-      call invoke_int_set_clean(face_counter, depth)
-      call invoke_face_selector_halo_kernel_type(                              &
+      call invoke(                                                             &
+          face_selector_halo_kernel_type(                                      &
               face_selector_ew, face_selector_ns,                              &
               face_counter, depth                                              &
+          )                                                                    &
       )
     end do
 

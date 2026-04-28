@@ -32,9 +32,9 @@ module sci_face_selector_halo_kernel_mod
   type, public, extends(kernel_type) :: face_selector_halo_kernel_type
     private
     type(arg_type) :: meta_args(3) = (/                                        &
-        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE,   W3),                        &
-        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE,   W3),                        &
-        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE,   W2H)                        &
+        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W3),                          &
+        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W3),                          &
+        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W2H)                          &
     /)
     integer :: operates_on = HALO_CELL_COLUMN
   contains
