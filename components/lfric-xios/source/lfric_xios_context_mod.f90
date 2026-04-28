@@ -15,6 +15,9 @@ module lfric_xios_context_mod
   use field_mod,            only : field_type
   use file_mod,             only : file_type
   use io_context_mod,       only : io_context_type, callback_clock_arg
+  use io_config_mod,        only : file_convention,       &
+                                   file_convention_ugrid, &
+                                   file_convention_cf
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use lfric_mpi_mod,        only : lfric_comm_type
   use log_mod,              only : log_event, log_scratch_space, &
@@ -24,6 +27,7 @@ module lfric_xios_context_mod
                                    setup_xios_files
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
+  use mesh_mod,             only : mesh_type
   use model_clock_mod,      only : model_clock_type
   use timing_mod,           only : start_timing, stop_timing, &
                                    tik, LPROF
@@ -50,6 +54,9 @@ module lfric_xios_context_mod
 
     logical :: uses_timer = .false.
     logical :: xios_context_initialised = .false.
+    !> Flag denoting if this file is a UGRID Planar mesh file with
+    !> projected coordinates that have been scaled
+    logical                                   :: ugrid_scaled_projected_coordinates = .false.
 
   contains
     private
@@ -111,6 +118,7 @@ contains
     type(field_type),     optional, intent(in)    :: alt_panel_ids(:)
     logical,              optional, intent(in)    :: start_at_zero
 
+    type(mesh_type), pointer             :: mesh => null()
     type(linked_list_item_type), pointer :: loop => null()
     type(lfric_xios_file_type),  pointer :: file => null()
     logical :: zero_start
@@ -134,8 +142,17 @@ contains
 
     ! Run XIOS setup routines
     call init_xios_calendar(model_clock, calendar, zero_start, this%context_clock_step)
+
     call init_xios_dimensions(chi, panel_id, alt_coords, alt_panel_ids)
-    if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist)
+    ! Obtain information on whether the mesh is ugrid and planar here?
+    ! This is to inform decisions on file post processing work around code path.
+    mesh => chi(1)%get_mesh()
+    if ( mesh%is_geometry_planar() .and. &
+                    file_convention == file_convention_ugrid ) then
+      this%ugrid_scaled_projected_coordinates = .true.
+    end if
+    if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist, &
+                                                              this%ugrid_scaled_projected_coordinates)
 
     if (associated(before_close)) call before_close(model_clock)
 
@@ -208,22 +225,28 @@ contains
       call xios_context_finalize()
       if ( LPROF ) call stop_timing(timing_idxc, 'xios.context_finalize')
 
-      ! We have closed the context on our end, but we need to make sure that XIOS
-      ! has closed the files for all servers before we process them.
-      call init_wait()
+      ! Only take action if this is a regional model with UGRID Projected
+      ! coordinates, as these are awaiting XIOS feature development
+      if ( this%ugrid_scaled_projected_coordinates ) then
+        call log_event("Closing file for post processing.", LOG_LEVEL_DEBUG)
+        ! We have closed the context on our end, but we need to make sure that XIOS
+        ! has closed the files for all servers before we process them.
+        call init_wait()
 
-      ! Close all files in list
-      if (this%filelist%get_length() > 0) then
-        loop => this%filelist%get_head()
-        do while (associated(loop))
-          select type( list_item => loop%payload )
-            type is (lfric_xios_file_type)
-              file => list_item
-              call file%file_close()
-          end select
-          loop => loop%next
-        end do
+        ! Close all files in list
+        if (this%filelist%get_length() > 0) then
+          loop => this%filelist%get_head()
+          do while (associated(loop))
+            select type( list_item => loop%payload )
+              type is (lfric_xios_file_type)
+                file => list_item
+                call file%file_close()
+            end select
+            loop => loop%next
+          end do
+        end if
       end if
+
       this%xios_context_initialised = .false.
     end if
     nullify(loop)

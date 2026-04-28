@@ -89,6 +89,9 @@ type, public, extends(file_type) :: lfric_xios_file_type
   logical :: is_diag = .false.
   !> Flag denoting if the always-on sampling mode is selected
   logical :: diag_always_on_sampling = .true.
+  !> Flag denoting if this file is a UGRID Planar mesh file with
+  !> projected coordinates that have been scaled
+  logical :: ugrid_scaled_projected_coordinates = .false.
   !> Will the file be read again from the beginning once the end is reached
   logical :: cyclic = .false.
   !>
@@ -118,6 +121,7 @@ contains
   procedure, public :: mode_is_write
   procedure, public :: recv_fields
   procedure, public :: send_fields
+  procedure, public :: set_ugrid_scaled_projected_coordinates
   final             :: lfric_xios_file_final
 
 end type lfric_xios_file_type
@@ -321,10 +325,16 @@ subroutine file_close(self)
   if (self%is_closed) return
 
   if ( self%io_mode == FILE_MODE_WRITE ) then
-    call log_event( "Waiting for XIOS to close file ["//trim(self%path)//".nc]", &
-                    log_level_debug )
-    call init_wait()
-    call process_output_file(trim(self%path)//".nc")
+    ! Only take action if this is a regional model with UGRID Projected
+    ! coordinates, as these are awaiting XIOS feature development
+    if ( self%ugrid_scaled_projected_coordinates ) then
+      call log_event( "Waiting for XIOS to close file ["//trim(self%path)//".nc]", &
+                      log_level_debug )
+      call init_wait()
+      call log_event( "post processing file ["//trim(self%path)//".nc]", &
+                      log_level_debug )
+      call process_output_file(trim(self%path)//".nc")
+    end if
   end if
 
   self%is_closed = .true.
@@ -588,5 +598,18 @@ subroutine lfric_xios_file_final(self)
   if (allocated(self%fields)) deallocate(self%fields)
 
 end subroutine lfric_xios_file_final
+
+!> @brief Setter for the file object ugrid_scaled_projected_coordinates
+!> @param[in]  ugrid_scaled_projected_coordinates Logical
+!>
+subroutine set_ugrid_scaled_projected_coordinates(self, ugrid_scaled_projected_coordinates)
+
+  implicit none
+  logical, intent(in) :: ugrid_scaled_projected_coordinates
+  class(lfric_xios_file_type), intent(inout) :: self
+
+  self%ugrid_scaled_projected_coordinates = ugrid_scaled_projected_coordinates
+
+end subroutine set_ugrid_scaled_projected_coordinates
 
 end module lfric_xios_file_mod
