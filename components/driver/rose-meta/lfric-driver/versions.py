@@ -32,34 +32,62 @@ class vnXX_txxx(MacroUpgrade):
 
 
 class vn31_t324(MacroUpgrade):
-    """Upgrade macro for ticket LFRic Core PR 324 by Ricky Wong."""
+    """Upgrade macro for LFRic Core PR#324 by Ricky Wong"""
 
     BEFORE_TAG = "vn3.1"
     AFTER_TAG = "vn3.1_t324"
 
     def upgrade(self, config, meta_config=None):
         # Commands From: rose-meta/lfric-driver
-        self.add_setting(
-            config, ["namelist:partitioning", "inner_halo_tiles"], ".false."
-        )
-        self.add_setting(config, ["namelist:partitioning", "tile_size_x"], "1")
-        self.add_setting(config, ["namelist:partitioning", "tile_size_y"], "1")
-        self.add_setting(
-            config,
-            ["namelist:partitioning(destination)", "inner_halo_tiles"],
-            ".false.",
-        )
-        self.add_setting(
-            config, ["namelist:partitioning(destination)", "tile_size_x"], "1"
-        )
-        self.add_setting(
-            config, ["namelist:partitioning(destination)", "tile_size_y"], "1"
-        )
-        self.add_setting(
-            config, ["namelist:multigrid", "coarsen_multigrid_tiles"], ".false."
-        )
-        self.add_setting(
-            config, ["namelist:multigrid", "max_tiled_multigrid_level"], "1"
-        )
+        # Only add in new configuration settings if the namelists
+        # are already present
+        #
+        if config.get(["namelist:partitioning"]) is not None:
+            self.add_setting(
+                config, ["namelist:partitioning", "inner_halo_tiles"], ".false."
+            )
+            self.add_setting(
+                config, ["namelist:partitioning", "tile_size_x"], "1"
+            )
+            self.add_setting(
+                config, ["namelist:partitioning", "tile_size_y"], "1"
+            )
+        if config.get(["namelist:partitioning(destination)"]) is not None:
+            self.add_setting(
+                config,
+                ["namelist:partitioning(destination)", "inner_halo_tiles"],
+                ".false.",
+            )
+            self.add_setting(
+                config,
+                ["namelist:partitioning(destination)", "tile_size_x"],
+                "1",
+            )
+            self.add_setting(
+                config,
+                ["namelist:partitioning(destination)", "tile_size_y"],
+                "1",
+            )
+        if config.get(["namelist:partitioning(destination)"]) is not None:
+            self.add_setting(
+                config,
+                ["namelist:partitioning(source)", "inner_halo_tiles"],
+                ".false.",
+            )
+            self.add_setting(
+                config, ["namelist:partitioning(source)", "tile_size_x"], "1"
+            )
+            self.add_setting(
+                config, ["namelist:partitioning(source)", "tile_size_y"], "1"
+            )
+        if config.get(["namelist:multigrid)"]) is not None:
+            self.add_setting(
+                config,
+                ["namelist:multigrid", "coarsen_multigrid_tiles"],
+                ".false.",
+            )
+            self.add_setting(
+                config, ["namelist:multigrid", "max_tiled_multigrid_level"], "1"
+            )
 
         return config, self.reports
