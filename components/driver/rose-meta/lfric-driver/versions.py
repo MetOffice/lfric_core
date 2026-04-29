@@ -1,3 +1,4 @@
+import re
 import sys
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
@@ -20,13 +21,10 @@ class UpgradeError(Exception):
 
 """
 Copy this template and complete to add your macro
-
 class vnXX_txxx(MacroUpgrade):
     # Upgrade macro for <TICKET> by <Author>
-
     BEFORE_TAG = "vnX.X"
     AFTER_TAG = "vnX.X_txxx"
-
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
@@ -46,6 +44,17 @@ class vn31_t324(MacroUpgrade):
         )
         self.add_setting(config, ["namelist:partitioning", "tile_size_x"], "1")
         self.add_setting(config, ["namelist:partitioning", "tile_size_y"], "1")
+        self.add_setting(
+            config,
+            ["namelist:partitioning(destination)", "inner_halo_tiles"],
+            ".false.",
+        )
+        self.add_setting(
+            config, ["namelist:partitioning(destination)", "tile_size_x"], "1"
+        )
+        self.add_setting(
+            config, ["namelist:partitioning(destination)", "tile_size_y"], "1"
+        )
         self.add_setting(
             config, ["namelist:multigrid", "coarsen_multigrid_tiles"], ".false."
         )
