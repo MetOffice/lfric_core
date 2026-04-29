@@ -31,3 +31,26 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+
+class vn31_t324(MacroUpgrade):
+    """Upgrade macro for ticket LFRic Core PR 324 by Ricky Wong."""
+
+    BEFORE_TAG = "vn3.1"
+    AFTER_TAG = "vn3.1_t324"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:partitioning", "inner_halo_tiles"], ".false."
+        )
+        self.add_setting(config, ["namelist:partitioning", "tile_size_x"], "1")
+        self.add_setting(config, ["namelist:partitioning", "tile_size_y"], "1")
+        self.add_setting(
+            config, ["namelist:multigrid", "coarsen_multigrid_tiles"], ".false."
+        )
+        self.add_setting(
+            config, ["namelist:multigrid", "max_tiled_multigrid_level"], "1"
+        )
+
+        return config, self.reports
