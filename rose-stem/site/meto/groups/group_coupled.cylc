@@ -22,8 +22,8 @@
         "coupled_canned_azspice_gnu_fast-debug-64bit",
     ],
     "coupled_azspice_build": [
-        "build_coupled_azspice_gnu_fast-debug-64-bit",
-        "build_coupled_azspice_gnu_full-debug-64-bit",
+        "build_coupled_azspice_gnu_fast-debug-64bit",
+        "build_coupled_azspice_gnu_full-debug-64bit",
     ]
     }) %}
 
@@ -44,8 +44,8 @@
         "coupled_canned_ex1a_cce_fast-debug-64bit",
     ],
     "coupled_ex1a_build": [
-        "build_coupled_ex1a_cce_fast-debug-64-bit",
-        "build_coupled_ex1a_cce_full-debug-64-bit",
+        "build_coupled_ex1a_cce_fast-debug-64bit",
+        "build_coupled_ex1a_cce_full-debug-64bit",
     ]
     }) %}
 

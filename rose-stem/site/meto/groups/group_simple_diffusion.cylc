@@ -22,8 +22,8 @@
         "simple_diffusion_canned_azspice_gnu_fast-debug-64bit",
     ],
     "simple_diffusion_azspice_build": [
-        "build_simple_diffusion_azspice_gnu_fast-debug-64-bit",
-        "build_simple_diffusion_azspice_gnu_full-debug-64-bit",
+        "build_simple_diffusion_azspice_gnu_fast-debug-64bit",
+        "build_simple_diffusion_azspice_gnu_full-debug-64bit",
     ]
     }) %}
 
@@ -45,8 +45,8 @@
         "simple_diffusion_canned_ex1a_cce_fast-debug-64bit",
     ],
     "simple_diffusion_ex1a_build": [
-        "build_simple_diffusion_ex1a_cce_fast-debug-64-bit",
-        "build_simple_diffusion_ex1a_cce_full-debug-64-bit",
+        "build_simple_diffusion_ex1a_cce_fast-debug-64bit",
+        "build_simple_diffusion_ex1a_cce_full-debug-64bit",
     ]
     }) %}
 

@@ -27,9 +27,9 @@
         "io_demo_canned_azspice_gnu_fast-debug-64bit",
     ],
     "io_demo_azspice_build": [
-        "build_io_demo_azspice_gnu_fast-debug-64-bit",
-        "build_io_demo_azspice_gnu_fast-debug-32-bit",
-        "build_io_demo_azspice_gnu_full-debug-64-bit",
+        "build_io_demo_azspice_gnu_fast-debug-64bit",
+        "build_io_demo_azspice_gnu_fast-debug-32bit",
+        "build_io_demo_azspice_gnu_full-debug-64bit",
     ]
     }) %}
 
@@ -62,9 +62,9 @@
         "io_demo_canned_ex1a_cce_fast-debug-64bit",
     ],
     "io_demo_ex1a_build": [
-        "build_io_demo_ex1a_cce_fast-debug-64-bit",
-        "build_io_demo_ex1a_cce_fast-debug-32-bit",
-        "build_io_demo_ex1a_cce_full-debug-64-bit",
+        "build_io_demo_ex1a_cce_fast-debug-64bit",
+        "build_io_demo_ex1a_cce_fast-debug-32bit",
+        "build_io_demo_ex1a_cce_full-debug-64bit",
     ]
     }) %}
 
