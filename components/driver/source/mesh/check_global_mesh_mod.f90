@@ -5,14 +5,12 @@
 !-----------------------------------------------------------------------------
 module check_global_mesh_mod
 
-  use constants_mod,           only: i_def, str_def, &
-                                     str_max_filename
-  use global_mesh_mod,         only: global_mesh_type
-  use log_mod,                 only: log_event,         &
-                                     log_scratch_space, &
-                                     LOG_LEVEL_ERROR
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
+  use constants_mod,   only: i_def, str_def, str_max_filename
+  use config_mod,      only: config_type
+  use global_mesh_mod, only: global_mesh_type
+  use log_mod,         only: log_event,         &
+                             log_scratch_space, &
+                             LOG_LEVEL_ERROR
 
   use global_mesh_collection_mod, only: global_mesh_collection
 
@@ -34,15 +32,15 @@ contains
 
 !> @brief Basic validation that global meshes are suitable
 !!        for the specified configuration.
-!> @param[in]  configuration Configuration object.
-!> @param[in]  mesh_names    Global meshes held in application
-!!                           global mesh collection object.
-subroutine check_global_mesh( configuration, mesh_names )
+!> @param[in]  config      Configuration object.
+!> @param[in]  mesh_names  Global meshes held in application
+!!                         global mesh collection object.
+subroutine check_global_mesh( config, mesh_names )
 
   implicit none
 
-  type(namelist_collection_type), intent(in) :: configuration
-  character(str_def),             intent(in) :: mesh_names(:)
+  type(config_type),  intent(in) :: config
+  character(str_def), intent(in) :: mesh_names(:)
 
   integer(i_def) :: topology
   integer(i_def) :: geometry
@@ -50,17 +48,12 @@ subroutine check_global_mesh( configuration, mesh_names )
   logical :: valid_geometry
   logical :: valid_topology
 
-  type(global_mesh_type), pointer :: global_mesh   => null()
-  type(namelist_type),    pointer :: base_mesh_nml => null()
+  type(global_mesh_type), pointer :: global_mesh
 
   integer(i_def) :: i
 
-  base_mesh_nml => configuration%get_namelist('base_mesh')
-
-  call base_mesh_nml%get_value( 'geometry', geometry )
-  call base_mesh_nml%get_value( 'topology', topology )
-
-  base_mesh_nml => null()
+  geometry = config%base_mesh%geometry()
+  topology = config%base_mesh%topology()
 
   do i=1, size(mesh_names)
 

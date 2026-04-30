@@ -16,7 +16,6 @@ module sci_mapping_constants_mod
 
   ! Infrastructure
   use constants_mod,                     only: i_def, r_def, l_def, str_def
-  use copy_field_alg_mod,                only: copy_field
   use extrusion_mod,                     only: PRIME_EXTRUSION, &
                                                DOUBLE_LEVEL,    &
                                                TWOD
@@ -751,7 +750,7 @@ contains
               weights_rtran, fine_w3_fs, coarse_mesh, fine_mesh                &
       )
 
-      call copy_field(weights_rdef, weights_rtran)
+      call invoke( real_to_real_x(weights_rtran, weights_rdef) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
     end if

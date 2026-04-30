@@ -785,6 +785,7 @@ contains
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
+    integer(kind=i_def)                   :: depth
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dx_at_w2_inventory%is_initialised()) then
@@ -802,7 +803,8 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      call dx_at_w2_inventory%add_field(dx_at_w2, w2_fs, mesh)
+      depth = mesh%get_halo_depth()
+      call dx_at_w2_inventory%add_field(dx_at_w2, w2_fs, mesh, halo_depth=depth)
       call invoke( X_divideby_Y(dx_at_w2, detj_at_w2, dA_at_w2) )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
@@ -1219,7 +1221,7 @@ contains
       inventory_name = "height_w2_fe"
     case (W2H)
       inventory => height_w2h_inventory_fe
-      inventory_name = "height_w2_fe"
+      inventory_name = "height_w2h_fe"
     case (W3)
       inventory => height_w3_inventory_fe
       inventory_name = "height_w3_fe"
@@ -1251,6 +1253,7 @@ contains
       call inventory%add_field(height, space, mesh)
 
       select case (space_id)
+      ! Horizontally discontinuous spaces
       case (W3, Wtheta)
         call invoke(                                                           &
             height_discontinuous_kernel_type(                                  &
@@ -1258,6 +1261,7 @@ contains
             )                                                                  &
         )
 
+      ! Horizontally continuous spaces
       case default
         ! Can't import multiplicity, so must calculate it
         call ones%initialise( space )
@@ -1312,6 +1316,7 @@ contains
     type(field_type)                      :: ones
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
+    integer(kind=i_def)                   :: depth
 
     ! Determine inventory based on space
     select case (space_id)
@@ -1326,7 +1331,7 @@ contains
       inventory_name = "height_w2_fv"
     case (W2H)
       inventory => height_w2h_inventory_fv
-      inventory_name = "height_w2_fv"
+      inventory_name = "height_w2h_fv"
     case (W3)
       inventory => height_w3_inventory_fv
       inventory_name = "height_w3_fv"
@@ -1352,10 +1357,12 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
+      depth = mesh%get_halo_depth()
       space => function_space_collection%get_fs(mesh, 0, 0, space_id)
-      call inventory%add_field(height, space, mesh)
+      call inventory%add_field(height, space, mesh, halo_depth=depth)
 
       select case (space_id)
+      ! Horizontally discontinuous spaces
       case (W3, Wtheta)
         call invoke(                                                           &
             height_discontinuous_kernel_type(                                  &
@@ -1363,6 +1370,7 @@ contains
             )                                                                  &
         )
 
+      ! Horizontally continuous spaces
       case default
         ! Can't import multiplicity, so must calculate it
         call ones%initialise( space )
