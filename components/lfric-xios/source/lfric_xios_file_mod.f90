@@ -95,6 +95,8 @@ type, public, extends(file_type) :: lfric_xios_file_type
   logical :: context_init_read = .true.
   !> Temporal controller for file
   type(temporal_type) :: temporal
+  !> Update frequency for temporal control (enum, optional)
+  integer(i_def) :: update_freq = 0
 
   !> XIOS representations
   !> Internal XIOS representation of the file
@@ -202,11 +204,14 @@ end subroutine register_diagnostics_file
 !> @param[in] fields_in_file Array of fields contained in the file
 !> @param[in] is_diag        Is it a diagnostics file?
 !> @param[in] diag_always_on_sampling Is the always-on sampling mode selected?
+!> @param[in] file_convention Enum denoting the file convention to use for the file
+!> @param[in] update_freq     Enum for update frequency to be passed to temporal
+!!                            controller (optional, only relevant for time series files)
 function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
                                       operation, cyclic, field_group_id,      &
                                       fields_in_file, is_diag,                &
                                       diag_always_on_sampling,                &
-                                      file_convention ) result(self)
+                                      file_convention, update_freq ) result(self)
 
   implicit none
 
@@ -223,7 +228,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
   logical(l_def),      optional, intent(in) :: is_diag
   logical(l_def),      optional, intent(in) :: diag_always_on_sampling
   integer(i_def),      optional, intent(in) :: file_convention
-
+  integer(i_def),      optional, intent(in) :: update_freq
   type(field_collection_iterator_type) :: iter
   class(field_parent_type), pointer    :: fld => null()
 
@@ -239,6 +244,10 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
   if (present(file_convention)) self%file_convention = file_convention
   if (present(cyclic) .and. self%io_mode == FILE_MODE_READ) then
     self%cyclic = cyclic
+  end if
+
+  if (present(update_freq)) then
+    self%update_freq = update_freq
   end if
 
   if (present(freq)) then
@@ -424,8 +433,9 @@ subroutine register_with_context(self)
       ! the temporal object initialiser which will tell XIOS which time entry
       ! to start reading from
       call xios_set_attr(self%handle, cyclic=self%cyclic)
-      call self%temporal%initialise( self%xios_id, self%path, self%fields, &
-                                     self%frequency, self%cyclic, record_offset )
+      call self%temporal%initialise( self%xios_id, self%path, self%fields,          &
+                                     self%frequency, self%cyclic, self%update_freq, &
+                                     record_offset )
       call xios_set_attr(self%handle, record_offset=record_offset)
     end if
 
