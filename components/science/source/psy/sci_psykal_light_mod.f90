@@ -69,6 +69,12 @@ contains
   !> @brief Sets the values of a field up to some depth
   !> @details This routine allows the values of an integer field to be set into
   !!          the halos up to some specified depth.
+  !!          Specifying a halo depth to loop over for a built-in is currently
+  !!          only possible through an optimisation script, which may not be a
+  !!          reasonable solution (at the time of the inclusion of this code,
+  !!          the computation of the face selectors uses this routine but
+  !!          cannot use it with an optimisation script). PSyclone issue #3423
+  !!          captures this requirement.
   !> @param[in,out] field  The field to set the values of
   !> @param[in]     value  The value to set the field to
   !> @param[in]     depth  Halo depth for setting the field
