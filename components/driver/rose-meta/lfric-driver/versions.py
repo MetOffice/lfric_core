@@ -52,39 +52,12 @@ class vn31_t324(MacroUpgrade):
             self.add_setting(
                 config, ["namelist:partitioning", "tile_size_y"], "1"
             )
-        if config.get(["namelist:partitioning(destination)"]) is not None:
-            self.add_setting(
-                config,
-                ["namelist:partitioning(destination)", "inner_halo_tiles"],
-                ".false.",
-            )
-            self.add_setting(
-                config,
-                ["namelist:partitioning(destination)", "tile_size_x"],
-                "1",
-            )
-            self.add_setting(
-                config,
-                ["namelist:partitioning(destination)", "tile_size_y"],
-                "1",
-            )
-        if config.get(["namelist:partitioning(destination)"]) is not None:
-            self.add_setting(
-                config,
-                ["namelist:partitioning(source)", "inner_halo_tiles"],
-                ".false.",
-            )
-            self.add_setting(
-                config, ["namelist:partitioning(source)", "tile_size_x"], "1"
-            )
-            self.add_setting(
-                config, ["namelist:partitioning(source)", "tile_size_y"], "1"
-            )
+
         if config.get(["namelist:multigrid)"]) is not None:
             self.add_setting(
                 config,
                 ["namelist:multigrid", "coarsen_multigrid_tiles"],
-                ".false.",
+                ".false."
             )
             self.add_setting(
                 config, ["namelist:multigrid", "max_tiled_multigrid_level"], "1"
