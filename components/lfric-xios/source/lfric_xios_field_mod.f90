@@ -24,7 +24,8 @@ module lfric_xios_field_mod
   use xios,                 only: xios_domain, xios_axis, xios_grid,          &
                                   xios_gridgroup, xios_is_valid_grid,         &
                                   xios_field,xios_fieldgroup, xios_add_child, &
-                                  xios_get_handle, xios_set_attr, xios_get_attr
+                                  xios_get_handle, xios_set_attr, xios_get_attr, &
+                                  xios_is_valid_field
 
   implicit none
 
@@ -106,6 +107,9 @@ function lfric_xios_field_constructor(model_field, xios_id, fieldgroup_id) resul
     self%fieldgroup_id = "field_definition"
   end if
 
+  ! Set XIOS field name to be the same as the model field name by default
+  self%xios_name = trim(adjustl(model_field%get_name()))
+
   return
 
 end function lfric_xios_field_constructor
@@ -133,12 +137,18 @@ subroutine register(self, field_read_access)
                   "] with field group ["//trim(self%fieldgroup_id)//"]", &
                   log_level_trace )
 
+  ! If this field is already registered with XIOS, get the existing handle,
+  ! otherwise a new one will be created below as part of `xios_add_child`.
+  if (xios_is_valid_field(self%xios_id)) then
+    call xios_get_handle(trim(adjustl(self%xios_id)), self%handle)
+    call xios_get_attr(self%handle, name=self%xios_name)
+  end if
+
   ! Get field group handle and add field
   call xios_get_handle(trim(adjustl(self%fieldgroup_id)), fieldgroup_hdl)
   call xios_add_child(fieldgroup_hdl, self%handle, trim(self%xios_id))
-  call xios_set_attr( self%handle,                                     &
-                      name=trim(adjustl(self%model_field%get_name())), &
-                      read_access=field_read_access )
+  call xios_set_attr( self%handle, name=trim(adjustl(self%xios_name)), &
+                                   read_access=field_read_access )
 
   ! Set up dimensions of output field
   vspace => self%model_field%get_function_space()
