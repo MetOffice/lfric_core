@@ -53,7 +53,7 @@ class vn31_t324(MacroUpgrade):
                 config, ["namelist:partitioning", "tile_size_y"], "1"
             )
 
-        if config.get(["namelist:formulation","l_multigrid"])) is not None:
+        if config.get(["namelist:formulation","l_multigrid"]) is not None:
             self.add_setting(
                 config,
                 ["namelist:multigrid", "coarsen_multigrid_tiles"],
