@@ -49,7 +49,7 @@ program lfric_xios_temporal_interp_test
   geometry      = test_db%config%base_mesh%geometry()
   topology      = test_db%config%base_mesh%topology()
   coord_system  = test_db%config%finite_element%coord_system()
-  scales_radius = test_db%config%planet%scaled_radius()
+  scaled_radius = test_db%config%planet%scaled_radius()
 
   ! =============================== Start test ================================
 
