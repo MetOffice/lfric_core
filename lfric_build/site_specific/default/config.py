@@ -24,8 +24,8 @@ class Config:
     scripts to allow site-specific customisations.
     '''
 
-    def __init__(self):
-        self._args = None
+    def __init__(self) -> None:
+        self._args: argparse.Namespace
 
     @property
     def args(self) -> argparse.Namespace:
