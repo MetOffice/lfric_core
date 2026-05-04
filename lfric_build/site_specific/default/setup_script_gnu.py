@@ -10,7 +10,7 @@ This function gets called from the default site-specific config file
 import argparse
 from typing import cast
 
-from fab.api import BuildConfig, Category, Linker, ToolRepository
+from fab.api import BuildConfig, Category, Compiler, Linker, ToolRepository
 
 
 def setup_script_gnu(build_config: BuildConfig,
