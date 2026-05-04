@@ -1,8 +1,13 @@
 #! /usr/bin/env python3
 
+##############################################################################
+# (c) Crown copyright 2026 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+##############################################################################
 
 '''
-This module contains the default Baf configuration class.
+This module contains the default Fab configuration class.
 '''
 
 import argparse
@@ -19,7 +24,7 @@ from default.setup_script_nvidia import setup_script_nvidia
 
 class Config:
     '''
-    This class is the default Configuration object for Baf builds.
+    This class is the default Configuration object for Fab builds.
     It provides several callbacks which will be called from the build
     scripts to allow site-specific customisations.
     '''

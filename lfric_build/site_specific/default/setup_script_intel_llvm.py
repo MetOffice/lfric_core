@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+##############################################################################
+# (c) Crown copyright 2026 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+##############################################################################
+
 '''
 This file contains a function that sets the default flags for all
 Intel llvm based compilers and linkers in the ToolRepository (ifx, icx).
