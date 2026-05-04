@@ -31,6 +31,7 @@ def setup_script_gnu(build_config: BuildConfig,
         gfortran = tr.get_tool(Category.FORTRAN_COMPILER, "mpif90-gfortran")
         if not gfortran.is_available:
             return
+    gfortran = cast(Compiler, gfortran)
 
     if gfortran.get_version() < (4, 9):
         raise RuntimeError(f"GFortran is too old to build LFRic. "
