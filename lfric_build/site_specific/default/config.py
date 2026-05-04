@@ -66,7 +66,7 @@ class Config:
             # compilation flags. This 'base' is not accessible to
             # the user, so it's not part of the profile list. Also,
             # make it inherit from the default profile '', so that
-            # a user does not have to specify the "base" profile.
+            # a user does not have to specify the 'base' profile.
             # Note that we set this even if a compiler is not available.
             # This is required in case that compilers are not in PATH,
             # so e.g. mpif90-ifort works, but ifort cannot be found.
