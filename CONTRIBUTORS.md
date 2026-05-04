@@ -2,6 +2,7 @@
 
 | GitHub user      | Real Name              | Affiliation           | Date       |
 | ---------------- | -----------------      | --------------------- | ---------- |
+| iboutle          | Ian Boutle             | Met Office            | 2026-03-06 |
 | andrewcoughtrie  | Andrew Coughtrie       | Met Office            | 2025.12.12 |
 | james-bruten-mo  | James Bruten           | Met Office            | 2025-12-09 |
 | jedbakerMO       | Jed Baker              | Met Office            | 2025-12-29 |
@@ -15,6 +16,7 @@
 | yaswant          | Yaswant Pradhan        | Met Office            | 2025-12-16 |
 | stevemullerworth | Steve Mullerworth      | Met Office            | 2026-01-08 |
 | harry-shepherd   | Harry Shepherd         | Met Office            | 2026-01-08 |
+| Pierre-siddall   | Pierre Siddall         | Met Office            | 2026-01-29 |
 | EdHone           | Ed Hone                | Met Office            | 2026-01-09 |
 | tom-j-h          | Tom Hill               | Met Office            | 2026-01-19 |
 | mo-alistairp     | Alistair Pirrie        | Met Office            | 2026-01-12 |
