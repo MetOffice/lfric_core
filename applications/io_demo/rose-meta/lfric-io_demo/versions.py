@@ -1,5 +1,5 @@
-import sys
 import re
+import sys
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
 
@@ -56,13 +56,16 @@ class vn31_t232(MacroUpgrade):
         self.add_setting(config, ["namelist:io_demo"])
 
         """Move multifile_io setting from io namelist to io_demo"""
-        self.remove_setting(
-            config, ["namelist:io", "multifile_io"])
+        self.remove_setting(config, ["namelist:io", "multifile_io"])
         self.add_setting(
             config, ["namelist:io_demo", "multifile_io"], ".false."
         )
-        self.add_setting(config, ["namelist:io_demo", "benchmark_sleep_time"], 0)
-        self.add_setting(config, ["namelist:io_demo", "io_benchmark"], ".false.")
+        self.add_setting(
+            config, ["namelist:io_demo", "benchmark_sleep_time"], 0
+        )
+        self.add_setting(
+            config, ["namelist:io_demo", "io_benchmark"], ".false."
+        )
         self.add_setting(config, ["namelist:io_demo", "n_benchmark_fields"], 0)
         return config, self.reports
 
@@ -89,5 +92,30 @@ class vn31_t330(MacroUpgrade):
         self.add_setting(config, ["namelist:files"])
         self.add_setting(config, ["namelist:files", "temporal_file_path"], "")
 
-        self.add_setting(config, ["namelist:io_demo", "temporal_reading"], ".false.")
+        self.add_setting(
+            config, ["namelist:io_demo", "temporal_reading"], ".false."
+        )
+        return config, self.reports
+
+
+class vn31_t238(MacroUpgrade):
+    """Upgrade macro for ticket #238 by Thomas Bendall."""
+
+    BEFORE_TAG = "vn3.1_t330"
+    AFTER_TAG = "vn3.1_t238"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:finite_element", "coord_space"], "'Wchi'"
+        )
+        coord_order = self.get_setting_value(
+            config, ["namelist:finite_element", "coord_order"]
+        )
+        self.add_setting(
+            config,
+            ["namelist:finite_element", "coord_order_nonprime"],
+            coord_order,
+        )
+
         return config, self.reports
