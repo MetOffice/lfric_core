@@ -6,7 +6,7 @@
 
 module nodal_xyz_coordinates_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
+  use constants_mod, only : i_def, r_def, imdi
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w2_m3x3_q3x3x3_size, &
@@ -47,7 +47,7 @@ contains
     use sci_chi_transform_mod,      only : init_chi_transforms
     use feign_config_mod,           only : feign_finite_element_config
     use finite_element_config_mod,  only : cellshape_quadrilateral, &
-                                           coord_system_xyz
+                                           coord_system_xyz, coord_space_wchi
 
     implicit none
 
@@ -56,12 +56,14 @@ contains
     call feign_finite_element_config(      &
         cellshape=cellshape_quadrilateral, &
         coord_order=0_i_def,               &
+        coord_order_nonprime=1_i_def,      &
+        coord_space=coord_space_wchi,      &
         coord_system=coord_system_xyz,     &
         element_order_h=0_i_def,           &
         element_order_v=0_i_def,           &
         rehabilitate=.true. )
 
-    call init_chi_transforms()
+    call init_chi_transforms(imdi, imdi)
 
   end subroutine setUp
 
@@ -69,7 +71,7 @@ contains
   subroutine tearDown( this )
 
     use sci_chi_transform_mod, only: final_chi_transforms
-    use configuration_mod, only: final_configuration
+    use config_loader_mod,     only: final_configuration
 
     implicit none
 

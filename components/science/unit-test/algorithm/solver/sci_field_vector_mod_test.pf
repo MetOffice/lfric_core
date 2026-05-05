@@ -56,10 +56,8 @@ contains
     integer(i_def)            :: mesh_id
 
     type(function_space_type), pointer :: w2_fs    => null()
-    type(mesh_type),           pointer :: mesh_out => null()
     type(mesh_type),           pointer :: mesh_ptr => null()
 
-    integer(i_def) :: err
     integer :: i, undf
     real(r_def) :: sum1, min1, max1, sum2, min2, max2, scalar
     real(r_def) :: test, answer

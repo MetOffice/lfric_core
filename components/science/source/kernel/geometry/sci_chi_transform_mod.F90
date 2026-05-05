@@ -13,11 +13,6 @@
 !------------------------------------------------------------------------------
 module sci_chi_transform_mod
 
-use base_mesh_config_mod,      only : geometry,                &
-                                      geometry_spherical,      &
-                                      geometry_planar,         &
-                                      topology,                &
-                                      topology_fully_periodic
 use constants_mod,             only : r_def, i_def, l_def,     &
                                       str_def, EPS, PI, rmdi
 use coord_transform_mod,       only : alphabetar2xyz,          &
@@ -28,15 +23,21 @@ use coord_transform_mod,       only : alphabetar2xyz,          &
                                       mesh_rotation_matrix,    &
                                       schmidt_transform_xyz,   &
                                       inverse_schmidt_transform_xyz
-use finite_element_config_mod, only : coord_system,            &
-                                      coord_system_xyz,        &
-                                      coord_system_native
 use log_mod,                   only : log_event,               &
                                       log_scratch_space,       &
                                       LOG_LEVEL_ERROR,         &
                                       LOG_LEVEL_DEBUG,         &
                                       LOG_LEVEL_WARNING
 use matrix_invert_mod,         only : matrix_invert_3x3
+
+use base_mesh_config_mod,      only : geometry,                &
+                                      geometry_spherical,      &
+                                      geometry_planar,         &
+                                      topology,                &
+                                      topology_fully_periodic
+use finite_element_config_mod, only : coord_system,            &
+                                      coord_system_xyz,        &
+                                      coord_system_native
 use planet_config_mod,         only : scaled_radius
 
 implicit none
@@ -89,13 +90,18 @@ contains
 !!                               argument, and ideally should only be used for
 !!                               unit-testing.
 !------------------------------------------------------------------------------
-subroutine init_chi_transforms(mesh_collection, north_pole_arg, equator_lat_arg)
+subroutine init_chi_transforms( geometry, topology, &
+                                mesh_collection,    &
+                                north_pole_arg, equator_lat_arg )
 
   use local_mesh_mod,            only : local_mesh_type
   use mesh_collection_mod,       only : mesh_collection_type
   use mesh_mod,                  only : mesh_type
 
   implicit none
+
+  integer(i_def), intent(in) :: geometry
+  integer(i_def), intent(in) :: topology
 
   type(mesh_collection_type), optional, intent(in) :: mesh_collection
   real(kind=r_def),           optional, intent(in) :: north_pole_arg(2)

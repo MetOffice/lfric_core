@@ -27,7 +27,7 @@ module aerial_config_mod
             aerial_is_loadable, aerial_is_loaded, &
             aerial_reset_load_status, &
             aerial_multiples_allowed, aerial_final, &
-            get_aerial_nml
+            get_aerial_nml, get_new_aerial_nml
 
   integer(i_def), parameter, public :: max_array_size = 500
 
@@ -157,20 +157,20 @@ contains
     type(namelist_type)      :: namelist_obj
     type(namelist_item_type) :: members(5)
 
-      call members(1)%initialise( &
-                  'absolute', absolute )
+    call members(1)%initialise( &
+                'absolute', absolute )
 
-      call members(2)%initialise( &
-                  'inlist', inlist )
+    call members(2)%initialise( &
+                'inlist', inlist )
 
-      call members(3)%initialise( &
-                  'lsize', lsize )
+    call members(3)%initialise( &
+                'lsize', lsize )
 
-      call members(4)%initialise( &
-                  'outlist', outlist )
+    call members(4)%initialise( &
+                'outlist', outlist )
 
-      call members(5)%initialise( &
-                  'unknown', unknown )
+    call members(5)%initialise( &
+                'unknown', unknown )
 
     if (trim(profile_name) /= trim(cmdi) ) then
       call namelist_obj%initialise( trim(listname), &
@@ -182,6 +182,44 @@ contains
     end if
 
   end function get_aerial_nml
+
+  !> @brief Returns a <<aerial_nml_type>> object populated with the
+  !>        current contents of this configuration module.
+  !> @return namelist_obj <<aerial_nml_type>> with current namelist contents.
+  function get_new_aerial_nml() result(namelist_obj)
+
+    use aerial_nml_mod, only: aerial_nml_type
+
+    implicit none
+
+    type(aerial_nml_type) :: namelist_obj
+    type(namelist_item_type) :: members(5)
+
+    call members(1)%initialise( &
+                'absolute', absolute )
+
+    call members(2)%initialise( &
+                'inlist', inlist )
+
+    call members(3)%initialise( &
+                'lsize', lsize )
+
+    call members(4)%initialise( &
+                'outlist', outlist )
+
+    call members(5)%initialise( &
+                'unknown', unknown )
+
+    if (trim(profile_name) /= trim(cmdi) ) then
+      call namelist_obj%initialise( trim(listname), &
+                                    members, &
+                                    profile_name = profile_name )
+    else
+      call namelist_obj%initialise( trim(listname), &
+                                    members )
+    end if
+
+  end function get_new_aerial_nml
 
 
   !> Performs any processing to be done once all namelists are loaded

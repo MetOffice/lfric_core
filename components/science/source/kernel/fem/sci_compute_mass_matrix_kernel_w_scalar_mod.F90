@@ -16,13 +16,18 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
                                      GH_LOGICAL, GH_SCALAR,     &
                                      GH_READ, GH_WRITE,         &
                                      GH_REAL, ANY_SPACE_2,      &
+                                     ANY_SPACE_9,               &
                                      ANY_DISCONTINUOUS_SPACE_3, &
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
   use constants_mod,           only: i_def, r_single, r_double, l_def
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-  use fs_continuity_mod,       only: W0, Wtheta, Wchi
+  use fs_continuity_mod,       only: W0, Wtheta
   use kernel_mod,              only: kernel_type
+
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -35,13 +40,13 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
     private
     type(arg_type) :: meta_args(4) = (/                                          &
          arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE, ANY_SPACE_2, ANY_SPACE_2),  &
-         arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,  Wchi),                      &
+         arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,  ANY_SPACE_9),               &
          arg_type(GH_FIELD,    GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
          arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ)                              &
          /)
     type(func_type) :: meta_funcs(2) = (/                                    &
          func_type(ANY_SPACE_2, GH_BASIS),                                   &
-         func_type(Wchi,        GH_BASIS, GH_DIFF_BASIS)                     &
+         func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                     &
          /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_QUADRATURE_XYoZ
@@ -161,7 +166,9 @@ contains
         chi3_e(df) = chi3(map_chi(df) + k - 1)
       end do
 
-      call coordinate_jacobian(ndf_chi, nqp_h, nqp_v,          &
+      call coordinate_jacobian(coord_system, geometry,         &
+                               topology, scaled_radius,        &
+                               ndf_chi, nqp_h, nqp_v,          &
                                chi1_e, chi2_e, chi3_e, ipanel, &
                                basis_chi, diff_basis_chi,      &
                                jac, dj)
@@ -257,7 +264,9 @@ contains
         chi3_e(df) = chi3(map_chi(df) + k - 1)
       end do
 
-      call coordinate_jacobian(ndf_chi, nqp_h, nqp_v,          &
+      call coordinate_jacobian(coord_system, geometry,         &
+                               topology, scaled_radius,        &
+                               ndf_chi, nqp_h, nqp_v,          &
                                chi1_e, chi2_e, chi3_e, ipanel, &
                                basis_chi, diff_basis_chi,      &
                                jac, dj)
@@ -356,7 +365,9 @@ contains
         chi3_e(df) = chi3(map_chi(df) + k - 1)
       end do
 
-      call coordinate_jacobian(ndf_chi, nqp_h, nqp_v,          &
+      call coordinate_jacobian(coord_system, geometry,         &
+                               topology, scaled_radius,        &
+                               ndf_chi, nqp_h, nqp_v,          &
                                chi1_e, chi2_e, chi3_e, ipanel, &
                                basis_chi, diff_basis_chi,      &
                                jac, dj)

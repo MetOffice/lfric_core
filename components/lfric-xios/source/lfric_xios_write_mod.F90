@@ -44,6 +44,8 @@ module lfric_xios_write_mod
                                   LOG_LEVEL_WARNING, &
                                   LOG_LEVEL_ERROR
   use lfric_string_mod,     only: split_string
+  use timing_mod,           only: start_timing, stop_timing, &
+                                  tik, LPROF
 #ifdef UNIT_TEST
   use lfric_xios_mock_mod,  only: xios_send_field,      &
                                   xios_get_domain_attr, &
@@ -118,10 +120,13 @@ subroutine write_field_generic(field_name, field_proxy)
   integer(i_def) :: vdim          ! vertical dimension
   real(dp_xios), allocatable :: xios_data(:)
   logical(l_def) :: legacy
+  integer(tik)   :: timing_id
 
   ! If the field is not active in xios at this timestep, exit this routine
   ! without doing anything
   if (.not. field_is_active(field_name, .true.)) return
+
+  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.write_fldg')
 
   undf = field_proxy%vspace%get_last_dof_owned() ! total dimension
 
@@ -151,6 +156,8 @@ subroutine write_field_generic(field_name, field_proxy)
   end if
 
   deallocate(xios_data)
+
+  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.write_fldg')
 
 end subroutine write_field_generic
 

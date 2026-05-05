@@ -19,20 +19,25 @@ module sci_compute_sample_u_ops_kernel_mod
                                       GH_OPERATOR,                 &
                                       GH_INC, GH_READ, GH_WRITE,   &
                                       ANY_DISCONTINUOUS_SPACE_3,   &
+                                      ANY_SPACE_9,                 &
                                       GH_BASIS, GH_DIFF_BASIS,     &
                                       CELL_COLUMN, GH_EVALUATOR,   &
                                       reference_element_data_type, &
                                       normals_to_faces
   use constants_mod,           only : r_def, i_def
-  use fs_continuity_mod,       only : W2broken, W3, Wtheta, Wchi
+  use fs_continuity_mod,       only : W2broken, W3, Wtheta
   use kernel_mod,              only : kernel_type
-  use base_mesh_config_mod,    only : geometry,  geometry_spherical, &
-                                      geometry_planar
   use sci_chi_transform_mod,   only : chi2llr
   use sci_coordinate_jacobian_mod, only : coordinate_jacobian, &
                                           coordinate_jacobian_inverse
   use coord_transform_mod,     only : sphere2cart_vector
   use reference_element_mod,   only : W, S, N, E, T, B
+
+  use finite_element_config_mod, only: coord_system
+  use base_mesh_config_mod,      only: geometry, topology, &
+                                       geometry_spherical, &
+                                       geometry_planar
+  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -50,11 +55,11 @@ module sci_compute_sample_u_ops_kernel_mod
          arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),               &
          arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),               &
          arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, WTHETA),           &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  Wchi),                       &
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),                &
          arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3)   &
          /)
     type(func_type) :: meta_funcs(1) = (/                                      &
-         func_type(Wchi, GH_BASIS, GH_DIFF_BASIS)                              &
+         func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                       &
          /)
     type(reference_element_data_type), dimension(1) ::                         &
     meta_reference_element =                                                   &
@@ -176,8 +181,9 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
         chi3_e(df_chi) = chi3(map_chi(df_chi) + k)
       end do
 
-      call coordinate_jacobian(ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e,       &
-                              ipanel, chi_basis, chi_diff_basis, jacobian, dj)
+      call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e,        &
+                               ipanel, chi_basis, chi_diff_basis, jacobian, dj)
       call coordinate_jacobian_inverse(ndf_w2b, jacobian, dj, jac_inv)
 
       ! X and Y components contribute equally to all W2 DoFs
@@ -225,7 +231,8 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
         chi3_e(df_chi) = chi3(map_chi(df_chi) + k)
       end do
 
-      call coordinate_jacobian(ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e,       &
+      call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
+                               ndf_chi, ndf_w2b, chi1_e, chi2_e, chi3_e,        &
                                ipanel, chi_basis, chi_diff_basis, jacobian, dj)
       call coordinate_jacobian_inverse(ndf_w2b, jacobian, dj, jac_inv)
 

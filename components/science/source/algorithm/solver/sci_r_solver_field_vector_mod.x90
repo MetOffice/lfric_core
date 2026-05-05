@@ -12,7 +12,6 @@ module sci_r_solver_field_vector_mod
   use constants_mod,                 only : i_def, r_def, r_solver
   use r_solver_field_mod,            only : r_solver_field_type
   use field_mod,                     only : field_type
-  use copy_field_alg_mod,            only : copy_field
   use function_space_mod,            only : function_space_type
   use function_space_collection_mod, only : function_space_collection
   use log_mod,                       only : log_event, LOG_LEVEL_ERROR, &
@@ -317,8 +316,6 @@ contains
   ! Copy a r_def field into the field vector
   subroutine import_rdef_field(self, rdef_field, position)
 
-    use copy_field_alg_mod,            only : copy_field
-
     implicit none
     class(r_solver_field_vector_type ), intent(inout) :: self
     type(field_type),                   intent(in)    :: rdef_field
@@ -332,7 +329,7 @@ contains
     end if
     self%vector_set=.true.
 
-    call copy_field(rdef_field, self%vector(position))
+    call invoke( real_to_real_x(self%vector(position), rdef_field) )
   end subroutine import_rdef_field
 
    ! Copies a field from the nominated position. The procedure a field has been

@@ -141,6 +141,8 @@ contains
 
     logical(l_def) :: generate_inner_halos
 
+    logical(l_def), parameter :: enforce_constraints = .false.
+
     logical(l_def) :: answer
 
     ! Create a local mesh from partitioning a global mesh on 1 and 4 processors
@@ -175,6 +177,7 @@ contains
                                 decomposition,         &
                                 max_stencil_depth,     &
                                 generate_inner_halos,  &
+                                enforce_constraints,   &
                                 this%getProcessRank(), &
                                 this%getNumProcesses() )
 
@@ -461,6 +464,8 @@ contains
     integer(i_def) :: total_ranks
     logical(l_def) :: generate_inner_halos
 
+    logical(l_def), parameter :: enforce_constraints = .true.
+
     type(global_mesh_type), target  :: global_mesh
     type(global_mesh_type), pointer :: global_mesh_ptr => null()
 
@@ -470,7 +475,7 @@ contains
 
     type(local_mesh_type), target :: local_mesh(2)
     type(local_mesh_map_type), pointer :: local_mesh_map
-    integer(i_def), allocatable     :: mesh_map(:,:,:)
+    integer(i_def), allocatable :: mesh_map(:,:,:)
 
     npanels  = 6
     filename='data/mesh_C32_MG.nc'
@@ -490,10 +495,10 @@ contains
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       global_mesh_ptr => global_mesh
-      partition = partition_type( global_mesh_ptr, partitioner_ptr,     &
-                                  decomposition, max_stencil_depth,      &
-                                  generate_inner_halos, local_rank,    &
-                                  total_ranks )
+      partition = partition_type( global_mesh_ptr, partitioner_ptr,          &
+                                  decomposition, max_stencil_depth,          &
+                                  generate_inner_halos, enforce_constraints, &
+                                  local_rank, total_ranks )
 
       call local_mesh(i)%initialise( global_mesh_ptr, partition )
       nullify(global_mesh_ptr)

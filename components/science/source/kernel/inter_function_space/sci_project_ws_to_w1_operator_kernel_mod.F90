@@ -20,10 +20,11 @@ use argument_mod,            only : arg_type, func_type,       &
                                     GH_READ, GH_WRITE,         &
                                     ANY_DISCONTINUOUS_SPACE_1, &
                                     ANY_DISCONTINUOUS_SPACE_3, &
+                                    ANY_SPACE_9,               &
                                     GH_BASIS, GH_DIFF_BASIS,   &
                                     CELL_COLUMN, GH_QUADRATURE_XYoZ
 use constants_mod,           only : r_def, i_def
-use fs_continuity_mod,       only : W1, Wchi
+use fs_continuity_mod,       only : W1
 use log_mod,                 only : log_event, LOG_LEVEL_ERROR
 
 implicit none
@@ -37,14 +38,14 @@ type, public, extends(kernel_type) :: project_ws_to_w1_operator_kernel_type
   private
   type(arg_type) :: meta_args(4) = (/                                               &
        arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W1, ANY_DISCONTINUOUS_SPACE_1), &
-       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   Wchi),                          &
+       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),                   &
        arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     &
        arg_type(GH_SCALAR,   GH_INTEGER, GH_READ)                                   &
        /)
   type(func_type) :: meta_funcs(3) = (/                              &
        func_type(W1,                        GH_BASIS),               &
        func_type(ANY_DISCONTINUOUS_SPACE_1, GH_BASIS),               &
-       func_type(Wchi,                      GH_BASIS, GH_DIFF_BASIS) &
+       func_type(ANY_SPACE_9,               GH_BASIS, GH_DIFF_BASIS) &
        /)
   integer :: operates_on = CELL_COLUMN
   integer :: gh_shape = GH_QUADRATURE_XYoZ
@@ -106,9 +107,12 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                                          pointwise_coordinate_jacobian_inverse
   use sci_chi_transform_mod,   only: chi2llr
   use coord_transform_mod,     only: sphere2cart_vector
-  use base_mesh_config_mod,    only: geometry,           &
-                                     geometry_spherical, &
-                                     geometry_planar
+
+  use base_mesh_config_mod,      only: geometry, topology, &
+                                       geometry_spherical, &
+                                       geometry_planar
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -173,7 +177,9 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                        ipanel, llr(1), llr(2), llr(3))
         end if
 
-        call pointwise_coordinate_jacobian(ndf_wx, chi1_e, chi2_e, chi3_e,  &
+        call pointwise_coordinate_jacobian(coord_system, geometry,          &
+                                           topology, scaled_radius,         &
+                                           ndf_wx, chi1_e, chi2_e, chi3_e,  &
                                            ipanel, basis_wx(:,:,qp_h,qp_v), &
                                            diff_basis_wx(:,:,qp_h,qp_v),    &
                                            jac, detj)

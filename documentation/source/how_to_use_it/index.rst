@@ -23,3 +23,4 @@ How to use it
     build_and_test/index
     parallelism/index
     API/index
+    deprecated/index

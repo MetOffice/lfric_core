@@ -1025,7 +1025,7 @@ contains
 
     type(function_space_type) :: test_fs
 
-    integer(i_def) :: undf, last_dof_owned, last_dof_halo
+    integer(i_def) :: undf, last_dof_annexed, last_dof_owned, last_dof_halo
 
     test_fs = function_space_type( this%mesh_id,         &
                                    this%element_order_h, &
@@ -1041,6 +1041,12 @@ contains
     ! as the total number of dofs
     @assertEqual ( undf, last_dof_owned )
 
+    ! Get the last of the annexed dofs
+    last_dof_annexed = test_fs%get_last_dof_annexed()
+    ! In a serial test such as this the last annexed dof should be the same
+    ! as the total number of dofs
+    @assertEqual ( undf, last_dof_annexed )
+
     !Get the last dof of the deepest halo
     last_dof_halo = test_fs%get_last_dof_halo()
     ! In a serial test such as this the last halo dof of the deepest halo
@@ -1053,8 +1059,9 @@ contains
     @assertEqual ( undf, last_dof_halo )
 
     last_dof_halo = test_fs%get_last_dof_halo(0)
-    ! The last dof in the halo depth zero, is actually the last owned dof
-    @assertEqual ( last_dof_owned, last_dof_halo )
+    ! The last dof at the halo depth zero should be the last dof before the
+    ! first halo - i.e. that last annexed dof
+    @assertEqual ( last_dof_annexed, last_dof_halo )
 
     call test_fs%clear()
 

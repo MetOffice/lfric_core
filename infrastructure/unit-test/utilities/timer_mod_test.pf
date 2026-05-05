@@ -13,6 +13,7 @@ module timer_mod_test
   use lfric_mpi_mod, only : global_mpi, &
                             lfric_comm_type
   use constants_mod, only : r_def, i_def, str_def, r_double, i_long
+  use sleep_mod,     only : c_sleep
 
   implicit none
 
@@ -120,7 +121,7 @@ contains
 
     call init_timer()
     call timer('test_sleep')
-    call sleep(1)
+    call c_sleep(1)
     call timer('test_sleep')
     call calculate_timer_stats()
     val = get_mean_time(1)

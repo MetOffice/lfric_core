@@ -73,11 +73,11 @@ module global_mesh_mod
     real(r_def) :: domain_extents(2,4) = rmdi
 
   ! Real-world location of mesh North Pole,
-  ! only valid for spherical geometry on lon-lat cordinate-system.
+  ! only valid for spherical geometry on lon-lat coordinate-system.
     real(r_def) :: north_pole(2) = rmdi
 
   ! Real-world location of mesh null island,
-  ! only valid for spherical geometry on lon-lat cordinate-system.
+  ! only valid for spherical geometry on lon-lat coordinate-system.
     real(r_def) :: null_island(2) = rmdi
 
   ! Latitude of equator of mesh following stretching
@@ -272,6 +272,8 @@ contains
     character(str_def) :: topology
     character(str_def) :: coord_sys
 
+    real(r_def) :: null_island(2)
+
     ! loop counter over entities (vertices or edges).
     integer(i_def) :: ientity
 
@@ -294,7 +296,7 @@ contains
                                    self%cell_coords, &
                                    self%coord_units_xy, &
                                    self%north_pole, &
-                                   self%null_island, &
+                                   null_island, &
                                    self%equatorial_latitude, &
                                    self%constructor_inputs, &
                                    self%rim_depth, &
@@ -344,6 +346,10 @@ contains
 
     end select
 
+    ! null island will exist only on a spherical lat-lon mesh
+    if ( self%is_geometry_spherical() .and. self%is_coord_sys_ll() ) then
+      self%null_island = null_island
+    end if
 
     ! CF Standard for longitude/latitude is in degrees
     ! though many functions assume radians. Convert
@@ -1019,16 +1025,19 @@ contains
   !>
   !> @note For a cubed -sphere mesh, this will only return correct cell IDs if
   !>       the offset cell remains on same the cubed-sphere "face" as the
-  !>       start cell.
+  !>       start cell unless check_orientation is specified.
   !>
   !> @param[in] cell_number ID of the anchor element.
   !> @param[in] x_cells Offset in the E/W direction.
   !> @param[in] y_cells Offset in the N/S direction.
+  !> @param[in] check_orientation Switch to check for orientation changes
+  !!                              such as when crossing panel boundaries
   !>
   !> @return cell_id ID of the cell at the given offset to the start cell.
   !>
   function get_cell_id( self, cell_number, &
-                        x_cells, y_cells ) result ( cell_id )
+                        x_cells, y_cells,  &
+                        check_orientation ) result ( cell_id )
 
   use reference_element_mod, only : W, S, E, N
 
@@ -1036,62 +1045,85 @@ contains
 
   class(global_mesh_type), intent(in) :: self
 
-  integer(i_def), intent(in) :: cell_number
-  integer(i_def), intent(in) :: x_cells, y_cells
+  integer(i_def),           intent(in) :: cell_number
+  integer(i_def),           intent(in) :: x_cells, y_cells
+  logical(l_def), optional, intent(in) :: check_orientation
 
-  integer(i_def) :: cell_id
+  integer(i_def) :: cell_id, old_cell_id
 
-  integer(i_def) :: index_x, dist_x
-  integer(i_def) :: index_y, dist_y
-  integer(i_def) :: i
+  integer(i_def) :: x_index, y_index, x_dist, y_dist, i, j
+  integer(i_def) :: opposite(4), rotate(4)
 
-  cell_id = cell_number
+  logical(l_def) :: check
 
-  ! Determine march along local x-axis
-  if (x_cells > 0) then
-    index_x = E
-    dist_x  = x_cells
-  else if (x_cells < 0) then
-    index_x = W
-    dist_x  = abs(x_cells)
+  opposite = (/ E, N, W, S /)
+  rotate = (/ S, E, N, W /)
+  if ( present( check_orientation ) ) then
+    check = check_orientation
   else
-    index_x = W
-    dist_x  = 0
+    check = .false.
   end if
 
-  ! Determine march along local y-axis
-  if (y_cells > 0) then
-    index_y = N
-    dist_y  = y_cells
-  else if (y_cells < 0) then
-    index_y = S
-    dist_y  = abs(y_cells)
+  cell_id=cell_number
+
+  if (x_cells >= 0 )then
+    x_index = E
+    x_dist = x_cells
   else
-    index_y = S
-    dist_y  = 0
+    x_index = W
+    x_dist = abs(x_cells)
+  end if
+  if (y_cells >= 0 )then
+    y_index = N
+    y_dist = y_cells
+  else
+    y_index = S
+    y_dist = abs(y_cells)
   end if
 
-  !========================================
-  ! March from anchor along local x/y axes.
-  !========================================
-  do i=1, dist_x
+  ! x_dist cells in the x-direction
+  do i = 1, x_dist
+    old_cell_id = cell_id
+    cell_id = self%cell_next_2d(x_index,cell_id)
     if (cell_id == self%void_cell) then
       ! The current cell is not on the domain
       write(log_scratch_space,'(A)') &
           'No adjacent cell, the current cell is not on mesh domain'
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
-    cell_id = self%cell_next_2d(index_x, cell_id)
+    ! Check if we've changed direction
+    if ( check .and. self%cell_next_2d(opposite(x_index),cell_id) /= old_cell_id ) then
+      ! We have changed direction so we need to find the correct
+      ! index and reset
+      do j = 1,4
+        if ( self%cell_next_2d(opposite(j),cell_id) == old_cell_id ) x_index = j
+      end do
+    end if
   end do
+  ! y_dist cells in the y-direction
+  ! Since the direction may have changed we need to recompute
+  y_index = rotate(x_index)
+  if ( x_cells < 0 ) y_index = opposite(y_index)
+  if ( y_cells < 0 ) y_index = opposite(y_index)
 
-  do i=1, dist_y
+  ! y_index and y_dist
+  do i = 1,y_dist
+    old_cell_id = cell_id
+    cell_id = self%cell_next_2d(y_index,cell_id)
     if (cell_id == self%void_cell) then
       ! The current cell is not on the domain
       write(log_scratch_space,'(A)') &
           'No adjacent cell, the current cell is not on mesh domain'
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
-    cell_id = self%cell_next_2d(index_y, cell_id)
+    ! Check if we've changed direction
+    if ( check .and.  self%cell_next_2d(opposite(y_index),cell_id) /= old_cell_id ) then
+      ! We have changed direction so we need to find the correct
+      ! index and reset
+      do j = 1,4
+        if ( self%cell_next_2d(opposite(j),cell_id) == old_cell_id ) y_index = j
+      end do
+    end if
   end do
 
   end function get_cell_id

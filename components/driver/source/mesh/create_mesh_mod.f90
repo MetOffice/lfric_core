@@ -58,7 +58,7 @@ contains
 !> @brief  Creates vertical mesh extrusion.
 !> @return  Resulting extrusion object
 function create_extrusion( extrusion_method, &
-                           domain_height,       &
+                           domain_height,    &
                            domain_bottom,    &
                            n_layers,         &
                            extrusion_id ) result(new)

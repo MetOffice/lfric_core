@@ -1,0 +1,36 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2026 Met Office. All rights reserved.
+! For further details please refer to the file LICENCE which you should have
+! received as part of this distribution.
+!-----------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------------
+module copy_field_halo_kernel_mod_test
+
+  use constants_mod, only : r_def, i_def
+  use funit
+
+  implicit none
+
+contains
+
+  @test
+  subroutine test_of_copy_field_halo()
+
+    use copy_field_halo_kernel_mod, only : copy_field_halo_code
+
+    implicit none
+
+    real(kind=r_def)            :: field_out(3), field_in(3)
+    real(kind=r_def), parameter :: tol = 1.0e-14_r_def
+    integer(kind=i_def)         :: map(1)
+
+    field_in(:) = [ -10.0_r_def, 0.0_r_def, 10.0_r_def ]
+    map(:) = [1]
+
+    call copy_field_halo_code(3, field_out, field_in, 1, 3, map)
+    @assertEqual( field_out, field_in, tol )
+
+  end subroutine test_of_copy_field_halo
+
+end module copy_field_halo_kernel_mod_test

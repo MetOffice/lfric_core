@@ -15,8 +15,6 @@ module runtime_partition_mod
                                      log_level_error,   &
                                      log_level_debug
   use local_mesh_mod,          only: local_mesh_type
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
   use ncdf_quad_mod,           only: ncdf_quad_type
   use partition_mod,           only: partition_type,                 &
                                      partitioner_interface,          &
@@ -78,15 +76,15 @@ subroutine get_partition_strategy( mesh_selection, total_ranks, partitioner_ptr 
       call log_event( "Using serial cubed sphere partitioner", &
                       log_level_debug )
 
-    else if (mod(total_ranks,6) == 0) then
+    else if (mod(total_ranks,3) == 0 .or. mod(total_ranks,2) == 0) then
       ! Paralled run job
       partitioner_ptr => partitioner_cubedsphere
       call log_event( "Using parallel cubed sphere partitioner", &
                       log_level_debug )
 
     else
-      call log_event( "Total number of processors must be 1 (serial) "// &
-                      "or a multiple of 6 for a cubed-sphere domain.",   &
+      call log_event( "Total number of processors must be 1 (serial) "//    &
+                      "or a multiple of 2 or 3 for a cubed-sphere domain.", &
                       log_level_error )
     end if
 
@@ -113,15 +111,18 @@ end subroutine get_partition_strategy
 !>                                    and method
 !> @param[in]  generate_inner_halos   Generate inner halo regions
 !!                                    to overlap comms & compute
-!> @param[in]  stencil_depth          Depth of cells outside the base cell
-!!                                    of stencil.
+!> @param[in]  stencil_depths         Depth of cells outside the base cell
+!!                                    of stencil for each mesh.
 !> @param[in]  partitioner_ptr        Mesh partitioning strategy
+!> @param[in]  enforce_constraints    Apply defensive checking for multigrid
+!>                                    configurations (Optional).
 subroutine create_local_mesh( mesh_names,              &
                               local_rank, total_ranks, &
                               decomposition,           &
-                              stencil_depth,           &
+                              stencil_depths,          &
                               generate_inner_halos,    &
-                              partitioner_ptr )
+                              partitioner_ptr,         &
+                              enforce_constraints )
 
   implicit none
 
@@ -131,9 +132,11 @@ subroutine create_local_mesh( mesh_names,              &
 
   integer(i_def), intent(in) :: local_rank
   integer(i_def), intent(in) :: total_ranks
-  integer(i_def), intent(in) :: stencil_depth
+  integer(i_def), intent(in) :: stencil_depths(:)
 
   logical(l_def), intent(in) :: generate_inner_halos
+
+  logical(l_def), intent(in), optional :: enforce_constraints
 
   procedure(partitioner_interface), intent(in), pointer :: partitioner_ptr
 
@@ -144,6 +147,14 @@ subroutine create_local_mesh( mesh_names,              &
   integer(i_def) :: local_mesh_id, i
   integer(i_def) :: mapping_factor
 
+  logical(l_def) :: enforce_constraints_choice
+
+  if (present(enforce_constraints)) then
+    enforce_constraints_choice = enforce_constraints
+  else
+    enforce_constraints_choice = .true.
+  end if
+
   do i=1, size(mesh_names)
 
     global_mesh_ptr => global_mesh_collection%get_global_mesh( mesh_names(i) )
@@ -151,14 +162,16 @@ subroutine create_local_mesh( mesh_names,              &
     mapping_factor = calc_mapping_factor( global_mesh_collection, global_mesh_ptr )
 
     ! Create partition
-    partition = partition_type( global_mesh_ptr,      &
-                                partitioner_ptr,      &
-                                decomposition,        &
-                                stencil_depth,        &
-                                generate_inner_halos, &
-                                local_rank,           &
-                                total_ranks,          &
+    partition = partition_type( global_mesh_ptr,             &
+                                partitioner_ptr,             &
+                                decomposition,               &
+                                stencil_depths(i),           &
+                                generate_inner_halos,        &
+                                enforce_constraints_choice,  &
+                                local_rank,                  &
+                                total_ranks,                 &
                                 mapping_factor )
+
     ! Create local_mesh
     call local_mesh%initialise( global_mesh_ptr, partition )
 
