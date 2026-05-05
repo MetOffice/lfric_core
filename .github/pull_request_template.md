@@ -27,18 +27,18 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 - [ ] I have performed a self-review of my own code
 - [ ] My code follows the project's
       [style guidelines](https://metoffice.github.io/lfric_core/how_to_contribute/index.html#how-to-contribute-index)
-- [ ] Comments have been included that aid undertanding and enhance the
+- [ ] Comments have been included that aid understanding and enhance the
       readability of the code
 - [ ] My changes generate no new warnings
 
 ## Testing
 
 - [ ] I have tested this change locally, using the LFRic Core rose-stem suite
-- [ ] If required (eg. API changes) I have also run the LFRic Apps test suite
+- [ ] If required (e.g. API changes) I have also run the LFRic Apps test suite
       using this branch
 - [ ] If any tests fail (rose-stem or CI) the reason is understood and
-      acceptable (eg. kgo changes)
-- [ ] I have added tests to cover new functionality as appropriate (eg. system
+      acceptable (e.g. kgo changes)
+- [ ] I have added tests to cover new functionality as appropriate (e.g. system
       tests, unit tests, etc.)
 - [ ] Any new tests have been assigned an appropriate amount of compute resource
       and have been allocated to an appropriate testing group (i.e. the
@@ -79,7 +79,7 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 
 ## PSyclone Approval
 
-- [ ] If you have edited any PSyclone-related code (eg. PSyKAl-lite, Kernel
+- [ ] If you have edited any PSyclone-related code (e.g. PSyKAl-lite, Kernel
       interface, optimisation scripts, LFRic data structure code) then please
       contact the
       [tooscollabdevteam@metoffice.gov.uk](tooscollabdevteam@metoffice.gov.uk)

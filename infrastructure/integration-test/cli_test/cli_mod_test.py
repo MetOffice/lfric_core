@@ -24,7 +24,7 @@ class cli_mod_normal_test(Test):
     """
 
     def __init__(self):
-        self._INJECT = "onwards/waffles.nml"
+        self._INJECT = "resources/cli_test.nml"
         super().__init__([sys.argv[1], self._INJECT])
 
     def test(self, returncode, out, err):
@@ -42,7 +42,29 @@ class cli_mod_normal_test(Test):
                 )
             )
 
-        return "Filename extracted from command line"
+        return "Valid filename extracted from command line"
+
+
+##############################################################################
+class cli_mod_missing_file_test(Test):
+    """
+    Tests the case where everything is normal and a filename is passed on the
+    command line, but that file doesn't exist.
+    """
+
+    def __init__(self):
+        self._INJECT = "onwards/waffles.nml"
+        super().__init__([sys.argv[1], self._INJECT])
+
+    def test(self, returncode, out, err):
+        if returncode == 0:
+            raise TestFailed(
+                "Unexpected success of test executable: {code}".format(
+                    code=returncode
+                )
+            )
+
+        return "Command line that refers to a missing file returned with error"
 
 
 ##############################################################################
@@ -68,7 +90,7 @@ class cli_mod_too_many_test(Test):
 
     def __init__(self):
         super().__init__(
-            [sys.argv[1], "onwards/waffles.nml", "2"]
+            [sys.argv[1], "resources/cli_test.nml", "2"]
         )
 
     def test(self, returncode, out, err):
@@ -129,6 +151,7 @@ class cli_mod_other_help_test(Test):
 ##############################################################################
 if __name__ == "__main__":
     TestEngine.run(cli_mod_normal_test())
+    TestEngine.run(cli_mod_missing_file_test())
     TestEngine.run(cli_mod_too_few_test())
     TestEngine.run(cli_mod_too_many_test())
     TestEngine.run(cli_mod_help_test())
