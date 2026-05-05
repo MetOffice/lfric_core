@@ -12,11 +12,24 @@
 !>           * Initialises function space chains for use by the model.
 module driver_fem_mod
 
+  use base_mesh_config_mod,           only: prime_mesh_name,                   &
+                                            geometry,                          &
+                                            geometry_spherical,                &
+                                            geometry_planar,                   &
+                                            topology,                          &
+                                            topology_non_periodic
   use sci_chi_transform_mod,          only: init_chi_transforms, &
                                             final_chi_transforms
   use constants_mod,                  only: i_def, l_def, str_def
   use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
-  use finite_element_config_mod,      only: coord_order
+  use finite_element_config_mod,      only: coord_order,                       &
+                                            coord_order_nonprime,              &
+                                            coord_system,                      &
+                                            coord_system_xyz,                  &
+                                            coord_space,                       &
+                                            coord_space_W0,                    &
+                                            coord_space_Wchi,                  &
+                                            coord_space_Wtheta
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
   use function_space_mod,             only: function_space_type
@@ -70,6 +83,10 @@ contains
     type(field_type)                   :: panel_id
     type(function_space_type), pointer :: fs => null()
     integer(kind=i_def)                :: chi_space, coord, i
+    integer(kind=i_def)                :: coord_order_h, coord_order_v
+    integer(kind=i_def)                :: this_coord_order
+    integer(kind=i_def)                :: halo_depth
+    logical(kind=l_def)                :: is_valid
 
     character(str_def) :: mesh_name
 
@@ -101,27 +118,78 @@ contains
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= TWOD) then
 
-        ! Initialise panel ID field object ---------------------------------------
+        ! Initialise panel ID field object -------------------------------------
         twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
         fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
-        call panel_id%initialise( vector_space = fs, halo_depth = twod_mesh%get_halo_depth() )
+        halo_depth = twod_mesh%get_halo_depth()
+        call panel_id%initialise(fs, halo_depth=halo_depth)
 
-        ! Initialise chi field object --------------------------------------------
-        if ( coord_order == 0 ) then
-          chi_space = W0
-          write(log_scratch_space,'(A)') &
-              'Computing W0 coordinate fields for ' // trim(mesh_name) // 'mesh'
-          call log_event( log_scratch_space, log_level_info )
+        ! Initialise chi field object ------------------------------------------
+        ! Set coordinate order for this mesh
+        if (all_mesh_names(i) == prime_mesh_name) then
+          this_coord_order = coord_order
         else
-          chi_space = Wchi
-          write(log_scratch_space,'(A)') &
-              'Computing Wchi coordinate fields for ' // trim(mesh_name) // 'mesh'
-          call log_event( log_scratch_space, log_level_info )
+          this_coord_order = coord_order_nonprime
         end if
-        fs => function_space_collection%get_fs(mesh, coord_order, coord_order, chi_space)
+
+        ! Determine coordinate space
+        select case (coord_space)
+        case (coord_space_W0)
+          ! Check domain/topology is valid
+          is_valid = (                                                         &
+              geometry == geometry_spherical                                   &
+              .and. coord_system == coord_system_xyz                           &
+            ) .or. (                                                           &
+              geometry == geometry_planar                                      &
+              .and. topology == topology_non_periodic                          &
+          )
+          if (.not. is_valid) then
+            call log_event(                                                    &
+                    'Coordinate space W0 is only valid for non-periodic ' //   &
+                    'planar domains or when using the xyz coordinate system.', &
+                    LOG_LEVEL_ERROR                                            &
+            )
+          end if
+
+          ! Correct the coord_order for W0 polynomials being 1 order above W3
+          this_coord_order = this_coord_order - 1
+          chi_space = W0
+
+        case (coord_space_Wchi)
+          chi_space = Wchi
+
+        case (coord_space_Wtheta)
+          chi_space = Wtheta
+
+        case default
+          call log_event('Invalid value for coord_space', LOG_LEVEL_ERROR)
+        end select
+
+        ! Set horizontal and vertical coordinate orders separately
+        if (coord_system == coord_system_xyz) then
+          ! Geocentric Cartesian coordinates - same order in all directions
+          coord_order_h = this_coord_order
+          coord_order_v = this_coord_order
+
+        else
+          ! For native coordinates, we separate horizontal and vertical coords
+          ! and can still accurately represent space with linear vertical coords
+          coord_order_h = this_coord_order
+
+          if (coord_space == coord_space_Wchi) then
+            coord_order_v = 1  ! Linear vertical coords for Wchi
+          else
+            coord_order_v = 0  ! Linear vertical coords for Wtheta
+          end if
+        end if
+
+        ! Create coordinate space
+        fs => function_space_collection%get_fs(                                &
+            mesh, coord_order_h, coord_order_v, chi_space                      &
+        )
 
         do coord = 1, size(chi)
-          call chi(coord)%initialise(vector_space = fs, halo_depth = twod_mesh%get_halo_depth() )
+          call chi(coord)%initialise(fs, halo_depth=halo_depth)
         end do
 
         ! Set coordinate fields --------------------------------------------------
