@@ -57,6 +57,8 @@
         'cp $CYLC_TASK_WORK_DIR/vernier-output* $TASK_OUTPUT_DIR || true'
     ] %}
 
+{% set run_resolution = task_values["resolution"] %}
+
 {% if task_values["app_name"] == "canned_test" %}
 
     {% if task_ns.application == "mesh_tools" %}
@@ -88,6 +90,7 @@
     {% if resolution is not string %}
         {% set resolution = resolution[0] %}
     {% endif %}
+    {% set run_resolution = resolution %}
 
     {% for opt_conf in task_values["opt_confs"] %}
         {% set script_str.name = script_str.name~" --opt-conf-key="~opt_conf %}
@@ -121,7 +124,7 @@
             CONFIGURATION_FILE    = {{configuration_file}}
             OUTPUT_FILE_PREFIX    = {{task_output_dir}}/mesh_{{task_ns.conf_name}}
             LOG_LEVEL             = {{task_values["log_level"]}}
-            RESOLUTION            = {{task_values["resolution"]|replace("_MG","")}}
+            RESOLUTION            = {{run_resolution|replace("_MG","")}}
             DT                    = {{task_values["DT"]}}
             USE_XIOS_IO           = {{task_values["use_xios_io"]}}
             NODAL_OUTPUT_ON_W3    = {{task_values["nodal_output_on_w3"]}}

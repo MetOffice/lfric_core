@@ -17,9 +17,9 @@ from pathlib import Path
 import sys
 from typing import List, Optional, Iterable, Union
 
-from fab.api import (ArtefactSet, BuildConfig, Exclude, grab_folder, Include,
-                     input_to_output_fpath, preprocess_x90, psyclone, step,
-                     SuffixFilter)
+from fab.api import (ArtefactSet, BuildConfig, Category, Exclude, grab_folder,
+                     Include, input_to_output_fpath, preprocess_x90, psyclone,
+                     step, SuffixFilter)
 from fab.fab_base.fab_base import FabBase
 
 from configurator import configurator
@@ -70,6 +70,16 @@ class LFRicBase(FabBase):
         # paths might need to be added later.
         self._add_python_paths = [str(self.lfric_core_root / "infrastructure" /
                                       "build" / "psyclone")]
+        linker = self.config.tool_box.get_tool(Category.LINKER,
+                                               mpi=self.config.mpi,
+                                               openmp=self.config.openmp,
+                                               enforce_fortran_linker=True)
+        try:
+            linker.get_lib_flags("netcdf")
+        except RuntimeError as err:
+            msg = (f"LFRic needs NetCDF, but the linker '{linker.name}' "
+                   f"has no NetCDF library setting defined. Aborting.")
+            raise RuntimeError(msg) from err
 
     @property
     def apps_dir(self) -> Path:

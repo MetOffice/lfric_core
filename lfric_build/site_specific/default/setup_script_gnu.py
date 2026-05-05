@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+##############################################################################
+# (c) Crown copyright 2026 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+##############################################################################
+
 '''
 This file contains a function that sets the default flags for all
 GNU based compilers and linkers in the ToolRepository.
@@ -10,7 +16,7 @@ This function gets called from the default site-specific config file
 import argparse
 from typing import cast
 
-from fab.api import BuildConfig, Category, Linker, ToolRepository
+from fab.api import BuildConfig, Category, Compiler, Linker, ToolRepository
 
 
 def setup_script_gnu(build_config: BuildConfig,
@@ -31,9 +37,10 @@ def setup_script_gnu(build_config: BuildConfig,
         gfortran = tr.get_tool(Category.FORTRAN_COMPILER, "mpif90-gfortran")
         if not gfortran.is_available:
             return
+    gfortran = cast(Compiler, gfortran)
 
     if gfortran.get_version() < (4, 9):
-        raise RuntimeError(f"GFortran is too old to build dynamo. "
+        raise RuntimeError(f"GFortran is too old to build LFRic. "
                            f"Must be at least 4.9.0, it is "
                            f"'{gfortran.get_version_string()}'.")
 

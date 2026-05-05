@@ -1,5 +1,11 @@
 #! /usr/bin/env python3
 
+##############################################################################
+# (c) Crown copyright 2026 Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+##############################################################################
+
 '''
 This module contains the default configuration for NCI. It will be invoked
 by the Baf scripts. This script:
