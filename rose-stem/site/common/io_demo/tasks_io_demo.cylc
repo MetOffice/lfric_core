@@ -21,6 +21,14 @@
         "tsteps": 90,
     }) %}
 
+{% elif task_ns.conf_name == "temporal_reading-C12" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["temporal_reading"],
+        "resolution": "C12",
+        "tsteps": 90,
+    }) %}
+
 {% elif task_ns.conf_name == "benchmark-C24" %}
 
     {% do task_dict.update({

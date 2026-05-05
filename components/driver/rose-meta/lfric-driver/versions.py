@@ -1,3 +1,4 @@
+import re
 import sys
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
@@ -20,14 +21,34 @@ class UpgradeError(Exception):
 
 """
 Copy this template and complete to add your macro
-
 class vnXX_txxx(MacroUpgrade):
     # Upgrade macro for <TICKET> by <Author>
-
     BEFORE_TAG = "vnX.X"
     AFTER_TAG = "vnX.X_txxx"
-
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
 """
+
+
+class vn31_t238(MacroUpgrade):
+    """Upgrade macro for ticket #238 by Thomas Bendall."""
+
+    BEFORE_TAG = "vn3.1_t368"
+    AFTER_TAG = "vn3.1_t238"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:finite_element", "coord_space"], "'Wchi'"
+        )
+        coord_order = self.get_setting_value(
+            config, ["namelist:finite_element", "coord_order"]
+        )
+        self.add_setting(
+            config,
+            ["namelist:finite_element", "coord_order_nonprime"],
+            coord_order,
+        )
+
+        return config, self.reports
