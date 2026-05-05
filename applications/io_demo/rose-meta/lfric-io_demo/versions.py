@@ -70,8 +70,8 @@ class vn31_t232(MacroUpgrade):
 class vn31_t330(MacroUpgrade):
     # Upgrade macro for 330 by Ed Hone
 
-    BEFORE_TAG = "vn3.1"
-    AFTER_TAG = "vn3.1_t232"
+    BEFORE_TAG = "vn3.1_t232"
+    AFTER_TAG = "vn3.1_t330"
 
     def upgrade(self, config, meta_config=None):
         """Add new io_demo namelist"""
