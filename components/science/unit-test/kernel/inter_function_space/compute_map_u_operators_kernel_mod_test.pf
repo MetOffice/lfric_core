@@ -28,7 +28,7 @@ contains
                                           stretching_method_linear
     use sci_chi_transform_mod,     only : init_chi_transforms
     use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_native
+                                          coord_system_native, coord_space_wchi
     use feign_config_mod,          only : feign_extrusion_config,      &
                                           feign_finite_element_config, &
                                           feign_base_mesh_config,      &
@@ -57,6 +57,8 @@ contains
              element_order_v=0_i_def,           &
              rehabilitate=.true.,               &
              coord_order = 0_i_def,             &
+             coord_order_nonprime=1_i_def,      &
+             coord_space=coord_space_wchi,      &
              coord_system=coord_system_native )
 
     call feign_planet_config( scaling_factor=1.0_r_def )

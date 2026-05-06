@@ -21,6 +21,8 @@ coord_order=1,
 coord_system='native',
 element_order_h=0,
 element_order_v=0,
+coord_order_nonprime=1
+coord_space='Wchi'
 rehabilitate=.true.,
 /
 

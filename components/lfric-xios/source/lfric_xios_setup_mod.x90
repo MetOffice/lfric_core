@@ -310,8 +310,9 @@ contains
     coord_dim_owned = proxy_coord_output(1)%vspace%get_last_dof_owned() / nfull_levels
 
     ! Obtain sample_chi, which will be used for setting up XIOS coordinates
-    if ( mesh%is_geometry_spherical() ) then
+    if ( mesh%is_geometry_spherical() .or. chi(1)%which_function_space() == Wtheta ) then
       ! Sample chi on W0 function space to prevent "unzipping" of cubed-sphere mesh
+      ! This also avoids issues when Wtheta is used as the coordinate space
       do i = 1,3
         call sample_chi(i)%initialise( vector_space = output_field_fs )
       end do
@@ -322,7 +323,10 @@ contains
       do i = 1,3
         call chi(i)%copy_field_serial(sample_chi(i))
       end do
-      ! Tell downstream output processing that the mesh is planar
+    end if
+
+    ! Tell downstream output processing that the mesh is planar
+    if ( .not. mesh%is_geometry_spherical() ) then
       call set_xios_geometry_planar()
     end if
 
