@@ -71,6 +71,17 @@ class Config(DefaultConfig):
         '''
         super().setup_intel_llvm(build_config)
         tr = ToolRepository()
+        compiler = tr.get_tool(Category.FORTRAN_COMPILER, "ifx")
+        if not self.args.no_test:
+            # TODO: path-specific flags required here.
+            # pfunit driver triggers an error " #7977: The type of the
+            # function reference does not match the type of the function
+            # definition"
+            # for the call suite%addTest(skeleton_test_suite()) in the
+            # driver. This flag should only be set for
+            # unit-test/driver_<NAME>.f90:
+            compiler.add_flags(["-warn", "nointerfaces"], "base")
+
         linker = tr.get_tool(Category.LINKER, "linker-ifx")
         # Add netcdf and pfunit flags
         self._setup_linker(linker)
