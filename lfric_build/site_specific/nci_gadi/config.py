@@ -15,7 +15,6 @@ suite to use, and adds the required site-specific linker and include flag.
 import os
 
 from fab.api import BuildConfig, Category, Linker, ToolRepository
-from fab.tools.pfunit import PfUnit
 
 from default.config import Config as DefaultConfig
 
@@ -78,9 +77,9 @@ class Config(DefaultConfig):
 
     def _setup_linker(self, linker: Linker) -> None:
         """
-        Generic setup of a linker (since in the NCI container environments the paths
-        are actually the same, independent of the compiler used). This adds netcdf and
-        pfunit definitions.
+        Generic setup of a linker (since in the NCI container environments
+        the paths are actually the same, independent of the compiler used).
+        This adds netcdf and pfunit definitions.
 
         :param linker: the linker instance to setup
         """
@@ -100,4 +99,4 @@ class Config(DefaultConfig):
             [f"-L{pfunit_root}/lib", "-lfunit", "-lpfunit",
              f"-L{spack_view}/FARGPARSE-1.7/lib/", "-lfargparse",
              f"-L{spack_view}/GFTL_SHARED-1.8/lib", "-lgftl-shared-v2",
-            ], silent_replace=True)
+             ], silent_replace=True)
