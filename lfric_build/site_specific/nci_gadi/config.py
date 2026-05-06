@@ -12,7 +12,9 @@ by the Fab scripts. This script sets intel-llvm as the default compiler
 suite to use, and adds the required site-specific linker and include flag.
 '''
 
-from fab.api import Category, ToolRepository
+import os
+
+from fab.api import BuildConfig, Category, Linker, ToolRepository
 from fab.tools.pfunit import PfUnit
 
 from default.config import Config as DefaultConfig
@@ -39,7 +41,8 @@ class Config(DefaultConfig):
         :param build_config: the Fab build configuration instance
         '''
         super().setup_gnu(build_config)
-        linker = tr.get_tool(Category.LINKER, "linker-gnu")
+        tr = ToolRepository()
+        linker = tr.get_tool(Category.LINKER, "linker-gfortran")
         # Add netcdf and pfunit flags
         self._setup_linker(linker)
 
@@ -53,7 +56,8 @@ class Config(DefaultConfig):
         :param build_config: the Fab build configuration instance
         '''
         super().setup_intel_classic(build_config)
-        linker = tr.get_tool(Category.LINKER, "linker-intel-classic")
+        tr = ToolRepository()
+        linker = tr.get_tool(Category.LINKER, "linker-ifort")
         # Add netcdf and pfunit flags
         self._setup_linker(linker)
 
@@ -67,13 +71,16 @@ class Config(DefaultConfig):
         :param build_config: the Fab build configuration instance
         '''
         super().setup_intel_llvm(build_config)
-        linker = tr.get_tool(Category.LINKER, "linker-intel-llvm")
+        tr = ToolRepository()
+        linker = tr.get_tool(Category.LINKER, "linker-ifx")
         # Add netcdf and pfunit flags
         self._setup_linker(linker)
 
     def _setup_linker(self, linker: Linker) -> None:
         """
-        Generic setup of a linker. This adds netcdf and pfunit definitions.
+        Generic setup of a linker (since in the NCI container environments the paths
+        are actually the same, independent of the compiler used). This adds netcdf and
+        pfunit definitions.
 
         :param linker: the linker instance to setup
         """
