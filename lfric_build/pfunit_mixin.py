@@ -156,10 +156,12 @@ class PfUnitMixin:
                             .with_suffix(".F90"))
             output_fpath.parent.mkdir(parents=True, exist_ok=True)
             pfunit.process(pf_file, output_fpath)
+            self.config.artefact_store.add(ArtefactSet.FORTRAN_COMPILER_FILES,
+                                           output_fpath)
         test_list = self.config.build_output / "unit-test" / "test_list.inc"
         with test_list.open("w", encoding="utf-8") as f:
             for test_name in all_tests:
-                f.write(f"ADD_TEST_SUITE({test_name})\n")
+                f.write(f"ADD_TEST_SUITE({test_name}_suite)\n")
 
         # TODO: That should be path-specific
         self.add_preprocessor_flags([f"-D_TEST_SUITES=\"{test_list.name}\"",

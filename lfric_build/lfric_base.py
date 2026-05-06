@@ -227,9 +227,6 @@ class LFRicBase(FabBase):
         self.configurator_step()
 
         path_filter_list = list(path_filters) if path_filters else []
-        # If testing is used (via LFRicBaseWithTest), unit-test will
-        # be handled there.
-        path_filter_list.append(Exclude('unit-test', '/test/'))
         super().find_source_files_step(path_filters=path_filter_list)
 
         self.templaterator_step(self.config)
