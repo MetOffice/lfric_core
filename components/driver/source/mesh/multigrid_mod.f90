@@ -12,6 +12,10 @@ module multigrid_mod
   use log_mod,           only: log_event, log_scratch_space, &
                                log_level_info, log_level_error
 
+  ! Collections
+  use mesh_collection_mod,           only: mesh_collection
+  use function_space_collection_mod, only: function_space_collection
+
   ! Object types
   use config_mod,    only: config_type
   use extrusion_mod, only: extrusion_type
@@ -22,7 +26,8 @@ module multigrid_mod
 
   implicit none
 
-  public :: init_multigrid_fs_chain, get_multigrid_tile_size
+  public :: init_multigrid_fs_chain, &
+            get_multigrid_tile_size
   public :: single_layer_function_space_chain,     &
             multigrid_function_space_chain,        &
             w2_multigrid_function_space_chain,     &
