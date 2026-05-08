@@ -6,13 +6,18 @@
 
 module multigrid_mod
 
-  use extrusion_mod, only: extrusion_type, prime_extrusion, &
-                           shifted, double_level
-  use config_mod,    only: config_type
-  use constants_mod, only: i_def, l_def, str_def, imdi
-  use log_mod,       only: log_event, log_level_error
+  use constants_mod,     only: i_def, l_def, str_def, imdi
+  use extrusion_mod,     only: prime_extrusion, shifted, double_level
+  use fs_continuity_mod, only: w2, w3, wtheta, w2v, w2h
+  use log_mod,           only: log_event, log_scratch_space, &
+                               log_level_info, log_level_error
 
-  use fs_continuity_mod,        only: w2, w3, wtheta, w2v, w2h
+  ! Object types
+  use config_mod,    only: config_type
+  use extrusion_mod, only: extrusion_type
+  use mesh_mod,      only: mesh_type
+
+  use function_space_mod,       only: function_space_type
   use function_space_chain_mod, only: function_space_chain_type
 
   implicit none
@@ -146,7 +151,7 @@ subroutine init_multigrid_fs_chain(multigrid_mesh_names)
 
     implicit none
 
-    character(str_def),  intent(in) :: multigrid_mesh_names(:)
+    character(str_def), intent(in) :: multigrid_mesh_names(:)
 
     type(mesh_type), pointer :: mesh
     type(mesh_type), pointer :: twod_mesh
@@ -203,8 +208,6 @@ subroutine init_multigrid_fs_chain(multigrid_mesh_names)
       fs => function_space_collection%get_fs( twod_mesh, 0, 0, w3 )
       call single_layer_function_space_chain%add( fs )
     end do
-
-    nullify(mesh, twod_mesh, fs)
 
     call log_event( 'Function space chains created', log_level_info )
 
