@@ -7,7 +7,7 @@
 module multigrid_mod
 
   use constants_mod,     only: i_def, l_def, str_def, imdi
-  use extrusion_mod,     only: prime_extrusion, shifted, double_level
+  use extrusion_mod,     only: prime_extrusion, shifted, double_level, twod
   use fs_continuity_mod, only: w2, w3, wtheta, w2v, w2h
   use log_mod,           only: log_event, log_scratch_space, &
                                log_level_info, log_level_error
