@@ -40,7 +40,7 @@ class vn22_t4231(MacroUpgrade):
         # Add settings
         return config, self.reports
 
-"""
+
 class vn22_t34(MacroUpgrade):
     # Upgrade macro for 34 by jennifer hickson
 
@@ -49,4 +49,3 @@ class vn22_t34(MacroUpgrade):
 
     def upgrade(self, config, meta_config=None):
         return config, self.reports
-"""

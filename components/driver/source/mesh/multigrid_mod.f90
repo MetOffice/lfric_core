@@ -12,10 +12,33 @@ module multigrid_mod
   use constants_mod, only: i_def, l_def, str_def, imdi
   use log_mod,       only: log_event, log_level_error
 
+  use fs_continuity_mod,        only: w2, w3, wtheta, w2v, w2h
+  use function_space_chain_mod, only: function_space_chain_type
+
   implicit none
 
-  public :: get_multigrid_tile_size
+  public :: init_multigrid_fs_chain, get_multigrid_tile_size
+  public :: single_layer_function_space_chain,     &
+            multigrid_function_space_chain,        &
+            w2_multigrid_function_space_chain,     &
+            wtheta_multigrid_function_space_chain, &
+            w2h_multigrid_function_space_chain,    &
+            w2v_multigrid_function_space_chain
 
+  !> @name Global variables
+  !>
+  !> @todo An alternative to global variables will be needed
+  !> in order to support multi-instance models.
+  !>
+  !> @{
+  type(function_space_chain_type), allocatable :: &
+           single_layer_function_space_chain,     &
+           multigrid_function_space_chain,        &
+           w2_multigrid_function_space_chain,     &
+           wtheta_multigrid_function_space_chain, &
+           w2h_multigrid_function_space_chain,    &
+           w2v_multigrid_function_space_chain
+  !> @}
 
 contains
 
@@ -116,5 +139,75 @@ function get_multigrid_tile_size( config, local_mesh_names, extrusion) &
   end if ! Coarsen multigrid_tiles
 
 end function get_multigrid_tile_size
+
+!> @brief  Initialises the function space chains used in multigrid.
+!> @param[in] multigrid_mesh_names  Names of the multigrid meshes
+subroutine init_multigrid_fs_chain(multigrid_mesh_names)
+
+    implicit none
+
+    character(str_def),  intent(in) :: multigrid_mesh_names(:)
+
+    type(mesh_type), pointer :: mesh
+    type(mesh_type), pointer :: twod_mesh
+
+    type(function_space_type), pointer :: fs
+
+    integer(i_def) :: i
+
+    nullify(mesh, twod_mesh, fs)
+
+    call log_event( 'FEM specifics: creating function space chains...', &
+                    log_level_info )
+
+    ! ======================================================================== !
+    ! Create function space chains
+    ! ======================================================================== !
+
+    multigrid_function_space_chain        = function_space_chain_type()
+    w2_multigrid_function_space_chain     = function_space_chain_type()
+    w2v_multigrid_function_space_chain    = function_space_chain_type()
+    w2h_multigrid_function_space_chain    = function_space_chain_type()
+    wtheta_multigrid_function_space_chain = function_space_chain_type()
+
+    write(log_scratch_space,'(A,I1,A)') &
+        'Initialising MultiGrid ', size(multigrid_mesh_names), &
+        '-level function space chain.'
+    call log_event( log_scratch_space, log_level_info )
+
+    do i = 1, size(multigrid_mesh_names)
+
+      mesh => mesh_collection%get_mesh( multigrid_mesh_names(i) )
+
+      ! Make sure this function_space is in the collection
+      fs => function_space_collection%get_fs( mesh, 0, 0, w3 )
+      call multigrid_function_space_chain%add( fs )
+
+      fs => function_space_collection%get_fs( mesh, 0, 0, w2 )
+      call w2_multigrid_function_space_chain%add( fs )
+
+      fs => function_space_collection%get_fs( mesh, 0, 0, w2v )
+      call w2v_multigrid_function_space_chain%add( fs )
+
+      fs => function_space_collection%get_fs( mesh, 0, 0, w2h )
+      call w2h_multigrid_function_space_chain%add( fs )
+
+      fs => function_space_collection%get_fs( mesh, 0, 0, wtheta )
+      call wtheta_multigrid_function_space_chain%add( fs )
+    end do
+
+    single_layer_function_space_chain = function_space_chain_type()
+    do i = 1, size(multigrid_mesh_names)
+      mesh => mesh_collection%get_mesh( multigrid_mesh_names(i) )
+      twod_mesh => mesh_collection%get_mesh( mesh, twod )
+      fs => function_space_collection%get_fs( twod_mesh, 0, 0, w3 )
+      call single_layer_function_space_chain%add( fs )
+    end do
+
+    nullify(mesh, twod_mesh, fs)
+
+    call log_event( 'Function space chains created', log_level_info )
+
+  end subroutine init_multigrid_fs_chain
 
 end module multigrid_mod

@@ -15,11 +15,12 @@ module sci_w3_to_w2_displacement_kernel_mod
                                     GH_FIELD, GH_SCALAR,       &
                                     GH_REAL, GH_INTEGER,       &
                                     GH_READ, GH_INC,           &
+                                    ANY_SPACE_9,               &
                                     ANY_DISCONTINUOUS_SPACE_3, &
                                     GH_BASIS, GH_EVALUATOR,    &
                                     CELL_COLUMN, GH_SCALAR,    &
                                     GH_LOGICAL
-  use fs_continuity_mod,     only : W3, W2H, Wchi
+  use fs_continuity_mod,     only : W3, W2H
   use constants_mod,         only : r_def, i_def
   use kernel_mod,            only : kernel_type
   use reference_element_mod, only : E, W, N, S
@@ -36,7 +37,7 @@ module sci_w3_to_w2_displacement_kernel_mod
     private
     type(arg_type) :: meta_args(8) = (/                                     &
          arg_type(GH_FIELD,   GH_REAL, GH_INC,  W2H),                       &! displacement
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ, Wchi),                      &! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               &! chi_1, chi_2, chi_3
          arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), &! panel_id
          arg_type(GH_FIELD,   GH_REAL, GH_READ, W3),                        &! dummy_w3
          arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! geometry
@@ -45,7 +46,7 @@ module sci_w3_to_w2_displacement_kernel_mod
          arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          &! scaled_radius
          /)
     type(func_type) :: meta_funcs(1) = (/                                   &
-         func_type(Wchi, GH_BASIS)                                          &
+         func_type(ANY_SPACE_9, GH_BASIS)                                   &
          /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_EVALUATOR

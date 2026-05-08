@@ -31,10 +31,33 @@ class vnXX_txxx(MacroUpgrade):
 """
 
 
+class vn31_t238(MacroUpgrade):
+    """Upgrade macro for ticket #238 by Thomas Bendall."""
+
+    BEFORE_TAG = "vn3.1"
+    AFTER_TAG = "vn3.1_t238"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:finite_element", "coord_space"], "'Wchi'"
+        )
+        coord_order = self.get_setting_value(
+            config, ["namelist:finite_element", "coord_order"]
+        )
+        self.add_setting(
+            config,
+            ["namelist:finite_element", "coord_order_nonprime"],
+            coord_order,
+        )
+
+        return config, self.reports
+
+
 class vn31_t324(MacroUpgrade):
     """Upgrade macro for LFRic Core PR#324 by Ricky Wong."""
 
-    BEFORE_TAG = "vn3.1"
+    BEFORE_TAG = "vn3.1_t238"
     AFTER_TAG = "vn3.1_t324"
 
     def upgrade(self, config, meta_config=None):

@@ -20,12 +20,13 @@ module sci_compute_sample_u_ops_kernel_mod
                                       GH_OPERATOR,                 &
                                       GH_INC, GH_READ, GH_WRITE,   &
                                       ANY_DISCONTINUOUS_SPACE_3,   &
+                                      ANY_SPACE_9,                 &
                                       GH_BASIS, GH_DIFF_BASIS,     &
                                       CELL_COLUMN, GH_EVALUATOR,   &
                                       reference_element_data_type, &
                                       normals_to_faces
   use constants_mod,           only : r_def, i_def
-  use fs_continuity_mod,       only : W2broken, W3, Wtheta, Wchi
+  use fs_continuity_mod,       only : W2broken, W3, Wtheta
   use kernel_mod,              only : kernel_type
   use sci_chi_transform_mod,   only : chi2llr
   use sci_coordinate_jacobian_mod, only : coordinate_jacobian, &
@@ -51,7 +52,7 @@ module sci_compute_sample_u_ops_kernel_mod
          arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              &! u_lon_op
          arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              &! u_lat_op
          arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, WTHETA),          &! u_rad_op
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  Wchi),                      &! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               &! chi_1, chi_2, chi_3
          arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &! panel_id
          arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! geometry
          arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! topology
@@ -59,7 +60,7 @@ module sci_compute_sample_u_ops_kernel_mod
          arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                           &! scaled_radius
          /)
     type(func_type) :: meta_funcs(1) = (/                                     &
-         func_type(Wchi, GH_BASIS, GH_DIFF_BASIS)                             &
+         func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                      &
          /)
     type(reference_element_data_type), dimension(1) ::                        &
     meta_reference_element =                                                  &
