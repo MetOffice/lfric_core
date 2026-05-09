@@ -125,12 +125,11 @@ class PfUnitMixin:
 
         pfunit = self.config.tool_box.get_tool(Category.PFUNIT)
         driver_f90 = pfunit.get_driver_f90()
-        # TODO: fab_base needs a `name` property
         driver_f90 = driver_f90.replace("program main",
-                                        f"program {self._name}_unit_test")
+                                        f"program {self.name}_unit_test")
 
         out_driver = (self.config.build_output / "unit-test" /
-                      f"driver_{self._name}.F90")
+                      f"driver_{self.name}.F90")
         out_driver.parent.mkdir(parents=True, exist_ok=True)
         with out_driver.open("w", encoding='utf-8') as f:
             f.write(driver_f90)
@@ -166,8 +165,7 @@ class PfUnitMixin:
         # TODO: That should be path-specific
         self.add_preprocessor_flags([f"-D_TEST_SUITES=\"{test_list.name}\"",
                                     "-I", str(pfunit.get_include_path())])
-        # TODO: fab_base needs a `name` property
-        self._root_symbol.append(f"{self._name}_unit_test")
+        self.root_symbols.append(f"{self.name}_unit_test")
         compiler = self.config.tool_box.get_tool(Category.FORTRAN_COMPILER)
         compiler.add_flags(["-I", str(pfunit.get_include_path())])
 
