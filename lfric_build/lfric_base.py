@@ -149,8 +149,8 @@ class LFRicBase(FabBase):
         super().handle_command_line_options(parser)
 
         if not self.args.openmp:
-            logger.error("LFRic required OpenMP in order to compile and "
-                         "link. Remove the '-no-omp` flag from the "
+            logger.error("LFRic requires OpenMP in order to compile and "
+                         "link. Remove the '-no-omp' flag from the "
                          "command line.")
             sys.exit(-1)
 

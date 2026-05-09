@@ -233,6 +233,30 @@ def test_get_directory(monkeypatch, tmp_path) -> None:
     assert lfric_base.lfric_core_root == mock_core
 
 
+def test_require_openmp(monkeypatch, caplog) -> None:
+    '''
+    Tests that using `-no-openmp` will abort with correct
+    error message.
+    '''
+    monkeypatch.setattr(sys, "argv", ["lfric_base.py",
+                                      "--no-openmp"])
+
+    with pytest.raises(SystemExit):
+        LFRicBase(name="test", apps_dir=Path("."))
+
+    assert len(caplog.records) == 2
+
+    assert caplog.records[0].levelname == "INFO"
+    # Check for the details about site-specific config that is
+    # being imported.
+    assert "Imported '" in caplog.text
+    assert "site_specific/default/config.py" in caplog.text
+
+    assert caplog.records[1].levelname == "ERROR"
+    assert ("LFRic requires OpenMP in order to compile and link. Remove "
+            "the '-no-omp' flag from the command line." in caplog.text)
+
+
 def test_precision_definition_without_default(monkeypatch) -> None:
     '''
     Tests specification of precision if no default precision is
