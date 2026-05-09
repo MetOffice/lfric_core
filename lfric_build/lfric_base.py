@@ -13,6 +13,7 @@ script.
 """
 
 import argparse
+import logging
 from pathlib import Path
 import sys
 from typing import List, Optional, Iterable, Union
@@ -24,6 +25,10 @@ from fab.fab_base.fab_base import FabBase
 
 from configurator import configurator
 from templaterator import Templaterator
+
+# Add a logger and connect it to stdout.
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 class LFRicBase(FabBase):
@@ -132,6 +137,22 @@ class LFRicBase(FabBase):
                 default=default, help=help_msg)
 
         return parser
+
+    def handle_command_line_options(self,
+                                    parser: argparse.ArgumentParser) -> None:
+        '''
+        Make sure that openmp is not disabled, since LFRic will not build
+        without (because some files use openmp without openmp sentinels).
+
+        :param argparse.ArgumentParser parser: the argument parser.
+        '''
+        super().handle_command_line_options(parser)
+
+        if not self.args.openmp:
+            logger.error("LFRic required OpenMP in order to compile and "
+                         "link. Remove the '-no-omp` flag from the "
+                         "command line.")
+            sys.exit(-1)
 
     def setup_site_specific_location(self):
         '''
