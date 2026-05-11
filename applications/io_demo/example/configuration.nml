@@ -15,12 +15,18 @@ number_of_layers=10,
 planet_radius=6371229.0,
 /
 
+&files
+temporal_file_path='',
+/
+
 &finite_element
 cellshape='quadrilateral',
 element_order_h=0,
 element_order_v=0,
 rehabilitate=.true.,
 coord_order=1
+coord_order_nonprime=1
+coord_space='Wchi'
 coord_system='native'
 /
 
@@ -52,6 +58,7 @@ coord_system='native'
 &io_demo
   multifile_io          = .false.
   io_benchmark          = .false.
+  temporal_reading      = .false.
   n_benchmark_fields    = 10
   benchmark_sleep_time  = 0
 /

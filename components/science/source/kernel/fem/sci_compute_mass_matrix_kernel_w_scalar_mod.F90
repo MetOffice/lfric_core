@@ -16,12 +16,13 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
                                      GH_LOGICAL, GH_SCALAR,     &
                                      GH_READ, GH_WRITE,         &
                                      GH_REAL, ANY_SPACE_2,      &
+                                     ANY_SPACE_9,               &
                                      ANY_DISCONTINUOUS_SPACE_3, &
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
   use constants_mod,           only: i_def, r_single, r_double, l_def
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-  use fs_continuity_mod,       only: W0, Wtheta, Wchi
+  use fs_continuity_mod,       only: W0, Wtheta
   use kernel_mod,              only: kernel_type
 
   use base_mesh_config_mod,      only: geometry, topology
@@ -39,13 +40,13 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
     private
     type(arg_type) :: meta_args(4) = (/                                          &
          arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE, ANY_SPACE_2, ANY_SPACE_2),  &
-         arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,  Wchi),                      &
+         arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,  ANY_SPACE_9),               &
          arg_type(GH_FIELD,    GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
          arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ)                              &
          /)
     type(func_type) :: meta_funcs(2) = (/                                    &
          func_type(ANY_SPACE_2, GH_BASIS),                                   &
-         func_type(Wchi,        GH_BASIS, GH_DIFF_BASIS)                     &
+         func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                     &
          /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_QUADRATURE_XYoZ
