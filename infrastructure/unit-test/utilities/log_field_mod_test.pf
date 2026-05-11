@@ -180,6 +180,7 @@ contains
     real(r_def)       :: expected_value
 
     call initialise_logging( this%getMpiCommunicator(), name )
+    call log_set_level(log_level_info)
     call log_field(this%field, log_level=log_level_info)
     call finalise_logging()
 
@@ -224,6 +225,7 @@ contains
     real(r_def)       :: expected_value
 
     call initialise_logging( this%getMpiCommunicator(), name )
+    call log_set_level(log_level_info)
     call log_field(this%field, log_level=log_level_info, start_dof=10, end_dof=20)
     call finalise_logging()
 
