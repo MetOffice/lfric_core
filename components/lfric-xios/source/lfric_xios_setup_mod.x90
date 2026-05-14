@@ -105,10 +105,6 @@ contains
                            timestep_length_for_xios
     type(xios_date)     :: xios_start_date, xios_origin_date
     integer(i_timestep) :: step_offset
-    type(xios_date)     :: reference_time
-    double precision    :: frtv
-    character(len=64)   :: str_origin, calendar_label
-    character(len=76)   :: str_calendar
 
     ! Set the XIOS time-step from the model clock
     timestep_length_for_xios%second = model_clock%get_seconds_per_step()
@@ -154,22 +150,6 @@ contains
       call log_event("Having start_date < origin_date may lead to unexpected " // &
                      "behaviour due to a bug in the xios intrinsic function " //  &
                      "date_convert_to_seconds", log_level_warning)
-    end if
-
-    ! Configure the forecast reference time scalar coordinate variable:
-    ! if the scalar is available and valid within the context.
-    if ( xios_is_valid_scalar("frt") ) then
-      call xios_date_convert_to_string(xios_origin_date, str_origin)
-      call xios_set_scalar_attr("frt", unit="seconds since "//str_origin)
-      ! calculate forecast reference time in seconds from start and offset
-      reference_time = xios_start_date - xios_since_timestep_zero
-      frtv = dble(xios_date_convert_to_seconds(reference_time))
-      call xios_set_scalar_attr("frt", value=frtv)
-      ! Note: at this point a calendar attribute should also be set
-      ! but, XIOS is unable to do this without feature development.
-      call xios_get_calendar_type(calendar_label)
-      str_calendar = "calendar = " // calendar_label
-      call xios_set_scalar_attr("frt", comment=str_calendar)
     end if
 
   end subroutine init_xios_calendar
