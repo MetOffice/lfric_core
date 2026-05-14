@@ -96,6 +96,12 @@ class PfUnitMixin:
         if (not self.args.no_test) and (self.apps_dir / unit_test).is_dir():
             grab_folder(self.config, src=self.apps_dir / unit_test,
                         dst_label=unit_test)
+            # Merge in the unit-testing files from components/science/unit-test
+            grab_folder(self.config,
+                        src=(self.lfric_core_root / "components" /
+                             "science" / "unit-test"),
+                        dst_label=unit_test)
+
             self._has_test = True
 
     def find_source_files_step(
