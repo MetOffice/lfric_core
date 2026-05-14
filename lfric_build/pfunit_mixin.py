@@ -96,11 +96,23 @@ class PfUnitMixin:
         if (not self.args.no_test) and (self.apps_dir / unit_test).is_dir():
             grab_folder(self.config, src=self.apps_dir / unit_test,
                         dst_label=unit_test)
-            # Merge in the unit-testing files from components/science/unit-test
-            grab_folder(self.config,
-                        src=(self.lfric_core_root / "components" /
-                             "science" / "unit-test"),
-                        dst_label=unit_test)
+            # Some tests also need the .f90 files from
+            # components/science/unit-tests, but not the .pf files. So, only
+            # pick the directories that contain f90 files (picking all files,
+            # including .pf, would add these tests to each unit-test, and
+            # besides being not intended, might not even compile in
+            # lfric_apps).
+            core_test_dir = (self.lfric_core_root / "components" / "science" /
+                             "unit-test")
+            dirs = set()
+            for path in core_test_dir.rglob("*90"):
+                dirs.add(path.parent)
+            for path in dirs:
+                # Store the files in the corresponding subdirectories
+                dst = path.relative_to(core_test_dir)
+                grab_folder(self.config,
+                            src=path,
+                            dst_label=unit_test / dst)
 
             self._has_test = True
 
