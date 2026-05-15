@@ -992,6 +992,80 @@ all the dof addresses in the original map as can be seen by examining
 the dof numbering in the :ref:`illustrations <w2_w3_vert_3d>` of the
 :math:`\mathbb{W}_{2}` and :math:`\mathbb{W}_{3}` spaces.
 
+Face Selectors
+^^^^^^^^^^^^^^
+The LFRic infrastructure is designed to loop over columns, allowing efficient
+vectorisation and parallelisation across the horizontal domain. However, some
+science kernels need to operate on horizontal faces rather than entities within
+cells. Since faces are shared between two adjacent columns, we face a
+computational challenge: each face is adjacent to two columns, and we must
+ensure that the face computation is performed only once, not twice.
+
+Face selector fields provide the solution to this problem.
+They consist of two 2D fields:
+
+1. **East-West (E/W) face selector**: indicates which east or west faces
+   in each column should be computed
+
+2. **North-South (N/S) face selector**: indicates which south or north faces
+   in each column should be computed
+
+These selectors contain information about which faces in each column should be
+included in the computation, ensuring that every face is computed exactly once
+as the kernel loops over all columns.
+
+In the new method, the face selector fields are extended to take integer values
+of -1, 0, 1, or 2, allowing for a more flexible and correct assignment of faces
+to columns. The interpretation of each value is given in :ref:`the table below <tab_new_face_selector>`.
+
+.. table:: Interpretation of face selector field values.
+   :name: tab_new_face_selector
+
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | Face Selector Value      | E/W Field Meaning                    | N/S Field Meaning                    |
+   +==========================+======================================+======================================+
+   | -1                       | Compute east face only               | Compute north face only              |
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | 0                        | Compute no E/W faces                 | Compute no N/S faces                 |
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | 1                        | Compute west face only               | Compute south face only              |
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | 2                        | Compute both west and east faces     | Compute both south and north faces   |
+   +--------------------------+--------------------------------------+--------------------------------------+
+
+With this definition, the sum of the *absolute values* of the face selector fields
+gives the total number of faces computed per column.
+This interpretation is demonstrated in the :ref:`diagram below <face_selector_diagram>`.
+In this example, columns 0, 1, 2 and 3 have E/W selector values of 1, 2, -1 and -1
+respectively, meaning the five vertical faces are each computed exactly once.
+Rows 0, 1, 2 and 3 have N/S selector values of 1, 2, -1 and -1 respectively,
+similarly covering all horizontal faces exactly once.
+
+.. figure:: images/face_selector_diagram.svg
+   :name: face_selector_diagram
+
+   Diagram illustrating how the face selector values are interpreted, using a
+   4x4 column grid. Each cell centre displays two values:
+   the E/W face selector (top) and the N/S face selector (bottom).
+   Triangle bases lie on the face edge with the apex
+   pointing towards the column that will perform the computation for that face.
+
+To use the face selector fields in a kernel, the kernel metadata should specify
+that the kernel is writing to a continuous :math:`\mathbb{W}_{2}` or
+:math:`\mathbb{W}_{2H}` field. The face selector fields are passed as arguments
+to the kernel, and faces are looped over via code like the following:
+
+.. code-block:: fortran
+
+   do j = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+     df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
+     ! Perform computations on face df
+   end do
+
+The routine ``face_from_face_selector`` takes the face selector values and
+the loop index to determine which face is being computed in the current iteration of the loop.
+
+
 The PSy layer code
 ------------------
 
