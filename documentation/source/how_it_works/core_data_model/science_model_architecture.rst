@@ -955,10 +955,10 @@ more arguments than the original ``invoke`` call, and each argument
 will be described when the :ref:`PSy layer code generation example
 <psy example>` is introduced.  All of the arguments and the
 order of the arguments derive entirely from the kernel metadata. In
-fact, the PSyclone toolset includes a stub generator ``genkernelstub``
-which will generate the following subroutine call and all the argument
-declarations based on the above metadata. See the PSyclone
-documentation for details.
+fact, the PSyclone toolset includes a :ref:`psyclone:stub-generation` 
+which will generate the following subroutine call and all the argument 
+declarations based on the above metadata. See the PSyclone documentation 
+for details.
 
 .. code-block:: fortran
 

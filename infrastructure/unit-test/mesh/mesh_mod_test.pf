@@ -7,7 +7,8 @@
 !>
 module mesh_mod_test
 
-  use constants_mod,        only: r_def, i_def, PI, str_max_filename, str_def
+  use constants_mod,        only: r_def, i_def, PI, str_max_filename, &
+                                  str_def, l_def
   use coord_transform_mod,  only: llr2xyz
   use extrusion_mod,        only: uniform_extrusion_type, PRIME_EXTRUSION
   use global_mesh_collection_mod, &
@@ -188,7 +189,7 @@ contains
     global_mesh_id = global_mesh_collection%add_unit_test_global_mesh()
 
     this%global_mesh => global_mesh_collection%get_global_mesh(global_mesh_id)
-    partition   =  partition_type()
+    partition = partition_type()
 
     call this%local_mesh%initialise( this%global_mesh, partition )
     call this%local_mesh%init_cell_owner()
@@ -741,14 +742,14 @@ contains
 !==============================================================================
   @Test( npes=[1] )
   subroutine test_mesh_map_retrieval( this)
-    use ncdf_quad_mod,     only: ncdf_quad_type
+
+    use ncdf_quad_mod, only: ncdf_quad_type
 
     implicit none
 
     class( mesh_test_type ), intent( inout ) :: this
 
     type(ugrid_mesh_data_type) :: ugrid_mesh_data
-
 
     integer(i_def) :: mesh_map_id
     integer(i_def) :: test_integer
@@ -789,6 +790,14 @@ contains
     integer(i_def) :: ncells
     character(str_def), allocatable :: target_mesh_names(:)
 
+    integer(i_def), parameter :: local_rank  = 0
+    integer(i_def), parameter :: total_ranks = 1
+    integer(i_def), parameter :: xprocs = 1
+    integer(i_def), parameter :: yprocs = 1
+    integer(i_def), parameter :: max_stencil_depth    = 1
+    logical(l_def), parameter :: generate_inner_halos = .true.
+    logical(l_def), parameter :: enforce_constraints  = .true.
+
     ! Clear out the global and local mesh collection, as they may contain
     ! unit test meshes - which is not what we want.
     call global_mesh_collection%clear()
@@ -806,8 +815,12 @@ contains
       call global_mesh_collection%add_new_global_mesh( global_mesh )
       global_mesh_ptr => global_mesh_collection % get_global_mesh( mesh_names(i) )
 
-      partition = partition_type(global_mesh_ptr, partitioner_ptr, &
-                                 custom_decomposition_type(1, 1),1,.true.,0,1)
+      partition = partition_type( global_mesh_ptr, partitioner_ptr,          &
+                                  custom_decomposition_type(xprocs, yprocs), &
+                                  max_stencil_depth,                         &
+                                  generate_inner_halos,                      &
+                                  enforce_constraints,                       &
+                                  local_rank, total_ranks )
       call local_mesh%initialise( global_mesh_ptr, partition )
       call local_mesh%init_cell_owner()
       local_mesh_id = local_mesh_collection%add_new_local_mesh( local_mesh )
@@ -860,8 +873,14 @@ contains
     do i=1, size(mesh_names)
       global_mesh_ptr => global_mesh_collection % get_global_mesh (mesh_names(i))
       source_local_mesh_ptr => local_mesh_collection % get_local_mesh (mesh_names(i))
-      partition = partition_type(global_mesh_ptr, partitioner_ptr,&
-                                 custom_decomposition_type(1, 1),1,.true.,0,1)
+
+      partition = partition_type( global_mesh_ptr, partitioner_ptr,          &
+                                  custom_decomposition_type(xprocs, yprocs), &
+                                  max_stencil_depth,                         &
+                                  generate_inner_halos,                      &
+                                  enforce_constraints,                       &
+                                  local_rank, total_ranks )
+
       mesh = mesh_type( source_local_mesh_ptr, extrusion )
       mesh_id =  mesh_collection % add_new_mesh( mesh )
       call mesh%clear()

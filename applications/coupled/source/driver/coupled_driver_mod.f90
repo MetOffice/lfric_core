@@ -78,7 +78,7 @@ contains
     real(r_def)    :: domain_bottom
     real(r_def)    :: domain_height
     real(r_def)    :: scaled_radius
-    logical        :: apply_partition_check
+    logical        :: check_partitions
 
     integer(i_def) :: i
     integer(i_def), parameter :: one_layer = 1_i_def
@@ -119,12 +119,12 @@ contains
 
     ! Create the required meshes
     stencil_depth = 1
-    apply_partition_check = .false.
-    call init_mesh( modeldb%configuration,       &
+    check_partitions = .false.
+    call init_mesh( modeldb%config,              &
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
                     base_mesh_names, extrusion,  &
-                    stencil_depth, apply_partition_check )
+                    stencil_depth, check_partitions )
 
     allocate( twod_names, source=base_mesh_names )
     do i=1, size(twod_names)

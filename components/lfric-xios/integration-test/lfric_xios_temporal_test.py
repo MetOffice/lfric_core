@@ -37,12 +37,17 @@ class LfricXiosFullNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-publ
             raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
                              f"stderr:\n" +
                              f"{err}")
+
+        self.plot_output(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
+                         Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
+                         'temporal_field')
+
         if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
                                   Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
                                   'temporal_field'):
             raise TestFailed("Output data does not match input data for same time values")
 
-        return "Reading full set of non-cylic data okay..."
+        return "Reading full set of non-cyclic data okay..."
 
 
 class LfricXiosNonCyclicHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
@@ -71,7 +76,44 @@ class LfricXiosNonCyclicHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-
                                   'temporal_field'):
             raise TestFailed("Output data does not match input data for same time values")
 
-        return "Reading full set of non-cylic data at higher model frequency okay..."
+        return "Reading full set of non-cyclic data at higher model frequency okay..."
+
+
+class LfricXiosNonCyclicNonSyncTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
+    """
+    Tests the LFRic-XIOS temporal reading functionality for a full set of
+    non-cyclic data at higher frequency than the input data
+    """
+
+    def __init__(self):
+        super().__init__(command=[sys.argv[1], "non_cyclic_non_sync.nml"], processes=1)
+        self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_data('non_sync_kgo.cdl', 'non_sync_kgo.nc')
+        self.gen_config( 'non_cyclic_base.nml', 'non_cyclic_non_sync.nml',
+                         {"dt":10.0,
+                          "calendar_start":"2024-01-01 15:03:20",
+                          "timestep_end":"30"} )
+
+    def test(self, returncode: int, out: str, err: str):
+        """
+        Test the output of the context test
+        """
+
+        if returncode != 0:
+            print(out)
+            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
+                             f"stderr:\n" +
+                             f"{err}")
+        self.plot_output(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
+                         Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
+                         'temporal_field')
+
+        if not self.nc_data_match(Path(self.test_working_dir, 'non_sync_kgo.nc'),
+                                  Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
+                                  'temporal_field'):
+            raise TestFailed("Output data does not match input data for same time values")
+
+        return "Reading non-synchronised non-cyclic data at higher model frequency okay..."
 
 
 class LfricXiosPartialNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
@@ -100,7 +142,7 @@ class LfricXiosPartialNonCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-p
                                   'temporal_field'):
             raise TestFailed("Output data does not match input data for same time values")
 
-        return "Reading partial set of non-cylic data okay..."
+        return "Reading partial set of non-cyclic data okay..."
 
 
 class LfricXiosNonCyclicFutureTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
@@ -165,6 +207,7 @@ class LfricXiosNonCyclicPastTest(LFRicXiosTest):  # pylint: disable=too-few-publ
 if __name__ == "__main__":
     TestEngine.run(LfricXiosFullNonCyclicTest())
     TestEngine.run(LfricXiosNonCyclicHighFreqTest())
+    TestEngine.run(LfricXiosNonCyclicNonSyncTest())
     TestEngine.run(LfricXiosPartialNonCyclicTest())
     TestEngine.run(LfricXiosNonCyclicFutureTest())
     TestEngine.run(LfricXiosNonCyclicPastTest())
