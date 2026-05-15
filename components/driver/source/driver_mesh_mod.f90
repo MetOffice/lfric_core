@@ -314,7 +314,8 @@ subroutine init_mesh( config,                  &
                             decomposition,           &
                             stencil_depths,          &
                             generate_inner_halos,    &
-                            partitioner_ptr )
+                            partitioner_ptr,         &
+                            enforce_constraints=check_partitions )
 
 
     ! 2.2f Read in the global intergrid mesh mappings,
