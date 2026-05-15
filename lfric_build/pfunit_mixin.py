@@ -108,7 +108,9 @@ class PfUnitMixin:
             for path in core_test_dir.rglob("*90"):
                 dirs.add(path.parent)
             for path in dirs:
-                # Store the files in the corresponding subdirectories
+                # Store the files in the corresponding subdirectories (without
+                # this when rsync-ing `a` and `a/b` you end up with duplicated
+                # files).
                 dst = path.relative_to(core_test_dir)
                 grab_folder(self.config,
                             src=path,
