@@ -46,6 +46,8 @@ contains
 
 subroutine random_perturb_code(nlayers, theta, height_wtheta, ndf_wtheta, undf_wtheta, map_wtheta)
 
+use initial_temperature_config_mod, only: theta_pert_start, theta_pert_end, theta_pert_size
+
 implicit none
 
 integer(kind=i_def), intent(in) :: nlayers
@@ -57,11 +59,6 @@ real(kind=r_def), intent(in),    dimension(undf_wtheta) :: height_wtheta
 
 integer(kind=i_def) :: k
 real(kind=r_def)    :: pert(0:nlayers-1)
-
-! These could become variables in the idealised namelist:
-real(kind=r_def), parameter :: theta_pert_start = 5.0e3_r_def ! Height (m) at which perturbations start
-real(kind=r_def), parameter :: theta_pert_end   = 7.0e3_r_def ! Height (m) at which perturbations end
-real(kind=r_def), parameter :: theta_pert_size  = 0.5_r_def   ! Max size of perturbations (K)
 
 call random_number(pert)
 
