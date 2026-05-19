@@ -118,8 +118,6 @@ contains
   ! compute the norm of a field vector
   function norm_field_vector(self) result(normal)
 
-    use sci_psykal_light_mod, only: invoke_rdouble_X_innerproduct_X
-
     implicit none
     class(r_solver_field_vector_type), intent(in) :: self
     real(kind=r_def)    :: normal
@@ -129,7 +127,7 @@ contains
 
     nfctr = size(self%vector)
     do fctr = 1, nfctr
-       call invoke_rdouble_X_innerproduct_X(field_norm, self%vector(fctr))
+       call invoke(X_innerproduct_X(field_norm, self%vector(fctr)))
        normal=normal + field_norm
     end do
     normal = sqrt(normal)
@@ -138,21 +136,17 @@ contains
   ! compute the norm of a field in the vector
   function field_norm_field_vector(self, n) result(normal)
 
-    use sci_psykal_light_mod, only: invoke_rdouble_X_innerproduct_X
-
     implicit none
     class(r_solver_field_vector_type), intent(in) :: self
     integer(kind=i_def),      intent(in) :: n
     real(kind=r_def)    :: normal
 
-    call invoke_rdouble_X_innerproduct_X(normal, self%vector(n))
+    call invoke(X_innerproduct_X(normal, self%vector(n)))
     normal = sqrt(normal)
   end function field_norm_field_vector
 
   ! compute the dot of inner product of a field vector
   function dot_field_vector(self, x) result(dot_prod)
-
-    use sci_psykal_light_mod, only: invoke_rdouble_X_innerproduct_Y
 
     implicit none
     class(r_solver_field_vector_type),    intent(in) :: self
@@ -167,7 +161,7 @@ contains
        nfctr = size(self%vector)
        do fctr = 1, nfctr
           inner_prod_field = 0.0_r_def
-          call invoke_rdouble_X_innerproduct_Y( inner_prod_field, self%vector(fctr), x%vector(fctr) )
+          call invoke(X_innerproduct_Y( inner_prod_field, self%vector(fctr), x%vector(fctr)))
           dot_prod = dot_prod + inner_prod_field
        end do
     class default
