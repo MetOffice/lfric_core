@@ -42,7 +42,7 @@
         [[[environment]]]
             BUILD_ROOT = ${TMPDIR}
             HYPERTHREADS    = 1
-            CORES_PER_NODE  = 128
+            CORES_PER_NODE  = {{site_vars.node_cores}}
             NUMA_REGIONS_PER_NODE = 2
 
     [[EX1A_BUILD]]

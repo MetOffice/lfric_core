@@ -24,7 +24,7 @@ module lfric_xios_temporal_mod
   use lfric_ncdf_file_mod,  only: lfric_ncdf_file_type
   use lfric_xios_field_mod, only: lfric_xios_field_type
   use lfric_xios_utils_mod, only: parse_date_as_xios, seconds_from_date, &
-                                  read_time_data
+                                  read_time_data, duration_from_enum
   use linked_list_data_mod, only: linked_list_data_type
   use log_mod,              only: log_event, log_scratch_space, &
                                   LOG_LEVEL_ERROR, LOG_LEVEL_INFO, &
@@ -73,6 +73,9 @@ module lfric_xios_temporal_mod
     type(xios_duration) :: io_frequency
     !> Do initial fields need to be read
     logical(l_def) :: read_initial_fields = .false.
+    !> How often the model data updated
+    type(xios_duration) :: update_frequency
+    logical :: interp_flag = .false.
 
 
   contains
@@ -106,9 +109,10 @@ contains
   !> @param[in,out] file_fields    A list of fields within the file
   !> @param[in]     io_frequency   How often the file is read
   !> @param[in]     cyclic         Is the time axis cyclic or not
+  !> @param[in]     update_frequency How often the model data should be updated (enum)
   !> @param[out]    record_offset  Time index for XIOS to start reading data from
   subroutine initialise( self, file_id, file_path, file_fields, io_frequency, &
-                         cyclic, record_offset )
+                         cyclic, update_freq, record_offset )
 
     implicit none
 
@@ -118,6 +122,7 @@ contains
     type(lfric_xios_field_type),  intent(inout) :: file_fields(:)
     type(xios_duration),          intent(in)    :: io_frequency
     logical,                      intent(in)    :: cyclic
+    integer(i_def),               intent(in)    :: update_freq
     integer(i_def),               intent(out)   :: record_offset
 
     type(xios_date)       :: context_start
@@ -130,6 +135,8 @@ contains
 
     self%io_frequency = io_frequency
 
+    self%update_frequency = duration_from_enum(update_freq)
+
     self%is_cyclic = cyclic
     if (self%is_cyclic) then
       self%cycle_period = self%io_frequency * size(self%time_data)
@@ -141,9 +148,17 @@ contains
     ! between the first two time entries
     call self%align_time_axis(context_start, record_offset)
 
-    ! Set window size to 2 if model timesteps not synchonised with time data
+    ! Add 1 to window_size if model timesteps not synchonised with time data
     if (.not. context_start == self%time_data(1)) then
-      self%window_size = 2
+      self%window_size = self%window_size + 1
+    end if
+
+    ! Add 1 to window size if interpolation is required
+    if (context_start + self%update_frequency == context_start + xios_duration(0)) then
+      self%interp_flag = .false.
+    else
+      self%interp_flag = .true.
+      self%window_size = self%window_size + 1
     end if
 
     ! The lfric_xios_field_type object is used to store the pointers to the model fields
@@ -168,10 +183,12 @@ contains
       call file_fields(i)%set_model_field(self%fields(self%read_index,i))
     end do
 
-    if (.not. context_start == self%time_data(1)) then
+    if (.not. context_start == self%time_data(1) .or. self%interp_flag) then
       ! Set up additional file definition for initialisation
       call self%setup_initial_read_definition(file_id, file_path, record_offset, n_fields)
-      call self%shift_read_index(file_fields)
+      do j = 1, self%window_size - 1
+        call self%shift_read_index(file_fields)
+      end do
     end if
 
   end subroutine initialise
@@ -253,18 +270,20 @@ contains
     type(xios_file)       :: initial_read_file
     type(xios_fieldgroup) :: init_fieldgroup
     character(str_def)    :: init_fields_id
+    character(len=7)      :: init_suffix
 
     class(field_parent_type), pointer :: init_field_ptr
+
+    call xios_get_timestep(timestep_duration)
+    call xios_get_handle("file_definition", file_definition)
 
     ! Set up separate file instance for initial read, in the case of time-varying
     ! inputs that need multiple time entries present on initialisation
     allocate(self%init_fields(self%window_size-1, n_fields))
     do f = 1, self%window_size-1
-      call xios_get_timestep(timestep_duration)
-
-      call xios_get_handle("file_definition", file_definition)
+      write(init_suffix, "(A,I0)") "_init_", f
       call xios_add_child( file_definition, initial_read_file, &
-                            trim(file_id)//"_init" )
+                            trim(file_id)//init_suffix )
 
       call xios_set_attr( initial_read_file, name=trim(adjustl(file_path)), &
                                               output_freq=timestep_duration, &
@@ -278,7 +297,7 @@ contains
       record_offset = record_offset + 1
 
       ! Add fields to initial file definition
-      init_fields_id = trim(file_id)//"_init_fields"
+      init_fields_id = trim(file_id)//init_suffix//"_fields"
       call xios_add_child(initial_read_file, init_fieldgroup, trim(init_fields_id))
       do i = 1, n_fields
         init_field_ptr => self%fields(f,i)
@@ -310,15 +329,17 @@ contains
     logical :: carryon
 
     type(xios_date)   :: model_date
-    integer(i_def) :: next_field_index, i
+    integer(i_def) :: next_field_index, i, f
 
     ! Get current date from XIOS calendar
     call xios_get_current_date(model_date)
 
     ! Perform initial field read
     if (self%read_initial_fields) then
-      do i = 1, size(self%init_fields(1,:))
-        call self%init_fields(1,i)%recv()
+      do f = 1, self%window_size - 1
+        do i = 1, size(self%init_fields(f,:))
+          call self%init_fields(f,i)%recv()
+        end do
       end do
       self%read_initial_fields = .false.
       call self%update_model_data()
@@ -342,7 +363,13 @@ contains
 
     if ( self%next_model_update <= model_date ) then
       call self%update_model_data()
-      self%next_model_update = self%time_data(2)
+      ! If the update frequency is 0, the model data is updated at each point
+      ! corresponding to the frequency of the input data
+      if (self%interp_flag) then
+        self%next_model_update = self%next_model_update + self%update_frequency
+      else
+        self%next_model_update = self%time_data(2)
+      end if
     end if
 
   end function advance
@@ -376,10 +403,13 @@ contains
 
     class(temporal_type),       intent(inout) :: self
 
+    type(xios_date)                   :: current_date
     class(field_parent_type), pointer :: tmp_model_field
     type(field_type),         pointer :: model_field
 
-    integer(i_def) :: i, n_fields
+    integer(i_def) :: i, n_fields, next_field_index
+
+    call xios_get_current_date(current_date)
 
     n_fields = size(self%fields, dim=2)
 
@@ -390,13 +420,66 @@ contains
       type is (field_type)
         model_field => tmp_model_field
       end select
-      call invoke(setval_X(model_field, self%fields(self%current_field_index, i)))
+      if (self%interp_flag) then
+        next_field_index = self%current_field_index + 1
+        if (next_field_index > self%window_size) next_field_index = 1
+        call interp_field_1d( model_field,                                  &
+                              self%fields(self%current_field_index, i),     &
+                              self%fields(next_field_index, i), &
+                              [self%time_data(1), self%time_data(2)],       &
+                              current_date )
+      else
+        call invoke(setval_X(model_field, self%fields(self%current_field_index, i)))
+      end if
     end do
 
     nullify(tmp_model_field)
     nullify(model_field)
 
+
   end subroutine update_model_data
+
+
+  !> @brief Populates a model field by interpolating between the data entries of
+  !>        the current time window.
+  !> @param[in,out] model_field     Pointer to field to be populated from data fields
+  !> @param[in]     window_field_1  Field containing data for the first entry of the time window
+  !> @param[in]     window_field_2  Field containing data for the second entry of the time window
+  !> @param[in]     time_window     The current time window
+  !> @param[in]     model_date      The current model date
+  subroutine interp_field_1d( model_field, window_field_1, window_field_2, time_window, model_date )
+
+    implicit none
+
+    type(field_type),       intent(inout), pointer :: model_field
+    type(field_type),       intent(in)             :: window_field_1
+    type(field_type),       intent(in)             :: window_field_2
+    type(xios_date),        intent(in)             :: time_window(2)
+    type(xios_date),        intent(in)             :: model_date
+
+    type(field_type)       :: dData, interp_gradient, interp_increment
+    real(r_def)            :: window_dt_sec, window_time_sec, dt_recip
+
+    ! Initialise interpolation variables
+    call model_field%copy_field_properties(dData)
+    call model_field%copy_field_properties(interp_gradient)
+    call model_field%copy_field_properties(interp_increment)
+
+    ! Get time in seconds from XIOS dates
+    window_dt_sec = seconds_from_date(time_window(2)) - &
+                    seconds_from_date(time_window(1))
+    window_time_sec = seconds_from_date(model_date) - &
+                      seconds_from_date(time_window(1))
+
+    dt_recip = 1.0_r_def/window_dt_sec
+
+    ! Perform linear interpolation and populate model field with interpolated data
+    call invoke( X_minus_Y( dData, window_field_2, window_field_1 ),              &
+                 a_times_X( interp_gradient, dt_recip, dData ),                   &
+                 a_times_X( interp_increment, window_time_sec, interp_gradient ), &
+                 X_plus_Y( model_field, window_field_1, interp_increment ) )
+
+  end subroutine interp_field_1d
 
   !-----------------------------------------------------------------------------
   ! Destructor routines

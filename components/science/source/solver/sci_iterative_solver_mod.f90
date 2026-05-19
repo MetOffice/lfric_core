@@ -1510,12 +1510,9 @@ contains
       end do
       init_err = sum(initial_error)
 
-      if (log_at_level( log_level_info )) then
-        ! Only compute the norm if we are going to write it
-        write( log_scratch_space, '(A,E15.8,":",E15.8)' ) &
-             "BLOCK_GCR starting ... ||b|| = ", b%norm(),init_err
-        call log_event(log_scratch_space, LOG_LEVEL_INFO)
-      end if
+      write( log_scratch_space, '(A,E15.8)' ) &
+           "BLOCK_GCR starting ... ||b|| = ", init_err
+      call log_event(log_scratch_space, LOG_LEVEL_INFO)
     end if
 
     ! Use special DDT to avoid CCE bug.
