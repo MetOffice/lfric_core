@@ -189,12 +189,6 @@ subroutine combine_w2_field_code_r_single(nlayers,                         &
     lowest_order = .false.
   end if
 
-  if (ndf_w2 == 6) then
-    lowest_order = .true.
-  else
-    lowest_order = .false.
-  end if
-
   if (lowest_order) then
     hori_dofs_to_do = ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
   else

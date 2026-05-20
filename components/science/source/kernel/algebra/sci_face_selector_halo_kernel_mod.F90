@@ -1,6 +1,6 @@
 
 !-----------------------------------------------------------------------------
-! (c) Crown copyright 2026 Met Office. All rights reserved.
+! (c) Crown copyright Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
@@ -9,14 +9,12 @@
 module sci_face_selector_halo_kernel_mod
 
   use argument_mod,                  only: arg_type,                           &
-                                           GH_FIELD, GH_SCALAR,                &
+                                           GH_FIELD, GH_WRITE,                 &
                                            GH_REAL, GH_INTEGER,                &
-                                           GH_WRITE, GH_READ,                  &
                                            HALO_CELL_COLUMN
   use constants_mod,                 only: i_def
   use fs_continuity_mod,             only: W3, W2H
   use kernel_mod,                    only: kernel_type
-  use reference_element_mod,         only: W, S, E, N
   use sci_face_selector_support_mod, only: compute_face_selector
 
   implicit none

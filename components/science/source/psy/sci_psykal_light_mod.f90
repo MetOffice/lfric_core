@@ -86,7 +86,7 @@ contains
     integer(kind=i_def),      intent(in)    :: value
     integer(kind=i_def),      intent(in)    :: depth
     integer(kind=i_def) :: df
-    integer(kind=i_def), pointer, dimension(:) :: field_data => null()
+    integer(kind=i_def), pointer, dimension(:) :: field_data
     type(integer_field_proxy_type) :: field_proxy
     integer(kind=i_def) :: loop_start
     integer(kind=i_def) :: loop_stop

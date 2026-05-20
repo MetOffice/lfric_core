@@ -23,7 +23,6 @@ use argument_mod,                  only: arg_type,                  &
 use constants_mod,                 only: i_def, r_def, l_def, IMDI
 use kernel_mod,                    only: kernel_type
 use reference_element_mod,         only: E, N
-use sci_face_selector_support_mod, only: face_from_face_selector
 
 implicit none
 
