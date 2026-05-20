@@ -29,3 +29,4 @@
 | shreybh1         | Shrey Bhardwaj         | Met Office            | 2026-03-26 |
 | hiker            | Joerg Henrichs         | Bureau of Meteorology | 2026-02-11 |
 | sergisiso        | Sergi Siso             | UKRI-STFC             | 2026-04-20 |
+| mattatmet        | Matthew Walker         | Met Office            | 2026-04-21 |
