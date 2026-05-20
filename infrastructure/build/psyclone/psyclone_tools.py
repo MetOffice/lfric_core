@@ -19,11 +19,16 @@ try:
 except ImportError:
     # Support for psyclone < 3.3
     from psyclone.transformations import OMPParallelTrans
+try:
+    from psyclone.domain.lfric.transformations import (
+        LFRicRedundantComputationTrans)
+except ImportError:
+    # Support for psyclone < 3.3
+    from psyclone.transformations import LFRicRedundantComputationTrans
 
 from psyclone.transformations import (
     LFRicColourTrans,
     LFRicOMPLoopTrans,
-    LFRicRedundantComputationTrans,
 )
 
 # List of allowed 'setval_*' built-ins for redundant computation transformation
