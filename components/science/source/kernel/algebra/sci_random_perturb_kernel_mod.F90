@@ -11,7 +11,7 @@
 module sci_random_perturb_kernel_mod
 
 use argument_mod,               only : arg_type, func_type,            &
-                                       GH_FIELD, GH_REAL,              &
+                                       GH_FIELD, GH_REAL, GH_SCALAR,   &
                                        GH_READ, GH_WRITE,              &
                                        GH_READWRITE,                   &
                                        ANY_SPACE_9, GH_BASIS,          &
@@ -29,9 +29,12 @@ implicit none
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: random_perturb_kernel_type
   private
-  type(arg_type) :: meta_args(2) = (/                      &
+  type(arg_type) :: meta_args(5) = (/                      &
        arg_type(GH_FIELD, GH_REAL, GH_READWRITE,  WTHETA), &
-       arg_type(GH_FIELD, GH_REAL, GH_READ,       WTHETA)  &
+       arg_type(GH_FIELD, GH_REAL, GH_READ,       WTHETA), &
+       arg_type(GH_SCALAR, GH_REAL, GH_READ ),             &
+       arg_type(GH_SCALAR, GH_REAL, GH_READ ),             &
+       arg_type(GH_SCALAR, GH_REAL, GH_READ )              &
        /)
   integer :: operates_on = CELL_COLUMN
 contains
@@ -44,9 +47,9 @@ end type
 public random_perturb_code
 contains
 
-subroutine random_perturb_code(nlayers, theta, height_wtheta, ndf_wtheta, undf_wtheta, map_wtheta)
-
-use initial_temperature_config_mod, only: theta_pert_start, theta_pert_end, theta_pert_size
+subroutine random_perturb_code(nlayers, theta, height_wtheta, theta_pert_size, &
+                               theta_pert_start, theta_pert_end,               &
+                               ndf_wtheta, undf_wtheta, map_wtheta)
 
 implicit none
 
@@ -56,6 +59,9 @@ integer(kind=i_def), intent(in) :: undf_wtheta
 integer(kind=i_def), intent(in), dimension(ndf_wtheta)  :: map_wtheta
 real(kind=r_def), intent(inout), dimension(undf_wtheta) :: theta
 real(kind=r_def), intent(in),    dimension(undf_wtheta) :: height_wtheta
+real(kind=r_def), intent(in)    :: theta_pert_size
+real(kind=r_def), intent(in)    :: theta_pert_start
+real(kind=r_def), intent(in)    :: theta_pert_end
 
 integer(kind=i_def) :: k
 real(kind=r_def)    :: pert(0:nlayers-1)
