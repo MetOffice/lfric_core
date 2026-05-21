@@ -29,7 +29,7 @@ class PfUnitMixin:
 
     :param name: the name to be used for the workspace. Note that
         the name of the compiler will be added to it.
-    :param apps_dir: the base directory of the application.
+    :param app_dir: the base directory of the application.
     :param root_symbol: the symbol (or list of symbols) of the main
         programs. Defaults to the parameter `name` if not specified.
 
@@ -40,12 +40,12 @@ class PfUnitMixin:
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name: str,
-                 apps_dir: Path,
+                 app_dir: Path,
                  root_symbol: Optional[Union[List[str], str]] = None
                  ):
 
         self._has_test = False
-        super().__init__(name, apps_dir=apps_dir, root_symbol=root_symbol)
+        super().__init__(name, app_dir=app_dir, root_symbol=root_symbol)
 
     def define_command_line_options(
             self,
@@ -93,8 +93,8 @@ class PfUnitMixin:
 
         unit_test = "unit-test"
         # Check if there are unit tests
-        if (not self.args.no_test) and (self.apps_dir / unit_test).is_dir():
-            grab_folder(self.config, src=self.apps_dir / unit_test,
+        if (not self.args.no_test) and (self.app_dir / unit_test).is_dir():
+            grab_folder(self.config, src=self.app_dir / unit_test,
                         dst_label=unit_test)
             # Some tests also need the .f90 files from
             # components/science/unit-tests, but not the .pf files. So, only

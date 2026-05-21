@@ -37,8 +37,8 @@ class FabSkeleton(PfUnitMixin, LFRicBase):
 
     def __init__(self, name: str = "skeleton") -> None:
 
-        apps_dir = Path(__file__).parent
-        super().__init__(name=name, apps_dir=apps_dir)
+        app_dir = Path(__file__).parent
+        super().__init__(name=name, app_dir=app_dir)
         # Store the root of this apps for later
         this_file = Path(__file__).resolve()
         self._this_root = this_file.parent
@@ -48,7 +48,7 @@ class FabSkeleton(PfUnitMixin, LFRicBase):
         Grabs the required source files and optimisation scripts.
         """
         super().grab_files_step()
-        grab_folder(self.config, src=self.apps_dir / "source",
+        grab_folder(self.config, src=self.app_dir / "source",
                     dst_label='')
 
         # Copy the optimisation scripts into a separate directory

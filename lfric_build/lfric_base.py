@@ -37,18 +37,18 @@ class LFRicBase(FabBase):
 
     :param name: the name to be used for the workspace. Note that
         the name of the compiler will be added to it.
-    :param apps_dir: the base directory of the application.
+    :param app_dir: the base directory of the application.
     :param root_symbol: the symbol (or list of symbols) of the main
         programs. Defaults to the parameter `name` if not specified.
 
     '''
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name: str,
-                 apps_dir: Path,
+                 app_dir: Path,
                  root_symbol: Optional[Union[List[str], str]] = None
                  ):
 
-        self._apps_dir = apps_dir
+        self._app_dir = app_dir
         # Will be set to true if a unit-test directory is found
 
         # List of all precision preprocessor symbols and their default.
@@ -87,11 +87,11 @@ class LFRicBase(FabBase):
             raise RuntimeError(msg) from err
 
     @property
-    def apps_dir(self) -> Path:
+    def app_dir(self) -> Path:
         """
         :returns: the root directory of the application.
         """
-        return self._apps_dir
+        return self._app_dir
 
     @property
     def lfric_core_root(self) -> Path:
