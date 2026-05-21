@@ -23,6 +23,8 @@ use fs_continuity_mod,          only : WTHETA, W3
 
 implicit none
 
+private
+
 !-------------------------------------------------------------------------------
 ! Public types
 !-------------------------------------------------------------------------------
@@ -37,8 +39,6 @@ type, public, extends(kernel_type) :: random_perturb_kernel_type
        arg_type(GH_SCALAR, GH_REAL, GH_READ )              &
        /)
   integer :: operates_on = CELL_COLUMN
-contains
-  procedure, nopass ::random_perturb_code
 end type
 
 !-------------------------------------------------------------------------------
