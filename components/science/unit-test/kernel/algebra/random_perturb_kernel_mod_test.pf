@@ -1,3 +1,6 @@
+
+
+
 !-----------------------------------------------------------------------------
 ! Copyright (c) 2022,  Met Office, on behalf of HMSO and Queen's Printer
 ! For further details please refer to the file LICENCE which you
@@ -93,6 +96,9 @@ contains
     call random_perturb_code(nlayers,                 &
                              this%theta,              &
                              this%height_wt,          &
+                             theta_pert_size,         &
+                             theta_pert_start,        &
+                             theta_pert_end,          &
                              ndf_wtheta, undf_wtheta, &
                              this%map_wtheta )
 
