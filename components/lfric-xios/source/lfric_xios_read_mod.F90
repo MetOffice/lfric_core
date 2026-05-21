@@ -241,10 +241,16 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
   real(r_def),   allocatable :: time_slice(:)
   real(r_def),   allocatable :: field_data(:)
 
-  type(mesh_type), pointer   :: mesh => null()
+  type(mesh_type), pointer   :: mesh 
+  type(mesh_type), pointer   :: local_mesh
+  type(str_def), pointer     :: local_mesh_name
+
+  nullify(mesh,local_mesh)
 
   ! Call error if field not on prime mesh
   mesh => field_proxy%vspace%get_mesh()
+  local_mesh => mesh%get_local_mesh()
+  local_mesh_name = local_mesh%get_mesh_name()
 
   fs_id = field_proxy%vspace%which()
   if ( fs_id /= W3 .and. fs_id /= WTheta .and. fs_id /= W2H ) then
@@ -279,17 +285,14 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
                       LOG_LEVEL_ERROR )
     end if
   else
-    if ( mesh%get_extrusion_id() == TWOD ) then
-      mesh => mesh_collection%get_mesh_variant( mesh, PRIME_EXTRUSION )
-    end if
     if ( fs_id == W3 ) then
-      call xios_get_domain_attr( trim(adjustl(mesh%get_mesh_name()))//"_face", ni=domain_size )
+      call xios_get_domain_attr( trim(adjustl(local_mesh_name))//"_face", ni=domain_size )
       call xios_get_axis_attr( 'vert_axis_half_levels', n_glo=vert_axis_size )
     else if ( fs_id == WTheta ) then
-      call xios_get_domain_attr( trim(adjustl(mesh%get_mesh_name()))//"_face", ni=domain_size )
+      call xios_get_domain_attr( trim(adjustl(local_mesh_name))//"_face", ni=domain_size )
       call xios_get_axis_attr( 'vert_axis_full_levels', n_glo=vert_axis_size )
     else if ( fs_id == W2H ) then
-      call xios_get_domain_attr( trim(adjustl(mesh%get_mesh_name()))//"_edge", ni=domain_size )
+      call xios_get_domain_attr( trim(adjustl(local_mesh_name))//"_edge", ni=domain_size )
       call xios_get_axis_attr( 'vert_axis_half_levels', n_glo=vert_axis_size )
     else
       call log_event( 'Time varying fields only readable for W3, WTheta or W2H function spaces', &
