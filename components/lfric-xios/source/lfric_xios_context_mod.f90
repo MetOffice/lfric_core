@@ -56,7 +56,7 @@ module lfric_xios_context_mod
     logical :: xios_context_initialised = .false.
     !> Flag denoting if this file is a UGRID Planar mesh file with
     !> projected coordinates that have been scaled
-    logical                                   :: ugrid_scaled_projected_coordinates = .false.
+    logical :: ugrid_scaled_projected_coordinates = .false.
 
   contains
     private

@@ -331,7 +331,7 @@ subroutine file_close(self)
       call log_event( "Waiting for XIOS to close file ["//trim(self%path)//".nc]", &
                       log_level_debug )
       call init_wait()
-      call log_event( "post processing file ["//trim(self%path)//".nc]", &
+      call log_event( "Processing file ["//trim(self%path)//".nc]", &
                       log_level_debug )
       call process_output_file(trim(self%path)//".nc")
     end if

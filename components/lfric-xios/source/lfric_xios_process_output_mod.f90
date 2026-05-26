@@ -14,20 +14,17 @@
 !>
 module lfric_xios_process_output_mod
 
-  use constants_mod,              only: i_def, r_def, str_def
+  use constants_mod,              only: i_def
   use file_mod,                   only: FILE_MODE_WRITE,     &
                                         FILE_OP_OPEN
   use io_config_mod,              only: file_convention,       &
-                                        file_convention_ugrid, &
-                                        file_convention_cf
+                                        file_convention_ugrid
   use lfric_mpi_mod,              only: global_mpi
-  use lfric_ncdf_dims_mod,        only: lfric_ncdf_dims_type
   use lfric_ncdf_field_mod,       only: lfric_ncdf_field_type
-  use lfric_ncdf_field_group_mod, only: lfric_ncdf_field_group_type
   use lfric_ncdf_file_mod,        only: lfric_ncdf_file_type
   use lfric_xios_constants_mod,   only: dp_xios
   use log_mod,                    only: log_event, log_level_trace, &
-                                        log_level_info
+                                        log_level_debug
 
   implicit none
 
@@ -55,7 +52,8 @@ subroutine process_output_file(file_path)
   ! Output processing must be done in serial
   if (global_mpi%get_comm_rank() /= 0) return
 
-  call log_event("Processing output file: "//trim(file_path), log_level_info)
+  call log_event("Processing output file to format_mesh: "//trim(file_path), &
+                  log_level_debug)
 
   ! If file has not been written out, then don't attempt to process it
   inquire(file=trim(file_path), exist=file_exists)
@@ -66,9 +64,7 @@ subroutine process_output_file(file_path)
                                     open_mode=FILE_OP_OPEN, &
                                     io_mode=FILE_MODE_WRITE )
 
-  if (file_convention == file_convention_ugrid) then
-    call format_mesh(file_ncdf)
-  end if
+  call format_mesh(file_ncdf)
 
   call file_ncdf%close_file()
 
