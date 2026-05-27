@@ -18,13 +18,11 @@ module lfric_xios_file_mod
   use file_mod,                      only: file_type,      &
                                            file_mode_read, &
                                            file_mode_write
-  use lfric_xios_process_output_mod, only: process_output_file
   use lfric_xios_field_mod,          only: lfric_xios_field_type
   use lfric_xios_diag_mod,           only: file_is_tagged
   use log_mod,                       only: log_event, log_level_error, &
                                            log_level_trace, log_level_debug
   use mesh_mod,                      only: mesh_type
-  use mod_wait,                      only: init_wait
   use lfric_xios_diag_mod,           only: get_file_name
   use lfric_xios_temporal_mod,       only: temporal_type
   use xios,                          only: xios_file, xios_is_valid_file,    &
@@ -89,9 +87,6 @@ type, public, extends(file_type) :: lfric_xios_file_type
   logical :: is_diag = .false.
   !> Flag denoting if the always-on sampling mode is selected
   logical :: diag_always_on_sampling = .true.
-  !> Flag denoting if this file is a UGRID Planar mesh file with
-  !> projected coordinates that have been scaled
-  logical :: ugrid_scaled_projected_coordinates = .false.
   !> Will the file be read again from the beginning once the end is reached
   logical :: cyclic = .false.
   !>
@@ -121,7 +116,7 @@ contains
   procedure, public :: mode_is_write
   procedure, public :: recv_fields
   procedure, public :: send_fields
-  procedure, public :: set_ugrid_scaled_projected_coordinates
+  procedure, public :: get_filepath
   final             :: lfric_xios_file_final
 
 end type lfric_xios_file_type
@@ -323,19 +318,6 @@ subroutine file_close(self)
   class(lfric_xios_file_type), intent(inout) :: self
 
   if (self%is_closed) return
-
-  if ( self%io_mode == FILE_MODE_WRITE ) then
-    ! Only take action if this is a regional model with UGRID Projected
-    ! coordinates, as these are awaiting XIOS feature development
-    if ( self%ugrid_scaled_projected_coordinates ) then
-      call log_event( "Waiting for XIOS to close file ["//trim(self%path)//".nc]", &
-                      log_level_debug )
-      call init_wait()
-      call log_event( "Processing file ["//trim(self%path)//".nc]", &
-                      log_level_debug )
-      call process_output_file(trim(self%path)//".nc")
-    end if
-  end if
 
   self%is_closed = .true.
 
@@ -599,17 +581,18 @@ subroutine lfric_xios_file_final(self)
 
 end subroutine lfric_xios_file_final
 
-!> @brief Setter for the file object ugrid_scaled_projected_coordinates
-!> @param[in]  ugrid_scaled_projected_coordinates Logical
+!> Gets the file path associated with this file.
 !>
-subroutine set_ugrid_scaled_projected_coordinates(self, ugrid_scaled_projected_coordinates)
+!> @return character string of the filepath with .nc suffix.
+function get_filepath( this ) result( filepath )
 
   implicit none
-  logical, intent(in) :: ugrid_scaled_projected_coordinates
-  class(lfric_xios_file_type), intent(inout) :: self
 
-  self%ugrid_scaled_projected_coordinates = ugrid_scaled_projected_coordinates
+  character(str_max_filename) :: filepath
+  class(lfric_xios_file_type), intent(in), target :: this
 
-end subroutine set_ugrid_scaled_projected_coordinates
+  filepath = trim(this%path)//".nc"
+
+end function get_filepath
 
 end module lfric_xios_file_mod

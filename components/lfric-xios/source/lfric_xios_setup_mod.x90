@@ -426,14 +426,12 @@ contains
   !> @brief  Sets up XIOS context file information from list of file objects
   !>
   !> @param[in]  files_list  List of file objects
-  !> @param[in]  logical ugrid_scaled_projected_coordinates
-  subroutine setup_xios_files(files_list, ugrid_scaled_projected_coordinates)
+  subroutine setup_xios_files(files_list)
 
     implicit none
 
     type(linked_list_type),       intent(inout) :: files_list
 
-    logical, intent(in)  :: ugrid_scaled_projected_coordinates
     type(xios_filegroup) :: file_definition
 
     ! Pointer to linked list - used for looping through the list
@@ -476,9 +474,6 @@ contains
           file => list_item
           ! Register individual file information with context
           call file%register_with_context()
-          if ( ugrid_scaled_projected_coordinates ) then
-            call file%set_ugrid_scaled_projected_coordinates(ugrid_scaled_projected_coordinates)
-          end if
 
         class default
       end select

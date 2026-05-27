@@ -26,6 +26,7 @@ module lfric_xios_context_mod
                                    init_xios_dimensions, &
                                    setup_xios_files
   use lfric_xios_file_mod,  only : lfric_xios_file_type
+  use lfric_xios_process_output_mod, only: process_output_file
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
   use mesh_mod,             only : mesh_type
   use model_clock_mod,      only : model_clock_type
@@ -151,8 +152,7 @@ contains
                     file_convention == file_convention_ugrid ) then
       this%ugrid_scaled_projected_coordinates = .true.
     end if
-    if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist, &
-                                                              this%ugrid_scaled_projected_coordinates)
+    if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist)
 
     if (associated(before_close)) call before_close(model_clock)
 
@@ -233,13 +233,14 @@ contains
         ! has closed the files for all servers before we process them.
         call init_wait()
 
-        ! Close all files in list
+        ! Process and close all files in list
         if (this%filelist%get_length() > 0) then
           loop => this%filelist%get_head()
           do while (associated(loop))
             select type( list_item => loop%payload )
               type is (lfric_xios_file_type)
                 file => list_item
+                call process_output_file(file)
                 call file%file_close()
             end select
             loop => loop%next

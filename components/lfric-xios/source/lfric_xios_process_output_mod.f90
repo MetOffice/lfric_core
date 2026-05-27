@@ -14,7 +14,7 @@
 !>
 module lfric_xios_process_output_mod
 
-  use constants_mod,              only: i_def
+  use constants_mod,              only: i_def, str_max_filename
   use file_mod,                   only: FILE_MODE_WRITE,     &
                                         FILE_OP_OPEN
   use io_config_mod,              only: file_convention,       &
@@ -23,6 +23,7 @@ module lfric_xios_process_output_mod
   use lfric_ncdf_field_mod,       only: lfric_ncdf_field_type
   use lfric_ncdf_file_mod,        only: lfric_ncdf_file_type
   use lfric_xios_constants_mod,   only: dp_xios
+  use lfric_xios_file_mod,        only: lfric_xios_file_type
   use log_mod,                    only: log_event, log_level_trace, &
                                         log_level_debug
 
@@ -39,13 +40,13 @@ contains
 !> @brief Processes a NetCDF file produced by XIOS to work around
 !>        limmitations in UGRID projected coordinates only.
 !>
-!> @param[in] file_path  The path to the NetCDF file to be edited
-subroutine process_output_file(file_path)
+!> @param[in] file  The lfric_xios file object for the NetCDF file to be edited
+subroutine process_output_file(file)
 
   implicit none
 
-  character(len=*), intent(in) :: file_path
-
+  character(len=str_max_filename) :: file_path
+  class(lfric_xios_file_type), intent(in) :: file
   type(lfric_ncdf_file_type) :: file_ncdf
   logical                    :: file_exists
 
@@ -54,6 +55,7 @@ subroutine process_output_file(file_path)
 
   call log_event("Processing output file to format_mesh: "//trim(file_path), &
                   log_level_debug)
+  file_path = file%get_filepath()
 
   ! If file has not been written out, then don't attempt to process it
   inquire(file=trim(file_path), exist=file_exists)
