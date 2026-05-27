@@ -26,7 +26,7 @@ from fab.fab_base.fab_base import FabBase
 
 from configurator import configurator
 from templaterator import Templaterator
-from psyclone_config import PsycloneConfig, PsycloneInfo
+from psyclone_control import PsycloneControl, PsycloneInfo
 
 # Add a logger and connect it to stdout.
 logger = logging.getLogger("fab")
@@ -87,16 +87,18 @@ class LFRicBase(FabBase):
                    f"has no NetCDF library setting defined. Aborting.")
             raise RuntimeError(msg) from err
 
-        self._psyclone_config = PsycloneConfig(self)
+        self._psyclone_control = PsycloneControl(self)
         if self.args.psyclone_info:
             info_list = [Path(i) for i in self.args.psyclone_info]
         else:
+            # This default rule implements the "file-specific if exists,
+            # otherwise global.py" rule.
             info_list = [Path(self.lfric_core_root / "lfric_build" /
                               "psyclone_info.yaml")]
         for psy_info_file in info_list:
             logger.info(f"Reading PSyclone configuration file "
                         f"'{psy_info_file}'.")
-            self._psyclone_config.read(Path(psy_info_file))
+            self._psyclone_control.read(Path(psy_info_file))
 
     @property
     def app_dir(self) -> Path:
@@ -399,14 +401,18 @@ class LFRicBase(FabBase):
             psyclone_cli_args.extend(additional_parameters)
 
         add_python_paths = ":".join(str(i) for i in self._add_python_paths)
-        for phase in self._psyclone_config.all_phases:
+        for phase in self._psyclone_control.all_phases:
             logger.info(f"Running PSyclone phase {phase}.")
-            psyclone_info = self._psyclone_config.get_info(phase)
+            psyclone_info = self._psyclone_control.get_info(phase)
             # To avoid impacting other code, store the original search path
-            # We have to modify PYTHONPATH (and not sys.path), since PSycline
+            # We have to modify PYTHONPATH (and not sys.path), since PSyclone
             # is run in its own shell (i.e. it inherits PYTHONPATH, but not
             # sys.path).
             orig_pythonpath = os.environ.get("PYTHONPATH", "")
+            # Add various paths: optimisation/site-platform/transmute
+            # (=opt_path) is required for some transmute scripts that
+            # import helper functions. Adding add_python_paths is
+            # required for other, shared PSyclone scripts
             os.environ["PYTHONPATH"] = (f"{psyclone_info.opt_path}:"
                                         f"{add_python_paths}:"
                                         f"{orig_pythonpath}")
@@ -473,7 +479,7 @@ class LFRicBase(FabBase):
         '''
         # Newer LFRic versions have a psykal directory
         logger.info(f"getting script '{fpath}' config: "
-                    f"'{str(self._psyclone_config)}'")
+                    f"'{str(self._psyclone_control)}'")
         optimisation_path = (config.source_root / "optimisation" /
                              f"{self.site}-{self.platform}" / "psykal")
         relative_path = None

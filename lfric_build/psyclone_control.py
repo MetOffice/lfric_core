@@ -18,6 +18,15 @@ from fab.fab_base.fab_base import FabBase
 
 
 class PsycloneInfo:
+    """
+    This class stores the set of rules and settings for one specific PSyclone
+    phase.
+
+    :param name: the name of this phase.
+    :param fab_base: the application script derived from FabBase. Required to
+        get access to the build config for paths, and the selected site and
+        platform.
+    """
 
     FILE_SPECIFIC = "file_specific"
     EXCLUDE = "exclude"
@@ -32,9 +41,6 @@ class PsycloneInfo:
         self._api: str = ""
         self._artefacts: str = ""
         self._rules: list[tuple[str, list[str]]] = []
-
-    def __str__(self) -> str:
-        return self._name
 
     @property
     def name(self) -> str:
@@ -66,6 +72,11 @@ class PsycloneInfo:
 
     @property
     def opt_path(self) -> Path:
+        """
+        :return: the optimisation root as absolute path (including site-
+            and platform-specific settings, and subdirectory, e.g. psykal
+            or transmute).
+        """
         return self._opt_path
 
     def update(self, info: dict[str, str]) -> None:
@@ -98,6 +109,12 @@ class PsycloneInfo:
 
     def _read_rule(self, rule: str, file_list: str) -> None:
         """
+        Parses a single rule from the yaml file. It especially handles
+        various way a '*' can be specified in a yaml file.
+
+        :param rule: the name of the rule (typically the script name, or
+            special term like `exclude` or `file_specific`).
+        :param file_list: the list of files to which to apply the rule to.
         """
         # Support '*', which is a reserved character in yaml and needs to
         # be escaped or quoted.
@@ -106,6 +123,9 @@ class PsycloneInfo:
         self._rules.append((rule, file_list.split()))
 
     def view(self) -> str:
+        """
+        :returns: a string representation of this phase in yaml format.
+        """
         s = f"""{self._name}:
 comment: {self.comment}
 api: {self.api}
@@ -116,6 +136,15 @@ rules: {self._rules}
         return s
 
     def file_specific_script(self, fpath: Path) -> Optional[Path]:
+        """
+        Searches for a file-specific optimisation script. It will search
+        both under the source and the build directories of the project
+        directory.
+
+        :param fpath: the file path of the Fortran file.
+        :returns: the path of the file-specific optimisation script, or
+            None if no such file exists.
+        """
         relative_path = None
         # The source file might be either in build_output (e.g. a preprocessed
         # .X90 file), or still in source (.x90 file). Check if the file
@@ -138,10 +167,24 @@ rules: {self._rules}
                 return local_transformation_script
         return None
 
-    def get_script(self, file: Path, config: BuildConfig) -> Optional[Path]:
-        # Search starting from the end, so last rule wins
-        file_str = str(file)
+    def get_script(self, fpath: Path, config: BuildConfig) -> Optional[Path]:
+        """
+        This method returns the script to be used for a given filename, or
+        None if no rule applies (or an explicit exclude rule applies)
 
+        This function will also provided to Fab's PSyclone step, and as such
+        it will receive the config object, even though it is not used.
+
+        :param fpath: the Fortran source file for which to find a
+            transformation script.
+        :param config: the build configuration (unused in this implementation)
+
+        :returns: the path to the transformation script, or None if no rule
+            applies (or an exclude rule applies).
+        """
+
+        file_str = str(fpath)
+        # Search starting from the end, so last rule wins
         for rule, file_list in self._rules[::-1]:
             for pattern in file_list:
                 if pattern not in file_str and pattern != "*":
@@ -151,7 +194,7 @@ rules: {self._rules}
                 # (note that file_specific might fall through in case that
                 # there is no file-specific script)
                 if rule == PsycloneInfo.FILE_SPECIFIC:
-                    script = self.file_specific_script(file)
+                    script = self.file_specific_script(fpath)
                     if script:
                         return script
                     if pattern == "*":
@@ -159,7 +202,7 @@ rules: {self._rules}
                         continue
 
                     # Now we have an explicit request for a file-specific
-                    # script a file, but that script does not exist.
+                    # script, but that script does not exist.
                     raise FileNotFoundError(
                         f"Cannot find explicitly requested script '{script}'.")
 
@@ -177,7 +220,18 @@ rules: {self._rules}
         return None
 
 
-class PsycloneConfig:
+class PsycloneControl:
+    """
+    This class stores the information from psyclone_info.yaml file(s). Several
+    files can be read, and latter information will extend the rules from
+    previous files, and replace the phases executed.
+
+    Details of each phase will be stored in PsycloneInfo instances.
+
+    :param fab_base: The FabBase derived application script. This is required
+        to get site, platform and config information when searching for
+        PSyclone scripts to be executed.
+    """
 
     def __init__(self, fab_base: FabBase) -> None:
         self._fab_base = fab_base
@@ -185,19 +239,47 @@ class PsycloneConfig:
         self._psyclone_info: dict[str, PsycloneInfo] = {}
 
     @property
-    def all_phases(self):
+    def all_phases(self) -> list[str]:
+        """
+        :returns: the list of all PSyclone phases to execute.
+        """
         return self._all_phases
 
     def get_info(self, phase: str) -> PsycloneInfo:
+        """
+        Returns the PSyclone information for the specified phase.
+
+        :param phase: the name of the phase.
+
+        :returns: the PSyclone Information for the specified phase.
+        """
         return self._psyclone_info[phase]
 
-    def view(self):
+    def view(self) -> str:
+        """
+        This returns a string representation of the combined read yaml files.
+        This is useful to be logged to show the actual details used.
+
+        :returns: the string represenation in yaml format of this PSyclone
+            control instance.
+        """
         s = f"""Phases: {" ".join(self._all_phases)}\n\n"""
         for phase in self._all_phases:
             s += f"{self._psyclone_info[phase].view()}\n"
         return s
 
     def read(self, filename: Union[str, Path]) -> None:
+        """
+        Reads a yaml file, and extends the potentially existing information.
+        Any phases specified in the new read yaml file will replace the
+        phases to be executed (i.e. will overwrite what was previously
+        specified). Any new rule sets will be added as new PsycloneInfo
+        instance. Rules for an exiting phase will be appended to the
+        existing information. The precedence handling means that any later
+        rule will overwrite any previous rule.
+
+        :param filename: the filename to read.
+        """
 
         with open(filename, "r", encoding="utf8") as stream:
             dependencies = yaml.safe_load(stream)
