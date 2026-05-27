@@ -444,6 +444,7 @@ end module sci_iterative_solver_mod
 
 !  Submodule with procedures for conjugate gradient !
 submodule(sci_iterative_solver_mod) conjugate_gradient_smod
+  implicit none
 contains
 
   !> Constructs a <code>conjugate_gradient</code> solver.
@@ -595,6 +596,7 @@ end submodule conjugate_gradient_smod
 
 ! submodule for the bicgstab procedures -- !
 submodule(sci_iterative_solver_mod) bicgstab_smod
+  implicit none
 contains
 
   !> Constructs a <code>bicgstab_type</code> solver.
@@ -781,6 +783,7 @@ contains
 end submodule bicgstab_smod
 
 submodule(sci_iterative_solver_mod) gmres_smod
+  implicit none
 contains
   !> constructs a <code>gmres_type</code> solver
   !> sets the values for the solver such as the residual (r_tol) and
@@ -1004,6 +1007,7 @@ contains
 end submodule gmres_smod
 
 submodule(sci_iterative_solver_mod) fgmres_smod
+  implicit none
 contains
   !> constructs a <code>fgmres_type</code> solver
   !> sets the values for the solver such as the residual (r_tol) and
@@ -1238,6 +1242,7 @@ contains
 end submodule fgmres_smod
 
 submodule(sci_iterative_solver_mod) gcr_smod
+  implicit none
 contains
   !> constructs a <code>gcr_type</code> solver
   !> sets the values for the solver such as the residual (r_tol) and
@@ -1409,6 +1414,7 @@ contains
 end submodule gcr_smod
 
 submodule(sci_iterative_solver_mod) block_gcr_smod
+  implicit none
 contains
   !> constructs a <code>block_gcr_type</code> solver
   !> sets the values for the solver such as the residual (r_tol) and
@@ -1627,6 +1633,7 @@ end submodule block_gcr_smod
 
 !  Submodule with procedures for Precondition only !
 submodule(sci_iterative_solver_mod) precondition_only_smod
+  implicit none
 contains
   !> constructs a <code>precondition_only</code> solver
   !> sets the values for the solver such as the residual (r_tol) and
@@ -1694,6 +1701,7 @@ end submodule precondition_only_smod
 
 !  Submodule with procedures for Jacobi solver !
 submodule(sci_iterative_solver_mod) jacobi_smod
+  implicit none
 contains
   !> Constructs a <code>Jacobi</code> solver
   !> sets the values for the solver such as the residual (r_tol) and
@@ -1814,6 +1822,7 @@ end submodule jacobi_smod
 
 
 submodule(sci_iterative_solver_mod) chebyshev_smod
+  implicit none
 contains
   !> constructs a <code>chebyshev</code> solver
   !> sets the values for the solver such as the residual (r_tol) and

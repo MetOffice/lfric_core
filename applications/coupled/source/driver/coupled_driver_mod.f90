@@ -188,7 +188,7 @@ contains
     depository => modeldb%fields%get_field_collection("depository")
     call depository%get_field("field_2", field_2)
 
-    ! Write checksum of coupled field (on incoming component) to file 
+    ! Write checksum of coupled field (on incoming component) to file
     call modeldb%values%get_value("cpl_name", cpl_component_name)
     if (trim(cpl_component_name) == "lfric_i") then
       call checksum_alg(program_name, field_2, 'coupled_field_2')
