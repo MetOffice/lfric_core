@@ -6,10 +6,93 @@
 
 [check]
 
-file-extensions= ["f90", "F90", "X90",  "x90"]          #check these file types
+file-extensions= ["f90", "F90", "X90", "x90"]       #check these file types
+
+select = [
+"E000", # io-error
+"E001", # syntax-error
+"C001", # missing implicit none
+"C021", # real literal missing kind suffix
+"C022", # implicit-real-kind
+"C031", # magic-number-in-array-size
+"C032", # magic unit in IO statement
+"C043", # missing action specifier when opening files
+"C051", # trailing-backslash
+"C071", # assumed-size
+"C072", # character has assumed size but does not have intent(in)
+"C081", # initialisation-in-declaration and no explicit save/parameter
+"C082", # pointer-initialisation-in-declaration
+"C091", # external-procedure
+"C092", # procedure not contained within module
+"C121", # use-all - use missing "only" clause
+"C132", # default-public-accessibility
+"C141", # missing-exit-or-cycle-label
+"OB011", # common-block, obsolescent
+"OB021", # entry-statement, obsolescent
+"OB051", # pause-statement, deleted feature
+"OB061", # deprecated-character-syntax
+"MOD001", # don't use double-precision
+"MOD021", # deprecated-relational-operator
+"S101", # trailing-whitespace
+"S071", # missing-double-colon
+"PORT011", # literal-kind
+"PORT012", # literal-kind-suffix
+"PORT021", # star-kind, non-standard syntax
+"FORT001", # invalid-rule-code-or-name
+"FORT002", # unused-allow-comment
+"FORT003", # redirected-allow-comment
+"FORT004", # duplicated-allow-comment
+"FORT005" # disabled-allow-comment
+]
+
+output-format = "grouped"              #group results by file
 
 
-select = ["C121"]
+# Repos containing only a few files with errors for the above rules
+# are dealt with below:
 
+[check.per-file-ignores] #don't run these rules on these files:
 
-output-format = "grouped"                #group results by file
+# infrastructure/source:
+"constants_mod.F90" = ["MOD001", "C022"]
+"lfric_mpi_mod.F90" = ["E001"]
+"random_number_generator_mod.f90" = ["C022"]
+"polynomial_mod.f90" = ["C132"]
+"namelist_item_mod.f90" = ["C072"]
+"namelist_mod.F90" = ["C072"]
+"io_utility_mod.f90" = ["C072"]
+"ncdf_quad_mod.F90" = ["C072"]
+"ugrid_2d_mod.F90" = ["C072"]
+"ugrid_file_mod.F90" = ["C072"]
+"key_value_collection_mod.f90" = ["C072"]
+"local_mesh_mod.f90" = ["C081"]
+"log_mod.F90" = ["C081"]
+
+# infrastructure/build:
+"content_mod.f90" = ["C081"]
+"one_each_mod.f90" = ["E001"]
+"alpha_mod.f90" = ["C022"]
+"epsilon_mod.f90" = ["C022"]
+"epsilon_one_submod.f90" = ["C022"]
+"eta_mod.F90" = ["C022"]
+"one.f90" = ["C022"]
+
+# components/science:
+"sci_psykal_builtin_light_mod.f90" = ["C132"]
+
+# components/lfric-xios:
+"lfric_xios_mock_mod.f90" = ["C072"]
+"lfric_xios_process_output_mod.f90" = ["C081"]
+"lfric_xios_setup_mod.x90" = ["C081"]
+
+# components/science: 
+"get_unit_test_planar_mesh_mod.f90" = ["C081"]
+"get_unit_test_qfaces_mod.f90" = ["C081"]
+"sci_psykal_light_mod.f90" = ["C132"]
+
+# mesh_tools/source:
+"calc_global_cell_map_mod.F90" = ["C081"]
+"gen_lbc_mod.F90" = ["C081"]
+"gen_planar_mod.F90" = ["C081"]
+"gencube_ps_mod.F90" = ["C081"]
+

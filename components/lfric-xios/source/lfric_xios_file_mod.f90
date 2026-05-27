@@ -22,7 +22,8 @@ module lfric_xios_file_mod
   use lfric_xios_field_mod,          only: lfric_xios_field_type
   use lfric_xios_diag_mod,           only: file_is_tagged
   use log_mod,                       only: log_event, log_level_error, &
-                                           log_level_trace, log_level_debug
+                                           log_level_trace, log_level_debug, &
+                                           log_level_warning
   use mesh_mod,                      only: mesh_type
   use mod_wait,                      only: init_wait
   use lfric_xios_diag_mod,           only: get_file_name
@@ -32,9 +33,9 @@ module lfric_xios_file_mod
                                            xios_set_attr, xios_filegroup,    &
                                            xios_get_file_attr,               &
                                            xios_set_file_attr,               &
+                                           xios_is_defined_file_attr,        &
                                            xios_fieldgroup, xios_duration,   &
                                            xios_is_valid_fieldgroup,         &
-                                           xios_is_defined_fieldgroup_attr,  &
                                            xios_get_fieldgroup_attr,         &
                                            xios_set_fieldgroup_attr,         &
                                            xios_date, xios_get_current_date, &
@@ -344,6 +345,7 @@ subroutine register_with_context(self)
   type(xios_date)        :: start_date
 
   integer(i_def) :: i, record_offset
+  logical :: output_freq_defined
 
   call log_event( "Registering XIOS file ["//trim(self%xios_id)//"]", &
                   log_level_trace )
@@ -394,14 +396,30 @@ subroutine register_with_context(self)
     call xios_set_attr( self%handle, time_counter="none")
   end if
 
-  ! Set XIOS duration object second value equal to file output frequency
-  call xios_get_timestep(timestep_duration)
+  ! Check if file frequency has been defined in iodef.xml config
+  call xios_is_defined_file_attr(self%xios_id, output_freq=output_freq_defined)
+
+  ! Set file frequency, giving priority to the value defined in the iodef.xml if
+  ! there the frequency has also been set in the model code.
   if (.not. self%freq_ts == undef_freq) then
-    self%frequency = self%freq_ts * timestep_duration
-    call xios_set_attr(self%handle, output_freq=self%frequency)
+    if (output_freq_defined) then
+      call log_event( "Frequency for file ["//trim(self%xios_id)//"] "      // &
+                      "defined in both LFRic and XIOS, defaulting to XIOS " // &
+                      "iodef.xml value", log_level_warning )
+    else
+      ! Convert frequency into seconds by multiplying by timestep duration
+      call xios_get_timestep(timestep_duration)
+      self%frequency = self%freq_ts * timestep_duration
+      call xios_set_attr(self%handle, output_freq=self%frequency)
+    end if
   else
-    ! If frequency is uninitialised, get it from XIOS
-    call xios_get_file_attr(self%xios_id, output_freq=self%frequency)
+    ! If frequency is uninitialised, get it from XIOS if possible
+    if (output_freq_defined) then
+      call xios_get_file_attr(self%xios_id, output_freq=self%frequency)
+    else
+      call log_event( "Frequency for file ["//trim(self%xios_id)//"] not " // &
+                      "defined in XIOS or LFRic", log_level_error )
+    end if
   end if
 
   ! Set the date of the first operation

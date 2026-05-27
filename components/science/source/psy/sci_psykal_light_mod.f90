@@ -278,29 +278,29 @@ contains
       USE mesh_mod, ONLY: mesh_type
       TYPE(field_type), intent(in) :: dummy_fine, dummy_coarse, weights_high_low, weights_low_high
       TYPE(quadrature_xyoz_type), intent(in) :: qr
-      INTEGER(KIND=i_def) cell
-      INTEGER(KIND=i_def) loop0_start, loop0_stop
+      INTEGER(KIND=i_def) :: cell
+      INTEGER(KIND=i_def) :: loop0_start, loop0_stop
       REAL(KIND=r_def), allocatable :: basis_adspc2_dummy_coarse_qr(:,:,:,:)
-      INTEGER(KIND=i_def) dim_adspc2_dummy_coarse
+      INTEGER(KIND=i_def) :: dim_adspc2_dummy_coarse
       REAL(KIND=r_def), pointer :: weights_xy_qr(:) => null(), weights_z_qr(:) => null()
-      INTEGER(KIND=i_def) np_xy_qr, np_z_qr
-      INTEGER(KIND=i_def) nlayers_dummy_fine
+      INTEGER(KIND=i_def) :: np_xy_qr, np_z_qr
+      INTEGER(KIND=i_def) :: nlayers_dummy_fine
       REAL(KIND=r_def), pointer, dimension(:) :: weights_low_high_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: weights_high_low_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: dummy_coarse_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: dummy_fine_data => null()
-      TYPE(field_proxy_type) dummy_fine_proxy, dummy_coarse_proxy, weights_high_low_proxy, weights_low_high_proxy
-      TYPE(quadrature_xyoz_proxy_type) qr_proxy
+      TYPE(field_proxy_type) :: dummy_fine_proxy, dummy_coarse_proxy, weights_high_low_proxy, weights_low_high_proxy
+      TYPE(quadrature_xyoz_proxy_type) :: qr_proxy
       INTEGER(KIND=i_def), pointer :: map_adspc1_dummy_fine(:,:) => null(), map_adspc2_dummy_coarse(:,:) => null(), &
 &map_adspc3_weights_high_low(:,:) => null()
-      INTEGER(KIND=i_def) ndf_adspc1_dummy_fine, undf_adspc1_dummy_fine, ndf_adspc2_dummy_coarse, undf_adspc2_dummy_coarse, &
+      INTEGER(KIND=i_def) :: ndf_adspc1_dummy_fine, undf_adspc1_dummy_fine, ndf_adspc2_dummy_coarse, undf_adspc2_dummy_coarse, &
 &ndf_adspc3_weights_high_low, undf_adspc3_weights_high_low
-      INTEGER(KIND=i_def) ncell_dummy_fine, ncpc_dummy_fine_dummy_coarse_x, ncpc_dummy_fine_dummy_coarse_y
+      INTEGER(KIND=i_def) :: ncell_dummy_fine, ncpc_dummy_fine_dummy_coarse_x, ncpc_dummy_fine_dummy_coarse_y
       INTEGER(KIND=i_def), pointer :: cell_map_dummy_coarse(:,:,:) => null()
       TYPE(mesh_map_type), pointer :: mmap_dummy_fine_dummy_coarse => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_dummy_fine
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_dummy_fine
       TYPE(mesh_type), pointer :: mesh_dummy_fine => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_dummy_coarse
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_dummy_coarse
       TYPE(mesh_type), pointer :: mesh_dummy_coarse => null()
       !
       ! Initialise field and/or operator proxies
@@ -406,23 +406,23 @@ contains
       USE mesh_map_mod, ONLY: mesh_map_type
       USE mesh_mod, ONLY: mesh_type
       TYPE(field_type), intent(in) :: fine_field, coarse_field, weights_high_to_low
-      INTEGER(KIND=i_def) cell
-      INTEGER(KIND=i_def) loop0_start, loop0_stop
-      INTEGER(KIND=i_def) nlayers_fine_field
+      INTEGER(KIND=i_def) :: cell
+      INTEGER(KIND=i_def) :: loop0_start, loop0_stop
+      INTEGER(KIND=i_def) :: nlayers_fine_field
       REAL(KIND=r_def), pointer, dimension(:) :: weights_high_to_low_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: coarse_field_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: fine_field_data => null()
-      TYPE(field_proxy_type) fine_field_proxy, coarse_field_proxy, weights_high_to_low_proxy
+      TYPE(field_proxy_type) :: fine_field_proxy, coarse_field_proxy, weights_high_to_low_proxy
       INTEGER(KIND=i_def), pointer :: map_adspc1_fine_field(:,:) => null(), map_adspc2_coarse_field(:,:) => null(), &
 &map_adspc3_weights_high_to_low(:,:) => null()
-      INTEGER(KIND=i_def) ndf_adspc1_fine_field, undf_adspc1_fine_field, ndf_adspc2_coarse_field, undf_adspc2_coarse_field, &
+      INTEGER(KIND=i_def) :: ndf_adspc1_fine_field, undf_adspc1_fine_field, ndf_adspc2_coarse_field, undf_adspc2_coarse_field, &
 &ndf_adspc3_weights_high_to_low, undf_adspc3_weights_high_to_low
-      INTEGER(KIND=i_def) ncell_fine_field, ncpc_fine_field_coarse_field_x, ncpc_fine_field_coarse_field_y
+      INTEGER(KIND=i_def) :: ncell_fine_field, ncpc_fine_field_coarse_field_x, ncpc_fine_field_coarse_field_y
       INTEGER(KIND=i_def), pointer :: cell_map_coarse_field(:,:,:) => null()
       TYPE(mesh_map_type), pointer :: mmap_fine_field_coarse_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_fine_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_fine_field
       TYPE(mesh_type), pointer :: mesh_fine_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_coarse_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_coarse_field
       TYPE(mesh_type), pointer :: mesh_coarse_field => null()
       !
       ! Initialise field and/or operator proxies
@@ -504,23 +504,23 @@ contains
       USE mesh_map_mod, ONLY: mesh_map_type
       USE mesh_mod, ONLY: mesh_type
       TYPE(field_type), intent(in) :: coarse_field, fine_field, weights_low_to_high
-      INTEGER(KIND=i_def) cell
-      INTEGER(KIND=i_def) loop0_start, loop0_stop
-      INTEGER(KIND=i_def) nlayers_coarse_field
+      INTEGER(KIND=i_def) :: cell
+      INTEGER(KIND=i_def) :: loop0_start, loop0_stop
+      INTEGER(KIND=i_def) :: nlayers_coarse_field
       REAL(KIND=r_def), pointer, dimension(:) :: weights_low_to_high_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: fine_field_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: coarse_field_data => null()
-      TYPE(field_proxy_type) coarse_field_proxy, fine_field_proxy, weights_low_to_high_proxy
+      TYPE(field_proxy_type) :: coarse_field_proxy, fine_field_proxy, weights_low_to_high_proxy
       INTEGER(KIND=i_def), pointer :: map_adspc1_coarse_field(:,:) => null(), map_adspc2_fine_field(:,:) => null(), &
 &map_adspc3_weights_low_to_high(:,:) => null()
-      INTEGER(KIND=i_def) ndf_adspc1_coarse_field, undf_adspc1_coarse_field, ndf_adspc2_fine_field, undf_adspc2_fine_field, &
+      INTEGER(KIND=i_def) :: ndf_adspc1_coarse_field, undf_adspc1_coarse_field, ndf_adspc2_fine_field, undf_adspc2_fine_field, &
 &ndf_adspc3_weights_low_to_high, undf_adspc3_weights_low_to_high
-      INTEGER(KIND=i_def) ncell_fine_field, ncpc_fine_field_coarse_field_x, ncpc_fine_field_coarse_field_y
+      INTEGER(KIND=i_def) :: ncell_fine_field, ncpc_fine_field_coarse_field_x, ncpc_fine_field_coarse_field_y
       INTEGER(KIND=i_def), pointer :: cell_map_coarse_field(:,:,:) => null()
       TYPE(mesh_map_type), pointer :: mmap_fine_field_coarse_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_fine_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_fine_field
       TYPE(mesh_type), pointer :: mesh_fine_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_coarse_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_coarse_field
       TYPE(mesh_type), pointer :: mesh_coarse_field => null()
       !
       ! Initialise field and/or operator proxies
@@ -605,29 +605,29 @@ contains
     USE mesh_mod, ONLY: mesh_type
     TYPE(field_type), intent(in) :: dummy_fine, dummy_coarse, weights_high_low, weights_low_high
     TYPE(quadrature_xyoz_type), intent(in) :: qr
-    INTEGER(KIND=i_def) cell
-    INTEGER(KIND=i_def) loop0_start, loop0_stop
+    INTEGER(KIND=i_def) :: cell
+    INTEGER(KIND=i_def) :: loop0_start, loop0_stop
     REAL(KIND=r_def), allocatable :: basis_adspc2_dummy_coarse_qr(:,:,:,:)
-    INTEGER(KIND=i_def) dim_adspc2_dummy_coarse
+    INTEGER(KIND=i_def) :: dim_adspc2_dummy_coarse
     REAL(KIND=r_def), pointer :: weights_xy_qr(:) => null(), weights_z_qr(:) => null()
-    INTEGER(KIND=i_def) np_xy_qr, np_z_qr
-    INTEGER(KIND=i_def) nlayers_dummy_fine
+    INTEGER(KIND=i_def) :: np_xy_qr, np_z_qr
+    INTEGER(KIND=i_def) :: nlayers_dummy_fine
     REAL(KIND=r_def), pointer, dimension(:) :: weights_low_high_data => null()
     REAL(KIND=r_def), pointer, dimension(:) :: weights_high_low_data => null()
     REAL(KIND=r_def), pointer, dimension(:) :: dummy_coarse_data => null()
     REAL(KIND=r_def), pointer, dimension(:) :: dummy_fine_data => null()
-    TYPE(field_proxy_type) dummy_fine_proxy, dummy_coarse_proxy, weights_high_low_proxy, weights_low_high_proxy
-    TYPE(quadrature_xyoz_proxy_type) qr_proxy
+    TYPE(field_proxy_type) :: dummy_fine_proxy, dummy_coarse_proxy, weights_high_low_proxy, weights_low_high_proxy
+    TYPE(quadrature_xyoz_proxy_type) :: qr_proxy
     INTEGER(KIND=i_def), pointer :: map_adspc1_dummy_fine(:,:) => null(), map_adspc2_dummy_coarse(:,:) => null(), &
 &map_adspc3_weights_high_low(:,:) => null()
-    INTEGER(KIND=i_def) ndf_adspc1_dummy_fine, undf_adspc1_dummy_fine, ndf_adspc2_dummy_coarse, undf_adspc2_dummy_coarse, &
+    INTEGER(KIND=i_def) :: ndf_adspc1_dummy_fine, undf_adspc1_dummy_fine, ndf_adspc2_dummy_coarse, undf_adspc2_dummy_coarse, &
 &ndf_adspc3_weights_high_low, undf_adspc3_weights_high_low
-    INTEGER(KIND=i_def) ncell_dummy_fine, ncpc_dummy_fine_dummy_coarse_x, ncpc_dummy_fine_dummy_coarse_y
+    INTEGER(KIND=i_def) :: ncell_dummy_fine, ncpc_dummy_fine_dummy_coarse_x, ncpc_dummy_fine_dummy_coarse_y
     INTEGER(KIND=i_def), pointer :: cell_map_dummy_coarse(:,:,:) => null()
     TYPE(mesh_map_type), pointer :: mmap_dummy_fine_dummy_coarse => null()
-    INTEGER(KIND=i_def) max_halo_depth_mesh_dummy_fine
+    INTEGER(KIND=i_def) :: max_halo_depth_mesh_dummy_fine
     TYPE(mesh_type), pointer :: mesh_dummy_fine => null()
-    INTEGER(KIND=i_def) max_halo_depth_mesh_dummy_coarse
+    INTEGER(KIND=i_def) :: max_halo_depth_mesh_dummy_coarse
     TYPE(mesh_type), pointer :: mesh_dummy_coarse => null()
     !
     ! Initialise field and/or operator proxies
@@ -735,26 +735,26 @@ contains
       USE mesh_mod, ONLY: mesh_type
       TYPE(field_type), intent(in) :: target_field, source_field, weights
       TYPE(integer_field_type), intent(in) :: face_selector_ew, face_selector_ns
-      INTEGER(KIND=i_def) cell
-      INTEGER(KIND=i_def) loop0_start, loop0_stop
-      INTEGER(KIND=i_def) nlayers_target_field
+      INTEGER(KIND=i_def) :: cell
+      INTEGER(KIND=i_def) :: loop0_start, loop0_stop
+      INTEGER(KIND=i_def) :: nlayers_target_field
       INTEGER(KIND=i_def), pointer, dimension(:) :: face_selector_ns_data => null()
       INTEGER(KIND=i_def), pointer, dimension(:) :: face_selector_ew_data => null()
-      TYPE(integer_field_proxy_type) face_selector_ew_proxy, face_selector_ns_proxy
+      TYPE(integer_field_proxy_type) :: face_selector_ew_proxy, face_selector_ns_proxy
       REAL(KIND=r_def), pointer, dimension(:) :: weights_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: source_field_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: target_field_data => null()
-      TYPE(field_proxy_type) target_field_proxy, source_field_proxy, weights_proxy
+      TYPE(field_proxy_type) :: target_field_proxy, source_field_proxy, weights_proxy
       INTEGER(KIND=i_def), pointer :: map_adspc1_target_field(:,:) => null(), map_adspc2_source_field(:,:) => null(), &
 &map_adspc3_weights(:,:) => null(), map_adspc4_face_selector_ew(:,:) => null()
-      INTEGER(KIND=i_def) ndf_adspc1_target_field, undf_adspc1_target_field, ndf_adspc2_source_field, undf_adspc2_source_field, &
+      INTEGER(KIND=i_def) :: ndf_adspc1_target_field, undf_adspc1_target_field, ndf_adspc2_source_field, undf_adspc2_source_field, &
 &ndf_adspc3_weights, undf_adspc3_weights, ndf_adspc4_face_selector_ew, undf_adspc4_face_selector_ew
-      INTEGER(KIND=i_def) ncell_source_field, ncpc_source_field_target_field_x, ncpc_source_field_target_field_y
+      INTEGER(KIND=i_def) :: ncell_source_field, ncpc_source_field_target_field_x, ncpc_source_field_target_field_y
       INTEGER(KIND=i_def), pointer :: cell_map_target_field(:,:,:) => null()
       TYPE(mesh_map_type), pointer :: mmap_source_field_target_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_target_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_target_field
       TYPE(mesh_type), pointer :: mesh_target_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_source_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_source_field
       TYPE(mesh_type), pointer :: mesh_source_field => null()
       !
       ! Initialise field and/or operator proxies
@@ -846,26 +846,26 @@ contains
       USE mesh_mod, ONLY: mesh_type
       TYPE(field_type), intent(in) :: target_field, source_field, weights
       TYPE(integer_field_type), intent(in) :: face_selector_ew, face_selector_ns
-      INTEGER(KIND=i_def) cell
-      INTEGER(KIND=i_def) loop0_start, loop0_stop
-      INTEGER(KIND=i_def) nlayers_target_field
+      INTEGER(KIND=i_def) :: cell
+      INTEGER(KIND=i_def) :: loop0_start, loop0_stop
+      INTEGER(KIND=i_def) :: nlayers_target_field
       INTEGER(KIND=i_def), pointer, dimension(:) :: face_selector_ns_data => null()
       INTEGER(KIND=i_def), pointer, dimension(:) :: face_selector_ew_data => null()
-      TYPE(integer_field_proxy_type) face_selector_ew_proxy, face_selector_ns_proxy
+      TYPE(integer_field_proxy_type) :: face_selector_ew_proxy, face_selector_ns_proxy
       REAL(KIND=r_def), pointer, dimension(:) :: weights_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: source_field_data => null()
       REAL(KIND=r_def), pointer, dimension(:) :: target_field_data => null()
-      TYPE(field_proxy_type) target_field_proxy, source_field_proxy, weights_proxy
+      TYPE(field_proxy_type) :: target_field_proxy, source_field_proxy, weights_proxy
       INTEGER(KIND=i_def), pointer :: map_adspc1_target_field(:,:) => null(), map_adspc2_source_field(:,:) => null(), &
 &map_adspc3_weights(:,:) => null(), map_adspc4_face_selector_ew(:,:) => null()
-      INTEGER(KIND=i_def) ndf_adspc1_target_field, undf_adspc1_target_field, ndf_adspc2_source_field, undf_adspc2_source_field, &
+      INTEGER(KIND=i_def) :: ndf_adspc1_target_field, undf_adspc1_target_field, ndf_adspc2_source_field, undf_adspc2_source_field, &
 &ndf_adspc3_weights, undf_adspc3_weights, ndf_adspc4_face_selector_ew, undf_adspc4_face_selector_ew
-      INTEGER(KIND=i_def) ncell_target_field, ncpc_target_field_source_field_x, ncpc_target_field_source_field_y
+      INTEGER(KIND=i_def) :: ncell_target_field, ncpc_target_field_source_field_x, ncpc_target_field_source_field_y
       INTEGER(KIND=i_def), pointer :: cell_map_source_field(:,:,:) => null()
       TYPE(mesh_map_type), pointer :: mmap_target_field_source_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_target_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_target_field
       TYPE(mesh_type), pointer :: mesh_target_field => null()
-      INTEGER(KIND=i_def) max_halo_depth_mesh_source_field
+      INTEGER(KIND=i_def) :: max_halo_depth_mesh_source_field
       TYPE(mesh_type), pointer :: mesh_source_field => null()
       !
       ! Initialise field and/or operator proxies

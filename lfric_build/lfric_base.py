@@ -50,7 +50,6 @@ class LFRicBase(FabBase):
                  ):
 
         self._app_dir = app_dir
-        # Will be set to true if a unit-test directory is found
 
         # List of all precision preprocessor symbols and their default.
         # Used to add corresponding command line options, and then to define
