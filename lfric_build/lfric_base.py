@@ -14,21 +14,22 @@ script.
 
 import argparse
 import logging
+import os
 from pathlib import Path
 import sys
-from typing import List, Optional, Iterable, Union
+from typing import cast, Optional, Iterable, Union
 
 from fab.api import (ArtefactSet, BuildConfig, Category, Exclude, grab_folder,
-                     Include, input_to_output_fpath, preprocess_x90, psyclone,
-                     step, SuffixFilter)
+                     Include, input_to_output_fpath, Linker, preprocess_x90,
+                     psyclone, psyclone_transmute, step, SuffixFilter)
 from fab.fab_base.fab_base import FabBase
 
 from configurator import configurator
 from templaterator import Templaterator
+from psyclone_config import PsycloneConfig, PsycloneInfo
 
 # Add a logger and connect it to stdout.
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+logger = logging.getLogger("fab")
 
 
 class LFRicBase(FabBase):
@@ -45,7 +46,7 @@ class LFRicBase(FabBase):
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name: str,
                  app_dir: Path,
-                 root_symbol: Optional[Union[List[str], str]] = None
+                 root_symbol: Optional[Union[list[str], str]] = None
                  ):
 
         self._app_dir = app_dir
@@ -79,12 +80,24 @@ class LFRicBase(FabBase):
                                                mpi=self.config.mpi,
                                                openmp=self.config.openmp,
                                                enforce_fortran_linker=True)
+        linker = cast(Linker, linker)
         try:
             linker.get_lib_flags("netcdf")
         except RuntimeError as err:
             msg = (f"LFRic needs NetCDF, but the linker '{linker.name}' "
                    f"has no NetCDF library setting defined. Aborting.")
             raise RuntimeError(msg) from err
+
+        self._psyclone_config = PsycloneConfig(self)
+        if self.args.psyclone_info:
+            info_list = [Path(i) for i in self.args.psyclone_info]
+        else:
+            info_list = [Path(self.lfric_core_root / "lfric_build" /
+                              "psyclone_info.yaml")]
+        for psy_info_file in info_list:
+            logger.info(f"Reading PSyclone configuration file "
+                        f"'{psy_info_file}'.")
+            self._psyclone_config.read(Path(psy_info_file))
 
     @property
     def app_dir(self) -> Path:
@@ -118,6 +131,11 @@ class LFRicBase(FabBase):
         parser.add_argument(
             '--no-xios', action="store_true", default=False,
             help="Disable compilation with XIOS.")
+
+        parser.add_argument(
+            '--psyclone-info', action="append",
+            help="PSyclone configuration files, controlling when to "
+                 "run PSyclone.")
 
         # Precision related command line arguments
         # ----------------------------------------
@@ -178,7 +196,7 @@ class LFRicBase(FabBase):
         - Use of XIOS (if not disabled using --no-xios command line option)
         - Disabling MPI (if disabled using --no-mpi)
         '''
-        preprocessor_flags: List[str] = []
+        preprocessor_flags: list[str] = []
 
         # Check all required precision defines
         for prec_name, _ in self._all_precisions:
@@ -198,7 +216,7 @@ class LFRicBase(FabBase):
 
         self.add_preprocessor_flags(preprocessor_flags)
 
-    def get_linker_flags(self) -> List[str]:
+    def get_linker_flags(self) -> list[str]:
         '''
         This method overwrites the base class get_linker_flags. It passes the
         libraries that LFRic uses to the linker. Currently, these libraries
@@ -356,7 +374,8 @@ class LFRicBase(FabBase):
     def psyclone_step(
             self,
             ignore_dependencies: Optional[Iterable[str]] = None,
-            additional_parameters: Optional[list[str]] = None
+            additional_parameters: Optional[list[str]] = None,
+            kernel_roots: Optional[list[Path]] = None,
             ) -> None:
         '''
         This method runs Fab's psyclone. It first sets the psyclone
@@ -367,24 +386,67 @@ class LFRicBase(FabBase):
         got through calling `get_transformation_script`, the api, and the
         additional psyclone command line arguments.
 
-        :param ignore_dependencies:
+        :param ignore_dependencies: Third party Fortran module names in
+            USE statements, 'DEPENDS ON' files and modules to be ignored.
         :param additional_parameters: optional additional parameter for the
             PSyclone.
+        :param kernel_roots:
+            Folders containing kernel files. Must be part of the analysed
+            source code.
         '''
+        kernel_roots = kernel_roots or []
         psyclone_cli_args = ["--config", self.get_psyclone_config()]
         if additional_parameters:
             psyclone_cli_args.extend(additional_parameters)
 
-        # To avoid impacting other code, store the original search path
-        old_sys_path = sys.path[:]
-        sys.path.extend(self._add_python_paths)
-        psyclone(self.config, kernel_roots=[(self.config.build_output /
-                                             "kernel")],
-                 transformation_script=self.get_transformation_script,
-                 api="lfric",
-                 cli_args=psyclone_cli_args,
-                 ignore_dependencies=ignore_dependencies)
-        sys.path = old_sys_path
+        add_python_paths = ":".join(str(i) for i in self._add_python_paths)
+        for phase in self._psyclone_config.all_phases:
+            logger.info(f"Running PSyclone phase {phase}.")
+            psyclone_info = self._psyclone_config.get_info(phase)
+            # To avoid impacting other code, store the original search path
+            # We have to modify PYTHONPATH (and not sys.path), since PSycline
+            # is run in its own shell (i.e. it inherits PYTHONPATH, but not
+            # sys.path).
+            orig_pythonpath = os.environ.get("PYTHONPATH", "")
+            os.environ["PYTHONPATH"] = (f"{psyclone_info.opt_path}:"
+                                        f"{add_python_paths}:"
+                                        f"{orig_pythonpath}")
+            if psyclone_info.api:
+                psyclone(self.config,
+                         kernel_roots=(kernel_roots +
+                                       [self.config.build_output / "kernel"]),
+                         transformation_script=psyclone_info.get_script,
+                         api=psyclone_info.api,
+                         cli_args=psyclone_cli_args,
+                         ignore_dependencies=ignore_dependencies)
+            else:
+                self._psyclone_transmute(psyclone_info,
+                                         psyclone_cli_args)
+            # Reset PYTHONPATH
+            os.environ["PYTHONPATH"] = orig_pythonpath
+
+    def _psyclone_transmute(self,
+                            psyclone_info: PsycloneInfo,
+                            psyclone_cli_args: list[str],
+                            ):
+        f90_files: list[Path] = []
+        af_store = self.config.artefact_store
+        for file in af_store[ArtefactSet.FORTRAN_COMPILER_FILES]:
+            script = psyclone_info.get_script(file, self.config)
+            if script:
+                f90_files.append(file)
+
+        # Don't use a suffix, meaning the original source files will be
+        # overwritten. Otherwise, PSyclone might find two files with the
+        # same kernels (once transmuted, one original) and abort.
+        psyclone_transmute(
+            self.config,
+            fortran_files=f90_files,
+            transformation_script=psyclone_info.get_script,
+            cli_args=psyclone_cli_args,
+            suffix="",
+            artefact_set=ArtefactSet.FORTRAN_COMPILER_FILES
+            )
 
     def get_psyclone_config(self) -> str:
         '''
@@ -411,10 +473,12 @@ class LFRicBase(FabBase):
         :returns: the transformation script to be used by PSyclone.
         '''
         # Newer LFRic versions have a psykal directory
+        logger.info(f"getting script '{fpath}' config: "
+                    f"'{str(self._psyclone_config)}'")
         optimisation_path = (config.source_root / "optimisation" /
                              f"{self.site}-{self.platform}" / "psykal")
         relative_path = None
-        # The soure file might be either in build_output (e.g. a preprocessed
+        # The source file might be either in build_output (e.g. a preprocessed
         # .X90 file), or still in source (.x90 file). Check if the file
         # is in one of the two sub-trees, and use the relative path to
         # check if there is a file-specific optimisation script

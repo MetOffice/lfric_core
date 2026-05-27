@@ -1,0 +1,42 @@
+# This file controls which files are being processed by PSyclone,
+# both using PSyclone's transmute ability (transformation generic
+# Fortran files), and its DSL (kernel based) capability.
+
+# First we specify the phases for PSyclone. This allows
+# any apps to run transmute and DSL steps in any order just by
+# changing (or supplying a different) psyclone-info file.
+# In this example, we run a transmute step before and after the DSL step.
+# This allows transforming source code before PSyclone runs its DSL
+# processing (during which transformed source code might be inlined).
+# The third step is done to support feedback from the DSL processing
+# to trigger additional processing (for example, if the DSL processing
+# adds OpenACC directive, it might determine that additional source
+# files need to be marked up to be compiled for OpenACC, which can then
+# be done in an additional transmute phase).
+
+phases:
+  # Just a single phase: running PSyclone in DSL mode
+  - dsl
+
+dsl:
+  comment: "PSylone DSL Phase"
+  api: lfric
+
+  # Run on all x90 files
+  artefacts: x90
+
+  script_dir: psykal
+
+  # The first two directives reproduce the default PSyclone triggering used
+  # in LFRic:
+
+  # Run optimisation/.../global.py on all x90 files (x90 because this is
+  # the dsl section, as specified in the artefacts above)
+  global.py: \*
+
+  # This represents existing functionality: if there is a file-specific .py
+  # file, use it. The specification of '*' does not trigger an error
+  # if there is no file_specific script (while explicitly putting a name
+  # here as shown in the previous pre_dsl phase will trigger an error, to
+  # catch typos early)
+  file_specific: \*
