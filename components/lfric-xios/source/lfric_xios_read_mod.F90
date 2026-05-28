@@ -14,7 +14,6 @@ module lfric_xios_read_mod
 
   use constants_mod,            only: i_def, l_def, str_def, r_def, rmdi, &
                                       LARGE_DP_NEGATIVE
-  use extrusion_mod,            only: TWOD, PRIME_EXTRUSION
   use lfric_xios_constants_mod, only: dp_xios
   use io_value_mod,             only: io_value_type
   use field_mod,                only: field_type, field_proxy_type
