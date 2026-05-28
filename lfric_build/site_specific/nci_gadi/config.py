@@ -94,13 +94,13 @@ class Config(DefaultConfig):
 
         :param linker: the linker instance to setup
         """
-        tr = ToolRepository()
-        shell = tr.get_default(Category.SHELL)
-        # We must remove the trailing new line, and create a list:
-        nc_flibs = shell.run(additional_parameters=["-c", "nf-config --flibs"],
-                             capture_output=True).strip().split()
-        linker.add_lib_flags("netcdf", nc_flibs, silent_replace=True)
+        nf_config = NfConfig()
+        if nf_config.is_available:        
+            # If not available, the site-specific setup must define netcdf
+            linker.add_lib_flags("netcdf", nf_config.get_linker_flags(),
+                                 silent_replace=True)
 
+        tr = ToolRepository()
         pfunit = tr.get_tool(Category.PFUNIT, "funitproc")
         pfunit_root = pfunit.get_root_path()
         spack_view = os.environ.get("SPACK_ENV_VIEW", "")
