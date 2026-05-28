@@ -34,7 +34,6 @@ module lfric_xios_read_mod
 
   use local_mesh_mod,           only: local_mesh_type
   use mesh_mod,                 only: mesh_type
-  use mesh_collection_mod,      only: mesh_collection
   use log_mod,                  only: log_event,         &
                                       log_scratch_space, &
                                       LOG_LEVEL_INFO,    &
