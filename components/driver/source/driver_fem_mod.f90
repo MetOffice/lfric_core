@@ -33,9 +33,10 @@ module driver_fem_mod
   use inventory_by_mesh_mod, only: inventory_by_mesh_type
 
   ! Configuration modules
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       geometry_planar,    &
-                                       topology_non_periodic
+  use base_mesh_config_mod,      only: geometry_spherical,    &
+                                       geometry_planar,       &
+                                       topology_non_periodic, &
+                                       topology_fully_periodic
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_space_W0,   &
                                        coord_space_Wchi, &
@@ -88,16 +89,10 @@ contains
 
     nullify(mesh, twod_mesh, fs)
 
+    prime_mesh_name = cmdi
     if (config%namelist_exists('base_mesh')) then
-      geometry        = config%base_mesh%geometry()
-      topology        = config%base_mesh%topology()
       prime_mesh_name = config%base_mesh%prime_mesh_name()
-    else
-      geometry = imdi
-      topology = imdi
-      prime_mesh_name = cmdi
     end if
-
 
     coord_system         = config%finite_element%coord_system()
     coord_order          = config%finite_element%coord_order()
@@ -108,10 +103,6 @@ contains
     ! ======================================================================== !
     ! Initialise coordinates
     ! ======================================================================== !
-
-    ! Initialise coordinate transformations
-    call init_chi_transforms( geometry, topology, &
-                              mesh_collection=mesh_collection )
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
@@ -126,8 +117,25 @@ contains
     ! ======================================================================== !
 
     do i = 1, SIZE(all_mesh_names)
+
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()
+
+      if (mesh%is_geometry_spherical()) then
+        geometry = geometry_spherical
+      else
+        geometry = geometry_planar
+      end if
+
+      if (mesh%is_topology_periodic()) then
+        topology = topology_fully_periodic
+      else
+        topology = topology_non_periodic
+      end if
+
+      ! Initialise coordinate transformations
+      call init_chi_transforms( geometry, topology, &
+                                mesh_collection=mesh_collection )
 
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= twod) then
@@ -204,9 +212,7 @@ contains
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field( chi, panel_id, mesh, &
-                                      geometry, topology,  &
-                                      coord_system, scaled_radius )
+        call assign_coordinate_field( config, mesh, chi, panel_id)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)

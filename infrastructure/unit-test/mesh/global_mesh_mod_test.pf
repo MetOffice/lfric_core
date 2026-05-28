@@ -223,6 +223,10 @@ contains
     npanels = global_mesh%get_npanels( )
     @assertEqual( 1, npanels )
 
+    @assertTrue(global_mesh%is_topology_periodic())
+    @assertFalse(global_mesh%is_topology_non_periodic())
+    @assertFalse(global_mesh%is_topology_channel())
+
   end subroutine test_biperiodic_global_mesh
 
 
@@ -374,6 +378,11 @@ contains
     ! Check number of panels
     npanels = global_mesh%get_npanels( )
     @assertEqual( 6, npanels )
+
+
+    @assertTrue( global_mesh%is_topology_periodic())
+    @assertFalse(global_mesh%is_topology_non_periodic())
+    @assertFalse(global_mesh%is_topology_channel() )
 
   end subroutine test_cubedsphere_global_mesh
 

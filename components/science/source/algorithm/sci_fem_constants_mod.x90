@@ -39,7 +39,7 @@ module sci_fem_constants_mod
                                                 nqp_v_exact
 
   ! Other algorithms
-  use sci_geometric_constants_mod,        only: get_coordinates,               &
+  use sci_geometric_constants_mod,        only: get_coordinates, &
                                                 get_panel_id
   ! Kernels
   use sci_compute_div_operator_kernel_mod, &
@@ -271,9 +271,9 @@ contains
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fe()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fe()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
       fs => function_space_collection%get_fs(mesh, element_order_h, &
@@ -383,9 +383,9 @@ contains
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fv()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fv()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
       fs => function_space_collection%get_fs(mesh, 0, 0, space)
@@ -511,7 +511,7 @@ contains
   !> @return The mass matrix diagonal field
   function get_mass_matrix_diagonal_fv(space, mesh_id) result(diagonal_mm)
 
-    use sci_mm_diagonal_kernel_mod,             only: mm_diagonal_kernel_type
+    use sci_mm_diagonal_kernel_mod, only: mm_diagonal_kernel_type
 
     implicit none
 
@@ -906,9 +906,9 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fe()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fe()
 
       w2_fs => function_space_collection%get_fs( mesh, element_order_h, &
                                                  element_order_v, W2 )
@@ -957,9 +957,9 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fv()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fv()
 
       w2_fs => function_space_collection%get_fs( mesh, 0, 0, W2 )
       w1_fs => function_space_collection%get_fs( mesh, 0, 0, W1 )
@@ -1004,9 +1004,9 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fe()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fe()
 
       w2_fs => function_space_collection%get_fs( mesh, element_order_h, &
                                                  element_order_v, W2 )
@@ -1053,9 +1053,9 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fe()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fe()
 
       w2h_fs => function_space_collection%get_fs( mesh, element_order_h, &
                                                   element_order_v, W2H )
@@ -1112,9 +1112,9 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fe()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fe()
       mm_w3_inv => get_inverse_mass_matrix_fe(W3, mesh_id)
 
       w2_fs => function_space_collection%get_fs( mesh, element_order_h, &
@@ -1167,9 +1167,9 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
-      qr_ptr => get_qr_fv()
+      chi      => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
+      qr_ptr   => get_qr_fv()
       mm_w3_inv => get_inverse_mass_matrix_fv(W3, mesh_id)
 
       w2_fs => function_space_collection%get_fs( mesh, 0, 0, W2 )

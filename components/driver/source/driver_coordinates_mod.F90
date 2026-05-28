@@ -7,6 +7,7 @@
 !> @brief  Module to assign the values of the coordinates of the mesh to a field.
 module driver_coordinates_mod
 
+  use config_mod,          only: config_type
   use constants_mod,       only: r_def, i_def, l_def, &
                                  radians_to_degrees,  &
                                  i_halo_index, eps, pi
@@ -51,16 +52,12 @@ contains
   !!           from the mesh generator and then 'assign_coordinate' on a column by
   !!           column basis.
   !>
+  !> @param[in]     config
+  !> @param[in]     mesh     Mesh on which this field is attached
   !> @param[in,out] chi      Model coordinate array of size 3 of fields
   !> @param[in]     panel_id Field giving the ID of mesh panels
-  !> @param[in]     mesh     Mesh on which this field is attached
-  !> @param[in]     geometry Mesh geometry enumeration value
-  !> @param[in]     topology Mesh topology enumeration value
-  !> @param[in]     coord_system Finite-element coordinate syatem enumeration value
-  !> @param[in]     scaled_radius Scaled planet radius
-  subroutine assign_coordinate_field(chi, panel_id, mesh, &
-                                     geometry, topology, &
-                                     coord_system, scaled_radius )
+
+  subroutine assign_coordinate_field(config, mesh, chi, panel_id)
 
     use domain_mod,            only: domain_type
     use field_mod,             only: field_type, field_proxy_type
@@ -73,14 +70,10 @@ contains
 
     implicit none
 
-    type( field_type ),  intent( inout )        :: chi(3)
-    type( field_type ),  intent( inout )        :: panel_id
-    type( mesh_type  ),  intent( in ),  pointer :: mesh
-
-    integer(i_def), intent(in) :: geometry
-    integer(i_def), intent(in) :: topology
-    integer(i_def), intent(in) :: coord_system
-    real(r_def),    intent(in) :: scaled_radius
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in), pointer :: mesh
+    type(field_type),  intent(inout) :: chi(3)
+    type(field_type),  intent(inout) :: panel_id
 
     integer(i_def),                pointer :: map(:,:)
     integer(i_def),                pointer :: map_pid(:,:)
@@ -115,7 +108,27 @@ contains
     real(kind=r_def) :: inverse_rot_matrix(3,3)
     real(kind=r_def) :: stretch_factor
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
     nullify( map, map_pid, dof_coords, reference_element )
+
+    if (mesh%is_geometry_spherical()) then
+      geometry = geometry_spherical
+    else
+      geometry = geometry_planar
+    end if
+
+    if (mesh%is_topology_periodic()) then
+      topology = topology_fully_periodic
+    else
+      topology = topology_non_periodic
+    end if
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! Break encapsulation and get the proxy.
     chi_proxy(1) = chi(1)%get_proxy()
