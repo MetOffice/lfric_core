@@ -33,6 +33,7 @@ module lfric_xios_read_mod
   use lfric_xios_utils_mod,     only: prime_io_mesh_is
   use lfric_xios_format_mod,    only: inverse_format_field
 
+  use local_mesh_mod,           only: local_mesh_type
   use mesh_mod,                 only: mesh_type
   use mesh_collection_mod,      only: mesh_collection
   use log_mod,                  only: log_event,         &
@@ -242,8 +243,8 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
   real(r_def),   allocatable :: field_data(:)
 
   type(mesh_type), pointer   :: mesh 
-  type(mesh_type), pointer   :: local_mesh
-  type(str_def), pointer     :: local_mesh_name
+  type(local_mesh_type), pointer   :: local_mesh
+  character(str_def)         :: local_mesh_name
 
   nullify(mesh,local_mesh)
 
