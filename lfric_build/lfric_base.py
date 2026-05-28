@@ -87,7 +87,15 @@ class LFRicBase(FabBase):
                    f"has no NetCDF library setting defined. Aborting.")
             raise RuntimeError(msg) from err
 
+        # Stores the PSyclone control information
         self._psyclone_control = PsycloneControl(self)
+
+        # If the PSyclone step is running, this stores the currently
+        # executed PSyclone information. This is used in the
+        # get_transformation_script function (to map the special return
+        # values like NO_SCRIPT back for the PSyclone tool).
+        self._current_psyclone_info: Optional[PsycloneInfo] = None
+
         if self.args.psyclone_info:
             info_list = [Path(i) for i in self.args.psyclone_info]
         else:
@@ -404,6 +412,8 @@ class LFRicBase(FabBase):
         for phase in self._psyclone_control.all_phases:
             logger.info(f"Running PSyclone phase {phase}.")
             psyclone_info = self._psyclone_control.get_info(phase)
+            # Save the info for the get transformation script function
+            self._current_psyclone_info = psyclone_info
             # To avoid impacting other code, store the original search path
             # We have to modify PYTHONPATH (and not sys.path), since PSyclone
             # is run in its own shell (i.e. it inherits PYTHONPATH, but not
@@ -420,7 +430,7 @@ class LFRicBase(FabBase):
                 psyclone(self.config,
                          kernel_roots=(kernel_roots +
                                        [self.config.build_output / "kernel"]),
-                         transformation_script=psyclone_info.get_script,
+                         transformation_script=self.get_transformation_script,
                          api=psyclone_info.api,
                          cli_args=psyclone_cli_args,
                          ignore_dependencies=ignore_dependencies)
@@ -429,6 +439,8 @@ class LFRicBase(FabBase):
                                          psyclone_cli_args)
             # Reset PYTHONPATH
             os.environ["PYTHONPATH"] = orig_pythonpath
+            # Reset to None
+            self._current_psyclone_info = None
 
     def _psyclone_transmute(self,
                             psyclone_info: PsycloneInfo,
@@ -438,7 +450,7 @@ class LFRicBase(FabBase):
         af_store = self.config.artefact_store
         for file in af_store[ArtefactSet.FORTRAN_COMPILER_FILES]:
             script = psyclone_info.get_script(file, self.config)
-            if script:
+            if script != PsycloneInfo.RESULT_EXCLUDE:
                 f90_files.append(file)
 
         # Don't use a suffix, meaning the original source files will be
@@ -447,7 +459,7 @@ class LFRicBase(FabBase):
         psyclone_transmute(
             self.config,
             fortran_files=f90_files,
-            transformation_script=psyclone_info.get_script,
+            transformation_script=self.get_transformation_script,
             cli_args=psyclone_cli_args,
             suffix="",
             artefact_set=ArtefactSet.FORTRAN_COMPILER_FILES
@@ -468,42 +480,24 @@ class LFRicBase(FabBase):
                                   config: BuildConfig) -> Optional[Path]:
         '''
         This method returns the path to the transformation script that PSyclone
-        will use for each x90 file. It first checks if there is a specific
-        transformation script for the x90 file. If not, it will see whether a
-        global transformation script can be used.
+        will use for each x90 file. It uses the get_script method of the
+        current PsycloneInfo object, but maps the special return values
+        "NO_SCRIPT".
 
         :param fpath: the path to the file being processed.
         :param config: the FAB BuildConfig instance.
 
         :returns: the transformation script to be used by PSyclone.
+
+        :raises ValueError: If the current psyclone_info result indicates
+            that the current file should be be run through PSyclone.
         '''
-        # Newer LFRic versions have a psykal directory
-        logger.info(f"getting script '{fpath}' config: "
-                    f"'{str(self._psyclone_control)}'")
-        optimisation_path = (config.source_root / "optimisation" /
-                             f"{self.site}-{self.platform}" / "psykal")
-        relative_path = None
-        # The source file might be either in build_output (e.g. a preprocessed
-        # .X90 file), or still in source (.x90 file). Check if the file
-        # is in one of the two sub-trees, and use the relative path to
-        # check if there is a file-specific optimisation script
-        for base_path in [config.source_root, config.build_output]:
-            try:
-                relative_path = fpath.relative_to(base_path)
-            except ValueError:
-                # The file is not under the `base_path` - keep on checking
-                pass
+        script = self._current_psyclone_info.get_script(fpath, config)
 
-        if relative_path:
-            # The file was under either source or build. Check if there
-            # is a file-specific optimisation script:
-            local_transformation_script = (optimisation_path /
-                                           (relative_path.with_suffix('.py')))
-            if local_transformation_script.exists():
-                return local_transformation_script
-
-        # No file-specific optimisation script found. Check for global.py:
-        global_transformation_script = optimisation_path / 'global.py'
-        if global_transformation_script.exists():
-            return global_transformation_script
-        return None
+        if script == PsycloneInfo.RESULT_NO_SCRIPT:
+            return None
+        if script == PsycloneInfo.RESULT_EXCLUDE:
+            raise ValueError("PSyclone transformation script returned "
+                             "'PsycloneInfo.RESULT_EXCLUDE', which should "
+                             "not happen.")
+        return script
