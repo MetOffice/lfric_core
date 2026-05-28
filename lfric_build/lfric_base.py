@@ -14,6 +14,7 @@ script.
 
 import argparse
 import logging
+import os
 from pathlib import Path
 import sys
 from typing import List, Optional, Iterable, Union
@@ -375,15 +376,18 @@ class LFRicBase(FabBase):
             psyclone_cli_args.extend(additional_parameters)
 
         # To avoid impacting other code, store the original search path
-        old_sys_path = sys.path[:]
-        sys.path.extend(self._add_python_paths)
+        orig_pythonpath = os.environ.get("PYTHONPATH", "")
+        add_python_paths = ":".join(str(i) for i in self._add_python_paths)
+        os.environ["PYTHONPATH"] = (f"{add_python_paths}:"
+                                    f"{orig_pythonpath}")
         psyclone(self.config, kernel_roots=[(self.config.build_output /
                                              "kernel")],
                  transformation_script=self.get_transformation_script,
                  api="lfric",
                  cli_args=psyclone_cli_args,
                  ignore_dependencies=ignore_dependencies)
-        sys.path = old_sys_path
+        # Reset PYTHONPATH
+        os.environ["PYTHONPATH"] = orig_pythonpath
 
     def get_psyclone_config(self) -> str:
         '''
