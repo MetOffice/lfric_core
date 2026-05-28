@@ -28,8 +28,14 @@ class PsycloneInfo:
         platform.
     """
 
+    # Define a new 'script paths' to indicate special results. Use : in the
+    # name, which is typically not a valid name (at the start)
+    RESULT_EXCLUDE = Path("::RESULT_EXCLUDE")
+    RESULT_NO_SCRIPT = Path("::RESULT_NO_SCRIPT")
+
     FILE_SPECIFIC = "file_specific"
     EXCLUDE = "exclude"
+    NO_SCRIPT = "no_script"
 
     def __init__(self, name: str, fab_base: FabBase) -> None:
         self._fab_base = fab_base
@@ -167,7 +173,7 @@ rules: {self._rules}
                 return local_transformation_script
         return None
 
-    def get_script(self, fpath: Path, config: BuildConfig) -> Optional[Path]:
+    def get_script(self, fpath: Path, config: BuildConfig) -> Path:
         """
         This method returns the script to be used for a given filename, or
         None if no rule applies (or an explicit exclude rule applies)
@@ -208,7 +214,11 @@ rules: {self._rules}
 
                 elif rule == PsycloneInfo.EXCLUDE:
                     # Exclude pattern matches:
-                    return None
+                    return PsycloneInfo.RESULT_EXCLUDE
+
+                elif rule == PsycloneInfo.NO_SCRIPT:
+                    # Exclude pattern matches:
+                    return PsycloneInfo.RESULT_NO_SCRIPT
 
                 else:
                     opt_script = self.opt_path / rule
@@ -217,7 +227,7 @@ rules: {self._rules}
                                               f"'{opt_script}'.")
                     return opt_script
 
-        return None
+        return PsycloneInfo.RESULT_EXCLUDE
 
 
 class PsycloneControl:
