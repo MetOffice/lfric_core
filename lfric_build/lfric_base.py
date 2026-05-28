@@ -413,7 +413,7 @@ class LFRicBase(FabBase):
         optimisation_path = (config.source_root / "optimisation" /
                              f"{self.site}-{self.platform}" / "psykal")
         relative_path = None
-        # The soure file might be either in build_output (e.g. a preprocessed
+        # The source file might be either in build_output (e.g. a preprocessed
         # .X90 file), or still in source (.x90 file). Check if the file
         # is in one of the two sub-trees, and use the relative path to
         # check if there is a file-specific optimisation script
