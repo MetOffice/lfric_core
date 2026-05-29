@@ -14,10 +14,7 @@ module driver_fem_mod
 
   use base_mesh_config_mod,           only: prime_mesh_name,                   &
                                             geometry,                          &
-                                            geometry_spherical,                &
-                                            geometry_planar,                   &
-                                            topology,                          &
-                                            topology_non_periodic
+                                            topology
   use sci_chi_transform_mod,          only: init_chi_transforms, &
                                             final_chi_transforms
   use constants_mod,                  only: i_def, l_def, str_def
@@ -49,8 +46,6 @@ module driver_fem_mod
                                             log_scratch_space
   use mesh_mod,                       only: mesh_type
   use mesh_collection_mod,            only: mesh_collection_type
-
-  use base_mesh_config_mod, only: geometry, topology
 
   implicit none
 
@@ -137,11 +132,11 @@ contains
         case (coord_space_W0)
           ! Check domain/topology is valid
           is_valid = (                                                         &
-              geometry == geometry_spherical                                   &
+              mesh%is_geometry_spherical()                                     &
               .and. coord_system == coord_system_xyz                           &
             ) .or. (                                                           &
-              geometry == geometry_planar                                      &
-              .and. topology == topology_non_periodic                          &
+              mesh%is_geometry_planar()                                        &
+              .and. mesh%is_topology_non_periodic()                            &
           )
           if (.not. is_valid) then
             call log_event(                                                    &
