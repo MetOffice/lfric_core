@@ -117,7 +117,8 @@ contains
     call assign_coordinate_xyz( nlayers, ndf, nverts, undf, map, dz, x, y, z, &
                                 vertices_phys, nodal_coord, vertices_comp,    &
                                 2.0_r_def, 0.0_r_def, panel_id, ndf_pid,      &
-                                undf_pid, map_pid )
+                                undf_pid, map_pid, geometry_planar,           &
+                                topology_fully_periodic )
 
     @assertEqual( one, x(1), tol )
     @assertEqual( one, y(1), tol )

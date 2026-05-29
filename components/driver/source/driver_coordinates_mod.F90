@@ -7,10 +7,8 @@
 !> @brief  Module to assign the values of the coordinates of the mesh to a field.
 module driver_coordinates_mod
 
-  use base_mesh_config_mod,      only: geometry,                &
-                                       geometry_planar,         &
+  use base_mesh_config_mod,      only: geometry_planar,         &
                                        geometry_spherical,      &
-                                       topology,                &
                                        topology_fully_periodic, &
                                        topology_non_periodic
   use constants_mod,             only: r_def, i_def, l_def, &
@@ -93,6 +91,7 @@ contains
     integer(i_def) :: undf, ndf, nlayers
     integer(i_def) :: undf_pid, ndf_pid, nlayers_pid
     integer(i_def) :: nverts
+    integer(i_def) :: topology
 
     integer(i_def) :: alloc_error
     integer(i_def) :: depth
@@ -160,8 +159,8 @@ contains
 
     ! Throw an error if stretching factor is not 1 and not on cubed-sphere
     if ( abs(stretch_factor - 1.0_r_def) > eps .and. .not.                     &
-         (geometry == geometry_spherical .and.                                 &
-          topology == topology_fully_periodic) ) then
+         (mesh%is_geometry_spherical() .and.                                   &
+          mesh%is_topology_periodic()) ) then
       call log_event(                                                          &
         'driver_coordinates: Cannot determine coordinates if Schmidt ' //      &
         'stretching factor is not 1 and mesh is not cubed-sphere',             &
@@ -172,7 +171,13 @@ contains
     panel_id_proxy%data = 1.0_r_def
 
     if ( coord_system == coord_system_xyz .or. &
-         geometry == geometry_planar ) then
+         mesh%is_geometry_planar() ) then
+
+      if (mesh%is_topology_periodic()) then
+        topology = topology_fully_periodic
+      else
+        topology = topology_non_periodic
+      end if
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -181,7 +186,9 @@ contains
                             map_pid(:,cell),       &
                             panel_id_proxy%data,   &
                             global_dof_id,         &
-                            panel_ncells    )
+                            panel_ncells,          &
+                            geometry_planar,       &
+                            topology    )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -205,8 +212,8 @@ contains
                                     map_pid(:,cell)      )
       end do
 
-    else if ( geometry == geometry_spherical .and. &
-              topology /= topology_fully_periodic ) then
+    else if ( mesh%is_geometry_spherical() .and. &
+              .not. mesh%is_topology_periodic() ) then
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -215,7 +222,9 @@ contains
                             map_pid(:,cell),       &
                             panel_id_proxy%data,   &
                             global_dof_id,         &
-                            panel_ncells   )
+                            panel_ncells,          &
+                            geometry_spherical,    &
+                            topology_non_periodic   )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -238,8 +247,8 @@ contains
                                         map_pid(:,cell)          )
       end do
 
-    else if ( geometry == geometry_spherical .and. &
-              topology == topology_fully_periodic ) then
+    else if ( mesh%is_geometry_spherical() .and. &
+              mesh%is_topology_periodic() ) then
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -248,7 +257,9 @@ contains
                             map_pid(:,cell),       &
                             panel_id_proxy%data,   &
                             global_dof_id,         &
-                            panel_ncells    )
+                            panel_ncells,          &
+                            geometry_spherical,    &
+                            topology_fully_periodic   )
 
         call mesh%get_column_coords(cell,column_coords)
 
@@ -301,13 +312,17 @@ contains
   !> @param[out]  panel_id            Field (to be calculated) with the ID of cubed sphere panels
   !> @param[in]   global_dof_id       Array of global id's
   !> @param[in]   panel_ncells        Number of cells per cubed sphere panel
+  !> @param[in]   geometry            Mesh geometry
+  !> @param[in]   topology            Mesh topology
   subroutine calc_panel_id( nlayers,            &
                             ndf_pid,            &
                             undf_pid,           &
                             map_pid,            &
                             panel_id,           &
                             global_dof_id,      &
-                            panel_ncells )
+                            panel_ncells,       &
+                            geometry,           &
+                            topology )
 
     implicit none
 
@@ -316,6 +331,8 @@ contains
     real(kind=r_def),    intent(out) :: panel_id(undf_pid)
     integer(kind=i_def), intent(in)  :: global_dof_id(undf_pid)
     integer(kind=i_def), intent(in)  :: panel_ncells
+    integer(kind=i_def), intent(in)  :: geometry
+    integer(kind=i_def), intent(in)  :: topology
 
     ! Internal variables
     integer(kind=i_def) :: vert, k
@@ -354,6 +371,8 @@ contains
   !> @param[in]   ndf_pid        Number of DoFs per cell for panel_id space
   !> @param[in]   undf_pid       Number of universal DoFs for panel_id space
   !> @param[in]   map_pid        DoF map for panel_id space
+  !> @param[in]   geometry       Mesh geometry
+  !> @param[in]   topology       Mesh topology
   subroutine assign_coordinate_xyz( nlayers,       &
                                     ndf,           &
                                     nverts,        &
@@ -371,7 +390,9 @@ contains
                                     panel_id,      &
                                     ndf_pid,       &
                                     undf_pid,      &
-                                    map_pid        )
+                                    map_pid,       &
+                                    geometry,      &
+                                    topology        )
 
     use reference_element_mod, only: SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
 
