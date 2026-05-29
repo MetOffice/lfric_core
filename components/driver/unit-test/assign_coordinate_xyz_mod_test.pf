@@ -75,6 +75,8 @@ contains
   @Test
   subroutine test_all( this )
 
+    use base_mesh_config_mod,   only : geometry_planar, &
+                                       topology_fully_periodic
     use driver_coordinates_mod, only : assign_coordinate_xyz
 
     implicit none

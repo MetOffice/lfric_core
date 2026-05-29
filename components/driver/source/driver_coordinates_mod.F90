@@ -209,7 +209,9 @@ contains
                                     panel_id_proxy%data, &
                                     ndf_pid,             &
                                     undf_pid,            &
-                                    map_pid(:,cell)      )
+                                    map_pid(:,cell),     &
+                                    geometry_planar,     &
+                                    topology      )
       end do
 
     else if ( mesh%is_geometry_spherical() .and. &
@@ -408,6 +410,8 @@ contains
     real(kind=r_def),    intent(in)  :: chi_hat_node(3,ndf), chi_hat_vert(nverts,3)
     real(kind=r_def),    intent(in)  :: domain_x, domain_y
     real(kind=r_def),    intent(in)  :: panel_id(undf_pid)
+    integer(kind=i_def), intent(in)  :: geometry
+    integer(kind=i_def), intent(in)  :: topology
 
     ! Internal variables
     integer(kind=i_def) :: k, df, dfk, vert
