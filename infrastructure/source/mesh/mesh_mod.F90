@@ -2588,7 +2588,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = self%local_mesh%is_topology_periodic()
+    answer = self%local_mesh%is_topology_non_periodic()
 
   end function is_topology_non_periodic
 

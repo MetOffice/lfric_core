@@ -92,6 +92,7 @@ contains
     integer(i_def) :: undf_pid, ndf_pid, nlayers_pid
     integer(i_def) :: nverts
     integer(i_def) :: topology
+    integer(i_def) :: geometry
 
     integer(i_def) :: alloc_error
     integer(i_def) :: depth
@@ -173,6 +174,11 @@ contains
     if ( coord_system == coord_system_xyz .or. &
          mesh%is_geometry_planar() ) then
 
+      if (mesh%is_geometry_spherical()) then
+        geometry = geometry_spherical
+      else
+        geometry = geometry_planar
+      end if
       if (mesh%is_topology_periodic()) then
         topology = topology_fully_periodic
       else
@@ -187,7 +193,7 @@ contains
                             panel_id_proxy%data,   &
                             global_dof_id,         &
                             panel_ncells,          &
-                            geometry_planar,       &
+                            geometry,              &
                             topology    )
 
         call mesh%get_column_coords(cell,column_coords)
@@ -210,7 +216,7 @@ contains
                                     ndf_pid,             &
                                     undf_pid,            &
                                     map_pid(:,cell),     &
-                                    geometry_planar,     &
+                                    geometry,            &
                                     topology      )
       end do
 
