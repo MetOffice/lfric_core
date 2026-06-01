@@ -53,9 +53,9 @@ subroutine process_output_file(file)
   ! Output processing must be done in serial
   if (global_mpi%get_comm_rank() /= 0) return
 
+  file_path = file%get_filepath()
   call log_event("Processing output file to format_mesh: "//trim(file_path), &
                   log_level_debug)
-  file_path = file%get_filepath()
 
   ! If file has not been written out, then don't attempt to process it
   inquire(file=trim(file_path), exist=file_exists)

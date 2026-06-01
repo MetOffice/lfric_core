@@ -240,7 +240,7 @@ contains
             select type( list_item => loop%payload )
               type is (lfric_xios_file_type)
                 file => list_item
-                call process_output_file(file)
+                if (file%mode_is_write()) call process_output_file(file)
                 call file%file_close()
             end select
             loop => loop%next
