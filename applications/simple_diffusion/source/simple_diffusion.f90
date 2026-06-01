@@ -36,25 +36,25 @@ program simple_diffusion
 
   call parse_command_line( filename )
   call modeldb%values%initialise()
-  call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise( program_name )
+
+  modeldb%mpi => global_mpi
+
+  call init_comm(program_name, modeldb)
+  call init_config( filename,                            &
+                    simple_diffusion_required_namelists, &
+                    config=modeldb%config )
+
+  call init_logger( modeldb%mpi%get_comm(), program_name )
 
   write(log_scratch_space,&
         '("Application built with ", A, "-bit real numbers")') &
         trim(precision_real)
   call log_event( log_scratch_space, log_level_trace )
-  modeldb%mpi => global_mpi
-  call init_comm(program_name, modeldb)
 
-  call init_config( filename, simple_diffusion_required_namelists, &
-                    configuration=modeldb%configuration,           &
-                    config=modeldb%config )
-
-  deallocate( filename )
-
-  call init_logger( modeldb%mpi%get_comm(), program_name )
   call init_collections()
   call init_time( modeldb )
+  deallocate( filename )
 
   allocate(rng, source=random_number_generator_type(default_seed))
   call modeldb%values%add_key_value("rng", rng)

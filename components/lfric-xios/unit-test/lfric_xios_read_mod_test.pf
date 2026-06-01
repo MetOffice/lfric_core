@@ -7,11 +7,13 @@
 !>
 module lfric_xios_read_mod_test
 
-  use constants_mod,                  only : i_def
+  use constants_mod,                  only : i_def, r_def
   use lfric_xios_constants_mod,       only : dp_xios
   use lfric_xios_utils_mod,           only : set_prime_io_mesh
   use halo_routing_collection_mod,    only : halo_routing_collection_type, &
                                              halo_routing_collection
+  use io_value_mod,                   only : io_value_type
+  use integer_io_value_mod,           only : integer_io_value_type
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use local_mesh_mod,                 only : local_mesh_type
@@ -37,6 +39,8 @@ module lfric_xios_read_mod_test
     type(function_space_type), pointer :: w2h_fs => null()
     type(function_space_type), pointer :: wth_fs => null()
     type(function_space_type), pointer :: w3_fs  => null()
+    type(io_value_type)                :: value_real
+    type(integer_io_value_type)        :: value_integer
     type(mesh_type),           pointer :: mesh   => null()
     type(local_mesh_type)              :: unit_test_local_mesh
   contains
@@ -123,6 +127,8 @@ contains
 
     use lfric_xios_read_mod,      only: checkpoint_read_xios,    &
                                         read_field_generic,      &
+                                        checkpoint_read_r_def_value,   &
+                                        checkpoint_read_integer_value, &
                                         read_state,              &
                                         read_field_time_var
 
@@ -133,30 +139,58 @@ contains
     ! Fields to be read into
     type(field_type) :: W0_field, W2H_field, WTheta_field, W3_field
     type(field_proxy_type) :: test_proxy
-    real(dp_xios), allocatable :: W0_data(:), W2H_data(:), WTheta_data(:), W3_data(:)
+    real(r_def), allocatable :: W0_data(:), W2H_data(:), WTheta_data(:), W3_data(:)
+    real(r_def), allocatable :: expected_real_result(:)
+    integer(i_def), allocatable :: int_data(:), expected_int_result(:)
+    integer(i_def) :: i
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Setup expected data arrays
+    ! The mock xios_recv_field routine returns sequential real values in XIOS
+    ! order (layer-by-layer). The arrays below are expected data for fields
+    ! as the data would be reordered columnwise. Also, the API will convert to
+    ! the correct real kind for the field and io_value type.
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    W0_data = (/ 1.0_dp_xios, 10.0_dp_xios, 19.0_dp_xios, 28.0_dp_xios, 2.0_dp_xios, 11.0_dp_xios, 20.0_dp_xios, 29.0_dp_xios, 3.0_dp_xios, 12.0_dp_xios, 21.0_dp_xios, 30.0_dp_xios, &
-                 4.0_dp_xios, 13.0_dp_xios, 22.0_dp_xios, 31.0_dp_xios, 5.0_dp_xios, 14.0_dp_xios, 23.0_dp_xios, 32.0_dp_xios, 6.0_dp_xios, 15.0_dp_xios, 24.0_dp_xios, 33.0_dp_xios, &
-                 7.0_dp_xios, 16.0_dp_xios, 25.0_dp_xios, 34.0_dp_xios, 8.0_dp_xios, 17.0_dp_xios, 26.0_dp_xios, 35.0_dp_xios, 9.0_dp_xios, 18.0_dp_xios, 27.0_dp_xios, 36.0_dp_xios /)
+    allocate(W0_data(36), source = (/                                        &
+                  1.0_r_def, 10.0_r_def, 19.0_r_def, 28.0_r_def, 2.0_r_def,  &
+                  11.0_r_def, 20.0_r_def, 29.0_r_def, 3.0_r_def, 12.0_r_def, &
+                  21.0_r_def, 30.0_r_def, 4.0_r_def, 13.0_r_def, 22.0_r_def, &
+                  31.0_r_def, 5.0_r_def, 14.0_r_def, 23.0_r_def, 32.0_r_def, &
+                  6.0_r_def, 15.0_r_def, 24.0_r_def, 33.0_r_def, 7.0_r_def,  &
+                  16.0_r_def, 25.0_r_def, 34.0_r_def, 8.0_r_def, 17.0_r_def, &
+                  26.0_r_def, 35.0_r_def, 9.0_r_def, 18.0_r_def, 27.0_r_def, &
+                  36.0_r_def /) )
 
-    W2H_data = (/ 1.00_dp_xios, 19.0_dp_xios, 37.0_dp_xios, 2.00_dp_xios, 20.0_dp_xios, 38.0_dp_xios, 3.00_dp_xios, 21.0_dp_xios, 39.0_dp_xios, &
-                  4.00_dp_xios, 22.0_dp_xios, 40.0_dp_xios, 5.00_dp_xios, 23.0_dp_xios, 41.0_dp_xios, 6.00_dp_xios, 24.0_dp_xios, 42.0_dp_xios, &
-                  7.00_dp_xios, 25.0_dp_xios, 43.0_dp_xios, 8.00_dp_xios, 26.0_dp_xios, 44.0_dp_xios, 9.00_dp_xios, 27.0_dp_xios, 45.0_dp_xios, &
-                  10.0_dp_xios, 28.0_dp_xios, 46.0_dp_xios, 11.0_dp_xios, 29.0_dp_xios, 47.0_dp_xios, 12.0_dp_xios, 30.0_dp_xios, 48.0_dp_xios, &
-                  13.0_dp_xios, 31.0_dp_xios, 49.0_dp_xios, 14.0_dp_xios, 32.0_dp_xios, 50.0_dp_xios, 15.0_dp_xios, 33.0_dp_xios, 51.0_dp_xios, &
-                  16.0_dp_xios, 34.0_dp_xios, 52.0_dp_xios, 17.0_dp_xios, 35.0_dp_xios, 53.0_dp_xios, 18.0_dp_xios, 36.0_dp_xios, 54.0_dp_xios /)
+    allocate (W2H_data(54), source = (/                                       &
+                  1.00_r_def, 19.0_r_def, 37.0_r_def, 2.00_r_def, 20.0_r_def, &
+                  38.0_r_def, 3.00_r_def, 21.0_r_def, 39.0_r_def, 4.00_r_def, &
+                  22.0_r_def, 40.0_r_def, 5.00_r_def, 23.0_r_def, 41.0_r_def, &
+                  6.00_r_def, 24.0_r_def, 42.0_r_def, 7.00_r_def, 25.0_r_def, &
+                  43.0_r_def, 8.00_r_def, 26.0_r_def, 44.0_r_def, 9.00_r_def, &
+                  27.0_r_def, 45.0_r_def, 10.0_r_def, 28.0_r_def, 46.0_r_def, &
+                  11.0_r_def, 29.0_r_def, 47.0_r_def, 12.0_r_def, 30.0_r_def, &
+                  48.0_r_def, 13.0_r_def, 31.0_r_def, 49.0_r_def, 14.0_r_def, &
+                  32.0_r_def, 50.0_r_def, 15.0_r_def, 33.0_r_def, 51.0_r_def, &
+                  16.0_r_def, 34.0_r_def, 52.0_r_def, 17.0_r_def, 35.0_r_def, &
+                  53.0_r_def, 18.0_r_def, 36.0_r_def, 54.0_r_def /) )
 
-    WTheta_data = (/ 1.0_dp_xios, 10.0_dp_xios, 19.0_dp_xios, 28.0_dp_xios, 2.0_dp_xios, 11.0_dp_xios, 20.0_dp_xios, 29.0_dp_xios, 3.0_dp_xios, 12.0_dp_xios, 21.0_dp_xios, 30.0_dp_xios, &
-                     4.0_dp_xios, 13.0_dp_xios, 22.0_dp_xios, 31.0_dp_xios, 5.0_dp_xios, 14.0_dp_xios, 23.0_dp_xios, 32.0_dp_xios, 6.0_dp_xios, 15.0_dp_xios, 24.0_dp_xios, 33.0_dp_xios, &
-                     7.0_dp_xios, 16.0_dp_xios, 25.0_dp_xios, 34.0_dp_xios, 8.0_dp_xios, 17.0_dp_xios, 26.0_dp_xios, 35.0_dp_xios, 9.0_dp_xios, 18.0_dp_xios, 27.0_dp_xios, 36.0_dp_xios /)
+    allocate (WTheta_data(36), source = (/                                   &
+                  1.0_r_def, 10.0_r_def, 19.0_r_def, 28.0_r_def, 2.0_r_def,  &
+                  11.0_r_def, 20.0_r_def, 29.0_r_def, 3.0_r_def, 12.0_r_def, &
+                  21.0_r_def, 30.0_r_def, 4.0_r_def, 13.0_r_def, 22.0_r_def, &
+                  31.0_r_def, 5.0_r_def, 14.0_r_def, 23.0_r_def, 32.0_r_def, &
+                  6.0_r_def, 15.0_r_def, 24.0_r_def, 33.0_r_def, 7.0_r_def,  &
+                  16.0_r_def, 25.0_r_def, 34.0_r_def, 8.0_r_def, 17.0_r_def, &
+                  26.0_r_def, 35.0_r_def, 9.0_r_def, 18.0_r_def, 27.0_r_def, &
+                  36.0_r_def /) )
 
-    W3_data = (/ 1.0_dp_xios, 10.0_dp_xios, 19.0_dp_xios, 2.0_dp_xios, 11.0_dp_xios, 20.0_dp_xios, 3.0_dp_xios, 12.0_dp_xios, 21.0_dp_xios, &
-                 4.0_dp_xios, 13.0_dp_xios, 22.0_dp_xios, 5.0_dp_xios, 14.0_dp_xios, 23.0_dp_xios, 6.0_dp_xios, 15.0_dp_xios, 24.0_dp_xios, &
-                 7.0_dp_xios, 16.0_dp_xios, 25.0_dp_xios, 8.0_dp_xios, 17.0_dp_xios, 26.0_dp_xios, 9.0_dp_xios, 18.0_dp_xios, 27.0_dp_xios /)
+    allocate (W3_data(27), source = (/                                       &
+                  1.0_r_def, 10.0_r_def, 19.0_r_def, 2.0_r_def, 11.0_r_def,  &
+                  20.0_r_def, 3.0_r_def, 12.0_r_def, 21.0_r_def, 4.0_r_def,  &
+                  13.0_r_def, 22.0_r_def, 5.0_r_def, 14.0_r_def, 23.0_r_def, &
+                  6.0_r_def, 15.0_r_def, 24.0_r_def, 7.0_r_def, 16.0_r_def,  &
+                  25.0_r_def, 8.0_r_def, 17.0_r_def, 26.0_r_def, 9.0_r_def,  &
+                  18.0_r_def, 27.0_r_def /) )
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Test node read
@@ -193,6 +227,30 @@ contains
     call read_field_generic("W3_field", test_proxy)
 
     @assertEqual( W3_data, test_proxy%data )
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Test io_value_type read
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    allocate( int_data(size(W0_data)) )
+    allocate( expected_real_result(size(W0_data)) )
+    allocate( expected_int_result(size(W0_data)) )
+
+    ! Mock xios_recv_field returns sequential numbers
+    expected_real_result = real((/(i,i=1,size(W0_data))/), r_def)
+    expected_int_result = (/(i,i=1,size(W0_data))/)
+
+    int_data=999
+    call this%value_real%init("my_real",W0_data)
+    call this%value_integer%init("my_integer",int_data)
+
+    call checkpoint_read_r_def_value(this%value_real)
+    call checkpoint_read_integer_value(this%value_integer)
+
+    @assertEqual(this%value_real%data, real(expected_real_result, r_def))
+    @assertEqual(this%value_integer%data, expected_int_result)
+
+    deallocate(int_data, expected_real_result, expected_int_result)
 
   end subroutine test_lfric_xios_read
 

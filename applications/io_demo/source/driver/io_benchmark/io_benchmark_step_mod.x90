@@ -1,0 +1,81 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+
+!> Steps the I/O benchmark section of IO_demo
+module io_benchmark_step_mod
+
+  use constants_mod,        only: i_def, r_def
+  use driver_modeldb_mod,   only: modeldb_type
+  use field_mod,            only: field_type
+  use field_parent_mod,     only: field_parent_type
+  use field_collection_iterator_mod, &
+                            only: field_collection_iterator_type
+  use field_collection_mod, only: field_collection_type
+  use log_mod,              only: log_event,         &
+                                  log_scratch_space, &
+                                  LOG_LEVEL_INFO
+  use sleep_mod,            only: c_sleep
+
+  implicit none
+
+  private
+  public :: step_io_benchmark
+
+contains
+
+  !> A simple timestep algorithm that copies the diffusion field into the
+  !! various benchmark fields and divides the entire field by the fields number
+  !!
+  !> @param[in,out]  modeldb  The model database
+  subroutine step_io_benchmark(modeldb)
+
+    implicit none
+
+      type(modeldb_type), optional, intent(inout) :: modeldb
+
+      type(field_collection_type), pointer :: depository
+      type(field_collection_type), pointer :: io_benchmark_fields
+      type(field_collection_iterator_type) :: field_iter
+      class(field_parent_type),    pointer :: step_field
+      type(field_type),            pointer :: kernel_field
+      type(field_type),            pointer :: diffusion_field
+
+      integer(i_def)     :: i, sleep_duration
+      real(r_def)        :: loop_factor
+
+      sleep_duration = modeldb%config%io_demo%benchmark_sleep_time()
+
+      ! Get field data ready
+      depository => modeldb%fields%get_field_collection("depository")
+      io_benchmark_fields => modeldb%fields%get_field_collection("io_benchmark_fields")
+      call depository%get_field("diffusion_field", diffusion_field)
+
+      call field_iter%initialise(io_benchmark_fields)
+      do i = 1, io_benchmark_fields%get_length()
+        if ( .not. field_iter%has_next() ) exit
+        step_field => field_iter%next()
+        select type(step_field)
+          type is (field_type)
+          ! Copy diffusion field values to new fields and adjust values
+          kernel_field => step_field
+          loop_factor = real(i, r_def)
+          call invoke( setval_X(kernel_field, diffusion_field), &
+                       inc_X_divideby_a(kernel_field, loop_factor) )
+        end select
+
+      end do
+
+      write(log_scratch_space,'(A,I0,A)') "io_demo: sleeping for ", sleep_duration, " seconds"
+      call log_event(log_scratch_space, LOG_LEVEL_INFO)
+      call c_sleep(sleep_duration)
+
+      nullify(step_field)
+      nullify(kernel_field)
+      nullify(diffusion_field)
+
+    end subroutine step_io_benchmark
+
+end module io_benchmark_step_mod

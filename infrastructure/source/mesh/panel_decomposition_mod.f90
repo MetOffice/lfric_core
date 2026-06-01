@@ -80,16 +80,16 @@ module panel_decomposition_mod
   ! Interface for routines that generate partition shape and location
   abstract interface
 
-    subroutine get_partition_interface( self,             &
-                                        relative_rank,    &
-                                        panel_ranks,      &
-                                        mapping_factor,   &
-                                        num_cells_x,      &
-                                        num_cells_y,      &
-                                        any_maps,         &
-                                        partition_width,  &
-                                        partition_height, &
-                                        partition_x_pos,  &
+    subroutine get_partition_interface( self,              &
+                                        relative_rank,     &
+                                        panel_ranks,       &
+                                        mapping_factor,    &
+                                        num_cells_x,       &
+                                        num_cells_y,       &
+                                        check_constraints, &
+                                        partition_width,   &
+                                        partition_height,  &
+                                        partition_x_pos,   &
                                         partition_y_pos )
       use constants_mod, only: i_def
       import :: panel_decomposition_type
@@ -101,7 +101,7 @@ module panel_decomposition_mod
                                        mapping_factor,   &
                                        num_cells_x,      &
                                        num_cells_y
-      logical,        intent(in)    :: any_maps
+      logical,        intent(in)    :: check_constraints
 
       integer(i_def), intent(inout) :: partition_width,  &
                                        partition_height, &
@@ -128,28 +128,27 @@ module panel_decomposition_mod
 contains
 
   !> @brief Partition the panel into a given number of x and y processes
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
-  !>                                must having aligning partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
-  subroutine get_custom_partition( self,             &
-                                   relative_rank,    &
-                                   panel_ranks,      &
-                                   mapping_factor,   &
-                                   num_cells_x,      &
-                                   num_cells_y,      &
-                                   any_maps,         &
-                                   partition_width,  &
-                                   partition_height, &
-                                   partition_x_pos,  &
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
+  subroutine get_custom_partition( self,              &
+                                   relative_rank,     &
+                                   panel_ranks,       &
+                                   mapping_factor,    &
+                                   num_cells_x,       &
+                                   num_cells_y,       &
+                                   check_constraints, &
+                                   partition_width,   &
+                                   partition_height,  &
+                                   partition_x_pos,   &
                                    partition_y_pos )
     implicit none
 
@@ -159,7 +158,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -173,7 +172,10 @@ contains
     num_yprocs = self%num_yprocs
 
     if ( panel_ranks /= num_xprocs * num_yprocs ) then
-      write( log_scratch_space, "(a,i0,a,i0,a,i0)" ) "Total ranks per panel ", panel_ranks, " must be the product of xprocs ", self%num_xprocs, " and yprocs ", self%num_yprocs
+      write( log_scratch_space, "(3(A,I0))" )                 &
+          "Total ranks per panel ", panel_ranks,              &
+          " must be the product of xprocs ", self%num_xprocs, &
+          " and yprocs ", self%num_yprocs
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )
     end if
 
@@ -183,7 +185,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -234,28 +236,27 @@ contains
 
   !> @brief Partition the panel into an automatically determined number of x and
   !         y processes
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
-  !>                                must having aligning partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
-  subroutine get_auto_partition( self,             &
-                                 relative_rank,    &
-                                 panel_ranks,      &
-                                 mapping_factor,   &
-                                 num_cells_x,      &
-                                 num_cells_y,      &
-                                 any_maps,         &
-                                 partition_width,  &
-                                 partition_height, &
-                                 partition_x_pos,  &
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
+  subroutine get_auto_partition( self,              &
+                                 relative_rank,     &
+                                 panel_ranks,       &
+                                 mapping_factor,    &
+                                 num_cells_x,       &
+                                 num_cells_y,       &
+                                 check_constraints, &
+                                 partition_width,   &
+                                 partition_height,  &
+                                 partition_x_pos,   &
                                  partition_y_pos )
     implicit none
 
@@ -265,7 +266,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -303,7 +304,7 @@ contains
         num_yprocs = panel_ranks / num_xprocs
 
         ! If we have any maps then x and y procs must divide the coarsest panel
-        if ( (.not. any_maps) .or. &
+        if ( (.not. check_constraints) .or. &
              ( mod( mp_num_cells_x, num_xprocs ) == 0 .and. &
                mod( mp_num_cells_y, num_yprocs ) == 0 ) &
         ) then
@@ -321,7 +322,7 @@ contains
         num_yprocs = panel_ranks / num_xprocs
 
         ! If we have any maps then x and y procs must divide the coarsest panel
-        if ( (.not. any_maps) .or. &
+        if ( (.not. check_constraints) .or. &
              ( mod( mp_num_cells_x, num_xprocs ) == 0 .and. &
                mod( mp_num_cells_y, num_yprocs ) == 0 ) &
         ) then
@@ -341,7 +342,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -382,28 +383,27 @@ contains
 
 
   !> @brief Partition the panel only in the x direction
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
-  !>                                must having aligning partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
-  subroutine get_row_partition( self,             &
-                                relative_rank,    &
-                                panel_ranks,      &
-                                mapping_factor,   &
-                                num_cells_x,      &
-                                num_cells_y,      &
-                                any_maps,         &
-                                partition_width,  &
-                                partition_height, &
-                                partition_x_pos,  &
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
+  subroutine get_row_partition( self,              &
+                                relative_rank,     &
+                                panel_ranks,       &
+                                mapping_factor,    &
+                                num_cells_x,       &
+                                num_cells_y,       &
+                                check_constraints, &
+                                partition_width,   &
+                                partition_height,  &
+                                partition_x_pos,   &
                                 partition_y_pos )
     implicit none
 
@@ -413,7 +413,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -431,7 +431,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -472,28 +472,27 @@ contains
 
 
   !> @brief Partition the panel only in the y direction
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[in]    any_maps         Whether there exist maps between meshes that
-  !>                                must having aligning partitions
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
-  subroutine get_column_partition( self,             &
-                                   relative_rank,    &
-                                   panel_ranks,      &
-                                   mapping_factor,   &
-                                   num_cells_x,      &
-                                   num_cells_y,      &
-                                   any_maps,         &
-                                   partition_width,  &
-                                   partition_height, &
-                                   partition_x_pos,  &
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
+  subroutine get_column_partition( self,              &
+                                   relative_rank,     &
+                                   panel_ranks,       &
+                                   mapping_factor,    &
+                                   num_cells_x,       &
+                                   num_cells_y,       &
+                                   check_constraints, &
+                                   partition_width,   &
+                                   partition_height,  &
+                                   partition_x_pos,   &
                                    partition_y_pos )
     implicit none
 
@@ -503,7 +502,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -521,7 +520,7 @@ contains
                               num_xprocs,  &
                               num_yprocs,  &
                               panel_ranks, &
-                              any_maps )
+                              check_constraints )
 
     call xy_decomposition( relative_rank,    &
                            num_cells_x,      &
@@ -562,26 +561,27 @@ contains
 
   !> @brief Partition the panel into an automatically determined number of
   !         columns of partitions of variable size.
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
-  subroutine get_auto_nonuniform_partition( self,             &
-                                            relative_rank,    &
-                                            panel_ranks,      &
-                                            mapping_factor,   &
-                                            num_cells_x,      &
-                                            num_cells_y,      &
-                                            any_maps,         &
-                                            partition_width,  &
-                                            partition_height, &
-                                            partition_x_pos,  &
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
+  subroutine get_auto_nonuniform_partition( self,              &
+                                            relative_rank,     &
+                                            panel_ranks,       &
+                                            mapping_factor,    &
+                                            num_cells_x,       &
+                                            num_cells_y,       &
+                                            check_constraints, &
+                                            partition_width,   &
+                                            partition_height,  &
+                                            partition_x_pos,   &
                                             partition_y_pos )
     implicit none
 
@@ -591,7 +591,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -620,7 +620,7 @@ contains
       num_xprocs = start_xprocs - i
 
       ! If there are any intermesh maps then xprocs must also divide the domain.
-      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. any_maps ) then
+      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. check_constraints ) then
         found_factors = .true.
         exit
       end if
@@ -628,7 +628,7 @@ contains
       num_xprocs = start_xprocs + i
 
       ! If there are any intermesh maps then xprocs must also divide the domain.
-      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. any_maps ) then
+      if ( ( mod(mp_num_cells_x, num_xprocs) == 0 ) .or. .not. check_constraints ) then
         found_factors = .true.
         exit
       end if
@@ -678,26 +678,27 @@ contains
 
   !> @brief Partition the panel into a given number of columns of partitions of
   !         variable size.
-  !> @param[in]    relative_rank    The number of this rank in the order of all
-  !                                 ranks on the panel
-  !> @param[in]    panel_ranks      The total number of ranks on the panel
-  !> @param[in]    mapping_factor   The ratio between this and coarsest mesh
-  !> @param[in]    num_cells_x      The panel's size in the x direction
-  !> @param[in]    num_cells_y      The panel's size in the y direction
-  !> @param[inout] partition_width  The partition's size in the x direction
-  !> @param[inout] partition_height The partition's size in the y direction
-  !> @param[inout] partition_x_pos  The x index of the partition
-  !> @param[inout] partition_y_pos  The y index of the partition
-  subroutine get_guided_nonuniform_partition( self,             &
-                                              relative_rank,    &
-                                              panel_ranks,      &
-                                              mapping_factor,   &
-                                              num_cells_x,      &
-                                              num_cells_y,      &
-                                              any_maps,         &
-                                              partition_width,  &
-                                              partition_height, &
-                                              partition_x_pos,  &
+  !> @param[in]    relative_rank     The number of this rank in the order of all
+  !                                  ranks on the panel
+  !> @param[in]    panel_ranks       The total number of ranks on the panel
+  !> @param[in]    mapping_factor    The ratio between this and coarsest mesh
+  !> @param[in]    num_cells_x       The panel's size in the x direction
+  !> @param[in]    num_cells_y       The panel's size in the y direction
+  !> @param[in]    check_constraints Check meshes have aligned partitions
+  !> @param[inout] partition_width   The partition's size in the x direction
+  !> @param[inout] partition_height  The partition's size in the y direction
+  !> @param[inout] partition_x_pos   The x index of the partition
+  !> @param[inout] partition_y_pos   The y index of the partition
+  subroutine get_guided_nonuniform_partition( self,              &
+                                              relative_rank,     &
+                                              panel_ranks,       &
+                                              mapping_factor,    &
+                                              num_cells_x,       &
+                                              num_cells_y,       &
+                                              check_constraints, &
+                                              partition_width,   &
+                                              partition_height,  &
+                                              partition_x_pos,   &
                                               partition_y_pos )
     implicit none
 
@@ -707,7 +708,7 @@ contains
                                      mapping_factor,   &
                                      num_cells_x,      &
                                      num_cells_y
-    logical,        intent(in)    :: any_maps
+    logical,        intent(in)    :: check_constraints
     integer(i_def), intent(inout) :: partition_width,  &
                                      partition_height, &
                                      partition_x_pos,  &
@@ -721,17 +722,20 @@ contains
 
     ! Defensive checks
     if ( num_xprocs <= 0 ) then
-      call log_event("Number of x processes must be strictly positive.", LOG_LEVEL_ERROR)
+      call log_event( "Number of x processes must be strictly positive.", &
+                      LOG_LEVEL_ERROR )
     end if
 
     if ( num_cells_x < num_xprocs ) then
-      write(log_scratch_space, "(a,i0,a,i0)") "Must have more cells than partitions in x direction."
+      write(log_scratch_space, '(A)') &
+          "Must have more cells than partitions in x direction."
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
 
-    if ( any_maps .and. ( mod(num_cells_x, num_xprocs) /= 0 ) ) then
-      write(log_scratch_space, "(a,i0,a,i0)") "Requested number of ranks in x direction ", num_xprocs, &
-        " must divide panel x dimension ", num_cells_x
+    if ( check_constraints .and. ( mod(num_cells_x, num_xprocs) /= 0 ) ) then
+      write(log_scratch_space, '(2(A,I0))')                        &
+          "Requested number of ranks in x direction ", num_xprocs, &
+          " must divide panel x dimension ", num_cells_x
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
 
@@ -839,14 +843,15 @@ contains
   !> @param[in] num_cells_y The panel's size in the y direction
   !> @param[in] num_xprocs  The number of partitions in the x direction
   !> @param[in] num_yprocs  The number of partitions in the y direction
-  !> @param[in] panel_ranks The number of ranks the panel is to be split into
-  !> @param[in] any_maps    Whether any mesh maps exist for this mesh
+  !> @param[in] panel_ranks       The number of ranks the panel is to be
+  !>                              split into
+  !> @param[in] check_constraints Check meshes have aligned partitions
   subroutine xy_defensive_checks( num_cells_x, &
                                   num_cells_y, &
                                   num_xprocs,  &
                                   num_yprocs,  &
                                   panel_ranks, &
-                                  any_maps )
+                                  check_constraints )
     implicit none
 
     integer(i_def), intent(in) :: num_cells_x, &
@@ -854,7 +859,8 @@ contains
                                   num_xprocs,  &
                                   num_yprocs,  &
                                   panel_ranks
-    logical       , intent(in) :: any_maps
+
+    logical(l_def), intent(in) :: check_constraints
 
     if ( num_xprocs <=0 .or. num_yprocs <= 0 ) then
       write(log_scratch_space, "(a,i0,a,i0,a)") &
@@ -878,23 +884,27 @@ contains
     end if
 
     ! Equal divisions are only required if there are maps between meshes
-    if (any_maps) then
+    if (check_constraints) then
+
       if ( mod(num_cells_x, num_xprocs) /= 0 ) then
-        write(log_scratch_space, "(a,i0,a,i0)") "Requested number of ranks in x direction ", num_xprocs, &
+        write(log_scratch_space, "(2(A,I0))")                      &
+          "Requested number of ranks in x direction ", num_xprocs, &
           " must divide panel x dimension ", num_cells_x
         call log_event(log_scratch_space, LOG_LEVEL_ERROR)
       end if
 
       if ( mod(num_cells_y, num_yprocs) /= 0 ) then
-        write(log_scratch_space, "(a,i0,a,i0)") "Requested number of ranks in y direction ", num_yprocs, &
-          " must divide panel y dimension ", num_cells_y
+        write(log_scratch_space, "(2(A,I0))")                       &
+           "Requested number of ranks in y direction ", num_yprocs, &
+           " must divide panel y dimension ", num_cells_y
         call log_event(log_scratch_space, LOG_LEVEL_ERROR)
       end if
     end if
 
     if ( num_xprocs * num_yprocs /= panel_ranks ) then
-      write(log_scratch_space, "(a,i0,a,i0)") "Requested number of partitions ", num_xprocs * num_yprocs, &
-        " must equal available number of ranks per panel ", panel_ranks
+      write(log_scratch_space, "(2(A,I0))")                           &
+          "Requested number of partitions ", num_xprocs * num_yprocs, &
+          " must equal available number of ranks per panel ", panel_ranks
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
 
@@ -1020,14 +1030,16 @@ contains
 
     type(global_mesh_type), intent(in), pointer :: global_mesh
 
-    integer(i_def) :: void_cell    ! Cell id that marks the cell as a cell outside of the partition.
+    integer(i_def) :: void_cell    ! Cell id that marks the cell as a cell
+                                   ! outside of the partition.
     integer(i_def) :: w_cell       ! The id of a cell on the western edge of the domain
     integer(i_def) :: cell_next(4) ! The cells around the cell being queried
     integer(i_def) :: cell_next_e  ! The cell to the east of the cell being queried
     logical :: periodic_xy(2)      ! Is mesh periodic in the x/y-axes
     logical :: valid_for_global_model
 
-    integer(i_def) :: panel_edge_ncells_x  ! number of cells across a panel of the input mesh in x-direction
+    integer(i_def) :: panel_edge_ncells_x  ! Number of cells across a panel of
+                                           ! the input mesh in x-direction
     integer(i_def) :: npanels
 
     valid_for_global_model = ( global_mesh%is_topology_periodic() .and. &
