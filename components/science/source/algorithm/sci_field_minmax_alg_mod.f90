@@ -16,10 +16,13 @@ module sci_field_minmax_alg_mod
                                             invoke_int32_field_min_max,        &
                                             invoke_real32_local_field_min_max, &
                                             invoke_real64_local_field_min_max, &
-                                            invoke_int32_local_field_min_max
+                                            invoke_int32_local_field_min_max,  &
+                                            invoke_real32_field_sum_norm,      &
+                                            invoke_real64_field_sum_norm
 
   use log_mod,                       only : log_event, log_scratch_space, &
                                             log_at_level
+  use logging_config_mod,            only : log_sums_and_norms
   use field_real32_mod,              only : field_real32_type
   use field_real64_mod,              only : field_real64_type
   use field_int32_mod,               only : field_int32_type
@@ -31,6 +34,11 @@ module sci_field_minmax_alg_mod
                       get_field_minmax_real64, &
                       get_field_minmax_int32
   end interface get_field_minmax
+
+  interface get_field_sum_norm
+     module procedure get_field_sum_norm_real32, &
+                      get_field_sum_norm_real64
+  end interface get_field_sum_norm
 
   interface get_local_field_minmax
      module procedure get_local_field_minmax_real32, &
@@ -48,7 +56,7 @@ contains
   !> Returns minimum and maximum of the data values of a field
   !> @param[in] field The field for which the min and max are required
   !> @param[out] fmin The minimum of the field
-  !> @param[out] fmax The minimum of the field
+  !> @param[out] fmax The maximum of the field
   subroutine get_field_minmax_real32( field, fmin, fmax )
     implicit none
     type(field_real32_type), intent(in) :: field
@@ -61,7 +69,7 @@ contains
   !> Returns minimum and maximum of the data values of a field
   !> @param[in] field The field for which the min and max are required
   !> @param[out] fmin The minimum of the field
-  !> @param[out] fmax The minimum of the field
+  !> @param[out] fmax The maximum of the field
   subroutine get_field_minmax_real64( field, fmin, fmax )
     implicit none
     type(field_real64_type), intent(in) :: field
@@ -74,7 +82,7 @@ contains
   !> Returns minimum and maximum of the data values of a field
   !> @param[in] field The field for which the min and max are required
   !> @param[out] fmin The minimum of the field
-  !> @param[out] fmax The minimum of the field
+  !> @param[out] fmax The maximum of the field
   subroutine get_field_minmax_int32( field, fmin, fmax )
     implicit none
     type(field_int32_type), intent(in)  :: field
@@ -87,7 +95,7 @@ contains
   !> Returns minimum and maximum of the field data values local to the rank
   !> @param[in] field The field for which the min and max are required
   !> @param[out] fmin The minimum of the field
-  !> @param[out] fmax The minimum of the field
+  !> @param[out] fmax The maximum of the field
   subroutine get_local_field_minmax_real32( field, fmin, fmax )
     implicit none
     type(field_real32_type), intent(in)  :: field
@@ -100,7 +108,7 @@ contains
   !> Returns minimum and maximum of the field data values local to the rank
   !> @param[in] field The field for which the min and max are required
   !> @param[out] fmin The minimum of the field
-  !> @param[out] fmax The minimum of the field
+  !> @param[out] fmax The maximum of the field
   subroutine get_local_field_minmax_real64( field, fmin, fmax )
     implicit none
     type(field_real64_type), intent(in)  :: field
@@ -113,7 +121,7 @@ contains
   !> Returns minimum and maximum of the field data values local to the rank
   !> @param[in] field The field for which the min and max are required
   !> @param[out] fmin The minimum of the field
-  !> @param[out] fmax The minimum of the field
+  !> @param[out] fmax The maximum of the field
   subroutine get_local_field_minmax_int32( field, fmin, fmax )
     implicit none
     type(field_int32_type), intent(in)  :: field
@@ -122,6 +130,32 @@ contains
     ! call the invoke in the psy layer
     call invoke_int32_local_field_min_max( fmin, fmax, field )
   end subroutine get_local_field_minmax_int32
+
+  !> Returns sum and norm of the data values of a field
+  !> @param[in] field The field for which the min and max are required
+  !> @param[out] fsum The sum of the field
+  !> @param[out] fnorm The L2 norm of the field data
+  subroutine get_field_sum_norm_real32( field, fsum, fnorm )
+    implicit none
+    type(field_real32_type), intent(in) :: field
+    real(kind=real32),      intent(out) :: fsum, fnorm
+
+    ! call the invoke in the PSy layer
+    call invoke_real32_field_sum_norm( fsum, fnorm, field )
+  end subroutine get_field_sum_norm_real32
+
+  !> Returns sum and norm of the data values of a field
+  !> @param[in] field The field for which the min and max are required
+  !> @param[out] fsum The sum of the field
+  !> @param[out] fnorm The L2 norm of the field data
+  subroutine get_field_sum_norm_real64( field, fsum, fnorm )
+    implicit none
+    type(field_real64_type), intent(in) :: field
+    real(kind=real64),      intent(out) :: fsum, fnorm
+
+    ! call the invoke in the psy layer
+    call invoke_real64_field_sum_norm( fsum, fnorm, field )
+  end subroutine get_field_sum_norm_real64
 
   !> Logs the minimum and maximum values of a field to the log
   !> @param[in] log_level The logging level at which to write the message
@@ -132,6 +166,7 @@ contains
     character(len = *),          intent(in) :: label
     type(field_real32_type),     intent(in) :: field
     real(kind=real32)                       :: fmin, fmax
+    real(kind=real32)                       :: fsum, fnorm
 
     ! If we aren't going to log the min and max then we don't need to
     ! do any further work here.
@@ -139,8 +174,16 @@ contains
 
     ! Calculate min and max field values for real32 field
     call invoke_real32_field_min_max( fmin, fmax, field )
-    write( log_scratch_space, '( A, A, A, 2E16.8 )' ) &
-           "Min/max ", trim(label), " = ", fmin, fmax
+
+    if (log_sums_and_norms) then
+      call invoke_real32_field_sum_norm( fsum, fnorm, field )
+      write( log_scratch_space, '( A, A, A, 4E16.8 )' ) &
+            "Min/max/sum/norm ", trim(label), " = ", fmin, fmax, fsum, fnorm
+    else
+      write( log_scratch_space, '( A, A, A, 2E16.8 )' ) &
+            "Min/max ", trim(label), " = ", fmin, fmax
+    end if
+
     call log_event( log_scratch_space, log_level )
   end subroutine log_field_minmax_real32
 
@@ -153,6 +196,7 @@ contains
     character(len = *),          intent(in) :: label
     type(field_real64_type),     intent(in) :: field
     real(kind=real64)                       :: fmin, fmax
+    real(kind=real64)                       :: fsum, fnorm
 
     ! If we aren't going to log the min and max then we don't need to
     ! do any further work here.
@@ -160,8 +204,16 @@ contains
 
     ! Calculate min and max field values for real64 field
     call invoke_real64_field_min_max( fmin, fmax, field )
-    write( log_scratch_space, '( A, A, A, 2E16.8 )' ) &
-          "Min/max ", trim(label), " = ", fmin, fmax
+
+    if (log_sums_and_norms) then
+      call invoke_real64_field_sum_norm( fsum, fnorm, field )
+      write( log_scratch_space, '( A, A, A, 4E32.16 )' ) &
+            "Min/max/sum/norm ", trim(label), " = ", fmin, fmax, fsum, fnorm
+    else
+      write( log_scratch_space, '( A, A, A, 2E32.16 )' ) &
+            "Min/max ", trim(label), " = ", fmin, fmax
+    end if
+
     call log_event( log_scratch_space, log_level )
   end subroutine log_field_minmax_real64
 

@@ -477,6 +477,146 @@ contains
     !
   end subroutine invoke_int32_local_field_min_max
 
+  subroutine invoke_real32_field_sum_norm(field_sum, field_norm, real32_field)
+
+    use scalar_real32_mod,  only: scalar_real32_type
+    use omp_lib,            only: omp_get_thread_num
+    use omp_lib,            only: omp_get_max_threads
+    use field_real32_mod,   only: field_real32_type, &
+                                  field_real32_proxy_type
+
+    implicit none
+
+    real(kind=real32),              intent(out)  :: field_sum
+    real(kind=real32),              intent(out)  :: field_norm
+    type(field_real32_type),         intent(in)  :: real32_field
+    type(scalar_real32_type)                     :: global_sum, global_norm
+    integer(kind=i_def)                          :: df
+    real(kind=real32), allocatable, dimension(:) :: l_field_sum
+    real(kind=real32), allocatable, dimension(:) :: l_field_norm
+    integer(kind=i_def)                          :: th_idx
+    integer(kind=i_def)                          :: loop0_start
+    integer(kind=i_def)                          :: loop0_stop
+    integer(kind=i_def)                          :: nthreads
+    type(field_real32_proxy_type)                :: field_proxy
+    !
+    ! Determine the number of OpenMP threads
+    !
+    nthreads = omp_get_max_threads()
+    !
+    ! Initialise field and/or operator proxies
+    !
+    field_proxy = real32_field%get_proxy()
+    !
+    ! Set-up all of the loop bounds
+    !
+    loop0_start = 1
+    loop0_stop = field_proxy%vspace%get_last_dof_owned()
+    !
+    ! Call kernels and communication routines
+    !
+    allocate(l_field_sum(nthreads))
+    allocate(l_field_norm(nthreads))
+    !
+    l_field_sum(:) = 0.0_real32
+    l_field_norm(:) = 0.0_real64
+    !
+    !$omp parallel default(shared), private(df,th_idx)
+    th_idx = omp_get_thread_num()+1
+    !$omp do schedule(static)
+    do df=loop0_start,loop0_stop
+      l_field_sum(th_idx) = l_field_sum(th_idx) + field_proxy%data(df)
+      l_field_norm(th_idx) = l_field_norm(th_idx) + field_proxy%data(df)*field_proxy%data(df)
+    end do
+    !$omp end do
+    !$omp end parallel
+    !
+    ! Find sums sequentially
+    !
+    field_sum = l_field_sum(1)
+    field_norm = l_field_norm(1)
+    do th_idx=2,nthreads
+      field_sum = field_sum + l_field_sum(th_idx)
+      field_norm = field_norm + l_field_norm(th_idx)
+    end do
+    deallocate(l_field_sum, l_field_norm)
+    global_sum%value = field_sum
+    global_norm%value = field_norm
+    field_sum = global_sum%get_sum()
+    field_norm = SQRT(MAX(global_norm%get_sum(), 0.0_real32))
+    !
+  end subroutine invoke_real32_field_sum_norm
+
+  subroutine invoke_real64_field_sum_norm(field_sum, field_norm, real64_field)
+
+    use scalar_real64_mod,  only: scalar_real64_type
+    use omp_lib,            only: omp_get_thread_num
+    use omp_lib,            only: omp_get_max_threads
+    use field_real64_mod,   only: field_real64_type, &
+                                  field_real64_proxy_type
+
+    implicit none
+
+    real(kind=real64),               intent(out) :: field_sum
+    real(kind=real64),               intent(out) :: field_norm
+    type(field_real64_type),          intent(in) :: real64_field
+    type(scalar_real64_type)                     :: global_sum, global_norm
+    integer(kind=i_def)                          :: df
+    real(kind=real64), allocatable, dimension(:) :: l_field_sum
+    real(kind=real64), allocatable, dimension(:) :: l_field_norm
+    integer(kind=i_def)                          :: th_idx
+    integer(kind=i_def)                          :: loop0_start
+    integer(kind=i_def)                          :: loop0_stop
+    integer(kind=i_def)                          :: nthreads
+    type(field_real64_proxy_type)                :: field_proxy
+    !
+    ! Determine the number of OpenMP threads
+    !
+    nthreads = omp_get_max_threads()
+    !
+    ! Initialise field and/or operator proxies
+    !
+    field_proxy = real64_field%get_proxy()
+    !
+    ! Set-up all of the loop bounds
+    !
+    loop0_start = 1
+    loop0_stop = field_proxy%vspace%get_last_dof_owned()
+    !
+    ! Call kernels and communication routines
+    !
+    allocate(l_field_sum(nthreads))
+    allocate(l_field_norm(nthreads))
+    !
+    l_field_sum(:) = 0.0_real64
+    l_field_norm(:) = 0.0_real64
+    !
+    !$omp parallel default(shared), private(df,th_idx)
+    th_idx = omp_get_thread_num()+1
+    !$omp do schedule(static)
+    do df=loop0_start,loop0_stop
+      l_field_sum(th_idx) = l_field_sum(th_idx) + field_proxy%data(df)
+      l_field_norm(th_idx) = l_field_norm(th_idx) + field_proxy%data(df)*field_proxy%data(df)
+    end do
+    !$omp end do
+    !$omp end parallel
+    !
+    ! Find sums sequentially
+    !
+    field_sum = l_field_sum(1)
+    field_norm = l_field_norm(1)
+    do th_idx=2,nthreads
+      field_sum = field_sum + l_field_sum(th_idx)
+      field_norm = field_norm + l_field_norm(th_idx)
+    end do
+    deallocate(l_field_sum, l_field_norm)
+    global_sum%value = field_sum
+    global_norm%value = field_norm
+    field_sum = global_sum%get_sum()
+    field_norm = SQRT(MAX(global_norm%get_sum(), 0.0_real64))
+    !
+  end subroutine invoke_real64_field_sum_norm
+
   !---------------------------------------------------------------------
   ! This is a PSyKAl-lite implementation of a built-in that will be
   ! implemented under PSYclone issue #2674. See that issue for further
