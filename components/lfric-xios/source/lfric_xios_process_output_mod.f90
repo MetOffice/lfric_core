@@ -7,7 +7,7 @@
 !> @brief  Module to only hold routines for re-processing files output by XIOS
 !>         where the configuration is unable to be delivered by XIOS.
 !>         The only facet in scope for this module is post processing projected
-!>         coordinates for UGRId specification files, pending new feature
+!>         coordinates for UGRID specification files, pending new feature
 !>         development in XIOS.  This is technical debt, and this
 !>         post processing approach should not be used for other file
 !>         manipulations.
