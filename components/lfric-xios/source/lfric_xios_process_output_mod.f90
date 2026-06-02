@@ -24,8 +24,7 @@ module lfric_xios_process_output_mod
   use lfric_ncdf_file_mod,        only: lfric_ncdf_file_type
   use lfric_xios_constants_mod,   only: dp_xios
   use lfric_xios_file_mod,        only: lfric_xios_file_type
-  use log_mod,                    only: log_event, log_level_trace, &
-                                        log_level_debug
+  use log_mod,                    only: log_event, log_level_debug
 
   implicit none
 

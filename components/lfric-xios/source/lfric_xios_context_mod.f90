@@ -16,8 +16,7 @@ module lfric_xios_context_mod
   use file_mod,             only : file_type
   use io_context_mod,       only : io_context_type, callback_clock_arg
   use io_config_mod,        only : file_convention,       &
-                                   file_convention_ugrid, &
-                                   file_convention_cf
+                                   file_convention_ugrid
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use lfric_mpi_mod,        only : lfric_comm_type
   use log_mod,              only : log_event, log_scratch_space, &
