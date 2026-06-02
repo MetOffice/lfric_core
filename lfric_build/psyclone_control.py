@@ -212,20 +212,19 @@ rules: {self._rules}
                     raise FileNotFoundError(
                         f"Cannot find explicitly requested script '{script}'.")
 
-                elif rule == PsycloneInfo.EXCLUDE:
+                if rule == PsycloneInfo.EXCLUDE:
                     # Exclude pattern matches:
                     return PsycloneInfo.RESULT_EXCLUDE
 
-                elif rule == PsycloneInfo.NO_SCRIPT:
+                if rule == PsycloneInfo.NO_SCRIPT:
                     # Exclude pattern matches:
                     return PsycloneInfo.RESULT_NO_SCRIPT
 
-                else:
-                    opt_script = self.opt_path / rule
-                    if not opt_script.exists():
-                        raise FileExistsError(f"Cannot find script "
-                                              f"'{opt_script}'.")
-                    return opt_script
+                opt_script = self.opt_path / rule
+                if not opt_script.exists():
+                    raise FileNotFoundError(f"Cannot find script "
+                                            f"'{opt_script}'.")
+                return opt_script
 
         return PsycloneInfo.RESULT_EXCLUDE
 
