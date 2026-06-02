@@ -226,6 +226,8 @@ def test_get_directory(monkeypatch, tmp_path) -> None:
     ]
     monkeypatch.setattr('inspect.stack', lambda: mock_stack)
     monkeypatch.setattr(sys, "argv", ["lfric_base.py"])
+    psyclone_control = mock_base_dir / "psyclone_info.yaml"
+    psyclone_control.write_text("phases:", encoding='utf-8')
 
     lfric_base = LFRicBase(name="test", app_dir=tmp_path / "app_dir")
 
@@ -691,7 +693,7 @@ def test_get_psyclone_config(monkeypatch) -> None:
     config_args = lfric_base.get_psyclone_config()
 
     assert config_args == str(lfric_base.config.source_root /
-                              'psyclone_config/psyclone.cfg')
+                              'psyclone_config' / 'psyclone.cfg')
 
 
 def test_get_transformation_script(monkeypatch, tmp_path) -> None:
@@ -703,47 +705,67 @@ def test_get_transformation_script(monkeypatch, tmp_path) -> None:
     # Create LFRicBase instance with mocked site/platform
     lfric_base = LFRicBase(name="test", app_dir=Path("."))
 
-    # Create mock config
+    # Create mock config, and insert it into the lfric base instance
+    # (to mock the paths used here)
     config = mock.MagicMock()
     config.source_root = tmp_path
-    config.build_output = tmp_path / "build"
+    config._build_output = tmp_path / "build"
     config.build_output.mkdir()
+    lfric_base._config = config
 
-    # Create x90 test source file
-    source_path = tmp_path / "some/path"
-    source_path.mkdir(parents=True)
-    test_file = source_path / "file.x90"
-    test_file.touch()
-
-    # Test case 1: x90 file not in source or build directories
-    outside_file = tmp_path.parent / "outside.x90"
-    assert lfric_base.get_transformation_script(outside_file, config) is None
-
-    # Test case 2: No optimisation directory, no transformation script
-    assert lfric_base.get_transformation_script(test_file, config) is None
-
-    # Test case 3: No PSykal but optimisation directory
     optimisation_folder_path = (tmp_path / "optimisation" / "default-default" /
                                 "psykal")
+
+    # Set a current psyclone phase in the object, so the correct rule
+    # (for dsl) is picked:
+    psy_info = lfric_base._psyclone_control.get_info("dsl")
+    psy_info._opt_path = optimisation_folder_path
+    lfric_base._current_psyclone_info = psy_info
+
+    # Create x90 test source file
+    source_path = tmp_path / "some" / "path"
+    source_path.mkdir(parents=True)
+
+    # Test case 1: No optimisation directory, no transformation script
+    test_file = source_path / "file.x90"
+    test_file.touch()
+    with pytest.raises(FileNotFoundError) as err:
+        lfric_base.get_transformation_script(test_file, config)
+
+    # Test case 2: No PSykal but optimisation directory
     global_script = optimisation_folder_path / "global.py"
     global_script.parent.mkdir(parents=True)
     global_script.touch()
 
     # No file-specific transformation script, use global script
-    other_file = tmp_path / "other/path/test.x90"
+    other_file = tmp_path / "other" / "path" / "test.x90"
     other_file.parent.mkdir(parents=True)
     other_file.touch()
     assert (lfric_base.get_transformation_script(other_file, config) ==
             global_script)
 
-    # Test case 4: Psykal directory exists
-    psykal_path = tmp_path / "optimisation/default-default/psykal"
+    # Test case 3: Psykal directory exists
+    psykal_path = tmp_path / "optimisation" / "default-default" / "psykal"
 
     # Create specific transformation script in psykal dir
-    specific_script = psykal_path / "some/path/file.py"
+    specific_script = psykal_path / "some" / "path" / "file.py"
     specific_script.parent.mkdir(parents=True)
     specific_script.touch()
 
     # Use specific script in psykal directory
     assert lfric_base.get_transformation_script(test_file, config) == \
         specific_script
+
+    # Test case 4: Return exclude (which should not happen, the function
+    # should only be called for files that have a script)
+    psy_info._rules = []
+    with pytest.raises(ValueError) as err:
+        lfric_base.get_transformation_script(test_file, config)
+    assert ("PSyclone transformation script returned "
+            "'PsycloneInfo.RESULT_EXCLUDE', which should not happen."
+            in str(err))
+
+    # Test case 5: Return None if the PSyclone control file explicitly
+    # requests to run PSyclone without a script.
+    psy_info._rules = [(psy_info.NO_SCRIPT, "*")]
+    assert lfric_base.get_transformation_script(test_file, config) is None
