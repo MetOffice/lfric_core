@@ -13,9 +13,6 @@ from pathlib import Path
 from typing import Optional, Union
 import yaml
 
-from fab.api import BuildConfig
-from fab.fab_base.fab_base import FabBase
-
 
 class PsycloneInfo:
     """
@@ -37,11 +34,14 @@ class PsycloneInfo:
     EXCLUDE = "exclude"
     NO_SCRIPT = "no_script"
 
-    def __init__(self, name: str, fab_base: FabBase) -> None:
-        self._fab_base = fab_base
+    def __init__(self, name: str,
+                 base_paths: list[Path],
+                 script_root: Path) -> None:
+        self._base_paths = base_paths
+        self._script_root = script_root
         # This will be initialised/updated each time when reading an info file.
         self._opt_path = Path()
-        self._script_dir: str = ""
+        self._relative_script_dir: str = ""
         self._name: str = name
         self._comment: str = ""
         self._api: str = ""
@@ -102,16 +102,14 @@ class PsycloneInfo:
             elif rule == "artefacts":
                 self._artefacts = info["artefacts"]
             elif rule == "script_dir":
-                self._script_dir = info["script_dir"]
+                self._relative_script_dir = info["script_dir"]
             else:
                 self._read_rule(rule, info[rule])
 
         # Store the potentially updated optimisation root path, i.e. the site-
         # and platform-specific location, followed by a script dir (typically
         # transmute or psykal). This path is used in a few places.
-        self._opt_path = (self._fab_base.config.source_root / "optimisation" /
-                          f"{self._fab_base.site}-{self._fab_base.platform}" /
-                          self._script_dir)
+        self._opt_path = self._script_root / self._relative_script_dir
 
     def _read_rule(self, rule: str, file_list: str) -> None:
         """
@@ -136,7 +134,7 @@ class PsycloneInfo:
 comment: {self.comment}
 api: {self.api}
 artefacts: {self.artefacts}
-script_dir: {self._script_dir}
+script_dir: {self._relative_script_dir}
 rules: {self._rules}
 """
         return s
@@ -156,8 +154,7 @@ rules: {self._rules}
         # .X90 file), or still in source (.x90 file). Check if the file
         # is in one of the two sub-trees, and use the relative path to
         # check if there is a file-specific optimisation script
-        for base_path in [self._fab_base.config.source_root,
-                          self._fab_base.config.build_output]:
+        for base_path in self._base_paths:
             try:
                 relative_path = fpath.relative_to(base_path)
             except ValueError:
@@ -173,7 +170,7 @@ rules: {self._rules}
                 return local_transformation_script
         return None
 
-    def get_script(self, fpath: Path, config: BuildConfig) -> Path:
+    def get_script(self, fpath: Path) -> Path:
         """
         This method returns the script to be used for a given filename, or
         None if no rule applies (or an explicit exclude rule applies)
@@ -183,7 +180,6 @@ rules: {self._rules}
 
         :param fpath: the Fortran source file for which to find a
             transformation script.
-        :param config: the build configuration (unused in this implementation)
 
         :returns: the path to the transformation script, or None if no rule
             applies (or an exclude rule applies).
@@ -237,13 +233,18 @@ class PsycloneControl:
 
     Details of each phase will be stored in PsycloneInfo instances.
 
+    :param base_paths:
     :param fab_base: The FabBase derived application script. This is required
         to get site, platform and config information when searching for
         PSyclone scripts to be executed.
     """
 
-    def __init__(self, fab_base: FabBase) -> None:
-        self._fab_base = fab_base
+    def __init__(self,
+                 script_root: Path,
+                 base_paths: list[Path]) -> None:
+        # Keep a copy in case that the user modifies the list later
+        self._base_paths = base_paths[:]
+        self._script_root = script_root
         self._all_phases: list[str] = []
         self._psyclone_info: dict[str, PsycloneInfo] = {}
 
@@ -302,6 +303,8 @@ class PsycloneControl:
                 # Already handled
                 continue
             if key not in self._psyclone_info:
-                self._psyclone_info[key] = PsycloneInfo(key, self._fab_base)
+                self._psyclone_info[key] = PsycloneInfo(key,
+                                                        self._base_paths,
+                                                        self._script_root)
 
             self._psyclone_info[key].update(dependencies[key])

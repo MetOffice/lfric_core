@@ -87,8 +87,16 @@ class LFRicBase(FabBase):
                    f"has no NetCDF library setting defined. Aborting.")
             raise RuntimeError(msg) from err
 
-        # Stores the PSyclone control information
-        self._psyclone_control = PsycloneControl(self)
+        # Store the PSyclone control information
+        # The paths used when identifying file-specific scripts. The matching
+        # base path is removed from the file name to get a relative name
+        # which is used in matching.
+        base_paths = [self.config.source_root,
+                      self.config.build_output]
+        script_root = (self.config.source_root / "optimisation" /
+                       f"{self.site}-{self.platform}")
+        self._psyclone_control = PsycloneControl(script_root=script_root,
+                                                 base_paths=base_paths)
 
         # If the PSyclone step is running, this stores the currently
         # executed PSyclone information. This is used in the
@@ -409,16 +417,17 @@ class LFRicBase(FabBase):
             psyclone_cli_args.extend(additional_parameters)
 
         add_python_paths = ":".join(str(i) for i in self._add_python_paths)
+        # To avoid impacting other code, store the original search path
+        # We have to modify PYTHONPATH (and not sys.path), since PSyclone
+        # is run in its own shell (i.e. it inherits PYTHONPATH, but not
+        # sys.path).
+        orig_pythonpath = os.environ.get("PYTHONPATH", "")
+
         for phase in self._psyclone_control.all_phases:
             logger.info(f"Running PSyclone phase {phase}.")
             psyclone_info = self._psyclone_control.get_info(phase)
             # Save the info for the get transformation script function
             self._current_psyclone_info = psyclone_info
-            # To avoid impacting other code, store the original search path
-            # We have to modify PYTHONPATH (and not sys.path), since PSyclone
-            # is run in its own shell (i.e. it inherits PYTHONPATH, but not
-            # sys.path).
-            orig_pythonpath = os.environ.get("PYTHONPATH", "")
             # Add various paths: optimisation/site-platform/transmute
             # (=opt_path) is required for some transmute scripts that
             # import helper functions. Adding add_python_paths is
@@ -449,7 +458,7 @@ class LFRicBase(FabBase):
         f90_files: list[Path] = []
         af_store = self.config.artefact_store
         for file in af_store[ArtefactSet.FORTRAN_COMPILER_FILES]:
-            script = psyclone_info.get_script(file, self.config)
+            script = psyclone_info.get_script(file)
             if script != PsycloneInfo.RESULT_EXCLUDE:
                 f90_files.append(file)
 
@@ -492,7 +501,7 @@ class LFRicBase(FabBase):
         :raises ValueError: If the current psyclone_info result indicates
             that the current file should be be run through PSyclone.
         '''
-        script = self._current_psyclone_info.get_script(fpath, config)
+        script = self._current_psyclone_info.get_script(fpath)
 
         if script == PsycloneInfo.RESULT_NO_SCRIPT:
             return None
