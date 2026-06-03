@@ -37,21 +37,15 @@ program lbc_demo
   integer :: geometry, topology
 
   call parse_command_line( filename )
-
-  write(log_scratch_space, '(A)') &
-      'Application built with ' // trim(precision_real) // '-bit real numbers'
-  call log_event( log_scratch_space, log_level_trace )
-
-  ! The technical and scientific state
-  modeldb%mpi => global_mpi
-  call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise( program_name )
 
-  call init_comm(program_name, modeldb)
+  modeldb%mpi => global_mpi
 
-  call init_config(filename, required_namelists,        &
-                   configuration=modeldb%configuration, &
+  call init_comm(program_name, modeldb)
+  call init_config(filename, required_namelists, &
                    config=modeldb%config)
+
+  call init_logger( modeldb%mpi%get_comm(), program_name )
 
   ! Before anything else, test that the mesh provided was a regional domain.
   ! This application is not intended for cubed-sphere meshes.
@@ -64,10 +58,12 @@ program lbc_demo
     call log_event( 'Cubed-Sphere mesh is not supported.', log_level_error)
   end if
 
-  call init_logger( modeldb%mpi%get_comm(), program_name )
+  write(log_scratch_space, '(A)') &
+      'Application built with ' // trim(precision_real) // '-bit real numbers'
+  call log_event( log_scratch_space, log_level_trace )
+
   call init_collections()
   call init_time(modeldb)
-
   deallocate( filename )
 
   ! Create the depository field collection and place it in modeldb
