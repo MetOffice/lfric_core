@@ -91,8 +91,8 @@ end function create_extrusion
 !!
 !> @param[in]  local_mesh_names  Names of the local_mesh_types to extrude.
 !> @param[in]  extrusion         Extrusion to employ.
-!> @param[in]  inner_halo_tiles
-!> @param[in]  tile_size
+!> @param[in]  inner_halo_tiles  Apply tiling to inner halos
+!> @param[in]  tile_size         Inner halo tile size if applied
 !> @param[in]  alt_name          Optional, Alternative names for the
 !!                               extruded meshes, defaults to local_mesh_names
 !!                               if absent.
@@ -145,8 +145,8 @@ end subroutine create_mesh_multiple
 !> @param[in]  local_mesh_name  Name of local_mesh_type object in
 !!                              application local_mesh_collection.
 !> @param[in]  extrusion        Extrusion to employ for this mesh_type object
-!> @param[in]  inner_halo_tiles
-!> @param[in]  tile_size
+!> @param[in]  inner_halo_tiles  Apply tiling to inner halos
+!> @param[in]  tile_size         Inner halo tile size if applied
 !> @param[in]  alt_name         Optional, Alternative name for the
 !!                              extruded mesh, defaults to local_mesh_name
 !!                              if absent.

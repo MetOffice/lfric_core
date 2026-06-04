@@ -91,10 +91,10 @@ contains
 !> @param[in]     chi2                     Coordinates in the second direction
 !> @param[in]     chi3                     Coordinates in the third direction
 !> @param[in]     panel_id                 A field giving the ID for mesh panels
-!> @param[in]     geometry
-!> @param[in]     topology
-!> @param[in]     coord_system
-!> @param[in]     scaled_radius
+!> @param[in]     geometry                 Mesh geometry enumeration value
+!> @param[in]     topology                 Mesh topology enumeration value
+!> @param[in]     coord_system             Finite-Element coord-system enumeration value
+!> @param[in]     scaled_radius            Planet scaled radius
 !> @param[in]     ndf_w2b                  Number of DoFs per cell for broken W2
 !> @param[in]     ndf_w3                   Number of DoFs per cell for W3
 !> @param[in]     ndf_wt                   Number of DoFs per cell for Wtheta

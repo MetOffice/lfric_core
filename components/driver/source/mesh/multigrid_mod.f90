@@ -56,7 +56,7 @@ contains
 !> @brief Routine returns tile sizes for supplied mesh names/extrusion where
 !>        applicable to the multigrid configuration.
 !>
-!> @param[in] config           Application configuration object
+!> @param[in] config           Application namelist configuration object
 !> @param[in] local_mesh_names Meshes to set multigrid tile sizes
 !> @param[in] extrusion        Extrusion object being applied to meshes.
 !>

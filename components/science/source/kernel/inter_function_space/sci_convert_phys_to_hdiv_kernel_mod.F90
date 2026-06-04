@@ -75,10 +75,10 @@ contains
 !> @param[in]     chi_2          2nd coordinate field
 !> @param[in]     chi_3          3rd coordinate field
 !> @param[in]     panel_id       Field giving the ID for mesh panels
-!> @param[in]     geometry       Integer indicating the domain geometry
-!> @param[in]     topology
-!> @param[in]     coord_system
-!> @param[in]     scaled_radius
+!> @param[in]     geometry       Mesh geometry enumeration value
+!> @param[in]     topology       Mesh topology enumeration value
+!> @param[in]     coord_system   Finite-Element coord-system enumeration value
+!> @param[in]     scaled_radius  Planet scaled radius
 !> @param[in]     ndf_w2         Number of DoFs per cell for W2
 !> @param[in]     undf_w2        Number of DoFs for W2 for this partition
 !> @param[in]     map_w2         Map of DoFs for lowest-layer cells for W2

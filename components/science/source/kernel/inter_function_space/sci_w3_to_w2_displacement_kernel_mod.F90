@@ -73,10 +73,10 @@ module sci_w3_to_w2_displacement_kernel_mod
   !> @param[in]     chi_3         The third coordinate field
   !> @param[in]     panel_id      ID for panels of the underlying mesh
   !> @param[in]     dummy_w3      An unused dummy field in W3
-  !> @param[in]     geometry
-  !> @param[in]     topology
-  !> @param[in]     coord_system
-  !> @param[in]     scaled_radius
+  !> @param[in]     geometry      Mesh geometry enumeration value
+  !> @param[in]     topology      Mesh topology enumeration value
+  !> @param[in]     coord_system  Finite-Element coord-system enumeration value
+  !> @param[in]     scaled_radius Planet scaled radius
   !> @param[in]     ndf_w2h       Number of DoFs for W2H per cell
   !> @param[in]     undf_w2h      Number of unique DoFs for W2H per partition
   !> @param[in]     map_w2h       The DoF map for bottom layer cells for W2H

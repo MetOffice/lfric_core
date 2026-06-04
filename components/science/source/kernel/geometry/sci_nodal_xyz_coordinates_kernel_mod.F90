@@ -63,10 +63,10 @@ contains
 !> @param[in] chi2 Coordinates in the second direction
 !> @param[in] chi3 Coordinates in the third direction
 !> @param[in] panel_id A field giving the ID for mesh panels.
-!! @param[in] geometry
-!! @param[in] topology
-!! @param[in] coord_system
-!! @param[in] scaled_radius
+!> @param[in] geometry      Mesh geometry enumeration value
+!> @param[in] topology      Mesh topology enumeration value
+!> @param[in] coord_system  Finite-Element coord-system enumeration value
+!> @param[in] scaled_radius Planet scaled radius
 !> @param[in] ndf_x Number of degrees of freedom per cell for the output field
 !> @param[in] undf_x Number of unique degrees of freedom for the output field
 !> @param[in] map_x Dofmap for the output field

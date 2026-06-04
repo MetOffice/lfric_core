@@ -52,7 +52,7 @@ contains
   !!           from the mesh generator and then 'assign_coordinate' on a column by
   !!           column basis.
   !>
-  !> @param[in]     config
+  !> @param[in]     config   Application namelist configuration object
   !> @param[in]     mesh     Mesh on which this field is attached
   !> @param[in,out] chi      Model coordinate array of size 3 of fields
   !> @param[in]     panel_id Field giving the ID of mesh panels

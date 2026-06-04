@@ -43,7 +43,7 @@ module sci_mapping_constants_mod
   ! Object types
   use config_mod, only: config_type
 
-  ! Confugration moudles
+  ! Configuration modules
   use base_mesh_config_mod, only: geometry_spherical,      &
                                   geometry_planar,         &
                                   topology_fully_periodic, &
@@ -202,9 +202,8 @@ contains
 
   !> @brief Create the operators for projecting spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
-  !> @param[in] config
-  !> @param[in] mesh          The mesh to compute the operators for
-
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to compute the operators for
   subroutine create_spherical_components_to_w2_projection( config, mesh )
 
     use sci_compute_map_u_operators_kernel_mod, &
@@ -282,11 +281,8 @@ contains
 
   !> @brief Create the operators for sampling spherical components in
   !!        (W3, W3, Wtheta) to a vector-valued field in W2
-  !> @param[in] mesh          The mesh to compute the operators for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to compute the operators for
   subroutine create_spherical_components_to_w2_sample( config, mesh )
 
     use sci_compute_sample_u_ops_kernel_mod, &
@@ -366,8 +362,9 @@ contains
 
   !> @brief Creates the weights for mapping between a higher order scalar space
   !!        on a coarse mesh to a lowest order scalar space on a fine mesh
-  !> @param[in] coarse_mesh_id The ID of the coarse mesh to get the object for
-  !> @param[in] fine_mesh_id   The ID of the fine mesh to get the object for
+  !> @param[in] config      Application namelist configuration object
+  !> @param[in] coarse_mesh Coarse mesh to get the object for
+  !> @param[in] fine_mesh   Fine mesh to get the object for
   subroutine create_scalar_inter_element_order_weights(config, coarse_mesh, fine_mesh)
 
     use sci_psykal_light_mod, only: invoke_weights_scalar_inter_element_order_kernel_type
@@ -449,8 +446,9 @@ contains
 
   !> @brief Creates the weights for mapping between a higher order W2 space
   !!        on a coarse mesh to a lowest order W2 space on a fine mesh
-  !> @param[in] coarse_mesh_id The ID of the coarse mesh to get the object for
-  !> @param[in] fine_mesh_id   The ID of the fine mesh to get the object for
+  !> @param[in] config       Application namelist configuration object
+  !> @param[in] coarse_mesh  Coarse mesh to get the object for
+  !> @param[in] fine_mesh    Fine mesh to get the object for
   subroutine create_w2_inter_element_order_weights(config, coarse_mesh, fine_mesh)
 
     use sci_psykal_light_mod, only: invoke_weights_w2_inter_element_order_kernel_type
@@ -827,7 +825,7 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the operator projection from xdot to W2
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The projection operator
   function get_project_xdot_to_w2(mesh) result(proj_op)
 
@@ -877,7 +875,7 @@ contains
   end function get_project_ydot_to_w2
 
   !> @brief Returns a pointer to the operator projection from zdot to W2
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The projection operator
   function get_project_zdot_to_w2(mesh) result(proj_op)
 
@@ -901,11 +899,8 @@ contains
   end function get_project_zdot_to_w2
 
   !> @brief Returns a pointer to the u_lon mapping operator
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The mapping operator for u_lon to W2
   function get_u_lon_map( config, mesh) &
                   result( u_lon_map_op )
@@ -935,11 +930,8 @@ contains
   end function get_u_lon_map
 
   !> @brief Returns a pointer to the u_lat mapping operator
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The mapping operator for u_lat to W2
   function get_u_lat_map( config, mesh ) &
                   result( u_lat_map_op )
@@ -969,11 +961,8 @@ contains
   end function get_u_lat_map
 
   !> @brief Returns a pointer to the u_up mapping operator
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The mapping operator for u_up to W2
   function get_u_up_map( config, mesh ) result( u_up_map_op )
 
@@ -1002,11 +991,8 @@ contains
   end function get_u_up_map
 
   !> @brief Returns a pointer to the u_lon sampling operator
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The sampling operator for u_lon to W2
   function get_u_lon_sample( config, mesh ) result( u_lon_sample_op )
 
@@ -1035,11 +1021,8 @@ contains
   end function get_u_lon_sample
 
   !> @brief Returns a pointer to the u_lat sampling operator
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The sampling operator for u_lat to W2
   function get_u_lat_sample( config, mesh ) result( u_lat_sample_op )
 
@@ -1068,11 +1051,8 @@ contains
   end function get_u_lat_sample
 
   !> @brief Returns a pointer to the u_up sampling operator
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The sampling operator for u_up to W2
   function get_u_up_sample( config, mesh ) result( u_up_sample_op )
 
@@ -1101,11 +1081,8 @@ contains
   end function get_u_up_sample
 
   !> @brief Returns a pointer to the operator projection from lon dot to W1
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
   function get_project_lon_dot_to_w1( config, mesh ) result( proj_op )
 
@@ -1186,11 +1163,8 @@ contains
   end function get_project_lon_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from lat dot to W1
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
   function get_project_lat_dot_to_w1( config, mesh ) result( proj_op )
 
@@ -1271,11 +1245,8 @@ contains
   end function get_project_lat_dot_to_w1
 
   !> @brief Returns a pointer to the operator projection from r dot to W1
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] topology      Mesh topology enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
   function get_project_r_dot_to_w1( config, mesh ) result( proj_op )
 
@@ -1356,8 +1327,8 @@ contains
   end function get_project_r_dot_to_w1
 
   !> @brief Returns the displacement when averaging from W3 to W2
-  !> @param[in] config
-  !> @param[in] mesh
+  !> @param[in]  config  Application namelist configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The displacement field used for correcting mappings from W3 to W2
   function get_w3_to_w2_displacement( config, mesh ) &
                               result( w3_to_w2_displacement )
@@ -1442,8 +1413,9 @@ contains
 
   !> @brief Returns the weights for mapping from a higher order scalar space
   !!        on a coarse mesh to a lowest order scalar space on a fine mesh
-  !> @param[in] coarse_mesh_id The ID of the coarse mesh to get the object for
-  !> @param[in] fine_mesh_id   The ID of the fine mesh to get the object for
+  !> @param[in] config      Application namelist configuration object
+  !> @param[in] coarse_mesh Coarse mesh to get the object for
+  !> @param[in] fine_mesh   Fine mesh to get the object for
   !> @return    weights        The weights for the mapping
   function get_weights_scalar_fe_to_fv(config, coarse_mesh, fine_mesh) result(weights)
 
@@ -1486,8 +1458,10 @@ contains
 
   !> @brief Returns the weights for mapping from a lowest order scalar space
   !!        on a fine mesh to a higher order scalar space on a coarse mesh
-  !> @param[in] coarse_mesh_id The ID of the coarse mesh to get the object for
-  !> @param[in] fine_mesh_id   The ID of the fine mesh to get the object for
+  !> @param[in]  config       Application namelist configuration object
+  !> @param[in]  fine_mesh    Fine mesh to get the object for
+  !> @param[in]  coarse_mesh  Coarse mesh to get the object for
+
   !> @return    weights        The weights for the mapping
   function get_weights_scalar_fv_to_fe(config, fine_mesh, coarse_mesh) result(weights)
 
@@ -1530,8 +1504,9 @@ contains
 
   !> @brief Returns the weights for mapping from a higher order W2 space
   !!        on a coarse mesh to a lowest order W2 space on a fine mesh
-  !> @param[in] coarse_mesh_id The ID of the coarse mesh to get the object for
-  !> @param[in] fine_mesh_id   The ID of the fine mesh to get the object for
+  !> @param[in] config       Application namelist configuration object
+  !> @param[in] coarse_mesh  Coarse mesh to get the object for
+  !> @param[in] fine_mesh    Fine mesh to get the object for
   !> @return    weights        The weights for the mapping
   function get_weights_w2_fe_to_fv(config, coarse_mesh, fine_mesh) result(weights)
 
@@ -1574,8 +1549,9 @@ contains
 
   !> @brief Returns the weights for mapping from a lowest order W2 space
   !!        on a fine mesh to a higher order W2 space on a coarse mesh
-  !> @param[in] coarse_mesh_id The ID of the coarse mesh to get the object for
-  !> @param[in] fine_mesh_id   The ID of the fine mesh to get the object for
+  !> @param[in]  config       Application namelist configuration object
+  !> @param[in]  fine_mesh    Fine mesh to get the object for
+  !> @param[in]  coarse_mesh  Coarse mesh to get the object for
   !> @return    weights        The weights for the mapping
   function get_weights_w2_fv_to_fe(config, fine_mesh, coarse_mesh) result(weights)
 

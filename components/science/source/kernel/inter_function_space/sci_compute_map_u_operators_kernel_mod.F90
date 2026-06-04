@@ -87,10 +87,10 @@ contains
 !! @param[in] chi_sph_2 2nd coordinate in spherical Wchi
 !! @param[in] chi_sph_3 3rd coordinate in spherical Wchi
 !! @param[in] panel_id Field giving the ID for mesh panels
-!! @param[in] geometry
-!! @param[in] topology
-!! @param[in] coord_system
-!! @param[in] scaled_radius
+!! @param[in] geometry      Mesh geometry enumeration value
+!! @param[in] topology      Mesh topology enumeration value
+!! @param[in] coord_system  Finite-Element coord-system enumeration value
+!! @param[in] scaled_radius Planet scaled radius
 !! @param[in] ndf_w2 Number of degrees of freedom per cell for w2
 !! @param[in] basis_w2 W2 basis functions evaluated at quadrature points
 !! @param[in] ndf_w3 Number of degrees of freedom per cell for w3

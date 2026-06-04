@@ -33,7 +33,7 @@ contains
 
 !> @brief Initialises the logging system from a namelist.
 !>
-!> @param[in] config       Application configuration object.
+!> @param[in] config       Application namelist configuration object
 !> @param[in] communicator MPI communicator to use for logging.
 !> @param[in] program_name Identifies the running program.
 !>

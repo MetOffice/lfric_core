@@ -51,7 +51,7 @@ contains
 
   !> @brief  Initialises the coordinate fields (chi) and FEM components.
   !>
-  !> @param[in]      config               Configuration object
+  !> @param[in]      config               Application namelist configuration object
   !> @param[in,out]  chi_inventory        Inventory object, containing all of
   !!                                      the chi fields indexed by mesh
   !> @param[in,out]  panel_id_inventory   Inventory object, containing all of

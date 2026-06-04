@@ -140,23 +140,15 @@ contains
   ! ========================================================================== !
 
   !> @brief Private routine for computing longitude and latitude fields
-  !> @param[in,out] long_inventory   Inventory containing longitude fields
-  !> @param[in,out] lat_inventory    Inventory containing latitude fields
-  !>
-  !> @param[in] mesh            Mesh used to determine local mesh for
-  !!                            computing the fields for
-  !> @param[in] fs_id           Identifier for function space to compute
-  !!                            longitude and latitude fields for
-  !> @param[in] use_fe          Flag to indicate whether to use finite
-  !!                            element or finite volume cells
-  !> @param[in] geometry        Mesh geometry enumeration value
-  !> @param[in] topology        Mesh topology enumeration value
-  !> @param[in] element_order_h Function space order in horizontal
-  !> @param[in] element_order_v Function space order in vertical
-  !> @param[in] coord_system    Finite-Element coord-system enumeration value
-  !> @param[in] f_lat           Latitiude of f-plane
-  !> @param[in] f_lon           Longitude of f-plane
-  !> @param[in] scaled_radius   Planet scaled radius
+  !> @param[in]     config          Application namelist configuration object
+  !> @param[in]     mesh            Mesh used to determine local mesh for
+  !!                                computing the fields for
+  !> @param[in]     space_id        Identifier for function space to compute
+  !!                                longitude and latitude fields for
+  !> @param[in]     use_fe          Flag to indicate whether to use finite
+  !!                                element or finite volume cells
+  !> @param[in,out] long_inventory  Inventory containing longitude fields
+  !> @param[in,out] lat_inventory   Inventory containing latitude fields
   subroutine compute_latlon( config, mesh, space_id, use_fe, &
                              long_inventory, lat_inventory )
 
@@ -245,10 +237,8 @@ contains
   end subroutine compute_latlon
 
   !> @brief Private routine for computing face selectors fields
-  !> @param[in,out] ew_inventory     Inventory containing East-West selectors
-  !> @param[in,out] ns_inventory     Inventory containing North-South selectors
-  !> @param[in]     mesh             Mesh used to determine local mesh for
-  !!                                 computing the fields for
+  !> @param[in]  mesh  Mesh used to determine local mesh for
+  !!                   computing the fields for
   subroutine compute_face_selectors(mesh)
 
     use reference_element_mod,          only: S, W
@@ -305,7 +295,7 @@ contains
   ! GETTERS FOR FINITE ELEMENT COORDINATE FIELDS
   ! ========================================================================== !
   !> @brief Function to return a pointer to the panel_id
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The coordinate field array
   function get_panel_id(mesh) result(panel_id_ptr)
 
@@ -326,7 +316,7 @@ contains
   end function get_panel_id
 
   !> @brief Returns a pointer to the coordinate field array
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The coordinate field array
   function get_coordinates(mesh) result(coords_ptr)
 
@@ -347,8 +337,8 @@ contains
   end function get_coordinates
 
   !> @brief Returns a pointer to the extended coordinate field array
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The coordinate field array
   function get_extended_coordinates(config, mesh) result(extended_chi)
 
@@ -414,7 +404,7 @@ contains
   ! GETTERS FOR BASIC GEOMETRIC ENTITIES
   ! ========================================================================== !
   !> @brief Returns the areas of cell faces at W2 DoF locations
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The dA field
   function get_dA_at_w2(mesh) result(dA_at_w2)
 
@@ -460,8 +450,8 @@ contains
   end function get_dA_at_w2
 
   !> @brief Returns the (finite element) Det(J) values at W3 dof locations
-  !> @param[in] config
-  !> @param[in] mesh         The ID of the mesh to get the object for
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The Det(J) field
   function get_detj_at_w3_fe(config, mesh) result(detj_at_w3)
 
@@ -550,7 +540,7 @@ contains
   end function get_detj_at_w3_fe
 
   !> @brief Returns the (finite volume) Det(J) values at W3 dof locations
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The Det(J) field
   function get_detj_at_w3_fv(mesh) result(detj_at_w3)
 
@@ -621,8 +611,8 @@ contains
   end function get_detj_at_w3_fv
 
   !> @brief Returns the (finite element) Det(J) values at W2 dof locations
-  !> @param[in] config
-  !> @param[in] mesh
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The Det(J) field
   function get_detj_at_w2_fe(config, mesh) result(detj_at_w2)
 
@@ -691,7 +681,7 @@ contains
   end function get_detj_at_w2_fe
 
   !> @brief Returns the (finite volume) Det(J) values at W2 dof locations
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The Det(J) field
   function get_detj_at_w2_fv(mesh) result(detj_at_w2)
 
@@ -745,8 +735,8 @@ contains
   end function get_detj_at_w2_fv
 
   !> @brief Returns a pointer to the vertical grid spacing, located at W3 DoFs
-  !> @param[in] config
-  !> @param[in] mesh
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The physical height difference of layers, at W3
   function get_dz_w3(config, mesh) result(dz_w3)
 
@@ -791,7 +781,7 @@ contains
   end function get_dz_w3
 
   !> @brief Returns the delta_at_wtheta values at Wtheta DoF locations
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The delta_at_wtheta field
   function get_delta_at_wtheta(mesh) result(delta_at_wtheta)
 
@@ -835,7 +825,7 @@ contains
   end function get_delta_at_wtheta
 
   !> @brief Returns the dx_at_w2 values at W2 DoF locations
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  mesh  Mesh to get the object for
   !> @return The dx_at_w2 field
   function get_dx_at_w2(mesh) result(dx_at_w2)
 
@@ -879,10 +869,8 @@ contains
   end function get_dx_at_w2
 
   !> @brief Returns the 1/dz values at lowest-order Wtheta DoF locations
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
-  !> @param[in] geometry      Mesh geometry enumeration value
-  !> @param[in] coord_system  Finite-Element coord-system enumeration value
-  !> @param[in] scaled_radius Planet scaled radius
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The dz_at_wtheta field
   function get_dz_at_wtheta(config, mesh) result(dz_at_wtheta)
 
@@ -890,7 +878,7 @@ contains
 
     implicit none
 
-    type(config_type), intent(in) :: config
+    type(config_type), intent(in)          :: config
     type(mesh_type),   intent(in), pointer :: mesh
 
     type(field_type),            pointer :: dz_at_wtheta
@@ -936,15 +924,17 @@ contains
 
   !> @brief Returns the surface area of a cell projected to mean sea level
   !>        i.e. ignoring the orographic effect on the area
-  !> @param[in] mesh_id       The ID of the mesh to get the object for
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
+
   !> @return The dA_msl_proj field
-  function get_dA_msl_proj(config,mesh) result(dA_msl_proj)
+  function get_dA_msl_proj(config, mesh) result(dA_msl_proj)
 
     use sci_calc_da_msl_proj_kernel_mod, only: calc_da_msl_proj_kernel_type
 
     implicit none
 
-    type(config_type), intent(in) :: config
+    type(config_type), intent(in)          :: config
     type(mesh_type),   intent(in), pointer :: mesh
 
     integer(kind=i_def) :: local_mesh_id
@@ -1006,17 +996,17 @@ contains
   ! PHYSICAL COORDINATES OF DOFs
   ! ========================================================================== !
   !> @brief Returns a pointer to the longitude of finite element DoFs
-  !> @param[in] config
-  !> @param[in] mesh
-  !> @param[in] space_id        The space for which to get the longitude of DoFs for
+  !> @param[in] config    Application namelist configuration object
+  !> @param[in] mesh      Mesh to get the object for
+  !> @param[in] space_id  The space for which to get the longitude of DoFs for
   !> @return The longitude field
   function get_longitude_fe(config, mesh, space_id) result(long_ptr)
 
     implicit none
 
-    type(config_type), intent(in) :: config
+    type(config_type), intent(in)          :: config
     type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in)          :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1080,17 +1070,17 @@ contains
   end function get_longitude_fe
 
   !> @brief Returns a pointer to the longitude of finite volume DoFs
-  !> @param[in] config
-  !> @param[in] mesh
-  !> @param[in] space_id        The space for which to get the longitude of DoFs for
+  !> @param[in] config    Application namelist configuration object
+  !> @param[in] mesh      Mesh to get the object for
+  !> @param[in] space_id  The space for which to get the longitude of DoFs for
   !> @return The longitude field
   function get_longitude_fv(config, mesh, space_id) result(long_ptr)
 
     implicit none
 
-    type(config_type), intent(in) :: config
+    type(config_type), intent(in)          :: config
     type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in)          :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1142,9 +1132,9 @@ contains
 
 
   !> @brief Returns a pointer to the latitude of finite element DoFs
-  !> @param[in] config
-  !> @param[in] mesh
-  !> @param[in] space_id        The space for which to get the latitude of DoFs for
+  !> @param[in] config    Application namelist configuration object
+  !> @param[in] mesh      Mesh to get the object for
+  !> @param[in] space_id  The space for which to get the latitude of DoFs for
   !> @return The latitude field
   function get_latitude_fe(config, mesh, space_id) result(lat_ptr)
 
@@ -1216,17 +1206,17 @@ contains
 
 
   !> @brief Returns a pointer to the latitude of finite volume DoFs
-  !> @param[in] config
-  !> @param[in] mesh
-  !> @param[in] space_id        The space for which to get the latitude of DoFs for
+  !> @param[in] config    Application namelist configuration object
+  !> @param[in] mesh      Mesh to get the object for
+  !> @param[in] space_id  The space for which to get the latitude of DoFs for
   !> @return The latitude field
   function get_latitude_fv(config, mesh, space_id) result(lat_ptr)
 
     implicit none
 
-    type(config_type), intent(in) :: config
+    type(config_type), intent(in)          :: config
     type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in)          :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1277,9 +1267,9 @@ contains
   end function get_latitude_fv
 
   !> @brief Returns a pointer to a finite element height field
-  !> @param[in] config
-  !> @param[in] mesh
-  !> @param[in] space_id        The space of the desired height field
+  !> @param[in] config    Application namelist configuration object
+  !> @param[in] mesh      Mesh to get the object for
+  !> @param[in] space_id  The space of the desired height field
 
   !> @return A height field
   function get_height_fe(config, mesh, space_id) result(height)
@@ -1290,9 +1280,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in) :: config
+    type(config_type), intent(in)          :: config
     type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in) :: space_id
+    integer(i_def),    intent(in)          :: space_id
 
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1410,9 +1400,9 @@ contains
   end function get_height_fe
 
   !> @brief Returns a pointer to a finite volume height field
-  !> @param[in] config
-  !> @param[in] mesh
-  !> @param[in] space_id      The space of the desired height field
+  !> @param[in] config    Application namelist configuration object
+  !> @param[in] mesh      Mesh to get the object for
+  !> @param[in] space_id  The space of the desired height field
   !> @return A height field
   function get_height_fv(config, mesh, space_id) result(height)
 
@@ -1534,7 +1524,7 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the east-west face selector
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh  Mesh to get the object for
   !> @return The east-west face selector
   function get_face_selector_ew(mesh) result(selector)
 
@@ -1563,7 +1553,7 @@ contains
   end function get_face_selector_ew
 
   !> @brief Returns a pointer to the north-south face selector
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] mesh  Mesh to get the object for
   !> @return The north-south face selector
   function get_face_selector_ns(mesh) result(selector)
 

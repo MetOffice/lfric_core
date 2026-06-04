@@ -24,7 +24,7 @@ contains
   !> As well as initialising the system a "top level" counter is set up
   !? for tracking halo calls.
   !>
-  !> @param[in] config     Configuration object
+  !> @param[in] config     Application namelist configuration object
   !> @param[in] identifier Top level halo name.
   !>
   subroutine init_counters(config, identifier)
@@ -54,7 +54,7 @@ contains
   !> @todo Reconsider the existance of the simple counter system once the
   !>       profiler is integrated.
   !>
-  !> @param[in] config     Configuration object
+  !> @param[in] config     Application namelist configuration object
   !> @param[in] identifier Top level counter name.
   !>
   subroutine final_counters(config, identifier)

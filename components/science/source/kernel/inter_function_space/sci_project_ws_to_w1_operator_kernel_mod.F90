@@ -80,10 +80,10 @@ contains
 !> @param[in]     chi3                3rd coordinate field in Wchi
 !> @param[in]     panel_id            Field giving the ID for mesh panels.
 !> @param[in]     direction           Index of the vector component (1,2 or 3) to project
-!> @param[in]     geometry
-!> @param[in]     topology
-!> @param[in]     coord_system
-!> @param[in]     scaled_radius
+!> @param[in]     geometry            Mesh geometry enumeration value
+!> @param[in]     topology            Mesh topology enumeration value
+!> @param[in]     coord_system        Finite-Element coord-system enumeration value
+!> @param[in]     scaled_radius       Planet scaled radius
 !> @param[in]     ndf_w1              Number of degrees of freedom per cell for vector space
 !> @param[in]     basis_w1            Basis functions for the vector space at quadrature points
 !> @param[in]     ndf_ws              Number of degrees of freedom per cell for scalar space
