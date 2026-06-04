@@ -299,16 +299,16 @@ contains
       ! Add fields to initial file definition
       init_fields_id = trim(file_id)//init_suffix//"_fields"
       call xios_add_child(initial_read_file, init_fieldgroup, trim(init_fields_id))
+      call xios_set_attr(init_fieldgroup, operation="once", read_access=.true.)
       do i = 1, n_fields
         init_field_ptr => self%fields(f,i)
         self%init_fields(f,i) = lfric_xios_field_type( init_field_ptr, &
                                           fieldgroup_id=trim(init_fields_id) )
         call self%init_fields(f,i)%set_model_field(init_field_ptr)
         call self%init_fields(f,i)%set_xios_name(trim(adjustl(self%field_dest(i)%get_xios_name())))
-        call self%init_fields(f,i)%register(field_read_access=.true.)
+        call self%init_fields(f,i)%register()
       end do
 
-      call xios_set_attr(init_fieldgroup, operation="once", read_access=.true.)
     end do
 
     self%read_initial_fields = .true.
