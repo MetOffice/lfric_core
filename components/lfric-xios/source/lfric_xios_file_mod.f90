@@ -78,10 +78,6 @@ type, public, extends(file_type) :: lfric_xios_file_type
   integer(i_def)              :: file_convention = undef_file_convention
   !> The file frequency in timesteps
   integer(i_def)              :: freq_ts = undef_freq
-  !> @todo field_group is slated for removal, it is a leftover placeholder
-  !!       needed to make checkpointing work for lfric_atm/gungho, but once
-  !!       they are upgraded to use the "fields_in_file" API this can be removed.
-  character(str_def)          :: field_group = undef_group
   !> The XIOS ID of the field group contained within the file
   character(str_def)          :: field_group_id
   !> Flag denoting if the file has been closed
@@ -259,7 +255,11 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
     self%freq_ts = freq
   end if
 
-  if (present(field_group_id)) self%field_group = field_group_id
+  if (present(field_group_id)) then
+    self%field_group_id = field_group_id
+  else
+    self%field_group_id = trim(self%xios_id)//"_fields"
+  end if
 
   ! Set up XIOS fields representing attached field collection
   if (present(fields_in_file)) then
@@ -268,7 +268,6 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
                       log_level_error )
     end if
     allocate(self%fields(fields_in_file%get_length()))
-    self%field_group_id = trim(self%xios_id)//"_fields"
     call iter%initialise(fields_in_file)
     do field_index = 1, fields_in_file%get_length()
       fld => iter%next()
@@ -340,7 +339,7 @@ subroutine register_with_context(self)
   class(lfric_xios_file_type),  intent(inout) :: self
 
   type(xios_filegroup)   :: file_definition
-  type(xios_fieldgroup)  :: field_group_hdl, file_fields
+  type(xios_fieldgroup)  :: file_fields
   type(xios_duration)    :: timestep_duration
   type(xios_date)        :: start_date
 
@@ -426,9 +425,20 @@ subroutine register_with_context(self)
   call xios_get_start_date(start_date)
   self%next_operation = start_date + self%frequency
 
+  ! If field group already exists then get the handle, otherwise create it
+  if (xios_is_valid_fieldgroup(self%field_group_id)) then
+    call xios_get_handle(trim(self%field_group_id), file_fields)
+  else
+    call xios_add_child(self%handle, file_fields, self%field_group_id)
+  end if
+
+  ! Set up read_access attribute for fields in file
+   if (self%mode_is_read()) then
+     call xios_set_attr(file_fields, read_access=.true.)
+   end if
+
   ! Set up fields in file
   if (allocated(self%fields)) then
-    call xios_add_child(self%handle, file_fields, self%field_group_id)
 
     ! Set the temporal operation for fields in the file
     select case(self%operation)
@@ -440,7 +450,7 @@ subroutine register_with_context(self)
 
     ! Iterate over field collection and register fields
     do i = 1, size(self%fields)
-      call self%fields(i)%register(field_read_access=self%mode_is_read())
+      call self%fields(i)%register()
     end do
 
     ! Set up time axis if needed
@@ -457,17 +467,10 @@ subroutine register_with_context(self)
       call xios_set_attr(self%handle, record_offset=record_offset)
     end if
 
-    ! Enable field collection
-    call xios_set_attr(file_fields, enabled=.true.)
-
   end if
 
-  ! LEGACY
-  ! If there is an associated field group, enable it
-  if ( .not. trim(self%field_group) == undef_group ) then
-    call xios_get_handle( trim(self%field_group), field_group_hdl )
-    call xios_set_attr( field_group_hdl, enabled=.true. )
-  end if
+  ! Enable field collection
+  call xios_set_attr(file_fields, enabled=.true.)
 
   ! Enable file
   call xios_set_attr( self%handle, enabled=.true. )
