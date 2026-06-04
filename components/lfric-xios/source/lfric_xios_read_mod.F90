@@ -240,7 +240,7 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
   real(r_def),   allocatable :: time_slice(:)
   real(r_def),   allocatable :: field_data(:)
 
-  type(mesh_type), pointer   :: mesh 
+  type(mesh_type), pointer   :: mesh
   type(local_mesh_type), pointer   :: local_mesh
   character(str_def)         :: local_mesh_name
 
