@@ -246,7 +246,6 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
 
   nullify(mesh,local_mesh)
 
-  ! Call error if field not on prime mesh
   mesh => field_proxy%vspace%get_mesh()
   local_mesh => mesh%get_local_mesh()
   local_mesh_name = local_mesh%get_mesh_name()
