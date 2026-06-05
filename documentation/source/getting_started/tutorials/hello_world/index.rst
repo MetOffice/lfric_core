@@ -86,5 +86,4 @@ number (e.g. S3). The final part of the message prefix is the log level (INFO
 in this case) and then the message itself as defined in the source code. The
 messages are printed by the application at different stages of the run to show
 what it is doing. In this case, it is showing that it is running an algorithm,
-printing out the minimum and maximum values of a field, and then writing
-diagnostic output.
+printing out the minimum and maximum values of a field before finishing
