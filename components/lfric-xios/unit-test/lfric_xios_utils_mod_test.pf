@@ -13,7 +13,7 @@ module lfric_xios_utils_mod_test
     use mesh_collection_mod,            only : mesh_collection_type, &
                                                mesh_collection
     use mesh_mod,                       only : mesh_type, PLANE, PLANE_BI_PERIODIC
-    use xios,                           only : xios_date
+    use xios,                           only : xios_date, xios_duration
 
     use funit
 
@@ -141,5 +141,54 @@ module lfric_xios_utils_mod_test
       @assertTrue( prime_io_mesh_is(this%mesh_1) )
 
     end subroutine prime_io_mesh_test
+
+
+    @test
+    subroutine duration_from_enum_test( this )
+
+      use lfric_xios_constants_mod, only : lx_second, lx_day, lx_month, lx_year
+      use lfric_xios_utils_mod, only : duration_from_enum
+
+      implicit none
+
+      class(utils_test_type), intent(inout) :: this
+
+      type(xios_duration) :: test_duration
+
+      test_duration = xios_duration(0, 0, 0, 0, 0, 0)
+
+      test_duration = duration_from_enum( 5*lx_day )
+      @assertEqual( int(test_duration%year, i_def), 0 )
+      @assertEqual( int(test_duration%month, i_def), 0 )
+      @assertEqual( int(test_duration%day, i_def), 5 )
+      @assertEqual( int(test_duration%hour, i_def), 0 )
+      @assertEqual( int(test_duration%minute, i_def), 0 )
+      @assertEqual( int(test_duration%second, i_def), 0 )
+
+      test_duration = duration_from_enum( lx_second )
+      @assertEqual( int(test_duration%year, i_def), 0 )
+      @assertEqual( int(test_duration%month, i_def), 0 )
+      @assertEqual( int(test_duration%day, i_def), 0 )
+      @assertEqual( int(test_duration%hour, i_def), 0 )
+      @assertEqual( int(test_duration%minute, i_def), 0 )
+      @assertEqual( int(test_duration%second, i_def), 1 )
+
+      test_duration = duration_from_enum( 42*lx_year )
+      @assertEqual( int(test_duration%year, i_def), 42 )
+      @assertEqual( int(test_duration%month, i_def), 0 )
+      @assertEqual( int(test_duration%day, i_def), 0 )
+      @assertEqual( int(test_duration%hour, i_def), 0 )
+      @assertEqual( int(test_duration%minute, i_def), 0 )
+      @assertEqual( int(test_duration%second, i_def), 0 )
+
+      test_duration = duration_from_enum( 7*lx_month )
+      @assertEqual( int(test_duration%year, i_def), 0 )
+      @assertEqual( int(test_duration%month, i_def), 7 )
+      @assertEqual( int(test_duration%day, i_def), 0 )
+      @assertEqual( int(test_duration%hour, i_def), 0 )
+      @assertEqual( int(test_duration%minute, i_def), 0 )
+      @assertEqual( int(test_duration%second, i_def), 0 )
+
+    end subroutine duration_from_enum_test
 
   end module lfric_xios_utils_mod_test

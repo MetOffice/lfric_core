@@ -22,7 +22,8 @@ module lfric_xios_file_mod
   use lfric_xios_field_mod,          only: lfric_xios_field_type
   use lfric_xios_diag_mod,           only: file_is_tagged
   use log_mod,                       only: log_event, log_level_error, &
-                                           log_level_trace, log_level_debug
+                                           log_level_trace, log_level_debug, &
+                                           log_level_warning
   use mesh_mod,                      only: mesh_type
   use mod_wait,                      only: init_wait
   use lfric_xios_diag_mod,           only: get_file_name
@@ -32,9 +33,9 @@ module lfric_xios_file_mod
                                            xios_set_attr, xios_filegroup,    &
                                            xios_get_file_attr,               &
                                            xios_set_file_attr,               &
+                                           xios_is_defined_file_attr,        &
                                            xios_fieldgroup, xios_duration,   &
                                            xios_is_valid_fieldgroup,         &
-                                           xios_is_defined_fieldgroup_attr,  &
                                            xios_get_fieldgroup_attr,         &
                                            xios_set_fieldgroup_attr,         &
                                            xios_date, xios_get_current_date, &
@@ -77,10 +78,6 @@ type, public, extends(file_type) :: lfric_xios_file_type
   integer(i_def)              :: file_convention = undef_file_convention
   !> The file frequency in timesteps
   integer(i_def)              :: freq_ts = undef_freq
-  !> @todo field_group is slated for removal, it is a leftover placeholder
-  !!       needed to make checkpointing work for lfric_atm/gungho, but once
-  !!       they are upgraded to use the "fields_in_file" API this can be removed.
-  character(str_def)          :: field_group = undef_group
   !> The XIOS ID of the field group contained within the file
   character(str_def)          :: field_group_id
   !> Flag denoting if the file has been closed
@@ -95,6 +92,8 @@ type, public, extends(file_type) :: lfric_xios_file_type
   logical :: context_init_read = .true.
   !> Temporal controller for file
   type(temporal_type) :: temporal
+  !> Update frequency for temporal control (enum, optional)
+  integer(i_def) :: update_freq = 0
 
   !> XIOS representations
   !> Internal XIOS representation of the file
@@ -202,11 +201,14 @@ end subroutine register_diagnostics_file
 !> @param[in] fields_in_file Array of fields contained in the file
 !> @param[in] is_diag        Is it a diagnostics file?
 !> @param[in] diag_always_on_sampling Is the always-on sampling mode selected?
+!> @param[in] file_convention Enum denoting the file convention to use for the file
+!> @param[in] update_freq     Enum for update frequency to be passed to temporal
+!!                            controller (optional, only relevant for time series files)
 function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
                                       operation, cyclic, field_group_id,      &
                                       fields_in_file, is_diag,                &
                                       diag_always_on_sampling,                &
-                                      file_convention ) result(self)
+                                      file_convention, update_freq ) result(self)
 
   implicit none
 
@@ -223,7 +225,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
   logical(l_def),      optional, intent(in) :: is_diag
   logical(l_def),      optional, intent(in) :: diag_always_on_sampling
   integer(i_def),      optional, intent(in) :: file_convention
-
+  integer(i_def),      optional, intent(in) :: update_freq
   type(field_collection_iterator_type) :: iter
   class(field_parent_type), pointer    :: fld => null()
 
@@ -241,6 +243,10 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
     self%cyclic = cyclic
   end if
 
+  if (present(update_freq)) then
+    self%update_freq = update_freq
+  end if
+
   if (present(freq)) then
     if (freq < 0) then ! we are going to allow freq = 0 (= no_freq)
       call log_event( "XIOS files cannot have negative frequency", &
@@ -249,7 +255,11 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
     self%freq_ts = freq
   end if
 
-  if (present(field_group_id)) self%field_group = field_group_id
+  if (present(field_group_id)) then
+    self%field_group_id = field_group_id
+  else
+    self%field_group_id = trim(self%xios_id)//"_fields"
+  end if
 
   ! Set up XIOS fields representing attached field collection
   if (present(fields_in_file)) then
@@ -258,7 +268,6 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
                       log_level_error )
     end if
     allocate(self%fields(fields_in_file%get_length()))
-    self%field_group_id = trim(self%xios_id)//"_fields"
     call iter%initialise(fields_in_file)
     do field_index = 1, fields_in_file%get_length()
       fld => iter%next()
@@ -330,11 +339,12 @@ subroutine register_with_context(self)
   class(lfric_xios_file_type),  intent(inout) :: self
 
   type(xios_filegroup)   :: file_definition
-  type(xios_fieldgroup)  :: field_group_hdl, file_fields
+  type(xios_fieldgroup)  :: file_fields
   type(xios_duration)    :: timestep_duration
   type(xios_date)        :: start_date
 
   integer(i_def) :: i, record_offset
+  logical :: output_freq_defined
 
   call log_event( "Registering XIOS file ["//trim(self%xios_id)//"]", &
                   log_level_trace )
@@ -385,23 +395,50 @@ subroutine register_with_context(self)
     call xios_set_attr( self%handle, time_counter="none")
   end if
 
-  ! Set XIOS duration object second value equal to file output frequency
-  call xios_get_timestep(timestep_duration)
+  ! Check if file frequency has been defined in iodef.xml config
+  call xios_is_defined_file_attr(self%xios_id, output_freq=output_freq_defined)
+
+  ! Set file frequency, giving priority to the value defined in the iodef.xml if
+  ! there the frequency has also been set in the model code.
   if (.not. self%freq_ts == undef_freq) then
-    self%frequency = self%freq_ts * timestep_duration
-    call xios_set_attr(self%handle, output_freq=self%frequency)
+    if (output_freq_defined) then
+      call log_event( "Frequency for file ["//trim(self%xios_id)//"] "      // &
+                      "defined in both LFRic and XIOS, defaulting to XIOS " // &
+                      "iodef.xml value", log_level_warning )
+    else
+      ! Convert frequency into seconds by multiplying by timestep duration
+      call xios_get_timestep(timestep_duration)
+      self%frequency = self%freq_ts * timestep_duration
+      call xios_set_attr(self%handle, output_freq=self%frequency)
+    end if
   else
-    ! If frequency is uninitialised, get it from XIOS
-    call xios_get_file_attr(self%xios_id, output_freq=self%frequency)
+    ! If frequency is uninitialised, get it from XIOS if possible
+    if (output_freq_defined) then
+      call xios_get_file_attr(self%xios_id, output_freq=self%frequency)
+    else
+      call log_event( "Frequency for file ["//trim(self%xios_id)//"] not " // &
+                      "defined in XIOS or LFRic", log_level_error )
+    end if
   end if
 
   ! Set the date of the first operation
   call xios_get_start_date(start_date)
   self%next_operation = start_date + self%frequency
 
+  ! If field group already exists then get the handle, otherwise create it
+  if (xios_is_valid_fieldgroup(self%field_group_id)) then
+    call xios_get_handle(trim(self%field_group_id), file_fields)
+  else
+    call xios_add_child(self%handle, file_fields, self%field_group_id)
+  end if
+
+  ! Set up read_access attribute for fields in file
+   if (self%mode_is_read()) then
+     call xios_set_attr(file_fields, read_access=.true.)
+   end if
+
   ! Set up fields in file
   if (allocated(self%fields)) then
-    call xios_add_child(self%handle, file_fields, self%field_group_id)
 
     ! Set the temporal operation for fields in the file
     select case(self%operation)
@@ -413,7 +450,7 @@ subroutine register_with_context(self)
 
     ! Iterate over field collection and register fields
     do i = 1, size(self%fields)
-      call self%fields(i)%register(field_read_access=self%mode_is_read())
+      call self%fields(i)%register()
     end do
 
     ! Set up time axis if needed
@@ -424,22 +461,16 @@ subroutine register_with_context(self)
       ! the temporal object initialiser which will tell XIOS which time entry
       ! to start reading from
       call xios_set_attr(self%handle, cyclic=self%cyclic)
-      call self%temporal%initialise( self%path, self%fields, self%frequency, &
-                                     self%cyclic, record_offset )
+      call self%temporal%initialise( self%xios_id, self%path, self%fields,          &
+                                     self%frequency, self%cyclic, self%update_freq, &
+                                     record_offset )
       call xios_set_attr(self%handle, record_offset=record_offset)
     end if
 
-    ! Enable field collection
-    call xios_set_attr(file_fields, enabled=.true.)
-
   end if
 
-  ! LEGACY
-  ! If there is an associated field group, enable it
-  if ( .not. trim(self%field_group) == undef_group ) then
-    call xios_get_handle( trim(self%field_group), field_group_hdl )
-    call xios_set_attr( field_group_hdl, enabled=.true. )
-  end if
+  ! Enable field collection
+  call xios_set_attr(file_fields, enabled=.true.)
 
   ! Enable file
   call xios_set_attr( self%handle, enabled=.true. )
@@ -498,6 +529,12 @@ subroutine recv_fields(self)
       call self%fields(i)%recv()
     end do
 
+    ! Shift the read index forward for temporal reading
+    if ( (self%io_mode == FILE_MODE_READ) .and. &
+        (self%operation == OPERATION_TIMESERIES) ) then
+      call self%temporal%shift_read_index(self%fields)
+    end if
+
     ! If file should only be operated on once, close it, else set the time for
     ! the next operation
     if (self%operation == OPERATION_ONCE) then
@@ -506,14 +543,14 @@ subroutine recv_fields(self)
       self%next_operation = self%next_operation + self%frequency
     end if
 
-    ! Advance the time axis if present
-    if ( (self%io_mode == FILE_MODE_READ) .and. &
-         (self%operation == OPERATION_TIMESERIES) ) then
-      if (.not. self%temporal%advance()) call self%file_close()
-    end if
-
     self%context_init_read = .false.
 
+  end if
+
+  ! Advance the time axis if present
+  if ( (self%io_mode == FILE_MODE_READ) .and. &
+        (self%operation == OPERATION_TIMESERIES) ) then
+    if (.not. self%temporal%advance(self%fields)) call self%file_close()
   end if
 
 end subroutine recv_fields
