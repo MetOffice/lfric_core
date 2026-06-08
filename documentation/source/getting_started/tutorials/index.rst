@@ -10,7 +10,7 @@ Tutorials
 =========
 Contained here are a number of tutorials that are designed to help you get
 started with LFRic. They cover a range of topics, from how to run a simple LFRic
-application, to develop kernels using the LFRic data model and PSyclone.
+application, to developing kernels using the LFRic data model and PSyclone.
 
 .. toctree::
    :maxdepth: 2
