@@ -44,90 +44,94 @@ class vn31_t11(MacroUpgrade):
             if n_meshes == "4":
                 self.add_setting(
                     config,
-                    ["mesh_maps"],
+                    ["namelist:mesh","mesh_maps"],
                     ["'regional_primary:regional_coarse_l1','regional_coarse_l1:regional_coarse_l2','regional_coarse_l2:regional_coarse_l3'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
-                    ["mesh_names"],
+                    ["namelist:mesh","mesh_names"],
                     ["'regional_primary','regional_coarse_l1','regional_coarse_l2','regional_coarse_l3'"],
                     forced=True
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
-                    ["mesh_maps"],
+                    ["namelist:mesh","mesh_maps"],
                     ["'regional_primary:regional_coarse_l1','regional_coarse_l1:regional_coarse_l2'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
-                    ["mesh_names"],
+                    ["namelist:mesh","mesh_names"],
                     ["'regional_primary','regional_coarse_l1','regional_coarse_l2'"],
                     forced=True
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
-                    ["mesh_maps"],
+                    ["namelist:mesh","mesh_maps"],
                     ["'regional_primary:regional_coarse_l1'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
-                    ["mesh_names"],
+                    ["namelist:mesh","mesh_names"],
                     ["'regional_primary','regional_coarse_l1'"],
                     forced=True,
                 )
             else:
                 self.add_setting(
-                    config, ["mesh_names"], ["'regional_primary'"],
+                    config,
+                    ["namelist:mesh","mesh_names"],
+                    ["'regional_primary'"],
                     forced=True
                 )
         else:
             if n_meshes == "4":
                 self.add_setting(
                     config,
-                    ["mesh_maps"],
+                    ["namelist:mesh","mesh_maps"],
                     ["'global_primary:global_coarse_l1','global_coarse_l1:global_coarse_l2','global_coarse_l2:global_coarse_l3'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
-                    ["mesh_names"],
+                    ["namelist:mesh","mesh_names"],
                     ["'global_primary','global_coarse_l1','global_coarse_l2','global_coarse_l3'"],
                     forced=True
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
-                    ["mesh_maps"],
+                    ["namelist:mesh","mesh_maps"],
                     ["'global_primary:global_coarse_l1','global_coarse_l1:global_coarse_l2'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
-                    ["mesh_names"],
+                    ["namelist:mesh","mesh_names"],
                     ["'global_primary,global_coarse_l1,global_coarse_l2'"],
                     forced=True
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
-                    ["mesh_maps"],
+                    ["namelist:mesh","mesh_maps"],
                     ["'global_primary:global_coarse_l1'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
-                    ["mesh_names"],
+                    ["namelist:mesh","mesh_names"],
                     ["'global_primary','global_coarse_l1'"],
                     forced=True
                 )
             else:
                 self.add_setting(
-                    config, ["mesh_names"], ["'global_primary'"],
+                    config,
+                    ["namelist:mesh","mesh_names"],
+                    ["'global_primary'"],
                     forced=True
                 )
 
