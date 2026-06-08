@@ -8,21 +8,23 @@
 !>
 module compute_mass_matrix_kernel_w1_mod_test
 
-    use constants_mod, only : i_def, r_def, imdi
-    use get_unit_test_m3x3_dofmap_mod, &
+  use constants_mod, only : i_def, r_def, imdi, rmdi
+  use get_unit_test_m3x3_dofmap_mod, &
       only : get_w0_m3x3_dofmap, get_w3_m3x3_dofmap
-    use get_unit_test_m3x3_q3x3x3_sizes_mod, &
+  use get_unit_test_m3x3_q3x3x3_sizes_mod, &
       only : get_w0_m3x3_q3x3x3_size, get_w1_m3x3_q3x3x3_size, &
              get_w3_m3x3_q3x3x3_size
-    use get_unit_test_q3x3x3_basis_mod, &
+  use get_unit_test_q3x3x3_basis_mod, &
       only : get_w0_q3x3x3_diff_basis, get_w1_q3x3x3_basis, &
              get_w0_q3x3x3_basis
-    use get_unit_test_q3x3x3_quadrature_mod,            &
+  use get_unit_test_q3x3x3_quadrature_mod,            &
       only : get_gaussian_q3x3x3_quadrature_weights_xy, &
              get_gaussian_q3x3x3_quadrature_weights_z
-    use get_unit_test_3x3x3_chi_mod, &
+  use get_unit_test_3x3x3_chi_mod, &
       only : get_w0_3x3x3_field
-    use funit
+  use funit
+
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -43,24 +45,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
     class(compute_mass_matrix_w1_test_type), intent(inout) :: this
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -69,14 +58,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
     class(compute_mass_matrix_w1_test_type), intent(inout) :: this
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -95,7 +82,12 @@ contains
     real(r_def), parameter :: dx = 6000.0_r_def
     real(r_def), parameter :: dy = 1000.0_r_def
     real(r_def), parameter :: dz = 2000.0_r_def
+
     integer(i_def), parameter :: nlayers = 3
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     integer :: i, j, k, cell
 
@@ -159,6 +151,10 @@ contains
                                       chi2,            &
                                       chi3,            &
                                       panel_id,        &
+                                      geometry,        &
+                                      topology,        &
+                                      coord_system,    &
+                                      scaled_radius,   &
                                       ndf_w1,          &
                                       basis_w1,        &
                                       ndf_w0,          &

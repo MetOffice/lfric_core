@@ -105,6 +105,7 @@ contains
 
     logical(kind=l_def) :: extended_mesh
 
+    logical(l_def) :: rehabilitate
     integer(i_def) :: geometry, topology, coord_system
     real(r_def)    :: scaled_radius
 
@@ -122,6 +123,7 @@ contains
       call log_event('get_detj_at_w3_fe: Unsupported topology selection',log_level_error)
     end if
 
+    rehabilitate  = config%finite_element%rehabilitate()
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -159,7 +161,9 @@ contains
                                                  extended_mesh, geometry,     &
                                                  topology, coord_system,      &
                                                  scaled_radius, qr),          &
-        compute_mass_matrix_kernel_w3_type(self%mass_w3, chi, panel_id, qr) )
+        compute_mass_matrix_kernel_w3_type(self%mass_w3, chi, panel_id,       &
+                                           geometry, topology, coord_system,  &
+                                           scaled_radius, rehabilitate, qr) )
 
     class default
 
