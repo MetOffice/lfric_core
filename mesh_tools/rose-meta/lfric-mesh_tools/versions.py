@@ -38,9 +38,10 @@ class vn31_t11(MacroUpgrade):
 
     def upgrade(self, config, meta_config=None):
         # Commands From: rose-meta/lfric-mesh_tools
+        topology = self.get_setting_value(config, ["namelist:mesh", "topology"])
         geometry = self.get_setting_value(config, ["namelist:mesh", "geometry"])
         n_meshes = self.get_setting_value(config, ["namelist:mesh", "n_meshes"])
-        if geometry == "planar":
+        if topology == "non-periodic" .or. geometry == 'planar':
             if n_meshes == "4":
                 self.add_setting(
                     config,
