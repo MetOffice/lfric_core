@@ -45,34 +45,26 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'regional_primary':'regional_coarse_l1',
-                      'regional_coarse_l1':'regional_coarse_l2',
-                      'regional_coarse_l2':'regional_coarse_l3'"],
+                    ["'regional_primary':'regional_coarse_l1','regional_coarse_l1':'regional_coarse_l2','regional_coarse_l2':'regional_coarse_l3'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["mesh_names"],
-                    ["'regional_primary',
-                      'regional_coarse_l1',
-                      'regional_coarse_l2',
-                      'regional_coarse_l3'"],
+                    ["'regional_primary','regional_coarse_l1','regional_coarse_l2','regional_coarse_l3'"],
                     forced=True
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'regional_primary':'regional_coarse_l1',
-                      'regional_coarse_l1':'regional_coarse_l2'"],
+                    ["'regional_primary':'regional_coarse_l1','regional_coarse_l1':'regional_coarse_l2'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["mesh_names"],
-                    ["'regional_primary',
-                      'regional_coarse_l1',
-                      'regional_coarse_l2'"],
+                    ["'regional_primary','regional_coarse_l1','regional_coarse_l2'"],
                     forced=True
                 )
             elif n_meshes == "2":
@@ -98,26 +90,20 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'global_primary:global_coarse_l1',
-                      'global_coarse_l1:global_coarse_l2',
-                      'global_coarse_l2:global_coarse_l3'"],
+                    ["'global_primary:global_coarse_l1','global_coarse_l1:global_coarse_l2','global_coarse_l2:global_coarse_l3'"],
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["mesh_names"],
-                    ["'global_primary',
-                      'global_coarse_l1',
-                      'global_coarse_l2',
-                      'global_coarse_l3'"],
+                    ["'global_primary','global_coarse_l1','global_coarse_l2','global_coarse_l3'"],
                     forced=True
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'global_primary:global_coarse_l1',
-                      'global_coarse_l1:global_coarse_l2'"],
+                    ["'global_primary:global_coarse_l1','global_coarse_l1:global_coarse_l2'"],
                     forced=True
                 )
                 self.add_setting(
