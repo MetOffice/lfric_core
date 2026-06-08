@@ -45,7 +45,7 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'regional_primary':'regional_coarse_l1','regional_coarse_l1':'regional_coarse_l2','regional_coarse_l2':'regional_coarse_l3'"],
+                    ["'regional_primary:regional_coarse_l1','regional_coarse_l1:regional_coarse_l2','regional_coarse_l2:regional_coarse_l3'"],
                     forced=True
                 )
                 self.add_setting(
@@ -58,7 +58,7 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'regional_primary':'regional_coarse_l1','regional_coarse_l1':'regional_coarse_l2'"],
+                    ["'regional_primary:regional_coarse_l1','regional_coarse_l1:regional_coarse_l2'"],
                     forced=True
                 )
                 self.add_setting(
@@ -71,7 +71,7 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["mesh_maps"],
-                    ["'regional_primary':'regional_coarse_l1'"],
+                    ["'regional_primary:regional_coarse_l1'"],
                     forced=True
                 )
                 self.add_setting(
