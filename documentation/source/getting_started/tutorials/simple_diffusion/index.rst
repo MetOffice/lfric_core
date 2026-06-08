@@ -11,8 +11,6 @@ The Data Model (Simple Diffusion)
 This tutorial is designed to provide an introduction to the LFRic data model and
 how to write kernels to perform calculations on the data held within a field.
 
-TODO: Some info on the lfric data structures. Ref to the main parts of the documentaion.
-
 The kernel performs the diffusion calculation on a tracer field, and we will be
 modifying it to extend its capability to include diffusion in both horizontal
 directions of mesh cells.
