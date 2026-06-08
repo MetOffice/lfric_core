@@ -7,11 +7,13 @@
 !-------------------------------------------------------------------------------
 module gp_rhs_kernel_mod_test
 
-  use constants_mod,  only : i_def, r_def, imdi
+  use constants_mod,  only : i_def, r_def, imdi, rmdi
   use funit
-  use quadrature_xyoz_mod,               only: quadrature_xyoz_type, &
-                                               quadrature_xyoz_proxy_type
-  use quadrature_rule_gaussian_mod,      only: quadrature_rule_gaussian_type
+  use quadrature_xyoz_mod,          only: quadrature_xyoz_type, &
+                                          quadrature_xyoz_proxy_type
+  use quadrature_rule_gaussian_mod, only: quadrature_rule_gaussian_type
+
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -42,30 +44,17 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
     class(gp_rhs_test_type), intent(inout) :: this
 
-    type( quadrature_xyoz_type )          :: qr
-    type(quadrature_xyoz_proxy_type) :: qr_proxy
-    type( quadrature_rule_gaussian_type ) :: quadrature_rule
+    type(quadrature_xyoz_type)          :: qr
+    type(quadrature_xyoz_proxy_type)    :: qr_proxy
+    type(quadrature_rule_gaussian_type) :: quadrature_rule
 
     integer(i_def) :: nqp_h, nqp_v
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -84,7 +73,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
@@ -93,7 +81,6 @@ contains
 
     deallocate( this%basis, this%basis_f, this%diff_basis )
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -123,6 +110,11 @@ contains
     integer          :: nqp_h, nqp_v
     real(kind=r_def) :: fx, fy, fz
     integer :: df, dim, qp1, qp2
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     qr = quadrature_xyoz_type(3, quadrature_rule)
 
@@ -172,15 +164,16 @@ contains
 
     num_layers=1
     rhs(:) = 0.0_r_def
-    call gp_rhs_code(num_layers,                            &
-                     rhs, f_data,                           &
-                     chi(:,1), chi(:,2), chi(:,3),          &
-                     panel_id,                              &
-                     ndf_w0, undf, map_w0, this%basis,      &
-                     ndf_f, undf_f, map_f, this%basis_f,    &
-                     ndf_w0, undf, map_w0,                  &
-                     this%basis, this%diff_basis,           &
-                     ndf_pid, undf_pid, map_pid,            &
+    call gp_rhs_code(num_layers,                         &
+                     rhs, f_data,                        &
+                     chi(:,1), chi(:,2), chi(:,3),       &
+                     panel_id, geometry, topology,       &
+                     coord_system, scaled_radius,        &
+                     ndf_w0, undf, map_w0, this%basis,   &
+                     ndf_f, undf_f, map_f, this%basis_f, &
+                     ndf_w0, undf, map_w0,               &
+                     this%basis, this%diff_basis,        &
+                     ndf_pid, undf_pid, map_pid,         &
                      nqp_h, nqp_v, wh, wv )
 
 ! Answer for hardwired jacobian

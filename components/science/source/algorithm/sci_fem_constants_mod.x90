@@ -32,12 +32,6 @@ module sci_fem_constants_mod
   use timing_mod,                         only: start_timing, stop_timing, &
                                                 tik, LPROF
 
-  ! Configuration
-  use finite_element_config_mod,          only: element_order_h, &
-                                                element_order_v, &
-                                                nqp_h_exact,     &
-                                                nqp_v_exact
-
   ! Other algorithms
   use sci_geometric_constants_mod,        only: get_coordinates, &
                                                 get_panel_id
@@ -47,6 +41,17 @@ module sci_fem_constants_mod
   use matrix_vector_kernel_mod,           only: matrix_vector_kernel_type
   use dg_inc_matrix_vector_kernel_mod,    only: dg_inc_matrix_vector_kernel_type
   use sci_multiplicity_kernel_mod,        only: multiplicity_kernel_type
+
+  ! Configuration modules
+  use base_mesh_config_mod, only: geometry_spherical,      &
+                                  geometry_planar,         &
+                                  topology_fully_periodic, &
+                                  topology_non_periodic
+
+  use finite_element_config_mod, only: element_order_h, &
+                                       element_order_v, &
+                                       nqp_h_exact,     &
+                                       nqp_v_exact
 
   implicit none
 
@@ -197,10 +202,11 @@ contains
   end function get_qr_fv
 
   !> @brief Returns a pointer to a finite element mass matrix
+  !> @param[in] config
+  !> @param[in] mesh
   !> @param[in] space   The space of the desired mass matrix
-  !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The mass matrix operator
-  function get_mass_matrix_fe(space, mesh_id) result(mm_op)
+  function get_mass_matrix_fe(config, mesh, space) result(mm_op)
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, &
                                   only: compute_mass_matrix_kernel_w_scalar_type
@@ -210,13 +216,13 @@ contains
                                   only: compute_mass_matrix_kernel_w1_type
     use sci_edge_lump_w2_mass_matrix_kernel_mod,     &
                                   only: edge_lump_w2_mass_matrix_kernel_type
-    use base_mesh_config_mod,     only: topology, topology_fully_periodic
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
     type(operator_type),          pointer :: mm_op
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: chi(:)
@@ -229,6 +235,26 @@ contains
     type(field_type)                      :: dummy_field
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
+
+    integer(i_def) :: geometry, topology, coord_system
+    real(r_def)    :: scaled_radius
+
+    if (mesh%is_geometry_spherical()) then
+      geometry= geometry_spherical
+    else
+      geometry= geometry_planar
+    end if
+
+    if (mesh%is_topology_periodic()) then
+      topology = topology_fully_periodic
+    else if (mesh%is_topology_non_periodic()) then
+      topology = topology_non_periodic
+    else
+      call log_event('get_detj_at_w3_fe: Unsupported topology selection',log_level_error)
+    end if
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -266,8 +292,7 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
@@ -295,6 +320,10 @@ contains
                        compute_mass_matrix_kernel_w_scalar_type(mm_op, chi,    &
                                                                 panel_id,      &
                                                                 extend_mesh,   &
+                                                                geometry,      &
+                                                                topology,      &
+                                                                coord_system,  &
+                                                                scaled_radius, &
                                                                 qr_ptr) )
       end select
       ! Lump W2 mass matrix along the edge of the domain to avoid boundary
@@ -315,10 +344,11 @@ contains
   end function get_mass_matrix_fe
 
   !> @brief Returns a pointer to a finite volume mass matrix
+  !> @param[in] config
+  !> @param[in] mesh
   !> @param[in] space   The space of the desired mass matrix
-  !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The mass matrix operator
-  function get_mass_matrix_fv(space, mesh_id) result(mm_op)
+  function get_mass_matrix_fv(config, mesh, space) result(mm_op)
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, &
                                   only: compute_mass_matrix_kernel_w_scalar_type
@@ -328,13 +358,13 @@ contains
                                   only: compute_mass_matrix_kernel_w1_type
     use sci_edge_lump_w2_mass_matrix_kernel_mod,     &
                                   only: edge_lump_w2_mass_matrix_kernel_type
-    use base_mesh_config_mod,     only: topology, topology_fully_periodic
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
     type(operator_type),          pointer :: mm_op
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: chi(:)
@@ -347,6 +377,26 @@ contains
     type(field_type)                      :: dummy_field
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
+
+    integer(i_def) :: geometry, topology, coord_system
+    real(r_def)    :: scaled_radius
+
+    if (mesh%is_geometry_spherical()) then
+      geometry= geometry_spherical
+    else
+      geometry= geometry_planar
+    end if
+
+    if (mesh%is_topology_periodic()) then
+      topology = topology_fully_periodic
+    else if (mesh%is_topology_non_periodic()) then
+      topology = topology_non_periodic
+    else
+      call log_event('get_detj_at_w3_fe: Unsupported topology selection',log_level_error)
+    end if
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! Point to appropriate inventory for this space
     select case (space)
@@ -378,8 +428,7 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
@@ -406,6 +455,10 @@ contains
                        compute_mass_matrix_kernel_w_scalar_type(mm_op, chi,    &
                                                                 panel_id,      &
                                                                 extend_mesh,   &
+                                                                geometry,      &
+                                                                topology,      &
+                                                                coord_system,  &
+                                                                scaled_radius, &
                                                                 qr_ptr) )
       end select
       ! Lump W2 mass matrix along the edge of the domain to avoid boundary

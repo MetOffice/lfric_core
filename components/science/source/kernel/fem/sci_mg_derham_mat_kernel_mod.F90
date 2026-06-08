@@ -15,8 +15,10 @@
 module sci_mg_derham_mat_kernel_mod
 
   use argument_mod,            only: arg_type, func_type,        &
-                                     GH_OPERATOR, GH_FIELD,      &
-                                     GH_REAL, GH_READ, GH_WRITE, &
+                                     GH_OPERATOR,                &
+                                     GH_FIELD, GH_SCALAR,        &
+                                     GH_REAL, GH_INTEGER,        &
+                                     GH_READ, GH_WRITE,          &
                                      ANY_SPACE_1, ANY_SPACE_9,   &
                                      ANY_DISCONTINUOUS_SPACE_3,  &
                                      GH_BASIS, GH_DIFF_BASIS,    &
@@ -26,10 +28,6 @@ module sci_mg_derham_mat_kernel_mod
                                          pointwise_coordinate_jacobian_inverse
   use fs_continuity_mod,       only: W2, W3, wtheta
   use kernel_mod,              only: kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -41,13 +39,17 @@ module sci_mg_derham_mat_kernel_mod
 
   type, public, extends(kernel_type) :: mg_derham_mat_kernel_type
     private
-    type(arg_type) :: meta_args(6) = (/                                      &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W2),                   &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W3),                   &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, Wtheta, Wtheta),           &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W2),                   &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),              &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3) &
+    type(arg_type) :: meta_args(10) = (/                                      &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W2),                    &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W3),                    &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, Wtheta, Wtheta),            &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W2),                    &
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               &
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           &! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           &! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           &! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                            &! scaled_radius
          /)
     type(func_type) :: meta_funcs(4) = (/                                    &
          func_type(W2,          GH_BASIS, GH_DIFF_BASIS),                    &
@@ -83,6 +85,10 @@ contains
 !! @param[in] chi2 Physical coordinates in the 2nd dir
 !! @param[in] chi3 Physical coordinates in the 3rd dir
 !! @param[in] panel_id Field giving the ID for mesh panels
+!! @param[in] geometry
+!! @param[in] topology
+!! @param[in] coord_system
+!! @param[in] scaled_radius
 !! @param[in] ndf_w2 Number of degrees of freedom per cell for W2 space
 !! @param[in] basis_w2 Basis functions evaluated at quadrature points for W2 space
 !! @param[in] diff_basis_w2 Differential of basis functions evaluated at
@@ -112,6 +118,8 @@ subroutine mg_derham_mat_code(cell, nlayers,                      &
                               ncell_3d6, div,                     &
                               chi1, chi2, chi3,                   &
                               panel_id,                           &
+                              geometry, topology,                 &
+                              coord_system, scaled_radius,        &
                               ndf_w2, basis_w2, diff_basis_w2,    &
                               ndf_w3, basis_w3,                   &
                               ndf_wt, basis_wt,                   &
@@ -148,6 +156,11 @@ subroutine mg_derham_mat_code(cell, nlayers,                      &
   real(kind=r_def), intent(in)  :: panel_id(undf_pid)
   real(kind=r_def), intent(in)  :: wqp_h(nqp_h)
   real(kind=r_def), intent(in)  :: wqp_v(nqp_v)
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df2, k, ik

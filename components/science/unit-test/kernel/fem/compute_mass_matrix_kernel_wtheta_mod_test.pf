@@ -8,7 +8,8 @@
 !>
 module compute_mass_matrix_kernel_wtheta_mod_test
 
-  use constants_mod,        only : i_def, r_def, r_single, r_double, l_def, imdi
+  use constants_mod, only: i_def, r_def, r_single, r_double, &
+                           l_def, imdi, rmdi
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod,                      &
                             only : get_w0_m3x3_q3x3x3_size,     &
@@ -27,6 +28,8 @@ module compute_mass_matrix_kernel_wtheta_mod_test
   use get_unit_test_3x3x3_chi_mod, &
                             only : get_w0_3x3x3_field
   use funit
+
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -49,24 +52,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
     class(compute_mass_matrix_wtheta_test_type), intent(inout) :: this
-
-    call feign_finite_element_config( &
-             cellshape              = cellshape_quadrilateral,    &
-             coord_order            = 0_i_def,                    &
-             coord_order_nonprime   = 1_i_def,                    &
-             coord_space            = coord_space_wchi,           &
-             coord_system           = coord_system_xyz,           &
-             element_order_h        = 0_i_def,                    &
-             element_order_v        = 0_i_def,                    &
-             rehabilitate           = .true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -75,14 +65,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
     class(compute_mass_matrix_wtheta_test_type), intent(inout) :: this
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -118,6 +106,10 @@ contains
     real(r_single), allocatable :: local_stencil_r32(:,:,:)
 
     logical(l_def), parameter :: extended_mesh = .false.
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Canned test data is kept as r_def
     real(r_def),    allocatable :: chi1(:), chi2(:), chi3(:)
@@ -211,6 +203,9 @@ contains
                                       chi3_r32,                  &
                                       panel_id_r32,              &
                                       extended_mesh,             &
+                                      geometry, topology,        &
+                                      coord_system,              &
+                                      scaled_radius,             &
                                       ndf_wtheta,                &
                                       basis_wtheta_r32,          &
                                       ndf_w0,                    &
@@ -283,6 +278,10 @@ contains
     real(r_single), allocatable :: local_stencil_r32(:,:,:)
 
     logical(l_def), parameter :: extended_mesh = .false.
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Canned test data is kept as r_def
     real(r_def),    allocatable :: chi1(:), chi2(:), chi3(:)
@@ -376,6 +375,9 @@ contains
                                       chi3_r64,                  &
                                       panel_id_r64,              &
                                       extended_mesh,             &
+                                      geometry, topology,        &
+                                      coord_system,              &
+                                      scaled_radius,             &
                                       ndf_wtheta,                &
                                       basis_wtheta_r64,          &
                                       ndf_w0,                    &
@@ -448,6 +450,10 @@ contains
     real(r_double), allocatable :: local_stencil_r64(:,:,:)
 
     logical(l_def), parameter :: extended_mesh = .false.
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Canned test data is kept as r_def
     real(r_def),    allocatable :: chi1(:), chi2(:), chi3(:)
@@ -541,6 +547,9 @@ contains
                                       chi3_r64,                  &
                                       panel_id_r64,              &
                                       extended_mesh,             &
+                                      geometry, topology,        &
+                                      coord_system,              &
+                                      scaled_radius,             &
                                       ndf_wtheta,                &
                                       basis_wtheta_r64,          &
                                       ndf_w0,                    &

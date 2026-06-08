@@ -7,11 +7,17 @@
 !-------------------------------------------------------------------------------
 module gp_vector_rhs_kernel_mod_test
 
-  use constants_mod,  only : i_def, r_def
+  use constants_mod,  only : i_def, r_def, rmdi
   use funit
-  use quadrature_xyoz_mod,               only: quadrature_xyoz_type, &
-                                               quadrature_xyoz_proxy_type
-  use quadrature_rule_gaussian_mod,      only: quadrature_rule_gaussian_type
+  use quadrature_xyoz_mod,          only: quadrature_xyoz_type, &
+                                          quadrature_xyoz_proxy_type
+  use quadrature_rule_gaussian_mod, only: quadrature_rule_gaussian_type
+
+  ! Configuration modules
+  use base_mesh_config_mod, only: geometry_planar, &
+                                  topology_fully_periodic
+
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -38,40 +44,17 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use base_mesh_config_mod,      only : geometry_planar, &
-                                          topology_fully_periodic
     use sci_chi_transform_mod,     only : init_chi_transforms
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config, &
-                                          feign_base_mesh_config
 
     implicit none
 
     class(gp_vector_rhs_test_type), intent(inout) :: this
 
-    type( quadrature_xyoz_type )          :: qr
-    type(quadrature_xyoz_proxy_type) :: qr_proxy
-    type( quadrature_rule_gaussian_type ) :: quadrature_rule
+    type(quadrature_xyoz_type)          :: qr
+    type(quadrature_xyoz_proxy_type)    :: qr_proxy
+    type(quadrature_rule_gaussian_type) :: quadrature_rule
 
     integer(i_def) :: nqp_h, nqp_v
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_planar,         &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     call init_chi_transforms(geometry_planar, topology_fully_periodic)
 
@@ -90,7 +73,6 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
@@ -99,7 +81,6 @@ contains
 
     deallocate( this%basis_f, this%basis, this%diff_basis )
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -129,6 +110,9 @@ contains
     real(kind=r_def) :: fx, fy, fz, dx, dy, dz, t_vec(3)
     integer :: df, dim, qp1, qp2
 
+    real(kind=r_def) :: scaled_radius
+
+    scaled_radius= rmdi
 
     qr = quadrature_xyoz_type(3, quadrature_rule)
 
@@ -193,6 +177,10 @@ contains
                             chi(:,1), chi(:,2), chi(:,3), &
                             panel_id,                     &
                             f_data,                       &
+                            geometry_planar,              &
+                            topology_fully_periodic,      &
+                            coord_system_xyz,             &
+                            scaled_radius,                &
                             ndf_w0, undf, map_w0, this%basis,  &
                             ndf_f, undf_f,map_f, this%basis_f, &
                             ndf_w0, undf, map_w0, this%basis,  &

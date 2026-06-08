@@ -22,6 +22,10 @@ module sci_galerkin_projection_alg_mod
   use sci_mass_matrix_solver_alg_mod, &
                                      only: mass_matrix_solver_alg
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   private
@@ -108,7 +112,9 @@ contains
       if ( size(f_out) == 1 ) then
         write( log_scratch_space, '(A)' ) '    scalar field ... '
         call log_event( log_scratch_space, log_level_debug )
-        call invoke( gp_rhs_kernel_type(rhs(1), f_in, chi, panel_id, qr) )
+        call invoke( gp_rhs_kernel_type(rhs(1), f_in, chi, panel_id,      &
+                                        geometry, topology, coord_system, &
+                                        scaled_radius, qr) )
       else
         write( log_scratch_space, '(A)' ) '    vector field ... '
         call log_event( log_scratch_space, log_level_debug )
@@ -121,11 +127,10 @@ contains
           )                                                &
         )
 
-        call invoke( &
-          gp_vector_rhs_kernel_type( &
-            rhs, f_in, chi, panel_id, w2_field, qr &
-          ) &
-        )
+        call invoke(                                                     &
+          gp_vector_rhs_kernel_type( rhs, f_in, chi, panel_id, w2_field, &
+                                     geometry, topology, coord_system,   &
+                                     scaled_radius, qr ) )
       end if
       do idx = 1, size(f_out)
         call mass_matrix_solver_alg( f_out(idx), rhs(idx) )
