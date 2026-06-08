@@ -18,6 +18,8 @@ from typing import cast
 
 from fab.api import BuildConfig, Category, Compiler, Linker, ToolRepository
 
+from nf_config import NfConfig
+
 
 def setup_script_nvidia(build_config: BuildConfig,
                         args: argparse.Namespace) -> None:
@@ -93,25 +95,21 @@ def setup_script_nvidia(build_config: BuildConfig,
     linker = tr.get_tool(Category.LINKER, f"linker-{nvfortran.name}")
     linker = cast(Linker, linker)
 
-    # ATM we don't use a shell when running a tool, and as such
-    # we can't directly use "$()" as parameter. So query these values using
-    # Fab's shell tool (doesn't really matter which shell we get, so just
-    # ask for the default):
-    shell = tr.get_default(Category.SHELL)
-    try:
-        # We must remove the trailing new line, and create a list:
-        nc_flibs = shell.run(additional_parameters=["-c", "nf-config --flibs"],
-                             capture_output=True).strip().split()
-    except RuntimeError:
-        nc_flibs = []
+    nf_config = NfConfig()
+    if nf_config.is_available:
+        # If not available, the site-specific setup must define netcdf
+        linker.add_lib_flags("netcdf", nf_config.get_linker_flags())
 
-    linker.add_lib_flags("netcdf", nc_flibs)
     linker.add_lib_flags("yaxt", ["-lyaxt", "-lyaxt_c"])
     linker.add_lib_flags("xios", ["-lxios"])
     linker.add_lib_flags("hdf5", ["-lhdf5"])
     linker.add_lib_flags("shumlib", ["-lshum"])
     linker.add_lib_flags("vernier", ["-lvernier_f", "-lvernier_c",
                                      "-lvernier"])
+
+    # This likely needs adjusting, pfunit required fargparse and gftl
+    linker.add_lib_flags("pfunit", ["-lfunit", "-lpfunit",
+                                    "-lfargparse", "lgftl-shared-v2"])
 
     # Always link with C++ libs
     linker.add_post_lib_flags(lib_flags)

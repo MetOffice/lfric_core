@@ -69,3 +69,19 @@ that the available compilation profiles can vary from site to site (see
 If Fab has issues finding a compiler, you can use the Fab debug command line option
 ```--available-compilers```, which will list all compilers and linkers Fab has
 identified as being available.
+
+## Testing with pFUnit
+
+Any application script can additionally inherit from the ``pfunit_mixin.py``
+mixin, e.g.:
+```
+from lfric_base import LFRicBase  # noqa: E402
+from pfunit_mixin import PfUnitMixin  # noqa: E402
+
+
+class FabSkeleton(PfUnitMixin, LFRicBase):
+
+```
+This will by default also build any tests in a ``unit-test`` directory.
+Additionally, a new command line option ``--no-test`` is added if
+building of the tests should be disabled.
