@@ -46,3 +46,7 @@ class Config(DefaultConfig):
         # these flags for now until the transition to pkg-config
         linker.add_lib_flags("netcdf", ["-lnetcdff", "-lnetcdf",
                                         "-lnetcdf", "-lm"])
+
+        # This likely needs adjusting, pfunit required fargparse and gftl
+        linker.add_lib_flags("pfunit", ["-lfunit", "-lpfunit",
+                                        "-lfargparse", "lgftl-shared-v2"])
