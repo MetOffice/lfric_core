@@ -31,6 +31,10 @@ from psyclone_control import PsycloneControl, PsycloneInfo
 # Add a logger and connect it to stdout.
 logger = logging.getLogger("fab")
 
+# Add a logger and connect it to stdout.
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
 
 class LFRicBase(FabBase):
     '''

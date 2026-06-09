@@ -720,6 +720,9 @@ def test_get_transformation_script(monkeypatch, tmp_path) -> None:
     # (for dsl) is picked:
     psy_info = lfric_base._psyclone_control.get_info("dsl")
     psy_info._opt_path = optimisation_folder_path
+    # Set tmp_path as the base_paths (which is used to detect
+    # the relative path when checking for file-specific scripts).
+    psy_info._base_paths = [tmp_path]
     lfric_base._current_psyclone_info = psy_info
 
     # Create x90 test source file
