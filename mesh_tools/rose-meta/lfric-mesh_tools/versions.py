@@ -39,7 +39,7 @@ class vn31_t11(MacroUpgrade):
     def upgrade(self, config, meta_config=None):
         # Commands From: rose-meta/lfric-mesh_tools
         n_meshes = self.get_setting_value(config, ["namelist:mesh", "n_meshes"])
-        if self.get_setting_value(config, ["namelist:planar_mesh"]) is not None:
+        if config.get_value(["namelist:planar_mesh"]) is not None:
             if n_meshes == "4":
                 self.add_setting(
                     config,
