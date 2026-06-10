@@ -29,7 +29,6 @@ def test_psyclone_info_properties():
     assert info.name == "test_phase"
     assert info.comment == ""
     assert info.api == ""
-    assert info.artefacts == ""
     assert info.opt_path == Path()
 
 
@@ -56,7 +55,6 @@ phases:
 dsl:
   comment: "PSyclone DSL Phase"
   api: lfric
-  artefacts: x90
   script_dir: psykal
   global.py: \\*
   file_specific: \\*
@@ -88,7 +86,6 @@ secondary:
     info_dsl = pc.get_info("dsl")
     assert info_dsl.comment == "PSyclone DSL Phase"
     assert info_dsl.api == "lfric"
-    assert info_dsl.artefacts == "x90"
     assert info_dsl.opt_path == script_root / "psykal"
 
     # Read second file to test incremental overrides

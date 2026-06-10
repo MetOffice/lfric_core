@@ -45,7 +45,6 @@ class PsycloneInfo:
         self._name: str = name
         self._comment: str = ""
         self._api: str = ""
-        self._artefacts: str = ""
         self._rules: list[tuple[str, list[str]]] = []
 
     @property
@@ -70,13 +69,6 @@ class PsycloneInfo:
         return self._api
 
     @property
-    def artefacts(self) -> str:
-        """
-        :returns: the artefacts to apply this info to.
-        """
-        return self._artefacts
-
-    @property
     def opt_path(self) -> Path:
         """
         :return: the optimisation root as absolute path (including site-
@@ -99,8 +91,6 @@ class PsycloneInfo:
                 self._comment = info["comment"]
             elif rule == "api":
                 self._api = info["api"]
-            elif rule == "artefacts":
-                self._artefacts = info["artefacts"]
             elif rule == "script_dir":
                 self._relative_script_dir = info["script_dir"]
             else:
@@ -134,7 +124,6 @@ class PsycloneInfo:
 
         yaml_dict = {"comment": self.comment,
                      "api": self.api,
-                     "artefacts": self.artefacts,
                      "script_dir": self._relative_script_dir}
 
         for rule, file_list in self._rules:
