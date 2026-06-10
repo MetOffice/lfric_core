@@ -185,8 +185,12 @@ contains
     type(lfric_xios_file_type),  pointer :: file => null()
     integer(tik) :: timing_idlx, timing_idxc
 
-    if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.finalise_context')
+
     if (this%xios_context_initialised) then
+      if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.finalise_context')
+      call log_event( 'Finalising XIOS context: ' // this%get_context_name(), LOG_LEVEL_DEBUG )
+      call this%set_current()
+
       ! Perform final write
       if (this%filelist%get_length() > 0) then
         loop => this%filelist%get_head()
@@ -225,10 +229,10 @@ contains
         end do
       end if
       this%xios_context_initialised = .false.
+      if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.finalise_context')
     end if
     nullify(loop)
     nullify(file)
-    if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.finalise_context')
 
   end subroutine finalise_xios_context
 
