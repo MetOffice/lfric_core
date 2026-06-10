@@ -10,7 +10,7 @@
 This module reads in a psyclone_info.yaml file.
 '''
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 import yaml
 
 
@@ -126,18 +126,21 @@ class PsycloneInfo:
             file_list = "*"
         self._rules.append((rule, file_list.split()))
 
-    def view(self) -> str:
+    def get_yaml_dict(self) -> dict[str, list[str]]:
         """
-        :returns: a string representation of this phase in yaml format.
+        :returns: returns ths data in this object in a dictionary, suitable
+            to write them back as a yaml file.
         """
-        s = f"""{self._name}:
-comment: {self.comment}
-api: {self.api}
-artefacts: {self.artefacts}
-script_dir: {self._relative_script_dir}
-rules: {self._rules}
-"""
-        return s
+
+        yaml_dict = {"comment": self.comment,
+                     "api": self.api,
+                     "artefacts": self.artefacts,
+                     "script_dir": self._relative_script_dir}
+
+        for rule, file_list in self._rules:
+            yaml_dict[rule] = " ".join(file_list)
+
+        return yaml_dict
 
     def file_specific_script(self, fpath: Path) -> Optional[Path]:
         """
@@ -247,6 +250,9 @@ class PsycloneControl:
         self._script_root = script_root
         self._all_phases: list[str] = []
         self._psyclone_info: dict[str, PsycloneInfo] = {}
+        # A list of all PSyclone info files that were read.
+        # Only used to add useful comments to the yaml output.
+        self._all_files_read: list[Path] = []
 
     @property
     def all_phases(self) -> list[str]:
@@ -265,7 +271,7 @@ class PsycloneControl:
         """
         return self._psyclone_info[phase]
 
-    def view(self) -> str:
+    def to_yaml(self) -> str:
         """
         This returns a string representation of the combined read yaml files.
         This is useful to be logged to show the actual details used.
@@ -273,12 +279,17 @@ class PsycloneControl:
         :returns: the string represenation in yaml format of this PSyclone
             control instance.
         """
-        s = f"""Phases: {" ".join(self._all_phases)}\n\n"""
-        for phase in self._all_phases:
-            s += f"{self._psyclone_info[phase].view()}\n"
-        return s
 
-    def read(self, filename: Union[str, Path]) -> None:
+        yaml_dict = {"phases": self._all_phases}
+        for phase in self._all_phases:
+            yaml_dict[phase] = self._psyclone_info[phase].get_yaml_dict()
+
+        files_read = '\n'.join(f"#       {i}" for i in self._all_files_read)
+        yaml_string = yaml.dump(yaml_dict, default_flow_style=False,
+                                sort_keys=False)
+        return f"# Files read:\n{files_read}\n{yaml_string}"
+
+    def read(self, file_path: Path) -> None:
         """
         Reads a yaml file, and extends the potentially existing information.
         Any phases specified in the new read yaml file will replace the
@@ -288,11 +299,12 @@ class PsycloneControl:
         existing information. The precedence handling means that any later
         rule will overwrite any previous rule.
 
-        :param filename: the filename to read.
+        :param file_path: the file_path to read.
         """
 
-        with open(filename, "r", encoding="utf8") as stream:
+        with open(file_path, "r", encoding="utf8") as stream:
             dependencies = yaml.safe_load(stream)
+            self._all_files_read.append(file_path.resolve())
 
         # First take phases (if available)
         if dependencies.get("phases", None):

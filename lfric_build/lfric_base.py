@@ -28,12 +28,7 @@ from configurator import configurator
 from templaterator import Templaterator
 from psyclone_control import PsycloneControl, PsycloneInfo
 
-# Add a logger and connect it to stdout.
 logger = logging.getLogger("fab")
-
-# Add a logger and connect it to stdout.
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 class LFRicBase(FabBase):
@@ -415,6 +410,11 @@ class LFRicBase(FabBase):
             Folders containing kernel files. Must be part of the analysed
             source code.
         '''
+        logger.info(f"PSyclone control file\n"
+                    f"# -------------------\n"
+                    f"{self._psyclone_control.to_yaml()}\n"
+                    f"# -------------------\n")
+
         kernel_roots = kernel_roots or []
         psyclone_cli_args = ["--config", self.get_psyclone_config()]
         if additional_parameters:
@@ -428,8 +428,8 @@ class LFRicBase(FabBase):
         orig_pythonpath = os.environ.get("PYTHONPATH", "")
 
         for phase in self._psyclone_control.all_phases:
-            logger.info(f"Running PSyclone phase {phase}.")
             psyclone_info = self._psyclone_control.get_info(phase)
+            logger.info(f"Running PSyclone phase: {psyclone_info.comment}.")
             # Save the info for the get transformation script function
             self._current_psyclone_info = psyclone_info
             # Add various paths: optimisation/site-platform/transmute
