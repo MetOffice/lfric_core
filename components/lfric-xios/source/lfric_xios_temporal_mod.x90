@@ -297,7 +297,7 @@ contains
       record_offset = record_offset + 1
 
       ! Add fields to initial file definition
-      init_fields_id = trim(file_id)//init_suffix//"_fields"
+      init_fields_id = trim(file_id)//init_suffix//"_field_group"
       call xios_add_child(initial_read_file, init_fieldgroup, trim(init_fields_id))
       call xios_set_attr(init_fieldgroup, operation="once", read_access=.true.)
       do i = 1, n_fields
