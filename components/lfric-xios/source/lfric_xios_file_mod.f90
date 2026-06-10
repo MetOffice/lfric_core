@@ -258,6 +258,9 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
   if (present(field_group_id)) then
     self%field_group_id = field_group_id
   else
+    ! The convention is to have a single field_group for fields in file
+    ! with mode="read" and to name that field group relative to the
+    ! file `id` with suffix "_field_group"
     self%field_group_id = trim(self%xios_id)//"_field_group"
   end if
 
