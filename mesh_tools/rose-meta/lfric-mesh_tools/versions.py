@@ -44,46 +44,46 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_maps"],
-                    "'regional_l0:regional_l1','regional_l1:regional_l2','regional_l2:regional_l3'",
+                    "'planar_l0:planar_l1','planar_l1:planar_l2','planar_l2:planar_l3'",
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'regional_l0','regional_l1','regional_l2','regional_l3'",
+                    "'planar_l0','planar_l1','planar_l2','planar_l3'",
                     forced=True
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_maps"],
-                    "'regional_l0:regional_l1','regional_l1:regional_l2'",
+                    "'planar_l0:planar_l1','planar_l1:planar_l2'",
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'regional_l0','regional_l1','regional_l2'",
+                    "'planar_l0','planar_l1','planar_l2'",
                     forced=True
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_maps"],
-                    "'regional_l0:regional_l1'",
+                    "'planar_l0:planar_l1'",
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'regional_l0','regional_l1'",
+                    "'planar_l0','planar_l1'",
                     forced=True,
                 )
             else:
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'regional_l0'",
+                    "'planar_l0'",
                     forced=True
                 )
         else:
@@ -91,46 +91,46 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_maps"],
-                    "'global_l0:global_l1','global_l1:global_l2','global_l2:global_l3'",
+                    "'cubedsphere_l0:cubedsphere_l1','cubedsphere_l1:cubedsphere_l2','cubedsphere_l2:cubedsphere_l3'",
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'global_l0','global_l1','global_l2','global_l3'",
+                    "'cubedsphere_l0','cubedsphere_l1','cubedsphere_l2','cubedsphere_l3'",
                     forced=True
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_maps"],
-                    "'global_l0:global_l1','global_l1:global_l2'",
+                    "'cubedsphere_l0:cubedsphere_l1','cubedsphere_l1:cubedsphere_l2'",
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'global_l0,global_l1,global_l2'",
+                    "'cubedsphere_l0,cubedsphere_l1,cubedsphere_l2'",
                     forced=True
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_maps"],
-                    "'global_l0:global_l1'",
+                    "'cubedsphere_l0:cubedsphere_l1'",
                     forced=True
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'global_l0','global_l1'",
+                    "'cubedsphere_l0','cubedsphere_l1'",
                     forced=True
                 )
             else:
                 self.add_setting(
                     config,
                     ["namelist:mesh","mesh_names"],
-                    "'global_l0'",
+                    "'cubedsphere_l0'",
                     forced=True
                 )
 
