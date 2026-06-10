@@ -258,7 +258,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
   if (present(field_group_id)) then
     self%field_group_id = field_group_id
   else
-    self%field_group_id = trim(self%xios_id)//"_fields"
+    self%field_group_id = trim(self%xios_id)//"_field_group"
   end if
 
   ! Set up XIOS fields representing attached field collection
