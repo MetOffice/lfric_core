@@ -12,7 +12,8 @@ module sci_extract_w_kernel_mod
                                GH_FIELD, GH_REAL, &
                                GH_WRITE, GH_READ, &
                                CELL_COLUMN
-  use constants_mod,     only: r_single, r_double, i_def
+  use constants_mod,     only: i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod, only: W2, Wtheta
   use kernel_mod,        only: kernel_type
 
@@ -43,8 +44,8 @@ module sci_extract_w_kernel_mod
   ! Generic interface for real32 and real64 types
   interface extract_w_code
     module procedure  &
-      extract_w_code_r_single, &
-      extract_w_code_r_double
+      extract_w_code_real32, &
+      extract_w_code_real64
   end interface
 
 
@@ -62,7 +63,7 @@ contains
 !! @param[in] undf_w2 The number of unique degrees of freedom for w2
 !! @param[in] map_w2 Integer array holding the dofmap for the cell at the
 !>            base of the column for w2
-subroutine extract_w_code_r_single( nlayers,                    &
+subroutine extract_w_code_real32( nlayers,                    &
                                     velocity_w2v,               &
                                     u_physics,                  &
                                     ndf_wth, undf_wth, map_wth, &
@@ -77,8 +78,8 @@ subroutine extract_w_code_r_single( nlayers,                    &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
 
-  real(kind=r_single), dimension(undf_wth), intent(inout) :: velocity_w2v
-  real(kind=r_single), dimension(undf_w2),  intent(in)    :: u_physics
+  real(kind=real32), dimension(undf_wth), intent(inout) :: velocity_w2v
+  real(kind=real32), dimension(undf_w2),  intent(in)    :: u_physics
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
   integer(kind=i_def), dimension(ndf_w2),   intent(in)    :: map_w2
 
@@ -91,9 +92,9 @@ subroutine extract_w_code_r_single( nlayers,                    &
 
   end do
 
-end subroutine extract_w_code_r_single
+end subroutine extract_w_code_real32
 
-subroutine extract_w_code_r_double( nlayers,                    &
+subroutine extract_w_code_real64( nlayers,                    &
                                     velocity_w2v,               &
                                     u_physics,                  &
                                     ndf_wth, undf_wth, map_wth, &
@@ -108,8 +109,8 @@ subroutine extract_w_code_r_double( nlayers,                    &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
 
-  real(kind=r_double), dimension(undf_wth), intent(inout) :: velocity_w2v
-  real(kind=r_double), dimension(undf_w2),  intent(in)    :: u_physics
+  real(kind=real64), dimension(undf_wth), intent(inout) :: velocity_w2v
+  real(kind=real64), dimension(undf_w2),  intent(in)    :: u_physics
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
   integer(kind=i_def), dimension(ndf_w2),   intent(in)    :: map_w2
 
@@ -122,6 +123,6 @@ subroutine extract_w_code_r_double( nlayers,                    &
 
   end do
 
-end subroutine extract_w_code_r_double
+end subroutine extract_w_code_real64
 
 end module sci_extract_w_kernel_mod

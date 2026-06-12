@@ -10,7 +10,8 @@
 !!        PSyclone and documented in issue 1099.
 module sci_operator_algebra_kernel_mod
 
-use constants_mod, only: r_def, i_def, r_single, r_double
+use constants_mod, only: r_def, i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,    only: kernel_type
 use argument_mod,  only: arg_type, func_type,        &
                          GH_OPERATOR, GH_SCALAR,     &
@@ -69,10 +70,10 @@ public :: operator_setval_x_kernel_code
   ! Generic interface for real32 and real64 types
   interface operator_setval_x_kernel_code
     module procedure  &
-      operator_setval_x_kernel_code_r_single, &
-      operator_setval_x_kernel_code_r_double, &
-      operator_setval_x_kernel_code_r_single_to_r_double, &
-      operator_setval_x_kernel_code_r_double_to_r_single
+      operator_setval_x_kernel_code_real32, &
+      operator_setval_x_kernel_code_real64, &
+      operator_setval_x_kernel_code_real32_to_real64, &
+      operator_setval_x_kernel_code_real64_to_real32
   end interface
 
 contains
@@ -161,9 +162,9 @@ end subroutine operator_setval_c_kernel_code
 !! @param[in]     ndf1       Number of dofs per cell for space 1
 !! @param[in]     ndf2       Number of dofs per cell for space 2
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine operator_setval_x_kernel_code_r_single(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real32(cell, nlayers, &
                                                   ncell_3d_1, x, &
                                                   ncell_3d_2, y, &
                                                   ndf1, ndf2)
@@ -175,8 +176,8 @@ subroutine operator_setval_x_kernel_code_r_single(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=r_single), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=r_single), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real32), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real32), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -186,11 +187,11 @@ subroutine operator_setval_x_kernel_code_r_single(cell, nlayers, &
     x(ik,:,:) = y(ik,:,:)
   end do
 
-end subroutine operator_setval_x_kernel_code_r_single
+end subroutine operator_setval_x_kernel_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine operator_setval_x_kernel_code_r_double(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real64(cell, nlayers, &
                                                   ncell_3d_1, x, &
                                                   ncell_3d_2, y, &
                                                   ndf1, ndf2)
@@ -202,8 +203,8 @@ subroutine operator_setval_x_kernel_code_r_double(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=r_double), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=r_double), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real64), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real64), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -213,11 +214,11 @@ subroutine operator_setval_x_kernel_code_r_double(cell, nlayers, &
     x(ik,:,:) = y(ik,:,:)
   end do
 
-end subroutine operator_setval_x_kernel_code_r_double
+end subroutine operator_setval_x_kernel_code_real64
 
-! R_SINGLE PRECISION to R_DOUBLE
+! REAL32 PRECISION to REAL64
 ! ==============================
-subroutine operator_setval_x_kernel_code_r_single_to_r_double(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real32_to_real64(cell, nlayers, &
                                                               ncell_3d_1, x, &
                                                               ncell_3d_2, y, &
                                                               ndf1, ndf2)
@@ -229,22 +230,22 @@ subroutine operator_setval_x_kernel_code_r_single_to_r_double(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=r_double), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=r_single), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real64), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real32), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
 
   do k = 0, nlayers - 1
     ik = k + 1 + (cell-1)*nlayers
-    x(ik,:,:) = real(y(ik,:,:), r_double)
+    x(ik,:,:) = real(y(ik,:,:), real64)
   end do
 
-end subroutine operator_setval_x_kernel_code_r_single_to_r_double
+end subroutine operator_setval_x_kernel_code_real32_to_real64
 
-! R_DOUBLE PRECISION to R_SINGLE
+! REAL64 PRECISION to REAL32
 ! ==============================
-subroutine operator_setval_x_kernel_code_r_double_to_r_single(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real64_to_real32(cell, nlayers, &
                                                               ncell_3d_1, x, &
                                                               ncell_3d_2, y, &
                                                               ndf1, ndf2)
@@ -256,17 +257,17 @@ subroutine operator_setval_x_kernel_code_r_double_to_r_single(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=r_single), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=r_double), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real32), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real64), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
 
   do k = 0, nlayers - 1
     ik = k + 1 + (cell-1)*nlayers
-    x(ik,:,:) = real(y(ik,:,:), r_single)
+    x(ik,:,:) = real(y(ik,:,:), real32)
   end do
 
-end subroutine operator_setval_x_kernel_code_r_double_to_r_single
+end subroutine operator_setval_x_kernel_code_real64_to_real32
 
 end module sci_operator_algebra_kernel_mod

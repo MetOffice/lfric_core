@@ -15,7 +15,8 @@ module sci_apply_w3_to_sh_w3_kernel_mod
                                       GH_READ, GH_WRITE,         &
                                       ANY_DISCONTINUOUS_SPACE_3, &
                                       CELL_COLUMN
-  use constants_mod,           only : i_def, r_single, r_double
+  use constants_mod,           only : i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,       only : W3
 
   use kernel_mod,              only : kernel_type
@@ -49,8 +50,8 @@ module sci_apply_w3_to_sh_w3_kernel_mod
   ! Generic interface for real32 and real64 types
   interface apply_w3_to_sh_w3_code
     module procedure  &
-      apply_w3_to_sh_w3_code_r_single, &
-      apply_w3_to_sh_w3_code_r_double
+      apply_w3_to_sh_w3_code_real32, &
+      apply_w3_to_sh_w3_code_real64
   end interface
 
 contains
@@ -69,9 +70,9 @@ contains
 !> @param[in] undf_w3 Number of (local) unique degrees of freedom for w3
 !> @param[in] map_w3 Dofmap for the cell at the base of the column for w3
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine apply_w3_to_sh_w3_code_r_single(                &
+subroutine apply_w3_to_sh_w3_code_real32(                &
                                             nlayers_sh,    &
                                             rhs_w3_sh,     &
                                             field_w3,      &
@@ -94,37 +95,37 @@ subroutine apply_w3_to_sh_w3_code_r_single(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=r_single),    dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
-  real(kind=r_single),    dimension(undf_w3),       intent(in) :: field_w3
-  real(kind=r_single),    dimension(undf_w3_sh),    intent(in) :: detj_shifted
-  real(kind=r_single),    dimension(undf_w3),       intent(in) :: detj_prime
+  real(kind=real32),    dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
+  real(kind=real32),    dimension(undf_w3),       intent(in) :: field_w3
+  real(kind=real32),    dimension(undf_w3_sh),    intent(in) :: detj_shifted
+  real(kind=real32),    dimension(undf_w3),       intent(in) :: detj_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
 
   ! Assume lowest order so only a single DoF per cell
   ! Bottom boundary value
-  rhs_w3_sh(map_w3_sh(1)) = 0.5_r_single * field_w3(map_w3(1)) &
+  rhs_w3_sh(map_w3_sh(1)) = 0.5_real32 * field_w3(map_w3(1)) &
                     * detj_prime(map_w3(1)) / detj_shifted(map_w3_sh(1))
 
   ! All interior levels
   do k = 1, nlayers_sh - 2
     rhs_w3_sh(map_w3_sh(1)+k) = &
-      (0.5_r_single * detj_prime(map_w3(1)+k) * field_w3(map_w3(1)+k) +    &
-       0.5_r_single * detj_prime(map_w3(1)+k-1) * field_w3(map_w3(1)+k-1)) &
+      (0.5_real32 * detj_prime(map_w3(1)+k) * field_w3(map_w3(1)+k) +    &
+       0.5_real32 * detj_prime(map_w3(1)+k-1) * field_w3(map_w3(1)+k-1)) &
        / detj_shifted(map_w3_sh(1)+k)
   end do
 
   ! Top boundary value
   k = nlayers_sh - 1
-  rhs_w3_sh(map_w3_sh(1)+k) = 0.5_r_single * field_w3(map_w3(1) + k-1) &
+  rhs_w3_sh(map_w3_sh(1)+k) = 0.5_real32 * field_w3(map_w3(1) + k-1) &
                     * detj_prime(map_w3(1)+k-1) / detj_shifted(map_w3_sh(1)+k)
 
-end subroutine apply_w3_to_sh_w3_code_r_single
+end subroutine apply_w3_to_sh_w3_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine apply_w3_to_sh_w3_code_r_double(                &
+subroutine apply_w3_to_sh_w3_code_real64(                &
                                             nlayers_sh,    &
                                             rhs_w3_sh,     &
                                             field_w3,      &
@@ -147,32 +148,32 @@ subroutine apply_w3_to_sh_w3_code_r_double(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=r_double),    dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
-  real(kind=r_double),    dimension(undf_w3),       intent(in) :: field_w3
-  real(kind=r_double),    dimension(undf_w3_sh),    intent(in) :: detj_shifted
-  real(kind=r_double),    dimension(undf_w3),       intent(in) :: detj_prime
+  real(kind=real64),    dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
+  real(kind=real64),    dimension(undf_w3),       intent(in) :: field_w3
+  real(kind=real64),    dimension(undf_w3_sh),    intent(in) :: detj_shifted
+  real(kind=real64),    dimension(undf_w3),       intent(in) :: detj_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
 
   ! Assume lowest order so only a single DoF per cell
   ! Bottom boundary value
-  rhs_w3_sh(map_w3_sh(1)) = 0.5_r_double * field_w3(map_w3(1)) &
+  rhs_w3_sh(map_w3_sh(1)) = 0.5_real64 * field_w3(map_w3(1)) &
                     * detj_prime(map_w3(1)) / detj_shifted(map_w3_sh(1))
 
   ! All interior levels
   do k = 1, nlayers_sh - 2
     rhs_w3_sh(map_w3_sh(1)+k) = &
-      (0.5_r_double * detj_prime(map_w3(1)+k) * field_w3(map_w3(1)+k) +    &
-       0.5_r_double * detj_prime(map_w3(1)+k-1) * field_w3(map_w3(1)+k-1)) &
+      (0.5_real64 * detj_prime(map_w3(1)+k) * field_w3(map_w3(1)+k) +    &
+       0.5_real64 * detj_prime(map_w3(1)+k-1) * field_w3(map_w3(1)+k-1)) &
        / detj_shifted(map_w3_sh(1)+k)
   end do
 
   ! Top boundary value
   k = nlayers_sh - 1
-  rhs_w3_sh(map_w3_sh(1)+k) = 0.5_r_double * field_w3(map_w3(1) + k-1) &
+  rhs_w3_sh(map_w3_sh(1)+k) = 0.5_real64 * field_w3(map_w3(1) + k-1) &
                     * detj_prime(map_w3(1)+k-1) / detj_shifted(map_w3_sh(1)+k)
 
-end subroutine apply_w3_to_sh_w3_code_r_double
+end subroutine apply_w3_to_sh_w3_code_real64
 
 end module sci_apply_w3_to_sh_w3_kernel_mod

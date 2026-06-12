@@ -13,7 +13,8 @@ use argument_mod,            only : arg_type,                 &
                                     GH_REAL, GH_READ, GH_INC, &
                                     ANY_SPACE_1, ANY_SPACE_2, &
                                     CELL_COLUMN
-use constants_mod,           only : r_single, r_double, i_def
+use constants_mod,           only : i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,              only : kernel_type
 
 implicit none
@@ -42,8 +43,8 @@ public :: transpose_matrix_vector_code
   ! Generic interface for real32 and real64 types
   interface transpose_matrix_vector_code
     module procedure  &
-      transpose_matrix_vector_code_r_single, &
-      transpose_matrix_vector_code_r_double
+      transpose_matrix_vector_code_real32, &
+      transpose_matrix_vector_code_real64
   end interface
 contains
 
@@ -61,9 +62,9 @@ contains
 !! @param[in] undf2 Unique number of degrees of freedom for the input field
 !! @param[in] map2 Dofmap for the cell at the base of the column for the input field
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine transpose_matrix_vector_code_r_single(cell,              &
+subroutine transpose_matrix_vector_code_real32(cell,              &
                                                  nlayers,           &
                                                  lhs, x,            &
                                                  ncell_3d,          &
@@ -80,14 +81,14 @@ subroutine transpose_matrix_vector_code_r_single(cell,              &
   integer(kind=i_def), dimension(ndf1), intent(in) :: map1
   integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-  real(kind=r_single), dimension(undf2),              intent(in)    :: x
-  real(kind=r_single), dimension(undf1),              intent(inout) :: lhs
-  real(kind=r_single), dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
+  real(kind=real32), dimension(undf2),              intent(in)    :: x
+  real(kind=real32), dimension(undf1),              intent(inout) :: lhs
+  real(kind=real32), dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
 
   ! Internal variables
   integer(kind=i_def)                  :: df, k, ik
-  real(kind=r_single), dimension(ndf2) :: x_e
-  real(kind=r_single), dimension(ndf1) :: lhs_e
+  real(kind=real32), dimension(ndf2) :: x_e
+  real(kind=real32), dimension(ndf1) :: lhs_e
 
   do k = 0, nlayers-1
     do df = 1, ndf2
@@ -100,11 +101,11 @@ subroutine transpose_matrix_vector_code_r_single(cell,              &
     end do
   end do
 
-end subroutine transpose_matrix_vector_code_r_single
+end subroutine transpose_matrix_vector_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine transpose_matrix_vector_code_r_double(cell,              &
+subroutine transpose_matrix_vector_code_real64(cell,              &
                                                  nlayers,           &
                                                  lhs, x,            &
                                                  ncell_3d,          &
@@ -121,14 +122,14 @@ subroutine transpose_matrix_vector_code_r_double(cell,              &
   integer(kind=i_def), dimension(ndf1), intent(in) :: map1
   integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-  real(kind=r_double), dimension(undf2),              intent(in)    :: x
-  real(kind=r_double), dimension(undf1),              intent(inout) :: lhs
-  real(kind=r_double), dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
+  real(kind=real64), dimension(undf2),              intent(in)    :: x
+  real(kind=real64), dimension(undf1),              intent(inout) :: lhs
+  real(kind=real64), dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
 
   ! Internal variables
   integer(kind=i_def)                  :: df, k, ik
-  real(kind=r_double), dimension(ndf2) :: x_e
-  real(kind=r_double), dimension(ndf1) :: lhs_e
+  real(kind=real64), dimension(ndf2) :: x_e
+  real(kind=real64), dimension(ndf1) :: lhs_e
 
   do k = 0, nlayers-1
     do df = 1, ndf2
@@ -141,6 +142,6 @@ subroutine transpose_matrix_vector_code_r_double(cell,              &
     end do
   end do
 
-end subroutine transpose_matrix_vector_code_r_double
+end subroutine transpose_matrix_vector_code_real64
 
 end module transpose_matrix_vector_kernel_mod

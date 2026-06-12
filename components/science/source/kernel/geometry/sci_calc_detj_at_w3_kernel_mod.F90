@@ -16,7 +16,8 @@ module sci_calc_detj_at_w3_kernel_mod
                                 GH_EVALUATOR,                &
                                 GH_SCALAR, GH_INTEGER
 
-  use constants_mod,     only : r_def, r_single, r_double, i_def
+  use constants_mod,     only : r_def, i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod, only : W3
   use kernel_mod,        only : kernel_type
 
@@ -56,8 +57,8 @@ module sci_calc_detj_at_w3_kernel_mod
   ! Generic interface for real32 and real64 types
   interface calc_detj_at_w3_code
     module procedure  &
-      calc_detj_at_w3_code_r_single, &
-      calc_detj_at_w3_code_r_double
+      calc_detj_at_w3_code_real32, &
+      calc_detj_at_w3_code_real64
   end interface
 
 contains
@@ -81,9 +82,9 @@ contains
 !> @param[in]  undf_pid       Number of unique degrees of freedom for panel_id
 !> @param[in]  map_pid        Dofmap for the cell at the base of the column for panel_id
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine calc_detj_at_w3_code_r_single( nlayers,                             &
+subroutine calc_detj_at_w3_code_real32( nlayers,                             &
                                           detj_w3,                             &
                                           chi1, chi2, chi3,                    &
                                           panel_id,                            &
@@ -105,7 +106,7 @@ subroutine calc_detj_at_w3_code_r_single( nlayers,                             &
   integer(kind=i_def),                            intent(in)    :: undf_chi
   integer(kind=i_def),                            intent(in)    :: ndf_pid
   integer(kind=i_def),                            intent(in)    :: undf_pid
-  real(kind=r_single), dimension(undf_w3),        intent(inout) :: detj_w3
+  real(kind=real32), dimension(undf_w3),        intent(inout) :: detj_w3
   real(kind=r_def), dimension(undf_chi),          intent(in)    :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf_pid),          intent(in)    :: panel_id
   integer(kind=i_def), dimension(ndf_w3),         intent(in)    :: map_w3
@@ -138,16 +139,16 @@ subroutine calc_detj_at_w3_code_r_single( nlayers,                             &
                                          ipanel, basis_chi(:,:,df),       &
                                          diff_basis_chi(:,:,df),          &
                                          jacobian, detj)
-      detj_w3(map_w3(df)+k) = real(detj, r_single)
+      detj_w3(map_w3(df)+k) = real(detj, real32)
     end do
 
   end do
 
-end subroutine calc_detj_at_w3_code_r_single
+end subroutine calc_detj_at_w3_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine calc_detj_at_w3_code_r_double( nlayers,                             &
+subroutine calc_detj_at_w3_code_real64( nlayers,                             &
                                           detj_w3,                             &
                                           chi1, chi2, chi3,                    &
                                           panel_id,                            &
@@ -169,7 +170,7 @@ subroutine calc_detj_at_w3_code_r_double( nlayers,                             &
   integer(kind=i_def),                            intent(in)    :: undf_chi
   integer(kind=i_def),                            intent(in)    :: ndf_pid
   integer(kind=i_def),                            intent(in)    :: undf_pid
-  real(kind=r_double), dimension(undf_w3),        intent(inout) :: detj_w3
+  real(kind=real64), dimension(undf_w3),        intent(inout) :: detj_w3
   real(kind=r_def), dimension(undf_chi),          intent(in)    :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf_pid),          intent(in)    :: panel_id
   integer(kind=i_def), dimension(ndf_w3),         intent(in)    :: map_w3
@@ -202,11 +203,11 @@ subroutine calc_detj_at_w3_code_r_double( nlayers,                             &
                                          ipanel, basis_chi(:,:,df),       &
                                          diff_basis_chi(:,:,df),          &
                                          jacobian, detj)
-      detj_w3(map_w3(df)+k) = real(detj, r_double)
+      detj_w3(map_w3(df)+k) = real(detj, real64)
     end do
 
   end do
 
-end subroutine calc_detj_at_w3_code_r_double
+end subroutine calc_detj_at_w3_code_real64
 
 end module sci_calc_detj_at_w3_kernel_mod

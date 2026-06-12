@@ -17,7 +17,8 @@ use argument_mod,            only : arg_type,            &
                                     GH_FIELD, GH_REAL,   &
                                     GH_INC, ANY_SPACE_1, &
                                     CELL_COLUMN
-use constants_mod,           only : r_double, r_single, i_def
+use constants_mod,           only : i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 
 implicit none
 
@@ -43,8 +44,8 @@ public :: enforce_bc_code
   ! Generic interface for real32 and real64 types
   interface enforce_bc_code
     module procedure  &
-      enforce_bc_code_r_single, &
-      enforce_bc_code_r_double
+      enforce_bc_code_real32, &
+      enforce_bc_code_real64
   end interface
 
 contains
@@ -58,9 +59,9 @@ contains
 !! @param[in] boundary_value Flags (= 0) for dofs that live on the
 !!            vertical boundaries of the cell (=1 for other dofs)
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine enforce_bc_code_r_double(nlayers,                        &
+subroutine enforce_bc_code_real64(nlayers,                        &
                                     field,                          &
                                     ndf, undf, map, boundary_value  &
                                    )
@@ -74,25 +75,25 @@ subroutine enforce_bc_code_r_double(nlayers,                        &
   integer(kind=i_def), dimension(ndf),   intent(in) :: map
   integer(kind=i_def), dimension(ndf,2), intent(in) :: boundary_value
 
-  real(kind=r_double), dimension(undf), intent(inout) :: field
+  real(kind=real64), dimension(undf), intent(inout) :: field
 
   ! Local variables
   integer(kind=i_def) :: df, k
 
   k = 0
   do df = 1,ndf
-    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,1),r_double)
+    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,1),real64)
   end do
   k = nlayers - 1
   do df = 1,ndf
-    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,2),r_double)
+    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,2),real64)
   end do
 
-end subroutine enforce_bc_code_r_double
+end subroutine enforce_bc_code_real64
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine enforce_bc_code_r_single(nlayers,                        &
+subroutine enforce_bc_code_real32(nlayers,                        &
                                     field,                          &
                                     ndf, undf, map, boundary_value  &
                                     )
@@ -106,20 +107,20 @@ subroutine enforce_bc_code_r_single(nlayers,                        &
   integer(kind=i_def), dimension(ndf),   intent(in) :: map
   integer(kind=i_def), dimension(ndf,2), intent(in) :: boundary_value
 
-  real(kind=r_single), dimension(undf), intent(inout) :: field
+  real(kind=real32), dimension(undf), intent(inout) :: field
 
   ! Local variables
   integer(kind=i_def) :: df, k
 
   k = 0
   do df = 1,ndf
-    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,1),r_single)
+    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,1),real32)
   end do
   k = nlayers - 1
   do df = 1,ndf
-    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,2),r_single)
+    field(map(df) + k) = field(map(df) + k)*real(boundary_value(df,2),real32)
   end do
 
-end subroutine enforce_bc_code_r_single
+end subroutine enforce_bc_code_real32
 
 end module sci_enforce_bc_kernel_mod

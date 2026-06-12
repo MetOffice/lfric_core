@@ -18,7 +18,8 @@ module sci_consist_w2_to_sh_w2_kernel_mod
                                             ANY_DISCONTINUOUS_SPACE_2, &
                                             ANY_DISCONTINUOUS_SPACE_3, &
                                             CELL_COLUMN
-  use constants_mod,                 only : r_def, i_def, r_single, r_double
+  use constants_mod,                 only : r_def, i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,             only : W2
   use kernel_mod,                    only : kernel_type
   use reference_element_mod,         only : T, B
@@ -79,7 +80,7 @@ contains
 !> @param[in] undf_w3_2d Num of DoFs for this partition for 2D W3
 !> @param[in] map_w3_2d  Map for 2D W3
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
 subroutine consist_w2_to_sh_w2_code_single(  nlayers_sh,       &
                                              field_w2_sh,      &
@@ -108,8 +109,8 @@ subroutine consist_w2_to_sh_w2_code_single(  nlayers_sh,       &
   integer(kind=i_def), dimension(ndf_w2),        intent(in) :: map_w2
   integer(kind=i_def), dimension(ndf_w3_2d),     intent(in) :: map_w3_2d
 
-  real(kind=r_single), dimension(undf_w2_sh), intent(inout) :: field_w2_sh
-  real(kind=r_single), dimension(undf_w2),       intent(in) :: field_w2
+  real(kind=real32), dimension(undf_w2_sh), intent(inout) :: field_w2_sh
+  real(kind=real32), dimension(undf_w2),       intent(in) :: field_w2
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ns
 
@@ -121,18 +122,18 @@ subroutine consist_w2_to_sh_w2_code_single(  nlayers_sh,       &
     df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Bottom boundary value
-    field_w2_sh(map_w2_sh(df)) = 0.5_r_single * field_w2(map_w2(df))
+    field_w2_sh(map_w2_sh(df)) = 0.5_real32 * field_w2(map_w2(df))
 
     ! Loop over all interior layers of shifted mesh
     do k = 1, nlayers_sh - 2
       field_w2_sh(map_w2_sh(df)+k) =                                           &
-          0.5_r_single * field_w2(map_w2(df)+k-1)                              &
-          + 0.5_r_single * field_w2(map_w2(df)+k)
+          0.5_real32 * field_w2(map_w2(df)+k-1)                              &
+          + 0.5_real32 * field_w2(map_w2(df)+k)
     end do
 
     ! Top boundary value
     k = nlayers_sh - 1
-    field_w2_sh(map_w2_sh(df)+k) = 0.5_r_single * field_w2(map_w2(df)+k-1)
+    field_w2_sh(map_w2_sh(df)+k) = 0.5_real32 * field_w2(map_w2(df)+k-1)
   end do
 
   do k = 1, nlayers_sh - 1
@@ -140,7 +141,7 @@ subroutine consist_w2_to_sh_w2_code_single(  nlayers_sh,       &
     ! Values are the average from the overlapping cells on the original mesh.
     df = B
     field_w2_sh(map_w2_sh(df)+k) = &
-      0.5_r_single * (field_w2(map_w2(df)+k-1) + field_w2(map_w2(df)+k) )
+      0.5_real32 * (field_w2(map_w2(df)+k-1) + field_w2(map_w2(df)+k) )
   end do
 
   ! Top and bottom values are the same as the original space
@@ -149,7 +150,7 @@ subroutine consist_w2_to_sh_w2_code_single(  nlayers_sh,       &
 
 end subroutine consist_w2_to_sh_w2_code_single
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
 subroutine consist_w2_to_sh_w2_code_double(  nlayers_sh,       &
                                              field_w2_sh,      &
@@ -178,8 +179,8 @@ subroutine consist_w2_to_sh_w2_code_double(  nlayers_sh,       &
   integer(kind=i_def), dimension(ndf_w2),        intent(in) :: map_w2
   integer(kind=i_def), dimension(ndf_w3_2d),     intent(in) :: map_w3_2d
 
-  real(kind=r_double), dimension(undf_w2_sh),    intent(inout) :: field_w2_sh
-  real(kind=r_double), dimension(undf_w2),       intent(in) :: field_w2
+  real(kind=real64), dimension(undf_w2_sh),    intent(inout) :: field_w2_sh
+  real(kind=real64), dimension(undf_w2),       intent(in) :: field_w2
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ns
 
@@ -192,18 +193,18 @@ subroutine consist_w2_to_sh_w2_code_double(  nlayers_sh,       &
     df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Bottom boundary value
-    field_w2_sh(map_w2_sh(df)) = 0.5_r_double * field_w2(map_w2(df))
+    field_w2_sh(map_w2_sh(df)) = 0.5_real64 * field_w2(map_w2(df))
 
     ! Loop over all interior layers of shifted mesh
     do k = 1, nlayers_sh - 2
       field_w2_sh(map_w2_sh(df)+k) =                                           &
-          0.5_r_double * field_w2(map_w2(df)+k-1)                              &
-          + 0.5_r_double * field_w2(map_w2(df)+k)
+          0.5_real64 * field_w2(map_w2(df)+k-1)                              &
+          + 0.5_real64 * field_w2(map_w2(df)+k)
     end do
 
     ! Top boundary value
     k = nlayers_sh - 1
-    field_w2_sh(map_w2_sh(df)+k) = 0.5_r_double * field_w2(map_w2(df)+k-1)
+    field_w2_sh(map_w2_sh(df)+k) = 0.5_real64 * field_w2(map_w2(df)+k-1)
   end do
 
   do k = 1, nlayers_sh - 1
@@ -211,7 +212,7 @@ subroutine consist_w2_to_sh_w2_code_double(  nlayers_sh,       &
     ! Values are the average from the overlapping cells on the original mesh.
     df = B
     field_w2_sh(map_w2_sh(df)+k) = &
-      0.5_r_double * (field_w2(map_w2(df)+k-1) + field_w2(map_w2(df)+k) )
+      0.5_real64 * (field_w2(map_w2(df)+k-1) + field_w2(map_w2(df)+k) )
   end do
 
   ! Top and bottom values are the same as the original space

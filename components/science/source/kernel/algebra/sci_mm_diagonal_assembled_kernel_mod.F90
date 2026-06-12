@@ -26,7 +26,8 @@ use argument_mod,            only : arg_type,              &
                                     GH_READ, GH_WRITE,     &
                                     GH_REAL, ANY_SPACE_1,  &
                                     CELL_COLUMN
-use constants_mod,           only : r_single, r_double, i_def
+use constants_mod,           only : i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,              only : kernel_type
 
 implicit none
@@ -54,8 +55,8 @@ public :: mm_diagonal_assembled_kernel_code
   ! Generic interface for real32 and real64 types
   interface mm_diagonal_assembled_kernel_code
     module procedure  &
-      mm_diagonal_assembled_kernel_code_r_single, &
-      mm_diagonal_assembled_kernel_code_r_double
+      mm_diagonal_assembled_kernel_code_real32, &
+      mm_diagonal_assembled_kernel_code_real64
   end interface
 
 contains
@@ -71,9 +72,9 @@ contains
 !> @param[in]  undf Unique number of degrees of freedom
 !> @param[in]  map Dofmap for the cell at the base of the column
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine mm_diagonal_assembled_kernel_code_r_single(cell,        &
+subroutine mm_diagonal_assembled_kernel_code_real32(cell,        &
                                                       nlayers,     &
                                                       mm_diag,     &
                                                       ncell_3d,    &
@@ -86,8 +87,8 @@ subroutine mm_diagonal_assembled_kernel_code_r_single(cell,        &
   integer(kind=i_def),                              intent(in)    :: cell, nlayers
   integer(kind=i_def),                              intent(in)    :: ncell_3d
   integer(kind=i_def),                              intent(in)    :: ndf, undf
-  real   (kind=r_single), dimension(undf),             intent(in)    :: mm_diag
-  real   (kind=r_single), dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
+  real   (kind=real32), dimension(undf),             intent(in)    :: mm_diag
+  real   (kind=real32), dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
   integer(kind=i_def), dimension(ndf),              intent(in)    :: map
 
   ! Internal variables
@@ -95,18 +96,18 @@ subroutine mm_diagonal_assembled_kernel_code_r_single(cell,        &
 
   do k = 0, nlayers-1
     ik = (cell-1)*nlayers + k + 1
-    mass_matrix(ik,:,:) = 0.0_r_single
+    mass_matrix(ik,:,:) = 0.0_real32
     do df = 1,ndf
       ! Set diagonal values of matrix
       mass_matrix(ik,df,df) = mm_diag(map(df)+k)
     end do
   end do
 
-end subroutine mm_diagonal_assembled_kernel_code_r_single
+end subroutine mm_diagonal_assembled_kernel_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine mm_diagonal_assembled_kernel_code_r_double(cell,        &
+subroutine mm_diagonal_assembled_kernel_code_real64(cell,        &
                                                       nlayers,     &
                                                       mm_diag,     &
                                                       ncell_3d,    &
@@ -119,8 +120,8 @@ subroutine mm_diagonal_assembled_kernel_code_r_double(cell,        &
   integer(kind=i_def),                              intent(in)    :: cell, nlayers
   integer(kind=i_def),                              intent(in)    :: ncell_3d
   integer(kind=i_def),                              intent(in)    :: ndf, undf
-  real   (kind=r_double), dimension(undf),             intent(in)    :: mm_diag
-  real   (kind=r_double), dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
+  real   (kind=real64), dimension(undf),             intent(in)    :: mm_diag
+  real   (kind=real64), dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
   integer(kind=i_def), dimension(ndf),              intent(in)    :: map
 
   ! Internal variables
@@ -128,14 +129,14 @@ subroutine mm_diagonal_assembled_kernel_code_r_double(cell,        &
 
   do k = 0, nlayers-1
     ik = (cell-1)*nlayers + k + 1
-    mass_matrix(ik,:,:) = 0.0_r_double
+    mass_matrix(ik,:,:) = 0.0_real64
     do df = 1,ndf
       ! Set diagonal values of matrix
       mass_matrix(ik,df,df) = mm_diag(map(df)+k)
     end do
   end do
 
-end subroutine mm_diagonal_assembled_kernel_code_r_double
+end subroutine mm_diagonal_assembled_kernel_code_real64
 
 
 end module sci_mm_diagonal_assembled_kernel_mod

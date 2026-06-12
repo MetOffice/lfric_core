@@ -13,7 +13,8 @@ module sci_average_w2_to_w2b_kernel_mod
                                     GH_FIELD, GH_REAL,         &
                                     GH_READ, GH_WRITE,         &
                                     CELL_COLUMN
-  use constants_mod,         only : r_single, r_double, i_def
+  use constants_mod,         only : i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,     only : W2, W2broken
   use kernel_mod,            only : kernel_type
 
@@ -43,8 +44,8 @@ module sci_average_w2_to_w2b_kernel_mod
 
   interface average_w2_to_w2b_code
     module procedure &
-      average_w2_to_w2b_code_r_single, &
-      average_w2_to_w2b_code_r_double
+      average_w2_to_w2b_code_real32, &
+      average_w2_to_w2b_code_real64
     end interface
 
 
@@ -62,7 +63,7 @@ contains
 !> @param[in] ndf_w2_broken Number of degrees of freedom per cell for W2 broken
 !> @param[in] undf_w2_broken Number of (local) unique degrees of freedom for W2 broken
 !> @param[in] map_w2_broken Dofmap for the cell at the base of the column for W2 broken
-subroutine average_w2_to_w2b_code_r_single( nlayers,          &
+subroutine average_w2_to_w2b_code_real32( nlayers,          &
                                             field_w2_broken,  &
                                             field_w2,         &
                                             ndf_w2_broken,    &
@@ -82,8 +83,8 @@ subroutine average_w2_to_w2b_code_r_single( nlayers,          &
   integer(kind=i_def), dimension(ndf_w2_broken),  intent(in) :: map_w2_broken
   integer(kind=i_def), dimension(ndf_w2),         intent(in) :: map_w2
 
-  real(kind=r_single),    dimension(undf_w2_broken), intent(inout) :: field_w2_broken
-  real(kind=r_single),    dimension(undf_w2),        intent(in)    :: field_w2
+  real(kind=real32),    dimension(undf_w2_broken), intent(inout) :: field_w2_broken
+  real(kind=real32),    dimension(undf_w2),        intent(in)    :: field_w2
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -95,9 +96,9 @@ subroutine average_w2_to_w2b_code_r_single( nlayers,          &
     end do
   end do
 
-end subroutine average_w2_to_w2b_code_r_single
+end subroutine average_w2_to_w2b_code_real32
 
-subroutine average_w2_to_w2b_code_r_double( nlayers,          &
+subroutine average_w2_to_w2b_code_real64( nlayers,          &
                                             field_w2_broken,  &
                                             field_w2,         &
                                             ndf_w2_broken,    &
@@ -117,8 +118,8 @@ subroutine average_w2_to_w2b_code_r_double( nlayers,          &
   integer(kind=i_def), dimension(ndf_w2_broken),  intent(in) :: map_w2_broken
   integer(kind=i_def), dimension(ndf_w2),         intent(in) :: map_w2
 
-  real(kind=r_double),    dimension(undf_w2_broken), intent(inout) :: field_w2_broken
-  real(kind=r_double),    dimension(undf_w2),        intent(in)    :: field_w2
+  real(kind=real64),    dimension(undf_w2_broken), intent(inout) :: field_w2_broken
+  real(kind=real64),    dimension(undf_w2),        intent(in)    :: field_w2
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -130,6 +131,6 @@ subroutine average_w2_to_w2b_code_r_double( nlayers,          &
     end do
   end do
 
-end subroutine average_w2_to_w2b_code_r_double
+end subroutine average_w2_to_w2b_code_real64
 
 end module sci_average_w2_to_w2b_kernel_mod

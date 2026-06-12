@@ -13,7 +13,8 @@ module sci_shift_mass_w3_kernel_mod
                                       GH_READ, GH_WRITE,         &
                                       ANY_DISCONTINUOUS_SPACE_3, &
                                       CELL_COLUMN
-  use constants_mod,           only : i_def, r_single, r_double
+  use constants_mod,           only : i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,       only : W3
 
   use kernel_mod,              only : kernel_type
@@ -45,8 +46,8 @@ module sci_shift_mass_w3_kernel_mod
   ! Generic interface for real32 and real64 types
   interface shift_mass_w3_code
     module procedure  &
-      shift_mass_w3_code_r_single, &
-      shift_mass_w3_code_r_double
+      shift_mass_w3_code_real32, &
+      shift_mass_w3_code_real64
   end interface
 
 contains
@@ -62,9 +63,9 @@ contains
 !> @param[in]     undf_w3       Num DoFs for this partition for W3 prime
 !> @param[in]     map_w3        Map of DoFs in the bottom layer for W3 prime
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine shift_mass_w3_code_r_single(                &
+subroutine shift_mass_w3_code_real32(                &
                                         nlayers_sh,    &
                                         mass_shifted,  &
                                         mass_prime,    &
@@ -85,31 +86,31 @@ subroutine shift_mass_w3_code_r_single(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=r_single),    dimension(undf_w3_sh), intent(inout) :: mass_shifted
-  real(kind=r_single),    dimension(undf_w3),       intent(in) :: mass_prime
+  real(kind=real32),    dimension(undf_w3_sh), intent(inout) :: mass_shifted
+  real(kind=real32),    dimension(undf_w3),       intent(in) :: mass_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
 
   ! Assume lowest order so only a single DoF per cell
   ! Bottom boundary value
-  mass_shifted(map_w3_sh(1)) = 0.5_r_single * mass_prime(map_w3(1))
+  mass_shifted(map_w3_sh(1)) = 0.5_real32 * mass_prime(map_w3(1))
 
   ! All interior levels
   do k = 1, nlayers_sh - 2
     mass_shifted(map_w3_sh(1)+k) = &
-      0.5_r_single * (mass_prime(map_w3(1)+k) + mass_prime(map_w3(1)+k-1))
+      0.5_real32 * (mass_prime(map_w3(1)+k) + mass_prime(map_w3(1)+k-1))
   end do
 
   ! Top boundary value
   k = nlayers_sh - 1
-  mass_shifted(map_w3_sh(1)+k) = 0.5_r_single * mass_prime(map_w3(1)+k-1)
+  mass_shifted(map_w3_sh(1)+k) = 0.5_real32 * mass_prime(map_w3(1)+k-1)
 
-end subroutine shift_mass_w3_code_r_single
+end subroutine shift_mass_w3_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine shift_mass_w3_code_r_double(                &
+subroutine shift_mass_w3_code_real64(                &
                                         nlayers_sh,    &
                                         mass_shifted,  &
                                         mass_prime,    &
@@ -130,26 +131,26 @@ subroutine shift_mass_w3_code_r_double(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=r_double),    dimension(undf_w3_sh), intent(inout) :: mass_shifted
-  real(kind=r_double),    dimension(undf_w3),       intent(in) :: mass_prime
+  real(kind=real64),    dimension(undf_w3_sh), intent(inout) :: mass_shifted
+  real(kind=real64),    dimension(undf_w3),       intent(in) :: mass_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
 
   ! Assume lowest order so only a single DoF per cell
   ! Bottom boundary value
-  mass_shifted(map_w3_sh(1)) = 0.5_r_double * mass_prime(map_w3(1))
+  mass_shifted(map_w3_sh(1)) = 0.5_real64 * mass_prime(map_w3(1))
 
   ! All interior levels
   do k = 1, nlayers_sh - 2
     mass_shifted(map_w3_sh(1)+k) = &
-      0.5_r_double * (mass_prime(map_w3(1)+k) + mass_prime(map_w3(1)+k-1))
+      0.5_real64 * (mass_prime(map_w3(1)+k) + mass_prime(map_w3(1)+k-1))
   end do
 
   ! Top boundary value
   k = nlayers_sh - 1
-  mass_shifted(map_w3_sh(1)+k) = 0.5_r_double * mass_prime(map_w3(1)+k-1)
+  mass_shifted(map_w3_sh(1)+k) = 0.5_real64 * mass_prime(map_w3(1)+k-1)
 
-end subroutine shift_mass_w3_code_r_double
+end subroutine shift_mass_w3_code_real64
 
 end module sci_shift_mass_w3_kernel_mod

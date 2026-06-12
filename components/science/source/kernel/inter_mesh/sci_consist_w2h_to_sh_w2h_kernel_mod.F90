@@ -18,7 +18,8 @@ module sci_consist_w2h_to_sh_w2h_kernel_mod
                                             ANY_DISCONTINUOUS_SPACE_2, &
                                             ANY_DISCONTINUOUS_SPACE_3, &
                                             CELL_COLUMN
-  use constants_mod,                 only : r_double, i_def, r_single, r_def
+  use constants_mod,                 only : i_def, r_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,             only : W2h
   use kernel_mod,                    only : kernel_type
   use sci_face_selector_support_mod, only : face_from_face_selector
@@ -54,8 +55,8 @@ module sci_consist_w2h_to_sh_w2h_kernel_mod
   ! Generic interface for real32 and real64 types
   interface consist_w2h_to_sh_w2h_code
     module procedure  &
-      consist_w2h_to_sh_w2h_code_r_single, &
-      consist_w2h_to_sh_w2h_code_r_double
+      consist_w2h_to_sh_w2h_code_real32, &
+      consist_w2h_to_sh_w2h_code_real64
   end interface
 
 contains
@@ -78,9 +79,9 @@ contains
 !> @param[in] undf_w3_2d Num of DoFs for this partition for 2D W3
 !> @param[in] map_w3_2d  Map for 2D W3
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine consist_w2h_to_sh_w2h_code_r_single( nlayers_sh,        &
+subroutine consist_w2h_to_sh_w2h_code_real32( nlayers_sh,        &
                                                 field_w2h_sh,      &
                                                 field_w2h,         &
                                                 face_selector_ew,  &
@@ -107,8 +108,8 @@ subroutine consist_w2h_to_sh_w2h_code_r_single( nlayers_sh,        &
   integer(kind=i_def), dimension(ndf_w2h),        intent(in) :: map_w2h
   integer(kind=i_def), dimension(ndf_w3_2d),      intent(in) :: map_w3_2d
 
-  real(kind=r_single), dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
-  real(kind=r_single), dimension(undf_w2h),       intent(in) :: field_w2h
+  real(kind=real32), dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
+  real(kind=real32), dimension(undf_w2h),       intent(in) :: field_w2h
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ns
 
@@ -120,25 +121,25 @@ subroutine consist_w2h_to_sh_w2h_code_r_single( nlayers_sh,        &
     df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Bottom boundary value
-    field_w2h_sh(map_w2h_sh(df)) = 0.5_r_single * field_w2h(map_w2h(df))
+    field_w2h_sh(map_w2h_sh(df)) = 0.5_real32 * field_w2h(map_w2h(df))
 
     ! Loop over all interior layers of shifted mesh
     do k = 1, nlayers_sh - 2
       field_w2h_sh(map_w2h_sh(df)+k) =                                         &
-          0.5_r_single * field_w2h(map_w2h(df)+k-1)                            &
-          + 0.5_r_single * field_w2h(map_w2h(df)+k)
+          0.5_real32 * field_w2h(map_w2h(df)+k-1)                            &
+          + 0.5_real32 * field_w2h(map_w2h(df)+k)
     end do
 
     ! Top boundary value
     k = nlayers_sh - 1
-    field_w2h_sh(map_w2h_sh(df)+k) = 0.5_r_single * field_w2h(map_w2h(df)+k-1)
+    field_w2h_sh(map_w2h_sh(df)+k) = 0.5_real32 * field_w2h(map_w2h(df)+k-1)
   end do
 
-end subroutine consist_w2h_to_sh_w2h_code_r_single
+end subroutine consist_w2h_to_sh_w2h_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine consist_w2h_to_sh_w2h_code_r_double( nlayers_sh,        &
+subroutine consist_w2h_to_sh_w2h_code_real64( nlayers_sh,        &
                                                 field_w2h_sh,      &
                                                 field_w2h,         &
                                                 face_selector_ew,  &
@@ -165,8 +166,8 @@ subroutine consist_w2h_to_sh_w2h_code_r_double( nlayers_sh,        &
   integer(kind=i_def), dimension(ndf_w2h),        intent(in) :: map_w2h
   integer(kind=i_def), dimension(ndf_w3_2d),      intent(in) :: map_w3_2d
 
-  real(kind=r_double), dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
-  real(kind=r_double), dimension(undf_w2h),       intent(in) :: field_w2h
+  real(kind=real64), dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
+  real(kind=real64), dimension(undf_w2h),       intent(in) :: field_w2h
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ns
 
@@ -178,20 +179,20 @@ subroutine consist_w2h_to_sh_w2h_code_r_double( nlayers_sh,        &
     df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Bottom boundary value
-    field_w2h_sh(map_w2h_sh(df)) = 0.5_r_double * field_w2h(map_w2h(df))
+    field_w2h_sh(map_w2h_sh(df)) = 0.5_real64 * field_w2h(map_w2h(df))
 
     ! Loop over all interior layers of shifted mesh
     do k = 1, nlayers_sh - 2
       field_w2h_sh(map_w2h_sh(df)+k) =                                         &
-          0.5_r_double * field_w2h(map_w2h(df)+k-1)                            &
-          + 0.5_r_double * field_w2h(map_w2h(df)+k)
+          0.5_real64 * field_w2h(map_w2h(df)+k-1)                            &
+          + 0.5_real64 * field_w2h(map_w2h(df)+k)
     end do
 
     ! Top boundary value
     k = nlayers_sh - 1
-    field_w2h_sh(map_w2h_sh(df)+k) = 0.5_r_double * field_w2h(map_w2h(df)+k-1)
+    field_w2h_sh(map_w2h_sh(df)+k) = 0.5_real64 * field_w2h(map_w2h(df)+k-1)
   end do
 
-end subroutine consist_w2h_to_sh_w2h_code_r_double
+end subroutine consist_w2h_to_sh_w2h_code_real64
 
 end module sci_consist_w2h_to_sh_w2h_kernel_mod

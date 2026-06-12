@@ -19,7 +19,8 @@ use argument_mod,                  only: arg_type, GH_INTEGER,      &
                                          ANY_DISCONTINUOUS_SPACE_2, &
                                          ANY_DISCONTINUOUS_SPACE_3, &
                                          CELL_COLUMN
-use constants_mod,                 only: r_single, r_double, i_def
+use constants_mod,                 only: i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use fs_continuity_mod,             only: W2
 use kernel_mod,                    only: kernel_type
 use sci_face_selector_support_mod, only: face_from_face_selector
@@ -53,8 +54,8 @@ public :: extract_uv_code
 ! Generic interface for real32 and real64 types
 interface extract_uv_code
   module procedure  &
-    extract_uv_code_r_single, &
-    extract_uv_code_r_double
+    extract_uv_code_real32, &
+    extract_uv_code_real64
 end interface
 
 contains
@@ -78,7 +79,7 @@ contains
 !> @param[in] ndf_w3_2d  Num of DoFs for 2D W3 per cell
 !> @param[in] undf_w3_2d Num of DoFs for this partition for 2D W3
 !> @param[in] map_w3_2d  Map for 2D W3
-subroutine extract_uv_code_r_single( nlayers,                         &
+subroutine extract_uv_code_real32( nlayers,                         &
                                      h_wind,                          &
                                      u_wind,                          &
                                      face_selector_ew,                &
@@ -97,8 +98,8 @@ subroutine extract_uv_code_r_single( nlayers,                         &
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
   integer(kind=i_def), intent(in) :: ndf_w3_2d, undf_w3_2d
 
-  real(kind=r_single), dimension(undf_w2h),   intent(inout) :: h_wind
-  real(kind=r_single), dimension(undf_w2),    intent(in)    :: u_wind
+  real(kind=real32), dimension(undf_w2h),   intent(inout) :: h_wind
+  real(kind=real32), dimension(undf_w2),    intent(in)    :: u_wind
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ns
   integer(kind=i_def), dimension(ndf_w2h),    intent(in)    :: map_w2h
@@ -118,9 +119,9 @@ subroutine extract_uv_code_r_single( nlayers,                         &
     end do
   end do
 
-end subroutine extract_uv_code_r_single
+end subroutine extract_uv_code_real32
 
-subroutine extract_uv_code_r_double( nlayers,                         &
+subroutine extract_uv_code_real64( nlayers,                         &
                                      h_wind,                          &
                                      u_wind,                          &
                                      face_selector_ew,                &
@@ -139,8 +140,8 @@ subroutine extract_uv_code_r_double( nlayers,                         &
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
   integer(kind=i_def), intent(in) :: ndf_w3_2d, undf_w3_2d
 
-  real(kind=r_double), dimension(undf_w2h),   intent(inout) :: h_wind
-  real(kind=r_double), dimension(undf_w2),    intent(in)    :: u_wind
+  real(kind=real64), dimension(undf_w2h),   intent(inout) :: h_wind
+  real(kind=real64), dimension(undf_w2),    intent(in)    :: u_wind
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ns
   integer(kind=i_def), dimension(ndf_w2h),    intent(in)    :: map_w2h
@@ -160,6 +161,6 @@ subroutine extract_uv_code_r_double( nlayers,                         &
     end do
   end do
 
-end subroutine extract_uv_code_r_double
+end subroutine extract_uv_code_real64
 
 end module sci_extract_uv_kernel_mod

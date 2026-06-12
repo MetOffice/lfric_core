@@ -15,7 +15,8 @@ module sci_enforce_lower_bound_kernel_mod
                             GH_READWRITE,              &
                             ANY_DISCONTINUOUS_SPACE_1, &
                             CELL_COLUMN
-  use constants_mod, only : i_def, r_def, r_single, r_double
+  use constants_mod, only : i_def, r_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use kernel_mod,    only : kernel_type
 
   implicit none
@@ -45,8 +46,8 @@ module sci_enforce_lower_bound_kernel_mod
   ! Generic interface for real32 and real64 types
   interface enforce_lower_bound_code
     module procedure  &
-      enforce_lower_bound_code_r_single, &
-      enforce_lower_bound_code_r_double
+      enforce_lower_bound_code_real32, &
+      enforce_lower_bound_code_real64
   end interface
 
 contains
@@ -60,9 +61,9 @@ contains
 !! @param[in] map Dofmap for the cell at the base of the column
 
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine enforce_lower_bound_code_r_single(nlayers, field, lower_bound, &
+subroutine enforce_lower_bound_code_real32(nlayers, field, lower_bound, &
                                              ndf, undf, map)
 
   implicit none
@@ -70,8 +71,8 @@ subroutine enforce_lower_bound_code_r_single(nlayers, field, lower_bound, &
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers, ndf, undf
   integer(kind=i_def), dimension(ndf), intent(in) :: map
-  real(kind=r_single), dimension(undf), intent(inout) :: field
-  real(kind=r_single), intent(in) :: lower_bound
+  real(kind=real32), dimension(undf), intent(inout) :: field
+  real(kind=real32), intent(in) :: lower_bound
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -85,11 +86,11 @@ subroutine enforce_lower_bound_code_r_single(nlayers, field, lower_bound, &
     end do
   end do
 
-end subroutine enforce_lower_bound_code_r_single
+end subroutine enforce_lower_bound_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine enforce_lower_bound_code_r_double(nlayers, field, lower_bound, &
+subroutine enforce_lower_bound_code_real64(nlayers, field, lower_bound, &
                                              ndf, undf, map)
 
   implicit none
@@ -97,8 +98,8 @@ subroutine enforce_lower_bound_code_r_double(nlayers, field, lower_bound, &
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers, ndf, undf
   integer(kind=i_def), dimension(ndf), intent(in) :: map
-  real(kind=r_double), dimension(undf), intent(inout) :: field
-  real(kind=r_double), intent(in) :: lower_bound
+  real(kind=real64), dimension(undf), intent(inout) :: field
+  real(kind=real64), intent(in) :: lower_bound
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -112,6 +113,6 @@ subroutine enforce_lower_bound_code_r_double(nlayers, field, lower_bound, &
     end do
   end do
 
-end subroutine enforce_lower_bound_code_r_double
+end subroutine enforce_lower_bound_code_real64
 
 end module sci_enforce_lower_bound_kernel_mod

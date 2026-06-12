@@ -22,7 +22,8 @@ use argument_mod,            only : arg_type,                  &
                                     GH_READWRITE,              &
                                     ANY_DISCONTINUOUS_SPACE_1, &
                                     DOMAIN
-use constants_mod,           only : r_single, r_double, i_def
+use constants_mod,           only : i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,              only : kernel_type
 
 implicit none
@@ -49,8 +50,8 @@ public :: assign_field_single_column_code
   ! Generic interface for real32 and real64 types
   interface assign_field_single_column_code
     module procedure  &
-      assign_field_single_column_code_r_single, &
-      assign_field_single_column_code_r_double
+      assign_field_single_column_code_real32, &
+      assign_field_single_column_code_real64
   end interface
 
 contains
@@ -63,9 +64,9 @@ contains
 !> @param[in]     undf Unique number of degrees of freedom  for the output field
 !> @param[in]     map Dofmap for the cell at the base of the column for the output field
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine assign_field_single_column_code_r_single(nlayers, ncols, &
+subroutine assign_field_single_column_code_real32(nlayers, ncols, &
                                                     x,              &
                                                     ndf, undf, map)
   implicit none
@@ -74,7 +75,7 @@ subroutine assign_field_single_column_code_r_single(nlayers, ncols, &
   integer(kind=i_def),                           intent(in)    :: nlayers
   integer(kind=i_def),                           intent(in)    :: ncols
   integer(kind=i_def),                           intent(in)    :: undf, ndf
-  real   (kind=r_single), dimension(undf),       intent(inout) :: x
+  real   (kind=real32), dimension(undf),       intent(inout) :: x
   integer(kind=i_def),    dimension(ndf, ncols), intent(in)    :: map
 
   ! Internal variables
@@ -83,15 +84,15 @@ subroutine assign_field_single_column_code_r_single(nlayers, ncols, &
   ! Assign values in column number 1
   do k = 0, nlayers-1
     do df = 1, ndf
-       x(map(df,1)+k) = 1.0_r_single
+       x(map(df,1)+k) = 1.0_real32
     end do
   end do
 
-end subroutine assign_field_single_column_code_r_single
+end subroutine assign_field_single_column_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine assign_field_single_column_code_r_double(nlayers, ncols, &
+subroutine assign_field_single_column_code_real64(nlayers, ncols, &
                                                     x,              &
                                                     ndf, undf, map)
   implicit none
@@ -100,7 +101,7 @@ subroutine assign_field_single_column_code_r_double(nlayers, ncols, &
   integer(kind=i_def),                           intent(in)    :: nlayers
   integer(kind=i_def),                           intent(in)    :: ncols
   integer(kind=i_def),                           intent(in)    :: undf, ndf
-  real   (kind=r_double), dimension(undf),       intent(inout) :: x
+  real   (kind=real64), dimension(undf),       intent(inout) :: x
   integer(kind=i_def),    dimension(ndf, ncols), intent(in)    :: map
 
   ! Internal variables
@@ -109,11 +110,11 @@ subroutine assign_field_single_column_code_r_double(nlayers, ncols, &
   ! Assign values in column number 1
   do k = 0, nlayers-1
     do df = 1, ndf
-       x(map(df,1)+k) = 1.0_r_double
+       x(map(df,1)+k) = 1.0_real64
     end do
   end do
 
-end subroutine assign_field_single_column_code_r_double
+end subroutine assign_field_single_column_code_real64
 
 
 end module sci_assign_field_single_column_kernel_mod

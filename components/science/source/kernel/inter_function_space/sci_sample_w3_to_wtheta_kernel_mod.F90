@@ -19,7 +19,8 @@ module sci_sample_w3_to_wtheta_kernel_mod
                                       GH_FIELD, GH_REAL, &
                                       GH_WRITE, GH_READ, &
                                       CELL_COLUMN
-  use constants_mod,           only : r_def, i_def, r_double, r_single
+  use constants_mod,           only : r_def, i_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,       only : Wtheta, W3
   use kernel_mod,              only : kernel_type
 
@@ -52,8 +53,8 @@ public :: sample_w3_to_wtheta_code
   ! Generic interface for real32 and real64 types
   interface sample_w3_to_wtheta_code
     module procedure  &
-      sample_w3_to_wtheta_code_r_single, &
-      sample_w3_to_wtheta_code_r_double
+      sample_w3_to_wtheta_code_real32, &
+      sample_w3_to_wtheta_code_real64
   end interface
 
 contains
@@ -71,10 +72,10 @@ contains
 !! @param[in]     undf_w3    Total number of degrees of freedom for W3
 !! @param[in]     map_w3     Dofmap for the cell at the base of the column for W3
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
 ! height fields are always r_def
-subroutine sample_w3_to_wtheta_code_r_single( nlayers,   &
+subroutine sample_w3_to_wtheta_code_real32( nlayers,   &
                                               field_wt,  &
                                               field_w3,  &
                                               height_wt, &
@@ -96,30 +97,30 @@ subroutine sample_w3_to_wtheta_code_r_single( nlayers,   &
   integer(kind=i_def), dimension(ndf_w3),  intent(in)    :: map_w3
   integer(kind=i_def), dimension(ndf_wt),  intent(in)    :: map_wt
 
-  real(kind=r_single), dimension(undf_wt), intent(inout) :: field_wt
-  real(kind=r_single), dimension(undf_w3), intent(in)    :: field_w3
+  real(kind=real32), dimension(undf_wt), intent(inout) :: field_wt
+  real(kind=real32), dimension(undf_w3), intent(in)    :: field_w3
   real(kind=r_def),    dimension(undf_wt), intent(in)    :: height_wt
   real(kind=r_def),    dimension(undf_w3), intent(in)    :: height_w3
 
   ! Internal variables
   integer(kind=i_def) :: k
-  real(kind=r_single) :: weight_lower, weight_upper, weight_denom
-  real(kind=r_single) :: top_value, log_top_value
+  real(kind=real32) :: weight_lower, weight_upper, weight_denom
+  real(kind=real32) :: top_value, log_top_value
 
   ! At top and bottom do linear extrapolation to get values on boundaries
   ! Bottom first
-  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), r_single)
-  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), r_single)
-  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), r_single)
+  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), real32)
+  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), real32)
+  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), real32)
 
   field_wt(map_wt(1)) = weight_upper / weight_denom * field_w3(map_w3(1)+1) &
                       + weight_lower / weight_denom * field_w3(map_w3(1))
 
   do k = 1, nlayers - 1
 
-    weight_denom = real(height_w3(map_w3(1)+k) - height_w3(map_w3(1)+k-1), r_single)
-    weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-1), r_single)
-    weight_lower = real(height_w3(map_w3(1)+k) - height_wt(map_wt(1)+k), r_single)
+    weight_denom = real(height_w3(map_w3(1)+k) - height_w3(map_w3(1)+k-1), real32)
+    weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-1), real32)
+    weight_lower = real(height_w3(map_w3(1)+k) - height_wt(map_wt(1)+k), real32)
 
     field_wt(map_wt(1)+k) = weight_upper / weight_denom * field_w3(map_w3(1)+k) &
                         + weight_lower / weight_denom * field_w3(map_w3(1)+k-1)
@@ -128,12 +129,12 @@ subroutine sample_w3_to_wtheta_code_r_single( nlayers,   &
 
   ! Now top
   k = nlayers
-  weight_denom = real(height_w3(map_w3(1)+k-1) - height_w3(map_w3(1)+k-2), r_single)
-  weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-2), r_single)
-  weight_lower = real(height_w3(map_w3(1)+k-1) - height_wt(map_wt(1)+k), r_single)
+  weight_denom = real(height_w3(map_w3(1)+k-1) - height_w3(map_w3(1)+k-2), real32)
+  weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-2), real32)
+  weight_lower = real(height_w3(map_w3(1)+k-1) - height_wt(map_wt(1)+k), real32)
 
-  if ( field_w3(map_w3(1)+k-1) > 0.0_r_single .and. &
-       field_w3(map_w3(1)+k-2) > 0.0_r_single ) then
+  if ( field_w3(map_w3(1)+k-1) > 0.0_real32 .and. &
+       field_w3(map_w3(1)+k-2) > 0.0_real32 ) then
     ! Danger of getting a negative value from extrapolation, so perform the
     ! calculation for the top value in log space (which cannot be negative)
     log_top_value = weight_upper / weight_denom * log(field_w3(map_w3(1)+k-1)) &
@@ -147,12 +148,12 @@ subroutine sample_w3_to_wtheta_code_r_single( nlayers,   &
 
   field_wt(map_wt(1)+k) = top_value
 
-end subroutine sample_w3_to_wtheta_code_r_single
+end subroutine sample_w3_to_wtheta_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
 ! height fields are always r_def
-subroutine sample_w3_to_wtheta_code_r_double( nlayers,   &
+subroutine sample_w3_to_wtheta_code_real64( nlayers,   &
                                               field_wt,  &
                                               field_w3,  &
                                               height_wt, &
@@ -174,29 +175,29 @@ subroutine sample_w3_to_wtheta_code_r_double( nlayers,   &
   integer(kind=i_def), dimension(ndf_w3),  intent(in)    :: map_w3
   integer(kind=i_def), dimension(ndf_wt),  intent(in)    :: map_wt
 
-  real(kind=r_double), dimension(undf_wt), intent(inout) :: field_wt
-  real(kind=r_double), dimension(undf_w3), intent(in)    :: field_w3
+  real(kind=real64), dimension(undf_wt), intent(inout) :: field_wt
+  real(kind=real64), dimension(undf_w3), intent(in)    :: field_w3
   real(kind=r_def),    dimension(undf_wt), intent(in)    :: height_wt
   real(kind=r_def),    dimension(undf_w3), intent(in)    :: height_w3
 
   ! Internal variables
   integer(kind=i_def) :: k
-  real(kind=r_double) :: weight_lower, weight_upper, weight_denom
-  real(kind=r_double) :: top_value, log_top_value
+  real(kind=real64) :: weight_lower, weight_upper, weight_denom
+  real(kind=real64) :: top_value, log_top_value
 
   ! At top and bottom do linear extrapolation to get values on boundaries
   ! Bottom first
-  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), r_double)
-  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), r_double)
-  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), r_double)
+  weight_denom = real(height_w3(map_w3(1)+1) - height_w3(map_w3(1)), real64)
+  weight_upper = real(height_wt(map_wt(1)) - height_w3(map_w3(1)), real64)
+  weight_lower = real(height_w3(map_w3(1)+1) - height_wt(map_wt(1)), real64)
 
   field_wt(map_wt(1)) = weight_upper / weight_denom * field_w3(map_w3(1)+1) &
                       + weight_lower / weight_denom * field_w3(map_w3(1))
 
   do k = 1, nlayers - 1
-    weight_denom = real(height_w3(map_w3(1)+k) - height_w3(map_w3(1)+k-1), r_double)
-    weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-1), r_double)
-    weight_lower = real(height_w3(map_w3(1)+k) - height_wt(map_wt(1)+k), r_double)
+    weight_denom = real(height_w3(map_w3(1)+k) - height_w3(map_w3(1)+k-1), real64)
+    weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-1), real64)
+    weight_lower = real(height_w3(map_w3(1)+k) - height_wt(map_wt(1)+k), real64)
 
     field_wt(map_wt(1)+k) = weight_upper / weight_denom * field_w3(map_w3(1)+k) &
                         + weight_lower / weight_denom * field_w3(map_w3(1)+k-1)
@@ -205,12 +206,12 @@ subroutine sample_w3_to_wtheta_code_r_double( nlayers,   &
 
   ! Now top
   k = nlayers
-  weight_denom = real(height_w3(map_w3(1)+k-1) - height_w3(map_w3(1)+k-2), r_double)
-  weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-2), r_double)
-  weight_lower = real(height_w3(map_w3(1)+k-1) - height_wt(map_wt(1)+k), r_double)
+  weight_denom = real(height_w3(map_w3(1)+k-1) - height_w3(map_w3(1)+k-2), real64)
+  weight_upper = real(height_wt(map_wt(1)+k) - height_w3(map_w3(1)+k-2), real64)
+  weight_lower = real(height_w3(map_w3(1)+k-1) - height_wt(map_wt(1)+k), real64)
 
-  if ( field_w3(map_w3(1)+k-1) > 0.0_r_double .and. &
-       field_w3(map_w3(1)+k-2) > 0.0_r_double ) then
+  if ( field_w3(map_w3(1)+k-1) > 0.0_real64 .and. &
+       field_w3(map_w3(1)+k-2) > 0.0_real64 ) then
     ! Danger of getting a negative value from extrapolation, so perform the
     ! calculation for the top value in log space (which cannot be negative)
     log_top_value = weight_upper / weight_denom * log(field_w3(map_w3(1)+k-1)) &
@@ -224,6 +225,6 @@ subroutine sample_w3_to_wtheta_code_r_double( nlayers,   &
 
   field_wt(map_wt(1)+k) = top_value
 
-end subroutine sample_w3_to_wtheta_code_r_double
+end subroutine sample_w3_to_wtheta_code_real64
 
 end module sci_sample_w3_to_wtheta_kernel_mod

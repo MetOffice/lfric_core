@@ -16,7 +16,8 @@
 
 module sci_prolong_multidata_scalar_kernel_mod
 
-use constants_mod,           only: i_def, r_double, r_single
+use constants_mod,           only: i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,              only: kernel_type
 use argument_mod,            only: arg_type,                  &
                                    GH_FIELD, GH_REAL,         &
@@ -45,8 +46,8 @@ public :: prolong_multidata_scalar_kernel_code
   ! Generic interface for real32 and real64 types
   interface prolong_multidata_scalar_kernel_code
     module procedure  &
-      prolong_multidata_scalar_code_r_single, &
-      prolong_multidata_scalar_code_r_double
+      prolong_multidata_scalar_code_real32, &
+      prolong_multidata_scalar_code_real64
   end interface
 
 contains
@@ -72,9 +73,9 @@ contains
   !!                                         grid for this mesh partition
   !> @param[in]     map_coarse               DoFmap of cells on the coarse grid
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
-  subroutine prolong_multidata_scalar_code_r_single(               &
+  subroutine prolong_multidata_scalar_code_real32(               &
                                           nlayers,                 &
                                           cell_map,                &
                                           ncell_fine_per_coarse_x, &
@@ -100,8 +101,8 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=r_single), intent(in)    :: coarse_field(undf_coarse)
-    real(kind=r_single), intent(inout) :: fine_field(undf_fine)
+    real(kind=real32), intent(in)    :: coarse_field(undf_coarse)
+    real(kind=real32), intent(inout) :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: ndata
 
     integer(kind=i_def) :: k, x_idx, y_idx, k_start, i, top_df
@@ -124,11 +125,11 @@ contains
       end do
     end do
 
-  end subroutine prolong_multidata_scalar_code_r_single
+  end subroutine prolong_multidata_scalar_code_real32
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
-  subroutine prolong_multidata_scalar_code_r_double(               &
+  subroutine prolong_multidata_scalar_code_real64(               &
                                           nlayers,                 &
                                           cell_map,                &
                                           ncell_fine_per_coarse_x, &
@@ -154,8 +155,8 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=r_double), intent(in)    :: coarse_field(undf_coarse)
-    real(kind=r_double), intent(inout) :: fine_field(undf_fine)
+    real(kind=real64), intent(in)    :: coarse_field(undf_coarse)
+    real(kind=real64), intent(inout) :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: ndata
 
     integer(kind=i_def) :: k, x_idx, y_idx, k_start, i, top_df
@@ -178,7 +179,7 @@ contains
       end do
     end do
 
-  end subroutine prolong_multidata_scalar_code_r_double
+  end subroutine prolong_multidata_scalar_code_real64
 
 
 end module sci_prolong_multidata_scalar_kernel_mod

@@ -13,7 +13,8 @@ module split_w2_field_kernel_mod
                                             ANY_DISCONTINUOUS_SPACE_2, &
                                             ANY_DISCONTINUOUS_SPACE_3, &
                                             CELL_COLUMN
-  use constants_mod,                 only : r_double, r_single, i_def, l_def
+  use constants_mod,                 only : i_def, l_def
+  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,             only : W2, W2h, W2v
   use kernel_mod,                    only : kernel_type
   use sci_face_selector_support_mod, only : face_from_face_selector
@@ -49,8 +50,8 @@ module split_w2_field_kernel_mod
   ! Generic interface for real32 and real64 types
   interface split_w2_field_code
     module procedure  &
-      split_w2_field_code_r_single, &
-      split_w2_field_code_r_double
+      split_w2_field_code_real32, &
+      split_w2_field_code_real64
   end interface
 
 contains
@@ -76,9 +77,9 @@ contains
 !> @param[in]     undf_w3_2d Num of DoFs for this partition for 2D W3
 !> @param[in]     map_w3_2d  Map for 2D W3
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine split_w2_field_code_r_double(nlayers,                         &
+subroutine split_w2_field_code_real64(nlayers,                         &
                                         uv, w, uvw,                      &
                                         face_selector_ew,                &
                                         face_selector_ns,                &
@@ -97,9 +98,9 @@ subroutine split_w2_field_code_r_double(nlayers,                         &
   integer(kind=i_def), dimension(ndf_w2h),    intent(in)    :: map_w2h
   integer(kind=i_def), dimension(ndf_w2v),    intent(in)    :: map_w2v
   integer(kind=i_def), dimension(ndf_w3_2d),  intent(in)    :: map_w3_2d
-  real(kind=r_double), dimension(undf_w2h),   intent(inout) :: uv
-  real(kind=r_double), dimension(undf_w2v),   intent(inout) :: w
-  real(kind=r_double), dimension(undf_w2),    intent(in)    :: uvw
+  real(kind=real64), dimension(undf_w2h),   intent(inout) :: uv
+  real(kind=real64), dimension(undf_w2v),   intent(inout) :: w
+  real(kind=real64), dimension(undf_w2),    intent(in)    :: uvw
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ns
 
@@ -147,11 +148,11 @@ subroutine split_w2_field_code_r_double(nlayers,                         &
     end do
   end if
 
-end subroutine split_w2_field_code_r_double
+end subroutine split_w2_field_code_real64
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine split_w2_field_code_r_single(nlayers,                         &
+subroutine split_w2_field_code_real32(nlayers,                         &
                                         uv, w, uvw,                      &
                                         face_selector_ew,                &
                                         face_selector_ns,                &
@@ -170,9 +171,9 @@ subroutine split_w2_field_code_r_single(nlayers,                         &
   integer(kind=i_def), dimension(ndf_w2h),    intent(in)    :: map_w2h
   integer(kind=i_def), dimension(ndf_w2v),    intent(in)    :: map_w2v
   integer(kind=i_def), dimension(ndf_w3_2d),  intent(in)    :: map_w3_2d
-  real(kind=r_single), dimension(undf_w2h),   intent(inout) :: uv
-  real(kind=r_single), dimension(undf_w2v),   intent(inout) :: w
-  real(kind=r_single), dimension(undf_w2),    intent(in)    :: uvw
+  real(kind=real32), dimension(undf_w2h),   intent(inout) :: uv
+  real(kind=real32), dimension(undf_w2v),   intent(inout) :: w
+  real(kind=real32), dimension(undf_w2),    intent(in)    :: uvw
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ns
 
@@ -220,6 +221,6 @@ subroutine split_w2_field_code_r_single(nlayers,                         &
     end do
   end if
 
-end subroutine split_w2_field_code_r_single
+end subroutine split_w2_field_code_real32
 
 end module split_w2_field_kernel_mod

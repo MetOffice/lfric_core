@@ -19,7 +19,8 @@ use argument_mod,                  only: arg_type, GH_INTEGER,                 &
                                          ANY_SPACE_2, CELL_COLUMN,             &
                                          ANY_DISCONTINUOUS_SPACE_2,            &
                                          ANY_DISCONTINUOUS_SPACE_3
-use constants_mod,                 only: i_def, r_def, r_single, r_double
+use constants_mod,                 only: i_def, r_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use fs_continuity_mod,             only: W2
 use kernel_mod,                    only: kernel_type
 use reference_element_mod,         only: W, S, E, N, B
@@ -60,8 +61,8 @@ public :: restrict_w2_code
   ! Generic interface for real32 and real64 types
   interface restrict_w2_code
     module procedure  &
-      restrict_w2_code_r_single, &
-      restrict_w2_code_r_double
+      restrict_w2_code_real32, &
+      restrict_w2_code_real64
   end interface
 
 contains
@@ -93,9 +94,9 @@ contains
   !!                                         2D W3
   !> @param[in]     map_w3_2d                Map for 2D W3
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
-  subroutine restrict_w2_code_r_single(nlayers,                 &
+  subroutine restrict_w2_code_real32(nlayers,                 &
                                        cell_map,                &
                                        ncell_fine_per_coarse_x, &
                                        ncell_fine_per_coarse_y, &
@@ -123,8 +124,8 @@ contains
     integer(kind=i_def), intent(in) :: undf_w3_2d
 
     ! Fields
-    real(kind=r_single), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=r_single), intent(in)    :: fine_field(undf_fine)
+    real(kind=real32), intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real32), intent(in)    :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: face_selector_ew(undf_w3_2d)
     integer(kind=i_def), intent(in)    :: face_selector_ns(undf_w3_2d)
 
@@ -136,7 +137,7 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: df, k, x_idx, y_idx, face
-    real(kind=r_single) :: new_coarse(nlayers+1)
+    real(kind=real32) :: new_coarse(nlayers+1)
 
     integer(kind=i_def), parameter :: n_faces = 5
     integer(kind=i_def), parameter :: face_order(n_faces) = [W,S,E,N,B]
@@ -213,7 +214,7 @@ contains
     do face = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
       df = face_from_face_selector(face, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
-      new_coarse(:) = 0.0_r_single
+      new_coarse(:) = 0.0_real32
 
       ! Build up 1D array of new coarse values for this column and face
       do y_idx = y_idx_start(df), y_idx_end(df)
@@ -236,7 +237,7 @@ contains
     ! Only do bottom value of cell
     ! Loop over an extra layer to get the very top
     df = B
-    new_coarse(:) = 0.0_r_single
+    new_coarse(:) = 0.0_real32
 
     ! Build up 1D array of new coarse values for this column
     do y_idx = 1, ncell_fine_per_coarse_y
@@ -252,11 +253,11 @@ contains
       coarse_field(map_coarse(df)+k) = new_coarse(k+1)
     end do
 
-  end subroutine restrict_w2_code_r_single
+  end subroutine restrict_w2_code_real32
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
-  subroutine restrict_w2_code_r_double(nlayers,                 &
+  subroutine restrict_w2_code_real64(nlayers,                 &
                                        cell_map,                &
                                        ncell_fine_per_coarse_x, &
                                        ncell_fine_per_coarse_y, &
@@ -284,8 +285,8 @@ contains
     integer(kind=i_def), intent(in) :: undf_w3_2d
 
     ! Fields
-    real(kind=r_double), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=r_double), intent(in)    :: fine_field(undf_fine)
+    real(kind=real64), intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real64), intent(in)    :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: face_selector_ew(undf_w3_2d)
     integer(kind=i_def), intent(in)    :: face_selector_ns(undf_w3_2d)
 
@@ -297,7 +298,7 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: df, k, x_idx, y_idx, face
-    real(kind=r_double) :: new_coarse(nlayers+1)
+    real(kind=real64) :: new_coarse(nlayers+1)
 
     integer(kind=i_def), parameter :: n_faces = 5
     integer(kind=i_def), parameter :: face_order(n_faces) = [W,S,E,N,B]
@@ -374,7 +375,7 @@ contains
     do face = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
       df = face_from_face_selector(face, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
-      new_coarse(:) = 0.0_r_double
+      new_coarse(:) = 0.0_real64
 
       ! Build up 1D array of new coarse values for this column and face
       do y_idx = y_idx_start(df), y_idx_end(df)
@@ -398,7 +399,7 @@ contains
     ! Only do bottom value of cell
     ! Loop over an extra layer to get the very top
     df = B
-    new_coarse(:) = 0.0_r_double
+    new_coarse(:) = 0.0_real64
 
     ! Build up 1D array of new coarse values for this column
     do y_idx = 1, ncell_fine_per_coarse_y
@@ -414,6 +415,6 @@ contains
       coarse_field(map_coarse(df)+k) = new_coarse(k+1)
     end do
 
-  end subroutine restrict_w2_code_r_double
+  end subroutine restrict_w2_code_real64
 
 end module sci_restrict_w2_kernel_mod

@@ -7,7 +7,8 @@
 !> @brief Kernel to compute Z = X*Y where Z, X and Y are all operators
 module sci_operator_x_times_y_kernel_mod
 
-use constants_mod, only: i_def, r_single, r_double
+use constants_mod, only: i_def
+use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,    only: kernel_type
 use argument_mod,  only: arg_type, func_type,        &
                          GH_OPERATOR, GH_SCALAR,     &
@@ -41,8 +42,8 @@ public :: operator_x_times_y_kernel_code
   ! Generic interface for real32 and real64 types
   interface operator_x_times_y_kernel_code
     module procedure  &
-      operator_x_times_y_kernel_code_r_single, &
-      operator_x_times_y_kernel_code_r_double
+      operator_x_times_y_kernel_code_real32, &
+      operator_x_times_y_kernel_code_real64
   end interface
 
 contains
@@ -59,7 +60,7 @@ contains
 !! @param[in] ndf1 Number of dofs per cell for space 1
 !! @param[in] ndf2 Number of dofs per cell for space 2
 !! @param[in] ndf3 Number of dofs per cell for space 3
-subroutine operator_x_times_y_kernel_code_r_single(cell, nlayers,         &
+subroutine operator_x_times_y_kernel_code_real32(cell, nlayers,         &
                                                    ncell_3d_1, x_times_y, &
                                                    ncell_3d_2, x,         &
                                                    ncell_3d_3, y,         &
@@ -72,9 +73,9 @@ subroutine operator_x_times_y_kernel_code_r_single(cell, nlayers,         &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2, ncell_3d_3
   integer(kind=i_def), intent(in) :: ndf1, ndf2, ndf3
 
-  real(kind=r_single), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
-  real(kind=r_single), dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
-  real(kind=r_single), dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
+  real(kind=real32), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
+  real(kind=real32), dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
+  real(kind=real32), dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -84,9 +85,9 @@ subroutine operator_x_times_y_kernel_code_r_single(cell, nlayers,         &
     x_times_y(ik,:,:) = matmul(x(ik,:,:), y(ik,:,:))
   end do
 
-end subroutine operator_x_times_y_kernel_code_r_single
+end subroutine operator_x_times_y_kernel_code_real32
 
-subroutine operator_x_times_y_kernel_code_r_double(cell, nlayers,         &
+subroutine operator_x_times_y_kernel_code_real64(cell, nlayers,         &
                                                    ncell_3d_1, x_times_y, &
                                                    ncell_3d_2, x,         &
                                                    ncell_3d_3, y,         &
@@ -99,9 +100,9 @@ subroutine operator_x_times_y_kernel_code_r_double(cell, nlayers,         &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2, ncell_3d_3
   integer(kind=i_def), intent(in) :: ndf1, ndf2, ndf3
 
-  real(kind=r_double), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
-  real(kind=r_double), dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
-  real(kind=r_double), dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
+  real(kind=real64), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
+  real(kind=real64), dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
+  real(kind=real64), dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -111,6 +112,6 @@ subroutine operator_x_times_y_kernel_code_r_double(cell, nlayers,         &
     x_times_y(ik,:,:) = matmul(x(ik,:,:), y(ik,:,:))
   end do
 
-end subroutine operator_x_times_y_kernel_code_r_double
+end subroutine operator_x_times_y_kernel_code_real64
 
 end module sci_operator_x_times_y_kernel_mod
