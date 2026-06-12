@@ -12,17 +12,17 @@
 
 module sci_extract_uv_kernel_mod
 
-use kernel_mod,               only: kernel_type
-use argument_mod,             only: arg_type, GH_INTEGER,      &
-                                    GH_FIELD, GH_REAL,         &
-                                    GH_READ, GH_WRITE,         &
-                                    ANY_DISCONTINUOUS_SPACE_2, &
-                                    ANY_DISCONTINUOUS_SPACE_3, &
-                                    CELL_COLUMN
-use constants_mod,            only: r_single, r_double, i_def
-use fs_continuity_mod,        only: W2
-use kernel_mod,               only: kernel_type
-use reference_element_mod,    only: N
+use kernel_mod,                    only: kernel_type
+use argument_mod,                  only: arg_type, GH_INTEGER,      &
+                                         GH_FIELD, GH_REAL,         &
+                                         GH_READ, GH_WRITE,         &
+                                         ANY_DISCONTINUOUS_SPACE_2, &
+                                         ANY_DISCONTINUOUS_SPACE_3, &
+                                         CELL_COLUMN
+use constants_mod,                 only: r_single, r_double, i_def
+use fs_continuity_mod,             only: W2
+use kernel_mod,                    only: kernel_type
+use sci_face_selector_support_mod, only: face_from_face_selector
 
 implicit none
 
@@ -109,10 +109,8 @@ subroutine extract_uv_code_r_single( nlayers,                         &
   integer(kind=i_def) :: df, k, j
 
   ! Loop over horizontal W2 DoFs
-  do j = 1, face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-    df = j
-    if (j == 3 .and. face_selector_ns(map_w3_2d(1)) == 2                       &
-               .and. face_selector_ew(map_w3_2d(1)) == 1) df = N
+  do j = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+    df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Loop over layers
     do k = 0, nlayers-1
@@ -153,10 +151,8 @@ subroutine extract_uv_code_r_double( nlayers,                         &
   integer(kind=i_def) :: df, k, j
 
   ! Loop over horizontal W2 DoFs
-  do j = 1, face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-    df = j
-    if (j == 3 .and. face_selector_ns(map_w3_2d(1)) == 2                       &
-               .and. face_selector_ew(map_w3_2d(1)) == 1) df = N
+  do j = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+    df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Loop over layers
     do k = 0, nlayers-1
