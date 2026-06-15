@@ -31,17 +31,3 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
-
-class vn31_t11(MacroUpgrade):
-    """Upgrade macro for ticket TTTT by Unknown."""
-
-    BEFORE_TAG = "vn3.1"
-    AFTER_TAG = "vn3.1_t11"
-
-    def upgrade(self, config, meta_config=None):
-        
-        self.change_setting_value(
-            config, ["namelist:base_mesh", "prime_mesh_name" ],
-            "'planar_l0'")
-
-    return config, self.reports
