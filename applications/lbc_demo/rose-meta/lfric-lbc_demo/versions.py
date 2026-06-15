@@ -40,11 +40,8 @@ class vn31_t11(MacroUpgrade):
 
     def upgrade(self, config, meta_config=None):
         
-        topology = self.get_setting_value(
-            config, ["namelist:base_mesh", "topology"] )
-        if topology == "'non_periodic'":
-            self.change_setting_value(
-                config, ["namelist:base_mesh", "prime_mesh_name" ],
-                "'planar_l0'")
+        self.change_setting_value(
+            config, ["namelist:base_mesh", "prime_mesh_name" ],
+            "'planar_l0'")
 
     return config, self.reports
