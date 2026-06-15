@@ -43,95 +43,102 @@ class vn31_t11(MacroUpgrade):
             if n_meshes == "4":
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_maps"],
+                    ["namelist:mesh", "mesh_maps"],
                     "'planar_l0:planar_l1','planar_l1:planar_l2','planar_l2:planar_l3'",
-                    forced=True
+                    forced=True,
                 )
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'planar_l0','planar_l1','planar_l2','planar_l3'",
-                    forced=True
+                    forced=True,
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_maps"],
+                    ["namelist:mesh", "mesh_maps"],
                     "'planar_l0:planar_l1','planar_l1:planar_l2'",
-                    forced=True
+                    forced=True,
                 )
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'planar_l0','planar_l1','planar_l2'",
-                    forced=True
+                    forced=True,
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_maps"],
+                    ["namelist:mesh", "mesh_maps"],
                     "'planar_l0:planar_l1'",
-                    forced=True
+                    forced=True,
                 )
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'planar_l0','planar_l1'",
                     forced=True,
                 )
             else:
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'planar_l0'",
-                    forced=True
+                    forced=True,
                 )
         else:
             if n_meshes == "4":
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_maps"],
+                    ["namelist:mesh", "mesh_maps"],
                     "'cubedsphere_l0:cubedsphere_l1','cubedsphere_l1:cubedsphere_l2','cubedsphere_l2:cubedsphere_l3'",
-                    forced=True
+                    forced=True,
                 )
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'cubedsphere_l0','cubedsphere_l1','cubedsphere_l2','cubedsphere_l3'",
-                    forced=True
+                    forced=True,
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_maps"],
+                    ["namelist:mesh", "mesh_maps"],
                     "'cubedsphere_l0:cubedsphere_l1','cubedsphere_l1:cubedsphere_l2'",
-                    forced=True
+                    forced=True,
                 )
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
-                    "'cubedsphere_l0,cubedsphere_l1,cubedsphere_l2'",
-                    forced=True
+                    ["namelist:mesh", "mesh_names"],
+                    "'cubedsphere_l0','cubedsphere_l1','cubedsphere_l2'",
+                    forced=True,
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_maps"],
+                    ["namelist:mesh", "mesh_maps"],
                     "'cubedsphere_l0:cubedsphere_l1'",
-                    forced=True
+                    forced=True,
                 )
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'cubedsphere_l0','cubedsphere_l1'",
-                    forced=True
+                    forced=True,
                 )
             else:
                 self.add_setting(
                     config,
-                    ["namelist:mesh","mesh_names"],
+                    ["namelist:mesh", "mesh_names"],
                     "'cubedsphere_l0'",
-                    forced=True
+                    forced=True,
                 )
+
+        topology = self.get_setting_value(
+            config, ["namelist:base_mesh", "topology"] )
+        if topology == "'non_periodic'":
+            self.update_setting(
+                config, ["namelist:base_mesh", "prime_mesh_name" ],
+                "'planar_l0'")
 
         return config, self.reports
