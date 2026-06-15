@@ -134,4 +134,16 @@ class vn31_t11(MacroUpgrade):
                     forced=True,
                 )
 
+        self.change_setting_value(
+                    config,
+                    ["namelist:planar_mesh", "lbc_parent_mesh"],
+                    "'planar_l0'"
+                )
+
+        self.change_setting_value(
+                    config,
+                    ["namelist:stretch_transform", "transform_mesh"],
+                    "'planar_l0'"
+                )
+
         return config, self.reports
