@@ -134,11 +134,4 @@ class vn31_t11(MacroUpgrade):
                     forced=True,
                 )
 
-        topology = self.get_setting_value(
-            config, ["namelist:base_mesh", "topology"] )
-        if topology == "'non_periodic'":
-            self.update_setting(
-                config, ["namelist:base_mesh", "prime_mesh_name" ],
-                "'planar_l0'")
-
         return config, self.reports

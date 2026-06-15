@@ -31,3 +31,20 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+class vn31_t14(MacroUpgrade):
+    """Upgrade macro for ticket TTTT by Unknown."""
+
+    BEFORE_TAG = "vn3.1"
+    AFTER_TAG = "vn3.1_t14"
+
+    def upgrade(self, config, meta_config=None):
+        
+        topology = self.get_setting_value(
+            config, ["namelist:base_mesh", "topology"] )
+        if topology == "'non_periodic'":
+            self.update_setting(
+                config, ["namelist:base_mesh", "prime_mesh_name" ],
+                "'planar_l0'")
+
+    return config, self.reports
