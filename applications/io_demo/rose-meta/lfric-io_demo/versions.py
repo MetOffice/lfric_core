@@ -21,13 +21,10 @@ class UpgradeError(Exception):
 
 """
 Copy this template and complete to add your macro
-
 class vnXX_txxx(MacroUpgrade):
     # Upgrade macro for <TICKET> by <Author>
-
     BEFORE_TAG = "vnX.X"
     AFTER_TAG = "vnX.X_txxx"
-
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
@@ -36,7 +33,6 @@ class vnXX_txxx(MacroUpgrade):
 
 class vn31_t232(MacroUpgrade):
     # Upgrade macro for 232 by Ed Hone
-
     BEFORE_TAG = "vn3.1"
     AFTER_TAG = "vn3.1_t232"
 
@@ -54,7 +50,6 @@ class vn31_t232(MacroUpgrade):
             config, ["file:configuration.nml", "source"], source
         )
         self.add_setting(config, ["namelist:io_demo"])
-
         """Move multifile_io setting from io namelist to io_demo"""
         self.remove_setting(config, ["namelist:io", "multifile_io"])
         self.add_setting(
@@ -72,7 +67,6 @@ class vn31_t232(MacroUpgrade):
 
 class vn31_t330(MacroUpgrade):
     # Upgrade macro for 330 by Ed Hone
-
     BEFORE_TAG = "vn3.1_t232"
     AFTER_TAG = "vn3.1_t330"
 
@@ -91,7 +85,6 @@ class vn31_t330(MacroUpgrade):
         )
         self.add_setting(config, ["namelist:files"])
         self.add_setting(config, ["namelist:files", "temporal_file_path"], "")
-
         self.add_setting(
             config, ["namelist:io_demo", "temporal_reading"], ".false."
         )
@@ -116,6 +109,20 @@ class vn31_t238(MacroUpgrade):
             config,
             ["namelist:finite_element", "coord_order_nonprime"],
             coord_order,
+        )
+        return config, self.reports
+
+
+class vn31_t287(MacroUpgrade):
+    """Upgrade macro for ticket #287 by Ed Hone."""
+
+    BEFORE_TAG = "vn3.1_t238"
+    AFTER_TAG = "vn3.1_t287"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-io_demo
+        self.add_setting(
+            config, ["namelist:files", "checkpoint_stem_name"], "''"
         )
 
         return config, self.reports
