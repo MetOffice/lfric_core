@@ -33,12 +33,14 @@ module io_demo_driver_mod
                                          LOG_LEVEL_TRACE
   use mesh_mod,                   only : mesh_type
   use mesh_collection_mod,        only : mesh_collection
-  use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
-  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, setup_io_benchmark_files
+  use io_benchmark_setup_mod,     only : create_io_benchmark_fields, &
+                                         setup_io_benchmark_files
   use io_benchmark_step_mod,      only : step_io_benchmark
+  use io_demo_checkpoint_mod,     only : setup_checkpoint_io
   use io_demo_alg_mod,            only : io_demo_alg
+  use io_demo_temporal_mod,       only : init_temporal_fields, setup_temporal_io
   use sci_field_minmax_alg_mod,   only : log_field_minmax
 
   !------------------------------------
@@ -92,6 +94,8 @@ contains
     logical        :: check_partitions
     logical        :: multifile_io
     logical        :: io_benchmark
+    logical        :: checkpoint_write
+    logical        :: checkpoint_read
 
     integer(i_def), parameter :: one_layer = 1_i_def
     integer(i_def) :: i
@@ -111,6 +115,10 @@ contains
     scaled_radius    = modeldb%config%planet%scaled_radius()
     multifile_io     = modeldb%config%io_demo%multifile_io()
     io_benchmark     = modeldb%config%io_demo%io_benchmark()
+    checkpoint_write = modeldb%config%io%checkpoint_write()
+    checkpoint_read  = modeldb%config%io%checkpoint_read()
+
+     ! Log the configuration
 
     !=======================================================================
     ! Mesh
@@ -214,6 +222,19 @@ contains
     call panel_id_inventory%get_field(mesh, panel_id)
     call init_io_demo(modeldb, mesh, chi, panel_id)
 
+
+    ! Set up checkpoint context if needed
+    if (checkpoint_write .or. checkpoint_read) then
+      call setup_checkpoint_io(modeldb, chi, panel_id)
+    end if
+
+    ! If temporal reading configuration is enabled, initialise infrastructure
+    ! for it
+    if (modeldb%config%io_demo%temporal_reading()) then
+      call init_temporal_fields(mesh, modeldb)
+      call setup_temporal_io(modeldb, chi, panel_id)
+    end if
+
     nullify(mesh, chi, panel_id)
     deallocate(base_mesh_names)
 
@@ -286,10 +307,9 @@ contains
     type( field_type ),            pointer :: diffusion_field
     type( field_collection_type ), pointer :: multifile_col
     type( field_type ),            pointer :: multifile_field
+    type( field_collection_type ), pointer :: temporal_col
+    type( field_type ),            pointer :: temporal_field
 
-    logical :: multifile_io
-
-    multifile_io = modeldb%config%io_demo%multifile_io()
 
     !-------------------------------------------------------------------------
     ! Checksum output
@@ -297,15 +317,20 @@ contains
     depository => modeldb%fields%get_field_collection("depository")
     call depository%get_field("diffusion_field", diffusion_field)
 
-    if (multifile_io) then
+    if (modeldb%config%io_demo%multifile_io()) then
       multifile_col => modeldb%fields%get_field_collection("multifile_io_fields")
       call multifile_col%get_field("multifile_field", multifile_field)
-      call checksum_alg(program_name, &
-                  diffusion_field, 'diffusion_field', &
-                  multifile_field, 'multifile_field')
+      call checksum_alg( program_name,                       &
+                         diffusion_field, 'diffusion_field', &
+                         multifile_field, 'multifile_field' )
+    else if (modeldb%config%io_demo%temporal_reading()) then
+      temporal_col => modeldb%fields%get_field_collection("temporal_fields")
+      call temporal_col%get_field("monthly_field", temporal_field)
+      call checksum_alg( program_name,                       &
+                         diffusion_field, 'diffusion_field', &
+                         temporal_field, 'monthly_field' )
     else
-      call checksum_alg(program_name, &
-                        diffusion_field, 'diffusion_field')
+      call checksum_alg(program_name, diffusion_field, 'diffusion_field')
     end if
 
     call log_event( program_name//': model completed', LOG_LEVEL_TRACE )

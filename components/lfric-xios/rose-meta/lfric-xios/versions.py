@@ -1,3 +1,4 @@
+import re
 import sys
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
@@ -31,3 +32,26 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+
+class vn31_t238(MacroUpgrade):
+    """Upgrade macro for ticket #238 by Thomas Bendall."""
+
+    BEFORE_TAG = "vn3.1"
+    AFTER_TAG = "vn3.1_t238"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:finite_element", "coord_space"], "'Wchi'"
+        )
+        coord_order = self.get_setting_value(
+            config, ["namelist:finite_element", "coord_order"]
+        )
+        self.add_setting(
+            config,
+            ["namelist:finite_element", "coord_order_nonprime"],
+            coord_order,
+        )
+
+        return config, self.reports

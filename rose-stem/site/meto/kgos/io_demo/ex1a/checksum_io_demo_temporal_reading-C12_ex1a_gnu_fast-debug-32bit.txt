@@ -1,0 +1,2 @@
+Inner product checksum diffusion_field =         4FAA301D
+Inner product checksum monthly_field =         35923DA2

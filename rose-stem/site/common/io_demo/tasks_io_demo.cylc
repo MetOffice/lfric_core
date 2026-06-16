@@ -13,11 +13,38 @@
         "tsteps": 10,
     }) %}
 
+{% elif task_ns.conf_name == "default-C24-CP" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["default"],
+        "resolution": "C24",
+        "tsteps": 90,
+        "crun": 2,
+        "kgo_checks": [],
+    }) %}
+
+{% elif task_ns.conf_name == "flexible-CP-C24" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["default", "flex_cp"],
+        "resolution": "C24",
+        "tsteps": 60,
+        "kgo_checks": [],
+    }) %}
+
 {% elif task_ns.conf_name == "multifile-C24" %}
 
     {% do task_dict.update({
         "opt_confs": ["multifile"],
         "resolution": "C24",
+        "tsteps": 90,
+    }) %}
+
+{% elif task_ns.conf_name == "temporal_reading-C12" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["temporal_reading"],
+        "resolution": "C12",
         "tsteps": 90,
     }) %}
 
