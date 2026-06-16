@@ -33,8 +33,6 @@ can be argued that breaking the standard is better in the particular context of
 the code. Routinely breaking the standard because you prefer a different style
 is not a sufficient argument. The code reviewer's judgement is final.
 
-Rose Stem testing includes some linting tests that enforce some of the standards.
-
 Copyright
 ---------
 
