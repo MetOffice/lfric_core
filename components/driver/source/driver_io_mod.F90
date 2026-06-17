@@ -49,11 +49,11 @@ module driver_io_mod
 
   abstract interface
     !> @brief Callback interface for bespoke IO configuration
-    !> @param[in] clock     Clock to be passed in at call site
-    subroutine io_configuration_callback(clock)
-      use clock_mod, only : clock_type
+    !> @param[in] modeldb  modeldb to be passed in at call site
+    subroutine io_configuration_callback(modeldb)
+      import modeldb_type
       implicit none
-      class(clock_type), intent(in) :: clock
+      type(modeldb_type), intent(in) :: modeldb
     end subroutine io_configuration_callback
   end interface
 
@@ -115,7 +115,7 @@ contains
       call modeldb%io_contexts%get_io_context(context_name, context)
       call context%set_current()
       if (present(before_close)) then
-        call before_close(modeldb%clock)
+        call before_close(modeldb)
       end if
 
       call context%close_context_definition()
