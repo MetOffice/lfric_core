@@ -2513,7 +2513,7 @@ subroutine apply_uniform_scaling(self)
   real(r_def) :: du, param_a
   integer(i_def) :: axis_direction
 
-  do axis_direction = 1, 2
+  do axis_direction=1, 2
 
     ! Calculate the cell spacing, scaling and number of points of unit mesh
     if ( axis_direction == axis_ns ) then
@@ -2545,7 +2545,7 @@ subroutine apply_domain_centre(self)
   class(gen_planar_type), intent(inout)  :: self
   integer(i_def) :: axis_direction
 
-  do axis_direction = 1, 2
+  do axis_direction=1, 2
     self%domain_extents(axis_direction,:) = self%domain_extents(axis_direction,:) &
                                           + self%domain_centre(axis_direction)
     self%vert_coords(axis_direction,:) = self%vert_coords(axis_direction,:) &
@@ -2572,7 +2572,7 @@ subroutine apply_shift(self)
   integer(i_def) :: axis_direction
   real(r_def) :: offset
 
-  do axis_direction = 1, 2
+  do axis_direction=1, 2
 
     offset = calculate_offset( axis_direction )
 
@@ -2600,7 +2600,7 @@ subroutine apply_polynomial_stretch(self)
   ! Save the domain extents for each boundary. As we only consider the positive
   ! direction for each boundary, this should be 1 for a unit mesh for all
   ! boundaries.
-  do boundary = 1, 4 !Loop over all boundaries
+  do boundary=1, 4 !Loop over all boundaries
 
     axis_direction = associated_axis_direction(boundary)
 
@@ -2613,7 +2613,7 @@ subroutine apply_polynomial_stretch(self)
    end if
   end do
 
-  do boundary = 1, 4 !Loop over all boundaries
+  do boundary=1, 4 !Loop over all boundaries
 
     axis_direction = associated_axis_direction(boundary)
 
@@ -2633,7 +2633,7 @@ subroutine apply_polynomial_stretch(self)
          u_domain(boundary), u_inner, u_outer, du, boundary )
 
     ! Apply the stretching transformation to each coordinate
-    do vert = 1, nverts
+    do vert=1, nverts
 
       ! Apply to positive coordinates for N or E
       ! Apply to negative coordinates for S or W
@@ -2650,7 +2650,7 @@ subroutine apply_polynomial_stretch(self)
     end do
 
     ! Apply the stretching transformation to the domain extents
-    do vert = 1,4
+    do vert=1, 4
       self%domain_extents(axis_direction, vert) =                         &
             polynomial_stretch(self%domain_extents(axis_direction, vert), &
             param_a, param_b, param_c, u_inner, u_outer )
