@@ -43,10 +43,13 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
-  use polynomial_stretching_mod,      only: associated_direction, &
-                                            calculate_offset,     &
-                                            polynomial_stretch,   &
-                                            polynomial_parameters
+  use polynomial_stretching_mod,      only: associated_axis_direction, &
+                                            calculate_offset,          &
+                                            polynomial_stretch,        &
+                                            polynomial_parameters,     &
+                                            axis_ns, axis_ew,          &
+                                            boundary_n, boundary_s,    &
+                                            boundary_e, boundary_w
 
   implicit none
 
@@ -1676,17 +1679,17 @@ subroutine calc_coords(self)
     self%coord_units_y = 'm'
 
   case(coord_sys_ll)
-    self%coord_units_x = 'radians' !'degrees'
-    self%coord_units_y = 'radians' !'degrees'
+    self%coord_units_x = 'radians'
+    self%coord_units_y = 'radians'
 
   case default
     write(log_scratch_space,'(A,I0)') &
         'Unset coordinate system enumeration: ', self%coord_sys
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
 
- end select
+  end select
 
-    call move_alloc(vert_coords, self%vert_coords)
+  call move_alloc(vert_coords, self%vert_coords)
 
   return
 end subroutine calc_coords
@@ -1706,7 +1709,7 @@ subroutine stretch_coords(self)
 
   select case (self%stretch_function)
     case (stretch_function_uniform)
-       call apply_uniform_resolution(self)
+       call apply_uniform_scaling(self)
        call apply_domain_centre(self)
 
     case (stretch_function_polynomial)
@@ -1714,9 +1717,11 @@ subroutine stretch_coords(self)
       call apply_shift(self)
       call apply_domain_centre(self)
 
-    case (stretch_function_inflation)
-       call log_event( "stretch_function inflation is not a transformation", &
-                      LOG_LEVEL_ERROR )
+   case (stretch_function_inflation)
+      write( log_scratch_space, '(A,A)' )                        &
+      "Stretch_function inflation is not a true transformation", &
+      "and so the mesh has to be created directly, rather than by stretching the unit-mesh."
+      call log_event( log_scratch_space, LOG_LEVEL_ERROR )
 
     case default
         call log_event( "Unrecognised value of stretch_function", &
@@ -2495,36 +2500,38 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
 end subroutine set_partition_parameters
 
 !------------------------------------------------------------------------------
-!> @brief Apply the uniform resolution stretching to the unit mesh coordinates
+!> @brief Apply a uniform scaling.
+!> @details When applying to the unit mesh coordinates this results in a
+!!          uniform resolution mesh.
 !------------------------------------------------------------------------------
-subroutine apply_uniform_resolution(self)
+subroutine apply_uniform_scaling(self)
 
   implicit none
 
   class(gen_planar_type), intent(inout) :: self
 
-  real(r_def) :: dx, param_a
-  integer(i_def) :: direction
+  real(r_def) :: du, param_a
+  integer(i_def) :: axis_direction
 
-  do direction = 1, 2
+  do axis_direction = 1, 2
 
     ! Calculate the cell spacing, scaling and number of points of unit mesh
-    if ( direction == 1 ) then
-      dx = 2.0_r_def / self%edge_cells_x
-      param_a = self%dx / dx
+    if ( axis_direction == axis_ns ) then
+      du = 2.0_r_def / self%edge_cells_x
+      param_a = self%dx / du
     else
-      dx = 2.0_r_def / self%edge_cells_y
-      param_a = self%dy / dx
+      du = 2.0_r_def / self%edge_cells_y
+      param_a = self%dy / du
     end if
 
-    ! Apply the scaling transformation to each coordinate and add on the domain centre
-    self%domain_extents(direction,:) = param_a * self%domain_extents(direction,:)
-    self%vert_coords(direction,:) = param_a * self%vert_coords(direction,:)
+    ! Apply the scaling transformation to each coordinate
+    self%domain_extents(axis_direction,:) = param_a * self%domain_extents(axis_direction,:)
+    self%vert_coords(axis_direction,:) = param_a * self%vert_coords(axis_direction,:)
   end do
 
   return
 
-end subroutine apply_uniform_resolution
+end subroutine apply_uniform_scaling
 
 !-------------------------------------------------------------------------------
 !> @brief Recentre the mesh from (0,0) to the domain_centre.
@@ -2536,13 +2543,13 @@ subroutine apply_domain_centre(self)
   implicit none
 
   class(gen_planar_type), intent(inout)  :: self
-  integer(i_def) :: direction
+  integer(i_def) :: axis_direction
 
-  do direction = 1, 2
-    self%domain_extents(direction,:) = self%domain_extents(direction,:) &
-                                     + self%domain_centre(direction)
-    self%vert_coords(direction,:) = self%vert_coords(direction,:) &
-                                  + self%domain_centre(direction)
+  do axis_direction = 1, 2
+    self%domain_extents(axis_direction,:) = self%domain_extents(axis_direction,:) &
+                                          + self%domain_centre(axis_direction)
+    self%vert_coords(axis_direction,:) = self%vert_coords(axis_direction,:) &
+                                       + self%domain_centre(axis_direction)
   end do
 
   return
@@ -2562,17 +2569,17 @@ subroutine apply_shift(self)
 
   class(gen_planar_type), intent(inout)  :: self
 
-  integer(i_def) :: direction
+  integer(i_def) :: axis_direction
   real(r_def) :: offset
 
-  do direction = 1, 2
+  do axis_direction = 1, 2
 
-    offset = calculate_offset( direction )
+    offset = calculate_offset( axis_direction )
 
-    self%vert_coords(direction, :) = self%vert_coords(direction, :) &
-                                   + offset
-    self%domain_extents(direction, :) = self%domain_extents(direction, :) &
-                                      + offset
+    self%vert_coords(axis_direction, :) = self%vert_coords(axis_direction, :) &
+                                        + offset
+    self%domain_extents(axis_direction, :) = self%domain_extents(axis_direction, :) &
+                                           + offset
 
   enddo
 
@@ -2587,66 +2594,66 @@ subroutine apply_polynomial_stretch(self)
 
   class(gen_planar_type), intent(inout)  :: self
 
-  real(r_def) :: dx, param_a, param_b, param_c, x_inner, x_outer, x_domain(4)
-  integer(i_def) :: nverts, vert, boundary, direction
+  real(r_def) :: du, param_a, param_b, param_c, u_inner, u_outer, u_domain(4)
+  integer(i_def) :: nverts, vert, boundary, axis_direction
 
   ! Save the domain extents for each boundary. As we only consider the positive
   ! direction for each boundary, this should be 1 for a unit mesh for all
   ! boundaries.
   do boundary = 1, 4 !(N, S, E, W)
 
-    direction = associated_direction(boundary)
+    axis_direction = associated_axis_direction(boundary)
 
-    if (boundary == 2 .or. boundary == 3) then
+    if (boundary == boundary_s .or. boundary == boundary_e) then
       ! S or E
-      x_domain(boundary) = self%domain_extents(direction,3)
+      u_domain(boundary) = self%domain_extents(axis_direction,3)
     else
       ! N or W
-      x_domain(boundary) = -1.0_r_def * self%domain_extents(direction,1)
+      u_domain(boundary) = -1.0_r_def * self%domain_extents(axis_direction,1)
    end if
   end do
 
   do boundary = 1, 4 !(N, S, E, W)
 
-    direction = associated_direction(boundary)
+    axis_direction = associated_axis_direction(boundary)
 
     ! Calculate the cell spacing and number of points of unit mesh
     ! of the fine mesh (fine mesh needed in case this is stretching
-    ! a multigrid mesh),
-    if ( direction == 1 ) then
-      dx = 2.0_r_def / self%fine_mesh_edge_cells_x
+    ! a coarser mesh),
+    if ( axis_direction == axis_ns ) then
+      du = 2.0_r_def / self%fine_mesh_edge_cells_x
     else
-      dx = 2.0_r_def / self%fine_mesh_edge_cells_y
+      du = 2.0_r_def / self%fine_mesh_edge_cells_y
     end if
 
-    nverts = size(self%vert_coords(direction, :))
+    nverts = size(self%vert_coords(axis_direction, :))
 
     ! Calculate the parameters required for the stretching transform
     call polynomial_parameters( param_a, param_b, param_c, &
-         x_domain(boundary), x_inner, x_outer, dx, boundary )
+         u_domain(boundary), u_inner, u_outer, du, boundary )
 
     ! Apply the stretching transformation to each coordinate
     do vert = 1, nverts
 
       ! Apply to positive coordinates for N or E
       ! Apply to negative coordinates for S or W
-      if ( ( ( boundary == 1 .or. boundary == 3)  .and.             &
-               self%vert_coords(direction, vert) > 0.0_r_def ) .or. &
-           ( ( boundary == 2 .or. boundary == 4 ) .and.             &
-             self%vert_coords(direction, vert) < 0.0_r_def ) ) then
+      if ( ( ( boundary == boundary_n .or. boundary == boundary_e)  .and. &
+               self%vert_coords(axis_direction, vert) > 0.0_r_def ) .or.  &
+           ( ( boundary == boundary_s .or. boundary == boundary_w ) .and. &
+             self%vert_coords(axis_direction, vert) < 0.0_r_def ) ) then
 
-        self%vert_coords(direction, vert) =                         &
-             polynomial_stretch(self%vert_coords(direction, vert),  &
-             param_a, param_b, param_c, x_inner, x_outer )
+        self%vert_coords(axis_direction, vert) =                          &
+             polynomial_stretch(self%vert_coords(axis_direction, vert),   &
+             param_a, param_b, param_c, u_inner, u_outer )
       end if
 
     end do
 
     ! Apply the stretching transformation to the domain extents
     do vert = 1,4
-      self%domain_extents(direction, vert) =                         &
-            polynomial_stretch(self%domain_extents(direction, vert), &
-            param_a, param_b, param_c, x_inner, x_outer )
+      self%domain_extents(axis_direction, vert) =                         &
+            polynomial_stretch(self%domain_extents(axis_direction, vert), &
+            param_a, param_b, param_c, u_inner, u_outer )
     end do
 
   end do

@@ -7,7 +7,12 @@
 !> @brief   Module to define a coordinate transformation for a stretched
 !!          regional mesh.
 !> @details The coordinate transformation is defined using a polynomial
-!!          function.
+!!          function and applied to the unit mesh coordinates (u_coord)
+!!          to give the transformed coordinates (t_coord), so t=f(u).
+!!          The transformation is formed by the separate application to
+!!          the positive and negative coordinates of each axis (N-S) and
+!!          (E-W). i.e. working on single axis at a time, radiating from the
+!!          centre to each of the 4 boundaries.
 !>
 module polynomial_stretching_mod
 
@@ -20,115 +25,128 @@ module polynomial_stretching_mod
                                     poly_power
   implicit none
 
-  public :: associated_direction, &
-            calculate_offset,     &
-            polynomial_stretch,   &
+  public :: associated_axis_direction, &
+            calculate_offset,          &
+            polynomial_stretch,        &
             polynomial_parameters
+
+  integer(i_def), public, parameter :: axis_ns = 1
+  integer(i_def), public, parameter :: axis_ew = 2
+  integer(i_def), public, parameter :: boundary_n = 1
+  integer(i_def), public, parameter :: boundary_s = 2
+  integer(i_def), public, parameter :: boundary_e = 3
+  integer(i_def), public, parameter :: boundary_w = 4
 
 contains
 
-function associated_direction( boundary ) result(direction)
+!> @brief   Determine the axis associated with boundary
+!> @details axis_ns is associated with boundary_n and boundary_s
+!!          axis_ew is associated with boundary_e and boundary_w
+function associated_axis_direction( boundary ) result(axis_direction)
 
   implicit none
 
   integer(i_def) :: boundary
-  integer(i_def) :: direction
+  integer(i_def) :: axis_direction
 
-  if (boundary == 1 .or. boundary == 2) then
+  if (boundary == boundary_n .or. boundary == boundary_s) then
     ! North-South
-    direction = 2
+    axis_direction = axis_ns
   else
     ! East-West
-    direction = 1
+    axis_direction = axis_ew
  end if
 
-end function associated_direction
+end function associated_axis_direction
 
-!> @brief Calculate the offset to apply before the polynomial stretching
+!> @brief Calculate the offset to apply.
 !> @details If the number of cells in the outer/stretch region on one boundary
 !!          e.g. the North, is not the same as the number of cells on the other
 !!          boundary (the South) then calculate the offset so that the high
 !!          resolution interior will be centred at (0,0).
-!> @param direction Direction (N-S) or (E-W)
-function calculate_offset( direction ) result(offset)
+!> @param axis_direction Axis (N-S) or (E-W)
+function calculate_offset( axis_direction ) result(offset)
 
-  integer(i_def), intent(in) :: direction
+  integer(i_def), intent(in) :: axis_direction
   real(r_def) :: offset
-  real(r_def) :: dx
+  real(r_def) :: du
 
-  dx = cell_size_inner(direction)
-  if ( direction == 2 ) then
+  du = cell_size_inner(axis_direction)
+  if ( axis_direction == axis_ns ) then
     ! North-South
-    offset = (n_cells_outer_nsew(1) + n_cells_stretch_nsew(1)) - &
-             (n_cells_outer_nsew(2) + n_cells_stretch_nsew(2))
-    offset = 0.5_r_def * dx * offset
+    offset = (n_cells_outer_nsew(boundary_N) + n_cells_stretch_nsew(boundary_N)) - &
+             (n_cells_outer_nsew(boundary_S) + n_cells_stretch_nsew(boundary_S))
   else
     ! East-West
-    offset = (n_cells_outer_nsew(3) + n_cells_stretch_nsew(3)) - &
-             (n_cells_outer_nsew(4) + n_cells_stretch_nsew(4))
-    offset = 0.5_r_def * dx * offset
+    offset = (n_cells_outer_nsew(boundary_E) + n_cells_stretch_nsew(boundary_E)) - &
+             (n_cells_outer_nsew(boundary_W) + n_cells_stretch_nsew(boundary_W))
  end if
+ offset = 0.5_r_def * du * offset
 
 end function calculate_offset
 
 !> @brief Calculate the polynomial stretching parameters
-!> @details In inner y = b x, in stretch y = a (x - xi) ^n + b x
-!!          and in outer y = yo + c (x - xo).
+!> @details Stretching function t=f(u) applied to separate regions:
+!!          Inner region:   t = b u
+!!          Stretch region: t = a (u - ui) ^n + b u
+!!          Outer region:   t = to + c (u - uo).
+!!          This subroutine returns the parameters a, b and c
+!!          used in these functions.
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
-!> @param x_domain  Uniform mesh coordinate at the end of the mesh
-!> @param x_inner   Uniform mesh coordinate betwen inner and stretch
-!> @param x_outer   Uniform mesh coordinate between stretch and outer
-!> @param dx        Uniform mesh cell size
-!> @param boundary  1 North, 2 South, 3 East or 4 West
+!> @param u_domain  Uniform mesh coordinate at the end of the mesh
+!> @param u_inner   Uniform mesh coordinate betwen inner and stretch
+!> @param u_outer   Uniform mesh coordinate between stretch and outer
+!> @param du        Uniform mesh cell size
+!> @param boundary  Boundary enumeration (either 1,2,3,4)
 subroutine polynomial_parameters( param_a, param_b, param_c, &
-                                  x_domain, x_inner, x_outer, dx, boundary )
+                                  u_domain, u_inner, u_outer, du, boundary )
 
   implicit none
 
-  real(r_def), intent(inout) :: param_a, param_b, param_c, x_inner, x_outer
-  real(r_def),    intent(in) :: x_domain, dx
+  real(r_def), intent(inout) :: param_a, param_b, param_c, u_inner, u_outer
+  real(r_def),    intent(in) :: u_domain, du
   integer(i_def), intent(in) :: boundary
 
   real(r_def) :: l_stretch
-  integer(i_def) :: direction
+  integer(i_def) :: axis_direction
 
-  ! Given the coordinates x with mesh size dx,
-  ! define new coordinates y such that in the outer and inner regions,
+  ! Given the coordinates u with mesh size du,
+  ! define new coordinates t such that in the outer and inner regions,
   ! the spacing is cell_size_outer and cell_size_inner and in the
   ! stretch region (in between the inner and outer) the coordinates
-  ! satisfy y = a ( x - xi) ^n + b x where xi is the boundary between the
+  ! satisfy t = a ( u - ui) ^n + b u where ui is the boundary between the
   ! inner and stretch region.
 
-  direction = associated_direction(boundary)
+  axis_direction = associated_axis_direction(boundary)
 
-  ! We only consider the region [0,x_domain]
+  ! We only consider the region [0,u_domain]
   ! | INNER    | STRETCH   |    OUTER   |
-  !         x_inner     x_outer      x_domain
+  !         u_inner     u_outer      u_domain
 
   ! Define the edges of the stretch region
-  x_outer = x_domain - ( n_cells_outer_nsew(boundary) * dx )
-  x_inner = x_domain - ( ( n_cells_outer_nsew(boundary) + &
-                           n_cells_stretch_nsew(boundary) ) * dx )
+  u_outer = u_domain - ( n_cells_outer_nsew(boundary) * du )
+  u_inner = u_domain - ( ( n_cells_outer_nsew(boundary) + &
+                           n_cells_stretch_nsew(boundary) ) * du )
 
   ! Define the total size or length of the stretch region
-  l_stretch = ( x_outer - x_inner )
+  l_stretch = ( u_outer - u_inner )
 
-  ! In outer region y = c (x -xo)
-  ! y' = c so c = target cell_size / dx
+  ! In outer region t = c (u -uo)
+  ! First derivative t' = c so c = target cell_size / du
 
-  param_c = cell_size_outer(direction) / dx
+  param_c = cell_size_outer(axis_direction) / du
 
-  ! In inner region and at x = xi (between inner and stretch)
-  ! y' = b so b = target cell_size /dx
+  ! In inner region and at u = ui (between inner and stretch)
+  ! First derivative t' = b so b = target cell_size /du
 
-  param_b = cell_size_inner(direction) / dx
+  param_b = cell_size_inner(axis_direction) / du
 
-  ! In stretch region y = a (x - xi) ^n + bx
-  ! Derivative y' = n a (x - xi) ^(n-1) + b
-  ! At x = xo (between stretch and outer), where xo - xi = l
-  ! Set n a (x - xi) ^(n-1) + b = c
+  ! In stretch region t = a (u - ui) ^n + bu
+  ! Derivative t' = n a (u - ui) ^(n-1) + b
+  ! At u = uo (between stretch and outer), where uo - ui = l
+  ! Set n a (u - ui) ^(n-1) + b = c
   ! So a = (c - b) / ( n l ^(n-1) )
 
   param_a = ( param_c - param_b ) / &
@@ -137,63 +155,66 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
 end subroutine polynomial_parameters
 
 !> @brief Apply a polynomial stretching transformation to a given coordinate
-!> @details In inner y = b x, in stretch y = a (x - xi) ^n + b x
-!!          and in outer y = yo + c x
+!> @details Stretching function t=f(u) applied to separate regions:
+!!          Inner region:   t = b u
+!!          Stretch region: t = a (u - ui) ^n + b u
+!!          Outer region:   t = to + c (u - uo).
+!!          This subroutine calculates the value t, given u.
+!> @param u_coord   The input (unit mesh) coordinate
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
-!> @param x_inner   Unit mesh coordinate betwen inner and stretch
-!> @param x_outer   Unit mesh coordinate between stretch and outer
-!> @param dx        Unit mesh cell size
-!> @param direction North-south or East-west
-function polynomial_stretch( x_coord, param_a, param_b, param_c, &
-                             x_inner, x_outer ) &
-                             result( y_coord )
+!> @param u_inner   Unit mesh coordinate betwen inner and stretch
+!> @param u_outer   Unit mesh coordinate between stretch and outer
+!> @param t_coord   The output (transformed) coordinate
+function polynomial_stretch( u_coord, param_a, param_b, param_c, &
+                             u_inner, u_outer ) &
+                             result( t_coord )
 
   implicit none
 
-  real(r_def), intent(in) :: x_coord
-  real(r_def), intent(in) :: param_a, param_b, param_c, x_inner, x_outer
+  real(r_def), intent(in) :: u_coord
+  real(r_def), intent(in) :: param_a, param_b, param_c, u_inner, u_outer
 
-  real(r_def) :: y_coord, y_outer, l_stretch, new_x_coord
+  real(r_def) :: t_coord, t_outer, l_stretch, new_u_coord
 
   logical(l_def) :: use_symmetry
 
   ! Define the total size or length of the stretch region
-  l_stretch =  x_outer - x_inner
+  l_stretch =  u_outer - u_inner
 
   ! Define a useful constant that describes the new coordinate at the
   ! point between the stretch and outer regions.
-  y_outer = ( param_a * l_stretch ** poly_power ) + &
-            ( param_b * x_outer )
+  t_outer = ( param_a * l_stretch ** poly_power ) + &
+            ( param_b * u_outer )
 
   ! Use symmetry to define coords < 0
-  if ( x_coord < 0.0_r_def ) then
+  if ( u_coord < 0.0_r_def ) then
     use_symmetry = .true.
-    new_x_coord = -1.0_r_def * x_coord
+    new_u_coord = -1.0_r_def * u_coord
   else
     use_symmetry= .false.
-    new_x_coord = x_coord
+    new_u_coord = u_coord
   end if
 
   ! Assign new coordinates using transform y=f(x)
-  if ( new_x_coord < x_inner ) then
-    ! In inner y = b x
-    y_coord = param_b * new_x_coord
+  if ( new_u_coord < u_inner ) then
+    ! In inner t = b u
+    t_coord = param_b * new_u_coord
 
-  else if ( new_x_coord >= x_inner .and. new_x_coord < x_outer ) then
-    ! In stretch y = a (x - xi) ^n + bx where a (x - xi) ^n >0
-    y_coord = param_b * new_x_coord + &
-              param_a * ( new_x_coord - x_inner ) ** poly_power
+  else if ( new_u_coord >= u_inner .and. new_u_coord < u_outer ) then
+    ! In stretch t = a (u - ui) ^n + bu where a (u - ui) ^n >0
+    t_coord = param_b * new_u_coord + &
+              param_a * ( new_u_coord - u_inner ) ** poly_power
 
   else
-    ! In outer y = c (x - xo) + yo
-    y_coord = param_c * ( new_x_coord - x_outer ) + y_outer
+    ! In outer t = c (u - uo) + to
+    t_coord = param_c * ( new_u_coord - u_outer ) + t_outer
   end if
 
   ! To define coords <0
   if ( use_symmetry ) then
-    y_coord = -1.0_r_def * y_coord
+    t_coord = -1.0_r_def * t_coord
   end if
 
   return
