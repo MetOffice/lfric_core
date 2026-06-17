@@ -2600,7 +2600,7 @@ subroutine apply_polynomial_stretch(self)
   ! Save the domain extents for each boundary. As we only consider the positive
   ! direction for each boundary, this should be 1 for a unit mesh for all
   ! boundaries.
-  do boundary = 1, 4 !(N, S, E, W)
+  do boundary = 1, 4 !Loop over all boundaries
 
     axis_direction = associated_axis_direction(boundary)
 
@@ -2613,7 +2613,7 @@ subroutine apply_polynomial_stretch(self)
    end if
   end do
 
-  do boundary = 1, 4 !(N, S, E, W)
+  do boundary = 1, 4 !Loop over all boundaries
 
     axis_direction = associated_axis_direction(boundary)
 

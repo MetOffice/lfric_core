@@ -81,8 +81,8 @@
 &stretch_transform
   cell_size_inner = 2.0, 2.0
   cell_size_outer = 3.0, 3.0
-  n_cells_outer_nsew   = 2, 2, 2, 2
-  n_cells_stretch_nsew = 5, 5, 5, 5
+  n_cells_outer_wsen   = 2, 2, 2, 2
+  n_cells_stretch_wsen = 5, 5, 5, 5
   stretching_on   = 'cell_centres'
   poly_power      = 3
   transform_mesh  = 'mesh_A'

@@ -20,8 +20,8 @@ module polynomial_stretching_mod
   use stretch_transform_config_mod, &
                              only : cell_size_outer,      &
                                     cell_size_inner,      &
-                                    n_cells_stretch_nsew, &
-                                    n_cells_outer_nsew,   &
+                                    n_cells_stretch_wsen, &
+                                    n_cells_outer_wsen,   &
                                     poly_power
   implicit none
 
@@ -74,12 +74,12 @@ function calculate_offset( axis_direction ) result(offset)
   du = cell_size_inner(axis_direction)
   if ( axis_direction == axis_ns ) then
     ! North-South
-    offset = (n_cells_outer_nsew(boundary_N) + n_cells_stretch_nsew(boundary_N)) - &
-             (n_cells_outer_nsew(boundary_S) + n_cells_stretch_nsew(boundary_S))
+    offset = (n_cells_outer_wsen(boundary_N) + n_cells_stretch_wsen(boundary_N)) - &
+             (n_cells_outer_wsen(boundary_S) + n_cells_stretch_wsen(boundary_S))
   else
     ! East-West
-    offset = (n_cells_outer_nsew(boundary_E) + n_cells_stretch_nsew(boundary_E)) - &
-             (n_cells_outer_nsew(boundary_W) + n_cells_stretch_nsew(boundary_W))
+    offset = (n_cells_outer_wsen(boundary_E) + n_cells_stretch_wsen(boundary_E)) - &
+             (n_cells_outer_wsen(boundary_W) + n_cells_stretch_wsen(boundary_W))
  end if
  offset = 0.5_r_def * du * offset
 
@@ -126,9 +126,9 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
   !         u_inner     u_outer      u_domain
 
   ! Define the edges of the stretch region
-  u_outer = u_domain - ( n_cells_outer_nsew(boundary) * du )
-  u_inner = u_domain - ( ( n_cells_outer_nsew(boundary) + &
-                           n_cells_stretch_nsew(boundary) ) * du )
+  u_outer = u_domain - ( n_cells_outer_wsen(boundary) * du )
+  u_inner = u_domain - ( ( n_cells_outer_wsen(boundary) + &
+                           n_cells_stretch_wsen(boundary) ) * du )
 
   ! Define the total size or length of the stretch region
   l_stretch = ( u_outer - u_inner )
