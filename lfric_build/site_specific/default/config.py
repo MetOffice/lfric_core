@@ -92,8 +92,7 @@ class Config:
         options have been added. This is for example used to add
         Vernier profiling flags, which are site-specific.
 
-        :param argparse.Namespace args: the command line options added in
-            the site configs
+        :param args: the command line options added in the site configs
         '''
         # Keep a copy of the args, so they can be used when
         # initialising compilers
@@ -107,7 +106,6 @@ class Config:
         compiler modes).
 
         :param build_config: the Fab build configuration instance
-        :type build_config: :py:class:`fab.BuildConfig`
         '''
         setup_script_cray(build_config, self.args)
 
@@ -119,7 +117,6 @@ class Config:
         compiler modes).
 
         :param build_config: the Fab build configuration instance
-        :type build_config: :py:class:`fab.BuildConfig`
         '''
         setup_script_gnu(build_config, self.args)
 
@@ -131,7 +128,6 @@ class Config:
         compiler modes).
 
         :param build_config: the Fab build configuration instance
-        :type build_config: :py:class:`fab.BuildConfig`
         '''
         setup_script_intel_classic(build_config, self.args)
 
@@ -143,7 +139,6 @@ class Config:
         compiler modes).
 
         :param build_config: the Fab build configuration instance
-        :type build_config: :py:class:`fab.BuildConfig`
         '''
         setup_script_intel_llvm(build_config, self.args)
 
@@ -155,7 +150,6 @@ class Config:
         compiler modes).
 
         :param build_config: the Fab build configuration instance
-        :type build_config: :py:class:`fab.BuildConfig`
         '''
         setup_script_nvidia(build_config, self.args)
 

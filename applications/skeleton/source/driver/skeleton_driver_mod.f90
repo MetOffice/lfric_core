@@ -196,9 +196,6 @@ contains
     ! Call an algorithm
     call skeleton_alg(modeldb, field_1)
 
-    ! Write out output file
-    call log_event(program_name//": Writing diagnostic output", LOG_LEVEL_INFO)
-
   end subroutine step
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

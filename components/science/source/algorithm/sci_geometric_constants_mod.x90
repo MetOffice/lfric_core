@@ -204,9 +204,9 @@ contains
   !!                                 computing the fields for
   subroutine compute_face_selectors(mesh)
 
-    use reference_element_mod,              only: S, W
-    use sci_set_any_int_dof_kernel_mod,     only: set_any_int_dof_kernel_type
-    use sci_face_selector_kernel_mod,       only: face_selector_kernel_type
+    use sci_psykal_light_mod,              only: invoke_deep_int_setval_c
+    use sci_face_selector_kernel_mod,      only: face_selector_kernel_type
+    use sci_face_selector_halo_kernel_mod, only: face_selector_halo_kernel_type
 
     implicit none
 
@@ -220,7 +220,8 @@ contains
     type(integer_field_type)           :: face_counter
     type(function_space_type), pointer :: w2h_2d_fs
     type(function_space_type), pointer :: w3_2d_fs
-    integer(tik)                       :: id
+    integer(kind=i_def)                :: depth, max_halo_depth
+    integer(kind=tik)                  :: id
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
@@ -228,27 +229,65 @@ contains
     local_mesh => mesh%get_local_mesh()
     w2h_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W2H)
     w3_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
+    max_halo_depth = twod_mesh%get_halo_depth()
 
     ! Temporary W2H field, tracking the count for each face
-    call face_counter%initialise( w2h_2d_fs )
+    call face_counter%initialise(w2h_2d_fs, halo_depth=max_halo_depth)
 
     call face_selector_ew_inventory%add_field(                                 &
-            face_selector_ew, w3_2d_fs, local_mesh                             &
+            face_selector_ew, w3_2d_fs, local_mesh, halo_depth=max_halo_depth  &
     )
     call face_selector_ns_inventory%add_field(                                 &
-            face_selector_ns, w3_2d_fs, local_mesh                             &
+            face_selector_ns, w3_2d_fs, local_mesh, halo_depth=max_halo_depth  &
     )
 
-    call invoke( int_setval_c(face_counter, 0),                                &
-                 ! Do West and South faces for every cell
-                 int_setval_c(face_selector_ew, 1),                            &
-                 int_setval_c(face_selector_ns, 1),                            &
-                 set_any_int_dof_kernel_type(face_counter, W, 1),              &
-                 set_any_int_dof_kernel_type(face_counter, S, 1),              &
-                 ! Determine where North and East faces are needed
-                 face_selector_kernel_type(face_selector_ew,                   &
-                                           face_selector_ns,                   &
-                                           face_counter ) )
+    ! ------------------------------------------------------------------------ !
+    ! Initialise face selectors to zero
+    ! ------------------------------------------------------------------------ !
+
+    call invoke_deep_int_setval_c(face_selector_ew, 0, max_halo_depth)
+    call invoke_deep_int_setval_c(face_selector_ns, 0, max_halo_depth)
+
+    ! ------------------------------------------------------------------------ !
+    ! Setting face selectors in owned cells
+    ! ------------------------------------------------------------------------ !
+
+    ! Set face counter to be one for halo DoFs, but zero for owned (and annexed,
+    ! if using) DoFs. The use of annexed DoFs will be picked up by using normal
+    ! int_setval_c invoke, but need to use psykal-lite implementation to ensure
+    ! halo DoFs are set to the correct value
+    call invoke_deep_int_setval_c(face_counter, 1, max_halo_depth)
+    call invoke( int_setval_c(face_counter, 0) )
+
+    ! Compute face selector in owned cell region
+    call invoke(                                                               &
+        face_selector_kernel_type(                                             &
+            face_selector_ew, face_selector_ns,                                &
+            face_counter                                                       &
+        )                                                                      &
+    )
+
+    ! ------------------------------------------------------------------------ !
+    ! Setting face selectors in halos
+    ! ------------------------------------------------------------------------ !
+
+    ! Set face counter to be zero for halo DoFs, but one for owned (and annexed,
+    ! if using) DoFs. The use of annexed DoFs will be picked up by using normal
+    ! int_setval_c invoke, but need to use psykal-lite implementation to ensure
+    ! halo DoFs are set to the correct value
+    call invoke_deep_int_setval_c(face_counter, 0, max_halo_depth)
+    call invoke( int_setval_c(face_counter, 1) )
+
+    ! Loop through different halo depths, setting the face selectors in the
+    ! halos at each depth as we go
+    do depth = 1, max_halo_depth
+      call invoke(                                                             &
+          face_selector_halo_kernel_type(                                      &
+              face_selector_ew, face_selector_ns,                              &
+              face_counter, depth                                              &
+          )                                                                    &
+      )
+    end do
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
 

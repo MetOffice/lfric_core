@@ -17,7 +17,7 @@ module io_demo_temporal_mod
   use function_space_collection_mod,          only : function_space_collection
   use function_space_mod,                     only : function_space_type
   use fs_continuity_mod,      only: Wtheta
-  use io_context_mod,         only: io_context_type, callback_clock_arg
+  use io_context_mod,         only: io_context_type
   use linked_list_mod,        only: linked_list_type
   use lfric_xios_action_mod,  only: advance
   use lfric_xios_context_mod, only: lfric_xios_context_type
@@ -87,7 +87,6 @@ contains
 
     class(event_actor_type), pointer :: event_actor_ptr
     procedure(event_action), pointer :: context_advance
-    procedure(callback_clock_arg), pointer :: before_close
 
     call log_event( 'io_demo: Setting up temporal I/O', LOG_LEVEL_DEBUG )
 
@@ -125,9 +124,8 @@ contains
     end if
 
     ! Initialise the XIOS context attached to the temporal context object
-    before_close => null()
     call temporal_context%initialise_xios_context( modeldb%mpi%get_comm(), chi, panel_id, &
-                                             modeldb%clock, modeldb%calendar, before_close )
+                                             modeldb%clock, modeldb%calendar )
 
     ! Add context object to the model clock's event loop, this means that the
     ! temporal context will be advanced at each model time step, and the
@@ -136,6 +134,8 @@ contains
     context_advance => advance
     call modeldb%clock%add_event(context_advance, event_actor_ptr)
     call temporal_context%set_active(.true.)
+
+    call temporal_context%close_context_definition()
 
     ! Set current context back to main
     call modeldb%io_contexts%get_io_context("io_demo", io_context)

@@ -12,16 +12,16 @@
 !!          This kernel only works for the lowest-order elements.
 module sci_consist_w2h_to_sh_w2h_kernel_mod
 
-  use argument_mod,          only : arg_type, GH_INTEGER,      &
-                                    GH_FIELD, GH_REAL,         &
-                                    GH_READ, GH_WRITE,         &
-                                    ANY_DISCONTINUOUS_SPACE_2, &
-                                    ANY_DISCONTINUOUS_SPACE_3, &
-                                    CELL_COLUMN
-  use constants_mod,         only : r_double, i_def, r_single, r_def
-  use fs_continuity_mod,     only : W2h
-  use kernel_mod,            only : kernel_type
-  use reference_element_mod, only : N, E, S, W
+  use argument_mod,                  only : arg_type, GH_INTEGER,      &
+                                            GH_FIELD, GH_REAL,         &
+                                            GH_READ, GH_WRITE,         &
+                                            ANY_DISCONTINUOUS_SPACE_2, &
+                                            ANY_DISCONTINUOUS_SPACE_3, &
+                                            CELL_COLUMN
+  use constants_mod,                 only : r_double, i_def, r_single, r_def
+  use fs_continuity_mod,             only : W2h
+  use kernel_mod,                    only : kernel_type
+  use sci_face_selector_support_mod, only : face_from_face_selector
 
   implicit none
 
@@ -116,10 +116,8 @@ subroutine consist_w2h_to_sh_w2h_code_r_single( nlayers_sh,        &
   integer(kind=i_def) :: df, k, j
 
   ! Loop over horizontal W2 DoFs
-  do j = 1, face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-    df = j
-    if (j == 3 .and. face_selector_ns(map_w3_2d(1)) == 2                       &
-               .and. face_selector_ew(map_w3_2d(1)) == 1) df = N
+  do j = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+    df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Bottom boundary value
     field_w2h_sh(map_w2h_sh(df)) = 0.5_r_single * field_w2h(map_w2h(df))
@@ -176,10 +174,8 @@ subroutine consist_w2h_to_sh_w2h_code_r_double( nlayers_sh,        &
   integer(kind=i_def) :: df, k, j
 
   ! Loop over horizontal W2 DoFs
-  do j = 1, face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-    df = j
-    if (j == 3 .and. face_selector_ns(map_w3_2d(1)) == 2                       &
-               .and. face_selector_ew(map_w3_2d(1)) == 1) df = N
+  do j = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+    df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
     ! Bottom boundary value
     field_w2h_sh(map_w2h_sh(df)) = 0.5_r_double * field_w2h(map_w2h(df))

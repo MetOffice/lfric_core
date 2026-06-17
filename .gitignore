@@ -57,6 +57,7 @@ __pycache__
 # LFRic CL Builds
 applications/**/bin
 applications/**/working
+applications/**/fab-workspace
 applications/**/test
 applications/**/documents
 applications/**/example*/

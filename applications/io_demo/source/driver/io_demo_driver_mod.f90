@@ -33,12 +33,12 @@ module io_demo_driver_mod
                                          LOG_LEVEL_TRACE
   use mesh_mod,                   only : mesh_type
   use mesh_collection_mod,        only : mesh_collection
-  use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
   use io_benchmark_setup_mod,     only : create_io_benchmark_fields, &
                                          setup_io_benchmark_files
   use io_benchmark_step_mod,      only : step_io_benchmark
+  use io_demo_checkpoint_mod,     only : setup_checkpoint_io
   use io_demo_alg_mod,            only : io_demo_alg
   use io_demo_temporal_mod,       only : init_temporal_fields, setup_temporal_io
   use sci_field_minmax_alg_mod,   only : log_field_minmax
@@ -94,6 +94,8 @@ contains
     logical        :: check_partitions
     logical        :: multifile_io
     logical        :: io_benchmark
+    logical        :: checkpoint_write
+    logical        :: checkpoint_read
 
     integer(i_def), parameter :: one_layer = 1_i_def
     integer(i_def) :: i
@@ -113,6 +115,10 @@ contains
     scaled_radius    = modeldb%config%planet%scaled_radius()
     multifile_io     = modeldb%config%io_demo%multifile_io()
     io_benchmark     = modeldb%config%io_demo%io_benchmark()
+    checkpoint_write = modeldb%config%io%checkpoint_write()
+    checkpoint_read  = modeldb%config%io%checkpoint_read()
+
+     ! Log the configuration
 
     !=======================================================================
     ! Mesh
@@ -215,6 +221,12 @@ contains
     call chi_inventory%get_field_array(mesh, chi)
     call panel_id_inventory%get_field(mesh, panel_id)
     call init_io_demo(modeldb, mesh, chi, panel_id)
+
+
+    ! Set up checkpoint context if needed
+    if (checkpoint_write .or. checkpoint_read) then
+      call setup_checkpoint_io(modeldb, chi, panel_id)
+    end if
 
     ! If temporal reading configuration is enabled, initialise infrastructure
     ! for it
