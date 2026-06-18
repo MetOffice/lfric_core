@@ -118,7 +118,7 @@ contains
       call modeldb%io_contexts%get_io_context(context_name, context)
       call context%set_current()
       if (present(before_close)) then
-        call before_close(modeldb%config, modelb%clock)
+        call before_close(modeldb%config, modeldb%clock)
       end if
 
       call context%close_context_definition()
