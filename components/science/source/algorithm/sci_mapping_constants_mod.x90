@@ -697,13 +697,15 @@ contains
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
-  function get_intermesh_weights_w3_rdef(fine_mesh, coarse_mesh) result(weights_rdef)
+  function get_intermesh_weights_w3_rdef(config, fine_mesh, coarse_mesh) &
+                                  result(weights_rdef)
 
     use sci_fem_constants_mod,               only: get_mass_matrix_diagonal_fv
     use sci_weights_intermesh_w3_kernel_mod, only: weights_intermesh_w3_kernel_type
 
     implicit none
 
+    type(config_type), intent(in) :: config
     type(mesh_type), pointer, intent(in) :: coarse_mesh
     type(mesh_type), pointer, intent(in) :: fine_mesh
     integer(kind=i_def)                  :: intermesh_id
@@ -739,8 +741,8 @@ contains
       end if
 
       ! @TODO #4487: this would be better as just the cell volumes
-      mm_w3_fine => get_mass_matrix_diagonal_fv(W3, fine_mesh%get_id())
-      mm_w3_coarse => get_mass_matrix_diagonal_fv(W3, coarse_mesh%get_id())
+      mm_w3_fine   => get_mass_matrix_diagonal_fv(config, fine_mesh, W3)
+      mm_w3_coarse => get_mass_matrix_diagonal_fv(config, coarse_mesh, W3)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
@@ -769,9 +771,12 @@ contains
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
-  function get_intermesh_weights_w3_rtran(fine_mesh, coarse_mesh) result(weights_rtran)
+  function get_intermesh_weights_w3_rtran(config, fine_mesh, coarse_mesh) & 
+                                   result(weights_rtran)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type(mesh_type), pointer, intent(in) :: coarse_mesh
     type(mesh_type), pointer, intent(in) :: fine_mesh
@@ -798,7 +803,9 @@ contains
 
     if (.not. constant_exists) then
       ! Create the object as it doesn't exist yet
-      weights_rdef => get_intermesh_weights_w3_rdef(fine_mesh, coarse_mesh)
+      weights_rdef => get_intermesh_weights_w3_rdef(config,    &
+                                                    fine_mesh, &
+                                                    coarse_mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 

@@ -9,6 +9,7 @@
 !> @details Applies the appropriate mass matrix operator to a field.
 module sci_mass_matrix_operator_alg_mod
 
+  use config_mod,              only: config_type
   use constants_mod,           only: i_def, r_def, l_def
   use field_mod,               only: field_type
   use log_mod,                 only: log_event,       &
@@ -69,7 +70,7 @@ contains
   !> @param[in,out] self Instance of mass_matrix_operator_type
   !> @param[in] x Field \f$x\f$ to apply operator to
   !> @param[in,out] y Resulting field \f$y=Mx\f$
-  subroutine apply_mass_matrix_operator(self, x, y)
+  subroutine apply_mass_matrix_operator(self, config, x, y)
 
     use sci_enforce_bc_kernel_mod, only: enforce_bc_kernel_type
     use matrix_vector_kernel_mod,  only: matrix_vector_kernel_type
@@ -77,6 +78,7 @@ contains
     implicit none
 
     class(mass_matrix_operator_type), intent(inout) :: self
+    type(config_type),                intent(in)    :: config
     class(abstract_vector_type),      intent(in)    :: x
     class(abstract_vector_type),      intent(inout) :: y
 

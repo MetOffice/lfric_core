@@ -22,6 +22,9 @@ module sci_galerkin_projection_alg_mod
   use sci_mass_matrix_solver_alg_mod, &
                                      only: mass_matrix_solver_alg
 
+  ! Object types
+  use config_mod, only: config_type
+
   use base_mesh_config_mod,      only: geometry, topology
   use finite_element_config_mod, only: coord_system
   use planet_config_mod,         only: scaled_radius
@@ -56,13 +59,16 @@ contains
   !> @todo Ideally this function would not take chi and panel_id, these would
   !>       be available through the input field. That is some way off though.
   !>
-  subroutine galerkin_projection_algorithm( f_out,    &
+  subroutine galerkin_projection_algorithm( config,   &
+                                            f_out,    &
                                             f_in,     &
                                             chi,      &
                                             panel_id, &
                                             qr)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     ! Field to output
     type(field_type),           intent(inout) :: f_out(:)
@@ -133,7 +139,7 @@ contains
                                      scaled_radius, qr ) )
       end if
       do idx = 1, size(f_out)
-        call mass_matrix_solver_alg( f_out(idx), rhs(idx) )
+        call mass_matrix_solver_alg( config, f_out(idx), rhs(idx) )
       end do
     end if
 

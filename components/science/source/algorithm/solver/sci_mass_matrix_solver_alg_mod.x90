@@ -46,6 +46,11 @@ module sci_mass_matrix_solver_alg_mod
   use timing_mod,                         only: start_timing, stop_timing, &
                                                 tik, LPROF
 
+  ! Object types
+  use config_mod, only: config_type
+  use mesh_mod, only: mesh_type
+
+
   implicit none
 
   private
@@ -58,7 +63,8 @@ contains
   !> @param[in]    x input field
   !> @param[in]    bc_flag optional flag to overide the default application of
   !>               boundary conditions
-  subroutine mass_matrix_solver_alg(y, x, bc_flag)
+  subroutine mass_matrix_solver_alg(config, y, x, bc_flag)
+
     use solver_config_mod,             only: maximum_iterations,               &
                                              tolerance,                        &
                                              method,                           &
@@ -91,9 +97,12 @@ contains
                                        only: operator_tri_solve_kernel_type
     implicit none
 
+    type(config_type), intent(in) :: config
+
     ! Prognostic fields
-    type( field_type), intent(inout)          :: y
-    type( field_type), intent(in)             :: x
+    type( field_type), intent(inout) :: y
+    type( field_type), intent(in)    :: x
+
     ! Optional flag to overide default boundary condition application
     logical(kind=l_def), optional, intent(in) :: bc_flag
 
@@ -111,7 +120,10 @@ contains
     integer(kind=i_def)             :: fs
     logical(kind=l_def)             :: apply_bc
     logical(kind=l_def)             :: lowest_order
-    integer(kind=i_def)             :: mesh_id
+
+    type(mesh_type), pointer        :: mesh
+!    integer(kind=i_def)             :: mesh_id
+
     type(operator_type), pointer    :: mass_matrix => null()
     type(field_type),    pointer    :: mass_matrix_diagonal => null()
     type(field_vector_type)         :: vec_mm_diagonal
@@ -121,7 +133,8 @@ contains
 
     if ( LPROF ) call start_timing( id, 'mass_matrix_solver_alg' )
 
-    mesh_id = y%get_mesh_id()
+!   mesh_id = y%get_mesh_id()
+    mesh    => y%get_mesh()
 
     lowest_order = x%get_element_order_h() == 0 .and. &
                    x%get_element_order_v() == 0
@@ -131,14 +144,14 @@ contains
     ! Direct solve for fully discontinuous spaces
     !> todo this needs to be extended to all DG spaces
       if ( lowest_order ) then
-         mass_matrix => get_inverse_mass_matrix_fv(fs, mesh_id)
+         mass_matrix => get_inverse_mass_matrix_fv(config, mesh, fs)
       else
-         mass_matrix => get_inverse_mass_matrix_fe(fs, mesh_id)
+         mass_matrix => get_inverse_mass_matrix_fe(config, mesh, fs)
       end if
 
       call invoke( dg_matrix_vector_kernel_type(y, x, mass_matrix) )
     else if ( fs == Wtheta .and. lowest_order ) then
-      mass_matrix => get_mass_matrix_fv(fs, mesh_id)
+      mass_matrix => get_mass_matrix_fv(config, mesh, fs)
       call invoke( operator_tri_solve_kernel_type(y, x, mass_matrix) )
     else
     ! Iterative solve for (semi-)continuous spaces
@@ -192,12 +205,12 @@ contains
 
       if ( lowest_order ) then
         ! Use mass matrix operator for FV spaces
-        mass_matrix          => get_mass_matrix_fv(fs, mesh_id)
-        mass_matrix_diagonal => get_mass_matrix_diagonal_fv(fs, mesh_id)
+        mass_matrix          => get_mass_matrix_fv(config, mesh, fs)
+        mass_matrix_diagonal => get_mass_matrix_diagonal_fv(config, mesh, fs)
       else
         ! Use mass matrix operator for higher order spaces
-        mass_matrix          => get_mass_matrix_fe(fs, mesh_id)
-        mass_matrix_diagonal => get_mass_matrix_diagonal_fe(fs, mesh_id)
+        mass_matrix          => get_mass_matrix_fe(config, mesh, fs)
+        mass_matrix_diagonal => get_mass_matrix_diagonal_fe(config, mesh, fs)
       end if
 
       select case ( fs )
@@ -307,7 +320,7 @@ contains
       vec_y = field_vector_type(1)
       call vec_x%import_field(x, 1)
       call vec_y%import_field(y, 1)
-      call mass_matrix_solver%apply(vec_y, vec_x)
+      call mass_matrix_solver%apply(config, vec_y, vec_x)
       call vec_y%export_field(y, 1)
 
     end if ! direct or iterative solve

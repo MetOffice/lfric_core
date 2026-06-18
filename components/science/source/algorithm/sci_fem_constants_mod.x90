@@ -42,6 +42,9 @@ module sci_fem_constants_mod
   use dg_inc_matrix_vector_kernel_mod,    only: dg_inc_matrix_vector_kernel_type
   use sci_multiplicity_kernel_mod,        only: multiplicity_kernel_type
 
+  ! Object types
+  use config_mod, only: config_type
+
   ! Configuration modules
   use base_mesh_config_mod, only: geometry_spherical,      &
                                   geometry_planar,         &
@@ -258,7 +261,7 @@ contains
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      mm_op => get_mass_matrix_fv(space, mesh_id)
+      mm_op => get_mass_matrix_fv(config, mesh, space)
       return
     end if
 
@@ -496,18 +499,21 @@ contains
   end function get_mass_matrix_fv
 
   !> @brief Returns a pointer to a diagonal finite element mass matrix
+  !> @param[in] config
+  !> @param[in] mesh    Mesh to get the object for
   !> @param[in] space   The space of the desired diagonal mass matrix
-  !> @param[in] mesh_id The ID of the mesh to get the object for
-  !> @return The mass matrix diagonal field
-  function get_mass_matrix_diagonal_fe(space, mesh_id) result(diagonal_mm)
 
-    use sci_mm_diagonal_kernel_mod,             only: mm_diagonal_kernel_type
+  !> @return The mass matrix diagonal field
+  function get_mass_matrix_diagonal_fe(config, mesh, space) result(diagonal_mm)
+
+    use sci_mm_diagonal_kernel_mod, only: mm_diagonal_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
     type(field_type),             pointer :: diagonal_mm
     type(operator_type),          pointer :: mass_matrix
     logical(kind=l_def)                   :: constant_exists
@@ -518,7 +524,7 @@ contains
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      diagonal_mm => get_mass_matrix_diagonal_fv(space, mesh_id)
+      diagonal_mm => get_mass_matrix_diagonal_fv(config, mesh, space)
       return
     end if
 
@@ -552,19 +558,18 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      mass_matrix => get_mass_matrix_fe(space, mesh_id)
+      mass_matrix => get_mass_matrix_fe(config, mesh, space)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
       fs => function_space_collection%get_fs(mesh, element_order_h, &
                                              element_order_v, space)
       call inventory%add_field(diagonal_mm, fs, mesh)
-      call invoke ( setval_c(diagonal_mm, 0.0_r_def),                          &
+      call invoke ( setval_c(diagonal_mm, 0.0_r_def), &
                     mm_diagonal_kernel_type(diagonal_mm, mass_matrix)  )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.fem' )
@@ -576,18 +581,20 @@ contains
   end function get_mass_matrix_diagonal_fe
 
   !> @brief Returns a pointer to a diagonal finite volume mass matrix
+  !> @param[in] config
+  !> @param[in] mesh    Mesh to get the object for
   !> @param[in] space   The space of the desired diagonal mass matrix
-  !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The mass matrix diagonal field
-  function get_mass_matrix_diagonal_fv(space, mesh_id) result(diagonal_mm)
+  function get_mass_matrix_diagonal_fv(config, mesh, space) result(diagonal_mm)
 
     use sci_mm_diagonal_kernel_mod, only: mm_diagonal_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
     type(field_type),             pointer :: diagonal_mm
     type(operator_type),          pointer :: mass_matrix
     logical(kind=l_def)                   :: constant_exists
@@ -626,18 +633,17 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      mass_matrix => get_mass_matrix_fv(space, mesh_id)
+      mass_matrix => get_mass_matrix_fv(config, mesh, space)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
       fs => function_space_collection%get_fs(mesh, 0, 0, space)
       call inventory%add_field(diagonal_mm, fs, mesh)
-      call invoke ( setval_c(diagonal_mm, 0.0_r_def),                          &
+      call invoke ( setval_c(diagonal_mm, 0.0_r_def), &
                     mm_diagonal_kernel_type(diagonal_mm, mass_matrix)  )
 
       if ( LPROF ) call stop_timing( id, 'runtime_constants.fem' )
@@ -653,15 +659,19 @@ contains
   !> @param[in] space   The space of the desired lumped inverse mass matrix
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The lumped inverse mass matrix
-  function get_inverse_lumped_mass_matrix_fe(space, mesh_id) result(mm_linv)
+  function get_inverse_lumped_mass_matrix_fe(config, mesh, space) result(mm_linv)
 
     use dg_matrix_vector_kernel_mod, only: dg_matrix_vector_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
+!    integer(kind=i_def),       intent(in) :: space
+!    integer(kind=i_def),       intent(in) :: mesh_id
+!    type(mesh_type),              pointer :: mesh
     type(field_type)                      :: ones
     type(field_type),             pointer :: mm_linv
     type(operator_type),          pointer :: mass_matrix
@@ -674,7 +684,7 @@ contains
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      mm_linv => get_inverse_lumped_mass_matrix_fv(space, mesh_id)
+      mm_linv => get_inverse_lumped_mass_matrix_fv(config, mesh, space)
       return
     end if
 
@@ -696,12 +706,12 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+!    mesh => mesh_collection%get_mesh(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      mass_matrix => get_mass_matrix_fe(space, mesh_id)
+      mass_matrix => get_mass_matrix_fe(config, mesh, space)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
@@ -737,15 +747,16 @@ contains
   !> @param[in] space   The space of the desired lumped inverse mass matrix
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The lumped inverse mass matrix
-  function get_inverse_lumped_mass_matrix_fv(space, mesh_id) result(mm_linv)
+  function get_inverse_lumped_mass_matrix_fv(config, mesh, space) result(mm_linv)
 
     use dg_matrix_vector_kernel_mod, only: dg_matrix_vector_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
     type(field_type)                      :: ones
     type(field_type),             pointer :: mm_linv
     type(operator_type),          pointer :: mass_matrix
@@ -774,12 +785,11 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      mass_matrix => get_mass_matrix_fv(space, mesh_id)
+      mass_matrix => get_mass_matrix_fv(config, mesh, space)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
@@ -813,15 +823,19 @@ contains
   !!        operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The inverse W3 mass matrix operator
-  function get_inverse_mass_matrix_fe(space, mesh_id) result(mm_inv)
+  function get_inverse_mass_matrix_fe(config, mesh, space) result(mm_inv)
 
     use sci_invert_local_operator_kernel_mod, only: invert_local_operator_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
+!    integer(kind=i_def),       intent(in) :: space
+!    integer(kind=i_def),       intent(in) :: mesh_id
+!    type(mesh_type),              pointer :: mesh
     type(operator_type),          pointer :: mass_matrix
     type(operator_type),          pointer :: mm_inv
     logical(kind=l_def)                   :: constant_exists
@@ -832,7 +846,7 @@ contains
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      mm_inv => get_inverse_mass_matrix_fv(space, mesh_id)
+      mm_inv => get_inverse_mass_matrix_fv(config, mesh, space)
       return
     end if
 
@@ -854,12 +868,12 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+!    mesh => mesh_collection%get_mesh(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      mass_matrix => get_mass_matrix_fe(space, mesh_id)
+      mass_matrix => get_mass_matrix_fe(config, mesh, space)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
@@ -880,17 +894,19 @@ contains
 
   !> @brief Returns a pointer to the finite volume inverse W3 mass matrix
   !!        operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The inverse W3 mass matrix operator
-  function get_inverse_mass_matrix_fv(space, mesh_id) result(mm_inv)
+  function get_inverse_mass_matrix_fv(config, mesh, space) result(mm_inv)
 
     use sci_invert_local_operator_kernel_mod, only: invert_local_operator_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+    integer(kind=i_def), intent(in)          :: space
+
     type(operator_type),          pointer :: mass_matrix
     type(operator_type),          pointer :: mm_inv
     logical(kind=l_def)                   :: constant_exists
@@ -917,12 +933,11 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      mass_matrix => get_mass_matrix_fv(space, mesh_id)
+      mass_matrix => get_mass_matrix_fv(config, mesh, space)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
@@ -985,7 +1000,7 @@ contains
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      curl => get_curl_fv(mesh_id)
+      curl => get_curl_fv(config, mesh)
       return
     end if
 
@@ -1196,14 +1211,17 @@ contains
   !> @brief Returns a pointer to the finite element inv_m3 * div operator
   !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The div operator
-  function get_im3_div_fe(mesh_id) result(im3_div)
+  function get_im3_div_fe(config, mesh) result(im3_div)
 
     use sci_operator_x_times_y_kernel_mod,  only: operator_x_times_y_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+
+!    integer(kind=i_def),       intent(in) :: mesh_id
+!    type(mesh_type),              pointer :: mesh
     type(operator_type),          pointer :: im3_div
     type(operator_type),          pointer :: mm_w3_inv
     type(operator_type)                   :: div
@@ -1217,7 +1235,7 @@ contains
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      im3_div => get_im3_div_fv(mesh_id)
+      im3_div => get_im3_div_fv(config, mesh)
       return
     end if
 
@@ -1226,15 +1244,15 @@ contains
       call im3_div_inventory_fe%initialise(name="im3_div_fe")
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = im3_div_inventory_fe%paired_object_exists(mesh_id)
+ !   mesh => mesh_collection%get_mesh(mesh_id)
+    constant_exists = im3_div_inventory_fe%paired_object_exists(mesh%get_id())
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       chi      => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
       qr_ptr   => get_qr_fe()
-      mm_w3_inv => get_inverse_mass_matrix_fe(W3, mesh_id)
+      mm_w3_inv => get_inverse_mass_matrix_fe(config, mesh, W3)
 
       w2_fs => function_space_collection%get_fs( mesh, element_order_h, &
                                                  element_order_v, W2 )
@@ -1255,16 +1273,20 @@ contains
   end function get_im3_div_fe
 
   !> @brief Returns a pointer to the finite volume inv_m3 * div operator
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in] config
+  !> @param[in] mesh   Mesh to get the object for
   !> @return The div operator
-  function get_im3_div_fv(mesh_id) result(im3_div)
+  function get_im3_div_fv(config, mesh) result(im3_div)
 
     use sci_operator_x_times_y_kernel_mod,  only: operator_x_times_y_kernel_type
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in)          :: config
+    type(mesh_type),     intent(in), pointer :: mesh
+
+!    integer(kind=i_def),       intent(in) :: mesh_id
+ !   type(mesh_type),              pointer :: mesh
     type(operator_type),          pointer :: im3_div
     type(operator_type),          pointer :: mm_w3_inv
     type(operator_type)                   :: div
@@ -1281,15 +1303,15 @@ contains
       call im3_div_inventory_fv%initialise(name="im3_div_fv")
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = im3_div_inventory_fv%paired_object_exists(mesh_id)
+  !  mesh => mesh_collection%get_mesh(mesh_id)
+    constant_exists = im3_div_inventory_fv%paired_object_exists(mesh%get_id())
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       chi      => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
       qr_ptr   => get_qr_fv()
-      mm_w3_inv => get_inverse_mass_matrix_fv(W3, mesh_id)
+      mm_w3_inv => get_inverse_mass_matrix_fv(config, mesh, W3)
 
       w2_fs => function_space_collection%get_fs( mesh, 0, 0, W2 )
       w3_fs => function_space_collection%get_fs( mesh, 0, 0, W3 )

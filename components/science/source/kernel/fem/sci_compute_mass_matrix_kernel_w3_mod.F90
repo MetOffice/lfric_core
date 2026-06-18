@@ -18,7 +18,8 @@ module sci_compute_mass_matrix_kernel_w3_mod
                                          GH_BASIS, GH_DIFF_BASIS,          &
                                          CELL_COLUMN, GH_QUADRATURE_XYoZ
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-  use constants_mod,               only: i_def, r_def, r_single, r_double
+  use constants_mod,               only: i_def, r_def, l_def, &
+                                         r_single, r_double
   use fs_continuity_mod,           only: W3
   use kernel_mod,                  only: kernel_type
 
@@ -134,7 +135,7 @@ contains
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
-    logical,             intent(in) :: rehabilitate
+    logical(kind=l_def), intent(in) :: rehabilitate
 
     !Internal variables
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel

@@ -8,6 +8,9 @@
 !>
 module sci_project_output_mod
 
+  ! Object_types
+  use config_mod, only: config_type
+
   implicit none
 
   private
@@ -26,7 +29,7 @@ contains
   !> @param[in]    panel_id         Cell orientation map.
   !> @param[in]    output_fs        Desired output function space.
   !>
-  subroutine project_output( field, projected_field, &
+  subroutine project_output( config, field, projected_field, &
                              chi, panel_id,          &
                              output_fs )
 
@@ -42,13 +45,18 @@ contains
 
     implicit none
 
+    type(config_type), intent(in) :: config
+
     ! Input field to project from
     type(field_type),         intent(in)    :: field
+
     ! Output field to project to
     type(field_type),         intent(inout) :: projected_field(:)
+
     ! Co-ordinate system
     type(field_type),         intent(in)    :: chi(:)
     type(field_type),         intent(in)    :: panel_id
+
     ! Output function space
     integer(i_def),           intent(in)    :: output_fs
 
@@ -84,9 +92,8 @@ contains
     end do
 
     ! do the projection
-    call galerkin_projection_algorithm(         &
-      projected_field, field, chi, panel_id, qr &
-    )
+    call galerkin_projection_algorithm(config, projected_field, field, &
+                                       chi, panel_id, qr)
 
   end subroutine project_output
 

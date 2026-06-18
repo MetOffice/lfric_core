@@ -9,8 +9,11 @@
 !! defines an interface for the linear operator application y = A.x
 
 module sci_linear_operator_mod
-  use vector_mod,    only : abstract_vector_type
-  use function_space_mod, only : function_space_type
+
+  use config_mod,         only: config_type
+  use function_space_mod, only: function_space_type
+  use vector_mod,         only: abstract_vector_type
+
   implicit none
   private
 
@@ -26,10 +29,12 @@ module sci_linear_operator_mod
      !> param[in] self a linear operator
      !> param[in] x a vector the linear operator is applied to
      !> param[inout] y a vector, the result.
-     subroutine apply_interface(self, x, y)
+     subroutine apply_interface(self, config, x, y)
        import :: abstract_linear_operator_type
        import :: abstract_vector_type
+       import :: config_type
        class(abstract_linear_operator_type), intent(inout) :: self
+       type(config_type),                    intent(in)    :: config
        class(abstract_vector_type),          intent(in)    :: x
        class(abstract_vector_type),          intent(inout) :: y
      end subroutine apply_interface

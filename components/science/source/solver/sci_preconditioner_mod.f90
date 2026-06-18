@@ -10,7 +10,9 @@
 !>          defines an interface for the preconditioner application y = P^{-1}.x
 
 module sci_preconditioner_mod
-  use vector_mod,    only : abstract_vector_type
+
+  use config_mod, only: config_type
+  use vector_mod, only: abstract_vector_type
 
   implicit none
   private
@@ -28,10 +30,14 @@ module sci_preconditioner_mod
      !> @param[in] self a preconditioner
      !> @param[in]    x a vector that the preconditioner is applied to.
      !> @param[inout] y a vector, the result.
-     subroutine apply_interface(self, x, y)
+     subroutine apply_interface(self, config, x, y)
+
        import :: abstract_vector_type
        import :: abstract_preconditioner_type
+       import :: config_type
+
        class(abstract_preconditioner_type), intent(inout) :: self
+       type(config_type),                   intent(in)    :: config
        class(abstract_vector_type),         intent(in)    :: x
        class(abstract_vector_type),         intent(inout) :: y
      end subroutine apply_interface
