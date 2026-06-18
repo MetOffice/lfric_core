@@ -26,3 +26,4 @@ navigation bar on all other pages.
    guide
    repository_contents
    installation/index
+   tutorials/index
