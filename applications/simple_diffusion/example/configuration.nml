@@ -21,6 +21,8 @@ element_order_h=0,
 element_order_v=0,
 rehabilitate=.true.,
 coord_order=1
+coord_order_nonprime=1
+coord_space='Wtheta'
 coord_system='native'
 /
 
@@ -44,7 +46,7 @@ coord_system='native'
 &time
   calendar = 'timestep'
   timestep_start = '1'
-  timestep_end = '1000'
+  timestep_end = '300'
   calendar_type='gregorian'
   calendar_start='2016-01-01 15:00:00'
   calendar_origin='2016-01-01 15:00:00'

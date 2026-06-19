@@ -125,7 +125,7 @@ type, public :: ugrid_2d_type
   ! Information about the domain orientation
   real(r_def) :: north_pole(2)        !< [Longitude, Latitude] of north pole used
                                       !< for the domain orientation (degrees)
-  real(r_def) :: null_island(2)       !< [Longitude, Latitude] of null island
+  real(r_def) :: null_island(2) = rmdi !< [Longitude, Latitude] of null island
                                       !< used for the domain orientation (degrees)
   real(r_def) :: equatorial_latitude  !< Latitude of equator of mesh (degrees)
 

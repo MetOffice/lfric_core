@@ -11,17 +11,18 @@
 !!          This method is only designed for the lowest order W2H space.
 module sci_restrict_w2h_kernel_mod
 
-use argument_mod,            only: arg_type, GH_INTEGER,      &
-                                   GH_FIELD, GH_REAL,         &
-                                   GH_READ, GH_WRITE,         &
-                                   GH_COARSE, GH_FINE,        &
-                                   ANY_SPACE_2, CELL_COLUMN,  &
-                                   ANY_DISCONTINUOUS_SPACE_2, &
-                                   ANY_DISCONTINUOUS_SPACE_3
-use constants_mod,           only: i_def, r_def, r_single, r_double
-use fs_continuity_mod,       only: W2H
-use kernel_mod,              only: kernel_type
-use reference_element_mod,   only: W, S, E, N
+use argument_mod,                  only: arg_type, GH_INTEGER,                 &
+                                         GH_FIELD, GH_REAL,                    &
+                                         GH_READ, GH_WRITE,                    &
+                                         GH_COARSE, GH_FINE,                   &
+                                         ANY_SPACE_2, CELL_COLUMN,             &
+                                         ANY_DISCONTINUOUS_SPACE_2,            &
+                                         ANY_DISCONTINUOUS_SPACE_3
+use constants_mod,                 only: i_def, r_def, r_single, r_double
+use fs_continuity_mod,             only: W2H
+use kernel_mod,                    only: kernel_type
+use reference_element_mod,         only: W, S, E, N
+use sci_face_selector_support_mod, only: face_from_face_selector
 
 implicit none
 
@@ -202,10 +203,8 @@ contains
     ! Horizontal components
     !---------------------------------------------------------------------------
 
-    do face = 1, face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-      df = face
-      if (face == 3 .and. face_selector_ns(map_w3_2d(1)) == 2                  &
-                    .and. face_selector_ew(map_w3_2d(1)) == 1) df = N
+    do face = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+      df = face_from_face_selector(face, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
       new_coarse(:) = 0.0_r_single
 
@@ -337,10 +336,8 @@ contains
     ! Horizontal components
     !---------------------------------------------------------------------------
 
-    do face = 1, face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-      df = face
-      if (face == 3 .and. face_selector_ns(map_w3_2d(1)) == 2                  &
-                    .and. face_selector_ew(map_w3_2d(1)) == 1) df = N
+    do face = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+      df = face_from_face_selector(face, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
 
       new_coarse(:) = 0.0_r_double
 

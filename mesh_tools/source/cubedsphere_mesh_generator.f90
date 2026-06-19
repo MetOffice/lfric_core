@@ -40,8 +40,6 @@ program cubedsphere_mesh_generator
                            log_scratch_space, log_level_info,    &
                            log_level_error, log_level_warning
 
-  use namelist_collection_mod, only: namelist_collection_type
-
   use ncdf_quad_mod, only: ncdf_quad_type
   use omp_lib,       only: omp_get_thread_num
   use partition_mod, only: partition_type, &
@@ -135,7 +133,6 @@ program cubedsphere_mesh_generator
   integer(i_def) :: i, j, k, l, n_voids
 
   type(config_type), save :: config
-  type(namelist_collection_type), save :: configuration
 
   ! Configuration variables to obtain from configuration.
   character(str_max_filename) :: mesh_file_prefix
@@ -194,12 +191,9 @@ program cubedsphere_mesh_generator
   local_rank  = global_mpi%get_comm_rank()
   call initialise_logging( communicator%get_comm_mpi_val(), 'CubeGen' )
 
-  call configuration%initialise( 'CubeGen', table_len=10 )
   call config%initialise( 'CubeGen' )
 
-  call read_configuration( filename,                    &
-                           configuration=configuration, &
-                           config=config )
+  call read_configuration( filename, config=config )
 
   deallocate( filename )
 

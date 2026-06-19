@@ -10,7 +10,7 @@
 !>
 module driver_io_mod
 
-  use constants_mod,           only: str_def, i_def
+  use constants_mod,           only: str_def, i_def, l_def
   use driver_modeldb_mod,      only: modeldb_type
   use driver_model_data_mod,   only: model_data_type
   use empty_io_context_mod,    only: empty_io_context_type
@@ -20,7 +20,7 @@ module driver_io_mod
   use field_mod,               only: field_type
   use inventory_by_mesh_mod,   only: inventory_by_mesh_type
   use io_context_collection_mod, only: io_context_collection_type
-  use io_context_mod,          only: io_context_type, callback_clock_arg
+  use io_context_mod,          only: io_context_type
   use log_mod,                 only: log_event, log_level_error, &
                                      log_level_trace, log_level_info, &
                                      log_scratch_space
@@ -32,7 +32,6 @@ module driver_io_mod
   use mesh_mod,                only: mesh_type
   use mesh_collection_mod,     only: mesh_collection
   use model_clock_mod,         only: model_clock_type
-  use namelist_mod,            only: namelist_type
 
   implicit none
 
@@ -46,6 +45,16 @@ module driver_io_mod
       type(linked_list_type), intent(out) :: files_list
       type(modeldb_type), optional, intent(inout) :: modeldb
     end subroutine filelist_populator
+  end interface
+
+  abstract interface
+    !> @brief Callback interface for bespoke IO configuration
+    !> @param[in] clock     Clock to be passed in at call site
+    subroutine io_configuration_callback(clock)
+      use clock_mod, only : clock_type
+      implicit none
+      class(clock_type), intent(in) :: clock
+    end subroutine io_configuration_callback
   end interface
 
 contains
@@ -83,34 +92,34 @@ contains
     procedure(filelist_populator), &
                    pointer, optional, intent(in)    :: populate_filelist
     character(len=str_def), optional, intent(in)    :: alt_mesh_names(:)
-    procedure(callback_clock_arg), optional         :: before_close
+    procedure(io_configuration_callback), &
+                            optional                :: before_close
 
-    procedure(callback_clock_arg), pointer :: before_close_ptr
+    type(lfric_xios_context_type), pointer :: context
 
-    type(namelist_type), pointer :: io_nml
+    logical(l_def) :: use_xios_io
 
-    logical :: use_xios_io
-
-    io_nml => modeldb%configuration%get_namelist('io')
-    call io_nml%get_value( 'use_xios_io', use_xios_io )
+    use_xios_io = modeldb%config%io%use_xios_io()
 
     ! Allocate IO context type based on model configuration
     if ( use_xios_io ) then
 #ifdef USE_XIOS
-      if (present(before_close)) then
-        before_close_ptr => before_close
-      else
-        before_close_ptr => null()
-      end if
-
       call init_xios_io_context( context_name,       &
                                  mesh_name,          &
                                  modeldb,            &
                                  chi_inventory,      &
                                  panel_id_inventory, &
-                                 before_close_ptr,   &
                                  populate_filelist,  &
                                  alt_mesh_names )
+
+      call modeldb%io_contexts%get_io_context(context_name, context)
+      call context%set_current()
+      if (present(before_close)) then
+        call before_close(modeldb%clock)
+      end if
+
+      call context%close_context_definition()
+
 #else
       call log_event( "Cannot use XIOS I/O: model has not been built with " // &
                       "XIOS enabled", log_level_error )
@@ -158,7 +167,6 @@ contains
   !> @param[in] modeldb             Model state
   !> @param[in] chi_inventory       Contains the model's coordinate fields
   !> @param[in] panel_id_inventory  Contains the model's panel ID fields
-  !> @param[in] before_close        Routine to be called before context closes
   !> @param[in] populate_filelist   Optional procedure for creating a list of
   !!                                file descriptions used by the model I/O
   !> @param[in] alt_mesh_names      Optional array of names for other meshes
@@ -168,7 +176,6 @@ contains
                                    modeldb,            &
                                    chi_inventory,      &
                                    panel_id_inventory, &
-                                   before_close,       &
                                    populate_filelist,  &
                                    alt_mesh_names )
 
@@ -179,7 +186,6 @@ contains
     class(modeldb_type),                 intent(inout) :: modeldb
     type(inventory_by_mesh_type),        intent(in)    :: chi_inventory
     type(inventory_by_mesh_type),        intent(in)    :: panel_id_inventory
-    procedure(callback_clock_arg), pointer, intent(in) :: before_close
     procedure(filelist_populator), &
                    pointer, optional,    intent(in)    :: populate_filelist
     character(len=str_def), optional,    intent(in)    :: alt_mesh_names(:)
@@ -200,10 +206,6 @@ contains
     procedure(event_action), pointer :: context_advance
 
     integer(i_def) :: num_meshes, i, j
-
-    type(namelist_type), pointer :: io_nml
-
-    io_nml => modeldb%configuration%get_namelist('io')
 
     mesh             => null()
     chi              => null()
@@ -263,7 +265,6 @@ contains
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
-                                               before_close,           &
                                                alt_coords,             &
                                                alt_panel_ids )
       deallocate(alt_coords)
@@ -272,8 +273,7 @@ contains
       call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
-                                               modeldb%calendar,       &
-                                               before_close )
+                                               modeldb%calendar )
     end if
 
     ! Attach context advancement to the model's clock

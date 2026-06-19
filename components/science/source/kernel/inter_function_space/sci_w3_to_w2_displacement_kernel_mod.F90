@@ -14,11 +14,12 @@ module sci_w3_to_w2_displacement_kernel_mod
   use argument_mod,          only : arg_type, func_type,       &
                                     GH_FIELD, GH_REAL,         &
                                     GH_READ, GH_INC,           &
+                                    ANY_SPACE_9,               &
                                     ANY_DISCONTINUOUS_SPACE_3, &
                                     GH_BASIS, GH_EVALUATOR,    &
                                     CELL_COLUMN, GH_SCALAR,    &
                                     GH_LOGICAL
-  use fs_continuity_mod,     only : W3, W2H, Wchi
+  use fs_continuity_mod,     only : W3, W2H
   use constants_mod,         only : r_def, i_def
   use kernel_mod,            only : kernel_type
   use reference_element_mod, only : E, W, N, S
@@ -35,12 +36,12 @@ module sci_w3_to_w2_displacement_kernel_mod
     private
     type(arg_type) :: meta_args(4) = (/                                      &
          arg_type(GH_FIELD,   GH_REAL, GH_INC,   W2H),                       &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  Wchi),                      &
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               &
          arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
          arg_type(GH_FIELD,   GH_REAL, GH_READ,  W3)                         &
          /)
     type(func_type) :: meta_funcs(1) = (/                                    &
-         func_type(Wchi, GH_BASIS)                                           &
+         func_type(ANY_SPACE_9, GH_BASIS)                                    &
          /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_EVALUATOR

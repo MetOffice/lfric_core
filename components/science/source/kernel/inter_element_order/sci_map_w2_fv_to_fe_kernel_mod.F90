@@ -11,18 +11,18 @@
 
 module sci_map_w2_fv_to_fe_kernel_mod
 
-use argument_mod,          only: arg_type,                  &
-                                 GH_FIELD, GH_REAL,         &
-                                 GH_INTEGER,                &
-                                 GH_READ, GH_READWRITE,     &
-                                 ANY_DISCONTINUOUS_SPACE_1, &
-                                 ANY_DISCONTINUOUS_SPACE_2, &
-                                 ANY_DISCONTINUOUS_SPACE_3, &
-                                 ANY_DISCONTINUOUS_SPACE_4, &
-                                 GH_COARSE, GH_FINE, CELL_COLUMN
-use constants_mod,         only: i_def, r_def, l_def, IMDI
-use kernel_mod,            only: kernel_type
-use reference_element_mod, only: E, N
+use argument_mod,                  only: arg_type,                  &
+                                         GH_FIELD, GH_REAL,         &
+                                         GH_INTEGER,                &
+                                         GH_READ, GH_READWRITE,     &
+                                         ANY_DISCONTINUOUS_SPACE_1, &
+                                         ANY_DISCONTINUOUS_SPACE_2, &
+                                         ANY_DISCONTINUOUS_SPACE_3, &
+                                         ANY_DISCONTINUOUS_SPACE_4, &
+                                         GH_COARSE, GH_FINE, CELL_COLUMN
+use constants_mod,                 only: i_def, r_def, l_def, IMDI
+use kernel_mod,                    only: kernel_type
+use reference_element_mod,         only: E, N
 
 implicit none
 
@@ -174,12 +174,12 @@ contains
         ! Internal, West face, South face dofs. Do nothing
       else if (df_c <= ndf_interior + 3*ndf_face_h) then
         ! East face dofs
-        if (face_selector_ew(map_w3_2d(1)) /= 2) then
+        if (face_selector_ew(map_w3_2d(1)) == 0 .or. face_selector_ew(map_w3_2d(1)) == 1) then
           cycle
         end if
       else if (df_c <= ndf_interior + 4*ndf_face_h) then
         ! North face dofs
-        if (face_selector_ns(map_w3_2d(1)) /= 2) then
+        if (face_selector_ns(map_w3_2d(1)) == 0 .or. face_selector_ns(map_w3_2d(1)) == 1) then
           cycle
         end if
       else if (df_c <= ndf_interior + 4*ndf_face_h + ndf_face_v) then

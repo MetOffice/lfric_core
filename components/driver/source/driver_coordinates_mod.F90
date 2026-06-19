@@ -31,16 +31,9 @@ module driver_coordinates_mod
   private
 
   public  :: assign_coordinate_field
-! Make procedures public for unit testing
-#ifdef UNIT_TEST
   public  :: assign_coordinate_xyz
   public  :: assign_coordinate_lonlatz
   public  :: assign_coordinate_alphabetaz
-#else
-  private :: assign_coordinate_xyz
-  private :: assign_coordinate_lonlatz
-  private :: assign_coordinate_alphabetaz
-#endif
 
 contains
 

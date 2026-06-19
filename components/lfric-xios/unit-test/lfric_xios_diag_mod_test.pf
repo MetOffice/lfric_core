@@ -7,68 +7,41 @@
 !>
 module lfric_xios_diag_mod_test
 
+  use, intrinsic :: iso_fortran_env, only: real64
+
   use funit
-  use, intrinsic :: iso_fortran_env,   only: real64
-  use constants_mod,                   only: str_def
+
+  use constants_mod, only: str_def
 
   implicit none
 
   private
   public :: test_lfric_xios_diag
 
-  @TestCase
-  type, extends(TestCase), public :: diag_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-  end type diag_test_type
-
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    implicit none
-
-    class(diag_test_type), intent(inout) :: this
-
-  end subroutine setUp
-
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    implicit none
-
-    class(diag_test_type), intent(inout) :: this
-
-  end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   @Test
-  subroutine test_lfric_xios_diag( this )
+  subroutine test_lfric_xios_diag()
 
-    use lfric_xios_diag_mod,     only:                                        &
-                                  file_is_enabled,                            &
-                                  file_is_tagged,                             &
-                                  get_file_name,                              &
-                                  field_is_valid,                             &
-                                  field_is_enabled,                           &
-                                  field_is_active,                            &
-                                  get_field_order,                            &
-                                  get_field_grid_ref,                         &
-                                  get_field_domain_ref,                       &
-                                  get_field_axis_ref,                         &
-                                  get_axis_dimension,                         &
-                                  set_zoom_axis_attr,                         &
-                                  set_variable,                               &
-                                  get_variable
+    use lfric_xios_diag_mod, only:                  &
+                              file_is_enabled,      &
+                              file_is_tagged,       &
+                              get_file_name,        &
+                              field_is_valid,       &
+                              field_is_enabled,     &
+                              field_is_active,      &
+                              get_field_order,      &
+                              get_field_grid_ref,   &
+                              get_field_domain_ref, &
+                              get_field_axis_ref,   &
+                              get_axis_dimension,   &
+                              set_zoom_axis_attr,   &
+                              set_variable,         &
+                              get_variable
 
     implicit none
-
-    class(diag_test_type), intent(inout) :: this
 
     character(str_def) :: str
     real(real64) :: val
