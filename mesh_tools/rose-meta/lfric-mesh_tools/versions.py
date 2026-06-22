@@ -1,3 +1,4 @@
+import re
 import sys
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
@@ -44,106 +45,111 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_maps"],
-                    "'planar_l0:planar_l1','planar_l1:planar_l2','planar_l2:planar_l3'",
+                    "'l0_planar:l1_planar','l1_planar:l2_planar','l2_planar:l3_planar'",
                     forced=True,
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'planar_l0','planar_l1','planar_l2','planar_l3'",
+                    "'l0_planar','l1_planar','l2_planar','l3_planar'",
                     forced=True,
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_maps"],
-                    "'planar_l0:planar_l1','planar_l1:planar_l2'",
+                    "'l0_planar:l1_planar','l1_planar:l2_planar'",
                     forced=True,
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'planar_l0','planar_l1','planar_l2'",
+                    "'l0_planar','l1_planar','l2_planar'",
                     forced=True,
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_maps"],
-                    "'planar_l0:planar_l1'",
+                    "'l0_planar:l1_planar'",
                     forced=True,
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'planar_l0','planar_l1'",
+                    "'l0_planar','l1_planar'",
                     forced=True,
                 )
             else:
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'planar_l0'",
+                    "'l0_planar'",
                     forced=True,
                 )
         else:
             if n_meshes == "4":
-                self.add_setting(
-                    config,
-                    ["namelist:mesh", "mesh_maps"],
-                    "'cubedsphere_l0:cubedsphere_l1','cubedsphere_l1:cubedsphere_l2','cubedsphere_l2:cubedsphere_l3'",
-                    forced=True,
-                )
+                edge_cells = self.get_setting_value(config, ["namelist:cubedsphere_mesh", "edge_cells"])
+                if edge_cells == '48,24,12,6':
+                    self.add_setting(
+                        config,
+                        ["namelist:mesh", "mesh_maps"],
+                        "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere','l2_cubedsphere:l3_cubedsphere'",'l0_cubedsphere:cubesphere_l2'
+                        forced=True,
+                    )
+                else:
+                    self.add_setting(
+                        config,
+                        ["namelist:mesh", "mesh_maps"],
+                        "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere','l2_cubedsphere:l3_cubedsphere'",
+                        forced=True,
+                    )
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'cubedsphere_l0','cubedsphere_l1','cubedsphere_l2','cubedsphere_l3'",
+                    "'l0_cubedsphere','l1_cubedsphere','l2_cubedsphere','l3_cubedsphere'",
                     forced=True,
                 )
             elif n_meshes == "3":
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_maps"],
-                    "'cubedsphere_l0:cubedsphere_l1','cubedsphere_l1:cubedsphere_l2'",
+                    "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere'",
                     forced=True,
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'cubedsphere_l0','cubedsphere_l1','cubedsphere_l2'",
+                    "'l0_cubedsphere','l1_cubedsphere','l2_cubedsphere'",
                     forced=True,
                 )
             elif n_meshes == "2":
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_maps"],
-                    "'cubedsphere_l0:cubedsphere_l1'",
+                    "'l0_cubedsphere:l1_cubedsphere'",
                     forced=True,
                 )
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'cubedsphere_l0','cubedsphere_l1'",
+                    "'l0_cubedsphere','l1_cubedsphere'",
                     forced=True,
                 )
             else:
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_names"],
-                    "'cubedsphere_l0'",
+                    "'l0_cubedsphere'",
                     forced=True,
                 )
-
         self.change_setting_value(
-                    config,
-                    ["namelist:planar_mesh", "lbc_parent_mesh"],
-                    "'planar_l0'"
-                )
-
+            config, ["namelist:planar_mesh", "lbc_parent_mesh"], "'l0_planar'"
+        )
         self.change_setting_value(
-                    config,
-                    ["namelist:stretch_transform", "transform_mesh"],
-                    "'planar_l0'"
-                )
+            config,
+            ["namelist:stretch_transform", "transform_mesh"],
+            "'l0_planar'",
+        )
 
         return config, self.reports
