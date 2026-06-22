@@ -94,7 +94,7 @@ class vn31_t11(MacroUpgrade):
                     self.add_setting(
                         config,
                         ["namelist:mesh", "mesh_maps"],
-                        "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere','l2_cubedsphere:l3_cubedsphere'",'l0_cubedsphere:cubesphere_l2'
+                        "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere','l2_cubedsphere:l3_cubedsphere','l0_cubedsphere:cubesphere_l2'",
                         forced=True,
                     )
                 else:
