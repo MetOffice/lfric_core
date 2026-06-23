@@ -89,12 +89,14 @@ class vn31_t11(MacroUpgrade):
                 )
         else:
             if n_meshes == "4":
-                edge_cells = self.get_setting_value(config, ["namelist:cubedsphere_mesh", "edge_cells"])
-                if edge_cells == '48,24,12,6':
+                edge_cells = self.get_setting_value(
+                    config, ["namelist:cubedsphere_mesh", "edge_cells"]
+                )
+                if edge_cells == "48,24,12,6":
                     self.add_setting(
                         config,
                         ["namelist:mesh", "mesh_maps"],
-                        "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere','l2_cubedsphere:l3_cubedsphere','l0_cubedsphere:cubesphere_l2'",
+                        "'l0_cubedsphere:l1_cubedsphere','l1_cubedsphere:l2_cubedsphere','l2_cubedsphere:l3_cubedsphere','l0_cubedsphere:l2_cubedsphere'",
                         forced=True,
                     )
                 else:
