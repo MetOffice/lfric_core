@@ -45,7 +45,7 @@ class vn31_t11(MacroUpgrade):
                 self.add_setting(
                     config,
                     ["namelist:mesh", "mesh_maps"],
-                    "'l0_planar:l1_planar','l1_planar:l2_planar','l2_planar:l3_planar'",
+                    "'l0_planar:l1_planar','l1_planar:l2_planar','l2_planar:l3_planar','l0_planar:l3_planar",
                     forced=True,
                 )
                 self.add_setting(
