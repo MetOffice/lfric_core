@@ -56,7 +56,7 @@ module io_demo_driver_mod
   type(inventory_by_mesh_type) :: chi_inventory
   type(inventory_by_mesh_type) :: panel_id_inventory
 
-  public initialise, step, finalise
+  public initialise, initial_step, step, finalise
 
 contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -264,6 +264,43 @@ contains
     deallocate(base_mesh_names)
 
   end subroutine initialise
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> Writes initial diagnostic output and sets initial values for the
+  !> io_benchmark fields.
+  !> @param [in]     program_name An identifier given to the model being run
+  !> @param [in,out] modeldb      The structure that holds model state
+  subroutine initial_step( program_name, modeldb )
+
+    implicit none
+
+    character(*),       intent(in)    :: program_name
+    type(modeldb_type), intent(inout) :: modeldb
+
+    type( field_collection_type ), pointer :: depository
+    type( field_type ),            pointer :: diffusion_field
+
+    logical :: write_diag, io_benchmark
+
+    write_diag   = modeldb%config%io%write_diag()
+    io_benchmark = modeldb%config%io_demo%io_benchmark()
+
+    ! We don't update the diffusion field in the initial step, but need to
+    ! step the io_benchmark fields as they are derived from the diffusion
+    ! field
+    if (io_benchmark) then
+      call step_io_benchmark(modeldb)
+    end if
+
+    ! Write diagnostic output
+    if (write_diag) then
+      depository => modeldb%fields%get_field_collection("depository")
+      call depository%get_field("diffusion_field", diffusion_field)
+      call log_event(program_name//": Writing diagnostic output", LOG_LEVEL_INFO)
+      call diffusion_field%write_field('diffusion_field')
+    end if
+
+  end subroutine initial_step
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> Performs a time step.

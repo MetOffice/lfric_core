@@ -67,19 +67,17 @@ contains
       ! Write all files that need to be written to
       call context%set_current()
 
-      if (model_clock%get_step() > model_clock%get_first_step()) then
-        filelist => context%get_filelist()
-        if (filelist%get_length() > 0) then
-          loop => filelist%get_head()
-          do while (associated(loop))
-            select type(list_item => loop%payload)
-            type is (lfric_xios_file_type)
-              file => list_item
-              if (file%mode_is_write()) call file%send_fields()
-            end select
-            loop => loop%next
-          end do
-        end if
+      filelist => context%get_filelist()
+      if (filelist%get_length() > 0) then
+        loop => filelist%get_head()
+        do while (associated(loop))
+          select type(list_item => loop%payload)
+          type is (lfric_xios_file_type)
+            file => list_item
+            if (file%mode_is_write()) call file%send_fields()
+          end select
+          loop => loop%next
+        end do
       end if
 
       ! Update XIOS calendar

@@ -418,7 +418,7 @@ subroutine register_with_context(self)
 
   ! Set the date of the first operation
   call xios_get_start_date(start_date)
-  self%next_operation = start_date + self%frequency
+  self%next_operation = start_date
 
   ! If field group already exists then get the handle, otherwise create it
   if (xios_is_valid_fieldgroup(self%field_group_id)) then
