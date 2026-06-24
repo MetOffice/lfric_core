@@ -76,6 +76,8 @@ type, public, extends(file_type) :: lfric_xios_file_type
   integer(i_def)              :: file_convention = undef_file_convention
   !> The file frequency in timesteps
   integer(i_def)              :: freq_ts = undef_freq
+  !> Should the initial field values (T0) be written to the file
+  logical(l_def)              :: write_initial_condition = .true.
   !> The XIOS ID of the field group contained within the file
   character(str_def)          :: field_group_id
   !> Flag denoting if the file has been closed
@@ -195,6 +197,8 @@ end subroutine register_diagnostics_file
 !> @param[in] freq           The frequency in timesteps that the file is
 !!                           read-from/written-to
 !> @param[in] operation      Enum denoting the kind of I/O done by the file
+!> @param[in] write_initial_condition Should the initial field values (T0) be written
+!!                                    to the file
 !> @param[in] cyclic         Whether the file is cyclic (for time series files)
 !> @param[in] field_group_id XIOS ID of the field group contained in the file
 !> @param[in] fields_in_file Array of fields contained in the file
@@ -204,9 +208,9 @@ end subroutine register_diagnostics_file
 !> @param[in] update_freq     Enum for update frequency to be passed to temporal
 !!                            controller (optional, only relevant for time series files)
 function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
-                                      operation, cyclic, field_group_id,      &
-                                      fields_in_file, is_diag,                &
-                                      diag_always_on_sampling,                &
+                                      operation, write_initial_condition,     &
+                                      cyclic, field_group_id, fields_in_file, &
+                                      is_diag, diag_always_on_sampling,       &
                                       file_convention, update_freq ) result(self)
 
   implicit none
@@ -217,6 +221,7 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
   integer(i_def),                intent(in) :: io_mode
   integer(i_def),      optional, intent(in) :: freq
   integer(i_def),      optional, intent(in) :: operation
+  logical(l_def),      optional, intent(in) :: write_initial_condition
   logical,             optional, intent(in) :: cyclic
   character(len=*),    optional, intent(in) :: field_group_id
   type(field_collection_type), &
@@ -253,6 +258,9 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
     end if
     self%freq_ts = freq
   end if
+
+  if (present(write_initial_condition)) &
+    self%write_initial_condition = write_initial_condition
 
   if (present(field_group_id)) then
     self%field_group_id = field_group_id
@@ -339,7 +347,7 @@ subroutine register_with_context(self)
   type(xios_date)        :: start_date
 
   integer(i_def) :: i, record_offset
-  logical :: output_freq_defined
+  logical :: output_freq_defined, write_initial_condition_defined
 
   call log_event( "Registering XIOS file ["//trim(self%xios_id)//"]", &
                   log_level_trace )
@@ -414,6 +422,17 @@ subroutine register_with_context(self)
       call log_event( "Frequency for file ["//trim(self%xios_id)//"] not " // &
                       "defined in XIOS or LFRic", log_level_error )
     end if
+  end if
+
+  ! Check if write_initial_condition has been defined in iodef.xml config
+  call xios_is_defined_file_attr( self%xios_id, &
+    write_initial_condition=write_initial_condition_defined )
+
+  if (write_initial_condition_defined) then
+    call log_event( "'write_initial_condition' for file ["//trim(self%xios_id)//"] " // &
+                    "defined in both LFRic and XIOS, defaulting to XIOS "            // &
+                    "iodef.xml value", log_level_warning )
+    xios_get_file_attr(self%xios_id, write_initial_condition=self%write_initial_condition)
   end if
 
   ! Set the date of the first operation
