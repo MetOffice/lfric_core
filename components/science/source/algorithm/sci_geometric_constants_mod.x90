@@ -176,18 +176,18 @@ contains
     integer(kind=i_def)                :: k_h, k_v
     integer(tik)                       :: id
 
-    integer(i_def) :: topology
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
-    integer(i_def) :: coord_system
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
+    integer(kind=i_def) :: coord_system
 
-    real(r_def) :: f_lat, f_lon
-    real(r_def) :: scaled_radius
+    real(kind=r_def) :: f_lat, f_lon
+    real(kind=r_def) :: scaled_radius
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    coord_system = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
 
@@ -205,14 +205,14 @@ contains
     local_mesh => mesh%get_local_mesh()
 
     twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
-    twod_fs   => function_space_collection%get_fs(twod_mesh, k_h, k_v, &
-                                                  space_id)
+    twod_fs => function_space_collection%get_fs(twod_mesh, k_h, k_v, &
+                                                space_id)
 
     call lat_inventory%add_field(lat, twod_fs, local_mesh)
     call long_inventory%add_field(long, twod_fs, local_mesh)
 
     if (mesh%is_geometry_spherical()) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if (mesh%is_topology_periodic()) then
@@ -228,7 +228,7 @@ contains
                                               topology, coord_system,   &
                                               scaled_radius) )
     else
-      call invoke( setval_c(lat,  f_lat), &
+      call invoke( setval_c(lat, f_lat), &
                    setval_c(long, f_lon) )
     end if
 
@@ -262,10 +262,10 @@ contains
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-    twod_mesh  => mesh_collection%get_mesh(mesh, TWOD)
+    twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
     local_mesh => mesh%get_local_mesh()
-    w2h_2d_fs  => function_space_collection%get_fs(twod_mesh, 0, 0, W2H)
-    w3_2d_fs   => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
+    w2h_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W2H)
+    w3_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
     max_halo_depth = twod_mesh%get_halo_depth()
 
     ! Temporary W2H field, tracking the count for each face
