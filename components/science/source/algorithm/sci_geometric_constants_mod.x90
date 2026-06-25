@@ -397,7 +397,7 @@ contains
 
     integer(tik) :: id
 
-    integer(i_def) :: coord_system
+    integer(kind=i_def) :: coord_system
 
     coord_system = config%finite_element%coord_system()
 
@@ -410,7 +410,7 @@ contains
 
     if (.not. constant_exists) then
       ! If this constant doesn't exist, create it
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
@@ -469,7 +469,7 @@ contains
 
     if (.not. constant_exists) then
       ! If this constant doesn't exist, create it
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
@@ -520,8 +520,8 @@ contains
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
 
-    integer(i_def) :: element_order_h, element_order_v
-    integer(i_def) :: nqp_h_exact, nqp_v_exact
+    integer(kind=i_def) :: element_order_h, element_order_v
+    integer(kind=i_def) :: nqp_h_exact, nqp_v_exact
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -543,7 +543,7 @@ contains
     constant_exists = detj_at_w3_inventory_fe%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -618,7 +618,7 @@ contains
     constant_exists = detj_at_w3_inventory_fv%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -671,7 +671,7 @@ contains
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
 
-    integer(i_def) :: element_order_h, element_order_v
+    integer(kind=i_def) :: element_order_h, element_order_v
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -691,7 +691,7 @@ contains
     constant_exists = detj_at_w2_inventory_fe%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -748,7 +748,7 @@ contains
     constant_exists = detj_at_w2_inventory_fv%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -941,7 +941,7 @@ contains
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       ! NB: this assumes heights are in the lowest-order space
-      height_w3  => get_height_fv( config, mesh, W3 )
+      height_w3 => get_height_fv( config, mesh, W3 )
       height_wth => get_height_fv( config, mesh, Wtheta)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
@@ -987,9 +987,9 @@ contains
     type(function_space_type),    pointer :: fs
     integer(tik)                          :: id
 
-    integer(i_def) :: geometry
-    real(r_def)    :: planet_radius
-    real(r_def)    :: domain_height
+    integer(kind=i_def) :: geometry
+    real(kind=r_def)    :: planet_radius
+    real(kind=r_def)    :: domain_height
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dA_msl_proj_inventory%is_initialised()) then
@@ -1054,10 +1054,10 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
 
-    logical(l_def), parameter :: use_fe = .true.
+    logical(kind=l_def), parameter :: use_fe = .true.
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1128,7 +1128,7 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    logical(l_def), parameter :: use_fe = .false.
+    logical(kind=l_def), parameter :: use_fe = .false.
 
     ! NB: Longitude and latitude fields are computed simultaneously
     ! Determine inventory based on space
@@ -1190,10 +1190,10 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    logical(l_def), parameter :: use_fe = .true.
+    logical(kind=l_def), parameter :: use_fe = .true.
 
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1264,7 +1264,7 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    logical(l_def), parameter :: use_fe = .false.
+    logical(kind=l_def), parameter :: use_fe = .false.
 
     ! NB: Longitude and latitude fields are computed simultaneously
     ! Determine inventory based on space
@@ -1334,12 +1334,12 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
-    integer(i_def) :: geometry
-    integer(i_def) :: coord_system
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: coord_system
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
 
-    real(r_def) :: scaled_radius
+    real(kind=r_def) :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry= geometry_spherical
@@ -1349,12 +1349,12 @@ contains
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    coord_system = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      height => get_height_fv( config, mesh, space_id )
+      height => get_height_fv(config, mesh, space_id)
       return
     end if
 
@@ -1453,7 +1453,7 @@ contains
 
     type(config_type), intent(in) :: config
     type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in) :: space_id
+    integer(kind=i_def),    intent(in) :: space_id
 
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1467,9 +1467,9 @@ contains
     integer(tik)                          :: id
     integer(kind=i_def)                   :: depth
 
-    integer(i_def) :: geometry
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry = geometry_spherical

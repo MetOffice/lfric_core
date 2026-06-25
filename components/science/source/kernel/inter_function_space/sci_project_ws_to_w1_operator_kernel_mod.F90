@@ -40,13 +40,13 @@ type, public, extends(kernel_type) :: project_ws_to_w1_operator_kernel_type
   private
   type(arg_type) :: meta_args(8) = (/                                               &
        arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W1, ANY_DISCONTINUOUS_SPACE_1), &! projection_operator
-       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),                   &! chi_1, chi_2, chi_3
-       arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     &! panel_id
-       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! direction
-       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! geometry
-       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! topology
-       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  &! coord_system
-       arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                                   &! scaled_radius
+       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),                   & ! chi_1, chi_2, chi_3
+       arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     & ! panel_id
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! direction
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! geometry
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! topology
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! coord_system
+       arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                                   & ! scaled_radius
    /)
   type(func_type) :: meta_funcs(3) = (/                              &
        func_type(W1,                        GH_BASIS),               &
