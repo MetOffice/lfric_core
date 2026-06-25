@@ -211,8 +211,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(function_space_type),   pointer :: w2_fs
     type(function_space_type),   pointer :: w3_fs
@@ -290,8 +290,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(function_space_type),   pointer :: w2_fs
     type(function_space_type),   pointer :: w3_fs
@@ -374,9 +374,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                       :: ndata, k_h, k_v
     type(field_type), pointer                 :: weights_high_low
@@ -458,9 +458,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: coarse_mesh
-    type(mesh_type),   intent(in), pointer :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                       :: ndata, k_h, k_v
     type(field_type), pointer                 :: weights_high_low
@@ -832,7 +832,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -857,7 +857,7 @@ contains
 
     implicit none
 
-    type(mesh_type), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -882,7 +882,7 @@ contains
 
     implicit none
 
-    type(mesh_type),intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
 
@@ -909,7 +909,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lon_map_op
     logical(kind=l_def)               :: constant_exists
@@ -940,7 +940,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lat_map_op
     logical(kind=l_def)               :: constant_exists
@@ -969,8 +969,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_up_map_op
     logical(kind=l_def)               :: constant_exists
@@ -1030,7 +1030,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in),  pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lat_sample_op
     logical(kind=l_def)               :: constant_exists
@@ -1059,8 +1059,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_up_sample_op
     logical(kind=l_def)               :: constant_exists
@@ -1089,8 +1089,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     integer(kind=i_def) :: geometry
     integer(kind=i_def) :: topology
@@ -1171,8 +1171,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     integer(kind=i_def) :: geometry
     integer(kind=i_def) :: topology
@@ -1253,8 +1253,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     integer(kind=i_def) :: geometry
     integer(kind=i_def) :: topology
@@ -1338,8 +1338,8 @@ contains
                                   only: w3_to_w2_displacement_kernel_type
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(local_mesh_type),     pointer :: local_mesh
     type(field_type),          pointer :: w3_to_w2_displacement
@@ -1422,9 +1422,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists
@@ -1468,9 +1468,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: fine_mesh
+    type(mesh_type),   intent(in) :: coarse_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists
@@ -1513,9 +1513,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists
@@ -1558,9 +1558,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: fine_mesh
+    type(mesh_type),   intent(in) :: coarse_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists

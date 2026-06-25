@@ -247,7 +247,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     ! Internal variables
     type(mesh_type),           pointer :: twod_mesh
@@ -340,7 +340,7 @@ contains
 
     implicit none
 
-    type(mesh_type),  pointer, intent(in) :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(mesh_type),  pointer :: prime_extrusion_mesh
     type(field_type), pointer :: panel_id_ptr
@@ -361,7 +361,7 @@ contains
 
     implicit none
 
-    type(mesh_type), pointer, intent(in) :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(mesh_type),  pointer :: prime_extrusion_mesh
     type(field_type), pointer :: coords_ptr(:)
@@ -386,7 +386,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(field_type),          pointer :: extended_chi(:)
     logical(kind=l_def)                :: constant_exists
@@ -451,7 +451,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(field_type),          pointer :: dA_at_w2
     logical(kind=l_def)                :: constant_exists
@@ -506,7 +506,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3
@@ -661,7 +661,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w2
@@ -729,7 +729,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w2
@@ -784,7 +784,7 @@ contains
     implicit none
 
     type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(field_type),          pointer :: dz_w3
     logical(kind=l_def)                :: constant_exists
@@ -829,7 +829,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: dx_at_w2
@@ -870,11 +870,11 @@ contains
 
     implicit none
 
-    type(mesh_type),  intent(in), pointer :: mesh
+    type(mesh_type),  intent(in) :: mesh
 
-    logical(kind=l_def)                   :: constant_exists
-    type(field_type),             pointer :: dx_at_w2
-    type(field_type),             pointer :: detj_at_w2
+    logical(kind=l_def)          :: constant_exists
+    type(field_type),    pointer :: dx_at_w2
+    type(field_type),    pointer :: detj_at_w2
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
@@ -1043,9 +1043,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1117,9 +1117,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1180,7 +1180,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
     integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
@@ -1253,9 +1253,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1319,9 +1319,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1452,7 +1452,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
     integer(kind=i_def),    intent(in) :: space_id
 
     type(inventory_by_mesh_type), pointer :: inventory
@@ -1569,7 +1569,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(local_mesh_type),    pointer :: local_mesh
     type(integer_field_type), pointer :: selector
@@ -1598,7 +1598,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(local_mesh_type),    pointer :: local_mesh
     type(integer_field_type), pointer :: selector
