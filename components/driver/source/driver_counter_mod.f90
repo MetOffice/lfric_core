@@ -34,11 +34,7 @@ contains
     type(config_type), intent(in) :: config
     character(*),      intent(in) :: identifier
 
-    logical(l_def) :: subroutine_counters
-
-    subroutine_counters = config%io%subroutine_counters()
-
-    if ( subroutine_counters ) then
+    if ( config%io%subroutine_counters() ) then
       allocate( halo_calls, source=count_type('halo_calls') )
       call halo_calls%counter( identifier )
     end if
@@ -64,15 +60,9 @@ contains
     type(config_type), intent(in) :: config
     character(*),      intent(in) :: identifier
 
-    logical(l_def)              :: subroutine_counters
-    character(str_max_filename) :: counter_output_suffix
-
-    subroutine_counters   = config%io%subroutine_counters()
-    counter_output_suffix = config%io%counter_output_suffix()
-
-    if (subroutine_counters) then
+    if ( config%io%subroutine_counters() ) then
       call halo_calls%counter( identifier )
-      call halo_calls%output_counters( counter_output_suffix )
+      call halo_calls%output_counters( config%io%counter_output_suffix() )
     end if
 
   end subroutine final_counters
