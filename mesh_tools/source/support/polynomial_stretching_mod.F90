@@ -164,9 +164,9 @@ end subroutine polynomial_parameters
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
-!> @param u_inner   Unit mesh coordinate betwen inner and stretch
-!> @param u_outer   Unit mesh coordinate between stretch and outer
-!> @param t_coord   The output (transformed) coordinate
+!> @param u_inner   u coordinate of boundary between inner and stretch regions (unit-mesh).
+!> @param u_outer   u coordinate of boundary between stretch and outer regions (unit-mesh)
+!> @param t_coord   The transformed output coordinate.
 function polynomial_stretch( u_coord, param_a, param_b, param_c, &
                              u_inner, u_outer ) &
                              result( t_coord )
