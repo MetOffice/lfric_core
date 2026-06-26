@@ -3,7 +3,6 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
-!> @todo Edit the kernel with tutorial tasks #3982
 
 
 !> @brief Applies horizontal Smagorinsky diffusion visc_h * (d2dx2 + d2dy2) to
@@ -52,21 +51,21 @@ module tracer_tutorial_diff_kernel_mod
 contains
 
 !> @brief Calculates horizontal Smagorinsky diffusion for a tracer variable
-!! @param[in] nlayers Number of layers in the mesh
-!! @param[in,out] theta_inc Diffusion increment for temperature field
-!! @param[in] theta_n Input temperature field
-!! @param[in] map_wt_stencil_size Number of cells in the stencil at the base
-!!                                of the column for Wtheta
-!! @param[in] map_wt_stencil Array holding the dofmap for the stencil at the
-!!                           base of the column for Wtheta
-!! @param[in] visc_h Diffusion coefficient for scalars on Wtheta points
-!! @param[in] dx_at_w2 Grid length at cell faces
-!! @param[in] ndf_wt Number of degrees of freedom per cell for theta space
-!! @param[in] undf_wt  Number of unique degrees of freedom for theta space
-!! @param[in] map_wt Cell dofmap for theta space
-!! @param[in] ndf_w2 Number of degrees of freedom per cell for w2 space
-!! @param[in] undf_w2  Number of unique degrees of freedom for w2 space
-!! @param[in] map_w2 Cell dofmap for w2 space
+!> @param[in] nlayers Number of layers in the mesh
+!> @param[in,out] theta_inc Diffusion increment for temperature field
+!> @param[in] theta_n Input temperature field
+!> @param[in] map_wt_stencil_size Number of cells in the stencil at the base
+!>                                of the column for Wtheta
+!> @param[in] map_wt_stencil Array holding the dofmap for the stencil at the
+!>                           base of the column for Wtheta
+!> @param[in] visc_h Diffusion coefficient for scalars on Wtheta points
+!> @param[in] dx_at_w2 Grid length at cell faces
+!> @param[in] ndf_wt Number of degrees of freedom per cell for theta space
+!> @param[in] undf_wt  Number of unique degrees of freedom for theta space
+!> @param[in] map_wt Cell dofmap for theta space
+!> @param[in] ndf_w2 Number of degrees of freedom per cell for w2 space
+!> @param[in] undf_w2  Number of unique degrees of freedom for w2 space
+!> @param[in] map_w2 Cell dofmap for w2 space
 subroutine tracer_tutorial_diff_code( nlayers,                              &
                                       theta_inc,                            &
                                       theta_n,                              &
@@ -95,8 +94,8 @@ subroutine tracer_tutorial_diff_code( nlayers,                              &
 
   ! Internal variables
   integer(kind=i_def) :: k
-  real(kind=r_def)    :: d2dx, d2dy
-  real(kind=r_def), dimension(0:nlayers-1) :: idx2, idy2
+  real(kind=r_def)    :: d2dx
+  real(kind=r_def), dimension(0:nlayers-1) :: idx2
 
   ! Assumed direction for derivatives in this kernel is:
   !  y
@@ -131,7 +130,6 @@ subroutine tracer_tutorial_diff_code( nlayers,                              &
   ! N.B. not accounting for difference between w3 and wtheta heights
   do k = 1, nlayers - 1
     idx2(k) = (2.0_r_def/(dx_at_w2(map_w2(1)+k)+dx_at_w2(map_w2(3)+k)))**2
-    idy2(k) = (2.0_r_def/(dx_at_w2(map_w2(2)+k)+dx_at_w2(map_w2(4)+k)))**2
   end do
 
   ! Horizontal theta diffusion
@@ -142,9 +140,7 @@ subroutine tracer_tutorial_diff_code( nlayers,                              &
   do k = 1, nlayers - 1
     d2dx = (theta_n(map_wt_stencil(1,2) + k)  - 2.0_r_def*theta_n(map_wt_stencil(1,1) + k) +      &
             theta_n(map_wt_stencil(1,4) + k) ) * idx2(k)
-    d2dy = (theta_n(map_wt_stencil(1,3) + k)  - 2.0_r_def*theta_n(map_wt_stencil(1,1) + k) +      &
-            theta_n(map_wt_stencil(1,5) + k) ) * idy2(k)
-    theta_inc(map_wt(1) + k) = visc_h(map_wt(1) + k) * (d2dx + d2dy)
+    theta_inc(map_wt(1) + k) = visc_h(map_wt(1) + k) * (d2dx)
   end do
 
 

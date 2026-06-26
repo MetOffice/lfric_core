@@ -65,6 +65,51 @@ contains
 
   end subroutine invoke_rtran_halo_exchange
 
+  !-----------------------------------------------------------------------------
+  !> @brief Sets the values of a field up to some depth
+  !> @details This routine allows the values of an integer field to be set into
+  !!          the halos up to some specified depth.
+  !!          Specifying a halo depth to loop over for a built-in is currently
+  !!          only possible through an optimisation script, which may not be a
+  !!          reasonable solution (at the time of the inclusion of this code,
+  !!          the computation of the face selectors uses this routine but
+  !!          cannot use it with an optimisation script). PSyclone issue #3423
+  !!          captures this requirement.
+  !> @param[in,out] field  The field to set the values of
+  !> @param[in]     value  The value to set the field to
+  !> @param[in]     depth  Halo depth for setting the field
+  subroutine invoke_deep_int_setval_c(field, value, depth)
+
+    implicit none
+
+    type(integer_field_type), intent(inout) :: field
+    integer(kind=i_def),      intent(in)    :: value
+    integer(kind=i_def),      intent(in)    :: depth
+    integer(kind=i_def) :: df
+    integer(kind=i_def), pointer, dimension(:) :: field_data
+    type(integer_field_proxy_type) :: field_proxy
+    integer(kind=i_def) :: loop_start
+    integer(kind=i_def) :: loop_stop
+
+    ! Initialise field and/or operator proxies
+    field_proxy = field%get_proxy()
+    field_data => field_proxy%data
+
+    ! Set-up all of the loop bounds
+    loop_start = 1
+    loop_stop = field_proxy%vspace%get_last_dof_halo(depth)
+
+    ! Call kernels and communication routines
+    do df = loop_start, loop_stop, 1
+      field_data(df) = value
+    end do
+
+    ! Set halos dirty/clean for fields modified in the above loop(s)
+    call field_proxy%set_dirty()
+    call field_proxy%set_clean(depth)
+
+  end subroutine invoke_deep_int_setval_c
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Psyclone does not currently have native support for builtins with mixed
     ! precision, this will be addressed in https://github.com/stfc/PSyclone/issues/1786

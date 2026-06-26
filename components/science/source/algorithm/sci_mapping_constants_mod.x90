@@ -42,6 +42,7 @@ module sci_mapping_constants_mod
                                                tik, LPROF
 
   ! Configuration
+  use base_mesh_config_mod,              only: geometry, topology
   use finite_element_config_mod,         only: element_order_h, &
                                                element_order_v
 
@@ -287,6 +288,7 @@ contains
     chi => get_coordinates(mesh_id)
     panel_id => get_panel_id(mesh_id)
 
+
     if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
     ! Kernels only work for lowest order spaces so use finite volume
@@ -302,7 +304,8 @@ contains
                  compute_sample_u_ops_kernel_type(u_lon_sample,                &
                                                   u_lat_sample,                &
                                                   u_up_sample,                 &
-                                                  chi, panel_id) )
+                                                  chi, panel_id,               &
+                                                  geometry, topology) )
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.mapping' )
 
