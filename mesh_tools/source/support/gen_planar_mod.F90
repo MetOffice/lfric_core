@@ -1983,7 +1983,7 @@ subroutine generate(self)
     call stretch_coords(self)
   end if
 
-  ! NOTE that due to the way cell centres are calculated for periodic meshes
+  ! NOTE: Due to the way cell centres are calculated for periodic meshes
   ! this calculation must be done before rotation.
   call calc_cell_centres(self)
 
