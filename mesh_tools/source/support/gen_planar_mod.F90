@@ -1708,23 +1708,24 @@ subroutine stretch_coords(self)
   class(gen_planar_type), intent(inout)  :: self
 
   select case (self%stretch_function)
-    case (stretch_function_uniform)
-       call apply_uniform_scaling(self)
-       call apply_domain_centre(self)
+  case (stretch_function_uniform)
+      call apply_uniform_scaling(self)
+      call apply_domain_centre(self)
 
-    case (stretch_function_polynomial)
+  case (stretch_function_polynomial)
       call apply_polynomial_stretch(self)
       call apply_shift(self)
       call apply_domain_centre(self)
 
-   case (stretch_function_inflation)
-      write( log_scratch_space, '(A,A)' )                        &
-      "Stretch_function inflation is not a true transformation", &
-      "and so the mesh has to be created directly, rather than by stretching the unit-mesh."
+  case (stretch_function_inflation)
+      write( log_scratch_space, '(A)' )                                &
+          'stretch_function_inflation is not a true transformation' // &
+          'and so the mesh has to be created directly, rather than' // &
+          'by stretching the unit-mesh.'
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )
 
-    case default
-        call log_event( "Unrecognised value of stretch_function", &
+  case default
+      call log_event( "Unrecognised value of stretch_function", &
                       LOG_LEVEL_ERROR )
   end select
 
