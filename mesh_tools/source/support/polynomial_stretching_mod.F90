@@ -92,11 +92,11 @@ end function calculate_offset
 !!          Outer region:   t = to + c (u - uo).
 !!          This subroutine returns the parameters a, b and c
 !!          used in these functions.
-!> @param param_a   Parameter a
-!> @param param_b   Parameter b
-!> @param param_c   Parameter c
-!> @param u_domain  u coordinate of domain boundary (uniform-mesh).
-!> @param u_inner   u coordinate of boundary between inner and stretch regions (uniform-mesh).
+!> @param param_a   Parameter a, used in stretch region
+!> @param param_b   Parameter b, used in inner region
+!> @param param_c   Parameter c, used in outer region
+!> @param u_domain  u coordinate of domain boundary (uniform-mesh)
+!> @param u_inner   u coordinate of boundary between inner and stretch regions (uniform-mesh)
 !> @param u_outer   u coordinate of boundary between stretch and outer regions (uniform-mesh)
 !> @param du        Cell size (uniform-mesh)
 !> @param boundary  Boundary enumeration which maps to a particular
@@ -113,8 +113,8 @@ subroutine polynomial_parameters( param_a, param_b, param_c, &
   real(r_def) :: l_stretch
   integer(i_def) :: axis_direction
 
-  ! Given the coordinates u with mesh size du,
-  ! define new coordinates t such that in the outer and inner regions,
+  ! Given the coordinates (u) with mesh size (du),
+  ! define new coordinates (t) such that in the outer and inner regions,
   ! the spacing is cell_size_outer and cell_size_inner and in the
   ! stretch region (in between the inner and outer) the coordinates
   ! satisfy t = a ( u - ui) ^n + b u where ui is the boundary between the
@@ -162,12 +162,12 @@ end subroutine polynomial_parameters
 !!          Outer region:   t = to + c (u - uo).
 !!          This subroutine calculates the value t, given u.
 !> @param u_coord   The input coordinate (unit-mesh)
-!> @param param_a   Parameter a
-!> @param param_b   Parameter b
-!> @param param_c   Parameter c
-!> @param u_inner   u coordinate of boundary between inner and stretch regions (unit-mesh).
+!> @param param_a   Parameter a, used in stretch region
+!> @param param_b   Parameter b, used in inner region
+!> @param param_c   Parameter c, used in outer region
+!> @param u_inner   u coordinate of boundary between inner and stretch regions (unit-mesh)
 !> @param u_outer   u coordinate of boundary between stretch and outer regions (unit-mesh)
-!> @param t_coord   The transformed output coordinate.
+!> @param t_coord   The transformed output coordinate
 function polynomial_stretch( u_coord, param_a, param_b, param_c, &
                              u_inner, u_outer ) &
                              result( t_coord )
