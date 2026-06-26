@@ -95,10 +95,10 @@ end function calculate_offset
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
-!> @param u_domain  Uniform mesh coordinate at the end of the mesh
-!> @param u_inner   Uniform mesh coordinate betwen inner and stretch
-!> @param u_outer   Uniform mesh coordinate between stretch and outer
-!> @param du        Uniform mesh cell size
+!> @param u_domain  u coordinate of domain boundary (uniform-mesh).
+!> @param u_inner   u coordinate of boundary between inner and stretch regions (uniform-mesh).
+!> @param u_outer   u coordinate of boundary between stretch and outer regions (uniform-mesh)
+!> @param du        Cell size (uniform-mesh)
 !> @param boundary  Boundary enumeration (either 1,2,3,4)
 subroutine polynomial_parameters( param_a, param_b, param_c, &
                                   u_domain, u_inner, u_outer, du, boundary )
