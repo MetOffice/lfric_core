@@ -1714,7 +1714,7 @@ subroutine stretch_coords(self)
 
   case (stretch_function_polynomial)
       call apply_polynomial_stretch(self)
-      call apply_shift(self)
+      call recentre_high_resolution_region(self)
       call apply_domain_centre(self)
 
   case (stretch_function_inflation)
@@ -2502,8 +2502,10 @@ end subroutine set_partition_parameters
 
 !------------------------------------------------------------------------------
 !> @brief Apply a uniform scaling.
-!> @details When applying to the unit mesh coordinates this results in a
-!!          uniform resolution mesh.
+!> @details Using the unit mesh and target cell size, calculate the scaling
+!!        factor and apply this to all coordinates to create a transformed
+!!        mesh with cell spacing given by the target cell size. This is used
+!!        as part of the stretch_function_uniform option.
 !------------------------------------------------------------------------------
 subroutine apply_uniform_scaling(self)
 
@@ -2536,8 +2538,9 @@ end subroutine apply_uniform_scaling
 
 !-------------------------------------------------------------------------------
 !> @brief Recentre the mesh from (0,0) to the domain_centre.
-!> @details For variable resolution meshes this centres the centre of the
-!!        high resolution region at the domain_centre.
+!> @details For fixed resolution meshes, this centres the mesh at the domain_centre.
+!!        For variable resolution meshes this centres the centre of the high resolution
+!!        region at the domain_centre. 
 !-------------------------------------------------------------------------------
 subroutine apply_domain_centre(self)
 
@@ -2558,13 +2561,13 @@ subroutine apply_domain_centre(self)
 end subroutine apply_domain_centre
 
 !-------------------------------------------------------------------------------
-!> @brief Apply a shift to the mesh coordinates
+!> @brief Calculate and apply a shift to the mesh coordinates.
 !> @details This is applied after the polynomial stretching so that the high
 !!        resolution region is centred on (0,0). This allows for a
 !!        non-symmetric variable resolution mesh e.g. with a larger outer
 !!        region in the North than the South.
 !-------------------------------------------------------------------------------
-subroutine apply_shift(self)
+subroutine recentre_high_resolution_region(self)
 
   implicit none
 
@@ -2584,7 +2587,7 @@ subroutine apply_shift(self)
 
   enddo
 
-end subroutine apply_shift
+end subroutine recentre_high_resolution_region
 
 !-------------------------------------------------------------------------------
 !> @brief Apply the polynomial stretching to the unit mesh coordinates
