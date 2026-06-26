@@ -157,10 +157,9 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
     integer(i_def),    intent(in) :: space_id
     logical(l_def),    intent(in) :: use_fe
-
-    type(mesh_type), intent(in), pointer :: mesh
 
     type(inventory_by_local_mesh_type), intent(inout) :: long_inventory
     type(inventory_by_local_mesh_type), intent(inout) :: lat_inventory
@@ -595,7 +594,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3

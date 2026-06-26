@@ -153,7 +153,8 @@ contains
 
     implicit none
 
-    type(mesh_type), pointer, intent(in) :: mesh
+    type(mesh_type), intent(in) :: mesh
+
     type(operator_type),         pointer :: project_xdot_to_w2
     type(operator_type),         pointer :: project_ydot_to_w2
     type(operator_type),         pointer :: project_zdot_to_w2
@@ -883,6 +884,7 @@ contains
     implicit none
 
     type(mesh_type), intent(in) :: mesh
+
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
 
@@ -940,7 +942,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type), intent(in) :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lat_map_op
     logical(kind=l_def)               :: constant_exists
@@ -1000,7 +1002,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lon_sample_op
     logical(kind=l_def)               :: constant_exists
