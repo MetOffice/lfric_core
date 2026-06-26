@@ -2631,7 +2631,8 @@ subroutine apply_polynomial_stretch(self)
 
     ! Calculate the parameters required for the stretching transform
     call polynomial_parameters( param_a, param_b, param_c, &
-         u_domain(boundary), u_inner, u_outer, du, boundary )
+                                u_domain(boundary), u_inner, & 
+                                u_outer, du, boundary )
 
     ! Apply the stretching transformation to each coordinate
     do vert=1, nverts
