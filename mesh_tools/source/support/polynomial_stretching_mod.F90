@@ -160,7 +160,7 @@ end subroutine polynomial_parameters
 !!          Stretch region: t = a (u - ui) ^n + b u
 !!          Outer region:   t = to + c (u - uo).
 !!          This subroutine calculates the value t, given u.
-!> @param u_coord   The input (unit mesh) coordinate
+!> @param u_coord   The input coordinate (unit-mesh)
 !> @param param_a   Parameter a
 !> @param param_b   Parameter b
 !> @param param_c   Parameter c
