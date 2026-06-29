@@ -411,7 +411,7 @@ program planar_mesh_generator
 
   ! This enables support meshes to be created with a variable
   ! resolution stretching function.
-  if (configuration%namelist_exists('stretch_transform')) then
+  if (config%namelist_exists('stretch_transform')) then
     do j=1, n_meshes
       if (trim(mesh_names(j)) == trim(transform_mesh)) then
         fine_mesh_edge_cells_x = edge_cells_x(j)
