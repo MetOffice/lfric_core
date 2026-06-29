@@ -8,7 +8,6 @@
 !
 program lfric_xios_time_read_test
 
-    use io_context_mod,         only: callback_clock_arg
     use lfric_xios_context_mod, only: lfric_xios_context_type
     use lfric_xios_driver_mod,  only: lfric_xios_initialise, lfric_xios_finalise
     use lfric_xios_utils_mod,   only: read_time_data
@@ -23,8 +22,6 @@ program lfric_xios_time_read_test
     type(xios_date), allocatable :: result(:), check(:)
     integer :: t
 
-    procedure(callback_clock_arg), pointer :: before_close => null()
-
     call test_db%initialise()
     call lfric_xios_initialise( "test", test_db%comm, .false. )
 
@@ -33,8 +30,7 @@ program lfric_xios_time_read_test
     call io_context%initialise( "test_io_context", 1, 10 )
     call io_context%initialise_xios_context( test_db%comm,                    &
                                              test_db%chi,  test_db%panel_id,  &
-                                             test_db%clock, test_db%calendar, &
-                                             before_close )
+                                             test_db%clock, test_db%calendar  )
 
     allocate(check(10))
     check = [ xios_date(2024, 1, 1, 15, 1, 0), &

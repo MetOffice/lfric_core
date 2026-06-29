@@ -14,7 +14,9 @@ module lfric_xios_context_mod
                                    l_def
   use field_mod,            only : field_type
   use file_mod,             only : file_type
-  use io_context_mod,       only : io_context_type, callback_clock_arg
+  use io_context_mod,       only : io_context_type
+  use io_config_mod,        only : file_convention,       &
+                                   file_convention_ugrid
   use lfric_xios_file_mod,  only : lfric_xios_file_type
   use lfric_mpi_mod,        only : lfric_comm_type
   use log_mod,              only : log_event, log_scratch_space, &
@@ -23,7 +25,9 @@ module lfric_xios_context_mod
                                    init_xios_dimensions, &
                                    setup_xios_files
   use lfric_xios_file_mod,  only : lfric_xios_file_type
+  use lfric_xios_process_output_mod, only: process_output_file
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
+  use mesh_mod,             only : mesh_type
   use model_clock_mod,      only : model_clock_type
   use timing_mod,           only : start_timing, stop_timing, &
                                    tik, LPROF
@@ -50,11 +54,16 @@ module lfric_xios_context_mod
 
     logical :: uses_timer = .false.
     logical :: xios_context_initialised = .false.
+    !> Flag denoting if this file is a UGRID Planar mesh file with
+    !> projected coordinates that have been scaled
+    logical :: ugrid_scaled_projected_coordinates = .false.
 
   contains
     private
     procedure, public :: initialise => initialise_lfric_xios_context
     procedure, public :: initialise_xios_context
+    procedure, public :: is_initialised
+    procedure, public :: close_context_definition
     procedure, public :: get_filelist
     procedure, public :: set_current
     procedure, public :: tick_context_clock
@@ -86,13 +95,11 @@ contains
   !> @param [in]     panel_id          Panel ID field
   !> @param [in]     model_clock       The model clock.
   !> @param [in]     calendar          The model calendar.
-  !> @param [in]     before_close      Routine to be called before context closes
   !> @param [in]     alt_coords        Array of coordinate fields for alternative meshes
   !> @param [in]     alt_panel_ids     Panel ID fields for alternative meshes
   subroutine initialise_xios_context( this, communicator,    &
                                       chi, panel_id,         &
                                       model_clock, calendar, &
-                                      before_close,          &
                                       alt_coords,            &
                                       alt_panel_ids,         &
                                       start_at_zero )
@@ -105,21 +112,18 @@ contains
     type(field_type),               intent(in)    :: panel_id
     type(model_clock_type),         intent(inout) :: model_clock
     class(calendar_type),           intent(in)    :: calendar
-    procedure(callback_clock_arg), pointer, &
-                                    intent(in)    :: before_close
     type(field_type),     optional, intent(in)    :: alt_coords(:,:)
     type(field_type),     optional, intent(in)    :: alt_panel_ids(:)
     logical,              optional, intent(in)    :: start_at_zero
 
-    type(linked_list_item_type), pointer :: loop => null()
-    type(lfric_xios_file_type),  pointer :: file => null()
+    type(mesh_type), pointer             :: mesh => null()
     logical :: zero_start
-    integer(tik) :: timing_idlx, timing_idxc
+    integer(tik) :: timing_id
 
     write(log_scratch_space, "(A)") &
         "Initialising XIOS context: " // this%get_context_name()
     call log_event(log_scratch_space, log_level_debug)
-    if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.init_context')
+    if ( LPROF ) call start_timing(timing_id, 'lfric_xios.init_context')
 
     if (present(start_at_zero)) then
       zero_start = start_at_zero
@@ -134,17 +138,42 @@ contains
 
     ! Run XIOS setup routines
     call init_xios_calendar(model_clock, calendar, zero_start, this%context_clock_step)
+
     call init_xios_dimensions(chi, panel_id, alt_coords, alt_panel_ids)
+    ! Obtain information on whether the mesh is ugrid and planar here?
+    ! This is to inform decisions on file post processing work around code path.
+    mesh => chi(1)%get_mesh()
+    if ( mesh%is_geometry_planar() .and. &
+                    file_convention == file_convention_ugrid ) then
+      this%ugrid_scaled_projected_coordinates = .true.
+    end if
     if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist)
 
-    if (associated(before_close)) call before_close(model_clock)
+    if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.init_context')
+
+  end subroutine initialise_xios_context
+
+  !> @brief Close the XIOS context definition and read any files that need to
+  !>        be read from.
+  !!
+  subroutine close_context_definition(this)
+
+    implicit none
+
+    class(lfric_xios_context_type), intent(inout) :: this
+
+    type(linked_list_item_type), pointer :: loop => null()
+    type(lfric_xios_file_type),  pointer :: file => null()
+    integer(tik) :: timing_id
+
+    call this%set_current()
 
     ! Close the context definition - no more I/O configuration operations
     ! can be defined after this point
-    if ( LPROF ) call start_timing(timing_idxc, 'xios.close_context_definition')
+    if ( LPROF ) call start_timing(timing_id, 'xios.close_context_definition')
     call log_event('XIOS context definition closing', log_level_debug)
     call xios_close_context_definition()
-    if ( LPROF ) call stop_timing(timing_idxc, 'xios.close_context_definition')
+    if ( LPROF ) call stop_timing(timing_id, 'xios.close_context_definition')
     call log_event('XIOS context definition closed', log_level_debug)
 
     this%xios_context_initialised = .true.
@@ -161,9 +190,18 @@ contains
         loop => loop%next
       end do
     end if
-    if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.init_context')
 
-  end subroutine initialise_xios_context
+  end subroutine close_context_definition
+
+  function is_initialised(this) result(initialised)
+    implicit none
+
+    class(lfric_xios_context_type), intent(in) :: this
+    logical :: initialised
+
+    initialised = this%xios_context_initialised
+
+  end function is_initialised
 
   subroutine finalise( this )
     implicit none
@@ -185,8 +223,12 @@ contains
     type(lfric_xios_file_type),  pointer :: file => null()
     integer(tik) :: timing_idlx, timing_idxc
 
-    if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.finalise_context')
+
     if (this%xios_context_initialised) then
+      if ( LPROF ) call start_timing(timing_idlx, 'lfric_xios.finalise_context')
+      call log_event( 'Finalising XIOS context: ' // this%get_context_name(), LOG_LEVEL_DEBUG )
+      call this%set_current()
+
       ! Perform final write
       if (this%filelist%get_length() > 0) then
         loop => this%filelist%get_head()
@@ -208,27 +250,34 @@ contains
       call xios_context_finalize()
       if ( LPROF ) call stop_timing(timing_idxc, 'xios.context_finalize')
 
-      ! We have closed the context on our end, but we need to make sure that XIOS
-      ! has closed the files for all servers before we process them.
-      call init_wait()
+      ! Only take action if this is a regional model with UGRID Projected
+      ! coordinates, as these are awaiting XIOS feature development
+      if ( this%ugrid_scaled_projected_coordinates ) then
+        call log_event("Closing file for post processing.", LOG_LEVEL_DEBUG)
+        ! We have closed the context on our end, but we need to make sure that XIOS
+        ! has closed the files for all servers before we process them.
+        call init_wait()
 
-      ! Close all files in list
-      if (this%filelist%get_length() > 0) then
-        loop => this%filelist%get_head()
-        do while (associated(loop))
-          select type( list_item => loop%payload )
-            type is (lfric_xios_file_type)
-              file => list_item
-              call file%file_close()
-          end select
-          loop => loop%next
-        end do
+        ! Process and close all files in list
+        if (this%filelist%get_length() > 0) then
+          loop => this%filelist%get_head()
+          do while (associated(loop))
+            select type( list_item => loop%payload )
+              type is (lfric_xios_file_type)
+                file => list_item
+                if (file%mode_is_write()) call process_output_file(file)
+                call file%file_close()
+            end select
+            loop => loop%next
+          end do
+        end if
       end if
+
       this%xios_context_initialised = .false.
+      if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.finalise_context')
     end if
     nullify(loop)
     nullify(file)
-    if ( LPROF ) call stop_timing(timing_idlx, 'lfric_xios.finalise_context')
 
   end subroutine finalise_xios_context
 

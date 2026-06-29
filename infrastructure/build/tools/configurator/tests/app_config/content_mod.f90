@@ -13,9 +13,9 @@
 !>
 module config_mod
 
+  use, intrinsic :: iso_fortran_env, only : error_unit, output_unit
+
   use constants_mod,   only: i_def, l_def, str_def, cmdi
-  use log_mod,         only: log_event, log_scratch_space, &
-                             log_level_error, log_level_warning
   use linked_list_mod, only: linked_list_type, linked_list_item_type
 
   use namelist_mod,            only: namelist_type
@@ -91,11 +91,12 @@ subroutine initialise(self, name)
   character(*), optional, intent(in) :: name
 
   if (self%isinitialised) then
-    write(log_scratch_space, '(A)')       &
-        'Application configuration: [' // &
-         trim(self%config_name)        // &
-        '] has already been initiaised.'
-    call log_event(log_scratch_space, log_level_error)
+    write(error_unit, '(A)') &
+        'Application configuration: [' //&
+         trim(self%config_name) //&
+        '] has already been initialised.'
+    flush(error_unit)
+    stop 1
   end if
 
   if (present(name)) then
@@ -103,6 +104,10 @@ subroutine initialise(self, name)
   else
     self%config_name = cmdi
   end if
+
+  ! Allocate linked lists
+  allocate(self%bar)
+  allocate(self%pot)
 
   self%isinitialised = .true.
 
@@ -136,9 +141,10 @@ subroutine add_namelist(self, namelist_obj)
   type is( foo_nml_type )
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
-      write(log_scratch_space, '(A)') &
+      write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
-      call log_event(log_scratch_space, log_level_error)
+      flush(error_unit)
+      stop 1
     else
       allocate(self%foo, source=namelist_obj)
       call self%update_contents(trim(name))
@@ -147,9 +153,10 @@ subroutine add_namelist(self, namelist_obj)
   type is( moo_nml_type )
     ! Multiple instances: NOT ALLOWED
     if (self%namelist_exists(trim(name))) then
-      write(log_scratch_space, '(A)') &
+      write(error_unit, '(A)') &
           trim(name) // ' namelist already allocated.'
-      call log_event(log_scratch_space, log_level_error)
+      flush(error_unit)
+      stop 1
     else
       allocate(self%moo, source=namelist_obj)
       call self%update_contents(trim(name))
@@ -158,17 +165,15 @@ subroutine add_namelist(self, namelist_obj)
   type is ( bar_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      write(log_scratch_space, '(A)') 'Ignoring ' // trim(name) // &
+      write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
           ' namelist: missing profile name.'
-      call log_event(log_scratch_space, log_level_warning)
+      flush(output_unit)
     else if (self%namelist_exists(trim(full_name))) then
-      write(log_scratch_space, '(A)') trim(name) // &
+      write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
-      call log_event(log_scratch_space, log_level_error)
+      flush(error_unit)
+      stop 1
     else
-      if (.not. allocated(self%bar)) then
-        allocate(self%bar)
-      end if
       call self%bar%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
     end if
@@ -176,26 +181,25 @@ subroutine add_namelist(self, namelist_obj)
   type is ( pot_nml_type )
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
-      write(log_scratch_space, '(A)') 'Ignoring ' // trim(name) // &
+      write(output_unit, '(A)') 'Ignoring ' // trim(name) //&
           ' namelist: missing profile name.'
-      call log_event(log_scratch_space, log_level_warning)
+      flush(output_unit)
     else if (self%namelist_exists(trim(full_name))) then
-      write(log_scratch_space, '(A)') trim(name) // &
+      write(error_unit, '(A)') trim(name) //&
           ' namelist (' // trim(profile_name) // '), already allocated.'
-      call log_event(log_scratch_space, log_level_error)
+      flush(error_unit)
+      stop 1
     else
-      if (.not. allocated(self%pot)) then
-        allocate(self%pot)
-      end if
       call self%pot%insert_item( namelist_obj )
       call self%update_contents(namelist_obj%get_full_name())
     end if
 
   class default
-     write(log_scratch_space, '(A)')                  &
-         ' Undefined namelist type(' // trim(name) // &
-         '), for this configuration.'
-     call log_event(log_scratch_space, log_level_error)
+    write(error_unit, '(A)') &
+        ' Undefined namelist type(' // trim(name) //&
+        '), for this configuration.'
+    flush(error_unit)
+    stop 1
 
   end select
 
@@ -272,11 +276,12 @@ function bar_list(self, profile_name) result(bar_nml_obj)
     ! reached without finding the namelist, fail with
     ! an error.
     if (.not. associated(loop)) then
-      write(log_scratch_space, '(A)') &
-          'Instance ' // trim(profile_name) // ' of ' // &
-          'bar_nml_type ' // &
+      write(error_unit, '(A)') &
+          'Instance ' // trim(profile_name) // ' of ' //&
+          'bar_nml_type ' //&
           'not found in configuration.'
-      call log_event(log_scratch_space, log_level_error)
+      flush(error_unit)
+      stop 1
     end if
 
     ! Otherwise 'cast' to a bar_namelist_type
@@ -321,11 +326,12 @@ function pot_list(self, profile_name) result(pot_nml_obj)
     ! reached without finding the namelist, fail with
     ! an error.
     if (.not. associated(loop)) then
-      write(log_scratch_space, '(A)') &
-          'Instance ' // trim(profile_name) // ' of ' // &
-          'pot_nml_type ' // &
+      write(error_unit, '(A)') &
+          'Instance ' // trim(profile_name) // ' of ' //&
+          'pot_nml_type ' //&
           'not found in configuration.'
-      call log_event(log_scratch_space, log_level_error)
+      flush(error_unit)
+      stop 1
     end if
 
     ! Otherwise 'cast' to a pot_namelist_type

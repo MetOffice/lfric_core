@@ -229,7 +229,8 @@ contains
                                           stretching_method_linear
     use finite_element_config_mod, only : cellshape_quadrilateral, &
                                           coord_system_native,     &
-                                          coord_system_xyz
+                                          coord_system_xyz,        &
+                                          coord_space_wchi
     use feign_config_mod,          only : feign_base_mesh_config,      &
                                           feign_extrusion_config,      &
                                           feign_finite_element_config, &
@@ -276,6 +277,8 @@ contains
              element_order_v=0_i_def,           &
              rehabilitate=.true.,               &
              coord_order=0_i_def,               &
+             coord_order_nonprime=1_i_def,      &
+             coord_space=coord_space_wchi,      &
              coord_system=coord_system )
 
     call feign_planet_config( scaling_factor=scaling )

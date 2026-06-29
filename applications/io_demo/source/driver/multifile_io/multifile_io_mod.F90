@@ -20,7 +20,7 @@ module multifile_io_mod
   use multifile_file_setup_mod,only: init_multifile_files
   use inventory_by_mesh_mod,   only: inventory_by_mesh_type
   use io_context_collection_mod, only: io_context_collection_type
-  use io_context_mod,          only: io_context_type, callback_clock_arg
+  use io_context_mod,          only: io_context_type
   use log_mod,                 only: log_event, log_level_error, &
                                      log_level_trace, log_level_info, &
                                      log_scratch_space
@@ -29,7 +29,6 @@ module multifile_io_mod
   use lfric_xios_action_mod,   only: advance_read_only
   use mesh_mod,                only: mesh_type
   use mesh_collection_mod,     only: mesh_collection
-  use model_clock_mod,         only: model_clock_type
   use step_calendar_mod,       only: step_calendar_type
 
   use multifile_io_nml_iterator_mod, only: multifile_io_nml_iterator_type
@@ -121,12 +120,10 @@ contains
     character(str_def) :: time_start
 
     procedure(event_action), pointer :: context_advance
-    procedure(callback_clock_arg), pointer :: before_close
 
     nullify(mesh)
     nullify(chi)
     nullify(panel_id)
-    nullify(before_close)
 
     call iter%initialise(modeldb%config%multifile_io)
     do while (iter%has_next())
@@ -162,8 +159,9 @@ contains
         call io_context%initialise_xios_context( modeldb%mpi%get_comm(),      &
                                                  chi, panel_id,               &
                                                  modeldb%clock, tmp_calendar, &
-                                                 before_close,                &
                                                  start_at_zero=.true. )
+
+        call io_context%close_context_definition()
 
         ! Attach context advancement to the model's clock
         context_advance => advance_read_only
