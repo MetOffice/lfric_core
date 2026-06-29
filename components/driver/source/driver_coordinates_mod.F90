@@ -197,8 +197,8 @@ contains
                             ndf_pid, undf_pid,   &
                             map_pid(:,cell),     &
                             panel_id_proxy%data, &
-!                           geometry,            &
-!                           topology,            &
+                            geometry,            &
+                            topology,            &
                             global_dof_id,       &
                             panel_ncells )
 
@@ -219,8 +219,8 @@ contains
                                     domain_max_x,        &
                                     domain_min_y,        &
                                     panel_id_proxy%data, &
-!                                   geometry,            &
-!                                   topology,            &
+                                    geometry,            &
+                                    topology,            &
                                     scaled_radius,       &
                                     ndf_pid,             &
                                     undf_pid,            &
@@ -230,14 +230,13 @@ contains
     else if ( geometry == geometry_spherical .and. &
               topology /= topology_fully_periodic ) then
 
-print*, 'Calculating with coordinate_lonlatz'
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
         call calc_panel_id( nlayers_pid,         &
                             ndf_pid, undf_pid,   &
                             map_pid(:,cell),     &
                             panel_id_proxy%data, &
-!                           geometry, topology,  &
+                            geometry, topology,  &
                             global_dof_id,       &
                             panel_ncells )
 
@@ -272,7 +271,7 @@ print*, 'Calculating with coordinate_lonlatz'
                             ndf_pid, undf_pid,   &
                             map_pid(:,cell),     &
                             panel_id_proxy%data, &
-!                           geometry, topology,  &
+                            geometry, topology,  &
                             global_dof_id,       &
                             panel_ncells )
 
@@ -335,19 +334,17 @@ print*, 'Calculating with coordinate_lonlatz'
                             undf_pid,           &
                             map_pid,            &
                             panel_id,           &
-!                           geometry, topology, &
+                            geometry, topology, &
                             global_dof_id,      &
                             panel_ncells )
 
-   use base_mesh_config_mod, only: geometry,& ! Remove after test
-                                   topology
     implicit none
 
     integer(kind=i_def), intent(in)  :: nlayers, ndf_pid, undf_pid
     integer(kind=i_def), intent(in)  :: map_pid(ndf_pid)
     real(kind=r_def),    intent(out) :: panel_id(undf_pid)
-!   integer(kind=i_def), intent(in)  :: geometry
-!   integer(kind=i_def), intent(in)  :: topology
+    integer(kind=i_def), intent(in)  :: geometry
+    integer(kind=i_def), intent(in)  :: topology
     integer(kind=i_def), intent(in)  :: global_dof_id(undf_pid)
     integer(kind=i_def), intent(in)  :: panel_ncells
 
@@ -406,17 +403,14 @@ print*, 'Calculating with coordinate_lonlatz'
                                     domain_x,      &
                                     domain_y,      &
                                     panel_id,      &
-!                                   geometry,      &
-!                                   topology,      &
+                                    geometry,      &
+                                    topology,      &
                                     scaled_radius, &
                                     ndf_pid,       &
                                     undf_pid,      &
                                     map_pid        )
 
     use reference_element_mod, only: SWB, SEB, NEB, NWB, SWT, SET, NET, NWT
-
-   use base_mesh_config_mod, only: geometry,& ! Remove after test
-                                   topology
 
     implicit none
 
@@ -430,7 +424,7 @@ print*, 'Calculating with coordinate_lonlatz'
     real(kind=r_def),    intent(in)  :: chi_hat_node(3,ndf), chi_hat_vert(nverts,3)
     real(kind=r_def),    intent(in)  :: domain_x, domain_y
     real(kind=r_def),    intent(in)  :: panel_id(undf_pid)
-!   integer(i_def),      intent(in)  :: geometry, topology
+    integer(i_def),      intent(in)  :: geometry, topology
     real(r_def),         intent(in)  :: scaled_radius
 
     ! Internal variables

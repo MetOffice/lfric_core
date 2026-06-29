@@ -2586,11 +2586,10 @@ contains
 
     class(mesh_type), intent(in) :: self
 
-    logical (l_def) :: answer
+    logical(l_def) :: answer
 
     answer = .false.
-!   answer = self%local_mesh%is_topology_non_periodic() ! Switch over comments after test
-    answer = self%local_mesh%is_topology_periodic()     ! Switch over comments after test
+    answer = self%local_mesh%is_topology_non_periodic()
 
   end function is_topology_non_periodic
 
