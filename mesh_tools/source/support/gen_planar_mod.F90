@@ -1752,10 +1752,10 @@ subroutine apply_uniform_scaling(self)
     ! Calculate the cell spacing, scaling and number of points of unit mesh
     if ( axis_direction == axis_ns ) then
       du = 2.0_r_def / self%edge_cells_y
-      param_a = self%dx / du
+      param_a = self%dy / du
     else
       du = 2.0_r_def / self%edge_cells_x
-      param_a = self%dy / du
+      param_a = self%dx / du
     end if
 
     ! Apply the scaling transformation to each coordinate
