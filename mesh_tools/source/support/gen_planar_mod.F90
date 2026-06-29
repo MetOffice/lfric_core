@@ -2540,7 +2540,7 @@ end subroutine apply_uniform_scaling
 !> @brief Recentre the mesh from (0,0) to the domain_centre.
 !> @details For fixed resolution meshes, this centres the mesh at the domain_centre.
 !!        For variable resolution meshes this centres the centre of the high resolution
-!!        region at the domain_centre. 
+!!        region at the domain_centre.
 !-------------------------------------------------------------------------------
 subroutine apply_domain_centre(self)
 
@@ -2634,7 +2634,7 @@ subroutine apply_polynomial_stretch(self)
 
     ! Calculate the parameters required for the stretching transform
     call polynomial_parameters( param_a, param_b, param_c, &
-                                u_domain(boundary), u_inner, & 
+                                u_domain(boundary), u_inner, &
                                 u_outer, du, boundary )
 
     ! Apply the stretching transformation to each coordinate
