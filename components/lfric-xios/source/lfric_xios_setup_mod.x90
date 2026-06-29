@@ -28,9 +28,9 @@ module lfric_xios_setup_mod
                                            file_convention_cf
   use lfric_mpi_mod,                 only: global_mpi
   use lfric_xios_file_mod,           only: lfric_xios_file_type
-  use lfric_xios_process_output_mod, only: set_xios_geometry_planar, &
-                                           xyz_scaling_factor
+  use lfric_xios_process_output_mod, only: xyz_scaling_factor
   use lfric_xios_utils_mod,          only: set_prime_io_mesh, parse_date_as_xios
+  use lfric_core_version_mod,        only: lfric_core_version_char
   use linked_list_mod,               only: linked_list_type, linked_list_item_type
   use log_mod,                       only: log_event, log_level_error, &
                                            log_level_warning, log_level_info
@@ -44,32 +44,38 @@ module lfric_xios_setup_mod
   use sci_pointwise_convert_xyz2llr_kernel_mod, &
                                      only: pointwise_convert_xyz2llr_kernel_type
   use step_calendar_mod,             only: step_calendar_type
-  use xios,                          only: xios_date,            &
-                                           xios_duration,        &
-                                           xios_define_calendar, &
-                                           xios_set_timestep,    &
-                                           xios_set_start_date,  &
-                                           xios_get_attr,        &
-                                           xios_get_handle,      &
-                                           xios_set_attr,        &
-                                           xios_set_axis_attr,   &
-                                           xios_set_domain_attr, &
-                                           xios_get_domain_attr, &
-                                           xios_add_child,       &
-                                           xios_domain,          &
-                                           xios_domaingroup,     &
-                                           xios_is_valid_domain, &
-                                           xios_axis,            &
-                                           xios_axisgroup,       &
-                                           xios_grid,            &
-                                           xios_gridgroup,       &
-                                           xios_is_valid_grid,   &
-                                           xios_file,            &
-                                           xios_filegroup,       &
-                                           xios_is_valid_file,   &
-                                           xios_field,           &
-                                           xios_fieldgroup,      &
-                                           operator(+), operator(<)
+  use xios,                          only: xios_date,                    &
+                                           xios_date_convert_to_seconds, &
+                                           xios_date_convert_to_string,  &
+                                           xios_duration,                &
+                                           xios_define_calendar,         &
+                                           xios_set_timestep,            &
+                                           xios_set_start_date,          &
+                                           xios_get_attr,                &
+                                           xios_get_calendar_type,       &
+                                           xios_get_handle,              &
+                                           xios_set_attr,                &
+                                           xios_set_axis_attr,           &
+                                           xios_set_domain_attr,         &
+                                           xios_set_file_attr,           &
+                                           xios_set_scalar_attr,         &
+                                           xios_get_domain_attr,         &
+                                           xios_add_child,               &
+                                           xios_domain,                  &
+                                           xios_domaingroup,             &
+                                           xios_is_valid_domain,         &
+                                           xios_is_valid_scalar,         &
+                                           xios_axis,                    &
+                                           xios_axisgroup,               &
+                                           xios_grid,                    &
+                                           xios_gridgroup,               &
+                                           xios_is_valid_grid,           &
+                                           xios_file,                    &
+                                           xios_filegroup,               &
+                                           xios_is_valid_file,           &
+                                           xios_field,                   &
+                                           xios_fieldgroup,              &
+                                           operator(+), operator(<), operator(-)
 
   !>@todo This information should be obtained from the calendar in the future
   use time_config_mod, only: type_of_calendar => calendar_type, &
@@ -325,11 +331,6 @@ contains
       end do
     end if
 
-    ! Tell downstream output processing that the mesh is planar
-    if ( .not. mesh%is_geometry_spherical() ) then
-      call set_xios_geometry_planar()
-    end if
-
     ! Allocate coordinate arrays
     ! The coordinates are computed by cell, so need space for annexed dofs
     allocate(nodes_lon_local(coord_dim_annexed))
@@ -437,6 +438,8 @@ contains
     type(linked_list_item_type), pointer :: loop => null()
     type(lfric_xios_file_type),  pointer :: file => null()
 
+    character(:), allocatable :: core_version_char
+
     if (files_list%get_length() == 0) then
       return
     end if
@@ -447,15 +450,20 @@ contains
     select case(file_convention)
     case (file_convention_ugrid)
       call xios_set_attr( file_definition, convention="UGRID" )
+      call xios_set_attr(file_definition, convention_str="CF-1.12 UGRID-1.0")
 
     case (file_convention_cf)
       call xios_set_attr( file_definition, convention="CF" )
+      call xios_set_attr(file_definition, convention_str="CF-1.12")
 
     case default
       call log_event("Invalid choice for file convention", log_level_error)
 
     end select
 
+    core_version_char = lfric_core_version_char()
+    call xios_set_attr(file_definition, description="LFRic file format " // &
+                                                    core_version_char)
     ! Start at the head of the file linked list
     loop => files_list%get_head()
     do while(associated(loop))
@@ -466,6 +474,7 @@ contains
           file => list_item
           ! Register individual file information with context
           call file%register_with_context()
+
         class default
       end select
 
@@ -1007,7 +1016,10 @@ contains
       end do
     end if
 
-    ! Apply scaling factor for XYZ coordinates
+    ! Apply scaling factor for XYZ coordinates if
+    ! UGRID and planar (projected coordinates).
+    ! Post processing will be applied to these files to work around
+    ! XIOS limitations, pending feature development in XIOS.
     if ( mesh%is_geometry_planar()        .and. &
          file_convention == file_convention_ugrid ) then
       lat_data = lat_data * xyz_scaling_factor

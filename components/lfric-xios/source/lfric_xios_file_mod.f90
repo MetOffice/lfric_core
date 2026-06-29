@@ -18,14 +18,12 @@ module lfric_xios_file_mod
   use file_mod,                      only: file_type,      &
                                            file_mode_read, &
                                            file_mode_write
-  use lfric_xios_process_output_mod, only: process_output_file
   use lfric_xios_field_mod,          only: lfric_xios_field_type
   use lfric_xios_diag_mod,           only: file_is_tagged
   use log_mod,                       only: log_event, log_level_error, &
                                            log_level_trace, log_level_debug, &
                                            log_level_warning
   use mesh_mod,                      only: mesh_type
-  use mod_wait,                      only: init_wait
   use lfric_xios_diag_mod,           only: get_file_name
   use lfric_xios_temporal_mod,       only: temporal_type
   use xios,                          only: xios_file, xios_is_valid_file,    &
@@ -78,10 +76,6 @@ type, public, extends(file_type) :: lfric_xios_file_type
   integer(i_def)              :: file_convention = undef_file_convention
   !> The file frequency in timesteps
   integer(i_def)              :: freq_ts = undef_freq
-  !> @todo field_group is slated for removal, it is a leftover placeholder
-  !!       needed to make checkpointing work for lfric_atm/gungho, but once
-  !!       they are upgraded to use the "fields_in_file" API this can be removed.
-  character(str_def)          :: field_group = undef_group
   !> The XIOS ID of the field group contained within the file
   character(str_def)          :: field_group_id
   !> Flag denoting if the file has been closed
@@ -119,6 +113,7 @@ contains
   procedure, public :: mode_is_write
   procedure, public :: recv_fields
   procedure, public :: send_fields
+  procedure, public :: get_filepath
   final             :: lfric_xios_file_final
 
 end type lfric_xios_file_type
@@ -259,7 +254,14 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
     self%freq_ts = freq
   end if
 
-  if (present(field_group_id)) self%field_group = field_group_id
+  if (present(field_group_id)) then
+    self%field_group_id = field_group_id
+  else
+    ! The convention is to have a single field_group for fields in file
+    ! with mode="read" and to name that field group relative to the
+    ! file `id` with suffix "_field_group"
+    self%field_group_id = trim(self%xios_id)//"_field_group"
+  end if
 
   ! Set up XIOS fields representing attached field collection
   if (present(fields_in_file)) then
@@ -268,7 +270,6 @@ function lfric_xios_file_constructor( file_name, xios_id, io_mode, freq,      &
                       log_level_error )
     end if
     allocate(self%fields(fields_in_file%get_length()))
-    self%field_group_id = trim(self%xios_id)//"_fields"
     call iter%initialise(fields_in_file)
     do field_index = 1, fields_in_file%get_length()
       fld => iter%next()
@@ -321,13 +322,6 @@ subroutine file_close(self)
 
   if (self%is_closed) return
 
-  if ( self%io_mode == FILE_MODE_WRITE ) then
-    call log_event( "Waiting for XIOS to close file ["//trim(self%path)//".nc]", &
-                    log_level_debug )
-    call init_wait()
-    call process_output_file(trim(self%path)//".nc")
-  end if
-
   self%is_closed = .true.
 
 end subroutine file_close
@@ -340,7 +334,7 @@ subroutine register_with_context(self)
   class(lfric_xios_file_type),  intent(inout) :: self
 
   type(xios_filegroup)   :: file_definition
-  type(xios_fieldgroup)  :: field_group_hdl, file_fields
+  type(xios_fieldgroup)  :: file_fields
   type(xios_duration)    :: timestep_duration
   type(xios_date)        :: start_date
 
@@ -426,9 +420,20 @@ subroutine register_with_context(self)
   call xios_get_start_date(start_date)
   self%next_operation = start_date + self%frequency
 
+  ! If field group already exists then get the handle, otherwise create it
+  if (xios_is_valid_fieldgroup(self%field_group_id)) then
+    call xios_get_handle(trim(self%field_group_id), file_fields)
+  else
+    call xios_add_child(self%handle, file_fields, self%field_group_id)
+  end if
+
+  ! Set up read_access attribute for fields in file
+   if (self%mode_is_read()) then
+     call xios_set_attr(file_fields, read_access=.true.)
+   end if
+
   ! Set up fields in file
   if (allocated(self%fields)) then
-    call xios_add_child(self%handle, file_fields, self%field_group_id)
 
     ! Set the temporal operation for fields in the file
     select case(self%operation)
@@ -440,7 +445,7 @@ subroutine register_with_context(self)
 
     ! Iterate over field collection and register fields
     do i = 1, size(self%fields)
-      call self%fields(i)%register(field_read_access=self%mode_is_read())
+      call self%fields(i)%register()
     end do
 
     ! Set up time axis if needed
@@ -457,17 +462,10 @@ subroutine register_with_context(self)
       call xios_set_attr(self%handle, record_offset=record_offset)
     end if
 
-    ! Enable field collection
-    call xios_set_attr(file_fields, enabled=.true.)
-
   end if
 
-  ! LEGACY
-  ! If there is an associated field group, enable it
-  if ( .not. trim(self%field_group) == undef_group ) then
-    call xios_get_handle( trim(self%field_group), field_group_hdl )
-    call xios_set_attr( field_group_hdl, enabled=.true. )
-  end if
+  ! Enable field collection
+  call xios_set_attr(file_fields, enabled=.true.)
 
   ! Enable file
   call xios_set_attr( self%handle, enabled=.true. )
@@ -606,5 +604,19 @@ subroutine lfric_xios_file_final(self)
   if (allocated(self%fields)) deallocate(self%fields)
 
 end subroutine lfric_xios_file_final
+
+!> Gets the file path associated with this file.
+!>
+!> @return character string of the filepath with .nc suffix.
+function get_filepath( this ) result( filepath )
+
+  implicit none
+
+  character(str_max_filename) :: filepath
+  class(lfric_xios_file_type), intent(in), target :: this
+
+  filepath = trim(this%path)//".nc"
+
+end function get_filepath
 
 end module lfric_xios_file_mod

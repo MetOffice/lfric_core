@@ -16,6 +16,7 @@ planet_radius=6371229.0,
 /
 
 &files
+checkpoint_stem_name='restart-io_demo-',
 temporal_file_path='',
 /
 
@@ -52,6 +53,8 @@ coord_system='native'
   counter_output_suffix = 'counter.txt'
   checkpoint_read       = .false.
   checkpoint_write      = .false.
+  end_of_run_checkpoint = .false.
+  checkpoint_times      = 10, 20
   file_convention       = 'UGRID'
 /
 

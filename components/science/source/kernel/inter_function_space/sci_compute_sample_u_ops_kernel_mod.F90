@@ -15,8 +15,8 @@
 module sci_compute_sample_u_ops_kernel_mod
 
   use argument_mod,            only : arg_type, func_type,         &
-                                      GH_FIELD, GH_REAL,           &
-                                      GH_OPERATOR,                 &
+                                      GH_FIELD, GH_SCALAR, GH_REAL,&
+                                      GH_INTEGER, GH_OPERATOR,     &
                                       GH_INC, GH_READ, GH_WRITE,   &
                                       ANY_DISCONTINUOUS_SPACE_3,   &
                                       ANY_SPACE_9,                 &
@@ -34,8 +34,7 @@ module sci_compute_sample_u_ops_kernel_mod
   use reference_element_mod,   only : W, S, N, E, T, B
 
   use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry, topology, &
-                                       geometry_spherical, &
+  use base_mesh_config_mod,      only: geometry_spherical, &
                                        geometry_planar
   use planet_config_mod,         only: scaled_radius
 
@@ -51,12 +50,14 @@ module sci_compute_sample_u_ops_kernel_mod
   !>
   type, public, extends(kernel_type) :: compute_sample_u_ops_kernel_type
     private
-    type(arg_type) :: meta_args(5) = (/                                        &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),               &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),               &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, WTHETA),           &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),                &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3)   &
+    type(arg_type) :: meta_args(7) = (/                                         &
+         arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, W3),               &! u_lon_op
+         arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, W3),               &! u_lat_op
+         arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, WTHETA),           &! u_rad_op
+         arg_type(GH_FIELD*3,   GH_REAL, GH_READ,  ANY_SPACE_9),                &! chi1, chi2, chi3
+         arg_type(GH_FIELD,     GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3),  &! panel_id
+         arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                              &! geometry
+         arg_type(GH_SCALAR, GH_INTEGER, GH_READ)                               &! topology
          /)
     type(func_type) :: meta_funcs(1) = (/                                      &
          func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                       &
@@ -90,6 +91,8 @@ contains
 !> @param[in]     chi2                     Coordinates in the second direction
 !> @param[in]     chi3                     Coordinates in the third direction
 !> @param[in]     panel_id                 A field giving the ID for mesh panels
+!> @param[in]     geometry                 Mesh geometry enumeration value
+!> @param[in]     topology                 Mesh topology enumeration value
 !> @param[in]     ndf_w2b                  Number of DoFs per cell for broken W2
 !> @param[in]     ndf_w3                   Number of DoFs per cell for W3
 !> @param[in]     ndf_wt                   Number of DoFs per cell for Wtheta
@@ -111,6 +114,7 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
                                       ncell_3d_3, u_rad_op,           &
                                       chi1, chi2, chi3,               &
                                       panel_id,                       &
+                                      geometry, topology,             &
                                       ndf_w2b, ndf_w3, ndf_wt,        &
                                       ndf_chi, undf_chi, map_chi,     &
                                       chi_basis, chi_diff_basis,      &
@@ -138,6 +142,8 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
   ! Fields
   real(kind=r_def), dimension(undf_pid), intent(in) :: panel_id
   real(kind=r_def), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+  integer(kind=i_def),                   intent(in) :: geometry
+  integer(kind=i_def),                   intent(in) :: topology
 
   ! Operators
   real(kind=r_def), dimension(ncell_3d_1,ndf_w2b,ndf_w3), intent(inout) :: u_lon_op

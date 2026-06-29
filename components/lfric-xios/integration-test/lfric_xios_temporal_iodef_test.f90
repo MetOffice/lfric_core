@@ -15,7 +15,6 @@ program lfric_xios_temporal_iodef_test
   use event_actor_mod,        only: event_actor_type
   use field_mod,              only: field_type, field_proxy_type
   use file_mod,               only: FILE_MODE_READ, FILE_MODE_WRITE
-  use io_context_mod,         only: callback_clock_arg
   use lfric_xios_action_mod,  only: advance
   use lfric_xios_context_mod, only: lfric_xios_context_type
   use lfric_xios_driver_mod,  only: lfric_xios_initialise, lfric_xios_finalise
@@ -29,7 +28,6 @@ program lfric_xios_temporal_iodef_test
   type(test_db_type)                                 :: test_db
   type(lfric_xios_context_type), target, allocatable :: io_context
 
-  procedure(callback_clock_arg), pointer :: before_close
   type(linked_list_type),        pointer :: file_list
   class(event_actor_type),       pointer :: context_actor
   procedure(event_action),       pointer :: context_advance
@@ -57,12 +55,9 @@ program lfric_xios_temporal_iodef_test
                                                     freq=1,                               &
                                                     fields_in_file=test_db%temporal_fields ) )
 
-  before_close => null()
   call io_context%initialise_xios_context( test_db%comm,                    &
                                            test_db%chi,  test_db%panel_id,  &
-                                           test_db%clock, test_db%calendar, &
-                                           before_close )
-
+                                           test_db%clock, test_db%calendar )
 
   context_advance => advance
   context_actor => io_context
