@@ -2589,7 +2589,8 @@ contains
     logical (l_def) :: answer
 
     answer = .false.
-    answer = self%local_mesh%is_topology_non_periodic()
+!   answer = self%local_mesh%is_topology_non_periodic() ! Switch over comments after test
+    answer = self%local_mesh%is_topology_periodic()     ! Switch over comments after test
 
   end function is_topology_non_periodic
 
