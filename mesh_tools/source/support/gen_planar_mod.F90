@@ -1751,10 +1751,10 @@ subroutine apply_uniform_scaling(self)
 
     ! Calculate the cell spacing, scaling and number of points of unit mesh
     if ( axis_direction == axis_ns ) then
-      du = 2.0_r_def / self%edge_cells_x
+      du = 2.0_r_def / self%edge_cells_y
       param_a = self%dx / du
     else
-      du = 2.0_r_def / self%edge_cells_y
+      du = 2.0_r_def / self%edge_cells_x
       param_a = self%dy / du
     end if
 
@@ -1856,9 +1856,9 @@ subroutine apply_polynomial_stretch(self)
     ! of the fine mesh (fine mesh needed in case this is stretching
     ! a coarser mesh),
     if ( axis_direction == axis_ns ) then
-      du = 2.0_r_def / self%fine_mesh_edge_cells_x
-    else
       du = 2.0_r_def / self%fine_mesh_edge_cells_y
+    else
+      du = 2.0_r_def / self%fine_mesh_edge_cells_x
     end if
 
     nverts = size(self%vert_coords(axis_direction, :))

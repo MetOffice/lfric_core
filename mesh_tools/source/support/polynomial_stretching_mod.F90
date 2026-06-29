@@ -30,12 +30,12 @@ module polynomial_stretching_mod
             polynomial_stretch,        &
             polynomial_parameters
 
-  integer(i_def), public, parameter :: axis_ns = 1
-  integer(i_def), public, parameter :: axis_ew = 2
-  integer(i_def), public, parameter :: boundary_n = 1
-  integer(i_def), public, parameter :: boundary_s = 2
-  integer(i_def), public, parameter :: boundary_e = 3
-  integer(i_def), public, parameter :: boundary_w = 4
+  integer(i_def), public, parameter :: axis_ns = 2 ! Latitude  (North-South)
+  integer(i_def), public, parameter :: axis_ew = 1 ! Longitude (East-West)
+  integer(i_def), public, parameter :: boundary_w = 1 ! West
+  integer(i_def), public, parameter :: boundary_s = 2 ! South
+  integer(i_def), public, parameter :: boundary_e = 3 ! East
+  integer(i_def), public, parameter :: boundary_n = 4 ! North
 
 contains
 
