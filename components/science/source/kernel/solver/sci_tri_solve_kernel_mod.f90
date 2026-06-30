@@ -88,9 +88,9 @@ subroutine tri_solve_code_real32(  nlayers,                    &
   real(kind=real32),   dimension(undf), intent(in)    :: tri_plus
   real(kind=real32),   dimension(undf), intent(in)    :: tri_minus
 
-  integer(kind=i_def)                  :: k, ij
+  integer(kind=i_def)                     :: k, ij
   real(kind=real32),   dimension(nlayers) :: x_new, tri_plus_new
-  real(kind=real32)                     :: denom
+  real(kind=real32)                       :: denom
 
   k  = 0
   ij = map(1)
@@ -132,9 +132,9 @@ subroutine tri_solve_code_real64(  nlayers,                    &
   real(kind=real64),   dimension(undf), intent(in)    :: tri_plus
   real(kind=real64),   dimension(undf), intent(in)    :: tri_minus
 
-  integer(kind=i_def)                  :: k, ij
+  integer(kind=i_def)                     :: k, ij
   real(kind=real64),   dimension(nlayers) :: x_new, tri_plus_new
-  real(kind=real64)                     :: denom
+  real(kind=real64)                       :: denom
 
   k  = 0
   ij = map(1)

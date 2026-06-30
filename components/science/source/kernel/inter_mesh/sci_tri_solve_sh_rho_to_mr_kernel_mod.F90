@@ -97,9 +97,9 @@ subroutine tri_solve_sh_rho_to_mr_code_real32(                                  
   real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_below
 
   ! Internal variables
-  integer(kind=i_def)                     :: k, ij, nlayers_shifted
+  integer(kind=i_def)                        :: k, ij, nlayers_shifted
   real(kind=real32),   dimension(nlayers+1)  :: rhs_new, tri_above_new
-  real(kind=real32)                        :: denom
+  real(kind=real32)                          :: denom
 
   nlayers_shifted = nlayers + 1
 
@@ -150,9 +150,9 @@ subroutine tri_solve_sh_rho_to_mr_code_real64(                                  
   real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_below
 
   ! Internal variables
-  integer(kind=i_def)                     :: k, ij, nlayers_shifted
+  integer(kind=i_def)                        :: k, ij, nlayers_shifted
   real(kind=real64),   dimension(nlayers+1)  :: rhs_new, tri_above_new
-  real(kind=real64)                        :: denom
+  real(kind=real64)                          :: denom
 
   nlayers_shifted = nlayers + 1
 

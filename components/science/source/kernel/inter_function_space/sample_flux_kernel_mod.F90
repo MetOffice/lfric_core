@@ -97,10 +97,9 @@ subroutine sample_flux_code_real32(  nlayers,                      &
   real(kind=real32),   dimension(undf_q),        intent(in)    :: q
 
   ! Internal variables
-  integer(kind=i_def)                :: df, df_q, k, loc
-
+  integer(kind=i_def)                   :: df, df_q, k, loc
   real(kind=real32),   dimension(ndf_q) :: q_cell
-  real(kind=real32)                   :: q_at_node
+  real(kind=real32)                     :: q_at_node
 
   do k = 0, nlayers-1
     do df_q = 1, ndf_q
@@ -141,10 +140,9 @@ subroutine sample_flux_code_real64(  nlayers,                      &
   real(kind=real64),   dimension(undf_q),        intent(in)    :: q
 
   ! Internal variables
-  integer(kind=i_def)                :: df, df_q, k, loc
-
+  integer(kind=i_def)                   :: df, df_q, k, loc
   real(kind=real64),   dimension(ndf_q) :: q_cell
-  real(kind=real64)                   :: q_at_node
+  real(kind=real64)                     :: q_at_node
 
   do k = 0, nlayers-1
     do df_q = 1, ndf_q
