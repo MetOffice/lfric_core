@@ -218,7 +218,7 @@ end subroutine operator_setval_x_kernel_code_real64
 
 ! REAL32 PRECISION to REAL64
 ! ==============================
-subroutine operator_setval_x_kernel_code_real32_to_real64(  cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real32_to_real64(    cell, nlayers, &
                                                               ncell_3d_1, x, &
                                                               ncell_3d_2, y, &
                                                               ndf1, ndf2)
@@ -245,7 +245,7 @@ end subroutine operator_setval_x_kernel_code_real32_to_real64
 
 ! REAL64 PRECISION to REAL32
 ! ==============================
-subroutine operator_setval_x_kernel_code_real64_to_real32(  cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real64_to_real32(    cell, nlayers, &
                                                               ncell_3d_1, x, &
                                                               ncell_3d_2, y, &
                                                               ndf1, ndf2)

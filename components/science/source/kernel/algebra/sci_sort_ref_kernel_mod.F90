@@ -110,7 +110,7 @@ subroutine sort_ref_code_real64(  nlayers,                   &
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt
-  real(kind=real64)   :: theta_k
+  real(kind=real64)  :: theta_k
 
   do k = 1, nlayers
 
