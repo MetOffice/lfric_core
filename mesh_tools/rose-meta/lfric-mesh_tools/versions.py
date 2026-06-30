@@ -1,3 +1,4 @@
+import re
 import sys
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
@@ -20,30 +21,28 @@ class UpgradeError(Exception):
 
 """
 Copy this template and complete to add your macro
-
 class vnXX_txxx(MacroUpgrade):
     # Upgrade macro for <TICKET> by <Author>
-
     BEFORE_TAG = "vnX.X"
     AFTER_TAG = "vnX.X_txxx"
-
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
 """
 
+
 class vn31_t270(MacroUpgrade):
-    # Upgrade macro for #270 by cjohnson-pi
+    """Upgrade macro for ticket #270 by cjohnson-pi."""
 
     BEFORE_TAG = "vn3.1"
     AFTER_TAG = "vn3.1_t270"
 
     def upgrade(self, config, meta_config=None):
-        # Add settings
+        # Commands From: rose-meta/lfric-mesh_tools
         nml = "namelist:planar_mesh"
         apply_stretch_transform = self.get_setting_value(
-            config, [nml, "apply_stretch_transform"])
-        
+            config, [nml, "apply_stretch_transform"]
+        )
         if apply_stretch_transform == ".true.":
             self.add_setting(
                 config,
@@ -56,8 +55,6 @@ class vn31_t270(MacroUpgrade):
                 [nml, "stretch_function"],
                 "'uniform'",
             )
-        self.remove_setting(
-            config, [nml, "apply_stretch_transform"]
-        )
-             
+        self.remove_setting(config, [nml, "apply_stretch_transform"])
+
         return config, self.reports
