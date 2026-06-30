@@ -76,7 +76,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine sample_flux_code_real32(nlayers,                      &
+subroutine sample_flux_code_real32(  nlayers,                      &
                                      flux, u, rmultiplicity, q,    &
                                      ndf_f, undf_f, map_f,         &
                                      ndf_q, undf_q, map_q, basis_q &
@@ -92,14 +92,14 @@ subroutine sample_flux_code_real32(nlayers,                      &
   integer(kind=i_def), dimension(ndf_q), intent(in) :: map_q
 
   real(kind=r_def),    dimension(1,ndf_q,ndf_f), intent(in)    :: basis_q
-  real(kind=real32), dimension(undf_f),        intent(inout) :: flux
-  real(kind=real32), dimension(undf_f),        intent(in)    :: u, rmultiplicity
-  real(kind=real32), dimension(undf_q),        intent(in)    :: q
+  real(kind=real32),   dimension(undf_f),        intent(inout) :: flux
+  real(kind=real32),   dimension(undf_f),        intent(in)    :: u, rmultiplicity
+  real(kind=real32),   dimension(undf_q),        intent(in)    :: q
 
   ! Internal variables
   integer(kind=i_def)                :: df, df_q, k, loc
 
-  real(kind=real32), dimension(ndf_q) :: q_cell
+  real(kind=real32),   dimension(ndf_q) :: q_cell
   real(kind=real32)                   :: q_at_node
 
   do k = 0, nlayers-1
@@ -120,7 +120,7 @@ end subroutine sample_flux_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine sample_flux_code_real64(nlayers,                      &
+subroutine sample_flux_code_real64(  nlayers,                      &
                                      flux, u, rmultiplicity, q,    &
                                      ndf_f, undf_f, map_f,         &
                                      ndf_q, undf_q, map_q, basis_q &
@@ -136,14 +136,14 @@ subroutine sample_flux_code_real64(nlayers,                      &
   integer(kind=i_def), dimension(ndf_q), intent(in) :: map_q
 
   real(kind=r_def),    dimension(1,ndf_q,ndf_f), intent(in)    :: basis_q
-  real(kind=real64), dimension(undf_f),        intent(inout) :: flux
-  real(kind=real64), dimension(undf_f),        intent(in)    :: u, rmultiplicity
-  real(kind=real64), dimension(undf_q),        intent(in)    :: q
+  real(kind=real64),   dimension(undf_f),        intent(inout) :: flux
+  real(kind=real64),   dimension(undf_f),        intent(in)    :: u, rmultiplicity
+  real(kind=real64),   dimension(undf_q),        intent(in)    :: q
 
   ! Internal variables
   integer(kind=i_def)                :: df, df_q, k, loc
 
-  real(kind=real64), dimension(ndf_q) :: q_cell
+  real(kind=real64),   dimension(ndf_q) :: q_cell
   real(kind=real64)                   :: q_at_node
 
   do k = 0, nlayers-1

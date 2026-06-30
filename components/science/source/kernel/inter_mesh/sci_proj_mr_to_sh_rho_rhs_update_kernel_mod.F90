@@ -86,7 +86,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine proj_mr_to_sh_rho_rhs_update_code_real32(                           &
+subroutine proj_mr_to_sh_rho_rhs_update_code_real32(                             &
                                               nlayers_shifted,                   &
                                               tri_below,                         &
                                               tri_diag,                          &
@@ -109,14 +109,14 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_real32(                           &
   integer(kind=i_def), dimension(ndf_w3),    intent(in) :: map_w3
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=real32), dimension(undf_sh_w3),  intent(inout) :: tri_below
-  real(kind=real32), dimension(undf_sh_w3),  intent(inout) :: tri_diag
-  real(kind=real32), dimension(undf_sh_w3),  intent(inout) :: tri_above
-  real(kind=real32), dimension(undf_w3),     intent(in)    :: rho_d
-  real(kind=real32), dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
-  real(kind=real32), dimension(undf_w3),     intent(in)    :: I_upper_i_i
-  real(kind=real32), dimension(undf_w3),     intent(in)    :: I_lower_i_i
-  real(kind=real32), dimension(undf_w3),     intent(in)    :: I_upper_i_im1
+  real(kind=real32),   dimension(undf_sh_w3),  intent(inout) :: tri_below
+  real(kind=real32),   dimension(undf_sh_w3),  intent(inout) :: tri_diag
+  real(kind=real32),   dimension(undf_sh_w3),  intent(inout) :: tri_above
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: rho_d
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_upper_i_i
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_lower_i_i
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_upper_i_im1
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -147,7 +147,7 @@ end subroutine proj_mr_to_sh_rho_rhs_update_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine proj_mr_to_sh_rho_rhs_update_code_real64(                           &
+subroutine proj_mr_to_sh_rho_rhs_update_code_real64(                             &
                                               nlayers_shifted,                   &
                                               tri_below,                         &
                                               tri_diag,                          &
@@ -170,14 +170,14 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_real64(                           &
   integer(kind=i_def), dimension(ndf_w3),    intent(in) :: map_w3
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=real64), dimension(undf_sh_w3),  intent(inout) :: tri_below
-  real(kind=real64), dimension(undf_sh_w3),  intent(inout) :: tri_diag
-  real(kind=real64), dimension(undf_sh_w3),  intent(inout) :: tri_above
-  real(kind=real64), dimension(undf_w3),     intent(in)    :: rho_d
-  real(kind=real64), dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
-  real(kind=real64), dimension(undf_w3),     intent(in)    :: I_upper_i_i
-  real(kind=real64), dimension(undf_w3),     intent(in)    :: I_lower_i_i
-  real(kind=real64), dimension(undf_w3),     intent(in)    :: I_upper_i_im1
+  real(kind=real64),   dimension(undf_sh_w3),  intent(inout) :: tri_below
+  real(kind=real64),   dimension(undf_sh_w3),  intent(inout) :: tri_diag
+  real(kind=real64),   dimension(undf_sh_w3),  intent(inout) :: tri_above
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: rho_d
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_upper_i_i
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_lower_i_i
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_upper_i_im1
 
   ! Internal variables
   integer(kind=i_def) :: df, k

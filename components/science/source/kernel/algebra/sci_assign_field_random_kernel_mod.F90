@@ -61,7 +61,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine assign_field_random_code_real32(nlayers,       &
+subroutine assign_field_random_code_real32(  nlayers,       &
                                              x,             &
                                              scale,         &
                                              ndf, undf, map)
@@ -76,7 +76,7 @@ subroutine assign_field_random_code_real32(nlayers,       &
 
   ! Internal variables
   integer(kind=i_def)              :: df, k
-  real(kind=real32), dimension(ndf) :: random_values
+  real(kind=real32),   dimension(ndf) :: random_values
 
   do k = 0, nlayers-1
     call random_number(random_values(:))
@@ -89,7 +89,7 @@ end subroutine assign_field_random_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine assign_field_random_code_real64(nlayers,       &
+subroutine assign_field_random_code_real64(  nlayers,       &
                                              x,             &
                                              scale,         &
                                              ndf, undf, map)
@@ -104,7 +104,7 @@ subroutine assign_field_random_code_real64(nlayers,       &
 
   ! Internal variables
   integer(kind=i_def)              :: df, k
-  real(kind=real64), dimension(ndf) :: random_values
+  real(kind=real64),   dimension(ndf) :: random_values
 
   do k = 0, nlayers-1
     call random_number(random_values(:))

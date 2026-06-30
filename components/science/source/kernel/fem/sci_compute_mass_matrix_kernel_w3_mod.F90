@@ -89,7 +89,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine compute_mass_matrix_w3_code_real32( &
+  subroutine compute_mass_matrix_w3_code_real32(   &
                                          cell, nlayers, ncell_3d, mm,  &
                                          chi1, chi2, chi3, panel_id,   &
                                          ndf_w3, basis_w3,             &
@@ -109,25 +109,25 @@ contains
     integer(kind=i_def), dimension(ndf_chi), intent(in) :: map_chi
     integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
 
-    real(kind=real32), dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
+    real(kind=real32),   dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
 
-    real(kind=real32), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
-    real(kind=real32), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
-    real(kind=real32), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
+    real(kind=real32),   dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
+    real(kind=real32),   dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
+    real(kind=real32),   dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
 
-    real(kind=real32), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-    real(kind=real32), dimension(undf_pid), intent(in) :: panel_id
+    real(kind=real32),   dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+    real(kind=real32),   dimension(undf_pid), intent(in) :: panel_id
 
-    real(kind=real32), dimension(nqp_h), intent(in) :: wqp_h
-    real(kind=real32), dimension(nqp_v), intent(in) :: wqp_v
+    real(kind=real32),   dimension(nqp_h), intent(in) :: wqp_h
+    real(kind=real32),   dimension(nqp_v), intent(in) :: wqp_v
 
     !Internal variables
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel
     integer(kind=i_def)                             :: qp1, qp2
-    real(kind=real32), dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
+    real(kind=real32),   dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
     real(kind=real32)                             :: integrand
-    real(kind=real32), dimension(nqp_h,nqp_v)     :: dj
-    real(kind=real32), dimension(3,3,nqp_h,nqp_v) :: jac
+    real(kind=real32),   dimension(nqp_h,nqp_v)     :: dj
+    real(kind=real32),   dimension(3,3,nqp_h,nqp_v) :: jac
 
     ipanel = int(panel_id(map_pid(1)), i_def)
 
@@ -202,25 +202,25 @@ contains
     integer(kind=i_def), dimension(ndf_chi), intent(in) :: map_chi
     integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
 
-    real(kind=real32), dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
+    real(kind=real32),   dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
 
-    real(kind=real64), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
-    real(kind=real64), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
-    real(kind=real64), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
+    real(kind=real64),   dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
+    real(kind=real64),   dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
+    real(kind=real64),   dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
 
-    real(kind=real64), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-    real(kind=real64), dimension(undf_pid), intent(in) :: panel_id
+    real(kind=real64),   dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+    real(kind=real64),   dimension(undf_pid), intent(in) :: panel_id
 
-    real(kind=real64), dimension(nqp_h), intent(in) :: wqp_h
-    real(kind=real64), dimension(nqp_v), intent(in) :: wqp_v
+    real(kind=real64),   dimension(nqp_h), intent(in) :: wqp_h
+    real(kind=real64),   dimension(nqp_v), intent(in) :: wqp_v
 
     !Internal variables
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel
     integer(kind=i_def)                             :: qp1, qp2
-    real(kind=real64), dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
+    real(kind=real64),   dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
     real(kind=real64)                             :: integrand
-    real(kind=real64), dimension(nqp_h,nqp_v)     :: dj
-    real(kind=real64), dimension(3,3,nqp_h,nqp_v) :: jac
+    real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
+    real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 
     ipanel = int(panel_id(map_pid(1)), i_def)
 
@@ -275,7 +275,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine compute_mass_matrix_w3_code_real64( &
+  subroutine compute_mass_matrix_w3_code_real64(   &
                                          cell, nlayers, ncell_3d, mm,  &
                                          chi1, chi2, chi3, panel_id,   &
                                          ndf_w3, basis_w3,             &
@@ -295,25 +295,25 @@ contains
     integer(kind=i_def), dimension(ndf_chi), intent(in) :: map_chi
     integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
 
-    real(kind=real64), dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
+    real(kind=real64),   dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
 
-    real(kind=real64), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
-    real(kind=real64), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
-    real(kind=real64), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
+    real(kind=real64),   dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
+    real(kind=real64),   dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
+    real(kind=real64),   dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
 
-    real(kind=real64), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-    real(kind=real64), dimension(undf_pid), intent(in) :: panel_id
+    real(kind=real64),   dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+    real(kind=real64),   dimension(undf_pid), intent(in) :: panel_id
 
-    real(kind=real64), dimension(nqp_h), intent(in) :: wqp_h
-    real(kind=real64), dimension(nqp_v), intent(in) :: wqp_v
+    real(kind=real64),   dimension(nqp_h), intent(in) :: wqp_h
+    real(kind=real64),   dimension(nqp_v), intent(in) :: wqp_v
 
     !Internal variables
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel
     integer(kind=i_def)                             :: qp1, qp2
-    real(kind=real64), dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
+    real(kind=real64),   dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
     real(kind=real64)                             :: integrand
-    real(kind=real64), dimension(nqp_h,nqp_v)     :: dj
-    real(kind=real64), dimension(3,3,nqp_h,nqp_v) :: jac
+    real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
+    real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 
     ipanel = int(panel_id(map_pid(1)), i_def)
 

@@ -61,7 +61,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine enforce_operator_bc_code_real32(cell, nlayers,                   &
+subroutine enforce_operator_bc_code_real32(  cell, nlayers,                   &
                                              ncell_3d, op,                    &
                                              ndf1, ndf2, boundary_value       &
                                             )
@@ -73,7 +73,7 @@ subroutine enforce_operator_bc_code_real32(cell, nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf1, ndf2
   integer(kind=i_def), dimension(ndf1,2), intent(in) :: boundary_value
 
-  real(kind=real32), dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
+  real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
 
   ! Local variables
   integer(kind=i_def) :: df, k, ik
@@ -93,7 +93,7 @@ end subroutine enforce_operator_bc_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine enforce_operator_bc_code_real64(cell, nlayers,                   &
+subroutine enforce_operator_bc_code_real64(  cell, nlayers,                   &
                                              ncell_3d, op,                    &
                                              ndf1, ndf2, boundary_value       &
                                             )
@@ -105,7 +105,7 @@ subroutine enforce_operator_bc_code_real64(cell, nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf1, ndf2
   integer(kind=i_def), dimension(ndf1,2), intent(in) :: boundary_value
 
-  real(kind=real64), dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
+  real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
 
   ! Local variables
   integer(kind=i_def) :: df, k, ik

@@ -64,7 +64,7 @@ module sci_w3_to_w2_average_kernel_mod
   !> @param[in]     ndf_w3        Number of degrees of freedom per cell for W3
   !> @param[in]     undf_w3       Number of DoFs per partition for W3
   !> @param[in]     map_w3        Map of bottom-layer DoFs for W3
-  subroutine w3_to_w2_average_kernel_code_real32( nlayers,                 &
+  subroutine w3_to_w2_average_kernel_code_real32(   nlayers,                 &
                                                     field_w2,                &
                                                     field_w3,                &
                                                     rmultiplicity,           &
@@ -81,9 +81,9 @@ module sci_w3_to_w2_average_kernel_mod
     integer(kind=i_def), intent(in)    :: map_w2(ndf_w2)
     integer(kind=i_def), intent(in)    :: map_w3(ndf_w3)
 
-    real(kind=real32), intent(inout) :: field_w2(undf_w2)
+    real(kind=real32),   intent(inout) :: field_w2(undf_w2)
     real(kind=r_def),    intent(in)    :: rmultiplicity(undf_w2)
-    real(kind=real32), intent(in)    :: field_w3(undf_w3)
+    real(kind=real32),   intent(in)    :: field_w3(undf_w3)
 
     ! Internal variables
     integer(kind=i_def) :: df, k
@@ -125,7 +125,7 @@ module sci_w3_to_w2_average_kernel_mod
   !> @param[in]     ndf_w3        Number of degrees of freedom per cell for W3
   !> @param[in]     undf_w3       Number of DoFs per partition for W3
   !> @param[in]     map_w3        Map of bottom-layer DoFs for W3
-  subroutine w3_to_w2_average_kernel_code_real64( nlayers,                 &
+  subroutine w3_to_w2_average_kernel_code_real64(   nlayers,                 &
                                                     field_w2,                &
                                                     field_w3,                &
                                                     rmultiplicity,           &
@@ -142,9 +142,9 @@ module sci_w3_to_w2_average_kernel_mod
     integer(kind=i_def), intent(in)    :: map_w2(ndf_w2)
     integer(kind=i_def), intent(in)    :: map_w3(ndf_w3)
 
-    real(kind=real64), intent(inout) :: field_w2(undf_w2)
+    real(kind=real64),   intent(inout) :: field_w2(undf_w2)
     real(kind=r_def),    intent(in)    :: rmultiplicity(undf_w2)
-    real(kind=real64), intent(in)    :: field_w3(undf_w3)
+    real(kind=real64),   intent(in)    :: field_w3(undf_w3)
 
     ! Internal variables
     integer(kind=i_def) :: df, k

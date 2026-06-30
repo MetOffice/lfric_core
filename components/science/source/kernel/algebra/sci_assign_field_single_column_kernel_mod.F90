@@ -66,7 +66,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine assign_field_single_column_code_real32(nlayers, ncols, &
+subroutine assign_field_single_column_code_real32(  nlayers, ncols, &
                                                     x,              &
                                                     ndf, undf, map)
   implicit none
@@ -92,7 +92,7 @@ end subroutine assign_field_single_column_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine assign_field_single_column_code_real64(nlayers, ncols, &
+subroutine assign_field_single_column_code_real64(  nlayers, ncols, &
                                                     x,              &
                                                     ndf, undf, map)
   implicit none

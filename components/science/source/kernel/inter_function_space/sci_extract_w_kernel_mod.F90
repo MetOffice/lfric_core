@@ -63,7 +63,7 @@ contains
 !! @param[in] undf_w2 The number of unique degrees of freedom for w2
 !! @param[in] map_w2 Integer array holding the dofmap for the cell at the
 !>            base of the column for w2
-subroutine extract_w_code_real32( nlayers,                    &
+subroutine extract_w_code_real32(   nlayers,                    &
                                     velocity_w2v,               &
                                     u_physics,                  &
                                     ndf_wth, undf_wth, map_wth, &
@@ -78,8 +78,8 @@ subroutine extract_w_code_real32( nlayers,                    &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
 
-  real(kind=real32), dimension(undf_wth), intent(inout) :: velocity_w2v
-  real(kind=real32), dimension(undf_w2),  intent(in)    :: u_physics
+  real(kind=real32),   dimension(undf_wth), intent(inout) :: velocity_w2v
+  real(kind=real32),   dimension(undf_w2),  intent(in)    :: u_physics
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
   integer(kind=i_def), dimension(ndf_w2),   intent(in)    :: map_w2
 
@@ -94,7 +94,7 @@ subroutine extract_w_code_real32( nlayers,                    &
 
 end subroutine extract_w_code_real32
 
-subroutine extract_w_code_real64( nlayers,                    &
+subroutine extract_w_code_real64(   nlayers,                    &
                                     velocity_w2v,               &
                                     u_physics,                  &
                                     ndf_wth, undf_wth, map_wth, &
@@ -109,8 +109,8 @@ subroutine extract_w_code_real64( nlayers,                    &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
 
-  real(kind=real64), dimension(undf_wth), intent(inout) :: velocity_w2v
-  real(kind=real64), dimension(undf_w2),  intent(in)    :: u_physics
+  real(kind=real64),   dimension(undf_wth), intent(inout) :: velocity_w2v
+  real(kind=real64),   dimension(undf_w2),  intent(in)    :: u_physics
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
   integer(kind=i_def), dimension(ndf_w2),   intent(in)    :: map_w2
 

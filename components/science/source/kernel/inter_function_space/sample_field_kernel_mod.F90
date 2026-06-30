@@ -70,7 +70,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine sample_field_code_real32(nlayers,                         &
+subroutine sample_field_code_real32(  nlayers,                         &
                                       field_1, rmultiplicity, field_2, &
                                       ndf_1, undf_1, map_1,            &
                                       ndf_2, undf_2, map_2, basis_2    &
@@ -85,15 +85,15 @@ subroutine sample_field_code_real32(nlayers,                         &
   integer(kind=i_def), dimension(ndf_2), intent(in) :: map_2
 
   real(kind=r_def),    dimension(1,ndf_2,ndf_1), intent(in)    :: basis_2
-  real(kind=real32), dimension(undf_1),        intent(inout) :: field_1
-  real(kind=real32), dimension(undf_1),        intent(in)    :: rmultiplicity
-  real(kind=real32), dimension(undf_2),        intent(in)    :: field_2
+  real(kind=real32),   dimension(undf_1),        intent(inout) :: field_1
+  real(kind=real32),   dimension(undf_1),        intent(in)    :: rmultiplicity
+  real(kind=real32),   dimension(undf_2),        intent(in)    :: field_2
 
 
   ! Internal variables
   integer(kind=i_def) :: df, df_2, k, ijk
-  real(kind=real32) :: f_at_node
-  real(kind=real32), dimension(1,ndf_2,ndf_1) :: real32_basis_2
+  real(kind=real32)   :: f_at_node
+  real(kind=real32),   dimension(1,ndf_2,ndf_1) :: real32_basis_2
 
   real32_basis_2 = real(basis_2, real32)
 
@@ -112,7 +112,7 @@ end subroutine sample_field_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine sample_field_code_real64(nlayers,                         &
+subroutine sample_field_code_real64(  nlayers,                         &
                                       field_1, rmultiplicity, field_2, &
                                       ndf_1, undf_1, map_1,            &
                                       ndf_2, undf_2, map_2, basis_2    &
@@ -127,14 +127,14 @@ subroutine sample_field_code_real64(nlayers,                         &
   integer(kind=i_def), dimension(ndf_2), intent(in) :: map_2
 
   real(kind=r_def),    dimension(1,ndf_2,ndf_1), intent(in)    :: basis_2
-  real(kind=real64), dimension(undf_1),        intent(inout) :: field_1
-  real(kind=real64), dimension(undf_1),        intent(in)    :: rmultiplicity
-  real(kind=real64), dimension(undf_2),        intent(in)    :: field_2
+  real(kind=real64),   dimension(undf_1),        intent(inout) :: field_1
+  real(kind=real64),   dimension(undf_1),        intent(in)    :: rmultiplicity
+  real(kind=real64),   dimension(undf_2),        intent(in)    :: field_2
 
   ! Internal variables
   integer(kind=i_def) :: df, df_2, k, ijk
-  real(kind=real64) :: f_at_node
-  real(kind=real64), dimension(1,ndf_2,ndf_1) :: real64_basis_2
+  real(kind=real64)   :: f_at_node
+  real(kind=real64),   dimension(1,ndf_2,ndf_1) :: real64_basis_2
 
   real64_basis_2 = real(basis_2, real64)
 

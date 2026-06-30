@@ -84,7 +84,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine calc_detj_at_w3_code_real32( nlayers,                             &
+subroutine calc_detj_at_w3_code_real32(   nlayers,                             &
                                           detj_w3,                             &
                                           chi1, chi2, chi3,                    &
                                           panel_id,                            &
@@ -106,7 +106,7 @@ subroutine calc_detj_at_w3_code_real32( nlayers,                             &
   integer(kind=i_def),                            intent(in)    :: undf_chi
   integer(kind=i_def),                            intent(in)    :: ndf_pid
   integer(kind=i_def),                            intent(in)    :: undf_pid
-  real(kind=real32), dimension(undf_w3),        intent(inout) :: detj_w3
+  real(kind=real32),   dimension(undf_w3),        intent(inout) :: detj_w3
   real(kind=r_def), dimension(undf_chi),          intent(in)    :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf_pid),          intent(in)    :: panel_id
   integer(kind=i_def), dimension(ndf_w3),         intent(in)    :: map_w3
@@ -148,7 +148,7 @@ end subroutine calc_detj_at_w3_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine calc_detj_at_w3_code_real64( nlayers,                             &
+subroutine calc_detj_at_w3_code_real64(   nlayers,                             &
                                           detj_w3,                             &
                                           chi1, chi2, chi3,                    &
                                           panel_id,                            &
@@ -170,7 +170,7 @@ subroutine calc_detj_at_w3_code_real64( nlayers,                             &
   integer(kind=i_def),                            intent(in)    :: undf_chi
   integer(kind=i_def),                            intent(in)    :: ndf_pid
   integer(kind=i_def),                            intent(in)    :: undf_pid
-  real(kind=real64), dimension(undf_w3),        intent(inout) :: detj_w3
+  real(kind=real64),   dimension(undf_w3),        intent(inout) :: detj_w3
   real(kind=r_def), dimension(undf_chi),          intent(in)    :: chi1, chi2, chi3
   real(kind=r_def), dimension(undf_pid),          intent(in)    :: panel_id
   integer(kind=i_def), dimension(ndf_w3),         intent(in)    :: map_w3

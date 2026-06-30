@@ -80,7 +80,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine restrict_w2v_code_real32(nlayers,                 &
+  subroutine restrict_w2v_code_real32(  nlayers,                 &
                                         cell_map,                &
                                         ncell_fine_per_coarse_x, &
                                         ncell_fine_per_coarse_y, &
@@ -103,8 +103,8 @@ contains
     integer(kind=i_def), intent(in) :: undf_fine, undf_coarse
 
     ! Fields
-    real(kind=real32), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real32), intent(in)    :: fine_field(undf_fine)
+    real(kind=real32),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(in)    :: fine_field(undf_fine)
 
     ! Maps
     integer(kind=i_def), intent(in) :: map_fine(ndf, ncell_fine)
@@ -113,7 +113,7 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: df, k, x_idx, y_idx
-    real(kind=real32) :: new_coarse(nlayers+1)
+    real(kind=real32)   :: new_coarse(nlayers+1)
 
     !---------------------------------------------------------------------------
     ! Vertical components
@@ -142,7 +142,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine restrict_w2v_code_real64(nlayers,                 &
+  subroutine restrict_w2v_code_real64(  nlayers,                 &
                                         cell_map,                &
                                         ncell_fine_per_coarse_x, &
                                         ncell_fine_per_coarse_y, &
@@ -165,8 +165,8 @@ contains
     integer(kind=i_def), intent(in) :: undf_fine, undf_coarse
 
     ! Fields
-    real(kind=real64), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real64), intent(in)    :: fine_field(undf_fine)
+    real(kind=real64),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(in)    :: fine_field(undf_fine)
 
     ! Maps
     integer(kind=i_def), intent(in) :: map_fine(ndf, ncell_fine)
@@ -175,7 +175,7 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: df, k, x_idx, y_idx
-    real(kind=real64) :: new_coarse(nlayers+1)
+    real(kind=real64)   :: new_coarse(nlayers+1)
 
     !---------------------------------------------------------------------------
     ! Vertical components

@@ -75,7 +75,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine prolong_multidata_scalar_code_real32(               &
+  subroutine prolong_multidata_scalar_code_real32(                 &
                                           nlayers,                 &
                                           cell_map,                &
                                           ncell_fine_per_coarse_x, &
@@ -101,8 +101,8 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=real32), intent(in)    :: coarse_field(undf_coarse)
-    real(kind=real32), intent(inout) :: fine_field(undf_fine)
+    real(kind=real32),   intent(in)    :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(inout) :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: ndata
 
     integer(kind=i_def) :: k, x_idx, y_idx, k_start, i, top_df
@@ -129,7 +129,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine prolong_multidata_scalar_code_real64(               &
+  subroutine prolong_multidata_scalar_code_real64(                 &
                                           nlayers,                 &
                                           cell_map,                &
                                           ncell_fine_per_coarse_x, &
@@ -155,8 +155,8 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=real64), intent(in)    :: coarse_field(undf_coarse)
-    real(kind=real64), intent(inout) :: fine_field(undf_fine)
+    real(kind=real64),   intent(in)    :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(inout) :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: ndata
 
     integer(kind=i_def) :: k, x_idx, y_idx, k_start, i, top_df

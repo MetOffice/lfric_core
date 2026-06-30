@@ -75,7 +75,7 @@ contains
 ! REAL32 PRECISION
 ! ==================
 ! height fields are always r_def
-subroutine sample_w3_to_wtheta_code_real32( nlayers,   &
+subroutine sample_w3_to_wtheta_code_real32(   nlayers,   &
                                               field_wt,  &
                                               field_w3,  &
                                               height_wt, &
@@ -97,15 +97,15 @@ subroutine sample_w3_to_wtheta_code_real32( nlayers,   &
   integer(kind=i_def), dimension(ndf_w3),  intent(in)    :: map_w3
   integer(kind=i_def), dimension(ndf_wt),  intent(in)    :: map_wt
 
-  real(kind=real32), dimension(undf_wt), intent(inout) :: field_wt
-  real(kind=real32), dimension(undf_w3), intent(in)    :: field_w3
+  real(kind=real32),   dimension(undf_wt), intent(inout) :: field_wt
+  real(kind=real32),   dimension(undf_w3), intent(in)    :: field_w3
   real(kind=r_def),    dimension(undf_wt), intent(in)    :: height_wt
   real(kind=r_def),    dimension(undf_w3), intent(in)    :: height_w3
 
   ! Internal variables
   integer(kind=i_def) :: k
-  real(kind=real32) :: weight_lower, weight_upper, weight_denom
-  real(kind=real32) :: top_value, log_top_value
+  real(kind=real32)   :: weight_lower, weight_upper, weight_denom
+  real(kind=real32)   :: top_value, log_top_value
 
   ! At top and bottom do linear extrapolation to get values on boundaries
   ! Bottom first
@@ -153,7 +153,7 @@ end subroutine sample_w3_to_wtheta_code_real32
 ! REAL64 PRECISION
 ! ==================
 ! height fields are always r_def
-subroutine sample_w3_to_wtheta_code_real64( nlayers,   &
+subroutine sample_w3_to_wtheta_code_real64(   nlayers,   &
                                               field_wt,  &
                                               field_w3,  &
                                               height_wt, &
@@ -175,15 +175,15 @@ subroutine sample_w3_to_wtheta_code_real64( nlayers,   &
   integer(kind=i_def), dimension(ndf_w3),  intent(in)    :: map_w3
   integer(kind=i_def), dimension(ndf_wt),  intent(in)    :: map_wt
 
-  real(kind=real64), dimension(undf_wt), intent(inout) :: field_wt
-  real(kind=real64), dimension(undf_w3), intent(in)    :: field_w3
+  real(kind=real64),   dimension(undf_wt), intent(inout) :: field_wt
+  real(kind=real64),   dimension(undf_w3), intent(in)    :: field_w3
   real(kind=r_def),    dimension(undf_wt), intent(in)    :: height_wt
   real(kind=r_def),    dimension(undf_w3), intent(in)    :: height_w3
 
   ! Internal variables
   integer(kind=i_def) :: k
-  real(kind=real64) :: weight_lower, weight_upper, weight_denom
-  real(kind=real64) :: top_value, log_top_value
+  real(kind=real64)   :: weight_lower, weight_upper, weight_denom
+  real(kind=real64)   :: top_value, log_top_value
 
   ! At top and bottom do linear extrapolation to get values on boundaries
   ! Bottom first

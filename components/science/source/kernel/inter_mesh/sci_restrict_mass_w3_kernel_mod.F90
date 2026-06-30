@@ -68,7 +68,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine restrict_mass_w3_code_real32(                          &
+  subroutine restrict_mass_w3_code_real32(                            &
                                              nlayers,                 &
                                              cell_map,                &
                                              ncell_fine_per_coarse_x, &
@@ -93,11 +93,11 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=real32), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real32), intent(in)    :: fine_field(undf_fine)
+    real(kind=real32),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(in)    :: fine_field(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
-    real(kind=real32) :: coarse_value(nlayers-1+ndf)
+    real(kind=real32)   :: coarse_value(nlayers-1+ndf)
 
     ! Assume lowest order W3 or Wtheta space
     df = 1
@@ -124,7 +124,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine restrict_mass_w3_code_real64(                          &
+  subroutine restrict_mass_w3_code_real64(                            &
                                              nlayers,                 &
                                              cell_map,                &
                                              ncell_fine_per_coarse_x, &
@@ -149,11 +149,11 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=real64), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real64), intent(in)    :: fine_field(undf_fine)
+    real(kind=real64),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(in)    :: fine_field(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
-    real(kind=real64) :: coarse_value(nlayers-1+ndf)
+    real(kind=real64)   :: coarse_value(nlayers-1+ndf)
 
     ! Assume lowest order W3 or Wtheta space
     df = 1

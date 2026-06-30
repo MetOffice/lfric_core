@@ -75,7 +75,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine tri_matrix_vector_code_real32(                                   &
+subroutine tri_matrix_vector_code_real32(                                     &
                                             nlayers_shifted,                  &
                                             field_sh_w3,                      &
                                             tri_below,                        &
@@ -95,11 +95,11 @@ subroutine tri_matrix_vector_code_real32(                                   &
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=real32), dimension(undf_sh_w3), intent(inout) :: field_sh_w3
-  real(kind=real32), dimension(undf_sh_w3), intent(in)    :: tri_below
-  real(kind=real32), dimension(undf_sh_w3), intent(in)    :: tri_diag
-  real(kind=real32), dimension(undf_sh_w3), intent(in)    :: tri_above
-  real(kind=real32), dimension(undf_wt),    intent(in)    :: field_wt
+  real(kind=real32),   dimension(undf_sh_w3), intent(inout) :: field_sh_w3
+  real(kind=real32),   dimension(undf_sh_w3), intent(in)    :: tri_below
+  real(kind=real32),   dimension(undf_sh_w3), intent(in)    :: tri_diag
+  real(kind=real32),   dimension(undf_sh_w3), intent(in)    :: tri_above
+  real(kind=real32),   dimension(undf_wt),    intent(in)    :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -126,7 +126,7 @@ end subroutine tri_matrix_vector_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine tri_matrix_vector_code_real64(                                   &
+subroutine tri_matrix_vector_code_real64(                                     &
                                             nlayers_shifted,                  &
                                             field_sh_w3,                      &
                                             tri_below,                        &
@@ -146,11 +146,11 @@ subroutine tri_matrix_vector_code_real64(                                   &
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=real64), dimension(undf_sh_w3), intent(inout) :: field_sh_w3
-  real(kind=real64), dimension(undf_sh_w3), intent(in)    :: tri_below
-  real(kind=real64), dimension(undf_sh_w3), intent(in)    :: tri_diag
-  real(kind=real64), dimension(undf_sh_w3), intent(in)    :: tri_above
-  real(kind=real64), dimension(undf_wt),    intent(in)    :: field_wt
+  real(kind=real64),   dimension(undf_sh_w3), intent(inout) :: field_sh_w3
+  real(kind=real64),   dimension(undf_sh_w3), intent(in)    :: tri_below
+  real(kind=real64),   dimension(undf_sh_w3), intent(in)    :: tri_diag
+  real(kind=real64),   dimension(undf_sh_w3), intent(in)    :: tri_above
+  real(kind=real64),   dimension(undf_wt),    intent(in)    :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: df, k

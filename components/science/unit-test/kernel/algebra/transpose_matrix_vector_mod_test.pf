@@ -35,8 +35,8 @@ contains
 
     class(transpose_matrix_vector_mod_test_type), intent(inout) :: this
 
-    real(kind=real64) :: d(1,4,2), x(4), y(2), answer(2)
-    real(kind=real64) :: tol
+    real(kind=real64)   :: d(1,4,2), x(4), y(2), answer(2)
+    real(kind=real64)   :: tol
     integer(kind=i_def) :: i
 
     ! Explicit temporary arrays to prevent run-time warnings
@@ -86,8 +86,8 @@ contains
 
     class(transpose_matrix_vector_mod_test_type), intent(inout) :: this
 
-    real(kind=real32) :: d(1,4,2), x(4), y(2), answer(2)
-    real(kind=real32) :: tol
+    real(kind=real32)   :: d(1,4,2), x(4), y(2), answer(2)
+    real(kind=real32)   :: tol
     integer(kind=i_def) :: i
 
     ! Explicit temporary arrays to prevent run-time warnings

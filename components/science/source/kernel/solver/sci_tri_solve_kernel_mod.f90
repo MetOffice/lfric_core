@@ -70,7 +70,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine tri_solve_code_real32(nlayers,                    &
+subroutine tri_solve_code_real32(  nlayers,                    &
                                    y, x,                       &
                                    tri_0, tri_plus, tri_minus, &
                                    ndf, undf, map)
@@ -82,14 +82,14 @@ subroutine tri_solve_code_real32(nlayers,                    &
 
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
 
-  real(kind=real32), dimension(undf), intent(inout) :: y
-  real(kind=real32), dimension(undf), intent(in)    :: x
-  real(kind=real32), dimension(undf), intent(in)    :: tri_0
-  real(kind=real32), dimension(undf), intent(in)    :: tri_plus
-  real(kind=real32), dimension(undf), intent(in)    :: tri_minus
+  real(kind=real32),   dimension(undf), intent(inout) :: y
+  real(kind=real32),   dimension(undf), intent(in)    :: x
+  real(kind=real32),   dimension(undf), intent(in)    :: tri_0
+  real(kind=real32),   dimension(undf), intent(in)    :: tri_plus
+  real(kind=real32),   dimension(undf), intent(in)    :: tri_minus
 
   integer(kind=i_def)                  :: k, ij
-  real(kind=real32), dimension(nlayers) :: x_new, tri_plus_new
+  real(kind=real32),   dimension(nlayers) :: x_new, tri_plus_new
   real(kind=real32)                     :: denom
 
   k  = 0
@@ -114,7 +114,7 @@ end subroutine tri_solve_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine tri_solve_code_real64(nlayers,                    &
+subroutine tri_solve_code_real64(  nlayers,                    &
                                    y, x,                       &
                                    tri_0, tri_plus, tri_minus, &
                                    ndf, undf, map)
@@ -126,14 +126,14 @@ subroutine tri_solve_code_real64(nlayers,                    &
 
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
 
-  real(kind=real64), dimension(undf), intent(inout) :: y
-  real(kind=real64), dimension(undf), intent(in)    :: x
-  real(kind=real64), dimension(undf), intent(in)    :: tri_0
-  real(kind=real64), dimension(undf), intent(in)    :: tri_plus
-  real(kind=real64), dimension(undf), intent(in)    :: tri_minus
+  real(kind=real64),   dimension(undf), intent(inout) :: y
+  real(kind=real64),   dimension(undf), intent(in)    :: x
+  real(kind=real64),   dimension(undf), intent(in)    :: tri_0
+  real(kind=real64),   dimension(undf), intent(in)    :: tri_plus
+  real(kind=real64),   dimension(undf), intent(in)    :: tri_minus
 
   integer(kind=i_def)                  :: k, ij
-  real(kind=real64), dimension(nlayers) :: x_new, tri_plus_new
+  real(kind=real64),   dimension(nlayers) :: x_new, tri_plus_new
   real(kind=real64)                     :: denom
 
   k  = 0

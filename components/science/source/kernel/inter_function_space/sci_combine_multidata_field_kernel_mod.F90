@@ -79,7 +79,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine combine_multidata_field_code_real32(nlayers,              &
+subroutine combine_multidata_field_code_real32(  nlayers,              &
                                                  field_out, n,         &
                                                  field1_in, n1,        &
                                                  field2_in, n2,        &
@@ -98,9 +98,9 @@ subroutine combine_multidata_field_code_real32(nlayers,              &
   integer(kind=i_def), dimension(ndf),     intent(in)    :: map
   integer(kind=i_def), dimension(ndf_1),   intent(in)    :: map_1
   integer(kind=i_def), dimension(ndf_2),   intent(in)    :: map_2
-  real(kind=real32), dimension(undf),    intent(inout) :: field_out
-  real(kind=real32), dimension(undf_1),  intent(in)    :: field1_in
-  real(kind=real32), dimension(undf_2),  intent(in)    :: field2_in
+  real(kind=real32),   dimension(undf),    intent(inout) :: field_out
+  real(kind=real32),   dimension(undf_1),  intent(in)    :: field1_in
+  real(kind=real32),   dimension(undf_2),  intent(in)    :: field2_in
   logical(kind=l_def),                     intent(in)    :: ndata_first
 
 
@@ -137,7 +137,7 @@ end subroutine combine_multidata_field_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine combine_multidata_field_code_real64(nlayers,              &
+subroutine combine_multidata_field_code_real64(  nlayers,              &
                                                  field_out, n,         &
                                                  field1_in, n1,        &
                                                  field2_in, n2,        &
@@ -156,9 +156,9 @@ subroutine combine_multidata_field_code_real64(nlayers,              &
   integer(kind=i_def), dimension(ndf),     intent(in)    :: map
   integer(kind=i_def), dimension(ndf_1),   intent(in)    :: map_1
   integer(kind=i_def), dimension(ndf_2),   intent(in)    :: map_2
-  real(kind=real64), dimension(undf),    intent(inout) :: field_out
-  real(kind=real64), dimension(undf_1),  intent(in)    :: field1_in
-  real(kind=real64), dimension(undf_2),  intent(in)    :: field2_in
+  real(kind=real64),   dimension(undf),    intent(inout) :: field_out
+  real(kind=real64),   dimension(undf_1),  intent(in)    :: field1_in
+  real(kind=real64),   dimension(undf_2),  intent(in)    :: field2_in
   logical(kind=l_def),                     intent(in)    :: ndata_first
 
 

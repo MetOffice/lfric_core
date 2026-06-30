@@ -74,7 +74,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine mm_diagonal_assembled_kernel_code_real32(cell,        &
+subroutine mm_diagonal_assembled_kernel_code_real32(  cell,        &
                                                       nlayers,     &
                                                       mm_diag,     &
                                                       ncell_3d,    &
@@ -107,7 +107,7 @@ end subroutine mm_diagonal_assembled_kernel_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine mm_diagonal_assembled_kernel_code_real64(cell,        &
+subroutine mm_diagonal_assembled_kernel_code_real64(  cell,        &
                                                       nlayers,     &
                                                       mm_diag,     &
                                                       ncell_3d,    &

@@ -72,7 +72,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine apply_w3_to_sh_w3_code_real32(                &
+subroutine apply_w3_to_sh_w3_code_real32(                  &
                                             nlayers_sh,    &
                                             rhs_w3_sh,     &
                                             field_w3,      &
@@ -95,10 +95,10 @@ subroutine apply_w3_to_sh_w3_code_real32(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=real32),    dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
-  real(kind=real32),    dimension(undf_w3),       intent(in) :: field_w3
-  real(kind=real32),    dimension(undf_w3_sh),    intent(in) :: detj_shifted
-  real(kind=real32),    dimension(undf_w3),       intent(in) :: detj_prime
+  real(kind=real32),      dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
+  real(kind=real32),      dimension(undf_w3),       intent(in) :: field_w3
+  real(kind=real32),      dimension(undf_w3_sh),    intent(in) :: detj_shifted
+  real(kind=real32),      dimension(undf_w3),       intent(in) :: detj_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
@@ -125,7 +125,7 @@ end subroutine apply_w3_to_sh_w3_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine apply_w3_to_sh_w3_code_real64(                &
+subroutine apply_w3_to_sh_w3_code_real64(                  &
                                             nlayers_sh,    &
                                             rhs_w3_sh,     &
                                             field_w3,      &
@@ -148,10 +148,10 @@ subroutine apply_w3_to_sh_w3_code_real64(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=real64),    dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
-  real(kind=real64),    dimension(undf_w3),       intent(in) :: field_w3
-  real(kind=real64),    dimension(undf_w3_sh),    intent(in) :: detj_shifted
-  real(kind=real64),    dimension(undf_w3),       intent(in) :: detj_prime
+  real(kind=real64),      dimension(undf_w3_sh), intent(inout) :: rhs_w3_sh
+  real(kind=real64),      dimension(undf_w3),       intent(in) :: field_w3
+  real(kind=real64),      dimension(undf_w3_sh),    intent(in) :: detj_shifted
+  real(kind=real64),      dimension(undf_w3),       intent(in) :: detj_prime
 
   ! Internal variables
   integer(kind=i_def) :: k

@@ -136,7 +136,7 @@ contains
   !! @param[out] jac           Jacobian on quadrature points
   !! @param[out] dj            Determinant of the Jacobian on quadrature points
   !!
-  subroutine coordinate_jacobian_quadrature_real32(           &
+  subroutine coordinate_jacobian_quadrature_real32(             &
                                            coord_system,        &
                                            geometry,            &
                                            topology,            &
@@ -159,25 +159,25 @@ contains
     integer(kind=i_def),  intent(in) :: ndf, ngp_h, ngp_v
     integer(kind=i_def),  intent(in) :: panel_id
 
-    real(kind=real32),  intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-    real(kind=real32), intent(out) :: jac(3,3,ngp_h,ngp_v)
-    real(kind=real32), intent(out) :: dj(ngp_h,ngp_v)
-    real(kind=real32),  intent(in) :: basis(1,ndf,ngp_h,ngp_v)
-    real(kind=real32),  intent(in) :: diff_basis(3,ndf,ngp_h,ngp_v)
+    real(kind=real32),    intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
+    real(kind=real32),   intent(out) :: jac(3,3,ngp_h,ngp_v)
+    real(kind=real32),   intent(out) :: dj(ngp_h,ngp_v)
+    real(kind=real32),    intent(in) :: basis(1,ndf,ngp_h,ngp_v)
+    real(kind=real32),    intent(in) :: diff_basis(3,ndf,ngp_h,ngp_v)
 
     ! Local variables
-    real(kind=real32) :: jac_ref2sph(3,3,ngp_h,ngp_v)
-    real(kind=real32) :: jac_sph2XYZ(3,3)
-    real(kind=real32) :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
-    real(kind=real32) :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
-    real(kind=real32) :: longitude, latitude
-    real(kind=real32) :: radius
-    real(kind=real32) :: radius_vec(ngp_h*ngp_v)
-    real(kind=real32) :: rotation_matrix(3,3)
-    real(kind=real32) :: jac_S(3,3)
-    real(kind=real32) :: stretch_factor
-    real(kind=real32) :: native_x, native_y, native_z
-    real(kind=real32) :: native_lon, native_lat
+    real(kind=real32)   :: jac_ref2sph(3,3,ngp_h,ngp_v)
+    real(kind=real32)   :: jac_sph2XYZ(3,3)
+    real(kind=real32)   :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
+    real(kind=real32)   :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
+    real(kind=real32)   :: longitude, latitude
+    real(kind=real32)   :: radius
+    real(kind=real32)   :: radius_vec(ngp_h*ngp_v)
+    real(kind=real32)   :: rotation_matrix(3,3)
+    real(kind=real32)   :: jac_S(3,3)
+    real(kind=real32)   :: stretch_factor
+    real(kind=real32)   :: native_x, native_y, native_z
+    real(kind=real32)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -232,7 +232,7 @@ contains
         end do
       end do
 
-      jac_sph2XYZ_vec = jacobian_abr2XYZ_vec_real32(alpha_vec, beta_vec, radius_vec, panel_id, ngp)
+      jac_sph2XYZ_vec = jacobian_abr2XYZ_vec_real32(  alpha_vec, beta_vec, radius_vec, panel_id, ngp)
 
       k = 1
       do j = 1,ngp_v
@@ -299,7 +299,7 @@ contains
 
   end subroutine coordinate_jacobian_quadrature_real32
 
-  subroutine coordinate_jacobian_quadrature_real64(           &
+  subroutine coordinate_jacobian_quadrature_real64(             &
                                            coord_system,        &
                                            geometry,            &
                                            topology,            &
@@ -322,25 +322,25 @@ contains
     integer(kind=i_def),  intent(in) :: ndf, ngp_h, ngp_v
     integer(kind=i_def),  intent(in) :: panel_id
 
-    real(kind=real64),  intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-    real(kind=real64), intent(out) :: jac(3,3,ngp_h,ngp_v)
-    real(kind=real64), intent(out) :: dj(ngp_h,ngp_v)
-    real(kind=real64),  intent(in) :: basis(1,ndf,ngp_h,ngp_v)
-    real(kind=real64),  intent(in) :: diff_basis(3,ndf,ngp_h,ngp_v)
+    real(kind=real64),    intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
+    real(kind=real64),   intent(out) :: jac(3,3,ngp_h,ngp_v)
+    real(kind=real64),   intent(out) :: dj(ngp_h,ngp_v)
+    real(kind=real64),    intent(in) :: basis(1,ndf,ngp_h,ngp_v)
+    real(kind=real64),    intent(in) :: diff_basis(3,ndf,ngp_h,ngp_v)
 
     ! Local variables
-    real(kind=real64) :: jac_ref2sph(3,3,ngp_h,ngp_v)
-    real(kind=real64) :: jac_sph2XYZ(3,3)
-    real(kind=real64) :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
-    real(kind=real64) :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
-    real(kind=real64) :: longitude, latitude
-    real(kind=real64) :: radius
-    real(kind=real64) :: radius_vec(ngp_h*ngp_v)
-    real(kind=real64) :: rotation_matrix(3,3)
-    real(kind=real64) :: jac_S(3,3)
-    real(kind=real64) :: stretch_factor
-    real(kind=real64) :: native_x, native_y, native_z
-    real(kind=real64) :: native_lon, native_lat
+    real(kind=real64)   :: jac_ref2sph(3,3,ngp_h,ngp_v)
+    real(kind=real64)   :: jac_sph2XYZ(3,3)
+    real(kind=real64)   :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
+    real(kind=real64)   :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
+    real(kind=real64)   :: longitude, latitude
+    real(kind=real64)   :: radius
+    real(kind=real64)   :: radius_vec(ngp_h*ngp_v)
+    real(kind=real64)   :: rotation_matrix(3,3)
+    real(kind=real64)   :: jac_S(3,3)
+    real(kind=real64)   :: stretch_factor
+    real(kind=real64)   :: native_x, native_y, native_z
+    real(kind=real64)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -395,7 +395,7 @@ contains
         end do
       end do
 
-      jac_sph2XYZ_vec = jacobian_abr2XYZ_vec_real64(alpha_vec, beta_vec, radius_vec, panel_id, ngp)
+      jac_sph2XYZ_vec = jacobian_abr2XYZ_vec_real64(  alpha_vec, beta_vec, radius_vec, panel_id, ngp)
 
       k = 1
       do j = 1,ngp_v
@@ -486,7 +486,7 @@ contains
   !! @param[in] diff_basis     Grad of Wchi basis functions
   !! @param[out] jac           Jacobian on quadrature points
   !! @param[out] dj            Determinant of the Jacobian on quadrature points
-  subroutine coordinate_jacobian_evaluator_real32(            &
+  subroutine coordinate_jacobian_evaluator_real32(              &
                                            coord_system,        &
                                            geometry,            &
                                            topology,            &
@@ -509,23 +509,23 @@ contains
     integer(kind=i_def),  intent(in) :: ndf, neval_points
     integer(kind=i_def),  intent(in) :: panel_id
 
-    real(kind=real32),  intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-    real(kind=real32), intent(out) :: jac(3,3,neval_points)
-    real(kind=real32), intent(out) :: dj(neval_points)
-    real(kind=real32),  intent(in) :: basis(1,ndf,neval_points)
-    real(kind=real32),  intent(in) :: diff_basis(3,ndf,neval_points)
+    real(kind=real32),    intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
+    real(kind=real32),   intent(out) :: jac(3,3,neval_points)
+    real(kind=real32),   intent(out) :: dj(neval_points)
+    real(kind=real32),    intent(in) :: basis(1,ndf,neval_points)
+    real(kind=real32),    intent(in) :: diff_basis(3,ndf,neval_points)
 
     ! Local variables
-    real(kind=real32) :: jac_ref2sph(3,3,neval_points)
-    real(kind=real32) :: jac_sph2XYZ(3,3)
-    real(kind=real32) :: alpha, beta
-    real(kind=real32) :: longitude, latitude
-    real(kind=real32) :: radius
-    real(kind=real32) :: rotation_matrix(3,3)
-    real(kind=real32) :: jac_S(3,3)
-    real(kind=real32) :: stretch_factor
-    real(kind=real32) :: native_x, native_y, native_z
-    real(kind=real32) :: native_lon, native_lat
+    real(kind=real32)   :: jac_ref2sph(3,3,neval_points)
+    real(kind=real32)   :: jac_sph2XYZ(3,3)
+    real(kind=real32)   :: alpha, beta
+    real(kind=real32)   :: longitude, latitude
+    real(kind=real32)   :: radius
+    real(kind=real32)   :: rotation_matrix(3,3)
+    real(kind=real32)   :: jac_S(3,3)
+    real(kind=real32)   :: stretch_factor
+    real(kind=real32)   :: native_x, native_y, native_z
+    real(kind=real32)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -625,7 +625,7 @@ contains
 
   end subroutine coordinate_jacobian_evaluator_real32
 
-  subroutine coordinate_jacobian_evaluator_real64(            &
+  subroutine coordinate_jacobian_evaluator_real64(              &
                                            coord_system,        &
                                            geometry,            &
                                            topology,            &
@@ -648,23 +648,23 @@ contains
     integer(kind=i_def),  intent(in) :: ndf, neval_points
     integer(kind=i_def),  intent(in) :: panel_id
 
-    real(kind=real64),  intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-    real(kind=real64), intent(out) :: jac(3,3,neval_points)
-    real(kind=real64), intent(out) :: dj(neval_points)
-    real(kind=real64),  intent(in) :: basis(1,ndf,neval_points)
-    real(kind=real64),  intent(in) :: diff_basis(3,ndf,neval_points)
+    real(kind=real64),    intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
+    real(kind=real64),   intent(out) :: jac(3,3,neval_points)
+    real(kind=real64),   intent(out) :: dj(neval_points)
+    real(kind=real64),    intent(in) :: basis(1,ndf,neval_points)
+    real(kind=real64),    intent(in) :: diff_basis(3,ndf,neval_points)
 
     ! Local variables
-    real(kind=real64) :: jac_ref2sph(3,3,neval_points)
-    real(kind=real64) :: jac_sph2XYZ(3,3)
-    real(kind=real64) :: alpha, beta
-    real(kind=real64) :: longitude, latitude
-    real(kind=real64) :: radius
-    real(kind=real64) :: rotation_matrix(3,3)
-    real(kind=real64) :: jac_S(3,3)
-    real(kind=real64) :: stretch_factor
-    real(kind=real64) :: native_x, native_y, native_z
-    real(kind=real64) :: native_lon, native_lat
+    real(kind=real64)   :: jac_ref2sph(3,3,neval_points)
+    real(kind=real64)   :: jac_sph2XYZ(3,3)
+    real(kind=real64)   :: alpha, beta
+    real(kind=real64)   :: longitude, latitude
+    real(kind=real64)   :: radius
+    real(kind=real64)   :: rotation_matrix(3,3)
+    real(kind=real64)   :: jac_S(3,3)
+    real(kind=real64)   :: stretch_factor
+    real(kind=real64)   :: native_x, native_y, native_z
+    real(kind=real64)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -779,7 +779,7 @@ contains
   !! @param[in] jac        Jacobian on quadrature points
   !! @param[in] dj         Determinant of the Jacobian
   !! @param[out] jac_inv   Inverse of the Jacobian on quadrature points
-  subroutine coordinate_jacobian_inverse_quadrature_real32( &
+  subroutine coordinate_jacobian_inverse_quadrature_real32(   &
                                          ngp_h, ngp_v, jac, dj, jac_inv)
 
     use matrix_invert_mod, only: matrix_invert_3x3
@@ -788,11 +788,11 @@ contains
 
     integer(kind=i_def), intent(in)  :: ngp_h, ngp_v
 
-    real(kind=real32), intent(in)  :: jac(3,3,ngp_h,ngp_v)
-    real(kind=real32), intent(in)  :: dj(ngp_h,ngp_v)
-    real(kind=real32), intent(out) :: jac_inv(3,3,ngp_h,ngp_v)
+    real(kind=real32),   intent(in)  :: jac(3,3,ngp_h,ngp_v)
+    real(kind=real32),   intent(in)  :: dj(ngp_h,ngp_v)
+    real(kind=real32),   intent(out) :: jac_inv(3,3,ngp_h,ngp_v)
 
-    real(kind=real32) :: dummy
+    real(kind=real32)   :: dummy
     integer(kind=i_def) :: i, k
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -808,7 +808,7 @@ contains
 
   end subroutine coordinate_jacobian_inverse_quadrature_real32
 
-  subroutine coordinate_jacobian_inverse_quadrature_real64( &
+  subroutine coordinate_jacobian_inverse_quadrature_real64(   &
                                          ngp_h, ngp_v, jac, dj, jac_inv)
 
     use matrix_invert_mod, only: matrix_invert_3x3
@@ -817,11 +817,11 @@ contains
 
     integer(kind=i_def), intent(in)  :: ngp_h, ngp_v
 
-    real(kind=real64), intent(in)  :: jac(3,3,ngp_h,ngp_v)
-    real(kind=real64), intent(in)  :: dj(ngp_h,ngp_v)
-    real(kind=real64), intent(out) :: jac_inv(3,3,ngp_h,ngp_v)
+    real(kind=real64),   intent(in)  :: jac(3,3,ngp_h,ngp_v)
+    real(kind=real64),   intent(in)  :: dj(ngp_h,ngp_v)
+    real(kind=real64),   intent(out) :: jac_inv(3,3,ngp_h,ngp_v)
 
-    real(kind=real64) :: dummy
+    real(kind=real64)   :: dummy
     integer(kind=i_def) :: i, k
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -849,7 +849,7 @@ contains
   !! @param[in] jac          Jacobian on quadrature points
   !! @param[in] dj           Determinant of the Jacobian
   !! @param[out] jac_inv     Inverse of the Jacobian on evaluator points
-  subroutine coordinate_jacobian_inverse_evaluator_real32( &
+  subroutine coordinate_jacobian_inverse_evaluator_real32(   &
                                            neval_points, jac, dj, jac_inv)
 
     use matrix_invert_mod, only: matrix_invert_3x3
@@ -858,11 +858,11 @@ contains
 
     integer(kind=i_def), intent(in)  :: neval_points
 
-    real(kind=real32), intent(in)  :: jac(3,3,neval_points)
-    real(kind=real32), intent(in)  :: dj(neval_points)
-    real(kind=real32), intent(out) :: jac_inv(3,3,neval_points)
+    real(kind=real32),   intent(in)  :: jac(3,3,neval_points)
+    real(kind=real32),   intent(in)  :: dj(neval_points)
+    real(kind=real32),   intent(out) :: jac_inv(3,3,neval_points)
 
-    real(kind=real32) :: dummy
+    real(kind=real32)   :: dummy
     integer(kind=i_def) :: i
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -876,7 +876,7 @@ contains
 
   end subroutine coordinate_jacobian_inverse_evaluator_real32
 
-  subroutine coordinate_jacobian_inverse_evaluator_real64( &
+  subroutine coordinate_jacobian_inverse_evaluator_real64(   &
                                            neval_points, jac, dj, jac_inv)
 
     use matrix_invert_mod, only: matrix_invert_3x3
@@ -885,11 +885,11 @@ contains
 
     integer(kind=i_def), intent(in)  :: neval_points
 
-    real(kind=real64), intent(in)  :: jac(3,3,neval_points)
-    real(kind=real64), intent(in)  :: dj(neval_points)
-    real(kind=real64), intent(out) :: jac_inv(3,3,neval_points)
+    real(kind=real64),   intent(in)  :: jac(3,3,neval_points)
+    real(kind=real64),   intent(in)  :: dj(neval_points)
+    real(kind=real64),   intent(out) :: jac_inv(3,3,neval_points)
 
-    real(kind=real64) :: dummy
+    real(kind=real64)   :: dummy
     integer(kind=i_def) :: i
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -926,7 +926,7 @@ contains
   !! @param[in] diff_basis     Grad of Wchi basis functions
   !! @param[out] jac           Jacobian on quadrature points
   !! @param[out] dj            Determinant of the Jacobian on quadrature points
-  subroutine pointwise_coordinate_jacobian_real32(                &
+  subroutine pointwise_coordinate_jacobian_real32(                  &
                                        coord_system, geometry,      &
                                        topology, scaled_radius,     &
                                        ndf, chi_1, chi_2, chi_3,    &
@@ -942,23 +942,23 @@ contains
     integer(kind=i_def),  intent(in) :: ndf
     integer(kind=i_def),  intent(in) :: panel_id
 
-    real(kind=real32),  intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-    real(kind=real32),  intent(in) :: basis(1,ndf)
-    real(kind=real32),  intent(in) :: diff_basis(3,ndf)
-    real(kind=real32), intent(out) :: jac(3,3)
-    real(kind=real32), intent(out) :: dj
+    real(kind=real32),    intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
+    real(kind=real32),    intent(in) :: basis(1,ndf)
+    real(kind=real32),    intent(in) :: diff_basis(3,ndf)
+    real(kind=real32),   intent(out) :: jac(3,3)
+    real(kind=real32),   intent(out) :: dj
 
     ! Local variables
-    real(kind=real32) :: jac_ref2sph(3,3)
-    real(kind=real32) :: jac_sph2XYZ(3,3)
-    real(kind=real32) :: alpha, beta
-    real(kind=real32) :: longitude, latitude
-    real(kind=real32) :: radius
-    real(kind=real32) :: rotation_matrix(3,3)
-    real(kind=real32) :: jac_S(3,3)
-    real(kind=real32) :: stretch_factor
-    real(kind=real32) :: native_x, native_y, native_z
-    real(kind=real32) :: native_lon, native_lat
+    real(kind=real32)   :: jac_ref2sph(3,3)
+    real(kind=real32)   :: jac_sph2XYZ(3,3)
+    real(kind=real32)   :: alpha, beta
+    real(kind=real32)   :: longitude, latitude
+    real(kind=real32)   :: radius
+    real(kind=real32)   :: rotation_matrix(3,3)
+    real(kind=real32)   :: jac_S(3,3)
+    real(kind=real32)   :: stretch_factor
+    real(kind=real32)   :: native_x, native_y, native_z
+    real(kind=real32)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -1045,7 +1045,7 @@ contains
 
   end subroutine pointwise_coordinate_jacobian_real32
 
-  subroutine pointwise_coordinate_jacobian_real64(                &
+  subroutine pointwise_coordinate_jacobian_real64(                  &
                                        coord_system, geometry,      &
                                        topology, scaled_radius,     &
                                        ndf, chi_1, chi_2, chi_3,    &
@@ -1061,23 +1061,23 @@ contains
     integer(kind=i_def),  intent(in) :: ndf
     integer(kind=i_def),  intent(in) :: panel_id
 
-    real(kind=real64),  intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
-    real(kind=real64),  intent(in) :: basis(1,ndf)
-    real(kind=real64),  intent(in) :: diff_basis(3,ndf)
-    real(kind=real64), intent(out) :: jac(3,3)
-    real(kind=real64), intent(out) :: dj
+    real(kind=real64),    intent(in) :: chi_1(ndf), chi_2(ndf), chi_3(ndf)
+    real(kind=real64),    intent(in) :: basis(1,ndf)
+    real(kind=real64),    intent(in) :: diff_basis(3,ndf)
+    real(kind=real64),   intent(out) :: jac(3,3)
+    real(kind=real64),   intent(out) :: dj
 
     ! Local variables
-    real(kind=real64) :: jac_ref2sph(3,3)
-    real(kind=real64) :: jac_sph2XYZ(3,3)
-    real(kind=real64) :: alpha, beta
-    real(kind=real64) :: longitude, latitude
-    real(kind=real64) :: radius
-    real(kind=real64) :: rotation_matrix(3,3)
-    real(kind=real64) :: jac_S(3,3)
-    real(kind=real64) :: stretch_factor
-    real(kind=real64) :: native_x, native_y, native_z
-    real(kind=real64) :: native_lon, native_lat
+    real(kind=real64)   :: jac_ref2sph(3,3)
+    real(kind=real64)   :: jac_sph2XYZ(3,3)
+    real(kind=real64)   :: alpha, beta
+    real(kind=real64)   :: longitude, latitude
+    real(kind=real64)   :: radius
+    real(kind=real64)   :: rotation_matrix(3,3)
+    real(kind=real64)   :: jac_S(3,3)
+    real(kind=real64)   :: stretch_factor
+    real(kind=real64)   :: native_x, native_y, native_z
+    real(kind=real64)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -1176,13 +1176,13 @@ contains
   !! @param[in] jac        Jacobian on quadrature points
   !! @param[in] dj         Determinant of the Jacobian
   !! @return    jac_inv    Inverse of the Jacobian on quadrature points
-  function pointwise_coordinate_jacobian_inverse_real32(jac, dj) &
+  function pointwise_coordinate_jacobian_inverse_real32(  jac, dj) &
                                                           result(jac_inv)
     implicit none
 
     real(kind=real32)              :: jac_inv(3,3)
-    real(kind=real32), intent(in)  :: jac(3,3)
-    real(kind=real32), intent(in)  :: dj
+    real(kind=real32),   intent(in)  :: jac(3,3)
+    real(kind=real32),   intent(in)  :: dj
     real(kind=real32)              :: idj
 
     idj = 1.0_real32/dj
@@ -1199,13 +1199,13 @@ contains
 
   end function pointwise_coordinate_jacobian_inverse_real32
 
-  function pointwise_coordinate_jacobian_inverse_real64(jac, dj) &
+  function pointwise_coordinate_jacobian_inverse_real64(  jac, dj) &
                                                           result(jac_inv)
     implicit none
 
     real(kind=real64)              :: jac_inv(3,3)
-    real(kind=real64), intent(in)  :: jac(3,3)
-    real(kind=real64), intent(in)  :: dj
+    real(kind=real64),   intent(in)  :: jac(3,3)
+    real(kind=real64),   intent(in)  :: dj
     real(kind=real64)              :: idj
 
     idj = 1.0_real64/dj
@@ -1233,13 +1233,13 @@ contains
   !> @param[in] radius       The radius coordinate
   !> @param[in] panel_id     Integer giving the ID of the mesh panel
   !> @return    jac_abr2XYZ  3x3 matrix for the Jacobian of the transformation
-  function jacobian_abr2XYZ_real32(alpha, beta, radius, panel_id) &
+  function jacobian_abr2XYZ_real32(  alpha, beta, radius, panel_id) &
                                                       result(jac_abr2XYZ)
     implicit none
 
-    real(kind=real32), intent(in) :: alpha
-    real(kind=real32), intent(in) :: beta
-    real(kind=real32), intent(in) :: radius
+    real(kind=real32),   intent(in) :: alpha
+    real(kind=real32),   intent(in) :: beta
+    real(kind=real32),   intent(in) :: radius
     integer(kind=i_def), intent(in) :: panel_id
 
     real(kind=real32)             :: jac_abr2XYZ(3,3)
@@ -1272,13 +1272,13 @@ contains
 
   end function jacobian_abr2XYZ_real32
 
-  function jacobian_abr2XYZ_real64(alpha, beta, radius, panel_id) &
+  function jacobian_abr2XYZ_real64(  alpha, beta, radius, panel_id) &
                                                       result(jac_abr2XYZ)
     implicit none
 
-    real(kind=real64), intent(in) :: alpha
-    real(kind=real64), intent(in) :: beta
-    real(kind=real64), intent(in) :: radius
+    real(kind=real64),   intent(in) :: alpha
+    real(kind=real64),   intent(in) :: beta
+    real(kind=real64),   intent(in) :: radius
     integer(kind=i_def), intent(in) :: panel_id
 
     real(kind=real64)             :: jac_abr2XYZ(3,3)
@@ -1323,14 +1323,14 @@ contains
   !> @param[in] panel_id     Integer giving the ID of the mesh panel
   !> @param[in] ngp          Number of quadrature points
   !> @return    jac_abr2XYZ  Vector of 3x3 matrices for the Jacobian of the transformation
-function jacobian_abr2XYZ_vec_real32(alpha, beta, radius, panel_id, ngp) &
+function jacobian_abr2XYZ_vec_real32(  alpha, beta, radius, panel_id, ngp) &
                                                       result(jac_abr2XYZ)
     implicit none
 
     integer(kind=i_def), intent(in) :: ngp
-    real(kind=real32), dimension(ngp), intent(in) :: alpha
-    real(kind=real32), dimension(ngp), intent(in) :: beta
-    real(kind=real32), dimension(ngp), intent(in) :: radius
+    real(kind=real32),   dimension(ngp), intent(in) :: alpha
+    real(kind=real32),   dimension(ngp), intent(in) :: beta
+    real(kind=real32),   dimension(ngp), intent(in) :: radius
     integer(kind=i_def), intent(in) :: panel_id
 
     real(kind=real32)                   :: jac_abr2XYZ(3,3,ngp)
@@ -1386,14 +1386,14 @@ function jacobian_abr2XYZ_vec_real32(alpha, beta, radius, panel_id, ngp) &
   !> @param[in] panel_id     Integer giving the ID of the mesh panel
   !> @param[in] ngp          Number of quadrature points
   !> @return    jac_abr2XYZ  Vector of 3x3 matrices for the Jacobian of the transformation
-function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
+function jacobian_abr2XYZ_vec_real64(  alpha, beta, radius, panel_id, ngp) &
                                                       result(jac_abr2XYZ)
     implicit none
 
     integer(kind=i_def), intent(in) :: ngp
-    real(kind=real64), dimension(ngp), intent(in) :: alpha
-    real(kind=real64), dimension(ngp), intent(in) :: beta
-    real(kind=real64), dimension(ngp), intent(in) :: radius
+    real(kind=real64),   dimension(ngp), intent(in) :: alpha
+    real(kind=real64),   dimension(ngp), intent(in) :: beta
+    real(kind=real64),   dimension(ngp), intent(in) :: radius
     integer(kind=i_def), intent(in) :: panel_id
 
     real(kind=real64)                   :: jac_abr2XYZ(3,3,ngp)
@@ -1447,13 +1447,13 @@ function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
   !> @param[in] latitude     The latitude coordinate
   !> @param[in] radius       The radius coordinate
   !> @return    jac_llr2XYZ  3x3 matrix for the Jacobian of the transformation
-  function jacobian_llr2XYZ_real32(longitude, latitude, radius) &
+  function jacobian_llr2XYZ_real32(  longitude, latitude, radius) &
                                                       result(jac_llr2XYZ)
     implicit none
 
-    real(kind=real32), intent(in) :: longitude
-    real(kind=real32), intent(in) :: latitude
-    real(kind=real32), intent(in) :: radius
+    real(kind=real32),   intent(in) :: longitude
+    real(kind=real32),   intent(in) :: latitude
+    real(kind=real32),   intent(in) :: radius
 
     real(kind=real32)             :: jac_llr2XYZ(3,3)
     real(kind=real32)             :: sin_lon, sin_lat, cos_lon, cos_lat
@@ -1480,13 +1480,13 @@ function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
 
   end function jacobian_llr2XYZ_real32
 
-  function jacobian_llr2XYZ_real64(longitude, latitude, radius) &
+  function jacobian_llr2XYZ_real64(  longitude, latitude, radius) &
                                                       result(jac_llr2XYZ)
     implicit none
 
-    real(kind=real64), intent(in) :: longitude
-    real(kind=real64), intent(in) :: latitude
-    real(kind=real64), intent(in) :: radius
+    real(kind=real64),   intent(in) :: longitude
+    real(kind=real64),   intent(in) :: latitude
+    real(kind=real64),   intent(in) :: radius
 
     real(kind=real64)             :: jac_llr2XYZ(3,3)
     real(kind=real64)             :: sin_lon, sin_lat, cos_lon, cos_lat
@@ -1523,18 +1523,18 @@ function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
   !> @param[in] latitude     The latitude coordinate
   !> @param[in] radius       The radius coordinate
   !> @return    jac_llr2XYZ  3x3 matrix for the Jacobian of the transformation
-  function jacobian_XYZ2llr_real32(longitude, latitude, radius) &
+  function jacobian_XYZ2llr_real32(  longitude, latitude, radius) &
                                                       result(jac_XYZ2llr)
     implicit none
 
-    real(kind=real32), intent(in) :: longitude
-    real(kind=real32), intent(in) :: latitude
-    real(kind=real32), intent(in) :: radius
+    real(kind=real32),   intent(in) :: longitude
+    real(kind=real32),   intent(in) :: latitude
+    real(kind=real32),   intent(in) :: radius
 
     real(kind=real32)             :: jac_XYZ2llr(3,3)
     real(kind=real32)             :: sin_lon, sin_lat, cos_lon, cos_lat
     real(kind=real32)             :: safe_cos_lat
-    real(kind=real32),  parameter :: tiny = 1.0e-7_real32
+    real(kind=real32),    parameter :: tiny = 1.0e-7_real32
 
     sin_lat = sin(latitude)
     sin_lon = sin(longitude)
@@ -1556,18 +1556,18 @@ function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
 
   end function jacobian_XYZ2llr_real32
 
-  function jacobian_XYZ2llr_real64(longitude, latitude, radius) &
+  function jacobian_XYZ2llr_real64(  longitude, latitude, radius) &
                                                       result(jac_XYZ2llr)
     implicit none
 
-    real(kind=real64), intent(in) :: longitude
-    real(kind=real64), intent(in) :: latitude
-    real(kind=real64), intent(in) :: radius
+    real(kind=real64),   intent(in) :: longitude
+    real(kind=real64),   intent(in) :: latitude
+    real(kind=real64),   intent(in) :: radius
 
     real(kind=real64)             :: jac_XYZ2llr(3,3)
     real(kind=real64)             :: sin_lon, sin_lat, cos_lon, cos_lat
     real(kind=real64)             :: safe_cos_lat
-    real(kind=real64),  parameter :: tiny = 1.0e-15_real64
+    real(kind=real64),    parameter :: tiny = 1.0e-15_real64
 
     sin_lat = sin(latitude)
     sin_lon = sin(longitude)
@@ -1598,20 +1598,20 @@ function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
   !> @param[in] radius     The radial coordinate
   !> @param[in] stretch    The stretching factor
   !> @return    jac_stretched  3x3 matrix for the Jacobian of the transformation
-  function jacobian_stretched_real32(longitude, latitude, radius, stretch) result(jac_stretched)
+  function jacobian_stretched_real32(  longitude, latitude, radius, stretch) result(jac_stretched)
 
     implicit none
 
-    real(kind=real32), intent(in) :: longitude, latitude
-    real(kind=real32), intent(in) :: radius, stretch
+    real(kind=real32),   intent(in) :: longitude, latitude
+    real(kind=real32),   intent(in) :: radius, stretch
 
-    real(kind=real32) :: jac_llr2XYZ(3,3)
-    real(kind=real32) :: jac_XYZ2llr(3,3)
+    real(kind=real32)   :: jac_llr2XYZ(3,3)
+    real(kind=real32)   :: jac_XYZ2llr(3,3)
 
-    real(kind=real32), parameter :: one = 1.0_real32
+    real(kind=real32),   parameter :: one = 1.0_real32
 
-    real(kind=real32) :: lat_stretched, psi
-    real(kind=real32) :: jac_stretched(3,3)
+    real(kind=real32)   :: lat_stretched, psi
+    real(kind=real32)   :: jac_stretched(3,3)
 
     ! Compute stretched variables
     lat_stretched = schmidt_transform_lat(latitude, stretch)
@@ -1637,20 +1637,20 @@ function jacobian_abr2XYZ_vec_real64(alpha, beta, radius, panel_id, ngp) &
 
   end function jacobian_stretched_real32
 
-  function jacobian_stretched_real64(longitude, latitude, radius, stretch) result(jac_stretched)
+  function jacobian_stretched_real64(  longitude, latitude, radius, stretch) result(jac_stretched)
 
     implicit none
 
-    real(kind=real64), intent(in) :: longitude, latitude
-    real(kind=real64), intent(in) :: radius, stretch
+    real(kind=real64),   intent(in) :: longitude, latitude
+    real(kind=real64),   intent(in) :: radius, stretch
 
-    real(kind=real64) :: jac_llr2XYZ(3,3)
-    real(kind=real64) :: jac_XYZ2llr(3,3)
+    real(kind=real64)   :: jac_llr2XYZ(3,3)
+    real(kind=real64)   :: jac_XYZ2llr(3,3)
 
-    real(kind=real64), parameter :: one = 1.0_real64
+    real(kind=real64),   parameter :: one = 1.0_real64
 
-    real(kind=real64) :: lat_stretched, psi
-    real(kind=real64) :: jac_stretched(3,3)
+    real(kind=real64)   :: lat_stretched, psi
+    real(kind=real64)   :: jac_stretched(3,3)
 
     ! Compute stretched variables
     lat_stretched = schmidt_transform_lat(latitude, stretch)

@@ -60,7 +60,7 @@ contains
 !! @param[in] ndf1 Number of dofs per cell for space 1
 !! @param[in] ndf2 Number of dofs per cell for space 2
 !! @param[in] ndf3 Number of dofs per cell for space 3
-subroutine operator_x_times_y_kernel_code_real32(cell, nlayers,         &
+subroutine operator_x_times_y_kernel_code_real32(  cell, nlayers,         &
                                                    ncell_3d_1, x_times_y, &
                                                    ncell_3d_2, x,         &
                                                    ncell_3d_3, y,         &
@@ -73,9 +73,9 @@ subroutine operator_x_times_y_kernel_code_real32(cell, nlayers,         &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2, ncell_3d_3
   integer(kind=i_def), intent(in) :: ndf1, ndf2, ndf3
 
-  real(kind=real32), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
-  real(kind=real32), dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
-  real(kind=real32), dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
+  real(kind=real32),   dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
+  real(kind=real32),   dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
+  real(kind=real32),   dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -87,7 +87,7 @@ subroutine operator_x_times_y_kernel_code_real32(cell, nlayers,         &
 
 end subroutine operator_x_times_y_kernel_code_real32
 
-subroutine operator_x_times_y_kernel_code_real64(cell, nlayers,         &
+subroutine operator_x_times_y_kernel_code_real64(  cell, nlayers,         &
                                                    ncell_3d_1, x_times_y, &
                                                    ncell_3d_2, x,         &
                                                    ncell_3d_3, y,         &
@@ -100,9 +100,9 @@ subroutine operator_x_times_y_kernel_code_real64(cell, nlayers,         &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2, ncell_3d_3
   integer(kind=i_def), intent(in) :: ndf1, ndf2, ndf3
 
-  real(kind=real64), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
-  real(kind=real64), dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
-  real(kind=real64), dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
+  real(kind=real64),   dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x_times_y
+  real(kind=real64),   dimension(ncell_3d_2, ndf1, ndf3), intent(in)    :: x
+  real(kind=real64),   dimension(ncell_3d_3, ndf3, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik

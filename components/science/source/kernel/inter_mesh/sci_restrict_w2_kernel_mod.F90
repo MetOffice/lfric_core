@@ -96,7 +96,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine restrict_w2_code_real32(nlayers,                 &
+  subroutine restrict_w2_code_real32(  nlayers,                 &
                                        cell_map,                &
                                        ncell_fine_per_coarse_x, &
                                        ncell_fine_per_coarse_y, &
@@ -124,8 +124,8 @@ contains
     integer(kind=i_def), intent(in) :: undf_w3_2d
 
     ! Fields
-    real(kind=real32), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real32), intent(in)    :: fine_field(undf_fine)
+    real(kind=real32),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(in)    :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: face_selector_ew(undf_w3_2d)
     integer(kind=i_def), intent(in)    :: face_selector_ns(undf_w3_2d)
 
@@ -137,7 +137,7 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: df, k, x_idx, y_idx, face
-    real(kind=real32) :: new_coarse(nlayers+1)
+    real(kind=real32)   :: new_coarse(nlayers+1)
 
     integer(kind=i_def), parameter :: n_faces = 5
     integer(kind=i_def), parameter :: face_order(n_faces) = [W,S,E,N,B]
@@ -257,7 +257,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine restrict_w2_code_real64(nlayers,                 &
+  subroutine restrict_w2_code_real64(  nlayers,                 &
                                        cell_map,                &
                                        ncell_fine_per_coarse_x, &
                                        ncell_fine_per_coarse_y, &
@@ -285,8 +285,8 @@ contains
     integer(kind=i_def), intent(in) :: undf_w3_2d
 
     ! Fields
-    real(kind=real64), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real64), intent(in)    :: fine_field(undf_fine)
+    real(kind=real64),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(in)    :: fine_field(undf_fine)
     integer(kind=i_def), intent(in)    :: face_selector_ew(undf_w3_2d)
     integer(kind=i_def), intent(in)    :: face_selector_ns(undf_w3_2d)
 
@@ -298,7 +298,7 @@ contains
 
     ! Internal variables
     integer(kind=i_def) :: df, k, x_idx, y_idx, face
-    real(kind=real64) :: new_coarse(nlayers+1)
+    real(kind=real64)   :: new_coarse(nlayers+1)
 
     integer(kind=i_def), parameter :: n_faces = 5
     integer(kind=i_def), parameter :: face_order(n_faces) = [W,S,E,N,B]

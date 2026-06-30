@@ -63,7 +63,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine transpose_matrix_code_real32(cell,        &
+subroutine transpose_matrix_code_real32(  cell,        &
                                           nlayers,     &
                                           ncell_3d,    &
                                           mat_in,      &
@@ -81,8 +81,8 @@ subroutine transpose_matrix_code_real32(cell,        &
   integer(kind=i_def), intent(in)    :: ncell_3d_2
   integer(kind=i_def), intent(in)    :: ndf1
   integer(kind=i_def), intent(in)    :: ndf2
-  real(kind=real32), dimension(ncell_3d,ndf1,ndf2), intent(in)      :: mat_in
-  real(kind=real32), dimension(ncell_3d,ndf2,ndf1), intent(inout)   :: mat_out
+  real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(in)      :: mat_in
+  real(kind=real32),   dimension(ncell_3d,ndf2,ndf1), intent(inout)   :: mat_out
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -96,7 +96,7 @@ end subroutine transpose_matrix_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine transpose_matrix_code_real64(cell,        &
+subroutine transpose_matrix_code_real64(  cell,        &
                                           nlayers,     &
                                           ncell_3d,    &
                                           mat_in,      &
@@ -114,8 +114,8 @@ subroutine transpose_matrix_code_real64(cell,        &
   integer(kind=i_def), intent(in)    :: ncell_3d_2
   integer(kind=i_def), intent(in)    :: ndf1
   integer(kind=i_def), intent(in)    :: ndf2
-  real(kind=real64), dimension(ncell_3d,ndf1,ndf2), intent(in)      :: mat_in
-  real(kind=real64), dimension(ncell_3d,ndf2,ndf1), intent(inout)   :: mat_out
+  real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(in)      :: mat_in
+  real(kind=real64),   dimension(ncell_3d,ndf2,ndf1), intent(inout)   :: mat_out
 
   ! Internal variables
   integer(kind=i_def) :: k, ik

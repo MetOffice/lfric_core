@@ -81,7 +81,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine consist_w2h_to_sh_w2h_code_real32( nlayers_sh,        &
+subroutine consist_w2h_to_sh_w2h_code_real32(   nlayers_sh,        &
                                                 field_w2h_sh,      &
                                                 field_w2h,         &
                                                 face_selector_ew,  &
@@ -108,8 +108,8 @@ subroutine consist_w2h_to_sh_w2h_code_real32( nlayers_sh,        &
   integer(kind=i_def), dimension(ndf_w2h),        intent(in) :: map_w2h
   integer(kind=i_def), dimension(ndf_w3_2d),      intent(in) :: map_w3_2d
 
-  real(kind=real32), dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
-  real(kind=real32), dimension(undf_w2h),       intent(in) :: field_w2h
+  real(kind=real32),   dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
+  real(kind=real32),   dimension(undf_w2h),       intent(in) :: field_w2h
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ns
 
@@ -139,7 +139,7 @@ end subroutine consist_w2h_to_sh_w2h_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine consist_w2h_to_sh_w2h_code_real64( nlayers_sh,        &
+subroutine consist_w2h_to_sh_w2h_code_real64(   nlayers_sh,        &
                                                 field_w2h_sh,      &
                                                 field_w2h,         &
                                                 face_selector_ew,  &
@@ -166,8 +166,8 @@ subroutine consist_w2h_to_sh_w2h_code_real64( nlayers_sh,        &
   integer(kind=i_def), dimension(ndf_w2h),        intent(in) :: map_w2h
   integer(kind=i_def), dimension(ndf_w3_2d),      intent(in) :: map_w3_2d
 
-  real(kind=real64), dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
-  real(kind=real64), dimension(undf_w2h),       intent(in) :: field_w2h
+  real(kind=real64),   dimension(undf_w2h_sh), intent(inout) :: field_w2h_sh
+  real(kind=real64),   dimension(undf_w2h),       intent(in) :: field_w2h
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),     intent(in) :: face_selector_ns
 

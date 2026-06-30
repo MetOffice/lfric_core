@@ -58,7 +58,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine multiplicity_code_real32(nlayers, &
+subroutine multiplicity_code_real32(  nlayers, &
                                       field,   &
                                       ndf, undf, map)
 
@@ -69,7 +69,7 @@ subroutine multiplicity_code_real32(nlayers, &
   integer(kind=i_def), intent(in) :: ndf
   integer(kind=i_def), intent(in) :: undf
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
-  real(kind=real32), dimension(undf), intent(inout) :: field
+  real(kind=real32),   dimension(undf), intent(inout) :: field
 
   ! Internal variables
   integer(kind=i_def) :: k, df
@@ -85,7 +85,7 @@ end subroutine multiplicity_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine multiplicity_code_real64(nlayers, &
+subroutine multiplicity_code_real64(  nlayers, &
                                       field,   &
                                       ndf, undf, map)
 
@@ -96,7 +96,7 @@ subroutine multiplicity_code_real64(nlayers, &
   integer(kind=i_def), intent(in) :: ndf
   integer(kind=i_def), intent(in) :: undf
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
-  real(kind=real64), dimension(undf), intent(inout) :: field
+  real(kind=real64),   dimension(undf), intent(inout) :: field
 
   ! Internal variables
   integer(kind=i_def) :: k, df

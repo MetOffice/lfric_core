@@ -66,7 +66,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine matrix_vector_code_real32(cell,              &
+  subroutine matrix_vector_code_real32(  cell,              &
                                          nlayers,           &
                                          lhs, x,            &
                                          ncell_3d,          &
@@ -83,9 +83,9 @@ contains
     integer(kind=i_def), dimension(ndf1), intent(in) :: map1
     integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-    real(kind=real32), dimension(undf2),              intent(in)    :: x
-    real(kind=real32), dimension(undf1),              intent(inout) :: lhs
-    real(kind=real32), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+    real(kind=real32),   dimension(undf2),              intent(in)    :: x
+    real(kind=real32),   dimension(undf1),              intent(inout) :: lhs
+    real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
     integer(kind=i_def) :: df, ik, df2, i1, i2, nl
@@ -105,7 +105,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine matrix_vector_code_real64(cell,              &
+  subroutine matrix_vector_code_real64(  cell,              &
                                          nlayers,           &
                                          lhs, x,            &
                                          ncell_3d,          &
@@ -122,9 +122,9 @@ contains
     integer(kind=i_def), dimension(ndf1), intent(in) :: map1
     integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-    real(kind=real64), dimension(undf2),              intent(in)    :: x
-    real(kind=real64), dimension(undf1),              intent(inout) :: lhs
-    real(kind=real64), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+    real(kind=real64),   dimension(undf2),              intent(in)    :: x
+    real(kind=real64),   dimension(undf1),              intent(inout) :: lhs
+    real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     integer(kind=i_def) :: df, ik, df2, i1, i2, nl
 

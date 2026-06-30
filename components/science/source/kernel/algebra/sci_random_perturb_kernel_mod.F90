@@ -59,7 +59,7 @@ contains
 ! ==================
 ! REAL32 PRECISION
 ! ==================
-subroutine random_perturb_code_real32(nlayers, theta, height_wtheta,     &
+subroutine random_perturb_code_real32(  nlayers, theta, height_wtheta,     &
                         theta_pert_size, theta_pert_start, theta_pert_end, &
                         ndf_wtheta, undf_wtheta, map_wtheta)
 
@@ -69,11 +69,11 @@ integer(kind=i_def), intent(in) :: nlayers
 integer(kind=i_def), intent(in) :: ndf_wtheta
 integer(kind=i_def), intent(in) :: undf_wtheta
 integer(kind=i_def), intent(in),    dimension(ndf_wtheta)  :: map_wtheta
-real(kind=real32), intent(inout), dimension(undf_wtheta) :: theta
-real(kind=real32), intent(in),    dimension(undf_wtheta) :: height_wtheta
-real(kind=real32), intent(in) :: theta_pert_size
-real(kind=real32), intent(in) :: theta_pert_start
-real(kind=real32), intent(in) :: theta_pert_end
+real(kind=real32),   intent(inout), dimension(undf_wtheta) :: theta
+real(kind=real32),   intent(in),    dimension(undf_wtheta) :: height_wtheta
+real(kind=real32),   intent(in) :: theta_pert_size
+real(kind=real32),   intent(in) :: theta_pert_start
+real(kind=real32),   intent(in) :: theta_pert_end
 
 integer(kind=i_def) :: k
 real(kind=real32)    :: pert(0:nlayers-1)
@@ -94,7 +94,7 @@ end subroutine random_perturb_code_real32
 ! ==================
 ! REAL64 PRECISION
 ! ==================
-subroutine random_perturb_code_real64(nlayers, theta, height_wtheta,     &
+subroutine random_perturb_code_real64(  nlayers, theta, height_wtheta,     &
                         theta_pert_size, theta_pert_start, theta_pert_end, &
                         ndf_wtheta, undf_wtheta, map_wtheta)
 
@@ -104,11 +104,11 @@ integer(kind=i_def), intent(in) :: nlayers
 integer(kind=i_def), intent(in) :: ndf_wtheta
 integer(kind=i_def), intent(in) :: undf_wtheta
 integer(kind=i_def), intent(in),    dimension(ndf_wtheta)  :: map_wtheta
-real(kind=real64), intent(inout), dimension(undf_wtheta) :: theta
-real(kind=real64), intent(in),    dimension(undf_wtheta) :: height_wtheta
-real(kind=real64), intent(in) :: theta_pert_size
-real(kind=real64), intent(in) :: theta_pert_start
-real(kind=real64), intent(in) :: theta_pert_end
+real(kind=real64),   intent(inout), dimension(undf_wtheta) :: theta
+real(kind=real64),   intent(in),    dimension(undf_wtheta) :: height_wtheta
+real(kind=real64),   intent(in) :: theta_pert_size
+real(kind=real64),   intent(in) :: theta_pert_start
+real(kind=real64),   intent(in) :: theta_pert_end
 
 integer(kind=i_def) :: k
 real(kind=real64)    :: pert(0:nlayers-1)

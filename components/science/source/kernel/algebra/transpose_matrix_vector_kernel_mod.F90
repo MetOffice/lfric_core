@@ -64,7 +64,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine transpose_matrix_vector_code_real32(cell,              &
+subroutine transpose_matrix_vector_code_real32(  cell,              &
                                                  nlayers,           &
                                                  lhs, x,            &
                                                  ncell_3d,          &
@@ -81,14 +81,14 @@ subroutine transpose_matrix_vector_code_real32(cell,              &
   integer(kind=i_def), dimension(ndf1), intent(in) :: map1
   integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-  real(kind=real32), dimension(undf2),              intent(in)    :: x
-  real(kind=real32), dimension(undf1),              intent(inout) :: lhs
-  real(kind=real32), dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
+  real(kind=real32),   dimension(undf2),              intent(in)    :: x
+  real(kind=real32),   dimension(undf1),              intent(inout) :: lhs
+  real(kind=real32),   dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
 
   ! Internal variables
   integer(kind=i_def)                  :: df, k, ik
-  real(kind=real32), dimension(ndf2) :: x_e
-  real(kind=real32), dimension(ndf1) :: lhs_e
+  real(kind=real32),   dimension(ndf2) :: x_e
+  real(kind=real32),   dimension(ndf1) :: lhs_e
 
   do k = 0, nlayers-1
     do df = 1, ndf2
@@ -105,7 +105,7 @@ end subroutine transpose_matrix_vector_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine transpose_matrix_vector_code_real64(cell,              &
+subroutine transpose_matrix_vector_code_real64(  cell,              &
                                                  nlayers,           &
                                                  lhs, x,            &
                                                  ncell_3d,          &
@@ -122,14 +122,14 @@ subroutine transpose_matrix_vector_code_real64(cell,              &
   integer(kind=i_def), dimension(ndf1), intent(in) :: map1
   integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-  real(kind=real64), dimension(undf2),              intent(in)    :: x
-  real(kind=real64), dimension(undf1),              intent(inout) :: lhs
-  real(kind=real64), dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
+  real(kind=real64),   dimension(undf2),              intent(in)    :: x
+  real(kind=real64),   dimension(undf1),              intent(inout) :: lhs
+  real(kind=real64),   dimension(ncell_3d,ndf2,ndf1), intent(in)    :: matrix
 
   ! Internal variables
   integer(kind=i_def)                  :: df, k, ik
-  real(kind=real64), dimension(ndf2) :: x_e
-  real(kind=real64), dimension(ndf1) :: lhs_e
+  real(kind=real64),   dimension(ndf2) :: x_e
+  real(kind=real64),   dimension(ndf1) :: lhs_e
 
   do k = 0, nlayers-1
     do df = 1, ndf2

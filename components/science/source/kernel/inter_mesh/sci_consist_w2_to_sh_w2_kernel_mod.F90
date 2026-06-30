@@ -109,8 +109,8 @@ subroutine consist_w2_to_sh_w2_code_single(  nlayers_sh,       &
   integer(kind=i_def), dimension(ndf_w2),        intent(in) :: map_w2
   integer(kind=i_def), dimension(ndf_w3_2d),     intent(in) :: map_w3_2d
 
-  real(kind=real32), dimension(undf_w2_sh), intent(inout) :: field_w2_sh
-  real(kind=real32), dimension(undf_w2),       intent(in) :: field_w2
+  real(kind=real32),   dimension(undf_w2_sh), intent(inout) :: field_w2_sh
+  real(kind=real32),   dimension(undf_w2),       intent(in) :: field_w2
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ns
 
@@ -179,8 +179,8 @@ subroutine consist_w2_to_sh_w2_code_double(  nlayers_sh,       &
   integer(kind=i_def), dimension(ndf_w2),        intent(in) :: map_w2
   integer(kind=i_def), dimension(ndf_w3_2d),     intent(in) :: map_w3_2d
 
-  real(kind=real64), dimension(undf_w2_sh),    intent(inout) :: field_w2_sh
-  real(kind=real64), dimension(undf_w2),       intent(in) :: field_w2
+  real(kind=real64),   dimension(undf_w2_sh),    intent(inout) :: field_w2_sh
+  real(kind=real64),   dimension(undf_w2),       intent(in) :: field_w2
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d),    intent(in) :: face_selector_ns
 

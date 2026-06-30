@@ -66,7 +66,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine mm_diagonal_kernel_code_real32(cell,        &
+  subroutine mm_diagonal_kernel_code_real32(  cell,        &
                                               nlayers,     &
                                               mm_diag,     &
                                               ncell_3d,    &
@@ -79,8 +79,8 @@ contains
     integer(kind=i_def),                    intent(in)  :: cell, nlayers, ndf
     integer(kind=i_def),                    intent(in)  :: undf, ncell_3d
     integer(kind=i_def), dimension(ndf),    intent(in)  :: map
-    real(kind=real32), dimension(undf), intent(inout) :: mm_diag
-    real(kind=real32), dimension(ncell_3d,ndf,ndf), intent(in) :: mass_matrix
+    real(kind=real32),   dimension(undf), intent(inout) :: mm_diag
+    real(kind=real32),   dimension(ncell_3d,ndf,ndf), intent(in) :: mass_matrix
 
     ! Internal variables
     integer(kind=i_def) :: df, k, ik
@@ -97,7 +97,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine mm_diagonal_kernel_code_real64(cell,        &
+  subroutine mm_diagonal_kernel_code_real64(  cell,        &
                                               nlayers,     &
                                               mm_diag,     &
                                               ncell_3d,    &
@@ -110,8 +110,8 @@ contains
    integer(kind=i_def),                    intent(in)  :: cell, nlayers, ndf
    integer(kind=i_def),                    intent(in)  :: undf, ncell_3d
    integer(kind=i_def), dimension(ndf),    intent(in)  :: map
-   real(kind=real64), dimension(undf), intent(inout) :: mm_diag
-   real(kind=real64), dimension(ncell_3d,ndf,ndf), intent(in) :: mass_matrix
+   real(kind=real64),   dimension(undf), intent(inout) :: mm_diag
+   real(kind=real64),   dimension(ncell_3d,ndf,ndf), intent(in) :: mass_matrix
 
    ! Internal variables
    integer(kind=i_def) :: df, k, ik

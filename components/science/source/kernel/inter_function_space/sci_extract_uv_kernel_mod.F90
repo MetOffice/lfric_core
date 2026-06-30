@@ -79,7 +79,7 @@ contains
 !> @param[in] ndf_w3_2d  Num of DoFs for 2D W3 per cell
 !> @param[in] undf_w3_2d Num of DoFs for this partition for 2D W3
 !> @param[in] map_w3_2d  Map for 2D W3
-subroutine extract_uv_code_real32( nlayers,                         &
+subroutine extract_uv_code_real32(   nlayers,                         &
                                      h_wind,                          &
                                      u_wind,                          &
                                      face_selector_ew,                &
@@ -98,8 +98,8 @@ subroutine extract_uv_code_real32( nlayers,                         &
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
   integer(kind=i_def), intent(in) :: ndf_w3_2d, undf_w3_2d
 
-  real(kind=real32), dimension(undf_w2h),   intent(inout) :: h_wind
-  real(kind=real32), dimension(undf_w2),    intent(in)    :: u_wind
+  real(kind=real32),   dimension(undf_w2h),   intent(inout) :: h_wind
+  real(kind=real32),   dimension(undf_w2),    intent(in)    :: u_wind
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ns
   integer(kind=i_def), dimension(ndf_w2h),    intent(in)    :: map_w2h
@@ -121,7 +121,7 @@ subroutine extract_uv_code_real32( nlayers,                         &
 
 end subroutine extract_uv_code_real32
 
-subroutine extract_uv_code_real64( nlayers,                         &
+subroutine extract_uv_code_real64(   nlayers,                         &
                                      h_wind,                          &
                                      u_wind,                          &
                                      face_selector_ew,                &
@@ -140,8 +140,8 @@ subroutine extract_uv_code_real64( nlayers,                         &
   integer(kind=i_def), intent(in) :: ndf_w2, undf_w2
   integer(kind=i_def), intent(in) :: ndf_w3_2d, undf_w3_2d
 
-  real(kind=real64), dimension(undf_w2h),   intent(inout) :: h_wind
-  real(kind=real64), dimension(undf_w2),    intent(in)    :: u_wind
+  real(kind=real64),   dimension(undf_w2h),   intent(inout) :: h_wind
+  real(kind=real64),   dimension(undf_w2),    intent(in)    :: u_wind
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ew
   integer(kind=i_def), dimension(undf_w3_2d), intent(in)    :: face_selector_ns
   integer(kind=i_def), dimension(ndf_w2h),    intent(in)    :: map_w2h

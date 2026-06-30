@@ -164,7 +164,7 @@ end subroutine operator_setval_c_kernel_code
 
 ! REAL32 PRECISION
 ! ==================
-subroutine operator_setval_x_kernel_code_real32(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real32(  cell, nlayers, &
                                                   ncell_3d_1, x, &
                                                   ncell_3d_2, y, &
                                                   ndf1, ndf2)
@@ -176,8 +176,8 @@ subroutine operator_setval_x_kernel_code_real32(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=real32), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=real32), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real32),   dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real32),   dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -191,7 +191,7 @@ end subroutine operator_setval_x_kernel_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine operator_setval_x_kernel_code_real64(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real64(  cell, nlayers, &
                                                   ncell_3d_1, x, &
                                                   ncell_3d_2, y, &
                                                   ndf1, ndf2)
@@ -203,8 +203,8 @@ subroutine operator_setval_x_kernel_code_real64(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=real64), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=real64), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real64),   dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real64),   dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -218,7 +218,7 @@ end subroutine operator_setval_x_kernel_code_real64
 
 ! REAL32 PRECISION to REAL64
 ! ==============================
-subroutine operator_setval_x_kernel_code_real32_to_real64(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real32_to_real64(  cell, nlayers, &
                                                               ncell_3d_1, x, &
                                                               ncell_3d_2, y, &
                                                               ndf1, ndf2)
@@ -230,8 +230,8 @@ subroutine operator_setval_x_kernel_code_real32_to_real64(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=real64), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=real32), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real64),   dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real32),   dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik
@@ -245,7 +245,7 @@ end subroutine operator_setval_x_kernel_code_real32_to_real64
 
 ! REAL64 PRECISION to REAL32
 ! ==============================
-subroutine operator_setval_x_kernel_code_real64_to_real32(cell, nlayers, &
+subroutine operator_setval_x_kernel_code_real64_to_real32(  cell, nlayers, &
                                                               ncell_3d_1, x, &
                                                               ncell_3d_2, y, &
                                                               ndf1, ndf2)
@@ -257,8 +257,8 @@ subroutine operator_setval_x_kernel_code_real64_to_real32(cell, nlayers, &
   integer(kind=i_def), intent(in) :: ncell_3d_1, ncell_3d_2
   integer(kind=i_def), intent(in) :: ndf1, ndf2
 
-  real(kind=real32), dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
-  real(kind=real64), dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
+  real(kind=real32),   dimension(ncell_3d_1, ndf1, ndf2), intent(inout) :: x
+  real(kind=real64),   dimension(ncell_3d_2, ndf1, ndf2), intent(in)    :: y
 
   ! Internal variables
   integer(kind=i_def) :: k, ik

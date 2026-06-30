@@ -68,7 +68,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine consist_w2v_to_sh_w2v_code_real32(  nlayers_sh,        &
+subroutine consist_w2v_to_sh_w2v_code_real32(    nlayers_sh,        &
                                                  field_w2v_sh,      &
                                                  field_w2v,         &
                                                  ndf_w2v_sh,        &
@@ -88,8 +88,8 @@ subroutine consist_w2v_to_sh_w2v_code_real32(  nlayers_sh,        &
   integer(kind=i_def), dimension(ndf_w2v_sh),     intent(in) :: map_w2v_sh
   integer(kind=i_def), dimension(ndf_w2v),        intent(in) :: map_w2v
 
-  real(kind=real32), dimension(undf_w2v_sh), intent(inout) :: field_w2v_sh
-  real(kind=real32), dimension(undf_w2v),       intent(in) :: field_w2v
+  real(kind=real32),   dimension(undf_w2v_sh), intent(inout) :: field_w2v_sh
+  real(kind=real32),   dimension(undf_w2v),       intent(in) :: field_w2v
 
   ! Internal variables
   integer(kind=i_def) :: bottom_df, top_df, k
@@ -113,7 +113,7 @@ end subroutine consist_w2v_to_sh_w2v_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine consist_w2v_to_sh_w2v_code_real64(  nlayers_sh,        &
+subroutine consist_w2v_to_sh_w2v_code_real64(    nlayers_sh,        &
                                                  field_w2v_sh,      &
                                                  field_w2v,         &
                                                  ndf_w2v_sh,        &
@@ -133,8 +133,8 @@ subroutine consist_w2v_to_sh_w2v_code_real64(  nlayers_sh,        &
   integer(kind=i_def), dimension(ndf_w2v_sh),     intent(in) :: map_w2v_sh
   integer(kind=i_def), dimension(ndf_w2v),        intent(in) :: map_w2v
 
-  real(kind=real64), dimension(undf_w2v_sh), intent(inout) :: field_w2v_sh
-  real(kind=real64), dimension(undf_w2v),       intent(in) :: field_w2v
+  real(kind=real64),   dimension(undf_w2v_sh), intent(inout) :: field_w2v_sh
+  real(kind=real64),   dimension(undf_w2v),       intent(in) :: field_w2v
 
   ! Internal variables
   integer(kind=i_def) :: bottom_df, top_df, k

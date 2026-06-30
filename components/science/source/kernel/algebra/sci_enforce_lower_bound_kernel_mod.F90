@@ -63,7 +63,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine enforce_lower_bound_code_real32(nlayers, field, lower_bound, &
+subroutine enforce_lower_bound_code_real32(  nlayers, field, lower_bound, &
                                              ndf, undf, map)
 
   implicit none
@@ -71,8 +71,8 @@ subroutine enforce_lower_bound_code_real32(nlayers, field, lower_bound, &
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers, ndf, undf
   integer(kind=i_def), dimension(ndf), intent(in) :: map
-  real(kind=real32), dimension(undf), intent(inout) :: field
-  real(kind=real32), intent(in) :: lower_bound
+  real(kind=real32),   dimension(undf), intent(inout) :: field
+  real(kind=real32),   intent(in) :: lower_bound
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -90,7 +90,7 @@ end subroutine enforce_lower_bound_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine enforce_lower_bound_code_real64(nlayers, field, lower_bound, &
+subroutine enforce_lower_bound_code_real64(  nlayers, field, lower_bound, &
                                              ndf, undf, map)
 
   implicit none
@@ -98,8 +98,8 @@ subroutine enforce_lower_bound_code_real64(nlayers, field, lower_bound, &
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers, ndf, undf
   integer(kind=i_def), dimension(ndf), intent(in) :: map
-  real(kind=real64), dimension(undf), intent(inout) :: field
-  real(kind=real64), intent(in) :: lower_bound
+  real(kind=real64),   dimension(undf), intent(inout) :: field
+  real(kind=real64),   intent(in) :: lower_bound
 
   ! Internal variables
   integer(kind=i_def) :: df, k

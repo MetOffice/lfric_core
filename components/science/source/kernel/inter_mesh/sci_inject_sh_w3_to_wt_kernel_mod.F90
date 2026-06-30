@@ -68,7 +68,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine inject_sh_w3_to_wt_code_real32(                &
+subroutine inject_sh_w3_to_wt_code_real32(                  &
                                              nlayers,       &
                                              field_wt,      &
                                              field_w3_sh,   &
@@ -89,8 +89,8 @@ subroutine inject_sh_w3_to_wt_code_real32(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_wt),        intent(in) :: map_wt
 
-  real(kind=real32), dimension(undf_w3_sh),    intent(in) :: field_w3_sh
-  real(kind=real32), dimension(undf_wt),    intent(inout) :: field_wt
+  real(kind=real32),   dimension(undf_w3_sh),    intent(in) :: field_w3_sh
+  real(kind=real32),   dimension(undf_wt),    intent(inout) :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: k
@@ -114,7 +114,7 @@ end subroutine inject_sh_w3_to_wt_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine inject_sh_w3_to_wt_code_real64(                &
+subroutine inject_sh_w3_to_wt_code_real64(                  &
                                              nlayers,       &
                                              field_wt,      &
                                              field_w3_sh,   &
@@ -135,8 +135,8 @@ subroutine inject_sh_w3_to_wt_code_real64(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_wt),        intent(in) :: map_wt
 
-  real(kind=real64),    dimension(undf_w3_sh),    intent(in) :: field_w3_sh
-  real(kind=real64),    dimension(undf_wt),    intent(inout) :: field_wt
+  real(kind=real64),      dimension(undf_w3_sh),    intent(in) :: field_w3_sh
+  real(kind=real64),      dimension(undf_wt),    intent(inout) :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: k

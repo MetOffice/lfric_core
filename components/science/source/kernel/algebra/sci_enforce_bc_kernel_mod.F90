@@ -61,7 +61,7 @@ contains
 
 ! REAL64 PRECISION
 ! ==================
-subroutine enforce_bc_code_real64(nlayers,                        &
+subroutine enforce_bc_code_real64(  nlayers,                        &
                                     field,                          &
                                     ndf, undf, map, boundary_value  &
                                    )
@@ -75,7 +75,7 @@ subroutine enforce_bc_code_real64(nlayers,                        &
   integer(kind=i_def), dimension(ndf),   intent(in) :: map
   integer(kind=i_def), dimension(ndf,2), intent(in) :: boundary_value
 
-  real(kind=real64), dimension(undf), intent(inout) :: field
+  real(kind=real64),   dimension(undf), intent(inout) :: field
 
   ! Local variables
   integer(kind=i_def) :: df, k
@@ -93,7 +93,7 @@ end subroutine enforce_bc_code_real64
 
 ! REAL32 PRECISION
 ! ==================
-subroutine enforce_bc_code_real32(nlayers,                        &
+subroutine enforce_bc_code_real32(  nlayers,                        &
                                     field,                          &
                                     ndf, undf, map, boundary_value  &
                                     )
@@ -107,7 +107,7 @@ subroutine enforce_bc_code_real32(nlayers,                        &
   integer(kind=i_def), dimension(ndf),   intent(in) :: map
   integer(kind=i_def), dimension(ndf,2), intent(in) :: boundary_value
 
-  real(kind=real32), dimension(undf), intent(inout) :: field
+  real(kind=real32),   dimension(undf), intent(inout) :: field
 
   ! Local variables
   integer(kind=i_def) :: df, k

@@ -66,7 +66,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine sort_column_above_code_real32(nlayers,                   &
+subroutine sort_column_above_code_real32(  nlayers,                   &
                                            theta,                     &
                                            height_wth,                &
                                            height_to_sort_above,      &
@@ -81,13 +81,13 @@ subroutine sort_column_above_code_real32(nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   real(kind=r_def),    intent(in) :: height_to_sort_above
 
-  real(kind=real32), dimension(undf_wth), intent(inout) :: theta
+  real(kind=real32),   dimension(undf_wth), intent(inout) :: theta
   real(kind=r_def),    dimension(undf_wth), intent(in)    :: height_wth
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt, k_low
-  real(kind=real32) :: theta_k
+  real(kind=real32)   :: theta_k
 
   ! Work out level to sort about
   k_low = nlayers + 1
@@ -116,7 +116,7 @@ end subroutine sort_column_above_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine sort_column_above_code_real64(nlayers,                   &
+subroutine sort_column_above_code_real64(  nlayers,                   &
                                            theta,                     &
                                            height_wth,                &
                                            height_to_sort_above,      &
@@ -131,13 +131,13 @@ subroutine sort_column_above_code_real64(nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   real(kind=r_def),    intent(in) :: height_to_sort_above
 
-  real(kind=real64), dimension(undf_wth), intent(inout) :: theta
+  real(kind=real64),   dimension(undf_wth), intent(inout) :: theta
   real(kind=r_def),    dimension(undf_wth), intent(in)    :: height_wth
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt, k_low
-  real(kind=real64) :: theta_k
+  real(kind=real64)   :: theta_k
 
   ! Work out level to sort about
   k_low = nlayers + 1

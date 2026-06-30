@@ -72,7 +72,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine tri_solve_sh_rho_to_mr_code_real32(                                  &
+subroutine tri_solve_sh_rho_to_mr_code_real32(                                    &
                                                  nlayers,                         &
                                                  field_wt, field_sh_w3,           &
                                                  tri_below, tri_diag, tri_above,  &
@@ -90,15 +90,15 @@ subroutine tri_solve_sh_rho_to_mr_code_real32(                                  
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=real32), dimension(undf_wt),     intent(inout) :: field_wt
-  real(kind=real32), dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
-  real(kind=real32), dimension(undf_sh_w3),  intent(in)    :: tri_above
-  real(kind=real32), dimension(undf_sh_w3),  intent(in)    :: tri_diag
-  real(kind=real32), dimension(undf_sh_w3),  intent(in)    :: tri_below
+  real(kind=real32),   dimension(undf_wt),     intent(inout) :: field_wt
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_above
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_diag
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_below
 
   ! Internal variables
   integer(kind=i_def)                     :: k, ij, nlayers_shifted
-  real(kind=real32), dimension(nlayers+1)  :: rhs_new, tri_above_new
+  real(kind=real32),   dimension(nlayers+1)  :: rhs_new, tri_above_new
   real(kind=real32)                        :: denom
 
   nlayers_shifted = nlayers + 1
@@ -125,7 +125,7 @@ end subroutine tri_solve_sh_rho_to_mr_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine tri_solve_sh_rho_to_mr_code_real64(                                  &
+subroutine tri_solve_sh_rho_to_mr_code_real64(                                    &
                                                  nlayers,                         &
                                                  field_wt, field_sh_w3,           &
                                                  tri_below, tri_diag, tri_above,  &
@@ -143,15 +143,15 @@ subroutine tri_solve_sh_rho_to_mr_code_real64(                                  
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=real64), dimension(undf_wt),     intent(inout) :: field_wt
-  real(kind=real64), dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
-  real(kind=real64), dimension(undf_sh_w3),  intent(in)    :: tri_above
-  real(kind=real64), dimension(undf_sh_w3),  intent(in)    :: tri_diag
-  real(kind=real64), dimension(undf_sh_w3),  intent(in)    :: tri_below
+  real(kind=real64),   dimension(undf_wt),     intent(inout) :: field_wt
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_above
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_diag
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_below
 
   ! Internal variables
   integer(kind=i_def)                     :: k, ij, nlayers_shifted
-  real(kind=real64), dimension(nlayers+1)  :: rhs_new, tri_above_new
+  real(kind=real64),   dimension(nlayers+1)  :: rhs_new, tri_above_new
   real(kind=real64)                        :: denom
 
   nlayers_shifted = nlayers + 1

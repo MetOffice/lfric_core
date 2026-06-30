@@ -56,7 +56,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine sort_ref_code_real32(nlayers,                   &
+subroutine sort_ref_code_real32(  nlayers,                   &
                                   theta_ref,                 &
                                   ndf_wth, undf_wth, map_wth &
                                  )
@@ -68,12 +68,12 @@ subroutine sort_ref_code_real32(nlayers,                   &
 
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
 
-  real(kind=real32), dimension(undf_wth), intent(inout) :: theta_ref
+  real(kind=real32),   dimension(undf_wth), intent(inout) :: theta_ref
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt
-  real(kind=real32) :: theta_k
+  real(kind=real32)   :: theta_k
 
   do k = 1, nlayers
 
@@ -93,7 +93,7 @@ end subroutine sort_ref_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine sort_ref_code_real64(nlayers,                   &
+subroutine sort_ref_code_real64(  nlayers,                   &
                                   theta_ref,                 &
                                   ndf_wth, undf_wth, map_wth &
                                  )
@@ -105,12 +105,12 @@ subroutine sort_ref_code_real64(nlayers,                   &
 
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
 
-  real(kind=real64), dimension(undf_wth), intent(inout) :: theta_ref
+  real(kind=real64),   dimension(undf_wth), intent(inout) :: theta_ref
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt
-  real(kind=real64) :: theta_k
+  real(kind=real64)   :: theta_k
 
   do k = 1, nlayers
 

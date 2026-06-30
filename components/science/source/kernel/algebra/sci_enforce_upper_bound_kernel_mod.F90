@@ -65,7 +65,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine enforce_upper_bound_code_real32(nlayers, field, upper_bound, enforce_val,&
+subroutine enforce_upper_bound_code_real32(  nlayers, field, upper_bound, enforce_val,&
                                              ndf, undf, map)
 
   implicit none
@@ -73,9 +73,9 @@ subroutine enforce_upper_bound_code_real32(nlayers, field, upper_bound, enforce_
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers, ndf, undf
   integer(kind=i_def), dimension(ndf), intent(in) :: map
-  real(kind=real32), dimension(undf), intent(inout) :: field
-  real(kind=real32), intent(in) :: upper_bound
-  real(kind=real32), intent(in) :: enforce_val
+  real(kind=real32),   dimension(undf), intent(inout) :: field
+  real(kind=real32),   intent(in) :: upper_bound
+  real(kind=real32),   intent(in) :: enforce_val
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -93,7 +93,7 @@ end subroutine enforce_upper_bound_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine enforce_upper_bound_code_real64(nlayers, field, upper_bound, enforce_val,&
+subroutine enforce_upper_bound_code_real64(  nlayers, field, upper_bound, enforce_val,&
                                              ndf, undf, map)
 
   implicit none
@@ -101,9 +101,9 @@ subroutine enforce_upper_bound_code_real64(nlayers, field, upper_bound, enforce_
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers, ndf, undf
   integer(kind=i_def), dimension(ndf), intent(in) :: map
-  real(kind=real64), dimension(undf), intent(inout) :: field
-  real(kind=real64), intent(in) :: upper_bound
-  real(kind=real64), intent(in) :: enforce_val
+  real(kind=real64),   dimension(undf), intent(inout) :: field
+  real(kind=real64),   intent(in) :: upper_bound
+  real(kind=real64),   intent(in) :: enforce_val
 
   ! Internal variables
   integer(kind=i_def) :: df, k

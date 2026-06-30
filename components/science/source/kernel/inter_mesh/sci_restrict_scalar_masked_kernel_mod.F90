@@ -79,7 +79,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-  subroutine restrict_scalar_masked_code_real32( nlayers,                 &
+  subroutine restrict_scalar_masked_code_real32(   nlayers,                 &
                                                    cell_map,                &
                                                    ncell_fine_per_coarse_x, &
                                                    ncell_fine_per_coarse_y, &
@@ -104,12 +104,12 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=real32), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real32), intent(in)    :: fine_field(undf_fine)
-    real(kind=real32), intent(in)    :: mask_fine(undf_fine)
+    real(kind=real32),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(in)    :: fine_field(undf_fine)
+    real(kind=real32),   intent(in)    :: mask_fine(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
-    real(kind=real32) :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
+    real(kind=real32)   :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
 
     ! Total number of interior, non-zero, fine-level cells i.e. cells
     ! that have mask value of 1
@@ -161,7 +161,7 @@ contains
 
   ! REAL64 PRECISION
   ! ==================
-  subroutine restrict_scalar_masked_code_real64( nlayers,                 &
+  subroutine restrict_scalar_masked_code_real64(   nlayers,                 &
                                                    cell_map,                &
                                                    ncell_fine_per_coarse_x, &
                                                    ncell_fine_per_coarse_y, &
@@ -186,12 +186,12 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=real64), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=real64), intent(in)    :: fine_field(undf_fine)
-    real(kind=real64), intent(in)    :: mask_fine(undf_fine)
+    real(kind=real64),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(in)    :: fine_field(undf_fine)
+    real(kind=real64),   intent(in)    :: mask_fine(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
-    real(kind=real64) :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
+    real(kind=real64)   :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
 
     ! Total number of interior, non-zero, fine-level cells i.e. cells
     ! that have mask value of 1

@@ -65,7 +65,7 @@ contains
 
 ! REAL32 PRECISION
 ! ==================
-subroutine shift_mass_w3_code_real32(                &
+subroutine shift_mass_w3_code_real32(                  &
                                         nlayers_sh,    &
                                         mass_shifted,  &
                                         mass_prime,    &
@@ -86,8 +86,8 @@ subroutine shift_mass_w3_code_real32(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=real32),    dimension(undf_w3_sh), intent(inout) :: mass_shifted
-  real(kind=real32),    dimension(undf_w3),       intent(in) :: mass_prime
+  real(kind=real32),      dimension(undf_w3_sh), intent(inout) :: mass_shifted
+  real(kind=real32),      dimension(undf_w3),       intent(in) :: mass_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
@@ -110,7 +110,7 @@ end subroutine shift_mass_w3_code_real32
 
 ! REAL64 PRECISION
 ! ==================
-subroutine shift_mass_w3_code_real64(                &
+subroutine shift_mass_w3_code_real64(                  &
                                         nlayers_sh,    &
                                         mass_shifted,  &
                                         mass_prime,    &
@@ -131,8 +131,8 @@ subroutine shift_mass_w3_code_real64(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_w3),        intent(in) :: map_w3
 
-  real(kind=real64),    dimension(undf_w3_sh), intent(inout) :: mass_shifted
-  real(kind=real64),    dimension(undf_w3),       intent(in) :: mass_prime
+  real(kind=real64),      dimension(undf_w3_sh), intent(inout) :: mass_shifted
+  real(kind=real64),      dimension(undf_w3),       intent(in) :: mass_prime
 
   ! Internal variables
   integer(kind=i_def) :: k
