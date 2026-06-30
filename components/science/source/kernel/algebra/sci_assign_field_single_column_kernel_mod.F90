@@ -75,7 +75,7 @@ subroutine assign_field_single_column_code_real32(  nlayers, ncols, &
   integer(kind=i_def),                           intent(in)    :: nlayers
   integer(kind=i_def),                           intent(in)    :: ncols
   integer(kind=i_def),                           intent(in)    :: undf, ndf
-  real   (kind=real32), dimension(undf),       intent(inout) :: x
+  real   (kind=real32),   dimension(undf),       intent(inout) :: x
   integer(kind=i_def),    dimension(ndf, ncols), intent(in)    :: map
 
   ! Internal variables
@@ -101,7 +101,7 @@ subroutine assign_field_single_column_code_real64(  nlayers, ncols, &
   integer(kind=i_def),                           intent(in)    :: nlayers
   integer(kind=i_def),                           intent(in)    :: ncols
   integer(kind=i_def),                           intent(in)    :: undf, ndf
-  real   (kind=real64), dimension(undf),       intent(inout) :: x
+  real   (kind=real64),   dimension(undf),       intent(inout) :: x
   integer(kind=i_def),    dimension(ndf, ncols), intent(in)    :: map
 
   ! Internal variables

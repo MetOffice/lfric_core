@@ -87,8 +87,8 @@ subroutine mm_diagonal_assembled_kernel_code_real32(  cell,        &
   integer(kind=i_def),                              intent(in)    :: cell, nlayers
   integer(kind=i_def),                              intent(in)    :: ncell_3d
   integer(kind=i_def),                              intent(in)    :: ndf, undf
-  real   (kind=real32), dimension(undf),             intent(in)    :: mm_diag
-  real   (kind=real32), dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
+  real   (kind=real32),   dimension(undf),             intent(in)    :: mm_diag
+  real   (kind=real32),   dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
   integer(kind=i_def), dimension(ndf),              intent(in)    :: map
 
   ! Internal variables
@@ -120,8 +120,8 @@ subroutine mm_diagonal_assembled_kernel_code_real64(  cell,        &
   integer(kind=i_def),                              intent(in)    :: cell, nlayers
   integer(kind=i_def),                              intent(in)    :: ncell_3d
   integer(kind=i_def),                              intent(in)    :: ndf, undf
-  real   (kind=real64), dimension(undf),             intent(in)    :: mm_diag
-  real   (kind=real64), dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
+  real   (kind=real64),   dimension(undf),             intent(in)    :: mm_diag
+  real   (kind=real64),   dimension(ncell_3d,ndf,ndf), intent(inout) :: mass_matrix
   integer(kind=i_def), dimension(ndf),              intent(in)    :: map
 
   ! Internal variables

@@ -71,8 +71,8 @@ subroutine assign_field_random_code_real32(  nlayers,       &
   integer(kind=i_def),                     intent(in)    :: nlayers
   integer(kind=i_def),                     intent(in)    :: undf, ndf
   integer(kind=i_def), dimension(ndf),     intent(in)    :: map
-  real   (kind=real32), dimension(undf), intent(inout) :: x
-  real   (kind=real32),                  intent(in)    :: scale
+  real   (kind=real32),   dimension(undf), intent(inout) :: x
+  real   (kind=real32),                    intent(in)    :: scale
 
   ! Internal variables
   integer(kind=i_def)              :: df, k
@@ -99,8 +99,8 @@ subroutine assign_field_random_code_real64(  nlayers,       &
   integer(kind=i_def),                     intent(in)    :: nlayers
   integer(kind=i_def),                     intent(in)    :: undf, ndf
   integer(kind=i_def),    dimension(ndf),  intent(in)    :: map
-  real   (kind=real64), dimension(undf), intent(inout) :: x
-  real   (kind=real64),                  intent(in)    :: scale
+  real   (kind=real64),   dimension(undf), intent(inout) :: x
+  real   (kind=real64),                    intent(in)    :: scale
 
   ! Internal variables
   integer(kind=i_def)              :: df, k
