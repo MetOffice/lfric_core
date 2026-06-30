@@ -146,7 +146,7 @@ contains
     real(kind=real32),   dimension(ndf_chi)         :: chi1_e
     real(kind=real32),   dimension(ndf_chi)         :: chi2_e
     real(kind=real32),   dimension(ndf_chi)         :: chi3_e
-    real(kind=real32)                             :: integrand
+    real(kind=real32)                               :: integrand
     real(kind=real32),   dimension(nqp_h,nqp_v)     :: dj
     real(kind=real32),   dimension(3,3,nqp_h,nqp_v) :: jac
 
@@ -244,7 +244,7 @@ contains
     real(kind=real64),   dimension(ndf_chi)         :: chi1_e
     real(kind=real64),   dimension(ndf_chi)         :: chi2_e
     real(kind=real64),   dimension(ndf_chi)         :: chi3_e
-    real(kind=real64)                             :: integrand
+    real(kind=real64)                               :: integrand
     real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
     real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 
@@ -345,7 +345,7 @@ contains
     real(kind=real64),   dimension(ndf_chi)         :: chi1_e
     real(kind=real64),   dimension(ndf_chi)         :: chi2_e
     real(kind=real64),   dimension(ndf_chi)         :: chi3_e
-    real(kind=real64)                             :: integrand
+    real(kind=real64)                               :: integrand
     real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
     real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 

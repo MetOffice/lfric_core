@@ -125,7 +125,7 @@ contains
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel
     integer(kind=i_def)                             :: qp1, qp2
     real(kind=real32),   dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
-    real(kind=real32)                             :: integrand
+    real(kind=real32)                               :: integrand
     real(kind=real32),   dimension(nqp_h,nqp_v)     :: dj
     real(kind=real32),   dimension(3,3,nqp_h,nqp_v) :: jac
 
@@ -218,7 +218,7 @@ contains
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel
     integer(kind=i_def)                             :: qp1, qp2
     real(kind=real64),   dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
-    real(kind=real64)                             :: integrand
+    real(kind=real64)                               :: integrand
     real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
     real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 
@@ -311,7 +311,7 @@ contains
     integer(kind=i_def)                             :: df, df2, k, ik, ipanel
     integer(kind=i_def)                             :: qp1, qp2
     real(kind=real64),   dimension(ndf_chi)         :: chi1_e, chi2_e, chi3_e
-    real(kind=real64)                             :: integrand
+    real(kind=real64)                               :: integrand
     real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
     real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 

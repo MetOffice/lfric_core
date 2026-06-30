@@ -166,18 +166,18 @@ contains
     real(kind=real32),    intent(in) :: diff_basis(3,ndf,ngp_h,ngp_v)
 
     ! Local variables
-    real(kind=real32)  :: jac_ref2sph(3,3,ngp_h,ngp_v)
-    real(kind=real32)  :: jac_sph2XYZ(3,3)
-    real(kind=real32)  :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
-    real(kind=real32)  :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
-    real(kind=real32)  :: longitude, latitude
-    real(kind=real32)  :: radius
-    real(kind=real32)  :: radius_vec(ngp_h*ngp_v)
-    real(kind=real32)  :: rotation_matrix(3,3)
-    real(kind=real32)  :: jac_S(3,3)
-    real(kind=real32)  :: stretch_factor
-    real(kind=real32)  :: native_x, native_y, native_z
-    real(kind=real32)  :: native_lon, native_lat
+    real(kind=real32)   :: jac_ref2sph(3,3,ngp_h,ngp_v)
+    real(kind=real32)   :: jac_sph2XYZ(3,3)
+    real(kind=real32)   :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
+    real(kind=real32)   :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
+    real(kind=real32)   :: longitude, latitude
+    real(kind=real32)   :: radius
+    real(kind=real32)   :: radius_vec(ngp_h*ngp_v)
+    real(kind=real32)   :: rotation_matrix(3,3)
+    real(kind=real32)   :: jac_S(3,3)
+    real(kind=real32)   :: stretch_factor
+    real(kind=real32)   :: native_x, native_y, native_z
+    real(kind=real32)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -329,18 +329,18 @@ contains
     real(kind=real64),    intent(in) :: diff_basis(3,ndf,ngp_h,ngp_v)
 
     ! Local variables
-    real(kind=real64)  :: jac_ref2sph(3,3,ngp_h,ngp_v)
-    real(kind=real64)  :: jac_sph2XYZ(3,3)
-    real(kind=real64)  :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
-    real(kind=real64)  :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
-    real(kind=real64)  :: longitude, latitude
-    real(kind=real64)  :: radius
-    real(kind=real64)  :: radius_vec(ngp_h*ngp_v)
-    real(kind=real64)  :: rotation_matrix(3,3)
-    real(kind=real64)  :: jac_S(3,3)
-    real(kind=real64)  :: stretch_factor
-    real(kind=real64)  :: native_x, native_y, native_z
-    real(kind=real64)  :: native_lon, native_lat
+    real(kind=real64)   :: jac_ref2sph(3,3,ngp_h,ngp_v)
+    real(kind=real64)   :: jac_sph2XYZ(3,3)
+    real(kind=real64)   :: jac_sph2XYZ_vec(3,3,ngp_h*ngp_v)
+    real(kind=real64)   :: alpha_vec(ngp_h*ngp_v), beta_vec(ngp_h*ngp_v)
+    real(kind=real64)   :: longitude, latitude
+    real(kind=real64)   :: radius
+    real(kind=real64)   :: radius_vec(ngp_h*ngp_v)
+    real(kind=real64)   :: rotation_matrix(3,3)
+    real(kind=real64)   :: jac_S(3,3)
+    real(kind=real64)   :: stretch_factor
+    real(kind=real64)   :: native_x, native_y, native_z
+    real(kind=real64)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -516,16 +516,16 @@ contains
     real(kind=real32),    intent(in) :: diff_basis(3,ndf,neval_points)
 
     ! Local variables
-    real(kind=real32)  :: jac_ref2sph(3,3,neval_points)
-    real(kind=real32)  :: jac_sph2XYZ(3,3)
-    real(kind=real32)  :: alpha, beta
-    real(kind=real32)  :: longitude, latitude
-    real(kind=real32)  :: radius
-    real(kind=real32)  :: rotation_matrix(3,3)
-    real(kind=real32)  :: jac_S(3,3)
-    real(kind=real32)  :: stretch_factor
-    real(kind=real32)  :: native_x, native_y, native_z
-    real(kind=real32)  :: native_lon, native_lat
+    real(kind=real32)   :: jac_ref2sph(3,3,neval_points)
+    real(kind=real32)   :: jac_sph2XYZ(3,3)
+    real(kind=real32)   :: alpha, beta
+    real(kind=real32)   :: longitude, latitude
+    real(kind=real32)   :: radius
+    real(kind=real32)   :: rotation_matrix(3,3)
+    real(kind=real32)   :: jac_S(3,3)
+    real(kind=real32)   :: stretch_factor
+    real(kind=real32)   :: native_x, native_y, native_z
+    real(kind=real32)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -655,16 +655,16 @@ contains
     real(kind=real64),    intent(in) :: diff_basis(3,ndf,neval_points)
 
     ! Local variables
-    real(kind=real64)  :: jac_ref2sph(3,3,neval_points)
-    real(kind=real64)  :: jac_sph2XYZ(3,3)
-    real(kind=real64)  :: alpha, beta
-    real(kind=real64)  :: longitude, latitude
-    real(kind=real64)  :: radius
-    real(kind=real64)  :: rotation_matrix(3,3)
-    real(kind=real64)  :: jac_S(3,3)
-    real(kind=real64)  :: stretch_factor
-    real(kind=real64)  :: native_x, native_y, native_z
-    real(kind=real64)  :: native_lon, native_lat
+    real(kind=real64)   :: jac_ref2sph(3,3,neval_points)
+    real(kind=real64)   :: jac_sph2XYZ(3,3)
+    real(kind=real64)   :: alpha, beta
+    real(kind=real64)   :: longitude, latitude
+    real(kind=real64)   :: radius
+    real(kind=real64)   :: rotation_matrix(3,3)
+    real(kind=real64)   :: jac_S(3,3)
+    real(kind=real64)   :: stretch_factor
+    real(kind=real64)   :: native_x, native_y, native_z
+    real(kind=real64)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -792,7 +792,7 @@ contains
     real(kind=real32),   intent(in)  :: dj(ngp_h,ngp_v)
     real(kind=real32),   intent(out) :: jac_inv(3,3,ngp_h,ngp_v)
 
-    real(kind=real32)  :: dummy
+    real(kind=real32)   :: dummy
     integer(kind=i_def) :: i, k
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -821,7 +821,7 @@ contains
     real(kind=real64),   intent(in)  :: dj(ngp_h,ngp_v)
     real(kind=real64),   intent(out) :: jac_inv(3,3,ngp_h,ngp_v)
 
-    real(kind=real64)  :: dummy
+    real(kind=real64)   :: dummy
     integer(kind=i_def) :: i, k
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -862,7 +862,7 @@ contains
     real(kind=real32),   intent(in)  :: dj(neval_points)
     real(kind=real32),   intent(out) :: jac_inv(3,3,neval_points)
 
-    real(kind=real32)  :: dummy
+    real(kind=real32)   :: dummy
     integer(kind=i_def) :: i
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -889,7 +889,7 @@ contains
     real(kind=real64),   intent(in)  :: dj(neval_points)
     real(kind=real64),   intent(out) :: jac_inv(3,3,neval_points)
 
-    real(kind=real64)  :: dummy
+    real(kind=real64)   :: dummy
     integer(kind=i_def) :: i
 
     !> @todo This is here to maintain the API. If it turns out we don't want
@@ -949,16 +949,16 @@ contains
     real(kind=real32),   intent(out) :: dj
 
     ! Local variables
-    real(kind=real32)  :: jac_ref2sph(3,3)
-    real(kind=real32)  :: jac_sph2XYZ(3,3)
-    real(kind=real32)  :: alpha, beta
-    real(kind=real32)  :: longitude, latitude
-    real(kind=real32)  :: radius
-    real(kind=real32)  :: rotation_matrix(3,3)
-    real(kind=real32)  :: jac_S(3,3)
-    real(kind=real32)  :: stretch_factor
-    real(kind=real32)  :: native_x, native_y, native_z
-    real(kind=real32)  :: native_lon, native_lat
+    real(kind=real32)   :: jac_ref2sph(3,3)
+    real(kind=real32)   :: jac_sph2XYZ(3,3)
+    real(kind=real32)   :: alpha, beta
+    real(kind=real32)   :: longitude, latitude
+    real(kind=real32)   :: radius
+    real(kind=real32)   :: rotation_matrix(3,3)
+    real(kind=real32)   :: jac_S(3,3)
+    real(kind=real32)   :: stretch_factor
+    real(kind=real32)   :: native_x, native_y, native_z
+    real(kind=real32)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -1068,16 +1068,16 @@ contains
     real(kind=real64),   intent(out) :: dj
 
     ! Local variables
-    real(kind=real64)  :: jac_ref2sph(3,3)
-    real(kind=real64)  :: jac_sph2XYZ(3,3)
-    real(kind=real64)  :: alpha, beta
-    real(kind=real64)  :: longitude, latitude
-    real(kind=real64)  :: radius
-    real(kind=real64)  :: rotation_matrix(3,3)
-    real(kind=real64)  :: jac_S(3,3)
-    real(kind=real64)  :: stretch_factor
-    real(kind=real64)  :: native_x, native_y, native_z
-    real(kind=real64)  :: native_lon, native_lat
+    real(kind=real64)   :: jac_ref2sph(3,3)
+    real(kind=real64)   :: jac_sph2XYZ(3,3)
+    real(kind=real64)   :: alpha, beta
+    real(kind=real64)   :: longitude, latitude
+    real(kind=real64)   :: radius
+    real(kind=real64)   :: rotation_matrix(3,3)
+    real(kind=real64)   :: jac_S(3,3)
+    real(kind=real64)   :: stretch_factor
+    real(kind=real64)   :: native_x, native_y, native_z
+    real(kind=real64)   :: native_lon, native_lat
 
     logical(kind=l_def) :: to_rotate
     logical(kind=l_def) :: to_stretch
@@ -1335,8 +1335,8 @@ function jacobian_abr2XYZ_vec_real32(  alpha, beta, radius, panel_id, ngp) &
 
     real(kind=real32)                   :: jac_abr2XYZ(3,3,ngp)
 
-    real(kind=real32)  :: tan_alpha, tan_beta, panel_rho
-    real(kind=real32)  :: tan_ab, tan_aa_p1, tan_bb_p1, factor, oneoverrho
+    real(kind=real32)   :: tan_alpha, tan_beta, panel_rho
+    real(kind=real32)   :: tan_ab, tan_aa_p1, tan_bb_p1, factor, oneoverrho
 
     integer(kind=i_def) :: k
 
@@ -1398,8 +1398,8 @@ function jacobian_abr2XYZ_vec_real64(  alpha, beta, radius, panel_id, ngp) &
 
     real(kind=real64)                   :: jac_abr2XYZ(3,3,ngp)
 
-    real(kind=real64)  :: tan_alpha, tan_beta, panel_rho
-    real(kind=real64)  :: tan_ab, tan_aa_p1, tan_bb_p1, factor, oneoverrho
+    real(kind=real64)   :: tan_alpha, tan_beta, panel_rho
+    real(kind=real64)   :: tan_ab, tan_aa_p1, tan_bb_p1, factor, oneoverrho
 
     integer(kind=i_def) :: k
 
@@ -1605,13 +1605,13 @@ function jacobian_abr2XYZ_vec_real64(  alpha, beta, radius, panel_id, ngp) &
     real(kind=real32),   intent(in) :: longitude, latitude
     real(kind=real32),   intent(in) :: radius, stretch
 
-    real(kind=real32)  :: jac_llr2XYZ(3,3)
-    real(kind=real32)  :: jac_XYZ2llr(3,3)
+    real(kind=real32)   :: jac_llr2XYZ(3,3)
+    real(kind=real32)   :: jac_XYZ2llr(3,3)
 
     real(kind=real32),   parameter :: one = 1.0_real32
 
-    real(kind=real32)  :: lat_stretched, psi
-    real(kind=real32)  :: jac_stretched(3,3)
+    real(kind=real32)   :: lat_stretched, psi
+    real(kind=real32)   :: jac_stretched(3,3)
 
     ! Compute stretched variables
     lat_stretched = schmidt_transform_lat(latitude, stretch)
@@ -1644,13 +1644,13 @@ function jacobian_abr2XYZ_vec_real64(  alpha, beta, radius, panel_id, ngp) &
     real(kind=real64),   intent(in) :: longitude, latitude
     real(kind=real64),   intent(in) :: radius, stretch
 
-    real(kind=real64)  :: jac_llr2XYZ(3,3)
-    real(kind=real64)  :: jac_XYZ2llr(3,3)
+    real(kind=real64)   :: jac_llr2XYZ(3,3)
+    real(kind=real64)   :: jac_XYZ2llr(3,3)
 
     real(kind=real64),   parameter :: one = 1.0_real64
 
-    real(kind=real64)  :: lat_stretched, psi
-    real(kind=real64)  :: jac_stretched(3,3)
+    real(kind=real64)   :: lat_stretched, psi
+    real(kind=real64)   :: jac_stretched(3,3)
 
     ! Compute stretched variables
     lat_stretched = schmidt_transform_lat(latitude, stretch)
