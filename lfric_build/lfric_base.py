@@ -247,8 +247,7 @@ class LFRicBase(FabBase):
         '''
         This method overwrites the base class grab_files_step. It includes all
         the LFRic core directories that are commonly required for building
-        LFRic applications. It also grabs the psydata directory for profiling,
-        if required.
+        LFRic applications. It also grabs optimisation scripts.
         '''
         dirs = ['infrastructure/source/',
                 'components/driver/source/',
@@ -265,6 +264,10 @@ class LFRicBase(FabBase):
         # Copy the PSyclone Config file into a separate directory
         grab_folder(self.config, src=self.lfric_core_root / "etc",
                     dst_label='psyclone_config')
+
+        # Copy the optimisation scripts into a separate directory
+        grab_folder(self.config, src=self.app_dir / 'optimisation',
+                    dst_label='optimisation')
 
     def find_source_files_step(
             self,
