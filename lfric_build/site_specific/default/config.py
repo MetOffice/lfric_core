@@ -98,6 +98,27 @@ class Config:
         # initialising compilers
         self._args = args
 
+    def update_repos(self, dep_info):
+        """
+        This method is called by the main script to allow each site to
+        replace the URLs of repos with e.g. local mirrors.
+        """
+
+        # A simplified example to use mirrors could be (which would
+        # typically be implemented in a derived, site-specific class)
+        # root = Path("/root/of/mirrors")
+        # mirrors = {"git@github.com:MetOffice/casim.git": root / "casim",
+        #            "git@github.com:MetOffice/jules.git": root / "jules",
+        #             }
+        # for dependency in dep_info.get_repo_names():
+        #     repo_infos = dep_info.get_repo_info(dependency)
+        #     for source_ref in repo_infos:
+        #         if source_ref.source in mirrors:
+        #             logger.info(f"Using mirror "
+        #                         f"'{mirrors[source_ref.source]}' for "
+        #                         f"'{source_ref.source}")
+        #             source_ref.source = mirrors[source_ref.source]
+
     def setup_cray(self, build_config: BuildConfig) -> None:
         '''
         This method sets up the Cray compiler and linker flags.

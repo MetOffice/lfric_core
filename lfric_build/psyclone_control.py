@@ -211,7 +211,7 @@ class PsycloneInfo:
                 opt_script = self.opt_path / rule
                 if not opt_script.exists():
                     raise FileNotFoundError(f"Cannot find script "
-                                            f"'{opt_script}'.")
+                                            f"'{opt_script}' for '{fpath}'.")
                 return opt_script
 
         return PsycloneInfo.RESULT_EXCLUDE
