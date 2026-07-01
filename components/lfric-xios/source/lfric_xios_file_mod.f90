@@ -18,14 +18,12 @@ module lfric_xios_file_mod
   use file_mod,                      only: file_type,      &
                                            file_mode_read, &
                                            file_mode_write
-  use lfric_xios_process_output_mod, only: process_output_file
   use lfric_xios_field_mod,          only: lfric_xios_field_type
   use lfric_xios_diag_mod,           only: file_is_tagged
   use log_mod,                       only: log_event, log_level_error, &
                                            log_level_trace, log_level_debug, &
                                            log_level_warning
   use mesh_mod,                      only: mesh_type
-  use mod_wait,                      only: init_wait
   use lfric_xios_diag_mod,           only: get_file_name
   use lfric_xios_temporal_mod,       only: temporal_type
   use xios,                          only: xios_file, xios_is_valid_file,    &
@@ -115,6 +113,7 @@ contains
   procedure, public :: mode_is_write
   procedure, public :: recv_fields
   procedure, public :: send_fields
+  procedure, public :: get_filepath
   final             :: lfric_xios_file_final
 
 end type lfric_xios_file_type
@@ -322,13 +321,6 @@ subroutine file_close(self)
   class(lfric_xios_file_type), intent(inout) :: self
 
   if (self%is_closed) return
-
-  if ( self%io_mode == FILE_MODE_WRITE ) then
-    call log_event( "Waiting for XIOS to close file ["//trim(self%path)//".nc]", &
-                    log_level_debug )
-    call init_wait()
-    call process_output_file(trim(self%path)//".nc")
-  end if
 
   self%is_closed = .true.
 
@@ -612,5 +604,19 @@ subroutine lfric_xios_file_final(self)
   if (allocated(self%fields)) deallocate(self%fields)
 
 end subroutine lfric_xios_file_final
+
+!> Gets the file path associated with this file.
+!>
+!> @return character string of the filepath with .nc suffix.
+function get_filepath( this ) result( filepath )
+
+  implicit none
+
+  character(str_max_filename) :: filepath
+  class(lfric_xios_file_type), intent(in), target :: this
+
+  filepath = trim(this%path)//".nc"
+
+end function get_filepath
 
 end module lfric_xios_file_mod

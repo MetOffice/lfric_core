@@ -34,6 +34,7 @@ module lfric_xios_read_mod
   use lfric_xios_utils_mod,     only: prime_io_mesh_is
   use lfric_xios_format_mod,    only: inverse_format_field
 
+  use local_mesh_mod,           only: local_mesh_type
   use mesh_mod,                 only: mesh_type
   use log_mod,                  only: log_event,         &
                                       log_scratch_space, &
@@ -290,10 +291,15 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
   real(r_def),   allocatable :: time_slice(:)
   real(r_def),   allocatable :: field_data(:)
 
-  type(mesh_type), pointer   :: mesh => null()
+  type(mesh_type), pointer   :: mesh
+  type(local_mesh_type), pointer   :: local_mesh
+  character(str_def)         :: local_mesh_name
 
-  ! Call error if field not on prime mesh
+  nullify(mesh,local_mesh)
+
   mesh => field_proxy%vspace%get_mesh()
+  local_mesh => mesh%get_local_mesh()
+  local_mesh_name = local_mesh%get_mesh_name()
 
   fs_id = field_proxy%vspace%which()
   if ( fs_id /= W3 .and. fs_id /= WTheta .and. fs_id /= W2H ) then
@@ -329,13 +335,13 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
     end if
   else
     if ( fs_id == W3 ) then
-      call xios_get_domain_attr( trim(adjustl(mesh%get_mesh_name()))//"_face", ni=domain_size )
+      call xios_get_domain_attr( trim(adjustl(local_mesh_name))//"_face", ni=domain_size )
       call xios_get_axis_attr( 'vert_axis_half_levels', n_glo=vert_axis_size )
     else if ( fs_id == WTheta ) then
-      call xios_get_domain_attr( trim(adjustl(mesh%get_mesh_name()))//"_face", ni=domain_size )
+      call xios_get_domain_attr( trim(adjustl(local_mesh_name))//"_face", ni=domain_size )
       call xios_get_axis_attr( 'vert_axis_full_levels', n_glo=vert_axis_size )
     else if ( fs_id == W2H ) then
-      call xios_get_domain_attr( trim(adjustl(mesh%get_mesh_name()))//"_edge", ni=domain_size )
+      call xios_get_domain_attr( trim(adjustl(local_mesh_name))//"_edge", ni=domain_size )
       call xios_get_axis_attr( 'vert_axis_half_levels', n_glo=vert_axis_size )
     else
       call log_event( 'Time varying fields only readable for W3, WTheta or W2H function spaces', &
@@ -368,6 +374,7 @@ subroutine read_field_time_var(xios_field_name, field_proxy, time_indices, time_
 
   ! Incoming data is shaped with multi-data axis first, then time axis, so set
   ! up an array for each multi-data level
+  ! Note that this places a restriction on the format on some ancil files
   do i = 0, ndata - 1
 
     !Get first ndata slice - note the conversion from double precision to r_def

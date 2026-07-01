@@ -15,7 +15,7 @@ module io_demo_checkpoint_mod
   use field_mod,              only: field_type
   use field_collection_mod,   only: field_collection_type
   use file_mod,               only: FILE_MODE_WRITE, FILE_MODE_READ
-  use io_context_mod,         only: io_context_type, callback_clock_arg
+  use io_context_mod,         only: io_context_type
   use linked_list_mod,        only: linked_list_type
   use lfric_xios_action_mod,  only: advance
   use lfric_xios_context_mod, only: lfric_xios_context_type
@@ -48,7 +48,6 @@ contains
 
     class(event_actor_type), pointer :: event_actor_ptr
     procedure(event_action), pointer :: context_advance
-    procedure(callback_clock_arg), pointer :: before_close
 
     character(len=str_max_filename) :: checkpoint_write_filename
     character(len=str_max_filename) :: checkpoint_read_filename
@@ -126,9 +125,8 @@ contains
     ! Add checkpoint context to clock events so that it is advanced at each timestep
     event_actor_ptr => cp_context
     context_advance => advance
-    before_close => null()
     call cp_context%initialise_xios_context( modeldb%mpi%get_comm(), chi, panel_id, &
-                                             modeldb%clock, modeldb%calendar, before_close )
+                                             modeldb%clock, modeldb%calendar )
 
     call modeldb%clock%add_event(context_advance, event_actor_ptr)
     call cp_context%set_active(.true.)

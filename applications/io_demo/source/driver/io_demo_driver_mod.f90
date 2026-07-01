@@ -33,7 +33,6 @@ module io_demo_driver_mod
                                          LOG_LEVEL_TRACE
   use mesh_mod,                   only : mesh_type
   use mesh_collection_mod,        only : mesh_collection
-  use model_clock_mod,            only : model_clock_type
   use multifile_field_setup_mod,  only : create_multifile_io_fields
   use multifile_io_mod,           only : init_multifile_io, step_multifile_io
   use io_benchmark_setup_mod,     only : create_io_benchmark_fields, &
