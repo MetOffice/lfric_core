@@ -529,7 +529,7 @@ contains
     else if (mesh%is_geometry_planar()) then
       geometry = geometry_planar
     else
-      call log_event( Unsupported geometry selection', &
+      call log_event( 'Unsupported geometry selection', &
                       log_level_error )
     end if
 
@@ -538,7 +538,7 @@ contains
     else if (mesh%is_topology_non_periodic()) then
       topology = topology_non_periodic
     else
-      call log_event( Unsupported topology selection', &
+      call log_event( 'Unsupported topology selection', &
                       log_level_error )
     end if
 

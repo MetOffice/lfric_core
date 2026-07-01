@@ -773,7 +773,7 @@ contains
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
-  function get_intermesh_weights_w3_rtran(config, fine_mesh, coarse_mesh) & 
+  function get_intermesh_weights_w3_rtran(config, fine_mesh, coarse_mesh) &
                                    result(weights_rtran)
 
     implicit none
