@@ -228,7 +228,7 @@ def test_get_directory(monkeypatch, tmp_path) -> None:
     ]
     monkeypatch.setattr('inspect.stack', lambda: mock_stack)
     monkeypatch.setattr(sys, "argv", ["lfric_base.py"])
-    psyclone_control = mock_base_dir / "psyclone_info.yaml"
+    psyclone_control = mock_base_dir / "psyclone_control.yaml"
     psyclone_control.write_text("phases:", encoding='utf-8')
 
     lfric_base = LFRicBase(name="test", app_dir=tmp_path / "app_dir")

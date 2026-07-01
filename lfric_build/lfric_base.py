@@ -103,14 +103,14 @@ class LFRicBase(FabBase):
         # values like NO_SCRIPT back for the PSyclone tool).
         self._current_psyclone_info: Optional[PsycloneInfo] = None
 
-        if self.args.psyclone_info:
-            info_list = [Path(i) for i in self.args.psyclone_info]
+        if self.args.psyclone_control:
+            control_list = [Path(i) for i in self.args.psyclone_control]
         else:
             # This default rule implements the "file-specific if exists,
             # otherwise global.py" rule.
-            info_list = [Path(self.lfric_core_root / "lfric_build" /
-                              "psyclone_info.yaml")]
-        for psy_info_file in info_list:
+            control_list = [Path(self.lfric_core_root / "lfric_build" /
+                            "psyclone_control.yaml")]
+        for psy_info_file in control_list:
             logger.info(f"Reading PSyclone configuration file "
                         f"'{psy_info_file}'.")
             self._psyclone_control.read(Path(psy_info_file))
@@ -149,9 +149,9 @@ class LFRicBase(FabBase):
             help="Disable compilation with XIOS.")
 
         parser.add_argument(
-            '--psyclone-info', action="append",
+            '--psyclone-control', action="append",
             help="PSyclone configuration files, controlling when to "
-                 "run PSyclone.")
+                 "run the various PSyclone phases.")
 
         # Precision related command line arguments
         # ----------------------------------------

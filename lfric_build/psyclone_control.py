@@ -219,9 +219,9 @@ class PsycloneInfo:
 
 class PsycloneControl:
     """
-    This class stores the information from psyclone_info.yaml file(s). Several
-    files can be read, and latter information will extend the rules from
-    previous files, and replace the phases executed.
+    This class stores the information from psyclone_control.yaml file(s).
+    Several files can be read, and latter information will extend the rules
+    from previous files, and replace the phases executed.
 
     Details of each phase will be stored in PsycloneInfo instances.
 
