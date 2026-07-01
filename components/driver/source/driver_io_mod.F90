@@ -20,7 +20,7 @@ module driver_io_mod
   use field_mod,               only: field_type
   use inventory_by_mesh_mod,   only: inventory_by_mesh_type
   use io_context_collection_mod, only: io_context_collection_type
-  use io_context_mod,          only: io_context_type, callback_clock_arg
+  use io_context_mod,          only: io_context_type
   use log_mod,                 only: log_event, log_level_error, &
                                      log_level_trace, log_level_info, &
                                      log_scratch_space
@@ -45,6 +45,19 @@ module driver_io_mod
       type(linked_list_type), intent(out) :: files_list
       type(modeldb_type), optional, intent(inout) :: modeldb
     end subroutine filelist_populator
+  end interface
+
+  abstract interface
+    !> @brief Callback interface for bespoke IO configuration
+    !> @param[in] config    configuration to be passed in at call site
+    !> @param[in] clock     Clock to be passed in at call site
+    subroutine io_configuration_callback(config,clock)
+      use config_mod, only: config_type
+      use clock_mod, only : clock_type
+      implicit none
+      type(config_type), intent(in) :: config
+      class(clock_type), intent(in) :: clock
+    end subroutine io_configuration_callback
   end interface
 
 contains
@@ -89,9 +102,10 @@ contains
     procedure(filelist_populator), &
                    pointer, optional, intent(in)    :: populate_filelist
     character(len=str_def), optional, intent(in)    :: alt_mesh_names(:)
-    procedure(callback_clock_arg), optional         :: before_close
+    procedure(io_configuration_callback), &
+                            optional                :: before_close
 
-    procedure(callback_clock_arg), pointer :: before_close_ptr
+    type(lfric_xios_context_type), pointer :: context
 
     logical(l_def) :: use_xios_io
 
@@ -100,21 +114,23 @@ contains
     ! Allocate IO context type based on model configuration
     if ( use_xios_io ) then
 #ifdef USE_XIOS
-      if (present(before_close)) then
-        before_close_ptr => before_close
-      else
-        before_close_ptr => null()
-      end if
-
       call init_xios_io_context( context_name,       &
                                  mesh_name,          &
                                  modeldb,            &
                                  chi_inventory,      &
                                  panel_id_inventory, &
-                                 before_close_ptr,   &
                                  geometry, topology, &
                                  populate_filelist,  &
                                  alt_mesh_names )
+
+      call modeldb%io_contexts%get_io_context(context_name, context)
+      call context%set_current()
+      if (present(before_close)) then
+        call before_close(modeldb%config, modeldb%clock)
+      end if
+
+      call context%close_context_definition()
+
 #else
       call log_event( "Cannot use XIOS I/O: model has not been built with " // &
                       "XIOS enabled", log_level_error )
@@ -162,7 +178,6 @@ contains
   !> @param[in] modeldb             Model state
   !> @param[in] chi_inventory       Contains the model's coordinate fields
   !> @param[in] panel_id_inventory  Contains the model's panel ID fields
-  !> @param[in] before_close        Routine to be called before context closes
   !> @param[in] geometry            Mesh geometry enumeration value
   !> @param[in] topology            Mesh topology enumeration value
   !> @param[in] populate_filelist   Optional procedure for creating a list of
@@ -174,21 +189,19 @@ contains
                                    modeldb,            &
                                    chi_inventory,      &
                                    panel_id_inventory, &
-                                   before_close,       &
                                    geometry, topology, &
                                    populate_filelist,  &
                                    alt_mesh_names )
 
     implicit none
 
-    character(*),                  intent(in)    :: context_name
-    character(*),                  intent(in)    :: mesh_name
-    class(modeldb_type),           intent(inout) :: modeldb
-    type(inventory_by_mesh_type),  intent(in)    :: chi_inventory
-    type(inventory_by_mesh_type),  intent(in)    :: panel_id_inventory
-    procedure(callback_clock_arg), intent(in), pointer :: before_close
-    integer(i_def),                intent(in)    :: geometry
-    integer(i_def),                intent(in)    :: topology
+    character(*),                 intent(in)    :: context_name
+    character(*),                 intent(in)    :: mesh_name
+    class(modeldb_type),          intent(inout) :: modeldb
+    type(inventory_by_mesh_type), intent(in)    :: chi_inventory
+    type(inventory_by_mesh_type), intent(in)    :: panel_id_inventory
+    integer(i_def),               intent(in)    :: geometry
+    integer(i_def),               intent(in)    :: topology
 
     procedure(filelist_populator), &
                    pointer, optional,    intent(in)    :: populate_filelist
@@ -275,7 +288,6 @@ contains
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
-                                               before_close,           &
                                                geometry, topology,     &
                                                coord_system,           &
                                                scaled_radius,          &
@@ -288,7 +300,6 @@ contains
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
-                                               before_close,           &
                                                geometry, topology,     &
                                                coord_system,           &
                                                scaled_radius )

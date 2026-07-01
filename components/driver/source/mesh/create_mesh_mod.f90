@@ -161,7 +161,7 @@ subroutine create_mesh_single( local_mesh_name, extrusion,  &
   logical(l_def),        intent(in) :: inner_halo_tiles
   integer(i_def),        intent(in) :: tile_size(2)
 
-  character(str_def), intent(in), optional :: alt_name
+  character(*), intent(in), optional :: alt_name
 
   type(local_mesh_type), pointer :: local_mesh_ptr
 
@@ -174,7 +174,7 @@ subroutine create_mesh_single( local_mesh_name, extrusion,  &
   if ( .not. present(alt_name) ) then
     name = local_mesh_name
   else
-    name = alt_name
+    name = trim(alt_name)
   end if
 
 

@@ -31,7 +31,7 @@
 {% set panel_decomp = "'"~task_values["panel_decomp"]~"'" %}
 
 {# Set the read/write filenames for restarts #}
-{% set restart_stem_name = checkpoint_dir~"/restart_"~task_family~"_tstep" %}
+{% set restart_stem_name = checkpoint_dir~"/restart_"~task_family~"-" %}
 
 {# Set the pre-script command for canned tests #}
 {% set canned_prescript = "cp -r $SOURCE_DIRECTORY/"~task_values["example_dir"]~"/* "~

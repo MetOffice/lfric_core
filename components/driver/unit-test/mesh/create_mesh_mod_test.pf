@@ -54,9 +54,9 @@ contains
 
     implicit none
 
-    call mesh_collection%clear()
-    call global_mesh_collection%clear()
     call local_mesh_collection%clear()
+    call global_mesh_collection%clear()
+    call mesh_collection%clear()
 
   end subroutine tear_down
 

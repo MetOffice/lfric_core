@@ -157,10 +157,9 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
     integer(i_def),    intent(in) :: space_id
     logical(l_def),    intent(in) :: use_fe
-
-    type(mesh_type), intent(in), pointer :: mesh
 
     type(inventory_by_local_mesh_type), intent(inout) :: long_inventory
     type(inventory_by_local_mesh_type), intent(inout) :: lat_inventory
@@ -176,18 +175,18 @@ contains
     integer(kind=i_def)                :: k_h, k_v
     integer(tik)                       :: id
 
-    integer(i_def) :: topology
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
-    integer(i_def) :: coord_system
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
+    integer(kind=i_def) :: coord_system
 
-    real(r_def) :: f_lat, f_lon
-    real(r_def) :: scaled_radius
+    real(kind=r_def) :: f_lat, f_lon
+    real(kind=r_def) :: scaled_radius
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    coord_system = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
 
@@ -205,14 +204,14 @@ contains
     local_mesh => mesh%get_local_mesh()
 
     twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
-    twod_fs   => function_space_collection%get_fs(twod_mesh, k_h, k_v, &
-                                                  space_id)
+    twod_fs => function_space_collection%get_fs(twod_mesh, k_h, k_v, &
+                                                space_id)
 
     call lat_inventory%add_field(lat, twod_fs, local_mesh)
     call long_inventory%add_field(long, twod_fs, local_mesh)
 
     if (mesh%is_geometry_spherical()) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if (mesh%is_topology_periodic()) then
@@ -228,7 +227,7 @@ contains
                                               topology, coord_system,   &
                                               scaled_radius) )
     else
-      call invoke( setval_c(lat,  f_lat), &
+      call invoke( setval_c(lat, f_lat), &
                    setval_c(long, f_lon) )
     end if
 
@@ -241,13 +240,13 @@ contains
   !!                   computing the fields for
   subroutine compute_face_selectors(mesh)
 
-    use reference_element_mod,          only: S, W
-    use sci_set_any_int_dof_kernel_mod, only: set_any_int_dof_kernel_type
-    use sci_face_selector_kernel_mod,   only: face_selector_kernel_type
+    use sci_psykal_light_mod,              only: invoke_deep_int_setval_c
+    use sci_face_selector_kernel_mod,      only: face_selector_kernel_type
+    use sci_face_selector_halo_kernel_mod, only: face_selector_halo_kernel_type
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     ! Internal variables
     type(mesh_type),           pointer :: twod_mesh
@@ -257,35 +256,74 @@ contains
     type(integer_field_type)           :: face_counter
     type(function_space_type), pointer :: w2h_2d_fs
     type(function_space_type), pointer :: w3_2d_fs
-    integer(tik)                       :: id
+    integer(kind=i_def)                :: depth, max_halo_depth
+    integer(kind=tik)                  :: id
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-    twod_mesh  => mesh_collection%get_mesh(mesh, TWOD)
+    twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
     local_mesh => mesh%get_local_mesh()
-    w2h_2d_fs  => function_space_collection%get_fs(twod_mesh, 0, 0, W2H)
-    w3_2d_fs   => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
+    w2h_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W2H)
+    w3_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
+    max_halo_depth = twod_mesh%get_halo_depth()
 
     ! Temporary W2H field, tracking the count for each face
-    call face_counter%initialise( w2h_2d_fs )
+    call face_counter%initialise(w2h_2d_fs, halo_depth=max_halo_depth)
 
     call face_selector_ew_inventory%add_field(                                 &
-            face_selector_ew, w3_2d_fs, local_mesh                             &
+            face_selector_ew, w3_2d_fs, local_mesh, halo_depth=max_halo_depth  &
     )
     call face_selector_ns_inventory%add_field(                                 &
-            face_selector_ns, w3_2d_fs, local_mesh                             &
+            face_selector_ns, w3_2d_fs, local_mesh, halo_depth=max_halo_depth  &
     )
 
-    call invoke( int_setval_c(face_counter, 0),                                &
-                 ! Do West and South faces for every cell
-                 int_setval_c(face_selector_ew, 1),                            &
-                 int_setval_c(face_selector_ns, 1),                            &
-                 set_any_int_dof_kernel_type(face_counter, W, 1),              &
-                 set_any_int_dof_kernel_type(face_counter, S, 1),              &
-                 ! Determine where North and East faces are needed
-                 face_selector_kernel_type(face_selector_ew,                   &
-                                           face_selector_ns,                   &
-                                           face_counter ) )
+    ! ------------------------------------------------------------------------ !
+    ! Initialise face selectors to zero
+    ! ------------------------------------------------------------------------ !
+
+    call invoke_deep_int_setval_c(face_selector_ew, 0, max_halo_depth)
+    call invoke_deep_int_setval_c(face_selector_ns, 0, max_halo_depth)
+
+    ! ------------------------------------------------------------------------ !
+    ! Setting face selectors in owned cells
+    ! ------------------------------------------------------------------------ !
+
+    ! Set face counter to be one for halo DoFs, but zero for owned (and annexed,
+    ! if using) DoFs. The use of annexed DoFs will be picked up by using normal
+    ! int_setval_c invoke, but need to use psykal-lite implementation to ensure
+    ! halo DoFs are set to the correct value
+    call invoke_deep_int_setval_c(face_counter, 1, max_halo_depth)
+    call invoke( int_setval_c(face_counter, 0) )
+
+    ! Compute face selector in owned cell region
+    call invoke(                                                               &
+        face_selector_kernel_type(                                             &
+            face_selector_ew, face_selector_ns,                                &
+            face_counter                                                       &
+        )                                                                      &
+    )
+
+    ! ------------------------------------------------------------------------ !
+    ! Setting face selectors in halos
+    ! ------------------------------------------------------------------------ !
+
+    ! Set face counter to be zero for halo DoFs, but one for owned (and annexed,
+    ! if using) DoFs. The use of annexed DoFs will be picked up by using normal
+    ! int_setval_c invoke, but need to use psykal-lite implementation to ensure
+    ! halo DoFs are set to the correct value
+    call invoke_deep_int_setval_c(face_counter, 0, max_halo_depth)
+    call invoke( int_setval_c(face_counter, 1) )
+
+    ! Loop through different halo depths, setting the face selectors in the
+    ! halos at each depth as we go
+    do depth = 1, max_halo_depth
+      call invoke(                                                             &
+          face_selector_halo_kernel_type(                                      &
+              face_selector_ew, face_selector_ns,                              &
+              face_counter, depth                                              &
+          )                                                                    &
+      )
+    end do
 
     if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
 
@@ -301,7 +339,7 @@ contains
 
     implicit none
 
-    type(mesh_type),  pointer, intent(in) :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(mesh_type),  pointer :: prime_extrusion_mesh
     type(field_type), pointer :: panel_id_ptr
@@ -322,7 +360,7 @@ contains
 
     implicit none
 
-    type(mesh_type), pointer, intent(in) :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(mesh_type),  pointer :: prime_extrusion_mesh
     type(field_type), pointer :: coords_ptr(:)
@@ -347,7 +385,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(field_type),          pointer :: extended_chi(:)
     logical(kind=l_def)                :: constant_exists
@@ -358,7 +396,7 @@ contains
 
     integer(tik) :: id
 
-    integer(i_def) :: coord_system
+    integer(kind=i_def) :: coord_system
 
     coord_system = config%finite_element%coord_system()
 
@@ -371,7 +409,7 @@ contains
 
     if (.not. constant_exists) then
       ! If this constant doesn't exist, create it
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
@@ -412,7 +450,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(field_type),          pointer :: dA_at_w2
     logical(kind=l_def)                :: constant_exists
@@ -430,7 +468,7 @@ contains
 
     if (.not. constant_exists) then
       ! If this constant doesn't exist, create it
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
@@ -467,7 +505,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3
@@ -487,9 +525,12 @@ contains
     real(r_def)    :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
-      geometry= geometry_spherical
+      geometry = geometry_spherical
+    else if (mesh%is_geometry_planar()) then
+      geometry = geometry_planar
     else
-      geometry= geometry_planar
+      call log_event( Unsupported geometry selection', &
+                      log_level_error )
     end if
 
     if (mesh%is_topology_periodic()) then
@@ -497,7 +538,8 @@ contains
     else if (mesh%is_topology_non_periodic()) then
       topology = topology_non_periodic
     else
-      call log_event('get_detj_at_w3_fe: Unsupported topology selection',log_level_error)
+      call log_event( Unsupported topology selection', &
+                      log_level_error )
     end if
 
     element_order_h = config%finite_element%element_order_h()
@@ -522,7 +564,7 @@ contains
     constant_exists = detj_at_w3_inventory_fe%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -578,8 +620,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3
@@ -598,8 +640,11 @@ contains
 
     if (mesh%is_geometry_spherical()) then
       geometry= geometry_spherical
-    else
+    else if (mesh%is_geometry_planar()) then
       geometry= geometry_planar
+    else
+      call log_event( 'Unsupported geometry selection', &
+                      log_level_error )
     end if
 
     if (mesh%is_topology_periodic()) then
@@ -607,7 +652,8 @@ contains
     else if (mesh%is_topology_non_periodic()) then
       topology = topology_non_periodic
     else
-      call log_event('get_detj_at_w3_fe: Unsupported topology selection',log_level_error)
+      call log_event( 'Unsupported topology selection', &
+                      log_level_error )
     end if
 
     coord_system    = config%finite_element%coord_system()
@@ -622,7 +668,7 @@ contains
     constant_exists = detj_at_w3_inventory_fv%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -669,7 +715,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w2
@@ -679,7 +725,7 @@ contains
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
 
-    integer(i_def) :: element_order_h, element_order_v
+    integer(kind=i_def) :: element_order_h, element_order_v
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -699,7 +745,7 @@ contains
     constant_exists = detj_at_w2_inventory_fe%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -737,7 +783,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w2
@@ -756,7 +802,7 @@ contains
     constant_exists = detj_at_w2_inventory_fv%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       ! Create the object as it doesn't exist yet
@@ -792,7 +838,7 @@ contains
     implicit none
 
     type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(field_type),          pointer :: dz_w3
     logical(kind=l_def)                :: constant_exists
@@ -837,7 +883,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: dx_at_w2
@@ -878,11 +924,11 @@ contains
 
     implicit none
 
-    type(mesh_type),  intent(in), pointer :: mesh
+    type(mesh_type),  intent(in) :: mesh
 
-    logical(kind=l_def)                   :: constant_exists
-    type(field_type),             pointer :: dx_at_w2
-    type(field_type),             pointer :: detj_at_w2
+    logical(kind=l_def)          :: constant_exists
+    type(field_type),    pointer :: dx_at_w2
+    type(field_type),    pointer :: detj_at_w2
     type(field_type),             pointer :: dA_at_w2
     type(function_space_type),    pointer :: w2_fs
     integer(tik)                          :: id
@@ -925,8 +971,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(field_type),            pointer :: dz_at_wtheta
     type(function_space_type),   pointer :: wtheta_k0_fs
@@ -949,7 +995,7 @@ contains
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       ! NB: this assumes heights are in the lowest-order space
-      height_w3  => get_height_fv( config, mesh, W3 )
+      height_w3 => get_height_fv( config, mesh, W3 )
       height_wth => get_height_fv( config, mesh, Wtheta)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
@@ -995,9 +1041,9 @@ contains
     type(function_space_type),    pointer :: fs
     integer(tik)                          :: id
 
-    integer(i_def) :: geometry
-    real(r_def)    :: planet_radius
-    real(r_def)    :: domain_height
+    integer(kind=i_def) :: geometry
+    real(kind=r_def)    :: planet_radius
+    real(kind=r_def)    :: domain_height
 
     ! Initialise inventory if it hasn't been done so already
     if (.not. dA_msl_proj_inventory%is_initialised()) then
@@ -1051,9 +1097,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1062,10 +1108,10 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
 
-    logical(l_def), parameter :: use_fe = .true.
+    logical(kind=l_def), parameter :: use_fe = .true.
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1125,9 +1171,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1136,7 +1182,7 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    logical(l_def), parameter :: use_fe = .false.
+    logical(kind=l_def), parameter :: use_fe = .false.
 
     ! NB: Longitude and latitude fields are computed simultaneously
     ! Determine inventory based on space
@@ -1188,7 +1234,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
     integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
@@ -1198,10 +1244,10 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    logical(l_def), parameter :: use_fe = .true.
+    logical(kind=l_def), parameter :: use_fe = .true.
 
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1261,9 +1307,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(local_mesh_type),              pointer :: local_mesh
     type(inventory_by_local_mesh_type), pointer :: long_inventory
@@ -1272,7 +1318,7 @@ contains
     logical(kind=l_def)                         :: constant_exists
     character(len=str_def)                      :: inventory_name
 
-    logical(l_def), parameter :: use_fe = .false.
+    logical(kind=l_def), parameter :: use_fe = .false.
 
     ! NB: Longitude and latitude fields are computed simultaneously
     ! Determine inventory based on space
@@ -1327,9 +1373,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in)          :: space_id
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+    integer(i_def),    intent(in) :: space_id
 
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1342,12 +1388,12 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
-    integer(i_def) :: geometry
-    integer(i_def) :: coord_system
-    integer(i_def) :: element_order_h
-    integer(i_def) :: element_order_v
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: coord_system
+    integer(kind=i_def) :: element_order_h
+    integer(kind=i_def) :: element_order_v
 
-    real(r_def) :: scaled_radius
+    real(kind=r_def) :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry= geometry_spherical
@@ -1357,12 +1403,12 @@ contains
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    coord_system = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
-      height => get_height_fv( config, mesh, space_id )
+      height => get_height_fv(config, mesh, space_id)
       return
     end if
 
@@ -1460,8 +1506,8 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
-    integer(i_def),    intent(in) :: space_id
+    type(mesh_type),   intent(in) :: mesh
+    integer(kind=i_def),    intent(in) :: space_id
 
     type(inventory_by_mesh_type), pointer :: inventory
     logical(kind=l_def)                   :: constant_exists
@@ -1475,9 +1521,9 @@ contains
     integer(tik)                          :: id
     integer(kind=i_def)                   :: depth
 
-    integer(i_def) :: geometry
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry = geometry_spherical
@@ -1577,7 +1623,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(local_mesh_type),    pointer :: local_mesh
     type(integer_field_type), pointer :: selector
@@ -1606,7 +1652,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(local_mesh_type),    pointer :: local_mesh
     type(integer_field_type), pointer :: selector

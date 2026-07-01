@@ -245,18 +245,18 @@ contains
     select case ( this%source_coord_system )
     case ( XYZ )
       this%src_coord_system = coord_system_xyz
-      this%topology         = topology_fully_periodic
+      this%topology = topology_fully_periodic
 
     case ( LLH, LLH_rot )
-      this%src_coord_system  = coord_system_native
-      this%topology          = topology_non_periodic
+      this%src_coord_system = coord_system_native
+      this%topology = topology_non_periodic
 
     case ( ABH, ABH_stretch_rot )
-      this%src_coord_system  = coord_system_native
-      this%topology          = topology_fully_periodic
+      this%src_coord_system = coord_system_native
+      this%topology = topology_fully_periodic
     end select
 
-    this%geometry      = geometry_spherical
+    this%geometry = geometry_spherical
     this%scaled_radius = planet_radius*scaling
 
     if ( this%source_coord_system == LLH_rot ) then

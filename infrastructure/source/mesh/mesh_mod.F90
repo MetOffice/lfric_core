@@ -2586,7 +2586,7 @@ contains
 
     class(mesh_type), intent(in) :: self
 
-    logical (l_def) :: answer
+    logical(l_def) :: answer
 
     answer = .false.
     answer = self%local_mesh%is_topology_non_periodic()

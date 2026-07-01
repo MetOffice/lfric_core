@@ -153,7 +153,8 @@ contains
 
     implicit none
 
-    type(mesh_type), pointer, intent(in) :: mesh
+    type(mesh_type), intent(in) :: mesh
+
     type(operator_type),         pointer :: project_xdot_to_w2
     type(operator_type),         pointer :: project_ydot_to_w2
     type(operator_type),         pointer :: project_zdot_to_w2
@@ -177,7 +178,7 @@ contains
     end if
 
 
-    chi      => get_coordinates(mesh)
+    chi => get_coordinates(mesh)
     panel_id => get_panel_id(mesh)
     ! Kernels only work for lowest order spaces so use finite volume
     qr => get_qr_fv()
@@ -211,8 +212,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(function_space_type),   pointer :: w2_fs
     type(function_space_type),   pointer :: w3_fs
@@ -224,10 +225,10 @@ contains
     type(operator_type),         pointer :: u_lat_map
     type(operator_type),         pointer :: u_up_map
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry = geometry_spherical
@@ -241,7 +242,7 @@ contains
       topology = topology_non_periodic
     end if
 
-    coord_system  = config%finite_element%coord_system()
+    coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     if (.not. u_lon_map_inventory%is_initialised()) then
@@ -254,7 +255,7 @@ contains
       call u_up_map_inventory%initialise(name='u_up_map')
     end if
 
-    chi      => get_coordinates(mesh)
+    chi => get_coordinates(mesh)
     panel_id => get_panel_id(mesh)
 
     ! Kernels only work for lowest order spaces so use finite volume
@@ -290,8 +291,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(function_space_type),   pointer :: w2_fs
     type(function_space_type),   pointer :: w3_fs
@@ -303,10 +304,10 @@ contains
     type(operator_type),         pointer :: u_up_sample
     integer(tik)                         :: id
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry = geometry_spherical
@@ -320,7 +321,7 @@ contains
       topology = topology_non_periodic
     end if
 
-    coord_system  = config%finite_element%coord_system()
+    coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     if (.not. u_lon_sample_inventory%is_initialised()) then
@@ -333,8 +334,9 @@ contains
       call u_up_sample_inventory%initialise(name='u_up_sample')
     end if
 
-    chi      => get_coordinates(mesh)
+    chi => get_coordinates(mesh)
     panel_id => get_panel_id(mesh)
+
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
@@ -373,9 +375,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                       :: ndata, k_h, k_v
     type(field_type), pointer                 :: weights_high_low
@@ -457,9 +459,9 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: coarse_mesh
-    type(mesh_type),   intent(in), pointer :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                       :: ndata, k_h, k_v
     type(field_type), pointer                 :: weights_high_low
@@ -838,7 +840,7 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -863,7 +865,7 @@ contains
 
     implicit none
 
-    type(mesh_type), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -888,7 +890,8 @@ contains
 
     implicit none
 
-    type(mesh_type),intent(in), pointer :: mesh
+    type(mesh_type), intent(in) :: mesh
+
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
 
@@ -915,7 +918,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lon_map_op
     logical(kind=l_def)               :: constant_exists
@@ -946,7 +949,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type), intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lat_map_op
     logical(kind=l_def)               :: constant_exists
@@ -975,8 +978,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_up_map_op
     logical(kind=l_def)               :: constant_exists
@@ -1006,7 +1009,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lon_sample_op
     logical(kind=l_def)               :: constant_exists
@@ -1036,7 +1039,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in),  pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_lat_sample_op
     logical(kind=l_def)               :: constant_exists
@@ -1065,8 +1068,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: u_up_sample_op
     logical(kind=l_def)               :: constant_exists
@@ -1095,13 +1098,13 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def) :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def) :: scaled_radius
 
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
@@ -1125,7 +1128,7 @@ contains
       topology = topology_non_periodic
     end if
 
-    coord_system  = config%finite_element%coord_system()
+    coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
@@ -1140,7 +1143,7 @@ contains
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
       chi => get_coordinates(mesh)
-      qr  => get_qr_fv()
+      qr => get_qr_fv()
       panel_id => get_panel_id(mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
@@ -1177,13 +1180,13 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
@@ -1207,7 +1210,7 @@ contains
       topology = topology_non_periodic
     end if
 
-    coord_system  = config%finite_element%coord_system()
+    coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
@@ -1223,7 +1226,7 @@ contains
     if (.not. constant_exists) then
       panel_id => get_panel_id(mesh)
       chi => get_coordinates(mesh)
-      qr  => get_qr_fv()
+      qr => get_qr_fv()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
@@ -1259,13 +1262,13 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
 
     type(operator_type),        pointer :: proj_op
@@ -1290,7 +1293,7 @@ contains
       topology = topology_non_periodic
     end if
 
-    coord_system  = config%finite_element%coord_system()
+    coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
@@ -1302,7 +1305,7 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      qr  => get_qr_fv()
+      qr => get_qr_fv()
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
@@ -1344,8 +1347,8 @@ contains
                                   only: w3_to_w2_displacement_kernel_type
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(local_mesh_type),     pointer :: local_mesh
     type(field_type),          pointer :: w3_to_w2_displacement
@@ -1357,10 +1360,10 @@ contains
     type(function_space_type), pointer :: w3_k0_fs
     integer(tik)                       :: id
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
 
     if (mesh%is_geometry_spherical()) then
       geometry = geometry_spherical
@@ -1374,7 +1377,7 @@ contains
       topology = topology_non_periodic
     end if
 
-    coord_system  = config%finite_element%coord_system()
+    coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     ! Initialise inventory if this is the first time getting this constant
@@ -1395,7 +1398,7 @@ contains
       )
     else
       ! If this constant doesn't exist, create it
-      chi      => get_coordinates(mesh)
+      chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
@@ -1428,9 +1431,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists
@@ -1474,9 +1477,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: fine_mesh
+    type(mesh_type),   intent(in) :: coarse_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists
@@ -1519,9 +1522,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: coarse_mesh
+    type(mesh_type),   intent(in) :: fine_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists
@@ -1564,9 +1567,9 @@ contains
 
     implicit none
 
-    type(config_type),         intent(in) :: config
-    type(mesh_type),  pointer, intent(in) :: fine_mesh
-    type(mesh_type),  pointer, intent(in) :: coarse_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: fine_mesh
+    type(mesh_type),   intent(in) :: coarse_mesh
 
     integer(kind=i_def)                   :: intermesh_id
     logical(kind=l_def)                   :: constant_exists

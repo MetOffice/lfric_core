@@ -116,7 +116,7 @@ contains
     ! Loop through all 3D meshes
     ! ======================================================================== !
 
-    do i = 1, SIZE(all_mesh_names)
+    do i = 1, size(all_mesh_names)
 
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()

@@ -13,6 +13,25 @@
         "tsteps": 10,
     }) %}
 
+{% elif task_ns.conf_name == "default-C24-CP" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["default"],
+        "resolution": "C24",
+        "tsteps": 90,
+        "crun": 2,
+        "kgo_checks": [],
+    }) %}
+
+{% elif task_ns.conf_name == "flexible-CP-C24" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["default", "flex_cp"],
+        "resolution": "C24",
+        "tsteps": 60,
+        "kgo_checks": [],
+    }) %}
+
 {% elif task_ns.conf_name == "multifile-C24" %}
 
     {% do task_dict.update({
@@ -27,6 +46,32 @@
         "opt_confs": ["temporal_reading"],
         "resolution": "C12",
         "tsteps": 90,
+    }) %}
+
+
+{% elif task_ns.conf_name == "temporal_reading-C48" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["temporal_reading"],
+        "resolution": "C48",
+        "tsteps": 90,
+        "kgo_checks": [],
+        "mpi_parts": 24,
+    }) %}
+
+
+{% elif task_ns.conf_name == "temporal_reading-C48-server" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["temporal_reading"],
+        "resolution": "C48",
+        "tsteps": 90,
+        "kgo_checks": [],
+        "mpi_parts": 24,
+        "mpi_parts_xios": 1,
+        "xios_nodes": 1,
+        "xios_server_mode": true,
+        "xios_server_ranks": 1,
     }) %}
 
 {% elif task_ns.conf_name == "benchmark-C24" %}
