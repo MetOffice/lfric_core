@@ -70,6 +70,9 @@ program planar_mesh_generator
                                  key_from_geometry
   use rotation_config_mod, only: ROTATION_TARGET_NULL_ISLAND, &
                                  ROTATION_TARGET_NORTH_POLE
+  use planar_mesh_config_mod, &
+                           only: STRETCH_FUNCTION_INFLATION, &
+                                 STRETCH_FUNCTION_POLYNOMIAL
 
   implicit none
 
@@ -169,11 +172,9 @@ program planar_mesh_generator
   logical :: periodic_y
   logical :: create_lbc_mesh
   integer(i_def) :: lbc_rim_depth
+  integer(i_def) :: stretch_function
 
   character(str_def) :: lbc_parent_mesh
-
-  logical :: apply_stretch_transform
-
   character(str_def) :: transform_mesh
 
   type(local_mesh_collection_type) :: local_mesh_collection
@@ -226,17 +227,16 @@ program planar_mesh_generator
   topology       = config%mesh%topology()
   geometry       = config%mesh%geometry()
 
-  edge_cells_x    = config%planar_mesh%edge_cells_x()
-  edge_cells_y    = config%planar_mesh%edge_cells_y()
-  periodic_x      = config%planar_mesh%periodic_x()
-  periodic_y      = config%planar_mesh%periodic_y()
-  domain_size     = config%planar_mesh%domain_size()
-  domain_centre   = config%planar_mesh%domain_centre()
-  create_lbc_mesh = config%planar_mesh%create_lbc_mesh()
-  lbc_rim_depth   = config%planar_mesh%lbc_rim_depth()
-  lbc_parent_mesh = config%planar_mesh%lbc_parent_mesh()
-
-  apply_stretch_transform = config%planar_mesh%apply_stretch_transform()
+  edge_cells_x     = config%planar_mesh%edge_cells_x()
+  edge_cells_y     = config%planar_mesh%edge_cells_y()
+  periodic_x       = config%planar_mesh%periodic_x()
+  periodic_y       = config%planar_mesh%periodic_y()
+  domain_size      = config%planar_mesh%domain_size()
+  domain_centre    = config%planar_mesh%domain_centre()
+  create_lbc_mesh  = config%planar_mesh%create_lbc_mesh()
+  lbc_rim_depth    = config%planar_mesh%lbc_rim_depth()
+  lbc_parent_mesh  = config%planar_mesh%lbc_parent_mesh()
+  stretch_function = config%planar_mesh%stretch_function()
 
   if (partition_mesh) then
     max_stencil_depth    = config%partitions%max_stencil_depth()
@@ -251,7 +251,8 @@ program planar_mesh_generator
     target_null_island = config%rotation%target_null_island()
   end if
 
-  if (apply_stretch_transform) then
+  if (stretch_function == STRETCH_FUNCTION_INFLATION .or. &
+      stretch_function == STRETCH_FUNCTION_POLYNOMIAL) then
     transform_mesh = config%stretch_transform%transform_mesh()
   end if
 
@@ -408,9 +409,9 @@ program planar_mesh_generator
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
   end if
 
-  if (apply_stretch_transform) then
-    ! This enables support meshes to be created with a variable
-    ! resolution stretching function.
+  ! This enables support meshes to be created with a variable
+  ! resolution stretching function.
+  if (config%namelist_exists('stretch_transform')) then
     do j=1, n_meshes
       if (trim(mesh_names(j)) == trim(transform_mesh)) then
         fine_mesh_edge_cells_x = edge_cells_x(j)
@@ -743,6 +744,7 @@ program planar_mesh_generator
                         periodic_y         = periodic_y,             &
                         domain_size        = domain_size,            &
                         domain_centre      = domain_centre,          &
+                        stretch_function   = stretch_function,       &
                         rotate_mesh        = rotate_mesh,            &
                         target_north_pole  = set_north_pole,         &
                         target_null_island = set_null_island )
@@ -779,6 +781,7 @@ program planar_mesh_generator
                         fine_mesh_edge_cells_y,                    &
                         periodic_x, periodic_y,                    &
                         domain_size, domain_centre,                &
+                        stretch_function    = stretch_function,    &
                         target_mesh_names   = target_mesh_names,   &
                         target_edge_cells_x = target_edge_cells_x, &
                         target_edge_cells_y = target_edge_cells_y, &

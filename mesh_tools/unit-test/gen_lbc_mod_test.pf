@@ -21,6 +21,7 @@ module gen_lbc_mod_test
   use mesh_config_mod, only: coord_sys_xyz,   &
                              geometry_planar, &
                              topology_non_periodic
+  use planar_mesh_config_mod, only: stretch_function_uniform
 
   use funit
 
@@ -237,19 +238,21 @@ contains
    kgo_lbc_lam_map => rim3_9x8_lbc_lam
 
    cube_element    = reference_cube_type()
-   planar_strategy = gen_planar_type( reference_element=cube_element,      &
-                                      mesh_name=name,                      &
-                                      geometry=geometry_planar,            &
-                                      topology=topology_non_periodic,      &
-                                      coord_sys=coord_sys_xyz,             &
-                                      edge_cells_x=edge_cells_x,           &
-                                      edge_cells_y=edge_cells_y,           &
-                                      fine_mesh_edge_cells_x=edge_cells_x, &
-                                      fine_mesh_edge_cells_y=edge_cells_y, &
-                                      domain_size=domain_size,             &
-                                      domain_centre=domain_centre,         &
-                                      periodic_x=periodic_x,               &
-                                      periodic_y=periodic_y )
+   planar_strategy = gen_planar_type(                                     &
+                       reference_element      = cube_element,             &
+                       mesh_name              = name,                     &
+                       geometry               = geometry_planar,          &
+                       topology               = topology_non_periodic,    &
+                       coord_sys              = coord_sys_xyz,            &
+                       edge_cells_x           = edge_cells_x,             &
+                       edge_cells_y           = edge_cells_y,             &
+                       fine_mesh_edge_cells_x = edge_cells_x,             &
+                       fine_mesh_edge_cells_y = edge_cells_y,             &
+                       domain_size            = domain_size,              &
+                       domain_centre          = domain_centre,            &
+                       stretch_function       = stretch_function_uniform, &
+                       periodic_x             = periodic_x,               &
+                       periodic_y             = periodic_y )
 
 
    lbc_strategy = gen_lbc_type(planar_strategy, rim_depth )
@@ -402,19 +405,21 @@ contains
    kgo_lbc_lam_map => rim2_6x5_lbc_lam
 
    cube_element    = reference_cube_type()
-   planar_strategy = gen_planar_type( reference_element=cube_element,      &
-                                      mesh_name=name,                      &
-                                      geometry=geometry_planar,            &
-                                      topology=topology_non_periodic,      &
-                                      coord_sys=coord_sys_xyz,             &
-                                      periodic_x=periodic_x,               &
-                                      periodic_y=periodic_y,               &
-                                      domain_size=domain_size,             &
-                                      domain_centre=domain_centre,         &
-                                      edge_cells_x=edge_cells_x,           &
-                                      edge_cells_y=edge_cells_y ,          &
-                                      fine_mesh_edge_cells_x=edge_cells_x, &
-                                      fine_mesh_edge_cells_y=edge_cells_y )
+   planar_strategy = gen_planar_type(                                     &
+                       reference_element      = cube_element,             &
+                       mesh_name              = name,                     &
+                       geometry               = geometry_planar,          &
+                       topology               = topology_non_periodic,    &
+                       coord_sys              = coord_sys_xyz,            &
+                       periodic_x             = periodic_x,               &
+                       periodic_y             = periodic_y,               &
+                       domain_size            = domain_size,              &
+                       domain_centre          = domain_centre,            &
+                       stretch_function       = stretch_function_uniform, &
+                       edge_cells_x           = edge_cells_x,             &
+                       edge_cells_y           = edge_cells_y,             &
+                       fine_mesh_edge_cells_x = edge_cells_x,             &
+                       fine_mesh_edge_cells_y = edge_cells_y )
 
    lbc_strategy = gen_lbc_type(planar_strategy, rim_depth )
 
@@ -539,19 +544,21 @@ contains
    kgo_lbc_lam_map => rim1_3x4_lbc_lam
 
    cube_element    = reference_cube_type()
-   planar_strategy = gen_planar_type( reference_element=cube_element,      &
-                                      mesh_name=name,                      &
-                                      geometry=geometry_planar,            &
-                                      topology=topology_non_periodic,      &
-                                      coord_sys=coord_sys_xyz,             &
-                                      edge_cells_x=edge_cells_x,           &
-                                      edge_cells_y=edge_cells_y,           &
-                                      fine_mesh_edge_cells_x=edge_cells_x, &
-                                      fine_mesh_edge_cells_y=edge_cells_y, &
-                                      domain_size=domain_size,             &
-                                      domain_centre=domain_centre,         &
-                                      periodic_x=periodic_x,               &
-                                      periodic_y=periodic_y )
+   planar_strategy = gen_planar_type(                                     &
+                       reference_element      = cube_element,             &
+                       mesh_name              = name,                     &
+                       geometry               = geometry_planar,          &
+                       topology               = topology_non_periodic,    &
+                       coord_sys              = coord_sys_xyz,            &
+                       edge_cells_x           = edge_cells_x,             &
+                       edge_cells_y           = edge_cells_y,             &
+                       fine_mesh_edge_cells_x = edge_cells_x,             &
+                       fine_mesh_edge_cells_y = edge_cells_y,             &
+                       domain_size            = domain_size,              &
+                       domain_centre          = domain_centre,            &
+                       stretch_function       = stretch_function_uniform, &
+                       periodic_x             = periodic_x,               &
+                       periodic_y             = periodic_y )
 
    lbc_strategy = gen_lbc_type(planar_strategy, rim_depth )
 

@@ -6,17 +6,17 @@
 !> @brief Split a W2 field into the component W2v and W2h fields
 module split_w2_field_kernel_mod
 
-  use argument_mod,          only : arg_type,                  &
-                                    GH_FIELD, GH_REAL,         &
-                                    GH_WRITE, GH_INTEGER,      &
-                                    GH_READ, ANY_SPACE_1,      &
-                                    ANY_DISCONTINUOUS_SPACE_2, &
-                                    ANY_DISCONTINUOUS_SPACE_3, &
-                                    CELL_COLUMN
-  use constants_mod,         only : r_double, r_single, i_def, l_def
-  use fs_continuity_mod,     only : W2, W2h, W2v
-  use kernel_mod,            only : kernel_type
-  use reference_element_mod, only : N
+  use argument_mod,                  only : arg_type,                  &
+                                            GH_FIELD, GH_REAL,         &
+                                            GH_WRITE, GH_INTEGER,      &
+                                            GH_READ, ANY_SPACE_1,      &
+                                            ANY_DISCONTINUOUS_SPACE_2, &
+                                            ANY_DISCONTINUOUS_SPACE_3, &
+                                            CELL_COLUMN
+  use constants_mod,                 only : r_double, r_single, i_def, l_def
+  use fs_continuity_mod,             only : W2, W2h, W2v
+  use kernel_mod,                    only : kernel_type
+  use sci_face_selector_support_mod, only : face_from_face_selector
 
   implicit none
 
@@ -107,7 +107,6 @@ subroutine split_w2_field_code_r_double(nlayers,                         &
   integer(kind=i_def) :: df, k, j
   integer(kind=i_def) :: hori_dofs_to_do
   logical(kind=l_def) :: lowest_order
-  logical(kind=l_def) :: dof3_is_N
 
   if (ndf_w2 == 6) then
     lowest_order = .true.
@@ -116,21 +115,15 @@ subroutine split_w2_field_code_r_double(nlayers,                         &
   end if
 
   if (lowest_order) then
-    hori_dofs_to_do = face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-    if (face_selector_ns(map_w3_2d(1)) == 2 .and. face_selector_ew(map_w3_2d(1)) == 1) then
-      dof3_is_N = .true.
-    else
-      dof3_is_N = .false.
-    end if
+    hori_dofs_to_do = ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
   else
     hori_dofs_to_do = ndf_w2h
-    dof3_is_N = .false.
   end if
 
   ! Loop over horizontal W2 DoFs
   do j = 1, hori_dofs_to_do
-    df = j
-    if (j == 3 .and. dof3_is_N) df = N
+    df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
+    if (.not. lowest_order) df = j
 
     ! Loop over layers
     do k = 0, nlayers-1
@@ -187,7 +180,6 @@ subroutine split_w2_field_code_r_single(nlayers,                         &
   integer(kind=i_def) :: df, k, j
   integer(kind=i_def) :: hori_dofs_to_do
   logical(kind=l_def) :: lowest_order
-  logical(kind=l_def) :: dof3_is_N
 
   if (ndf_w2 == 6) then
     lowest_order = .true.
@@ -196,21 +188,15 @@ subroutine split_w2_field_code_r_single(nlayers,                         &
   end if
 
   if (lowest_order) then
-    hori_dofs_to_do = face_selector_ew(map_w3_2d(1)) + face_selector_ns(map_w3_2d(1))
-    if (face_selector_ns(map_w3_2d(1)) == 2 .and. face_selector_ew(map_w3_2d(1)) == 1) then
-      dof3_is_N = .true.
-    else
-      dof3_is_N = .false.
-    end if
+    hori_dofs_to_do = ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
   else
     hori_dofs_to_do = ndf_w2h
-    dof3_is_N = .false.
   end if
 
   ! Loop over horizontal W2 DoFs
   do j = 1, hori_dofs_to_do
-    df = j
-    if (j == 3 .and. dof3_is_N) df = N
+    df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
+    if (.not. lowest_order) df = j
 
     ! Loop over layers
     do k = 0, nlayers-1

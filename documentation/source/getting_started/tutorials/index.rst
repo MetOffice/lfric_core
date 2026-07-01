@@ -13,7 +13,7 @@ started with LFRic. They cover a range of topics, from how to run a simple LFRic
 application, to developing kernels using the LFRic data model and PSyclone.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :glob:
 
    */index

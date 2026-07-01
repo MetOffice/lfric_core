@@ -10,7 +10,7 @@
     convention="UGRID">
 
   <file id="monthly_ancil" mode="read" output_freq="1mo" cyclic="true" enabled=".FALSE.">
-    <field id="monthly_field__monthly_ancil_fields" name="mass_fraction_of_ozone_in_air"/>
+    <field id="monthly_field__monthly_ancil_field_group" name="mass_fraction_of_ozone_in_air"/>
   </file>
 
   </file_definition>

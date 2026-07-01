@@ -58,6 +58,12 @@ contains
 
     select type(context)
     type is (lfric_xios_context_type)
+
+      ! If context definition has not been closed, close it now
+      if (.not. context%is_initialised()) then
+        call context%close_context_definition()
+      end if
+
       ! Write all files that need to be written to
       call context%set_current()
 
