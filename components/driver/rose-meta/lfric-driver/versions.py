@@ -50,12 +50,11 @@ class vn31_t238(MacroUpgrade):
             ["namelist:finite_element", "coord_order_nonprime"],
             coord_order,
         )
-
         return config, self.reports
 
 
 class vn31_t324(MacroUpgrade):
-    """Upgrade macro for LFRic Core PR#324 by Ricky Wong."""
+    """Upgrade macro for ticket TTTT by Unknown."""
 
     BEFORE_TAG = "vn3.1_t238"
     AFTER_TAG = "vn3.1_t324"
@@ -78,7 +77,8 @@ class vn31_t324(MacroUpgrade):
         if config.get(["namelist:multigrid"]) is not None:
             self.add_setting(
                 config,
-                ["namelist:multigrid", "coarsen_multigrid_tiles"], ".false."
+                ["namelist:multigrid", "coarsen_multigrid_tiles"],
+                ".false.",
             )
             self.add_setting(
                 config, ["namelist:multigrid", "max_tiled_multigrid_level"], "1"
