@@ -34,7 +34,7 @@ integer(i_def), parameter :: TOPOLOGY_DIMENSION  = 2
 !> @brief Stores 2-dimensional grid information.
 !-------------------------------------------------------------------------------
 type, public :: ugrid_2d_type
-  private
+  ! private
 
   character(str_def) :: mesh_name
 
@@ -258,9 +258,7 @@ subroutine get_mesh_names(self, filename, mesh_names)
   character(len=*),     intent(in)    :: filename
   character(len=*),     intent(out)   :: mesh_names(:)
 
-  call self%file_handler%file_open(trim(filename))
   call self%file_handler%get_mesh_names(mesh_names)
-  call self%file_handler%file_close()
 
   return
 end subroutine get_mesh_names
@@ -279,9 +277,7 @@ subroutine get_n_meshes(self, filename, n_meshes)
   character(len=*),     intent(in)    :: filename
   integer(i_def),       intent(out)   :: n_meshes
 
-  call self%file_handler%file_open(trim(filename))
   n_meshes = self%file_handler%get_n_meshes()
-  call self%file_handler%file_close()
 
   return
 end subroutine get_n_meshes
@@ -504,11 +500,10 @@ subroutine set_from_file_read(self, mesh_name, filename)
 
   self%mesh_name = trim(mesh_name)
 
-  call self%file_handler%file_open(trim(filename))
 
   if (.not. self%file_handler%is_mesh_present(trim(mesh_name))) then
     self%populated_with_mesh = .false.
-    call self%file_handler%file_close()
+
     return
   end if
 
@@ -548,7 +543,7 @@ subroutine set_from_file_read(self, mesh_name, filename)
        self%nmaps, self%target_mesh_names )
 
 
-  call self%file_handler%file_close()
+  ! call self%file_handler%file_close()
 
   self%populated_with_mesh = .true.
 

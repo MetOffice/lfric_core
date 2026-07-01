@@ -28,6 +28,7 @@ module runtime_partition_mod
 
   use local_mesh_collection_mod,  only: local_mesh_collection
   use global_mesh_collection_mod, only: global_mesh_collection
+    use ugrid_2d_mod,   only: ugrid_2d_type
 
   implicit none
 
@@ -198,13 +199,13 @@ end subroutine create_local_mesh
 !!           mesh object.
 !!
 !> @param[in]  input_mesh_file  Input file to load mesh maps from.
-subroutine create_local_mesh_maps( input_mesh_file )
+subroutine create_local_mesh_maps( input_mesh_file, ugrid_2d )
 
   implicit none
 
   character(len=str_max_filename) :: input_mesh_file
 
-  type(ncdf_quad_type) :: file_handler
+    type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   character(str_def), allocatable :: source_mesh_names(:)
   character(str_def), allocatable :: target_mesh_names(:)
@@ -225,7 +226,6 @@ subroutine create_local_mesh_maps( input_mesh_file )
 
   ! Read in the maps for each global mesh
   !=================================================================
-  call file_handler%file_open(trim(input_mesh_file))
 
   allocate( source_mesh_names, &
             source=global_mesh_collection%get_mesh_names() )
@@ -251,7 +251,7 @@ subroutine create_local_mesh_maps( input_mesh_file )
         if ( associated(target_local_mesh) ) then
 
           ! Read in the global mesh map
-          call file_handler%read_map( source_mesh_names(i), &
+          call ugrid_2d%file_handler%read_map( source_mesh_names(i), &
                                       target_mesh_names(j), &
                                       gid_mesh_map )
 
@@ -295,8 +295,6 @@ subroutine create_local_mesh_maps( input_mesh_file )
   if ( allocated( source_mesh_names ) ) then
     deallocate( source_mesh_names)
   end if
-
-  call file_handler%file_close()
 
   return
 end subroutine create_local_mesh_maps
