@@ -27,6 +27,7 @@ module runtime_partition_mod
 
   use local_mesh_collection_mod,  only: local_mesh_collection
   use global_mesh_collection_mod, only: global_mesh_collection
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
   implicit none
 
@@ -213,13 +214,14 @@ end subroutine create_local_mesh
 !!           mesh object.
 !!
 !> @param[in]  input_mesh_file  Input file to load mesh maps from.
-subroutine create_local_mesh_maps_from_file( input_mesh_file )
+!> @param[inout]  ugrid_2d ugrid_2d_type to interact with an open file.
+subroutine create_local_mesh_maps_from_file( input_mesh_file, ugrid_2d )
 
   implicit none
 
   character(len=str_max_filename),   intent(in)    :: input_mesh_file
 
-  type(ncdf_quad_type) :: file_handler
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   character(str_def), allocatable :: source_mesh_names(:)
   character(str_def), allocatable :: target_mesh_names(:)
@@ -237,7 +239,6 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
 
   ! Read in the maps for each global mesh
   !=================================================================
-  call file_handler%file_open(trim(input_mesh_file))
 
   allocate( source_mesh_names, &
             source=global_mesh_collection%get_mesh_names() )
@@ -262,7 +263,7 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
            local_mesh_collection%get_local_mesh( target_mesh_names(j) )
 
         if ( associated(target_local_mesh) ) then
-          call load_map( source_local_mesh, target_local_mesh, file_handler )
+          call load_map( source_local_mesh, target_local_mesh, ugrid_2d )
         end if
 
       end do
@@ -277,8 +278,6 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
   if ( allocated( source_mesh_names ) ) then
     deallocate( source_mesh_names)
   end if
-
-  call file_handler%file_close()
 
   return
 end subroutine create_local_mesh_maps_from_file
@@ -380,14 +379,14 @@ end subroutine create_local_mesh_maps_from_object
 !>           all checks and file open/closing have been done by calling routine
 !> @param[in]  source_mesh  Source local mesh to add intergrid maps to.
 !> @param[in]  target_mesh  Target local mesh to map to.
-!> @param[in]  file_handler Open file handler to file.
-subroutine load_map(source_mesh, target_mesh, file_handler)
+!> @param[inout]  ugrid_2d ugrid_2d_type to interact with an open file.
+subroutine load_map(source_mesh, target_mesh, ugrid_2d)
 
   implicit none
 
   type(local_mesh_type), intent(inout) :: source_mesh
   type(local_mesh_type), intent(in)    :: target_mesh
-  type(ncdf_quad_type),  intent(in)    :: file_handler
+  type(ugrid_2d_type),   intent(inout) :: ugrid_2d
 
   character(str_def) :: source_name
   character(str_def) :: target_name
@@ -405,9 +404,9 @@ subroutine load_map(source_mesh, target_mesh, file_handler)
   target_name = target_mesh%get_origin_name()
 
   ! Read in the global mesh map
-  call file_handler%read_map( source_name, &
-                              target_name, &
-                              gid_mesh_map )
+  call ugrid_2d%file_handler_read_map( source_name, &
+                                       target_name, &
+                                       gid_mesh_map )
 
   ! Create the local mesh map
   ntarget_per_source_cell_x = size(gid_mesh_map, 1)
