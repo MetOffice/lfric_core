@@ -55,3 +55,37 @@ class vn31_t238(MacroUpgrade):
         )
 
         return config, self.reports
+
+
+class vn31_t324(MacroUpgrade):
+    """Upgrade macro for ticket #324 by Ricky Wong."""
+
+    BEFORE_TAG = "vn3.1_t238"
+    AFTER_TAG = "vn3.1_t324"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        # Only add in new configuration settings if the namelists
+        # are already present
+        #
+        if config.get(["namelist:partitioning"]) is not None:
+            self.add_setting(
+                config, ["namelist:partitioning", "inner_halo_tiles"], ".false."
+            )
+            self.add_setting(
+                config, ["namelist:partitioning", "tile_size_x"], "1"
+            )
+            self.add_setting(
+                config, ["namelist:partitioning", "tile_size_y"], "1"
+            )
+        if config.get(["namelist:multigrid"]) is not None:
+            self.add_setting(
+                config,
+                ["namelist:multigrid", "coarsen_multigrid_tiles"],
+                ".false.",
+            )
+            self.add_setting(
+                config, ["namelist:multigrid", "max_tiled_multigrid_level"], "1"
+            )
+
+        return config, self.reports
