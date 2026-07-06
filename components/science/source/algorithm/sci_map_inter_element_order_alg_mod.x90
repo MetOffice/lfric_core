@@ -192,8 +192,6 @@ contains
     type(integer_field_type), pointer :: face_selector_ew
     type(integer_field_type), pointer :: face_selector_ns
 
-    integer(kind=i_def) :: coarse_mesh_id
-
     ! Check that horizontal element-orders are compatible and call mapping
     ! kernels
     if (target_field%get_element_order_h() > 0 .and. &
@@ -201,10 +199,8 @@ contains
       coarse_mesh => target_field%get_mesh()
       fine_mesh => source_field%get_mesh()
 
-      coarse_mesh_id = target_field%get_mesh_id()
-
-      face_selector_ew => get_face_selector_ew(coarse_mesh_id)
-      face_selector_ns => get_face_selector_ns(coarse_mesh_id)
+      face_selector_ew => get_face_selector_ew(coarse_mesh)
+      face_selector_ns => get_face_selector_ns(coarse_mesh)
 
       weights => get_weights_w2_fv_to_fe(fine_mesh, coarse_mesh)
       call invoke_map_w2_fv_to_fe_kernel_type(target_field, source_field, weights,  &
@@ -215,10 +211,8 @@ contains
       coarse_mesh => source_field%get_mesh()
       fine_mesh => target_field%get_mesh()
 
-      coarse_mesh_id = source_field%get_mesh_id()
-
-      face_selector_ew => get_face_selector_ew(coarse_mesh_id)
-      face_selector_ns => get_face_selector_ns(coarse_mesh_id)
+      face_selector_ew => get_face_selector_ew(coarse_mesh)
+      face_selector_ns => get_face_selector_ns(coarse_mesh)
 
       weights => get_weights_w2_fe_to_fv(coarse_mesh, fine_mesh)
       call invoke_map_w2_fe_to_fv_kernel_type(target_field, source_field, weights,  &

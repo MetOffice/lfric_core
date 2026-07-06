@@ -59,9 +59,14 @@ program lfric_xios_temporal_test
                                                     freq=1,                               &
                                                     fields_in_file=test_db%temporal_fields ) )
 
-  call io_context%initialise_xios_context( test_db%comm,                    &
-                                           test_db%chi,  test_db%panel_id,  &
-                                           test_db%clock, test_db%calendar )
+  call io_context%initialise_xios_context( test_db%comm, &
+                                           test_db%chi, test_db%panel_id, &
+                                           test_db%clock, test_db%calendar, &
+                                           test_db%config%base_mesh%geometry(), &
+                                           test_db%config%base_mesh%topology(), &
+                                           test_db%config%finite_element%coord_system(), &
+                                           test_db%config%planet%scaled_radius() )
+
 
   context_advance => advance
   context_actor => io_context

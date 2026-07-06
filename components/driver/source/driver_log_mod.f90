@@ -1,7 +1,8 @@
 module driver_log_mod
 
-use constants_mod,        only: i_def
+use constants_mod,        only: i_def, l_def
 use convert_to_upper_mod, only: convert_to_upper
+use config_mod,           only: config_type
 use lfric_mpi_mod,        only: lfric_comm_type
 use log_mod,              only: log_event,          &
                                 log_set_level,      &
@@ -14,14 +15,14 @@ use log_mod,              only: log_event,          &
                                 LOG_LEVEL_INFO,     &
                                 LOG_LEVEL_DEBUG,    &
                                 LOG_LEVEL_TRACE
-use logging_config_mod,   only: run_log_level,          &
-                                key_from_run_log_level, &
-                                RUN_LOG_LEVEL_ERROR,    &
-                                RUN_LOG_LEVEL_INFO,     &
-                                RUN_LOG_LEVEL_DEBUG,    &
-                                RUN_LOG_LEVEL_TRACE,    &
-                                RUN_LOG_LEVEL_WARNING,  &
-                                log_to_rank_zero_only
+
+use logging_config_mod, only: key_from_run_log_level, &
+                              RUN_LOG_LEVEL_ERROR,    &
+                              RUN_LOG_LEVEL_INFO,     &
+                              RUN_LOG_LEVEL_DEBUG,    &
+                              RUN_LOG_LEVEL_TRACE,    &
+                              RUN_LOG_LEVEL_WARNING
+
 
 implicit none
 
@@ -32,17 +33,24 @@ contains
 
 !> @brief Initialises the logging system from a namelist.
 !>
+!> @param[in] config       Application namelist configuration object
 !> @param[in] communicator MPI communicator to use for logging.
 !> @param[in] program_name Identifies the running program.
 !>
-subroutine init_logger(communicator, program_name)
+subroutine init_logger(config, communicator, program_name)
 
   implicit none
 
-  character(len=*),       intent(in) :: program_name
-  type(lfric_comm_type),  intent(in) :: communicator
+  type(config_type),     intent(in) :: config
+  type(lfric_comm_type), intent(in) :: communicator
+  character(len=*),      intent(in) :: program_name
 
   integer(i_def) :: log_level
+  integer(i_def) :: run_log_level
+  logical(l_def) :: log_to_rank_zero_only
+
+  run_log_level         = config%logging%run_log_level()
+  log_to_rank_zero_only = config%logging%log_to_rank_zero_only()
 
   call initialise_logging( communicator%get_comm_mpi_val(), program_name, &
                            log_to_rank_zero_only=log_to_rank_zero_only)

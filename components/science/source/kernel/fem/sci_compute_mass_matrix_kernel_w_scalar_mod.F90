@@ -381,7 +381,7 @@ contains
                    basis_w_scalar(1,df,qp1,qp2)   * &
                    basis_w_scalar(1,df2,qp1,qp2)  * &
                    dj(qp1,qp2)
-               mm(ik,df,df2) = mm(ik,df,df2) + integrand
+              mm(ik,df,df2) = mm(ik,df,df2) + integrand
             end do
           end do
         end do

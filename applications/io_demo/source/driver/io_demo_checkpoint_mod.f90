@@ -8,7 +8,8 @@
 !!          files and fields to it
 module io_demo_checkpoint_mod
 
-  use constants_mod,          only: i_def, str_max_filename, str_def, r_second
+  use constants_mod,          only: i_def, r_def, str_max_filename, &
+                                    str_def, r_second
   use driver_modeldb_mod,     only: modeldb_type
   use event_mod,              only: event_action
   use event_actor_mod,        only: event_actor_type
@@ -22,6 +23,12 @@ module io_demo_checkpoint_mod
   use lfric_xios_file_mod,    only: lfric_xios_file_type, OPERATION_ONCE
   use log_mod,                only: log_event, log_scratch_space, &
                                     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR
+  use mesh_mod,               only: mesh_type
+
+  use base_mesh_config_mod, only: geometry_spherical,      &
+                                  geometry_planar,         &
+                                  topology_fully_periodic, &
+                                  topology_non_periodic
 
   implicit none
 
@@ -54,7 +61,33 @@ contains
     character(len=str_def)          :: checkpoint_id
     integer(i_def) :: ts_start, ts_end, t_cp, freq_ts
 
+    type(mesh_type), pointer :: mesh
+
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
     call log_event( 'io_demo: Setting up checkpoint I/O', LOG_LEVEL_DEBUG )
+
+    mesh => chi(1)%get_mesh()
+    if (mesh%is_geometry_spherical()) then
+      geometry = geometry_spherical
+    else
+      geometry = geometry_planar
+    end if
+
+    if (mesh%is_topology_periodic()) then
+      topology = topology_fully_periodic
+    else if (mesh%is_topology_non_periodic()) then
+      topology = topology_non_periodic
+    else
+      call log_event( 'Unsupported mesh topology', &
+                      log_level_error )
+    end if
+
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     ts_start = modeldb%calendar%parse_instance(modeldb%config%time%timestep_start())
     ts_end   = modeldb%calendar%parse_instance(modeldb%config%time%timestep_end())
@@ -125,8 +158,10 @@ contains
     ! Add checkpoint context to clock events so that it is advanced at each timestep
     event_actor_ptr => cp_context
     context_advance => advance
-    call cp_context%initialise_xios_context( modeldb%mpi%get_comm(), chi, panel_id, &
-                                             modeldb%clock, modeldb%calendar )
+    call cp_context%initialise_xios_context(                   &
+                        modeldb%mpi%get_comm(), chi, panel_id, &
+                        modeldb%clock, modeldb%calendar,       &
+                        geometry, topology, coord_system, scaled_radius )
 
     call modeldb%clock%add_event(context_advance, event_actor_ptr)
     call cp_context%set_active(.true.)

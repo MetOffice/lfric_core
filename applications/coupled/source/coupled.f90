@@ -50,7 +50,8 @@ program coupled
   call init_config( filename, coupled_required_namelists, &
                     config=modeldb%config )
 
-  call init_logger( modeldb%mpi%get_comm(), &
+  call init_logger( modeldb%config, &
+                    modeldb%mpi%get_comm(), &
                     program_name//"_"//cpl_component_name )
 
   write(log_scratch_space,'(A)')                          &
