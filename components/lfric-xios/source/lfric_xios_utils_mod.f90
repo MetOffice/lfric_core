@@ -7,29 +7,30 @@
 !>
 module lfric_xios_utils_mod
 
-  use constants_mod,        only: i_def, r_def, str_def, str_long
-  use file_mod,             only: FILE_OP_OPEN, FILE_MODE_READ
-  use lfric_ncdf_dims_mod,  only: lfric_ncdf_dims_type
-  use lfric_ncdf_field_mod, only: lfric_ncdf_field_type
-  use lfric_ncdf_file_mod,  only: lfric_ncdf_file_type
-  use lfric_mpi_mod,        only: global_mpi
-  use lfric_xios_field_mod, only: lfric_xios_field_type
-  use log_mod,              only: log_event, log_scratch_space, &
-                                  LOG_LEVEL_ERROR, LOG_LEVEL_INFO, &
-                                  LOG_LEVEL_TRACE
-  use mesh_mod,             only: mesh_type
-  use xios,                 only: xios_date, xios_duration,        &
-                                  xios_get_time_origin,            &
-                                  xios_get_year_length_in_seconds, &
-                                  xios_date_convert_to_seconds,    &
-                                  operator(<), operator(+)
+  use constants_mod,            only: i_def, r_def, str_def, str_long
+  use file_mod,                 only: FILE_OP_OPEN, FILE_MODE_READ
+  use lfric_ncdf_dims_mod,      only: lfric_ncdf_dims_type
+  use lfric_ncdf_field_mod,     only: lfric_ncdf_field_type
+  use lfric_ncdf_file_mod,      only: lfric_ncdf_file_type
+  use lfric_mpi_mod,            only: global_mpi
+  use lfric_xios_constants_mod, only: lx_year, lx_month, lx_day, lx_second
+  use lfric_xios_field_mod,     only: lfric_xios_field_type
+  use log_mod,                  only: log_event, log_scratch_space, &
+                                      LOG_LEVEL_ERROR, LOG_LEVEL_INFO, &
+                                      LOG_LEVEL_TRACE
+  use mesh_mod,                 only: mesh_type
+  use xios,                     only: xios_date, xios_duration,        &
+                                      xios_get_time_origin,            &
+                                      xios_get_year_length_in_seconds, &
+                                      xios_date_convert_to_seconds,    &
+                                      operator(<), operator(+)
 
 
   implicit none
   private
   public :: parse_date_as_xios, seconds_from_date, &
             set_prime_io_mesh, prime_io_mesh_is,   &
-            read_time_data
+            read_time_data, duration_from_enum
 
   integer(i_def), private, allocatable :: prime_io_mesh_ids(:)
 
@@ -171,6 +172,9 @@ module lfric_xios_utils_mod
     type(lfric_ncdf_dims_type)  :: time_dim
     type(lfric_ncdf_field_type) :: time_var
 
+    call log_event( "Reading time data from file ["//trim(file_path)//"]", &
+                    LOG_LEVEL_TRACE )
+
     if (global_mpi%get_comm_rank() == 0) then
       file_ncdf = lfric_ncdf_file_type( trim(file_path)//".nc", &
                                         open_mode=FILE_OP_OPEN, &
@@ -193,7 +197,6 @@ module lfric_xios_utils_mod
       time_dim = lfric_ncdf_dims_type(trim(dim_id), file_ncdf)
       n_t = time_dim%get_size()
       allocate( input_data( n_t ) )
-      allocate( time_data( n_t ) )
 
       ! Read the time data from the ancil file
       time_var = lfric_ncdf_field_type(trim(var_id), file_ncdf)
@@ -227,6 +230,7 @@ module lfric_xios_utils_mod
     call global_mpi%broadcast(input_data, n_t_buf(1), 0)
     call global_mpi%broadcast(time_meta_buf, size(time_meta_buf, 1)*str_def, 0)
 
+    allocate(time_data(n_t_buf(1)))
     ref_date_str = time_meta_buf(1)
     time_units = time_meta_buf(2)
     ref_date = parse_date_as_xios(trim(adjustl(ref_date_str)))
@@ -262,5 +266,33 @@ module lfric_xios_utils_mod
     end if
 
   end function read_time_data
+
+
+  !> @brief  Construct an XIOS duration object from an integer time enum
+  !!
+  !> @param[in] time_enum  The integer time enum to be converted to an XIOS duration object
+  function  duration_from_enum(time_enum) result(duration)
+
+    implicit none
+
+    integer(i_def), intent(in) :: time_enum
+    type(xios_duration)        :: duration
+
+    duration = xios_duration(0, 0, 0, 0, 0, 0)
+
+    if (mod(time_enum, lx_year) == 0) then
+      duration%year = time_enum / lx_year
+    else if (mod(time_enum, lx_month) == 0) then
+      duration%month = time_enum / lx_month
+    else if (mod(time_enum, lx_day) == 0) then
+      duration%day = time_enum / lx_day
+    else if (mod(time_enum, lx_second) == 0) then
+      duration%second = time_enum / lx_second
+    else
+      call log_event( "Unable to construct XIOS duration from time enum", &
+                      log_level_error )
+    end if
+
+  end function duration_from_enum
 
 end module lfric_xios_utils_mod

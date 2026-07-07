@@ -77,7 +77,7 @@ module mesh_mod
     real(r_def) :: domain_base_height
 
     !> Label for the type of extrusion the mesh has
-    integer(i_def) :: extrusion_id
+    integer(i_def) :: extrusion_id = imdi
 
     !> Non-dimensional vertical coordinate eta[0,1], eta(0:nlayers)
     real(r_def), allocatable :: eta(:)
@@ -2586,9 +2586,10 @@ contains
 
     class(mesh_type), intent(in) :: self
 
-    logical (l_def) :: answer
+    logical(l_def) :: answer
 
-    answer = self%local_mesh%is_topology_periodic()
+    answer = .false.
+    answer = self%local_mesh%is_topology_non_periodic()
 
   end function is_topology_non_periodic
 
@@ -2608,6 +2609,7 @@ contains
 
     logical (l_def) :: answer
 
+    answer = .false.
     answer = self%local_mesh%is_topology_channel()
 
   end function is_topology_channel
@@ -2626,6 +2628,7 @@ contains
 
     logical (l_def) :: answer
 
+    answer = .false.
     answer = self%local_mesh%is_topology_periodic()
 
   end function is_topology_periodic
