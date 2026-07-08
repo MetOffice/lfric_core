@@ -126,7 +126,7 @@ subroutine consist_w2h_to_sh_w2h_code_real32(   nlayers_sh,        &
     ! Loop over all interior layers of shifted mesh
     do k = 1, nlayers_sh - 2
       field_w2h_sh(map_w2h_sh(df)+k) =                                         &
-          0.5_real32 * field_w2h(map_w2h(df)+k-1)                            &
+          0.5_real32 * field_w2h(map_w2h(df)+k-1)                              &
           + 0.5_real32 * field_w2h(map_w2h(df)+k)
     end do
 
@@ -184,7 +184,7 @@ subroutine consist_w2h_to_sh_w2h_code_real64(   nlayers_sh,        &
     ! Loop over all interior layers of shifted mesh
     do k = 1, nlayers_sh - 2
       field_w2h_sh(map_w2h_sh(df)+k) =                                         &
-          0.5_real64 * field_w2h(map_w2h(df)+k-1)                            &
+          0.5_real64 * field_w2h(map_w2h(df)+k-1)                              &
           + 0.5_real64 * field_w2h(map_w2h(df)+k)
     end do
 
