@@ -2,9 +2,9 @@
 <simulation>
 
   <context id = "lbc_demo:diags">
-    <axis_definition  src="../metadata/axis_dictionary.xml"/>
-    <grid_definition  src="../metadata/grid_dictionary.xml"/>
-    <field_definition src="../metadata/field_dictionary.xml"/>
+    <axis_definition  src="metadata/axis_dictionary.xml"/>
+    <grid_definition  src="metadata/grid_dictionary.xml"/>
+    <field_definition src="metadata/field_dictionary.xml"/>
 
     <file_definition type="one_file" time_counter="none">
       <file id="diagnostics" name="diagnostics" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
@@ -24,9 +24,9 @@
 
 
   <context id = "lbc_demo:lbcs">
-    <axis_definition  src="../metadata/axis_dictionary.xml"/>
-    <grid_definition  src="../metadata/grid_dictionary.xml"/>
-    <field_definition src="../metadata/field_dictionary.xml"/>
+    <axis_definition  src="metadata/axis_dictionary.xml"/>
+    <grid_definition  src="metadata/grid_dictionary.xml"/>
+    <field_definition src="metadata/field_dictionary.xml"/>
 
     <file_definition type="one_file" time_counter="none">
       <file id="lbcs_out" name="lbcs_out" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
@@ -44,18 +44,6 @@
     </file_definition>
   </context>
 
-  <context id = "xios">
-    <variable_definition>
-      <variable_group id = "buffer">
-        <variable id = "optimal_buffer_size" type = "string" >performance</variable>
-      </variable_group>
-
-      <variable_group id = "parameters" >
-        <variable id = "using_server" type = "bool" >true</variable>
-        <variable id = "info_level" type = "int" >50</variable>
-        <variable id = "print_file" type="bool">true</variable>
-      </variable_group>
-    </variable_definition>
-  </context>
+  <context src="etc/xios.xml"/>
 
 </simulation>
