@@ -3,9 +3,9 @@
 
   <context id = "simple_diffusion">
 
-   <axis_definition src="metadata/axis_dictionary.xml"/>
-   <grid_definition src="metadata/grid_dictionary.xml"/>
-   <field_definition src="metadata/field_dictionary.xml"/>
+   <axis_definition src="../metadata/axis_dictionary.xml"/>
+   <grid_definition src="../metadata/grid_dictionary.xml"/>
+   <field_definition src="../metadata/field_dictionary.xml"/>
 
    <file_definition
       type="one_file"
