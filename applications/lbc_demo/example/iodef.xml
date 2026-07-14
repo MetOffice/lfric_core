@@ -2,9 +2,9 @@
 <simulation>
 
   <context id = "lbc_demo:diags">
-    <axis_definition  src="../metadata/axis_dictionary.xml"/>
-    <grid_definition  src="../metadata/grid_dictionary.xml"/>
-    <field_definition src="../metadata/field_dictionary.xml"/>
+    <axis_definition  src="metadata/axis_dictionary.xml"/>
+    <grid_definition  src="metadata/grid_dictionary.xml"/>
+    <field_definition src="metadata/field_dictionary.xml"/>
 
     <file_definition type="one_file" time_counter="none">
       <file id="diagnostics" name="diagnostics" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
@@ -24,9 +24,9 @@
 
 
   <context id = "lbc_demo:lbcs">
-    <axis_definition  src="../metadata/axis_dictionary.xml"/>
-    <grid_definition  src="../metadata/grid_dictionary.xml"/>
-    <field_definition src="../metadata/field_dictionary.xml"/>
+    <axis_definition  src="metadata/axis_dictionary.xml"/>
+    <grid_definition  src="metadata/grid_dictionary.xml"/>
+    <field_definition src="metadata/field_dictionary.xml"/>
 
     <file_definition type="one_file" time_counter="none">
       <file id="lbcs_out" name="lbcs_out" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
