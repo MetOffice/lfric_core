@@ -21,7 +21,7 @@ import pytest
 # allows strings that start with:
 # 'metadata/' etc/' './' '../metadata' '$SOURCE_ROOT/'
 # followed by alphabetic characters only
-security_re = re.compile(r'^(metadata/|etc/|\./|../metadata/|\$SOURCE_ROOT/)'
+security_re = re.compile(r'^(metadata/|etc/|\./|\$SOURCE_ROOT/)'
                          r'[a-zA-Z]+\w')
 
 def src_replace(parent, path):

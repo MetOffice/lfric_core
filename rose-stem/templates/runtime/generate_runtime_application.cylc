@@ -34,7 +34,7 @@
 {% set restart_stem_name = checkpoint_dir~"/restart_"~task_family~"-" %}
 
 {# Set the pre-script command for canned tests #}
-{% set canned_prescript = "cp -r $SOURCE_DIRECTORY/"~task_values["example_dir"]~"/* "~
+{% set canned_prescript = "cp -rL $SOURCE_DIRECTORY/"~task_values["example_dir"]~"/* "~
                           "$CYLC_TASK_WORK_DIR" %}
 
 {# Set the post script command - should be a list of strings #}
