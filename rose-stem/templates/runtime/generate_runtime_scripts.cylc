@@ -56,6 +56,14 @@
         inherit={{inherit.str|upper}}
         script="rose task-run --app-key=rose-stem_lint_check"
 
+{% elif "validate_iodef" in task %}
+
+        inherit={{inherit.str|upper}}
+        script="rose task-run --app-key=validate_iodef"
+        [[[environment]]]
+            SOURCE_PATH = $SOURCE_ROOT/lfric_core
+        
+
 {% elif "validate_rose_meta" in task %}
 
         inherit={{inherit.str|upper}}
