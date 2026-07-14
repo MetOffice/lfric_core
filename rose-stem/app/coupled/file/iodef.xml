@@ -55,6 +55,6 @@
 
   </context>
 
-  <context src="etc/xios_coupled.xml"/>
+  <context id="xios" src="./etc/xios_coupled.xml"/>
 
 </simulation>
