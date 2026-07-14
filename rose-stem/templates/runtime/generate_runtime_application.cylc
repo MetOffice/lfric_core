@@ -35,7 +35,11 @@
 
 {# Set the pre-script command for canned tests #}
 {% set canned_prescript = "cp -rL $SOURCE_DIRECTORY/"~task_values["example_dir"]~"/* "~
-                          "$CYLC_TASK_WORK_DIR" %}
+                          "$CYLC_TASK_WORK_DIR ; "~
+                          "rose env-cat -o $CYLC_TASK_WORK_DIR/etc/tmp_xios.xml "~
+                          "$CYLC_TASK_WORK_DIR/etc/xios.xml ; "~
+                          "mv $CYLC_TASK_WORK_DIR/etc/tmp_xios.xml "~
+                          "$CYLC_TASK_WORK_DIR/etc/xios.xml " %}
 
 {# Set the post script command - should be a list of strings #}
 {% set post_script_commands = [
