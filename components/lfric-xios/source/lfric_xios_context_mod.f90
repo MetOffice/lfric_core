@@ -150,8 +150,10 @@ contains
     ! Run XIOS setup routines
     call init_xios_calendar( config, model_clock, calendar, &
                              zero_start, this%context_clock_step )
+    call log_event('XIOS calendar initialised', log_level_debug)
     call init_xios_dimensions( config, chi, panel_id, &
                                alt_coords, alt_panel_ids )
+    call log_event('XIOS dimensions initialised', log_level_debug)
 
     ! Obtain information on whether the mesh is ugrid and planar here?
     ! This is to inform decisions on file post processing work around code path.
@@ -167,6 +169,7 @@ contains
     end if
 
     if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.init_context')
+    call log_event('XIOS context initialised', log_level_debug)
 
   end subroutine initialise_xios_context
 

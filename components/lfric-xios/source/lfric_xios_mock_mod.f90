@@ -36,8 +36,8 @@ module lfric_xios_mock_mod
             xios_get_file_attr,                   &
             xios_is_valid_field,                  &
             xios_is_defined_field_attr,           &
-            xios_zoom_axis,                       &
-            xios_is_valid_zoom_axis,              &
+            xios_extract_axis,                       &
+            xios_is_valid_extract_axis,              &
             xios_get_handle,                      &
             xios_set_attr,                        &
             xios_setvar,                          &
@@ -45,9 +45,9 @@ module lfric_xios_mock_mod
             get_latest_data,                      &
             lfric_xios_mock_pull_in
 
-type :: xios_zoom_axis
+type :: xios_extract_axis
   ! intentionally left empty
-end type xios_zoom_axis
+end type xios_extract_axis
 
 !> Public mock XIOS data type used to hold data for read/write testing
 type(xios_mock_data_type), public :: mock_xios_data
@@ -449,7 +449,7 @@ real(real64), private :: var_var1
   !> Mock zoom axis existence test
   !> @param[in]    axis_id  ID of test axis
   !> @return                True iff test axis exists
-  function xios_is_valid_zoom_axis(axis_id) result(status)
+  function xios_is_valid_extract_axis(axis_id) result(status)
     implicit none
     character(*), intent(in) :: axis_id
 
@@ -461,7 +461,7 @@ real(real64), private :: var_var1
     case default
       status = .false.
     end select
-  end function xios_is_valid_zoom_axis
+  end function xios_is_valid_extract_axis
 
   !> Mock XIOS handle creator
   !> @param[in]    unique_id  ID of test object
@@ -469,7 +469,7 @@ real(real64), private :: var_var1
   subroutine xios_get_handle(unique_id, axis_hdl)
     implicit none
     character(*), intent(in) :: unique_id
-    type(xios_zoom_axis), optional, intent(inout) :: axis_hdl
+    type(xios_extract_axis), optional, intent(inout) :: axis_hdl
 
     select case (unique_id)
     case ('zoom1')
@@ -484,7 +484,7 @@ real(real64), private :: var_var1
   !> @param[out]   axis_hdl   Test zoom axis handle
   subroutine xios_set_attr(handle, begin, n)
     implicit none
-    type(xios_zoom_axis), intent(inout) :: handle
+    type(xios_extract_axis), intent(inout) :: handle
     integer(i_def), optional, intent(in) :: begin
     integer(i_def), optional, intent(in) :: n
     ! intentionally left empty
