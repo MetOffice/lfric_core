@@ -33,6 +33,7 @@ program lfric_xios_context_test
   call io_context%initialise_xios_context( test_db%config, test_db%comm,  &
                                            test_db%chi, test_db%panel_id, &
                                            test_db%clock, test_db%calendar )
+  call io_context%close_context_definition()
 
   deallocate(io_context)
 
