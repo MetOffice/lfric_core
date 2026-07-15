@@ -8,6 +8,8 @@
         <variable id = "using_server" type = "bool" >$XIOS_SERVER_MODE_XML</variable>
         <variable id = "info_level" type = "int" >50</variable>
         <variable id = "print_file" type="bool">true</variable>
+        <variable id="using_oasis" type="bool">true</variable>
+        <variable id="oasis_codes_id" type="string" >lfric</variable>
       </variable_group>
     </variable_definition>
   </context>
