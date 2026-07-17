@@ -286,12 +286,12 @@ contains
                             trim(file_id)//init_suffix )
 
       call xios_set_attr( initial_read_file, name=trim(adjustl(file_path)), &
-                                              output_freq=timestep_duration, &
-                                              mode="read",                   &
-                                              type="one_file",               &
-                                              record_offset=record_offset,  &
-                                              time_counter_name="time",      &
-                                              enabled=.true. )
+                                             output_freq=timestep_duration, &
+                                             mode="read",                   &
+                                             type="one_file",               &
+                                             record_offset=record_offset,   &
+                                             time_counter_name="time",      &
+                                             enabled=.true. )
 
       ! Move on record offset for next read
       record_offset = record_offset + 1

@@ -6,7 +6,7 @@
 !> @brief Sets up temporal reading for the IO_demo app
 module io_demo_temporal_mod
 
-  use constants_mod,          only: i_def, str_max_filename
+  use constants_mod,          only: i_def, r_def, str_max_filename
   use driver_modeldb_mod,     only: modeldb_type
   use event_mod,              only: event_action
   use event_actor_mod,        only: event_actor_type
@@ -14,8 +14,8 @@ module io_demo_temporal_mod
   use field_collection_mod,   only: field_collection_type
   use field_parent_mod,       only: read_interface, write_interface
   use file_mod,               only: FILE_MODE_WRITE, FILE_MODE_READ
-  use function_space_collection_mod,          only : function_space_collection
-  use function_space_mod,                     only : function_space_type
+  use function_space_collection_mod, only: function_space_collection
+  use function_space_mod,            only: function_space_type
   use fs_continuity_mod,      only: Wtheta
   use io_context_mod,         only: io_context_type
   use linked_list_mod,        only: linked_list_type
@@ -88,7 +88,17 @@ contains
     class(event_actor_type), pointer :: event_actor_ptr
     procedure(event_action), pointer :: context_advance
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
     call log_event( 'io_demo: Setting up temporal I/O', LOG_LEVEL_DEBUG )
+
+    geometry      = modeldb%config%base_mesh%geometry()
+    topology      = modeldb%config%base_mesh%topology()
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     temporal_fields => modeldb%fields%get_field_collection("temporal_fields")
 
@@ -113,7 +123,8 @@ contains
                                     fields_in_file = temporal_fields ) )
 
     if (modeldb%config%io%write_diag()) then
-       ! Set up definition of temporal write file - this will contain the time series output of the model
+       ! Set up definition of temporal write file - this will contain the
+       ! time-series output of the model
        call file_list%insert_item( &
                       lfric_xios_file_type( "io_demo_temporal_diag",          &
                                             xios_id = "temporal_diag",        &
@@ -124,8 +135,11 @@ contains
     end if
 
     ! Initialise the XIOS context attached to the temporal context object
-    call temporal_context%initialise_xios_context( modeldb%mpi%get_comm(), chi, panel_id, &
-                                             modeldb%clock, modeldb%calendar )
+    call temporal_context%initialise_xios_context(                   &
+                              modeldb%mpi%get_comm(), chi, panel_id, &
+                              modeldb%clock, modeldb%calendar,       &
+                              geometry, topology, coord_system,      &
+                              scaled_radius )
 
     ! Add context object to the model clock's event loop, this means that the
     ! temporal context will be advanced at each model time step, and the

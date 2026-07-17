@@ -15,8 +15,9 @@
 module sci_compute_sample_u_ops_kernel_mod
 
   use argument_mod,            only : arg_type, func_type,         &
-                                      GH_FIELD, GH_SCALAR, GH_REAL,&
-                                      GH_INTEGER, GH_OPERATOR,     &
+                                      GH_FIELD, GH_SCALAR,         &
+                                      GH_REAL, GH_INTEGER,         &
+                                      GH_OPERATOR,                 &
                                       GH_INC, GH_READ, GH_WRITE,   &
                                       ANY_DISCONTINUOUS_SPACE_3,   &
                                       ANY_SPACE_9,                 &
@@ -33,10 +34,7 @@ module sci_compute_sample_u_ops_kernel_mod
   use coord_transform_mod,     only : sphere2cart_vector
   use reference_element_mod,   only : W, S, N, E, T, B
 
-  use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       geometry_planar
-  use planet_config_mod,         only: scaled_radius
+  use base_mesh_config_mod, only: geometry_spherical, geometry_planar
 
   implicit none
 
@@ -50,20 +48,22 @@ module sci_compute_sample_u_ops_kernel_mod
   !>
   type, public, extends(kernel_type) :: compute_sample_u_ops_kernel_type
     private
-    type(arg_type) :: meta_args(7) = (/                                         &
-         arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, W3),               &! u_lon_op
-         arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, W3),               &! u_lat_op
-         arg_type(GH_OPERATOR,  GH_REAL, GH_WRITE, W2broken, WTHETA),           &! u_rad_op
-         arg_type(GH_FIELD*3,   GH_REAL, GH_READ,  ANY_SPACE_9),                &! chi1, chi2, chi3
-         arg_type(GH_FIELD,     GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3),  &! panel_id
-         arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                              &! geometry
-         arg_type(GH_SCALAR, GH_INTEGER, GH_READ)                               &! topology
+    type(arg_type) :: meta_args(9) = (/                                       &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              & ! u_lon_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, W3),              & ! u_lat_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2broken, WTHETA),          & ! u_rad_op
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               & ! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                           & ! scaled_radius
          /)
-    type(func_type) :: meta_funcs(1) = (/                                      &
-         func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                       &
+    type(func_type) :: meta_funcs(1) = (/                                     &
+         func_type(ANY_SPACE_9, GH_BASIS, GH_DIFF_BASIS)                      &
          /)
-    type(reference_element_data_type), dimension(1) ::                         &
-    meta_reference_element =                                                   &
+    type(reference_element_data_type), dimension(1) ::                        &
+    meta_reference_element =                                                  &
       (/ reference_element_data_type(normals_to_faces) /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_EVALUATOR
@@ -93,6 +93,8 @@ contains
 !> @param[in]     panel_id                 A field giving the ID for mesh panels
 !> @param[in]     geometry                 Mesh geometry enumeration value
 !> @param[in]     topology                 Mesh topology enumeration value
+!> @param[in]     coord_system             Finite-Element coord-system enumeration value
+!> @param[in]     scaled_radius            Planet scaled radius
 !> @param[in]     ndf_w2b                  Number of DoFs per cell for broken W2
 !> @param[in]     ndf_w3                   Number of DoFs per cell for W3
 !> @param[in]     ndf_wt                   Number of DoFs per cell for Wtheta
@@ -108,19 +110,18 @@ contains
 !> @param[in]     map_pid                  DoF map for the column's base cell for panel ID field
 !> @param[in]     nfaces                   Number of cell faces
 !> @param[in]     face_normals             The normal vectors to each face
-subroutine compute_sample_u_ops_code( col, nlayers,                   &
-                                      ncell_3d_1, u_lon_op,           &
-                                      ncell_3d_2, u_lat_op,           &
-                                      ncell_3d_3, u_rad_op,           &
-                                      chi1, chi2, chi3,               &
-                                      panel_id,                       &
-                                      geometry, topology,             &
-                                      ndf_w2b, ndf_w3, ndf_wt,        &
-                                      ndf_chi, undf_chi, map_chi,     &
-                                      chi_basis, chi_diff_basis,      &
-                                      ndf_pid, undf_pid, map_pid,     &
-                                      nfaces, face_normals            &
-                                    )
+subroutine compute_sample_u_ops_code( col, nlayers,                 &
+                                      ncell_3d_1, u_lon_op,         &
+                                      ncell_3d_2, u_lat_op,         &
+                                      ncell_3d_3, u_rad_op,         &
+                                      chi1, chi2, chi3,             &
+                                      panel_id, geometry, topology, &
+                                      coord_system, scaled_radius,  &
+                                      ndf_w2b, ndf_w3, ndf_wt,      &
+                                      ndf_chi, undf_chi, map_chi,   &
+                                      chi_basis, chi_diff_basis,    &
+                                      ndf_pid, undf_pid, map_pid,   &
+                                      nfaces, face_normals )
 
   implicit none
 
@@ -142,13 +143,16 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
   ! Fields
   real(kind=r_def), dimension(undf_pid), intent(in) :: panel_id
   real(kind=r_def), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-  integer(kind=i_def),                   intent(in) :: geometry
-  integer(kind=i_def),                   intent(in) :: topology
 
   ! Operators
   real(kind=r_def), dimension(ncell_3d_1,ndf_w2b,ndf_w3), intent(inout) :: u_lon_op
   real(kind=r_def), dimension(ncell_3d_2,ndf_w2b,ndf_w3), intent(inout) :: u_lat_op
   real(kind=r_def), dimension(ncell_3d_3,ndf_w2b,ndf_wt), intent(inout) :: u_rad_op
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def) :: df_w2, df_wt, df_chi, k, ipanel, cell_3d
@@ -256,8 +260,9 @@ subroutine compute_sample_u_ops_code( col, nlayers,                   &
         end do
 
         ! Calculate (lon,lat,r) coordinates for W2 points in this cell
-        call chi2llr(chi1_w2(df_w2), chi2_w2(df_w2), chi3_w2(df_w2), ipanel, &
-                     llr(1), llr(2), llr(3))
+        call chi2llr( chi1_w2(df_w2), chi2_w2(df_w2), chi3_w2(df_w2), ipanel, &
+                      geometry, topology, coord_system, scaled_radius,        &
+                      llr(1), llr(2), llr(3) )
 
         ! Rotate (lon,lat,r) unit vectors to (X,Y,Z) coordinates
         lon_vector_xyz(df_w2,:) = sphere2cart_vector(lon_vector_llr, llr)

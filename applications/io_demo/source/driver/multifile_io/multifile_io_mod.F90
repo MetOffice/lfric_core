@@ -9,7 +9,7 @@
 module multifile_io_mod
 
   use calendar_mod,            only: calendar_type
-  use constants_mod,           only: str_def, i_def
+  use constants_mod,           only: str_def, i_def, r_def
   use driver_model_data_mod,   only: model_data_type
   use driver_modeldb_mod,      only: modeldb_type
   use empty_io_context_mod,    only: empty_io_context_type
@@ -121,9 +121,19 @@ contains
 
     procedure(event_action), pointer :: context_advance
 
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
     nullify(mesh)
     nullify(chi)
     nullify(panel_id)
+
+    geometry      = modeldb%config%base_mesh%geometry()
+    topology      = modeldb%config%base_mesh%topology()
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     call iter%initialise(modeldb%config%multifile_io)
     do while (iter%has_next())
@@ -156,10 +166,11 @@ contains
 
         allocate(tmp_calendar, source=step_calendar_type(time_origin, time_start))
 
-        call io_context%initialise_xios_context( modeldb%mpi%get_comm(),      &
-                                                 chi, panel_id,               &
-                                                 modeldb%clock, tmp_calendar, &
-                                                 start_at_zero=.true. )
+        call io_context%initialise_xios_context(                   &
+                            modeldb%mpi%get_comm(), chi, panel_id, &
+                            modeldb%clock, tmp_calendar, geometry, &
+                            topology, coord_system, scaled_radius, &
+                            start_at_zero=.true. )
 
         call io_context%close_context_definition()
 

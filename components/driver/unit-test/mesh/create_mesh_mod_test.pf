@@ -19,61 +19,46 @@ module create_mesh_mod_test
   use mesh_mod,                   only : mesh_type
   use extrusion_mod,              only : extrusion_type, &
                                          PRIME_EXTRUSION
-  use extrusion_config_mod,       only : METHOD_UNIFORM
-  use feign_config_mod,           only : feign_multigrid_config, &
-                                         feign_partitioning_config
   use create_mesh_mod,            only : create_extrusion, &
                                          create_mesh
   use panel_decomposition_mod,    only : custom_decomposition_type
+
+  use extrusion_config_mod,    only: method_uniform
+  use partitioning_config_mod, only: panel_decomposition_auto, &
+                                     partitioner_planar
+
   use pfunit
 
   implicit none
 
   private
-  public :: test_single_cell_tiling
-
-  @TestCase
-  type, extends(TestCase), public :: create_mesh_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-  end type create_mesh_test_type
+  public :: set_up, tear_down, test_single_cell_tiling
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
     implicit none
 
-    class(create_mesh_test_type), intent(inout) :: this
-
-    mesh_collection = mesh_collection_type()
+    mesh_collection        = mesh_collection_type()
     global_mesh_collection = global_mesh_collection_type()
-    local_mesh_collection = local_mesh_collection_type()
+    local_mesh_collection  = local_mesh_collection_type()
 
-    call feign_multigrid_config( chain_mesh_tags        = [ 'dummy' ], &
-                                 multigrid_chain_nitems = 1_i_def,     &
-                                 n_coarsesmooth         = 1_i_def,     &
-                                 n_postsmooth           = 1_i_def,     &
-                                 n_presmooth            = 1_i_def,     &
-                                 smooth_relaxation      = 0.0_r_def )
-
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
     implicit none
 
-    class(create_mesh_test_type), intent(inout) :: this
-
-    call mesh_collection%clear()
-    call global_mesh_collection%clear()
     call local_mesh_collection%clear()
+    call global_mesh_collection%clear()
+    call mesh_collection%clear()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine initialise_mesh_collections( filename, mesh_name, xyprocs, &
@@ -148,14 +133,10 @@ contains
   ! Test 1x1 tiling only, which is equivalent to colouring - other tiling
   ! setups require MPI
   @Test
-  subroutine test_single_cell_tiling( this )
-
-    use partitioning_config_mod, only : panel_decomposition_auto, &
-                                        partitioner_planar
+  subroutine test_single_cell_tiling()
 
     implicit none
 
-    class(create_mesh_test_type), intent(inout) :: this
     class(extrusion_type),          allocatable :: extrusion
     type(mesh_type), pointer                    :: mesh
     integer(i_def)                              :: xyprocs(2)
@@ -176,19 +157,6 @@ contains
                                       max_stencil_depth, generate_inner_halos, &
                                       0_i_def, 1_i_def)
 
-    call feign_partitioning_config( coarsen_multigrid_tiles   = .false., &
-                                    generate_inner_halos      = .true.,  &
-                                    inner_halo_tiles          = .false., &
-                                    max_tiled_multigrid_level = 1_i_def, &
-                                    panel_decomposition       =          &
-                                               panel_decomposition_auto, &
-                                    panel_xproc               = 1_i_def, &
-                                    panel_yproc               = 1_i_def, &
-                                    partitioner               =          &
-                                                     partitioner_planar, &
-                                    tile_size_x               = 1_i_def, &
-                                    tile_size_y               = 1_i_def )
-
     allocate( extrusion, source=create_extrusion( METHOD_UNIFORM,   &
                                                   100.0_r_def,      &
                                                   10000.0_r_def,    &
@@ -197,7 +165,12 @@ contains
 
     ! Check that exactly one mesh is added to the collection
     @assertEqual( mesh_collection%n_meshes(), 0 )
-    call create_mesh( mesh_name, extrusion )
+
+    call create_mesh( mesh_name, extrusion, &
+                      inner_halo_tiles=.false., &
+                      tile_size=[1,1] )
+
+
     @assertEqual( mesh_collection%n_meshes(), 1 )
 
     ! Check that mesh name is correct

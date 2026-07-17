@@ -9,7 +9,7 @@ module lfric_xios_context_mod
 
   use calendar_mod,         only : calendar_type
   use clock_mod,            only : clock_type
-  use constants_mod,        only : i_def, &
+  use constants_mod,        only : i_def, r_def, &
                                    r_second, i_timestep, &
                                    l_def
   use field_mod,            only : field_type
@@ -90,16 +90,25 @@ contains
 
   !> @brief Set up an XIOS context.
   !>
-  !> @param [in]     communicator      MPI communicator used by context.
-  !> @param [in]     chi               Array of coordinate fields
-  !> @param [in]     panel_id          Panel ID field
-  !> @param [in]     model_clock       The model clock.
-  !> @param [in]     calendar          The model calendar.
-  !> @param [in]     alt_coords        Array of coordinate fields for alternative meshes
-  !> @param [in]     alt_panel_ids     Panel ID fields for alternative meshes
-  subroutine initialise_xios_context( this, communicator,    &
+  !> @param [in]  communicator   MPI communicator used by context.
+  !> @param [in]  chi            Array of coordinate fields
+  !> @param [in]  panel_id       Panel ID field
+  !> @param [in]  model_clock    The model clock.
+  !> @param [in]  calendar       The model calendar.
+  !> @param [in]  before_close   Routine to be called before context closes
+  !> @param [in]  geometry       Mesh geometry enumeration value.
+  !> @param [in]  topology       Mesh topology enumeration value.
+  !> @param [in]  coord_system   Finite-element coord-system enumeration value
+  !> @param [in]  scaled_radius  Planet scaled radius
+  !> @param [in]  alt_coords     Array of coordinate fields for alternative meshes
+  !> @param [in]  alt_panel_ids  Panel ID fields for alternative meshes
+  subroutine initialise_xios_context( this,                  &
+                                      communicator,          &
                                       chi, panel_id,         &
                                       model_clock, calendar, &
+                                      geometry, topology,    &
+                                      coord_system,          &
+                                      scaled_radius,         &
                                       alt_coords,            &
                                       alt_panel_ids,         &
                                       start_at_zero )
@@ -107,16 +116,23 @@ contains
     implicit none
 
     class(lfric_xios_context_type), intent(inout) :: this
+
     type(lfric_comm_type),          intent(in)    :: communicator
     type(field_type),               intent(in)    :: chi(:)
     type(field_type),               intent(in)    :: panel_id
     type(model_clock_type),         intent(inout) :: model_clock
     class(calendar_type),           intent(in)    :: calendar
+
+    integer(i_def), intent(in) :: geometry
+    integer(i_def), intent(in) :: topology
+    integer(i_def), intent(in) :: coord_system
+    real(r_def),    intent(in) :: scaled_radius
+
     type(field_type),     optional, intent(in)    :: alt_coords(:,:)
     type(field_type),     optional, intent(in)    :: alt_panel_ids(:)
     logical,              optional, intent(in)    :: start_at_zero
 
-    type(mesh_type), pointer             :: mesh => null()
+    type(mesh_type), pointer :: mesh
     logical :: zero_start
     integer(tik) :: timing_id
 
@@ -138,8 +154,10 @@ contains
 
     ! Run XIOS setup routines
     call init_xios_calendar(model_clock, calendar, zero_start, this%context_clock_step)
+    call init_xios_dimensions( chi, panel_id, geometry, topology, &
+                               coord_system, scaled_radius,       &
+                               alt_coords, alt_panel_ids )
 
-    call init_xios_dimensions(chi, panel_id, alt_coords, alt_panel_ids)
     ! Obtain information on whether the mesh is ugrid and planar here?
     ! This is to inform decisions on file post processing work around code path.
     mesh => chi(1)%get_mesh()
@@ -147,6 +165,7 @@ contains
                     file_convention == file_convention_ugrid ) then
       this%ugrid_scaled_projected_coordinates = .true.
     end if
+
     if (this%filelist%get_length() > 0) call setup_xios_files(this%filelist)
 
     if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.init_context')

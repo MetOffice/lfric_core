@@ -38,7 +38,7 @@ class cli_mod_normal_test(Test):
         if out.strip() != self._INJECT:
             raise TestFailed(
                 'Expected filename "{expected}" but found "{found}"'.format(
-                    expected=self._INJECT, found=out.strip()
+                    expected=self._INJECT.strip(), found=out.strip()
                 )
             )
 

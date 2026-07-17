@@ -12,7 +12,8 @@
 module sci_w3_to_w2_displacement_kernel_mod
 
   use argument_mod,          only : arg_type, func_type,       &
-                                    GH_FIELD, GH_REAL,         &
+                                    GH_FIELD, GH_SCALAR,       &
+                                    GH_REAL, GH_INTEGER,       &
                                     GH_READ, GH_INC,           &
                                     ANY_SPACE_9,               &
                                     ANY_DISCONTINUOUS_SPACE_3, &
@@ -34,14 +35,18 @@ module sci_w3_to_w2_displacement_kernel_mod
   !> The type declaration for the kernel. Contains the metadata needed by the PSy layer
   type, public, extends(kernel_type) :: w3_to_w2_displacement_kernel_type
     private
-    type(arg_type) :: meta_args(4) = (/                                      &
-         arg_type(GH_FIELD,   GH_REAL, GH_INC,   W2H),                       &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ,  W3)                         &
+    type(arg_type) :: meta_args(8) = (/                                     &
+         arg_type(GH_FIELD,   GH_REAL, GH_INC,  W2H),                       & ! displacement
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               & ! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, W3),                        & ! dummy_w3
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          & ! scaled_radius
          /)
-    type(func_type) :: meta_funcs(1) = (/                                    &
-         func_type(ANY_SPACE_9, GH_BASIS)                                    &
+    type(func_type) :: meta_funcs(1) = (/                                   &
+         func_type(ANY_SPACE_9, GH_BASIS)                                   &
          /)
     integer :: operates_on = CELL_COLUMN
     integer :: gh_shape = GH_EVALUATOR
@@ -68,6 +73,10 @@ module sci_w3_to_w2_displacement_kernel_mod
   !> @param[in]     chi_3         The third coordinate field
   !> @param[in]     panel_id      ID for panels of the underlying mesh
   !> @param[in]     dummy_w3      An unused dummy field in W3
+  !> @param[in]     geometry      Mesh geometry enumeration value
+  !> @param[in]     topology      Mesh topology enumeration value
+  !> @param[in]     coord_system  Finite-Element coord-system enumeration value
+  !> @param[in]     scaled_radius Planet scaled radius
   !> @param[in]     ndf_w2h       Number of DoFs for W2H per cell
   !> @param[in]     undf_w2h      Number of unique DoFs for W2H per partition
   !> @param[in]     map_w2h       The DoF map for bottom layer cells for W2H
@@ -89,6 +98,10 @@ module sci_w3_to_w2_displacement_kernel_mod
                                          chi_3,         &
                                          panel_id,      &
                                          dummy_w3,      &
+                                         geometry,      &
+                                         topology,      &
+                                         coord_system,  &
+                                         scaled_radius, &
                                          ndf_w2h,       &
                                          undf_w2h,      &
                                          map_w2h,       &
@@ -128,6 +141,11 @@ module sci_w3_to_w2_displacement_kernel_mod
     real(kind=r_def),    intent(in)    :: basis_chi_w2h(1,ndf_chi,ndf_w2h)
     real(kind=r_def),    intent(in)    :: basis_chi_w3(1,ndf_chi,ndf_w3)
 
+    integer(kind=i_def), intent(in) :: geometry
+    integer(kind=i_def), intent(in) :: topology
+    integer(kind=i_def), intent(in) :: coord_system
+    real(kind=r_def),    intent(in) :: scaled_radius
+
     ! Vertical cell index
     integer(kind=i_def) :: df_w2h, df_w3, df_chi
     integer(kind=i_def) :: ipanel
@@ -157,7 +175,8 @@ module sci_w3_to_w2_displacement_kernel_mod
       chi3_at_dof = chi3_at_dof + &
         basis_chi_w3(1,df_chi,df_w3) * chi_3(map_chi(df_chi))
     end do
-    call chi2abr(chi1_at_dof, chi2_at_dof, chi3_at_dof, ipanel, &
+    call chi2abr(chi1_at_dof, chi2_at_dof, chi3_at_dof, ipanel,   &
+                 geometry, topology, coord_system, scaled_radius, &
                  alpha_w3, beta_w3, dummy_r)
 
     ! W2H points ---------------------------------------------------------------
@@ -175,7 +194,8 @@ module sci_w3_to_w2_displacement_kernel_mod
         chi3_at_dof = chi3_at_dof + &
           basis_chi_w2h(1,df_chi,df_w2h) * chi_3(map_chi(df_chi))
       end do
-      call chi2abr(chi1_at_dof, chi2_at_dof, chi3_at_dof, ipanel, &
+      call chi2abr(chi1_at_dof, chi2_at_dof, chi3_at_dof, ipanel,   &
+                   geometry, topology, coord_system, scaled_radius, &
                    alpha_w2h(df_w2h), beta_w2h(df_w2h), dummy_r)
 
     end do
