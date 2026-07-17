@@ -39,7 +39,12 @@ class vn32_t386(MacroUpgrade):
     AFTER_TAG = "vn3.2_t386"
 
     def upgrade(self, config, meta_config=None):
-        # Commands From: rose-meta/lfric-mesh_tools
+
+        # Renames meshes (mesh names and mesh maps) as
+        # planar geometry: l0_planar, l1_planar, l2_planar and l3_planar
+        # cubedsphere geometry: l0_cubedsphere, l1_cubedsphere, l2_cubedsphere, l3_cubedsphere
+        # and depending on the number of meshes
+        
         n_meshes = self.get_setting_value(config, ["namelist:mesh", "n_meshes"])
         if config.get_value(["namelist:planar_mesh"]) is not None:
             if n_meshes == "4":
@@ -146,6 +151,9 @@ class vn32_t386(MacroUpgrade):
                     "'l0_cubedsphere'",
                     forced=True,
                 )
+                
+        # Point to the correct parent mesh for LAM meshes
+        
         self.change_setting_value(
             config, ["namelist:planar_mesh", "lbc_parent_mesh"], "'l0_planar'"
         )
