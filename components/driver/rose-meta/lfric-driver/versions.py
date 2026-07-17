@@ -41,7 +41,10 @@ class vn32_t386(MacroUpgrade):
     def upgrade(self, config, meta_config=None):
         # Add settings
         topology = self.get_setting_value(config, ["namelist:base_mesh", "topology"])
-        if (topology == "'non_periodic'"):
+        partitioner = self.get_setting_value(
+            config, ["namelist:partitioning", "partitioner"]
+        )
+        if topology == "'non_periodic'" or partitioner == "'planar'":
             self.change_setting_value(
                  config,
                 ["namelist:base_mesh", "prime_mesh_name"],
