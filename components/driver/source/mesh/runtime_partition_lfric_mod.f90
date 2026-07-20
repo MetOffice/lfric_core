@@ -9,8 +9,8 @@
 module runtime_partition_lfric_mod
 
   use constants_mod,           only: i_def, l_def
-  use namelist_collection_mod, only: namelist_collection_type
-  use namelist_mod,            only: namelist_type
+  use config_mod,              only: config_type
+  use partitioning_nml_mod,    only: partitioning_nml_type
   use partition_mod,           only: partitioner_interface
   use runtime_partition_mod,   only: get_partition_strategy
   use panel_decomposition_mod, only: panel_decomposition_type,           &
@@ -34,53 +34,19 @@ module runtime_partition_lfric_mod
   private
   public :: get_partition_parameters
 
-  interface get_partition_parameters
-    procedure get_partition_parameters_cfg
-    procedure get_partition_parameters_nml
-  end interface get_partition_parameters
 
 contains
 
-subroutine get_partition_parameters_cfg( configuration,  &
-                                         mesh_selection, &
-                                         total_ranks,    &
-                                         decomposition,  &
-                                         partitioner_ptr )
-
-  implicit none
-
-  type(namelist_collection_type), intent(in) :: configuration
-
-  integer,        intent(in) :: mesh_selection
-  integer(i_def), intent(in) :: total_ranks
-
-  class(panel_decomposition_type), intent(inout), allocatable :: decomposition
-
-  type(namelist_type), pointer :: partitioning
-
-  procedure(partitioner_interface), intent(out), pointer :: partitioner_ptr
-
-  partitioning => configuration%get_namelist('partitioning')
-
-  call get_partition_parameters_nml( partitioning,     &
+subroutine get_partition_parameters( partitioning_nml, &
                                      mesh_selection,   &
                                      total_ranks,      &
                                      decomposition,    &
                                      partitioner_ptr )
 
-
-end subroutine get_partition_parameters_cfg
-
-subroutine get_partition_parameters_nml( partitioning,   &
-                                         mesh_selection, &
-                                         total_ranks,    &
-                                         decomposition,  &
-                                         partitioner_ptr )
-
   implicit none
 
 
-  type(namelist_type), intent(in), pointer :: partitioning
+  type(partitioning_nml_type), intent(in) :: partitioning_nml
 
   integer,        intent(in) :: mesh_selection
   integer(i_def), intent(in) :: total_ranks
@@ -91,31 +57,41 @@ subroutine get_partition_parameters_nml( partitioning,   &
 
   integer(i_def) :: panel_xproc, panel_yproc
 
-  integer :: panel_decomposition
+  integer(i_def) :: panel_decomposition
 
-  call partitioning%get_value( 'panel_decomposition', panel_decomposition )
+  panel_decomposition = partitioning_nml%panel_decomposition()
+  panel_xproc = partitioning_nml%panel_xproc()
+  panel_yproc = partitioning_nml%panel_yproc()
+
+  ! nvfortran does not properly support the polymorphic allocation, to fix it
+  ! deallocate the polymorphic class and allocate each concrete type inside
+  ! the select cases
+  if (allocated(decomposition)) deallocate(decomposition)
 
   select case (panel_decomposition)
 
   case ( panel_decomposition_auto )
+    allocate(auto_decomposition_type :: decomposition)
     decomposition = auto_decomposition_type()
 
   case ( panel_decomposition_row )
+    allocate(row_decomposition_type :: decomposition)
     decomposition = row_decomposition_type()
 
   case ( panel_decomposition_column )
+    allocate(column_decomposition_type :: decomposition)
     decomposition = column_decomposition_type()
 
   case ( panel_decomposition_custom )
-    call partitioning%get_value( 'panel_xproc', panel_xproc )
-    call partitioning%get_value( 'panel_yproc', panel_yproc )
+    allocate(custom_decomposition_type :: decomposition)
     decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
 
   case ( panel_decomposition_auto_nonuniform )
+    allocate(auto_nonuniform_decomposition_type :: decomposition)
     decomposition = auto_nonuniform_decomposition_type()
 
   case ( panel_decomposition_guided_nonuniform )
-    call partitioning%get_value( 'panel_xproc', panel_xproc )
+    allocate(guided_nonuniform_decomposition_type :: decomposition)
     decomposition = guided_nonuniform_decomposition_type( panel_xproc )
 
   case default
@@ -127,7 +103,7 @@ subroutine get_partition_parameters_nml( partitioning,   &
 
   call get_partition_strategy(mesh_selection, total_ranks, partitioner_ptr)
 
-end subroutine get_partition_parameters_nml
+end subroutine get_partition_parameters
 
 
 end module runtime_partition_lfric_mod

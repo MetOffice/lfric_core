@@ -52,7 +52,7 @@ contains
 
     if (condition /= 0) then
       write( 6, '("feign_first_config: ", I0)' ) condition
-      stop
+      stop 1
     end if
 
     write( temporary_unit, '("&first")' )
@@ -65,7 +65,7 @@ contains
     call read_first_namelist( temporary_unit, local_rank, scan=.false. )
     call postprocess_first_namelist()
     close(temporary_unit, iostat=condition )
-    if (condition /= 0) stop temp_close_message
+    if (condition /= 0) error stop temp_close_message
 
   end subroutine feign_first_config
 
@@ -99,7 +99,7 @@ contains
 
     if (condition /= 0) then
       write( 6, '("feign_second_config: ", I0)' ) condition
-      stop
+      stop 1
     end if
 
     write( temporary_unit, '("&second")' )
@@ -112,7 +112,7 @@ contains
     call read_second_namelist( temporary_unit, local_rank, scan=.false. )
     call postprocess_second_namelist()
     close(temporary_unit, iostat=condition )
-    if (condition /= 0) stop temp_close_message
+    if (condition /= 0) error stop temp_close_message
 
   end subroutine feign_second_config
 

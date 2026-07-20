@@ -67,8 +67,8 @@ contains
                                                 element_order_h,  &
                                                 element_order_v, W2v )
     ! Get face selectors
-    face_selector_ew => get_face_selector_ew(field%get_mesh_id())
-    face_selector_ns => get_face_selector_ns(field%get_mesh_id())
+    face_selector_ew => get_face_selector_ew(field%get_mesh())
+    face_selector_ns => get_face_selector_ns(field%get_mesh())
     ! Initialise fields
     if (.not. hori_field%is_initialised()) then
       call hori_field%initialise(w2h_fs)
@@ -115,8 +115,8 @@ contains
                                                element_order_h,       &
                                                element_order_v, W2 )
     ! Get face selectors
-    face_selector_ew => get_face_selector_ew(hori_field%get_mesh_id())
-    face_selector_ns => get_face_selector_ns(hori_field%get_mesh_id())
+    face_selector_ew => get_face_selector_ew(hori_field%get_mesh())
+    face_selector_ns => get_face_selector_ns(hori_field%get_mesh())
     ! Initialise field
     if (.not. field%is_initialised()) then
       call field%initialise(w2_fs)

@@ -102,14 +102,14 @@ contains
                          kinfo,          &
                          commworld=comm_in%get_comm_mpi_val())
 
-    if (kinfo .NE. prism_ok) then
+    if (kinfo /= prism_ok) then
       call oasis_abort(self%comp_id, trim(cpl_name), 'initialise')
     endif
 
     call oasis_get_localcomm(comm, kinfo)
     call comm_out%set_comm_mpi_val(comm)
 
-    if (kinfo .NE. prism_ok) then
+    if (kinfo /= prism_ok) then
       call oasis_abort(self%comp_id, trim(cpl_name), 'initialise')
     endif
 
@@ -508,7 +508,7 @@ contains
 
     kinfo = prism_ok
     call oasis_terminate(kinfo)
-    if (kinfo .NE. prism_ok) then
+    if (kinfo /= prism_ok) then
       write(log_scratch_space,'(A, I4)') &
           "finalise: oasis_terminate error: ", kinfo
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )

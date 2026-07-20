@@ -29,6 +29,7 @@ module driver_mesh_mod
                                         str_max_filename
   use check_global_mesh_mod,      only: check_global_mesh
   use check_local_mesh_mod,       only: check_local_mesh
+  use config_mod,                 only: config_type
   use create_mesh_mod,            only: create_extrusion, create_mesh
   use extrusion_mod,              only: extrusion_type
   use global_mesh_mod,            only: global_mesh_type
@@ -39,8 +40,6 @@ module driver_mesh_mod
                                         log_scratch_space, &
                                         log_level_debug,   &
                                         log_level_error
-  use namelist_collection_mod,    only: namelist_collection_type
-  use namelist_mod,               only: namelist_type
   use panel_decomposition_mod,    only: panel_decomposition_type
   use partition_mod,              only: partitioner_interface
 
@@ -70,7 +69,7 @@ contains
 !===============================================================================
 !> @brief  Generates mesh(es) from mesh input file(s) on a given extrusion.
 !>
-!> @param[in] configuration     Application configuration object.
+!> @param[in] config            Application configuration object.
 !>                              This configuration object should contain the
 !>                              following defined namelist objects:
 !>                                 * base_mesh
@@ -80,6 +79,8 @@ contains
 !> @param[in] total_ranks       Total number of MPI ranks in this job.
 !> @param[in] mesh_names        Mesh names to load from the mesh input file(s).
 !> @param[in] extrusion         Extrusion object to be applied to meshes.
+!> @param[in] inner_halo_tiles  Apply tiling to inner halos.
+!> @param[in] tile_size         Tile sizes to apply to inner halos if applicable.
 !> @param[in] stencil_depths_in Required stencil depth for each mesh for
 !!                              the application. If this array is of size 1 then
 !!                              the single value is applied to all meshes.
@@ -92,9 +93,11 @@ contains
 !> @param[in] alt_names         (Optional), Alternative names for meshes in the
 !>                                          application mesh collection object.
 !===============================================================================
-subroutine init_mesh( configuration,           &
+subroutine init_mesh( config,                  &
                       local_rank, total_ranks, &
                       mesh_names, extrusion,   &
+                      inner_halo_tiles,        &
+                      tile_size,               &
                       stencil_depths_in,       &
                       check_partitions,        &
                       alt_names )
@@ -102,15 +105,16 @@ subroutine init_mesh( configuration,           &
   implicit none
 
   ! Arguments
-  type(namelist_collection_type) :: configuration
-
+  type(config_type),     intent(in) :: config
   integer(i_def),        intent(in) :: local_rank
   integer(i_def),        intent(in) :: total_ranks
   character(str_def),    intent(in) :: mesh_names(:)
   class(extrusion_type), intent(in) :: extrusion
 
-  integer(i_def),    intent(in) :: stencil_depths_in(:)
-  logical(l_def),    intent(in) :: check_partitions
+  logical(l_def), intent(in) :: inner_halo_tiles
+  integer(i_def), intent(in) :: tile_size(:,:)
+  integer(i_def), intent(in) :: stencil_depths_in(:)
+  logical(l_def), intent(in) :: check_partitions
 
   character(str_def), optional, intent(in) :: alt_names(:)
 
@@ -118,16 +122,12 @@ subroutine init_mesh( configuration,           &
   character(len=9), parameter :: routine_name = 'init_mesh'
 
   ! Namelist variables
-  type(namelist_type), pointer :: base_mesh_nml
-  type(namelist_type), pointer :: finite_element_nml
-  type(namelist_type), pointer :: partitioning_nml
-
   character(str_max_filename)  :: file_prefix
 
   integer(i_def) :: cellshape
 
-  logical :: prepartitioned
-  logical :: generate_inner_halos
+  logical(l_def) :: prepartitioned
+  logical(l_def) :: generate_inner_halos
 
   integer :: geometry
   integer :: topology
@@ -143,28 +143,24 @@ subroutine init_mesh( configuration,           &
 
   class(panel_decomposition_type), allocatable :: decomposition
 
-  integer(i_def)     :: i, n_digit
   character(str_def) :: fmt_str, number_str
 
-  !============================================================================
-  ! 0.0 Extract configuration variables
-  !============================================================================
-  base_mesh_nml      => configuration%get_namelist('base_mesh')
-  call base_mesh_nml%get_value( 'prepartitioned', prepartitioned )
-  call base_mesh_nml%get_value( 'file_prefix',    file_prefix )
+  integer(i_def) :: i, n_digit
 
-  finite_element_nml => configuration%get_namelist('finite_element')
-  call finite_element_nml%get_value( 'cellshape', cellshape )
+  !============================================================================
+  ! Extract configuration variables
+  !============================================================================
+  prepartitioned = config%base_mesh%prepartitioned()
+  file_prefix    = config%base_mesh%file_prefix()
+  cellshape      = config%finite_element%cellshape()
 
   if ( .not. prepartitioned ) then
-    partitioning_nml   => configuration%get_namelist('partitioning')
-    call partitioning_nml%get_value( 'generate_inner_halos', generate_inner_halos )
+    generate_inner_halos = config%partitioning%generate_inner_halos()
   end if
 
 
-
   !============================================================================
-  ! 0.1 Some basic checks
+  ! Some basic checks
   !============================================================================
 
   if ( size(stencil_depths_in) == 1 ) then
@@ -194,14 +190,14 @@ subroutine init_mesh( configuration,           &
   end do
 
   ! Currently only quad elements are fully functional
-  if (cellshape /= CELLSHAPE_QUADRILATERAL) then
+  if (cellshape /= cellshape_quadrilateral) then
     call log_event( "Reference_element must be QUAD for now...", &
                     LOG_LEVEL_ERROR )
   end if
 
 
   !============================================================================
-  ! 1.0 Determine which names to apply to resultant meshes.
+  ! Determine which names to apply to resultant meshes.
   !============================================================================
   if (present(alt_names)) then
     if (size(alt_names) == size(mesh_names)) then
@@ -218,15 +214,15 @@ subroutine init_mesh( configuration,           &
 
 
   !===========================================================================
-  ! 2.0 Create local mesh objects:
-  !     Two code pathes presented, either:
-  !     1. The input files have been pre-partitioned.
-  !        Meshes and are simply read from file and local mesh objects
-  !        are populated.
-  !     2. The input files have not been partitioned.
-  !        Global meshes are loaded from file and partitioning is applied
-  !        at runtime.  NOTE: This option is provided as legacy, and support
-  !        is on a best endeavours basis.
+  ! Create local mesh objects:
+  !   Two code pathes presented, either:
+  !   1. The input files have been pre-partitioned.
+  !      Meshes and are simply read from file and local mesh objects
+  !      are populated.
+  !   2. The input files have not been partitioned.
+  !      Global meshes are loaded from file and partitioning is applied
+  !      at runtime.  NOTE: This option is provided as legacy, and support
+  !      is on a best endeavours basis.
   !===========================================================================
 
   generate_inner_halos = .false.
@@ -234,8 +230,8 @@ subroutine init_mesh( configuration,           &
   if (prepartitioned) then
 
     !==========================================================================
-    ! 2.1 Read in local meshes / partition information / mesh maps
-    !     direct from file.
+    ! Read in local meshes / partition information / mesh maps
+    ! direct from file.
     !==========================================================================
     !
     ! For this local rank, a mesh input file with a common base name
@@ -255,22 +251,22 @@ subroutine init_mesh( configuration,           &
     call log_event( "Loading local mesh(es)", log_level_debug )
 
 
-    ! 2.1a Read in all local mesh data for this rank and
-    !      initialise local mesh objects from them.
+    ! Read in all local mesh data for this rank and
+    ! initialise local mesh objects from them.
     !===========================================================
     ! Each partitioned mesh file will contain meshes of the
     ! same name as all other partitions.
     call load_local_mesh( input_mesh_file, mesh_names )
 
-    ! 2.1b Apply configuration related checks to ensure that these
-    !      meshes are suitable for the supplied application
-    !      configuration.
+    ! Apply configuration related checks to ensure that these
+    ! meshes are suitable for the supplied application
+    ! configuration.
     !===========================================================
-    call check_local_mesh( configuration,  &
+    call check_local_mesh( config,         &
                            stencil_depths, &
                            mesh_names )
 
-    ! 2.1c Load and assign mesh maps.
+    ! Load and assign mesh maps.
     !===========================================================
     ! Mesh map identifiers are determined by the source/target
     ! mesh IDs they relate to. As a result inter-grid mesh maps
@@ -283,15 +279,12 @@ subroutine init_mesh( configuration,           &
   else
 
     !==========================================================================
-    ! 2.2 Perform runtime partitioning of global meshes.
+    ! Perform runtime partitioning of global meshes.
     !==========================================================================
-    call base_mesh_nml%get_value( 'geometry', geometry )
-    call base_mesh_nml%get_value( 'topology', topology )
+    geometry = config%base_mesh%geometry()
+    topology = config%base_mesh%topology()
 
-    partitioning_nml => configuration%get_namelist('partitioning')
-
-    call partitioning_nml%get_value( 'generate_inner_halos', &
-                                      generate_inner_halos )
+    generate_inner_halos = config%partitioning%generate_inner_halos()
 
     if ( geometry == geometry_spherical .and. &
          topology == topology_fully_periodic ) then
@@ -307,8 +300,8 @@ subroutine init_mesh( configuration,           &
 
     ! 2.2a Set constants that will control partitioning.
     !===========================================================
-    call get_partition_parameters( configuration, mesh_selection, &
-                                   total_ranks, decomposition,    &
+    call get_partition_parameters( config%partitioning, mesh_selection, &
+                                   total_ranks, decomposition,          &
                                    partitioner_ptr )
 
     ! 2.2b Read in all global meshes from input file
@@ -319,7 +312,7 @@ subroutine init_mesh( configuration,           &
     !      meshes are suitable for the supplied application
     !      configuration.
     !===========================================================
-    call check_global_mesh( configuration, mesh_names )
+    call check_global_mesh( config, mesh_names )
 
     ! 2.2e Partition the global meshes
     !===========================================================
@@ -328,7 +321,8 @@ subroutine init_mesh( configuration,           &
                             decomposition,           &
                             stencil_depths,          &
                             generate_inner_halos,    &
-                            partitioner_ptr )
+                            partitioner_ptr,         &
+                            enforce_constraints=check_partitions )
 
 
     ! 2.2f Read in the global intergrid mesh mappings,
@@ -341,12 +335,13 @@ subroutine init_mesh( configuration,           &
 
   end if  ! prepartitioned
 
-
   !============================================================================
   ! 3.0 Extrude the specified meshes from local mesh objects into
   !     mesh objects on the given extrusion.
   !============================================================================
-  call create_mesh( mesh_names, extrusion, alt_name=names )
+  call create_mesh( mesh_names, extrusion,       &
+                    inner_halo_tiles, tile_size, &
+                    alt_name=names )
 
 
   !============================================================================

@@ -7,7 +7,7 @@
 !> Test the get height kernel. Sets up a planar domain with quadratic height
 !> extrusion, and tests answer in W3 and Wtheta spaces
 !>
-module get_height_kernel_mod_test
+module height_discontinuous_kernel_mod_test
 
     use constants_mod,                       only : i_def, r_def
     use funit
@@ -26,69 +26,25 @@ module get_height_kernel_mod_test
   public :: test_all
 
   @TestCase
-  type, extends(TestCase), public :: get_height_kernel_test_type
+  type, extends(TestCase), public :: height_discontinuous_kernel_test_type
     private
   contains
-    procedure setUp
-    procedure tearDown
     procedure test_all
-  end type get_height_kernel_test_type
+  end type height_discontinuous_kernel_test_type
 
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    use base_mesh_config_mod,      only : geometry_planar, &
-                                          topology_fully_periodic
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz
-    use feign_config_mod,          only : feign_finite_element_config, &
-                                          feign_base_mesh_config
-
-    implicit none
-
-    class(get_height_kernel_test_type), intent(inout) :: this
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_planar,         &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=45.0_r_def )
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    use config_loader_mod, only: final_configuration
-
-    implicit none
-
-    class(get_height_kernel_test_type), intent(inout) :: this
-
-    call final_configuration()
-
-  end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
   subroutine test_all( this )
 
-    use sci_get_height_kernel_mod, only : get_height_code
+    use base_mesh_config_mod,                only : geometry_planar
+    use finite_element_config_mod,           only : coord_system_xyz
+    use sci_height_discontinuous_kernel_mod, only : height_discontinuous_code
 
     implicit none
 
-    class(get_height_kernel_test_type), intent(inout) :: this
+    class(height_discontinuous_kernel_test_type), intent(inout) :: this
 
     real(r_def), parameter :: dx     = 4.0_r_def, &
                               dy     = 3.0_r_def, &
@@ -172,17 +128,19 @@ contains
     height_w3(:) = 0.0_r_def
     height_wtheta(:) = 0.0_r_def
 
-    call get_height_code(nlayers,                            &
+    call height_discontinuous_code(nlayers,                  &
                          height_w3,                          &
                          chi_1, chi_2, chi_3,                &
+                         geometry_planar, coord_system_xyz,  &
                          radius,                             &
                          ndf_w3, undf_w3, map_w3(:,cell),    &
                          ndf_w0, undf_w0, map_w0(:,cell),    &
                          basis_w0_on_w3(:,:,:) )
 
-    call get_height_code(nlayers,                                     &
+    call height_discontinuous_code(nlayers,                           &
                          height_wtheta,                               &
                          chi_1, chi_2, chi_3,                         &
+                         geometry_planar, coord_system_xyz,           &
                          radius,                                      &
                          ndf_wtheta, undf_wtheta, map_wtheta(:,cell), &
                          ndf_w0, undf_w0, map_w0(:,cell),             &
@@ -216,4 +174,4 @@ contains
 
   end subroutine test_all
 
-end module get_height_kernel_mod_test
+end module height_discontinuous_kernel_mod_test
