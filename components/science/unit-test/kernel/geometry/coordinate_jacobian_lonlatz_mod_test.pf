@@ -9,11 +9,9 @@ module coordinate_jacobian_lonlatz_mod_test
 
   use funit
   use constants_mod, only : r_def, i_def, PI
-
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
-
+  use sci_mesh_enums_mod,        only: geometry_spherical, &
+                                       topology_non_periodic
   implicit none
 
   public :: set_up, tear_down, test_all

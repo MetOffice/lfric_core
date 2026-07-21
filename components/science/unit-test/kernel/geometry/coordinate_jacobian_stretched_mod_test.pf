@@ -21,8 +21,6 @@ contains
   @before
   subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_spherical, &
-                                          topology_non_periodic
     use extrusion_config_mod,      only : method_uniform, &
                                           stretching_method_linear
     use finite_element_config_mod, only : cellshape_quadrilateral, &
@@ -32,6 +30,8 @@ contains
                                           feign_extrusion_config,      &
                                           feign_finite_element_config, &
                                           feign_planet_config
+    use sci_mesh_enums_mod,        only : geometry_spherical, &
+                                          topology_non_periodic
 
     implicit none
 

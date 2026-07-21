@@ -33,14 +33,14 @@ module sci_compute_mass_matrix_kernel_w3_mod
   type, public, extends(kernel_type) :: compute_mass_matrix_kernel_w3_type
     private
     type(arg_type) :: meta_args(8) = (/                                       &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W3),                    &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! geometry
-         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! topology
-         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          &! coord_system
-         arg_type(GH_SCALAR,   GH_REAL,    GH_READ),                          &! scaled_radius
-         arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ)                           &! rehabilitate
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W3),                    & ! mm
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ),                          & ! scaled_radius
+         arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ)                           & ! rehabilitate
          /)
     type(func_type) :: meta_funcs(2) = (/                                    &
          func_type(W3,          GH_BASIS),                                   &

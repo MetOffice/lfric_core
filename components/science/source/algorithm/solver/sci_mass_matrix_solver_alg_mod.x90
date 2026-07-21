@@ -14,12 +14,14 @@
 !>         created when needed
 module sci_mass_matrix_solver_alg_mod
 
+  use config_mod,                         only: config_type
   use constants_mod,                      only: i_def, r_def, l_def
   use log_mod,                            only: log_event,         &
                                                 log_scratch_space, &
                                                 LOG_LEVEL_DEBUG,   &
                                                 LOG_LEVEL_ERROR,   &
                                                 LOG_LEVEL_TRACE
+  use mesh_mod,                           only: mesh_type
 
   ! Derived Types
   use field_mod,                          only: field_type
@@ -46,11 +48,6 @@ module sci_mass_matrix_solver_alg_mod
   use timing_mod,                         only: start_timing, stop_timing, &
                                                 tik, LPROF
 
-  ! Object types
-  use config_mod, only: config_type
-  use mesh_mod, only: mesh_type
-
-
   implicit none
 
   private
@@ -59,6 +56,7 @@ module sci_mass_matrix_solver_alg_mod
 contains
 !=============================================================================!
   !> @details Combined initialisation, run and finalise procedure for the mass matrix solver to solve My = x
+  !> @param[in]    config Application configuration object
   !> @param[inout] y result field
   !> @param[in]    x input field
   !> @param[in]    bc_flag optional flag to overide the default application of
@@ -122,7 +120,6 @@ contains
     logical(kind=l_def)             :: lowest_order
 
     type(mesh_type), pointer        :: mesh
-!    integer(kind=i_def)             :: mesh_id
 
     type(operator_type), pointer    :: mass_matrix => null()
     type(field_type),    pointer    :: mass_matrix_diagonal => null()
@@ -133,8 +130,7 @@ contains
 
     if ( LPROF ) call start_timing( id, 'mass_matrix_solver_alg' )
 
-!   mesh_id = y%get_mesh_id()
-    mesh    => y%get_mesh()
+    mesh => y%get_mesh()
 
     lowest_order = x%get_element_order_h() == 0 .and. &
                    x%get_element_order_v() == 0

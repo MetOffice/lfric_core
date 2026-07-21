@@ -29,48 +29,17 @@ module compute_mass_matrix_kernel_w0_mod_test
   private
   public :: test_r_single, test_mixed_precision, test_r_double
 
-  @TestCase
-  type, extends(TestCase), public :: compute_mass_matrix_w0_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_r_single
-    procedure test_mixed_precision
-    procedure test_r_double
-  end type compute_mass_matrix_w0_test_type
-
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
-
-  end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST R_SINGLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   @Test
-  subroutine test_r_single( this )
+  subroutine test_r_single()
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, only : &
                                  compute_mass_matrix_w_scalar_code
 
     implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -218,14 +187,12 @@ contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!! TEST MIXED PRECISION !!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_mixed_precision( this )
+  subroutine test_mixed_precision()
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, only : &
                                  compute_mass_matrix_w_scalar_code
 
     implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -373,14 +340,12 @@ contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST R_DOUBLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_r_double( this )
+  subroutine test_r_double()
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, only : &
                                  compute_mass_matrix_w_scalar_code
 
     implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &

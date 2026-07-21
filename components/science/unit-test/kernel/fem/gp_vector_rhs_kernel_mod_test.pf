@@ -7,17 +7,15 @@
 !-------------------------------------------------------------------------------
 module gp_vector_rhs_kernel_mod_test
 
-  use constants_mod,  only : i_def, r_def, rmdi
+  use constants_mod,             only: i_def, r_def, rmdi
+  use finite_element_config_mod, only: coord_system_xyz
   use funit
   use quadrature_xyoz_mod,          only: quadrature_xyoz_type, &
                                           quadrature_xyoz_proxy_type
   use quadrature_rule_gaussian_mod, only: quadrature_rule_gaussian_type
 
-  ! Configuration modules
-  use base_mesh_config_mod, only: geometry_planar, &
-                                  topology_fully_periodic
-
-  use finite_element_config_mod, only: coord_system_xyz
+  use sci_mesh_enums_mod, only: geometry_planar, &
+                                topology_fully_periodic
 
   implicit none
 
@@ -42,17 +40,18 @@ module gp_vector_rhs_kernel_mod_test
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @before
   subroutine setUp( this )
 
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
     class(gp_vector_rhs_test_type), intent(inout) :: this
 
-    type(quadrature_xyoz_type)          :: qr
-    type(quadrature_xyoz_proxy_type)    :: qr_proxy
-    type(quadrature_rule_gaussian_type) :: quadrature_rule
+    type( quadrature_xyoz_type )          :: qr
+    type( quadrature_xyoz_proxy_type )    :: qr_proxy
+    type( quadrature_rule_gaussian_type ) :: quadrature_rule
 
     integer(i_def) :: nqp_h, nqp_v
 
@@ -71,6 +70,7 @@ contains
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @after
   subroutine tearDown( this )
 
     use sci_chi_transform_mod, only: final_chi_transforms
@@ -110,9 +110,10 @@ contains
     real(kind=r_def) :: fx, fy, fz, dx, dy, dz, t_vec(3)
     integer :: df, dim, qp1, qp2
 
-    real(kind=r_def) :: scaled_radius
-
-    scaled_radius= rmdi
+    integer(i_def), parameter :: geometry = geometry_planar
+    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     qr = quadrature_xyoz_type(3, quadrature_rule)
 
@@ -177,9 +178,9 @@ contains
                             chi(:,1), chi(:,2), chi(:,3), &
                             panel_id,                     &
                             f_data,                       &
-                            geometry_planar,              &
-                            topology_fully_periodic,      &
-                            coord_system_xyz,             &
+                            geometry,                     &
+                            topology,                     &
+                            coord_system,                 &
                             scaled_radius,                &
                             ndf_w0, undf, map_w0, this%basis,  &
                             ndf_f, undf_f,map_f, this%basis_f, &

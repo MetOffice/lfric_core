@@ -69,6 +69,7 @@ contains
   !>@details Apply the trivial (null) preconditioner by setting \f$y=x\f$
   !>
   !>@param[inout] self instance of type null_preconditioner_type
+  !>@param[in]    config Application configuration object
   !>@param[inout] x field-vector containing the right hand side of the pressure
   !>@param[inout] y field-vector containing the solution
   subroutine apply_null_preconditioner(self, config, x, y)

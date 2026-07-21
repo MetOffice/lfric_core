@@ -15,11 +15,11 @@
 module sci_mapping_constants_mod
 
   ! Infrastructure
+  use config_mod,                        only: config_type
   use constants_mod,                     only: i_def, r_def, l_def, str_def
   use extrusion_mod,                     only: PRIME_EXTRUSION, &
                                                DOUBLE_LEVEL,    &
                                                TWOD
-  use sci_fem_constants_mod,             only: get_qr_fv
   use field_mod,                         only: field_type
   use function_space_mod,                only: function_space_type
   use function_space_collection_mod,     only: function_space_collection
@@ -39,20 +39,10 @@ module sci_mapping_constants_mod
   use r_tran_field_mod,                  only: r_tran_field_type
   use timing_mod,                        only: start_timing, stop_timing, &
                                                tik, LPROF
-
-  ! Object types
-  use config_mod, only: config_type
-
-  ! Configuration modules
-  use base_mesh_config_mod, only: geometry_spherical,      &
-                                  geometry_planar,         &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
-
-
-  ! Other algorithms
-  use sci_geometric_constants_mod, only: get_coordinates, &
-                                         get_panel_id
+  use sci_fem_constants_mod,             only: get_qr_fv
+  use sci_geometric_constants_mod,       only: get_coordinates, &
+                                               get_panel_id
+  use sci_mesh_enums_mod,                only: get_mesh_enums
 
   ! Kernels
   use sci_project_ws_to_w1_operator_kernel_mod, &
@@ -230,17 +220,7 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -309,17 +289,7 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -696,6 +666,7 @@ contains
   end function get_intermesh_weights_w2
 
   !> @brief Returns a pointer to the weights for conservative W3 mapping
+  !> @param[in] config       Application configuration object
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
@@ -708,6 +679,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
+
     type(mesh_type), pointer, intent(in) :: coarse_mesh
     type(mesh_type), pointer, intent(in) :: fine_mesh
     integer(kind=i_def)                  :: intermesh_id
@@ -770,6 +742,7 @@ contains
   end function get_intermesh_weights_w3_rdef
 
   !> @brief Returns a pointer to the weights for conservative W3 mapping
+  !> @param[in] config       Application configuration object
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
@@ -1116,17 +1089,7 @@ contains
     integer(kind=i_def),      parameter :: xdirection = 1_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -1198,17 +1161,7 @@ contains
     integer(kind=i_def),      parameter :: ydirection = 2_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -1281,17 +1234,7 @@ contains
     integer(kind=i_def),      parameter :: zdirection = 3_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -1365,17 +1308,7 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()

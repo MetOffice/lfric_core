@@ -7,20 +7,18 @@
 module sci_compute_broken_div_operator_kernel_mod
 
   use argument_mod,              only: arg_type, func_type,       &
-                                       GH_OPERATOR, GH_FIELD,     &
+                                       GH_OPERATOR,               &
+                                       GH_FIELD, GH_SCALAR,       &
                                        GH_READ, GH_WRITE,         &
-                                       GH_REAL, ANY_SPACE_1,      &
+                                       GH_REAL, GH_INTEGER,       &
+                                       GH_LOGICAL, ANY_SPACE_1,   &
                                        ANY_DISCONTINUOUS_SPACE_3, &
                                        GH_BASIS, GH_DIFF_BASIS,   &
                                        CELL_COLUMN, GH_QUADRATURE_XYoZ
-  use constants_mod,             only: r_def, i_def
+  use constants_mod,             only: r_def, i_def, l_def
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
   use fs_continuity_mod,         only: W2broken, W3
   use kernel_mod,                only: kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system, rehabilitate
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -32,10 +30,15 @@ module sci_compute_broken_div_operator_kernel_mod
 
   type, public, extends(kernel_type) :: compute_broken_div_operator_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                      &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W2broken),             &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_1),              &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3) &
+    type(arg_type) :: meta_args(8) = (/                                       &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W2broken),              & ! broken_div
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_1),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ),                          & ! scaled_radius
+         arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ)                           & ! rehabilitate
          /)
     type(func_type) :: meta_funcs(3) = (/                                    &
          func_type(W3,          GH_BASIS),                                   &
@@ -64,6 +67,11 @@ contains
   !! @param[in] chi2     2nd coordinate field in Wchi
   !! @param[in] chi3     3rd coordinate field in Wchi
   !! @param[in] panel_id Field giving the ID for mesh panels.
+  !! @param[in] geometry
+  !! @param[in] topology
+  !! @param[in] coord_system
+  !! @param[in] scaled_radius
+  !! @param[in] rehabilitate
   !! @param[in] ndf_w3   Number of degrees of freedom per cell for W3 space.
   !! @param[in] basis_w3 Scalar basis functions evaluated at quadrature points
   !!                     for W3 space.
@@ -89,6 +97,9 @@ contains
   subroutine compute_broken_div_operator_code(cell, nlayers, ncell_3d,       &
                                               broken_div,                    &
                                               chi1, chi2, chi3, panel_id,    &
+                                              geometry, topology,            &
+                                              coord_system, scaled_radius,   &
+                                              rehabilitate,                  &
                                               ndf_w3, basis_w3,              &
                                               ndf_w2b, diff_basis_w2b,       &
                                               ndf_chi, undf_chi, map_chi,    &
@@ -121,6 +132,12 @@ contains
     real(kind=r_def), dimension(undf_pid),                  intent(in)    :: panel_id
     real(kind=r_def), dimension(nqp_h),                     intent(in)    :: wqp_h
     real(kind=r_def), dimension(nqp_v),                     intent(in)    :: wqp_v
+
+    integer(kind=i_def), intent(in) :: geometry
+    integer(kind=i_def), intent(in) :: topology
+    integer(kind=i_def), intent(in) :: coord_system
+    real(kind=r_def),    intent(in) :: scaled_radius
+    logical(kind=l_def), intent(in) :: rehabilitate
 
     ! Internal variables
     integer(kind=i_def)                             :: df, df2, df3, k, ik, ipanel

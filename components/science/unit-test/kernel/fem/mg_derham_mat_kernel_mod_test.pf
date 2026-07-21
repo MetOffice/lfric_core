@@ -16,53 +16,39 @@ module mg_derham_mat_kernel_mod_test
   implicit none
 
   private
-  public :: test_all
-
-  @TestCase
-  type, extends(TestCase), public :: mg_derham_mat_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type mg_derham_mat_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
     use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    class(mg_derham_mat_test_type), intent(inout) :: this
-
     call init_chi_transforms(imdi, imdi)
 
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  subroutine tear_down()
 
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(mg_derham_mat_test_type), intent(inout) :: this
-
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_mg_derham_mat_kernel_mod, only : mg_derham_mat_code
 
     implicit none
-
-    class(mg_derham_mat_test_type), intent(inout) :: this
 
     real(r_def), parameter :: tol = 1.0e-12_r_def
 

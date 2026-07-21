@@ -25,10 +25,11 @@ module sci_linear_operator_mod
   end type abstract_linear_operator_type
 
   abstract interface
-     !> Abstract interface defined for the apply method.
-     !> param[in] self a linear operator
-     !> param[in] x a vector the linear operator is applied to
-     !> param[inout] y a vector, the result.
+     !> @brief Abstract interface defined for the apply method.
+     !> @param[in] self a linear operator
+     !> @param[in] config Application configuration object
+     !> @param[in] x a vector the linear operator is applied to
+     !> @param[inout] y a vector, the result.
      subroutine apply_interface(self, config, x, y)
        import :: abstract_linear_operator_type
        import :: abstract_vector_type

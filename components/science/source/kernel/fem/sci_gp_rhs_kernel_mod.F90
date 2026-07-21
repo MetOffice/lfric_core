@@ -30,14 +30,14 @@ private
 type, public, extends(kernel_type) :: gp_rhs_kernel_type
   private
   type(arg_type) :: meta_args(8) = (/                                     &
-       arg_type(GH_FIELD,   GH_REAL, GH_INC,  ANY_SPACE_1),               &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),               &
-       arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), &
-       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! geometry
-       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! topology
-       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         &! coord_system
-       arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          &! scaled_radius
+       arg_type(GH_FIELD,   GH_REAL, GH_INC,  ANY_SPACE_1),               & ! rhs
+       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),               & ! field
+       arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               & ! chi1, chi2, chi3
+       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! geometry
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! topology
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! coord_system
+       arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          & ! scaled_radius
        /)
   type(func_type) :: meta_funcs(3) = (/                                  &
        func_type(ANY_SPACE_1, GH_BASIS),                                 &

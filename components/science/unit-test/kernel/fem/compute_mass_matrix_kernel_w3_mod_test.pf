@@ -27,57 +27,43 @@ module compute_mass_matrix_kernel_w3_mod_test
   implicit none
 
   private
+  public :: set_up, tear_down
   public :: test_r_single, test_r_double, test_mixed_precision
-
-  @TestCase
-  type, extends(TestCase), public :: compute_mass_matrix_w3_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_r_single
-    procedure test_r_double
-    procedure test_mixed_precision
-  end type compute_mass_matrix_w3_test_type
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
     use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    class(compute_mass_matrix_w3_test_type), intent(inout) :: this
-
     call init_chi_transforms(imdi, imdi)
 
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(compute_mass_matrix_w3_test_type), intent(inout) :: this
-
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST R_SINGLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   @Test
-  subroutine test_r_single( this )
+  subroutine test_r_single()
 
     use sci_compute_mass_matrix_kernel_w3_mod, only : compute_mass_matrix_w3_code
 
     implicit none
-
-    class(compute_mass_matrix_w3_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -232,13 +218,11 @@ contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST R_DOUBLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_r_double( this )
+  subroutine test_r_double()
 
     use sci_compute_mass_matrix_kernel_w3_mod, only : compute_mass_matrix_w3_code
 
     implicit none
-
-    class(compute_mass_matrix_w3_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -394,13 +378,11 @@ contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!! TEST MIXED PRECISION !!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_mixed_precision( this )
+  subroutine test_mixed_precision()
 
     use sci_compute_mass_matrix_kernel_w3_mod, only : compute_mass_matrix_w3_code
 
     implicit none
-
-    class(compute_mass_matrix_w3_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &

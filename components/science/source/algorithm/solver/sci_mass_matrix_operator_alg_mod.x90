@@ -67,6 +67,7 @@ contains
 
   !> @brief Apply mass matrix operator to a pressure field to obtain \f$y=Mx\f$.
   !>
+  !> @param[in] config Application configuration object
   !> @param[in,out] self Instance of mass_matrix_operator_type
   !> @param[in] x Field \f$x\f$ to apply operator to
   !> @param[in,out] y Resulting field \f$y=Mx\f$

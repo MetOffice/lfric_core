@@ -35,9 +35,11 @@ module sci_hierarchical_preconditioner_mod
      subroutine coarsen_interface(self, config,other)
        import :: abstract_hierarchical_preconditioner_type
        import :: config_type
+
        class(abstract_hierarchical_preconditioner_type), intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type), intent(in) :: config
        class(abstract_hierarchical_preconditioner_type), allocatable, intent(inout) :: other
+
      end subroutine coarsen_interface
   end interface
 

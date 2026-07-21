@@ -7,13 +7,12 @@
 !-------------------------------------------------------------------------------
 module gp_rhs_kernel_mod_test
 
-  use constants_mod,  only : i_def, r_def, imdi, rmdi
+  use constants_mod,             only: i_def, r_def, imdi, rmdi
+  use finite_element_config_mod, only: coord_system_xyz
   use funit
   use quadrature_xyoz_mod,          only: quadrature_xyoz_type, &
                                           quadrature_xyoz_proxy_type
   use quadrature_rule_gaussian_mod, only: quadrature_rule_gaussian_type
-
-  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -42,6 +41,7 @@ module gp_rhs_kernel_mod_test
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @before
   subroutine setUp( this )
 
     use sci_chi_transform_mod, only: init_chi_transforms
@@ -50,9 +50,9 @@ contains
 
     class(gp_rhs_test_type), intent(inout) :: this
 
-    type(quadrature_xyoz_type)          :: qr
-    type(quadrature_xyoz_proxy_type)    :: qr_proxy
-    type(quadrature_rule_gaussian_type) :: quadrature_rule
+    type( quadrature_xyoz_type )          :: qr
+    type( quadrature_xyoz_proxy_type )    :: qr_proxy
+    type( quadrature_rule_gaussian_type ) :: quadrature_rule
 
     integer(i_def) :: nqp_h, nqp_v
 
@@ -64,13 +64,14 @@ contains
     nqp_h=qr_proxy%np_xy
     nqp_v=qr_proxy%np_z
 
-    allocate( this%basis_f   (1,ndf_f,nqp_h,nqp_v), &
-              this%basis     (1,ndf_w0,nqp_h,nqp_v), &
+    allocate( this%basis_f(1,ndf_f,nqp_h,nqp_v), &
+              this%basis(1,ndf_w0,nqp_h,nqp_v),  &
               this%diff_basis(3,ndf_w0,nqp_h,nqp_v) )
 
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @after
   subroutine tearDown( this )
 
     use sci_chi_transform_mod, only: final_chi_transforms
@@ -142,6 +143,7 @@ contains
           fx = (1.0_r_def - x_vert(df,1)) + (-1.0_r_def)**(int(x_vert(df,1))+1)*xqp_h(qp1,1)
           fy = (1.0_r_def - x_vert(df,2)) + (-1.0_r_def)**(int(x_vert(df,2))+1)*xqp_h(qp1,2)
           fz = (1.0_r_def - x_vert(df,3)) + (-1.0_r_def)**(int(x_vert(df,3))+1)*xqp_v(qp2)
+
           this%diff_basis(1,df,qp1,qp2) = fy*fz
           this%diff_basis(2,df,qp1,qp2) = fx*fz
           this%diff_basis(3,df,qp1,qp2) = fx*fy

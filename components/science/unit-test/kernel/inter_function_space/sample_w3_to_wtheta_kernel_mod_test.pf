@@ -34,10 +34,9 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use base_mesh_config_mod,      only : geometry_planar, &
-                                          topology_fully_periodic
     use feign_config_mod,          only : feign_base_mesh_config
-
+    use sci_mesh_enums_mod,        only : geometry_planar, &
+                                          topology_fully_periodic
     implicit none
 
     class(sample_w3_to_wtheta_test_type), intent(inout) :: this

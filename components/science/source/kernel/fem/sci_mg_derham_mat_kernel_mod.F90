@@ -40,16 +40,16 @@ module sci_mg_derham_mat_kernel_mod
   type, public, extends(kernel_type) :: mg_derham_mat_kernel_type
     private
     type(arg_type) :: meta_args(10) = (/                                      &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W2),                    &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W3),                    &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, Wtheta, Wtheta),            &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W2),                    &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           &! geometry
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           &! topology
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           &! coord_system
-         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                            &! scaled_radius
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W2),                    & ! mm2
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W3),                    & ! mm3
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, Wtheta, Wtheta),            & ! mmt
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W3, W2),                    & ! div
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                           & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                            & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(4) = (/                                    &
          func_type(W2,          GH_BASIS, GH_DIFF_BASIS),                    &

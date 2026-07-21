@@ -35,14 +35,14 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
   type, public, extends(kernel_type) :: compute_mass_matrix_kernel_w_scalar_type
     private
     type(arg_type) :: meta_args(8) = (/                                          &
-         arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE, ANY_SPACE_2, ANY_SPACE_2),  &
-         arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,    GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ),                             &
-         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                             &! geometry
-         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                             &! topology
-         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                             &! coord_system
-         arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                              &! scaled_radius
+         arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE, ANY_SPACE_2, ANY_SPACE_2),  & ! mm
+         arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,  ANY_SPACE_9),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_LOGICAL, GH_READ),                             & ! extended_mesh
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                             & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                             & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                             & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                              & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(2) = (/                                    &
          func_type(ANY_SPACE_2, GH_BASIS),                                   &

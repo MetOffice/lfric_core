@@ -29,23 +29,14 @@ module compute_mass_matrix_kernel_w2b_mod_test
   private
   public :: test_all
 
-  @TestCase
-  type, extends(TestCase), public :: compute_mass_matrix_w2b_test_type
-    private
-  contains
-    procedure test_all
-  end type compute_mass_matrix_w2b_test_type
-
 contains
 
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_compute_mass_matrix_kernel_w2_mod, only : compute_mass_matrix_w2_code
 
     implicit none
-
-    class(compute_mass_matrix_w2b_test_type), intent(inout) :: this
 
     real(kind=r_def) :: answer(6,6)
     real(r_def), parameter :: tol = 1.0e-6_r_def

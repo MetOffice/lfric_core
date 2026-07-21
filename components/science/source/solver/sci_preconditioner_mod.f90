@@ -28,6 +28,7 @@ module sci_preconditioner_mod
      !> abstract interface defined for the apply procedure of a preconditioner
      !! y = P.x
      !> @param[in] self a preconditioner
+     !> @param[in] config Application configuration object
      !> @param[in]    x a vector that the preconditioner is applied to.
      !> @param[inout] y a vector, the result.
      subroutine apply_interface(self, config, x, y)

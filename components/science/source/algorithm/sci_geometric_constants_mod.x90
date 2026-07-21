@@ -23,7 +23,6 @@ module sci_geometric_constants_mod
   use mesh_collection_mod,           only: mesh_collection
   use timing_mod,                    only: start_timing, stop_timing, &
                                            tik, LPROF
-
   ! Object types
   use config_mod,                  only: config_type
   use field_mod,                   only: field_type
@@ -33,12 +32,9 @@ module sci_geometric_constants_mod
   use inventory_by_local_mesh_mod, only: inventory_by_local_mesh_type
   use mesh_mod,                    only: mesh_type
   use local_mesh_mod,              only: local_mesh_type
+  use sci_mesh_enums_mod,          only: get_mesh_enums, geometry_spherical
 
   ! Configuration
-  use base_mesh_config_mod,      only: geometry_spherical,      &
-                                       geometry_planar,         &
-                                       topology_fully_periodic, &
-                                       topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
 
   implicit none
@@ -175,7 +171,7 @@ contains
     integer(kind=i_def)                :: k_h, k_v
     integer(tik)                       :: id
 
-    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: geometry, topology
     integer(kind=i_def) :: element_order_h
     integer(kind=i_def) :: element_order_v
     integer(kind=i_def) :: coord_system
@@ -184,6 +180,8 @@ contains
     real(kind=r_def) :: scaled_radius
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
+
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -214,18 +212,9 @@ contains
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
-      if (mesh%is_topology_periodic()) then
-        topology = topology_fully_periodic
-      else if (mesh%is_topology_non_periodic()) then
-        topology = topology_non_periodic
-      else
-        call log_event('compute_latlon: Unsupported topology selection',log_level_error)
-      end if
-
       call invoke( compute_latlon_kernel_type(lat, long, chi, panel_id, &
-                                              geometry_spherical,       &
-                                              topology, coord_system,   &
-                                              scaled_radius) )
+                                              geometry, topology,       &
+                                              coord_system, scaled_radius) )
     else
       call invoke( setval_c(lat, f_lat), &
                    setval_c(long, f_lon) )
@@ -524,23 +513,7 @@ contains
     integer(i_def) :: geometry, topology, coord_system
     real(r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else if (mesh%is_geometry_planar()) then
-      geometry = geometry_planar
-    else
-      call log_event( 'Unsupported geometry selection', &
-                      log_level_error )
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else if (mesh%is_topology_non_periodic()) then
-      topology = topology_non_periodic
-    else
-      call log_event( 'Unsupported topology selection', &
-                      log_level_error )
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -638,23 +611,7 @@ contains
     integer(i_def) :: geometry, topology, coord_system
     real(r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry= geometry_spherical
-    else if (mesh%is_geometry_planar()) then
-      geometry= geometry_planar
-    else
-      call log_event( 'Unsupported geometry selection', &
-                      log_level_error )
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else if (mesh%is_topology_non_periodic()) then
-      topology = topology_non_periodic
-    else
-      call log_event( 'Unsupported topology selection', &
-                      log_level_error )
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system    = config%finite_element%coord_system()
     scaled_radius   = config%planet%scaled_radius()
@@ -1050,11 +1007,7 @@ contains
       call dA_msl_proj_inventory%initialise(name="dA_msl_proj")
     end if
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     planet_radius = config%extrusion%planet_radius()
     domain_height = config%extrusion%domain_height()
@@ -1395,11 +1348,7 @@ contains
 
     real(kind=r_def) :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry= geometry_spherical
-    else
-      geometry= geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1525,11 +1474,7 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()

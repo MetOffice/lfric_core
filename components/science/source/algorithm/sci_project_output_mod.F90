@@ -8,9 +8,6 @@
 !>
 module sci_project_output_mod
 
-  ! Object_types
-  use config_mod, only: config_type
-
   implicit none
 
   private
@@ -23,6 +20,7 @@ contains
   !> @details This procedure uses the galerkin projection and a precomputed
   !>          mass matrix to project a field
   !>
+  !> @param[in]    config           Application configuration object
   !> @param[in]    field            To be projected.
   !> @param[inout] projected_field  Receives projection.
   !> @param[in]    chi              Field entity co-ordinates.
@@ -33,6 +31,7 @@ contains
                              chi, panel_id,          &
                              output_fs )
 
+    use config_mod,                only: config_type
     use constants_mod,             only: r_def, str_max_filename, i_def
     use field_mod,                 only: field_type
     use field_parent_mod,          only: write_interface

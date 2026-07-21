@@ -28,8 +28,7 @@ module sci_compute_map_u_operators_kernel_mod
   use fs_continuity_mod,       only : W2, W3, Wtheta
   use kernel_mod,              only : kernel_type
   use log_mod,                 only : log_event, LOG_LEVEL_ERROR, LOG_LEVEL_INFO
-
-  use base_mesh_config_mod, only: geometry_spherical, geometry_planar
+  use sci_mesh_enums_mod,      only : geometry_spherical, geometry_planar
 
   implicit none
 

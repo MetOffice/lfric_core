@@ -6,16 +6,12 @@
 
 module compute_sample_u_ops_kernel_mod_test
 
-  use base_mesh_config_mod,  only : geometry_spherical, &
-                                    topology_non_periodic
   use constants_mod,         only : i_def, r_def
   use reference_element_mod, only : W, S, E, N, B, T
-
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
-
   use funit
+  use sci_mesh_enums_mod,    only : geometry_spherical, &
+                                    topology_non_periodic
 
   implicit none
 

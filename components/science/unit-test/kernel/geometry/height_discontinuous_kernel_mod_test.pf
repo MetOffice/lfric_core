@@ -38,9 +38,9 @@ contains
   @Test
   subroutine test_all( this )
 
-    use base_mesh_config_mod,                only : geometry_planar
     use finite_element_config_mod,           only : coord_system_xyz
     use sci_height_discontinuous_kernel_mod, only : height_discontinuous_code
+    use sci_mesh_enums_mod,                  only : geometry_planar
 
     implicit none
 

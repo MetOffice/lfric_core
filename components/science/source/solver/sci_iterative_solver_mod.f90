@@ -14,6 +14,7 @@
 
 module sci_iterative_solver_mod
 
+  use config_mod,           only : config_type
   use constants_mod,        only : r_def, i_def, EPS, l_def
   use vector_mod,           only : abstract_vector_type
   use sci_linear_operator_mod, &
@@ -26,8 +27,6 @@ module sci_iterative_solver_mod
                                    log_scratch_space,         &
                                    log_at_level
   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
-
-  use config_mod, only: config_type
 
   implicit none
 ! Removing the following "private" statement is a workaround for a bug that
@@ -65,6 +64,7 @@ module sci_iterative_solver_mod
     !> @details Apply the iterative solver for a given right hand side
     !> \f$b\f$.
     !>
+    !> @param[in] config Application configuration object
     !> @param[inout] x  Resulting solution \f$x\f$
     !> @param[in] b  Right hand side vector \f$b\f$
     !>
@@ -75,7 +75,7 @@ module sci_iterative_solver_mod
       import :: config_type
 
       class(abstract_iterative_solver_type), intent(inout) :: self
-      type(config_type),                     intent(in)     :: config
+      type(config_type),                     intent(in)    :: config
       class(abstract_vector_type),           intent(inout) :: x
       class(abstract_vector_type),           intent(inout) :: b
 
@@ -122,7 +122,7 @@ module sci_iterative_solver_mod
   interface
      module subroutine cg_solve(self, config, x, b)
        class(conjugate_gradient_type), intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine
@@ -159,7 +159,7 @@ type(config_type), intent(in) :: config
   interface
      module subroutine bicgstab_solve(self, config, x, b)
        class(bicgstab_type),           intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine
@@ -199,7 +199,7 @@ type(config_type), intent(in) :: config
   interface
      module subroutine gmres_solve(self, config, x, b)
        class(gmres_type),              intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine gmres_solve
@@ -237,8 +237,8 @@ type(config_type), intent(in) :: config
 
   interface
      module subroutine fgmres_solve(self, config,x, b)
-       class(fgmres_type),              intent(inout) :: self
-type(config_type), intent(in) :: config
+       class(fgmres_type),             intent(inout) :: self
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine fgmres_solve
@@ -277,7 +277,7 @@ type(config_type), intent(in) :: config
   interface
      module subroutine gcr_solve(self, config,x, b)
        class(gcr_type),              intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),            intent(in)    :: config
        class(abstract_vector_type),  intent(inout) :: x
        class(abstract_vector_type),  intent(inout) :: b
      end subroutine gcr_solve
@@ -318,7 +318,7 @@ type(config_type), intent(in) :: config
   interface
      module subroutine block_gcr_solve(self, config, x, b)
        class(block_gcr_type),        intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),            intent(in)    :: config
        class(abstract_vector_type),  intent(inout) :: x
        class(abstract_vector_type),  intent(inout) :: b
      end subroutine block_gcr_solve
@@ -354,7 +354,7 @@ type(config_type), intent(in) :: config
   interface
      module subroutine precondition_only_solve(self, config, x, b)
        class(precondition_only_type), intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),             intent(in)    :: config
        class(abstract_vector_type),   intent(inout) :: x
        class(abstract_vector_type),   intent(inout) :: b
      end subroutine
@@ -395,10 +395,10 @@ type(config_type), intent(in) :: config
 
   interface
      module subroutine jacobi_solve(self, config, x, b)
-       class(jacobi_type), intent(inout) :: self
-type(config_type), intent(in) :: config
-       class(abstract_vector_type),    intent(inout) :: x
-       class(abstract_vector_type),    intent(inout) :: b
+       class(jacobi_type),          intent(inout) :: self
+       type(config_type),           intent(in)    :: config
+       class(abstract_vector_type), intent(inout) :: x
+       class(abstract_vector_type), intent(inout) :: b
      end subroutine
   end interface
 
@@ -438,7 +438,7 @@ type(config_type), intent(in) :: config
   interface
      module subroutine chebyshev_solve(self, config, x, b)
        class(chebyshev_type),       intent(inout) :: self
-type(config_type), intent(in) :: config
+       type(config_type),           intent(in)    :: config
        class(abstract_vector_type), intent(inout) :: x
        class(abstract_vector_type), intent(inout) :: b
      end subroutine
@@ -506,6 +506,7 @@ contains
   !>
   !> Over-rides the abstract interface to do the actual solve.
   !>
+  !> @param[in]    config Application configuration object
   !> @param[inout] b  "RHS" or boundary conditions.
   !> @param[inout] x  Solution.
   !>
@@ -514,9 +515,7 @@ contains
     implicit none
 
     class(conjugate_gradient_type), intent(inout) :: self
-
-    type(config_type), intent(in) :: config
-
+    type(config_type),              intent(in)    :: config
     class(abstract_vector_type),    intent(inout) :: x
     class(abstract_vector_type),    intent(inout) :: b
 
@@ -661,8 +660,9 @@ contains
   end function bicgstab_constructor
 
   !> bicgstab solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
-  !> This the "RHS" or boundary conditions,
+  !>                 This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
   module subroutine bicgstab_solve(self, config, x, b)
@@ -850,6 +850,7 @@ contains
 
   !> gmres_solve. Over-rides the abstract interface to do the actual solve.
   !> @detail The solver implements left-preconditioning, i.e. is solving M{-1}.A.x = M{-1}.b
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
@@ -859,7 +860,6 @@ contains
     implicit none
 
     class(gmres_type),           intent(inout) :: self
-
     type(config_type),           intent(in)    :: config
     class(abstract_vector_type), intent(inout) :: x
     class(abstract_vector_type), intent(inout) :: b
@@ -887,7 +887,7 @@ contains
 
     call b%duplicate(res)
     ! compute res = b -Ax ... in stages
-    call self%lin_op%apply(config,x,Ax)
+    call self%lin_op%apply(config, x, Ax)
     call res%copy(b)
     call res%axpy(-1.0_r_def,Ax)
 
@@ -1080,18 +1080,17 @@ contains
   !> @detail The solver implements flexible right-preconditioning, i.e. is solving A.M{-1}.M.x = b
   !>         as 1)  A.M{-1}.y = b
   !>            2)  M{-1}y = x
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
   module subroutine fgmres_solve(self, config, x, b)
     implicit none
-    class(fgmres_type),              intent(inout) :: self
-
-    type(config_type), intent(in) :: config
-
-    class(abstract_vector_type),    intent(inout) :: x
-    class(abstract_vector_type),    intent(inout) :: b
+    class(fgmres_type),          intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: s
@@ -1317,6 +1316,7 @@ contains
   !> @detail The solver implements right-preconditioning, i.e. is solving A.M{-1}.M.x = b
   !>         as 1)  A.M{-1}.y = b
   !>            2)  M{-1}y = x
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
@@ -1325,10 +1325,10 @@ contains
 
     implicit none
 
-    class(gcr_type),              intent(inout) :: self
-    type(config_type), intent(in) :: config
-    class(abstract_vector_type),  intent(inout) :: x
-    class(abstract_vector_type),  intent(inout) :: b
+    class(gcr_type),             intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: dx
@@ -1494,16 +1494,17 @@ contains
   !> @detail The solver implements right-preconditioning, i.e. is solving A.M{-1}.M.x = b
   !>         as 1)  A.M{-1}.y = b
   !>            2)  M{-1}y = x
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
   module subroutine block_gcr_solve(self, config, x, b)
     implicit none
-    class(block_gcr_type),        intent(inout) :: self
-    type(config_type),            intent(in) :: config
-    class(abstract_vector_type),  intent(inout) :: x
-    class(abstract_vector_type),  intent(inout) :: b
+    class(block_gcr_type),       intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: Ax
@@ -1696,6 +1697,7 @@ contains
   end function
 
   !> Precondition only solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
@@ -1705,7 +1707,7 @@ contains
     implicit none
 
     class(precondition_only_type), intent(inout) :: self
-    type(config_type), intent(in) :: config
+    type(config_type),             intent(in)    :: config
     class(abstract_vector_type),   intent(inout) :: x
     class(abstract_vector_type),   intent(inout) :: b
 
@@ -1781,6 +1783,7 @@ contains
   end function
 
   !> Jacobi solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
@@ -1790,7 +1793,7 @@ contains
     implicit none
 
     class(jacobi_type),          intent(inout) :: self
-    type(config_type),           intent(in) :: config
+    type(config_type),           intent(in)    :: config
     class(abstract_vector_type), intent(inout) :: x
     class(abstract_vector_type), intent(inout) :: b
 
@@ -1908,6 +1911,7 @@ contains
   end function
 
   !> chebyshev solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
@@ -1917,9 +1921,7 @@ contains
     implicit none
 
     class(chebyshev_type),       intent(inout) :: self
-
-    type(config_type), intent(in) :: config
-
+    type(config_type),           intent(in)    :: config
     class(abstract_vector_type), intent(inout) :: x
     class(abstract_vector_type), intent(inout) :: b
 
