@@ -148,6 +148,7 @@ contains
   ! Compute the Jacobian J^{i,j} = d chi_i / d \hat{chi_j} and the
   ! determinant det(J)
   !-----------------------------------------------------------------------------
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -311,6 +312,7 @@ contains
   ! Compute the Jacobian J^{i,j} = d chi_i / d \hat{chi_j} and the
   ! determinant det(J)
   !-----------------------------------------------------------------------------
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -498,6 +500,7 @@ contains
   ! Compute the Jacobian J^{i,j} = d chi_i / d \hat{chi_j} and the
   ! determinant det(J)
   !-----------------------------------------------------------------------------
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -637,6 +640,7 @@ contains
   ! Compute the Jacobian J^{i,j} = d chi_i / d \hat{chi_j} and the
   ! determinant det(J)
   !-----------------------------------------------------------------------------
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -783,6 +787,7 @@ contains
 
     use matrix_invert_mod, only: matrix_invert_3x3
 
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in)  :: ngp_h, ngp_v
@@ -812,6 +817,7 @@ contains
 
     use matrix_invert_mod, only: matrix_invert_3x3
 
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in)  :: ngp_h, ngp_v
@@ -853,6 +859,7 @@ contains
 
     use matrix_invert_mod, only: matrix_invert_3x3
 
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in)  :: neval_points
@@ -880,6 +887,7 @@ contains
 
     use matrix_invert_mod, only: matrix_invert_3x3
 
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in)  :: neval_points
@@ -931,6 +939,7 @@ contains
                                        ndf, chi_1, chi_2, chi_3,    &
                                        panel_id, basis, diff_basis, &
                                        jac, dj )
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -1050,6 +1059,7 @@ contains
                                        ndf, chi_1, chi_2, chi_3,    &
                                        panel_id, basis, diff_basis, &
                                        jac, dj )
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -1177,6 +1187,7 @@ contains
   !! @return    jac_inv    Inverse of the Jacobian on quadrature points
   function pointwise_coordinate_jacobian_inverse_r_single(jac, dj) &
                                                           result(jac_inv)
+    !$omp declare target
     implicit none
 
     real(kind=r_single)              :: jac_inv(3,3)
@@ -1200,6 +1211,7 @@ contains
 
   function pointwise_coordinate_jacobian_inverse_r_double(jac, dj) &
                                                           result(jac_inv)
+    !$omp declare target
     implicit none
 
     real(kind=r_double)              :: jac_inv(3,3)
@@ -1234,6 +1246,7 @@ contains
   !> @return    jac_abr2XYZ  3x3 matrix for the Jacobian of the transformation
   function jacobian_abr2XYZ_r_single(alpha, beta, radius, panel_id) &
                                                       result(jac_abr2XYZ)
+    !$omp declare target
     implicit none
 
     real(kind=r_single), intent(in) :: alpha
@@ -1273,6 +1286,7 @@ contains
 
   function jacobian_abr2XYZ_r_double(alpha, beta, radius, panel_id) &
                                                       result(jac_abr2XYZ)
+    !$omp declare target
     implicit none
 
     real(kind=r_double), intent(in) :: alpha
@@ -1324,6 +1338,7 @@ contains
   !> @return    jac_abr2XYZ  Vector of 3x3 matrices for the Jacobian of the transformation
 function jacobian_abr2XYZ_vec_r_single(alpha, beta, radius, panel_id, ngp) &
                                                       result(jac_abr2XYZ)
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in) :: ngp
@@ -1387,6 +1402,7 @@ function jacobian_abr2XYZ_vec_r_single(alpha, beta, radius, panel_id, ngp) &
   !> @return    jac_abr2XYZ  Vector of 3x3 matrices for the Jacobian of the transformation
 function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
                                                       result(jac_abr2XYZ)
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in) :: ngp
@@ -1448,6 +1464,7 @@ function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
   !> @return    jac_llr2XYZ  3x3 matrix for the Jacobian of the transformation
   function jacobian_llr2XYZ_r_single(longitude, latitude, radius) &
                                                       result(jac_llr2XYZ)
+    !$omp declare target
     implicit none
 
     real(kind=r_single), intent(in) :: longitude
@@ -1481,6 +1498,7 @@ function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
 
   function jacobian_llr2XYZ_r_double(longitude, latitude, radius) &
                                                       result(jac_llr2XYZ)
+    !$omp declare target
     implicit none
 
     real(kind=r_double), intent(in) :: longitude
@@ -1524,6 +1542,7 @@ function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
   !> @return    jac_llr2XYZ  3x3 matrix for the Jacobian of the transformation
   function jacobian_XYZ2llr_r_single(longitude, latitude, radius) &
                                                       result(jac_XYZ2llr)
+    !$omp declare target
     implicit none
 
     real(kind=r_single), intent(in) :: longitude
@@ -1557,6 +1576,7 @@ function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
 
   function jacobian_XYZ2llr_r_double(longitude, latitude, radius) &
                                                       result(jac_XYZ2llr)
+    !$omp declare target
     implicit none
 
     real(kind=r_double), intent(in) :: longitude
@@ -1599,6 +1619,7 @@ function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
   !> @return    jac_stretched  3x3 matrix for the Jacobian of the transformation
   function jacobian_stretched_r_single(longitude, latitude, radius, stretch) result(jac_stretched)
 
+    !$omp declare target
     implicit none
 
     real(kind=r_single), intent(in) :: longitude, latitude
@@ -1638,6 +1659,7 @@ function jacobian_abr2XYZ_vec_r_double(alpha, beta, radius, panel_id, ngp) &
 
   function jacobian_stretched_r_double(longitude, latitude, radius, stretch) result(jac_stretched)
 
+    !$omp declare target
     implicit none
 
     real(kind=r_double), intent(in) :: longitude, latitude

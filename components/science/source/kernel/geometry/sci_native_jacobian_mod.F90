@@ -68,6 +68,7 @@ contains
   subroutine native_jacobian(coord_system, geometry, topology, scaled_radius, &
                              ndf_chi, nlayers, chi_1, chi_2, chi_3, panel_id, &
                              basis, diff_basis, jac, dj)
+    !$omp declare target
     implicit none
 
     integer(kind=i_def),  intent(in) :: coord_system
@@ -234,6 +235,7 @@ contains
   !> @param[in] panel_id   Mesh panel ID value for the column
   !> @return    jac_out    3x3 matrix for the Jacobian of the transformation
   function jacobian_abr2XYZ(nlayers, alpha, beta, radius, panel_id) result(jac_out)
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in) :: nlayers
@@ -292,6 +294,7 @@ contains
   !> @return    jac_llr2XYZ  3x3 matrix for the Jacobian of the transformation
   function jacobian_llr2XYZ(nlayers, longitude, latitude, radius) &
                                                       result(jac_llr2XYZ)
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in) :: nlayers
@@ -335,6 +338,7 @@ contains
   !> @return    jac_XYZ2llr  3x3 matrix for the Jacobian of the transformation
   function jacobian_XYZ2llr(nlayers, longitude, latitude, radius) &
                                                       result(jac_XYZ2llr)
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in) :: nlayers
@@ -379,6 +383,7 @@ contains
   !> @return    jac_stretched  3x3 matrix for the Jacobian of the transformation
   function jacobian_stretched(nlayers, longitude, latitude, radius, stretch) result(jac_stretched)
 
+    !$omp declare target
     implicit none
 
     integer(kind=i_def), intent(in) :: nlayers

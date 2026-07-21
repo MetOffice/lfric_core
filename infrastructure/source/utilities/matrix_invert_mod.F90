@@ -65,6 +65,7 @@ module matrix_invert_mod
      ! using LU factorization by Dolittle algorithm
      !--------------------------------------------------------------------------
 
+     !$omp declare target
      implicit none
 
      integer(kind=i_def), intent(in)  :: n
@@ -143,6 +144,7 @@ module matrix_invert_mod
      ! using LU factorization by Dolittle algorithm
      !--------------------------------------------------------------------------
 
+     !$omp declare target
      implicit none
 
      integer(kind=i_def), intent(in)  :: n
@@ -432,6 +434,7 @@ module matrix_invert_mod
 
      use constants_mod, only: r_single
 
+     !$omp declare target
      implicit none
      real(kind=r_single), intent(in) :: A(3,3)
      real(kind=r_single)             :: A_inv(3,3)
@@ -461,6 +464,7 @@ module matrix_invert_mod
 
      use constants_mod, only: r_double
 
+     !$omp declare target
      implicit none
      real(kind=r_double), intent(in) :: A(3,3)
      real(kind=r_double)             :: A_inv(3,3)
@@ -493,6 +497,7 @@ module matrix_invert_mod
 
    pure real(kind=r_single) function determinant_3x3_r_single(j)
 
+     !$omp declare target
      implicit none
 
      real(kind=r_single), intent(in) :: j(3,3)
@@ -506,6 +511,7 @@ module matrix_invert_mod
 
    pure real(kind=r_double) function determinant_3x3_r_double(j)
 
+     !$omp declare target
      implicit none
 
      real(kind=r_double), intent(in) :: j(3,3)
