@@ -105,7 +105,7 @@ subroutine load_local_mesh_maps_single_source( input_mesh_file, &
       if ( local_mesh_collection%check_for( target_mesh_names(i) ) ) then
 
         ! Read in the local mesh map.
-        call ugrid_2d%file_handler%read_map( source_mesh_name,     &
+        call ugrid_2d%file_handler_read_map( source_mesh_name,     &
                                     target_mesh_names(i), &
                                     lid_mesh_map )
 

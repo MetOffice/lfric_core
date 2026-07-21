@@ -251,7 +251,7 @@ subroutine create_local_mesh_maps( input_mesh_file, ugrid_2d )
         if ( associated(target_local_mesh) ) then
 
           ! Read in the global mesh map
-          call ugrid_2d%file_handler%read_map( source_mesh_names(i), &
+          call ugrid_2d%file_handler_read_map( source_mesh_names(i), &
                                       target_mesh_names(j), &
                                       gid_mesh_map )
 

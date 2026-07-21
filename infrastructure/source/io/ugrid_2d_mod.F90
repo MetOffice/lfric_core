@@ -144,6 +144,7 @@ contains
   procedure :: set_file_handler
   procedure :: file_handler_open
   procedure :: file_handler_close
+  procedure :: file_handler_read_map
   procedure :: set_from_file_read
   procedure :: write_to_file
   procedure :: append_to_file
@@ -497,7 +498,7 @@ subroutine file_handler_open(self, filename)
   character(len=*),     intent(in) :: filename
 
   if ( .not. allocated (self%file_handler) ) then
-        call log_event('ugrid_2d file handler not set on open', log_level_error)
+    call log_event('ugrid_2d file handler not set on open', log_level_error)
   end if
   
   if ( .not. self%file_handler_file_open ) then
@@ -519,7 +520,7 @@ subroutine file_handler_close(self)
   class(ugrid_2d_type), intent(inout) :: self
 
   if ( .not. allocated (self%file_handler) ) then
-        call log_event('ugrid_2d file handler not set on close', log_level_error)
+    call log_event('ugrid_2d file handler not set on close', log_level_error)
   end if
   
   if ( self%file_handler_file_open ) then
@@ -529,6 +530,49 @@ subroutine file_handler_close(self)
   return
 end subroutine file_handler_close
 
+!-------------------------------------------------------------------------------
+!> @brief   Call `read-map` on the file_handler.
+!> @details Wrapper to enable the ugrid_2d object's file_handler to call its
+!>          `read_map` subroutine and pass through relevant arguments.
+!>          The file_handler must be set on the object and the file open.
+!>
+!>  @param[in]      source_mesh_name    Name of the source mesh object
+!>  @param[in]      target_mesh_name    Name of the target mesh object
+!>  @param[out]     mesh_map            Intergrid mapping array which maps
+!>                                      source mesh cells to target mesh
+!>                                      cells. Allocatable integer array,
+!>                                      returned as
+!>                                      [n target cells per source x,
+!>                                       n target cells per source y,
+!>                                       n source cells]
+!-------------------------------------------------------------------------------
+subroutine file_handler_read_map( self,             &
+                                  source_mesh_name, &
+                                  target_mesh_name, &
+                                  mesh_map )
+
+  implicit none
+
+  class(ugrid_2d_type), intent(inout) :: self
+  character(str_def), intent(inout)  :: source_mesh_name
+  character(str_def), intent(inout)  :: target_mesh_name
+  integer(i_def),     intent(out), allocatable :: mesh_map(:,:,:)
+
+  if ( .not. allocated (self%file_handler) ) then
+    call log_event('ugrid_2d file handler not set on close', log_level_error)
+  end if
+
+  if ( .not. self%file_handler_file_open ) then
+    call log_event('ugrid_2d file handler file not open on read_map', &
+                    log_level_error)
+  end if
+
+  call self%file_handler%read_map(source_mesh_name, &
+                                  target_mesh_name, &
+                                  mesh_map )
+
+  return
+end subroutine file_handler_read_map
 
 !-------------------------------------------------------------------------------
 !> @brief   Reads ugrid information and populates internal arrays.
