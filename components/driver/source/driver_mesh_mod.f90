@@ -261,7 +261,7 @@ subroutine init_mesh( config,                  &
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(input_mesh_file))
+    call ugrid_2d%file_handler_open(trim(input_mesh_file))
 
     call log_event( 'Using pre-partitioned mesh file:', log_level_debug )
     call log_event( '   '//trim(input_mesh_file), log_level_debug )
@@ -326,7 +326,7 @@ subroutine init_mesh( config,                  &
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(input_mesh_file))
+    call ugrid_2d%file_handler_open(trim(input_mesh_file))
 
     ! 2.2a Set constants that will control partitioning.
     !===========================================================
@@ -365,7 +365,7 @@ subroutine init_mesh( config,                  &
 
   end if  ! prepartitioned
 
-  call ugrid_2d%file_handler%file_close()
+  call ugrid_2d%file_handler_close()
   if (allocated(file_handler)) deallocate( file_handler )
 
 

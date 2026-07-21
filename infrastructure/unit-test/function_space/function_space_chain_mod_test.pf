@@ -141,7 +141,7 @@ type(custom_decomposition_type) :: decomposition
 
     allocate( ncdf_quad_type :: file_handler_ )
     call ugrid_2d%set_file_handler( file_handler_ )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
 call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
@@ -177,7 +177,7 @@ do i=1, size(mesh_names)
   call global_mesh%clear()
   call local_mesh%clear()
 enddo
-call ugrid_2d%file_handler%file_close()
+call ugrid_2d%file_handler_close()
 if (allocated(file_handler_)) deallocate( file_handler_ )
 
 ! Now all the meshes exist, read in global mesh maps, convert them to local ids

@@ -142,13 +142,13 @@ subroutine test_compute_colours_cubedsphere(this)
   filename = "data/mesh_C4.nc"
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
     ! Run through mesh construction process to initialise tiling via
     ! the mesh_type API
     call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
   global_mesh_ptr => global_mesh
@@ -280,13 +280,13 @@ subroutine test_compute_colours_biperiodic(this)
   filename = "data/mesh_BiP8x8-750x250.nc"
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
     ! Run through mesh construction process to initialise tiling via
     ! the mesh_type API
     call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
   global_mesh_ptr => global_mesh
@@ -394,13 +394,13 @@ subroutine test_compute_colours_generic(this)
   filename = "data/mesh_C4.nc"
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
   ! Force colour generator to use generic colour routine by not saying
   ! it's a cubed sphere
     call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
   global_mesh_ptr => global_mesh

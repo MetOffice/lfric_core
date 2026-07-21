@@ -108,7 +108,7 @@ contains
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
 
     !-------------------------------------
@@ -119,7 +119,7 @@ contains
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
     ! Check the global mesh id
@@ -277,7 +277,7 @@ contains
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
 
     !---------------------------------------
@@ -287,7 +287,7 @@ contains
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
     ! Check the global mesh id
@@ -446,7 +446,7 @@ contains
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
 
     filename='data/mesh_C32_MG.nc'
@@ -457,7 +457,7 @@ contains
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
     ! Check details of C4 mesh
@@ -579,7 +579,7 @@ contains
 
     allocate( ncdf_quad_type :: file_handler_ )
     call ugrid_2d%set_file_handler( file_handler_ )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
 
     !-------------------------------------------------
@@ -601,7 +601,7 @@ contains
       MultiGrid_ids(i) = global_mesh%get_id()
       call global_mesh_collection%add_new_global_mesh( global_mesh )
     end do
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler_)) deallocate( file_handler_ )
 
     ! Check that each ID appears only once

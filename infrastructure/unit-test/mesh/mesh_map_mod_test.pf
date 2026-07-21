@@ -172,7 +172,7 @@ contains
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
     call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
@@ -215,7 +215,7 @@ contains
     fine_global_mesh = global_mesh_type( ugrid_mesh_data )
     fine_global_mesh_ptr => fine_global_mesh
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
 
     fine_partition   = partition_type( fine_global_mesh_ptr,   &

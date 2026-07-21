@@ -132,13 +132,14 @@ contains
 
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    print, *, trim(filename)
+    call ugrid_2d%file_handler_open(trim(filename))
     ! Run through mesh construction process to initialise tiling via
     ! the mesh_type API
     call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler)) deallocate( file_handler )
      global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )

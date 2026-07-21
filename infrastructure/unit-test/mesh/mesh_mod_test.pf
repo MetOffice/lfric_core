@@ -815,7 +815,7 @@ contains
 
     allocate( ncdf_quad_type :: file_handler_ )
     call ugrid_2d%set_file_handler( file_handler_ )
-    call ugrid_2d%file_handler%file_open(trim(filename))
+    call ugrid_2d%file_handler_open(trim(filename))
 
     ! Create all the meshes: global and local
     do i=1, size(mesh_names)
@@ -837,7 +837,7 @@ contains
       call global_mesh%clear()
       call local_mesh%clear()
     end do
-    call ugrid_2d%file_handler%file_close()
+    call ugrid_2d%file_handler_close()
     if (allocated(file_handler_)) deallocate( file_handler_ )
 
     ! Now all the meshes exist, read in global mesh maps, convert them to local ids
