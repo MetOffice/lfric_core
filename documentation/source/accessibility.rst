@@ -12,7 +12,7 @@
 Accessibility statement for the LFRic core Docs website
 #######################################################
 
-Details on producing an accessibility statement can be found on the `Central
+Change Details on producing an accessibility statement can be found on the `Central
 Digital & Data Office government website`_.
 
 This accessibility statement applies to content published on the
