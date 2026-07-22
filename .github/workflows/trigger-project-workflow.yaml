@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   trigger_project_workflow:
-    if: github.repository == 'MetOffice/lfric_apps'
+    if: github.repository == 'MetOffice/lfric_core'
 
     permissions:
       actions: read  # Required to check out code or parse files safely
