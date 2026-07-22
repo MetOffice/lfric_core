@@ -45,7 +45,7 @@ subroutine load_local_mesh_maps_multiple_source( input_mesh_file, &
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
-  character(str_def),          intent(in) :: source_mesh_names(:)
+  character(str_def),          intent(inout) :: source_mesh_names(:)
   type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   integer(i_def) :: i
@@ -74,7 +74,7 @@ subroutine load_local_mesh_maps_single_source( input_mesh_file, &
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
-  character(str_def),          intent(in) :: source_mesh_name
+  character(str_def),          intent(inout) :: source_mesh_name
 
   character(str_def), allocatable :: target_mesh_names(:)
   integer(i_def),     allocatable :: lid_mesh_map(:,:,:)
