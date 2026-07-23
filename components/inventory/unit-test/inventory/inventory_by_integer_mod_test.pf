@@ -1,0 +1,306 @@
+!-----------------------------------------------------------------------------
+! (c) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+! Some of the content of this file has been produced with the assistance of
+! GitHub Copilot (Claude Sonnet 5).
+!-----------------------------------------------------------------------------
+
+!> Test the inventory_by_integer object
+!>
+module inventory_by_integer_mod_test
+
+    use constants_mod,                 only : i_def, r_def, l_def, r_solver
+    use function_space_mod,            only : function_space_type
+    use function_space_collection_mod, only : function_space_collection_type, &
+                                              function_space_collection
+    use mesh_collection_mod,           only : mesh_collection_type, &
+                                              mesh_collection
+    use mesh_mod,                      only : mesh_type
+    use halo_routing_collection_mod,   only : halo_routing_collection_type, &
+                                              halo_routing_collection
+    use field_mod,                     only : field_type, field_proxy_type
+    use operator_mod,                  only : operator_type, operator_proxy_type
+    use inventory_by_integer_mod,      only : inventory_by_integer_type
+    use fs_continuity_mod,             only : W3
+    use linked_list_mod,               only : linked_list_item_type
+    use local_mesh_mod,                only : local_mesh_type
+    use funit
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: inventory_by_integer_test_type
+    private
+    type(function_space_type), pointer :: w3_fs_A => null()
+    type(function_space_type), pointer :: w3_fs_B => null()
+    type(local_mesh_type)              :: unit_test_local_mesh
+    type(mesh_type), pointer           :: mesh_A => null()
+    type(mesh_type), pointer           :: mesh_B => null()
+  contains
+    procedure setUp
+    procedure tearDown
+    procedure get_local_mesh_ptr
+    procedure test_all
+  end type inventory_by_integer_test_type
+
+  integer(i_def), parameter :: element_order_h = 0
+  integer(i_def), parameter :: element_order_v = 0
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    use mesh_mod, only : mesh_type, PLANE_BI_PERIODIC, PLANE
+
+    implicit none
+
+    class(inventory_by_integer_test_type), intent(inout) :: this
+
+    type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
+    type(mesh_type) :: unit_test_mesh_A, unit_test_mesh_B
+    integer(i_def)  :: mesh_id
+    integer(i_def)  :: mesh_id_A = 3
+    integer(i_def)  :: mesh_id_B = 4
+
+    ! Create top level mesh collection
+    mesh_collection = mesh_collection_type()
+    ! Create top level function space collection
+    function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
+
+    call this%unit_test_local_mesh%initialise()
+    unit_test_local_mesh_ptr => this%get_local_mesh_ptr()
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    unit_test_mesh_A = mesh_type( PLANE_BI_PERIODIC, unit_test_local_mesh_ptr )
+    call unit_test_mesh_A%set_id( mesh_id_A )
+    mesh_id = mesh_collection%add_new_mesh( unit_test_mesh_A )
+    this%mesh_A => mesh_collection%get_mesh( mesh_id )
+    this%w3_fs_A => function_space_collection%get_fs( this%mesh_A,     &
+                                                      element_order_h, &
+                                                      element_order_v, &
+                                                      W3 )
+
+    unit_test_mesh_B = mesh_type( PLANE, unit_test_local_mesh_ptr )
+    call unit_test_mesh_B%set_id( mesh_id_B )
+    mesh_id = mesh_collection%add_new_mesh( unit_test_mesh_B )
+    this%mesh_B => mesh_collection%get_mesh( mesh_id )
+    this%w3_fs_B => function_space_collection%get_fs( this%mesh_B,     &
+                                                      element_order_h, &
+                                                      element_order_v, &
+                                                      W3 )
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(inventory_by_integer_test_type), intent(inout) :: this
+
+    call function_space_collection%clear()
+    call mesh_collection%clear()
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  function get_local_mesh_ptr(this) result(unit_test_local_mesh_ptr)
+    implicit none
+    class(inventory_by_integer_test_type), intent(inout), target :: this
+    type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
+    unit_test_local_mesh_ptr => this%unit_test_local_mesh
+  end function get_local_mesh_ptr
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  @test
+  subroutine test_all( this )
+
+    implicit none
+
+    class(inventory_by_integer_test_type), intent(inout) :: this
+
+    type(field_type)                      :: test_field_A
+    type(field_type)                      :: test_field_B
+    type(field_proxy_type)                :: test_field_A_p
+    type(field_proxy_type)                :: test_field_B_p
+
+    type(operator_type)                   :: test_op_A
+    type(operator_type)                   :: test_op_B
+    type(operator_proxy_type)             :: test_op_A_p
+    type(operator_proxy_type)             :: test_op_B_p
+
+    type(field_type), pointer             :: returned_field_A
+    type(field_type), pointer             :: returned_field_B
+    type(field_proxy_type)                :: returned_field_A_p
+    type(field_proxy_type)                :: returned_field_B_p
+
+    type(operator_type), pointer          :: returned_op_A
+    type(operator_type), pointer          :: returned_op_B
+    type(operator_proxy_type)             :: returned_op_A_p
+    type(operator_proxy_type)             :: returned_op_B_p
+
+    type(inventory_by_integer_type), target :: test_inventory_by_integer_A
+    type(inventory_by_integer_type), target :: test_inventory_by_integer_B
+
+    real(kind=r_def),    parameter :: tol = 1.0e-8_r_def
+    real(kind=r_solver), parameter :: tol_rsol = 1.0e-8_r_solver
+
+    integer(kind=i_def), parameter :: key_A = 1_i_def
+    integer(kind=i_def), parameter :: key_B = 2_i_def
+
+    real(kind=r_def)    :: first_real
+    real(kind=r_solver) :: second_real
+    logical(kind=l_def) :: exists
+    logical(kind=l_def) :: scalar_logical
+    integer(kind=i_def) :: scalar_integer
+    integer(kind=i_def) :: length
+
+    real(kind=r_def),    pointer :: returned_real1
+    real(kind=r_solver), pointer :: returned_real2
+    logical(kind=l_def), pointer :: returned_logical
+    integer(kind=i_def), pointer :: returned_integer
+
+    !---------------------------- Create fields -------------------------------!
+    ! Create a field object and put 99.0 in the first dof
+    call test_field_A%initialise( this%w3_fs_A )
+    test_field_A_p = test_field_A%get_proxy()
+    test_field_A_p%data(1) = 99.0_r_def
+
+    call test_field_B%initialise( this%w3_fs_B )
+    test_field_B_p = test_field_B%get_proxy()
+    test_field_B_p%data(1) = 54.0_r_def
+
+    call test_op_A%initialise( this%w3_fs_A, this%w3_fs_A )
+    test_op_A_p = test_op_A%get_proxy()
+    test_op_A_p%local_stencil(1,1,1) = 20.1_r_def
+
+    call test_op_B%initialise( this%w3_fs_B, this%w3_fs_B )
+    test_op_B_p = test_op_B%get_proxy()
+    test_op_B_p%local_stencil(1,1,1) = 0.09_r_def
+
+    !----------------- Create inventory 'A' & test extracts -------------------!
+    ! Create a inventory_by_integer_A and put fields in it
+    call test_inventory_by_integer_A%initialise(name="test_inventory_of_fields", &
+                                                table_len=5)
+    call test_inventory_by_integer_A%copy_field(test_field_A, key_A)
+    call test_inventory_by_integer_A%copy_field(test_field_B, key_B)
+
+    !--- Check fields exist in inventory
+    exists = test_inventory_by_integer_A%paired_object_exists(key_A)
+    @assertTrue(exists)
+    exists = test_inventory_by_integer_A%paired_object_exists(key_B)
+    @assertTrue(exists)
+
+    ! Field extracts
+    call test_inventory_by_integer_A%get_field(key_A, returned_field_A)
+    returned_field_A_p = returned_field_A%get_proxy()
+    ! Check that test_field has 99.0 in the first dof
+    @assertEqual(99.0_r_def, returned_field_A_p%data(1), tol)
+
+    call test_inventory_by_integer_A%get_field(key_B, returned_field_B)
+    returned_field_B_p = returned_field_B%get_proxy()
+    ! Check that test_field has 54.0 in the first dof
+    @assertEqual(54.0_r_def, returned_field_B_p%data(1), tol)
+
+    ! Check we can remove a field from the inventory
+    call test_inventory_by_integer_A%remove_paired_object(key_A)
+    length = test_inventory_by_integer_A%get_length()
+    @assertEqual(1, length)
+
+    ! Check that test_field no longer exists in inventory_by_integer
+    exists = test_inventory_by_integer_A%paired_object_exists(key_A)
+    @assertFalse(exists)
+
+    ! Check we can add the field back into the inventory
+    call test_inventory_by_integer_A%copy_field(test_field_A, key_A)
+    call test_inventory_by_integer_A%get_field(key_A, returned_field_A)
+    returned_field_A_p = returned_field_A%get_proxy()
+    @assertEqual(99.0_r_def, returned_field_A_p%data(1), tol)
+
+    !-------------- Create operator inventory 'B' & test extracts -------------!
+    ! Create a inventory_by_integer_B and put fields in it
+    call test_inventory_by_integer_B%initialise(name="test_inventory_of_fields", &
+                                                table_len=5)
+    call test_inventory_by_integer_B%copy_operator(test_op_A, key_A)
+    call test_inventory_by_integer_B%copy_operator(test_op_B, key_B)
+
+    !---Check operators exist in inventory
+    exists = test_inventory_by_integer_B%paired_object_exists(key_A)
+    @assertTrue(exists)
+    exists = test_inventory_by_integer_B%paired_object_exists(key_B)
+    @assertTrue(exists)
+
+    ! Operator extracts
+    call test_inventory_by_integer_B%get_operator(key_A, returned_op_A)
+    returned_op_A_p = returned_op_A%get_proxy()
+    ! Check that test_op has 20.1 in the first dof
+    @assertEqual(20.1_r_def, returned_op_A_p%local_stencil(1,1,1), tol)
+
+    call test_inventory_by_integer_B%get_operator(key_B, returned_op_B)
+    returned_op_B_p = returned_op_B%get_proxy()
+    ! Check that test_op has 0.09 in the first dof
+    @assertEqual(0.09_r_def, returned_op_B_p%local_stencil(1,1,1), tol)
+
+    ! Check we can remove a operator from the inventory
+    call test_inventory_by_integer_B%remove_paired_object(key_A)
+    length = test_inventory_by_integer_B%get_length()
+    @assertEqual(1, length)
+
+    ! Check that test_op no longer exists in inventory_by_integer
+    exists = test_inventory_by_integer_B%paired_object_exists(key_A)
+    @assertFalse(exists)
+
+    ! Check we can add the operator back into the inventory
+    call test_inventory_by_integer_B%copy_operator(test_op_A, key_A)
+    call test_inventory_by_integer_B%get_operator(key_A, returned_op_A)
+    returned_op_A_p = returned_op_A%get_proxy()
+    @assertEqual(20.1_r_def, returned_op_A_p%local_stencil(1,1,1), tol)
+
+    ! --- Check use of scalars in inventories
+    call test_inventory_by_integer_A%clear()
+    call test_inventory_by_integer_A%initialise(                               &
+            name="test_inventory_A_of_scalars", table_len=5                    &
+    )
+    ! Add a logical
+    scalar_logical = .true.
+    call test_inventory_by_integer_A%add_logical( scalar_logical, key_A )
+    call test_inventory_by_integer_A%get_logical( key_A, returned_logical )
+    @assertTrue(returned_logical)
+
+    ! Add an integer
+    scalar_integer = 19
+    call test_inventory_by_integer_A%add_integer( scalar_integer, key_B )
+    call test_inventory_by_integer_A%get_integer( key_B, returned_integer )
+    @assertEqual(scalar_integer, returned_integer)
+
+    ! Add reals
+    call test_inventory_by_integer_B%clear()
+    call test_inventory_by_integer_B%initialise(                               &
+            name="test_inventory_B_of_scalars", table_len=5                    &
+    )
+    first_real = 19.19_r_def
+    second_real = 19.1919_r_solver
+    call test_inventory_by_integer_B%add_real( first_real, key_A )
+    call test_inventory_by_integer_B%add_real( second_real, key_B )
+    call test_inventory_by_integer_B%get_real( key_A, returned_real1 )
+    call test_inventory_by_integer_B%get_real( key_B, returned_real2 )
+    @assertEqual(first_real, returned_real1, tol)
+    @assertEqual(second_real, returned_real2, tol_rsol)
+
+    ! Tidy up by clearing inventories
+    call test_inventory_by_integer_A%clear()
+    call test_inventory_by_integer_B%clear()
+
+  end subroutine test_all
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+end module inventory_by_integer_mod_test

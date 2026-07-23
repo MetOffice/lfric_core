@@ -1,6 +1,8 @@
 ' (C) Crown copyright 2022 Met Office. All rights reserved.
 ' The file LICENCE, distributed with this code, contains details of the terms
 ' under which the code may be used.
+' Some of the content of this file has been produced with the assistance of
+' GitHub Copilot (Claude Sonnet 5).
 
 @startuml
 
@@ -8,6 +10,7 @@
 
 !include inventory/inventory_by_mesh_mod.iuml
 !include inventory/inventory_by_local_mesh_mod.iuml
+!include inventory/inventory_by_integer_mod.iuml
 !include inventory/id_abstract_pair_mod.iuml
 !include inventory/id_integer_pair_mod.iuml
 !include inventory/id_integer_array_pair_mod.iuml
@@ -17,14 +20,17 @@
 !include inventory/id_real32_pair_mod.iuml
 !include inventory/id_real64_pair_mod.iuml
 !include inventory/id_r32_field_array_pair_mod.iuml
+!include inventory/id_r32_field_array_2d_pair_mod.iuml
 !include inventory/id_r32_field_pair_mod.iuml
 !include inventory/id_r32_operator_pair_mod.iuml
 !include inventory/id_r64_field_pair_mod.iuml
 !include inventory/id_r64_field_array_pair_mod.iuml
+!include inventory/id_r64_field_array_2d_pair_mod.iuml
 !include inventory/id_r64_operator_pair_mod.iuml
 
 inventory_by_mesh_mod::inventory_by_mesh_type o-> "*" id_abstract_pair_mod::id_abstract_pair_type
 inventory_by_local_mesh_mod::inventory_by_local_mesh_type o-> "*" id_abstract_pair_mod::id_abstract_pair_type
+inventory_by_integer_mod::inventory_by_integer_type o-> "*" id_abstract_pair_mod::id_abstract_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_integer_pair_mod::id_integer_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_integer_array_pair_mod::id_integer_array_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_integer_field_pair_mod::id_integer_field_pair_type
@@ -34,9 +40,11 @@ id_abstract_pair_mod::id_abstract_pair_type ^- id_real32_pair_mod::id_real32_pai
 id_abstract_pair_mod::id_abstract_pair_type ^- id_real64_pair_mod::id_real64_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_r32_field_pair_mod::id_r32_field_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_r32_field_array_pair_mod::id_r32_field_array_pair_type
+id_abstract_pair_mod::id_abstract_pair_type ^- id_r32_field_array_2d_pair_mod::id_r32_field_array_2d_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_r32_operator_pair_mod::id_r32_operator_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_r64_field_pair_mod::id_r64_field_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_r64_field_array_pair_mod::id_r64_field_array_pair_type
+id_abstract_pair_mod::id_abstract_pair_type ^- id_r64_field_array_2d_pair_mod::id_r64_field_array_2d_pair_type
 id_abstract_pair_mod::id_abstract_pair_type ^- id_r64_operator_pair_mod::id_r64_operator_pair_type
 
 @enduml

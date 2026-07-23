@@ -1,17 +1,18 @@
 !-----------------------------------------------------------------------------
-! (C) Crown copyright 2022 Met Office. All rights reserved.
+! (C) Crown copyright Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 ! Some of the content of this file has been produced with the assistance of
 ! GitHub Copilot (Claude Sonnet 5).
 !-----------------------------------------------------------------------------
 !
-!> @brief Holds and manages objects that are paired with meshes in an inventory
+!> @brief Holds and manages objects that are paired with an integer key in an
+!>        inventory
 !>
 !> @details A container that holds a collection of objects that are paired with
-!!          meshes.
-!
-module inventory_by_mesh_mod
+!!          an integer key (e.g. an enumerator).
+
+module inventory_by_integer_mod
 
   use constants_mod,                    only: i_def, l_def, str_def, r_single, &
                                               r_double
@@ -26,7 +27,6 @@ module inventory_by_mesh_mod
   use linked_list_data_mod,             only: linked_list_data_type
   use linked_list_mod,                  only: linked_list_type, &
                                               linked_list_item_type
-  use mesh_mod,                         only: mesh_type
   use operator_mod,                     only: operator_type
   use operator_real32_mod,              only: operator_real32_type
   use operator_real64_mod,              only: operator_real64_type
@@ -52,14 +52,14 @@ module inventory_by_mesh_mod
   private
 
   ! Set the default table length -- this number should be higher than the
-  ! expected number of meshes. If this limit is actually reached, then
-  ! it can be increased in the future
+  ! expected number of distinct integer keys. If this limit is actually
+  ! reached, then it can be increased in the future
   integer(kind=i_def), parameter :: default_table_len = 20
 
   !-----------------------------------------------------------------------------
   ! Type that holds an inventory of paired objects in a linked list
   !-----------------------------------------------------------------------------
-  type, extends(linked_list_data_type), public :: inventory_by_mesh_type
+  type, extends(linked_list_data_type), public :: inventory_by_integer_type
     private
     !> The name of the inventory if provided.
     character(str_def)     :: name = 'unnamed_inventory'
@@ -87,13 +87,9 @@ module inventory_by_mesh_mod
     procedure, public :: add_r32_field
     procedure, public :: add_r64_field
     procedure, public :: add_integer_field
-    procedure, public :: add_r32_intermesh_field
-    procedure, public :: add_r64_intermesh_field
-    generic           :: add_field => add_r32_field,           &
-                                      add_r64_field,           &
-                                      add_integer_field,       &
-                                      add_r32_intermesh_field, &
-                                      add_r64_intermesh_field
+    generic           :: add_field => add_r32_field,     &
+                                      add_r64_field,     &
+                                      add_integer_field
     procedure, public :: add_r32_field_array
     procedure, public :: add_r64_field_array
     procedure, public :: add_integer_field_array
@@ -120,13 +116,9 @@ module inventory_by_mesh_mod
     procedure, public :: copy_r32_field
     procedure, public :: copy_r64_field
     procedure, public :: copy_integer_field
-    procedure, public :: copy_r32_intermesh_field
-    procedure, public :: copy_r64_intermesh_field
-    generic           :: copy_field => copy_r32_field,           &
-                                       copy_r64_field,           &
-                                       copy_integer_field,       &
-                                       copy_r32_intermesh_field, &
-                                       copy_r64_intermesh_field
+    generic           :: copy_field => copy_r32_field,     &
+                                       copy_r64_field,     &
+                                       copy_integer_field
     procedure, public :: copy_r32_field_array
     procedure, public :: copy_r64_field_array
     procedure, public :: copy_integer_field_array
@@ -146,13 +138,9 @@ module inventory_by_mesh_mod
     procedure, public :: get_r32_field
     procedure, public :: get_r64_field
     procedure, public :: get_integer_field
-    procedure, public :: get_r32_intermesh_field
-    procedure, public :: get_r64_intermesh_field
-    generic           :: get_field => get_r32_field,           &
-                                      get_r64_field,           &
-                                      get_integer_field,       &
-                                      get_r32_intermesh_field, &
-                                      get_r64_intermesh_field
+    generic           :: get_field => get_r32_field,     &
+                                      get_r64_field,     &
+                                      get_integer_field
     procedure, public :: get_r32_field_array
     procedure, public :: get_r64_field_array
     procedure, public :: get_integer_field_array
@@ -178,11 +166,9 @@ module inventory_by_mesh_mod
     ! Overloaded routine (which will trigger a failure)
     procedure, private :: inventory_copy_constructor
 
-    procedure, public :: compute_intermesh_id
-
     generic, public   :: assignment(=) => inventory_copy_constructor
-    final             :: inventory_by_mesh_destructor
-  end type inventory_by_mesh_type
+    final             :: inventory_by_integer_destructor
+  end type inventory_by_integer_type
 
 contains
 
@@ -195,9 +181,9 @@ subroutine initialise(self, name, table_len)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  character(*),        optional, intent(in)    :: name
-  integer(kind=i_def), optional, intent(in)    :: table_len
+  class(inventory_by_integer_type), intent(inout) :: self
+  character(*),           optional, intent(in)    :: name
+  integer(kind=i_def),    optional, intent(in)    :: table_len
 
   integer(kind=i_def) :: i
 
@@ -223,8 +209,8 @@ subroutine add_paired_object(self, paired_object)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  class(id_abstract_pair_type),  intent(in)    :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  class(id_abstract_pair_type),     intent(in)    :: paired_object
   integer(kind=i_def) :: hash, id
 
   ! Extract ID
@@ -234,9 +220,9 @@ subroutine add_paired_object(self, paired_object)
   ! If it does, throw an error
   if ( self%paired_object_exists( id ) ) then
     write(log_scratch_space, '(A,I8,5A)')                                      &
-        'Paired object on mesh [', id, '] corresponds to a hash that',         &
-        ' already exists in inventory_by_mesh: ', trim(self%name),             &
-        '. If this object corresponds to a new mesh, you may need to ',        &
+        'Paired object on key [', id, '] corresponds to a hash that',          &
+        ' already exists in inventory_by_integer: ', trim(self%name),          &
+        '. If this object corresponds to a new key, you may need to ',         &
         'increase the table length of the inventory'
     call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     call self%remove_paired_object(id)
@@ -246,7 +232,7 @@ subroutine add_paired_object(self, paired_object)
   hash = mod(id, self%get_table_len())
   call self%paired_object_list(hash)%insert_item( paired_object )
   write(log_scratch_space, '(A,I8,2A)') &
-    'Adding object on mesh [', id, '] to inventory_by_mesh: ', trim(self%name)
+    'Adding object on key [', id, '] to inventory_by_integer: ', trim(self%name)
   call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
 
 end subroutine add_paired_object
@@ -257,7 +243,7 @@ function get_length(self) result(length)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in) :: self
+  class(inventory_by_integer_type), intent(in) :: self
   integer(kind=i_def) :: length
   integer(kind=i_def) :: i
 
@@ -274,7 +260,7 @@ function get_name(self) result(name)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in) :: self
+  class(inventory_by_integer_type), intent(in) :: self
   character(str_def) :: name
 
   name = self%name
@@ -287,11 +273,11 @@ function get_table_len(self) result(table_len)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in) :: self
+  class(inventory_by_integer_type), intent(in) :: self
   integer(kind=i_def) :: table_len
 
   if ( self%table_len == 0 ) then
-    call log_event("inventory_by_mesh: Attempt to use uninitialised collection", &
+    call log_event("inventory_by_integer: Attempt to use uninitialised collection", &
                     LOG_LEVEL_ERROR)
   end if
 
@@ -305,14 +291,14 @@ function is_initialised(self) result(initialised)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in) :: self
+  class(inventory_by_integer_type), intent(in) :: self
   logical(kind=l_def) :: initialised
 
   initialised = allocated(self%paired_object_list)
 
 end function is_initialised
 
-!> DEPRECATED: Assignment operator between inventory_by_mesh_type pairs.
+!> DEPRECATED: Assignment operator between inventory_by_integer_type pairs.
 !> Currently, this routine generates a (hopefully) useful message, then
 !> forces an error.
 !>
@@ -321,12 +307,12 @@ end function is_initialised
 subroutine inventory_copy_constructor(self, source)
 
   implicit none
-  class(inventory_by_mesh_type), intent(inout) :: self
-  type(inventory_by_mesh_type),  intent(in)    :: source
+  class(inventory_by_integer_type), intent(inout) :: self
+  type(inventory_by_integer_type),  intent(in)    :: source
 
   write(log_scratch_space,'(A,A)')&
-     '"inventory_by_mesh2 = inventory_by_mesh1" syntax not supported. '  // &
-     'Use "call inventory_by_mesh1%copy_inventory(inventory_by_mesh2)". '// &
+     '"inventory_by_integer2 = inventory_by_integer1" syntax not supported. '  // &
+     'Use "call inventory_by_integer1%copy_inventory(inventory_by_integer2)". '// &
      'Inventory: ', source%get_name()
   call log_event( log_scratch_space, LOG_LEVEL_ERROR )
 
@@ -337,7 +323,7 @@ subroutine clear(self)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
+  class(inventory_by_integer_type), intent(inout) :: self
   integer(i_def) :: i
 
   if (allocated(self%paired_object_list)) then
@@ -352,17 +338,17 @@ subroutine clear(self)
 end subroutine clear
 
 !> @brief Destructor for the inventory
-subroutine inventory_by_mesh_destructor(self)
+subroutine inventory_by_integer_destructor(self)
 
   implicit none
 
-  type (inventory_by_mesh_type), intent(inout) :: self
+  type (inventory_by_integer_type), intent(inout) :: self
 
   call self%clear()
 
   return
 
-end subroutine inventory_by_mesh_destructor
+end subroutine inventory_by_integer_destructor
 
 ! ============================================================================ !
 ! ROUTINES TO CYCLE THROUGH LINKED LIST
@@ -375,8 +361,8 @@ function get_paired_object(self, id) result(paired_object)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in) :: self
-  integer(kind=i_def),           intent(in) :: id
+  class(inventory_by_integer_type), intent(in) :: self
+  integer(kind=i_def),              intent(in) :: id
 
   ! Pointer to linked list - used for looping through the list
   type(linked_list_item_type),  pointer :: loop => null()
@@ -392,8 +378,8 @@ function get_paired_object(self, id) result(paired_object)
     ! If inventory is empty or we're at the end of list and we didn't find the
     ! object, fail with an error
     if ( .not. associated(loop) ) then
-      write(log_scratch_space, '(A,I8,2A)') 'get_paired_object: No object on mesh [', &
-         id, '] in inventory_by_mesh: ', trim(self%name)
+      write(log_scratch_space, '(A,I8,2A)') 'get_paired_object: No object for key [', &
+         id, '] in inventory_by_integer: ', trim(self%name)
       call log_event( log_scratch_space, LOG_LEVEL_ERROR)
     end if
 
@@ -493,7 +479,7 @@ function paired_object_exists(self, id) result(exists)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in) :: self
+  class(inventory_by_integer_type), intent(in) :: self
 
   integer(kind=i_def), intent(in) :: id
   integer(kind=i_def)             :: loop_id
@@ -612,8 +598,8 @@ subroutine remove_paired_object(self, id)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  integer(kind=i_def),           intent(in)    :: id
+  class(inventory_by_integer_type), intent(inout) :: self
+  integer(kind=i_def),              intent(in)    :: id
 
   ! Pointer to linked list - used for looping through the list
   type(linked_list_item_type),  pointer :: loop => null()
@@ -629,7 +615,7 @@ subroutine remove_paired_object(self, id)
     ! If list is empty or we're at the end of list and we didn't find the
     ! object, fail with an error
     if ( .not. associated(loop) ) then
-      write(log_scratch_space, '(A,I8,2A)') 'remove_paired_object: No object paired to mesh [', &
+      write(log_scratch_space, '(A,I8,2A)') 'remove_paired_object: No object paired to key [', &
          id, '] in the inventory: ', trim(self%name)
       call log_event( log_scratch_space, LOG_LEVEL_ERROR)
     end if
@@ -723,24 +709,24 @@ subroutine remove_paired_object(self, id)
 end subroutine remove_paired_object
 
 ! ============================================================================ !
-! ADD OBJECT ROUTINES -- these are specific to an inventory_by_mesh
+! ADD OBJECT ROUTINES -- these are specific to an inventory_by_integer
 ! ============================================================================ !
 
 !> @brief Adds an r32 field to the inventory and returns a pointer to it
 !> @param[out] field       Pointer to the field that is to be added
 !> @param[in]  fs          Function space for the field to be created
-!> @param[in]  mesh        The mesh to pair the field with
+!> @param[in]  key         The integer key to pair the field with
 !> @param[in]  name        Optional name for the field
 !> @param[in]  halo_depth  Optional halo depth for field (to overwrite the
 !!                         default halo depth)
-subroutine add_r32_field(self, field, fs, mesh, name, halo_depth)
+subroutine add_r32_field(self, field, fs, key, name, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(field_real32_type),   pointer, intent(out)   :: field
   type(function_space_type), pointer, intent(in)    :: fs
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   character(*),             optional, intent(in)    :: name
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_r32_field_pair_type)                      :: paired_object
@@ -753,28 +739,27 @@ subroutine add_r32_field(self, field, fs, mesh, name, halo_depth)
   end if
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), name=local_name, &
-                                halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, name=local_name, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_r32_field(mesh, field)
+  call self%get_r32_field(key, field)
 
 end subroutine add_r32_field
 
 !> @brief Adds an r64 field to the inventory and returns a pointer to it
 !> @param[out] field       Pointer to the field that is to be added
 !> @param[in]  fs          Function space for the field to be created
-!> @param[in]  mesh        The mesh to pair the field with
+!> @param[in]  key         The integer key to pair the field with
 !> @param[in]  name        Optional name for the field
 !> @param[in]  halo_depth  Optional halo depth for field (to overwrite the
 !!                         default halo depth)
-subroutine add_r64_field(self, field, fs, mesh, name, halo_depth)
+subroutine add_r64_field(self, field, fs, key, name, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(field_real64_type),   pointer, intent(out)   :: field
   type(function_space_type), pointer, intent(in)    :: fs
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   character(*),             optional, intent(in)    :: name
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_r64_field_pair_type)                      :: paired_object
@@ -787,82 +772,28 @@ subroutine add_r64_field(self, field, fs, mesh, name, halo_depth)
   end if
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), name=local_name, &
+  call paired_object%initialise(fs, key, name=local_name, &
                                 halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_r64_field(mesh, field)
+  call self%get_r64_field(key, field)
 
 end subroutine add_r64_field
-
-!> @brief Adds an r32 field to the inventory, that is used for intermesh mapping
-!!        and returns a pointer to it
-!> @param[out] field        Pointer to the field that is to be added
-!> @param[in]  fs           Function space for the field to be created
-!> @param[in]  source_mesh  The source mesh for the intermesh transform
-!> @param[in]  target_mesh  The target mesh for the intermesh transform
-subroutine add_r32_intermesh_field(self, field, fs, source_mesh, target_mesh)
-
-  implicit none
-
-  class(inventory_by_mesh_type),      intent(inout) :: self
-  type(field_real32_type),   pointer, intent(out)   :: field
-  type(function_space_type), pointer, intent(in)    :: fs
-  type(mesh_type),                    intent(in)    :: source_mesh
-  type(mesh_type),                    intent(in)    :: target_mesh
-  type(id_r32_field_pair_type)                      :: paired_object
-  integer(kind=i_def)                               :: intermesh_id
-
-  ! Make a unique ID for transform between source and target mesh
-  intermesh_id = self%compute_intermesh_id(source_mesh, target_mesh)
-  ! Set up the paired_object
-  call paired_object%initialise(fs, intermesh_id)
-  call self%add_paired_object(paired_object)
-  call self%get_r32_intermesh_field(source_mesh, target_mesh, field)
-
-end subroutine add_r32_intermesh_field
-
-!> @brief Adds an r64 field to the inventory, that is used for intermesh mapping
-!!        and returns a pointer to it
-!> @param[out] field        Pointer to the field that is to be added
-!> @param[in]  fs           Function space for the field to be created
-!> @param[in]  source_mesh  The source mesh for the intermesh transform
-!> @param[in]  target_mesh  The target mesh for the intermesh transform
-subroutine add_r64_intermesh_field(self, field, fs, source_mesh, target_mesh)
-
-  implicit none
-
-  class(inventory_by_mesh_type),      intent(inout) :: self
-  type(field_real64_type),   pointer, intent(out)   :: field
-  type(function_space_type), pointer, intent(in)    :: fs
-  type(mesh_type),                    intent(in)    :: source_mesh
-  type(mesh_type),                    intent(in)    :: target_mesh
-  type(id_r64_field_pair_type)                      :: paired_object
-  integer(kind=i_def)                               :: intermesh_id
-
-  ! Make a unique ID for transform between source and target mesh
-  intermesh_id = self%compute_intermesh_id(source_mesh, target_mesh)
-  ! Set up the paired_object
-  call paired_object%initialise(fs, intermesh_id)
-  call self%add_paired_object(paired_object)
-  call self%get_r64_intermesh_field(source_mesh, target_mesh, field)
-
-end subroutine add_r64_intermesh_field
 
 !> @brief Adds an integer field to the inventory and returns a pointer to it
 !> @param[out] field        Pointer to the field that is to be added
 !> @param[in]  fs           Function space for the field to be created
-!> @param[in]  mesh         The mesh to pair the field with
+!> @param[in]  key          The integer key to pair the field with
 !> @param[in]  name         Optional name for the field
 !> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
 !!                          default halo depth)
-subroutine add_integer_field(self, field, fs, mesh, name, halo_depth)
+subroutine add_integer_field(self, field, fs, key, name, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(integer_field_type),  pointer, intent(out)   :: field
   type(function_space_type), pointer, intent(in)    :: fs
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   character(*),             optional, intent(in)    :: name
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_integer_field_pair_type)                  :: paired_object
@@ -875,10 +806,9 @@ subroutine add_integer_field(self, field, fs, mesh, name, halo_depth)
   end if
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), name=local_name, &
-                                halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, name=local_name, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_integer_field(mesh, field)
+  call self%get_integer_field(key, field)
 
 end subroutine add_integer_field
 
@@ -886,26 +816,25 @@ end subroutine add_integer_field
 !> @param[out] field_array  Pointer to the field_array that is to be added
 !> @param[in]  fs           Function space for the fields to be created
 !> @param[in]  array_size   Size of array of fields to be created
-!> @param[in]  mesh         The mesh to pair the field_array with
+!> @param[in]  key          The integer key to pair the field_array with
 !> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
 !!                          default halo depth)
-subroutine add_r32_field_array(self, field_array, fs, array_size, mesh, halo_depth)
+subroutine add_r32_field_array(self, field_array, fs, array_size, key, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(field_real32_type),   pointer, intent(out)   :: field_array(:)
   type(function_space_type), pointer, intent(in)    :: fs
   integer(kind=i_def),                intent(in)    :: array_size
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_r32_field_array_pair_type)                :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), array_size, &
-                                halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, array_size, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_r32_field_array(mesh, field_array)
+  call self%get_r32_field_array(key, field_array)
 
 end subroutine add_r32_field_array
 
@@ -913,26 +842,25 @@ end subroutine add_r32_field_array
 !> @param[out] field_array  Pointer to the field_array that is to be added
 !> @param[in]  fs           Function space for the fields to be created
 !> @param[in]  array_size   Size of array of fields to be created
-!> @param[in]  mesh         The mesh to pair the field_array with
+!> @param[in]  key          The integer key to pair the field_array with
 !> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
 !!                          default halo depth)
-subroutine add_r64_field_array(self, field_array, fs, array_size, mesh, halo_depth)
+subroutine add_r64_field_array(self, field_array, fs, array_size, key, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(field_real64_type),   pointer, intent(out)   :: field_array(:)
   type(function_space_type), pointer, intent(in)    :: fs
   integer(kind=i_def),                intent(in)    :: array_size
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_r64_field_array_pair_type)                :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), array_size, &
-                                  halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, array_size, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_r64_field_array(mesh, field_array)
+  call self%get_r64_field_array(key, field_array)
 
 end subroutine add_r64_field_array
 
@@ -941,27 +869,26 @@ end subroutine add_r64_field_array
 !> @param[in]  fs           Function space for the fields to be created
 !> @param[in]  dim1         Size of the first dimension of the field array
 !> @param[in]  dim2         Size of the second dimension of the field array
-!> @param[in]  mesh         The mesh to pair the field_array with
+!> @param[in]  key          The integer key to pair the field_array with
 !> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
 !!                          default halo depth)
-subroutine add_r32_field_array_2d(self, field_array, fs, dim1, dim2, mesh, halo_depth)
+subroutine add_r32_field_array_2d(self, field_array, fs, dim1, dim2, key, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(field_real32_type),   pointer, intent(out)   :: field_array(:,:)
   type(function_space_type), pointer, intent(in)    :: fs
   integer(kind=i_def),                intent(in)    :: dim1
   integer(kind=i_def),                intent(in)    :: dim2
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_r32_field_array_2d_pair_type)             :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), dim1, dim2, &
-                                halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, dim1, dim2, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_r32_field_array_2d(mesh, field_array)
+  call self%get_r32_field_array_2d(key, field_array)
 
 end subroutine add_r32_field_array_2d
 
@@ -970,27 +897,26 @@ end subroutine add_r32_field_array_2d
 !> @param[in]  fs           Function space for the fields to be created
 !> @param[in]  dim1         Size of the first dimension of the field array
 !> @param[in]  dim2         Size of the second dimension of the field array
-!> @param[in]  mesh         The mesh to pair the field_array with
+!> @param[in]  key          The integer key to pair the field_array with
 !> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
 !!                          default halo depth)
-subroutine add_r64_field_array_2d(self, field_array, fs, dim1, dim2, mesh, halo_depth)
+subroutine add_r64_field_array_2d(self, field_array, fs, dim1, dim2, key, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(field_real64_type),   pointer, intent(out)   :: field_array(:,:)
   type(function_space_type), pointer, intent(in)    :: fs
   integer(kind=i_def),                intent(in)    :: dim1
   integer(kind=i_def),                intent(in)    :: dim2
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_r64_field_array_2d_pair_type)             :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), dim1, dim2, &
-                                halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, dim1, dim2, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_r64_field_array_2d(mesh, field_array)
+  call self%get_r64_field_array_2d(key, field_array)
 
 end subroutine add_r64_field_array_2d
 
@@ -998,115 +924,114 @@ end subroutine add_r64_field_array_2d
 !> @param[out] field_array  Pointer to the field_array that is to be added
 !> @param[in]  fs           Function space for the fields to be created
 !> @param[in]  array_size   Size of array of fields to be created
-!> @param[in]  mesh         The mesh to pair the field_array with
+!> @param[in]  key          The integer key to pair the field_array with
 !> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
 !!                          default halo depth)
-subroutine add_integer_field_array(self, field_array, fs, array_size, mesh, halo_depth)
+subroutine add_integer_field_array(self, field_array, fs, array_size, key, halo_depth)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(integer_field_type),  pointer, intent(out)   :: field_array(:)
   type(function_space_type), pointer, intent(in)    :: fs
   integer(kind=i_def),                intent(in)    :: array_size
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   integer(i_def),           optional, intent(in)    :: halo_depth
   type(id_integer_field_array_pair_type)            :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs, mesh%get_id(), array_size, &
-                                halo_depth=halo_depth)
+  call paired_object%initialise(fs, key, array_size, halo_depth=halo_depth)
   call self%add_paired_object(paired_object)
-  call self%get_integer_field_array(mesh, field_array)
+  call self%get_integer_field_array(key, field_array)
 
 end subroutine add_integer_field_array
 
 !> @brief Adds an integer to the inventory
 !> @param[in] number      The integer that is to be added to the inventory
-!> @param[in] mesh        The mesh to pair the integer with
-subroutine add_integer(self, number, mesh)
+!> @param[in] key         The integer key to pair the integer with
+subroutine add_integer(self, number, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  integer(kind=i_def),           intent(in)    :: number
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_integer_pair_type)                   :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  integer(kind=i_def),              intent(in)    :: number
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_integer_pair_type)                      :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(number, mesh%get_id())
+  call paired_object%initialise(number, key)
   call self%add_paired_object(paired_object)
 
 end subroutine add_integer
 
 !> @brief Adds an integer_array to the inventory
 !> @param[in] numbers  The integer_array that is to be added to the inventory
-!> @param[in] mesh     The mesh to pair the integer_array with
-subroutine add_integer_array(self, numbers, mesh)
+!> @param[in] key      The integer key to pair the integer_array with
+subroutine add_integer_array(self, numbers, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  integer(kind=i_def),           intent(in)    :: numbers(:)
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_integer_array_pair_type)             :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  integer(kind=i_def),              intent(in)    :: numbers(:)
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_integer_array_pair_type)                :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(numbers, mesh%get_id())
+  call paired_object%initialise(numbers, key)
   call self%add_paired_object(paired_object)
 
 end subroutine add_integer_array
 
 !> @brief Adds a real32 to the inventory
 !> @param[in] number      The real that is to be added to the inventory
-!> @param[in] mesh        The mesh to pair the real with
-subroutine add_real32(self, number, mesh)
+!> @param[in] key         The integer key to pair the real with
+subroutine add_real32(self, number, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  real(kind=r_single),           intent(in)    :: number
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_real32_pair_type)                    :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  real(kind=r_single),              intent(in)    :: number
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_real32_pair_type)                       :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(number, mesh%get_id())
+  call paired_object%initialise(number, key)
   call self%add_paired_object(paired_object)
 
 end subroutine add_real32
 
 !> @brief Adds a real64 to the inventory
 !> @param[in] number      The real that is to be added to the inventory
-!> @param[in] mesh        The mesh to pair the real with
-subroutine add_real64(self, number, mesh)
+!> @param[in] key         The integer key to pair the real with
+subroutine add_real64(self, number, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  real(kind=r_double),           intent(in)    :: number
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_real64_pair_type)                    :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  real(kind=r_double),              intent(in)    :: number
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_real64_pair_type)                       :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(number, mesh%get_id())
+  call paired_object%initialise(number, key)
   call self%add_paired_object(paired_object)
 
 end subroutine add_real64
 
 !> @brief Adds a  logical to the inventory
 !> @param[in] bool_flag   The logical that is to be added to the inventory
-!> @param[in] mesh        The mesh to pair the logical with
-subroutine add_logical(self, bool_flag, mesh)
+!> @param[in] key         The integer key to pair the logical with
+subroutine add_logical(self, bool_flag, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  logical(kind=i_def),           intent(in)    :: bool_flag
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_logical_pair_type)                   :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  logical(kind=i_def),              intent(in)    :: bool_flag
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_logical_pair_type)                      :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(bool_flag, mesh%get_id())
+  call paired_object%initialise(bool_flag, key)
   call self%add_paired_object(paired_object)
 
 end subroutine add_logical
@@ -1115,22 +1040,22 @@ end subroutine add_logical
 !> @param[out] operator_out Pointer to the operator that is to be added
 !> @param[in]  fs_target    Function space for the target field of the operator
 !> @param[in]  fs_source    Function space for the source field of the operator
-!> @param[in]  mesh         The mesh to pair the operator with
-subroutine add_r32_operator(self, operator_out, fs_target, fs_source, mesh)
+!> @param[in]  key          The integer key to pair the operator with
+subroutine add_r32_operator(self, operator_out, fs_target, fs_source, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(operator_real32_type),pointer, intent(out)   :: operator_out
   type(function_space_type), pointer, intent(in)    :: fs_target
   type(function_space_type), pointer, intent(in)    :: fs_source
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   type(id_r32_operator_pair_type)                   :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs_target, fs_source, mesh%get_id())
+  call paired_object%initialise(fs_target, fs_source, key)
   call self%add_paired_object(paired_object)
-  call self%get_r32_operator(mesh, operator_out)
+  call self%get_r32_operator(key, operator_out)
 
 end subroutine add_r32_operator
 
@@ -1138,272 +1063,226 @@ end subroutine add_r32_operator
 !> @param[out] operator_out Pointer to the operator that is to be added
 !> @param[in]  fs_target    Function space for the target field of the operator
 !> @param[in]  fs_source    Function space for the source field of the operator
-!> @param[in]  mesh         The mesh to pair the operator with
-subroutine add_r64_operator(self, operator_out, fs_target, fs_source, mesh)
+!> @param[in]  key          The integer key to pair the operator with
+subroutine add_r64_operator(self, operator_out, fs_target, fs_source, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),      intent(inout) :: self
+  class(inventory_by_integer_type),   intent(inout) :: self
   type(operator_real64_type),pointer, intent(out)   :: operator_out
   type(function_space_type), pointer, intent(in)    :: fs_target
   type(function_space_type), pointer, intent(in)    :: fs_source
-  type(mesh_type),                    intent(in)    :: mesh
+  integer(kind=i_def),                intent(in)    :: key
   type(id_r64_operator_pair_type)                   :: paired_object
 
   ! Set up the paired_object
-  call paired_object%initialise(fs_target, fs_source, mesh%get_id())
+  call paired_object%initialise(fs_target, fs_source, key)
   call self%add_paired_object(paired_object)
-  call self%get_r64_operator(mesh, operator_out)
+  call self%get_r64_operator(key, operator_out)
 
 end subroutine add_r64_operator
 
 ! ============================================================================ !
-! COPY OBJECT ROUTINES -- these are specific to an inventory_by_mesh
+! COPY OBJECT ROUTINES -- these are specific to an inventory_by_integer
 ! ============================================================================ !
 
 !> @brief Copies an r32 field into the inventory
 !> @param[in] field       The field that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field with
-subroutine copy_r32_field(self, field, mesh)
+!> @param[in] key         The integer key to pair the field with
+subroutine copy_r32_field(self, field, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
+  class(inventory_by_integer_type), intent(inout) :: self
   type(field_real32_type),          intent(in)    :: field
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_r32_field_pair_type)                 :: paired_object
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_r32_field_pair_type)                    :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field, mesh%get_id())
+  call paired_object%copy_initialise(field, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r32_field
 
 !> @brief Copies an r64 field into the inventory
 !> @param[in] field       The field that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field with
-subroutine copy_r64_field(self, field, mesh)
+!> @param[in] key         The integer key to pair the field with
+subroutine copy_r64_field(self, field, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  type(field_real64_type),       intent(in)    :: field
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_r64_field_pair_type)                 :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  type(field_real64_type),          intent(in)    :: field
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_r64_field_pair_type)                    :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field, mesh%get_id())
+  call paired_object%copy_initialise(field, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r64_field
 
-!> @brief Copies an r32 field into the inventory, that is used for intermesh mapping
-!> @param[in] field        The field that is to be copied into the inventory
-!> @param[in] source_mesh  The source mesh for the intermesh transform
-!> @param[in] target_mesh  The target mesh for the intermesh transform
-subroutine copy_r32_intermesh_field(self, field, source_mesh, target_mesh)
-
-  implicit none
-
-  class(inventory_by_mesh_type), intent(inout) :: self
-  type(field_real32_type),       intent(in)    :: field
-  type(mesh_type),               intent(in)    :: source_mesh
-  type(mesh_type),               intent(in)    :: target_mesh
-  type(id_r32_field_pair_type)                 :: paired_object
-  integer(kind=i_def)                          :: intermesh_id
-
-  ! Make a unique ID for transform between source and target mesh
-  intermesh_id = self%compute_intermesh_id(source_mesh, target_mesh)
-  ! Set up the paired_object
-  call paired_object%copy_initialise(field, intermesh_id)
-  call self%add_paired_object(paired_object)
-
-end subroutine copy_r32_intermesh_field
-
-!> @brief Copies an r64 field into the inventory, that is used for intermesh mapping
-!> @param[in] field        The field that is to be copied into the inventory
-!> @param[in] source_mesh  The source mesh for the intermesh transform
-!> @param[in] target_mesh  The target mesh for the intermesh transform
-subroutine copy_r64_intermesh_field(self, field, source_mesh, target_mesh)
-
-  implicit none
-
-  class(inventory_by_mesh_type), intent(inout) :: self
-  type(field_real64_type),       intent(in)    :: field
-  type(mesh_type),               intent(in)    :: source_mesh
-  type(mesh_type),               intent(in)    :: target_mesh
-  type(id_r64_field_pair_type)                 :: paired_object
-  integer(kind=i_def)                          :: intermesh_id
-
-  ! Make a unique ID for transform between source and target mesh
-  intermesh_id = self%compute_intermesh_id(source_mesh, target_mesh)
-  ! Set up the paired_object
-  call paired_object%copy_initialise(field, intermesh_id)
-  call self%add_paired_object(paired_object)
-
-end subroutine copy_r64_intermesh_field
-
 !> @brief Copies an integer field into the inventory
 !> @param[in] field       The field that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field with
-subroutine copy_integer_field(self, field, mesh)
+!> @param[in] key         The integer key to pair the field with
+subroutine copy_integer_field(self, field, key)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(inout) :: self
-  type(integer_field_type),      intent(in)    :: field
-  type(mesh_type),               intent(in)    :: mesh
-  type(id_integer_field_pair_type)             :: paired_object
+  class(inventory_by_integer_type), intent(inout) :: self
+  type(integer_field_type),         intent(in)    :: field
+  integer(kind=i_def),              intent(in)    :: key
+  type(id_integer_field_pair_type)                :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field, mesh%get_id())
+  call paired_object%copy_initialise(field, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_integer_field
 
 !> @brief Copies an r32 field_array into the inventory
 !> @param[in] field_array The field_array that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field_array with
-subroutine copy_r32_field_array(self, field_array, mesh)
+!> @param[in] key         The integer key to pair the field_array with
+subroutine copy_r32_field_array(self, field_array, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),     intent(inout) :: self
+  class(inventory_by_integer_type),  intent(inout) :: self
   type(field_real32_type),           intent(in)    :: field_array(:)
-  type(mesh_type),                   intent(in)    :: mesh
+  integer(kind=i_def),               intent(in)    :: key
   type(id_r32_field_array_pair_type)               :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field_array, mesh%get_id())
+  call paired_object%copy_initialise(field_array, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r32_field_array
 
 !> @brief Copies an r64 field_array into the inventory
 !> @param[in] field_array The field_array that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field_array with
-subroutine copy_r64_field_array(self, field_array, mesh)
+!> @param[in] key         The integer key to pair the field_array with
+subroutine copy_r64_field_array(self, field_array, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),     intent(inout) :: self
+  class(inventory_by_integer_type),  intent(inout) :: self
   type(field_real64_type),           intent(in)    :: field_array(:)
-  type(mesh_type),                   intent(in)    :: mesh
+  integer(kind=i_def),               intent(in)    :: key
   type(id_r64_field_array_pair_type)               :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field_array, mesh%get_id())
+  call paired_object%copy_initialise(field_array, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r64_field_array
 
 !> @brief Copies a 2D r32 field_array into the inventory
 !> @param[in] field_array The 2D field_array that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field_array with
-subroutine copy_r32_field_array_2d(self, field_array, mesh)
+!> @param[in] key         The integer key to pair the field_array with
+subroutine copy_r32_field_array_2d(self, field_array, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),        intent(inout) :: self
+  class(inventory_by_integer_type),     intent(inout) :: self
   type(field_real32_type),              intent(in)    :: field_array(:,:)
-  type(mesh_type),                      intent(in)    :: mesh
+  integer(kind=i_def),                  intent(in)    :: key
   type(id_r32_field_array_2d_pair_type)               :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field_array, mesh%get_id())
+  call paired_object%copy_initialise(field_array, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r32_field_array_2d
 
 !> @brief Copies a 2D r64 field_array into the inventory
 !> @param[in] field_array The 2D field_array that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field_array with
-subroutine copy_r64_field_array_2d(self, field_array, mesh)
+!> @param[in] key         The integer key to pair the field_array with
+subroutine copy_r64_field_array_2d(self, field_array, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),        intent(inout) :: self
+  class(inventory_by_integer_type),     intent(inout) :: self
   type(field_real64_type),              intent(in)    :: field_array(:,:)
-  type(mesh_type),                      intent(in)    :: mesh
+  integer(kind=i_def),                  intent(in)    :: key
   type(id_r64_field_array_2d_pair_type)               :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field_array, mesh%get_id())
+  call paired_object%copy_initialise(field_array, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r64_field_array_2d
 
 !> @brief Copies an integer field_array into the inventory
 !> @param[in] field_array The field_array that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the field_array with
-subroutine copy_integer_field_array(self, field_array, mesh)
+!> @param[in] key         The integer key to pair the field_array with
+subroutine copy_integer_field_array(self, field_array, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),         intent(inout) :: self
+  class(inventory_by_integer_type),      intent(inout) :: self
   type(integer_field_type),              intent(in)    :: field_array(:)
-  type(mesh_type),                       intent(in)    :: mesh
+  integer(kind=i_def),                   intent(in)    :: key
   type(id_integer_field_array_pair_type)               :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(field_array, mesh%get_id())
+  call paired_object%copy_initialise(field_array, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_integer_field_array
 
 !> @brief Copies an r32 operator into the inventory.
 !> @param[in] operator_in The operator that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the operator with
-subroutine copy_r32_operator(self, operator_in, mesh)
+!> @param[in] key         The integer key to pair the operator with
+subroutine copy_r32_operator(self, operator_in, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),     intent(inout) :: self
+  class(inventory_by_integer_type),  intent(inout) :: self
   type(operator_real32_type),        intent(in)    :: operator_in
-  type(mesh_type),                   intent(in)    :: mesh
+  integer(kind=i_def),               intent(in)    :: key
   type(id_r32_operator_pair_type)                  :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(operator_in, mesh%get_id())
+  call paired_object%copy_initialise(operator_in, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r32_operator
 
 !> @brief Copies an r64 operator into the inventory.
 !> @param[in] operator_in The operator that is to be copied into the inventory
-!> @param[in] mesh        The mesh to pair the operator with
-subroutine copy_r64_operator(self, operator_in, mesh)
+!> @param[in] key         The integer key to pair the operator with
+subroutine copy_r64_operator(self, operator_in, key)
 
   implicit none
 
-  class(inventory_by_mesh_type),     intent(inout) :: self
+  class(inventory_by_integer_type),  intent(inout) :: self
   type(operator_real64_type),        intent(in)    :: operator_in
-  type(mesh_type),                   intent(in)    :: mesh
+  integer(kind=i_def),               intent(in)    :: key
   type(id_r64_operator_pair_type)                  :: paired_object
 
   ! Set up the paired_object
-  call paired_object%copy_initialise(operator_in, mesh%get_id())
+  call paired_object%copy_initialise(operator_in, key)
   call self%add_paired_object(paired_object)
 
 end subroutine copy_r64_operator
 
 ! ============================================================================ !
-! GET OBJECT ROUTINES -- these are specific to an inventory_by_mesh
+! GET OBJECT ROUTINES -- these are specific to an inventory_by_integer
 ! ============================================================================ !
 
 !> @brief Sets a pointer to an r32 field from the inventory
-!> @param[in]  mesh    The mesh of the r32 field to be accessed
+!> @param[in]  key     The integer key of the r32 field to be accessed
 !> @param[out] field   Field pointer to the r32 field to be accessed
-subroutine get_r32_field(self, mesh, field)
+subroutine get_r32_field(self, key, field)
 
   implicit none
 
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: mesh
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
   type(field_real32_type), pointer, intent(out) :: field
   class(id_abstract_pair_type), pointer         :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r32_field_pair_type)
@@ -1415,18 +1294,18 @@ subroutine get_r32_field(self, mesh, field)
 end subroutine get_r32_field
 
 !> @brief Sets a pointer to an r64 field from the inventory
-!> @param[in]  mesh    The mesh of the r64 field to be accessed
+!> @param[in]  key     The integer key of the r64 field to be accessed
 !> @param[out] field   Field pointer to the r64 field to be accessed
-subroutine get_r64_field(self, mesh, field)
+subroutine get_r64_field(self, key, field)
 
   implicit none
 
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: mesh
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
   type(field_real64_type), pointer, intent(out) :: field
   class(id_abstract_pair_type), pointer         :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r64_field_pair_type)
@@ -1437,77 +1316,19 @@ subroutine get_r64_field(self, mesh, field)
 
 end subroutine get_r64_field
 
-!> @brief Sets a pointer to an r32 field used for intermesh transforms
-!> @param[in]  source_mesh   The source mesh for the intermesh transform
-!> @param[in]  target_mesh   The target mesh for the intermesh transform
-!> @param[out] field         Field pointer to the r32 field to be accessed
-subroutine get_r32_intermesh_field(self, source_mesh, target_mesh, field)
-
-  implicit none
-
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: source_mesh
-  type(mesh_type),                  intent(in)  :: target_mesh
-  type(field_real32_type), pointer, intent(out) :: field
-  class(id_abstract_pair_type), pointer         :: paired_object
-  integer(kind=i_def)                           :: intermesh_id
-
-  ! Make a unique ID for transform between source and target mesh
-  intermesh_id = self%compute_intermesh_id(source_mesh, target_mesh)
-
-  paired_object => self%get_paired_object(intermesh_id)
-
-  select type(this => paired_object)
-    type is (id_r32_field_pair_type)
-      field => this%get_field()
-    class default
-      call log_event('Paired ID object must be of r32 field type', LOG_LEVEL_ERROR)
-  end select
-
-end subroutine get_r32_intermesh_field
-
-!> @brief Sets a pointer to an r64 field used for intermesh transforms
-!> @param[in]  source_mesh   The source mesh for the intermesh transform
-!> @param[in]  target_mesh   The target mesh for the intermesh transform
-!> @param[out] field         Field pointer to the r64 field to be accessed
-subroutine get_r64_intermesh_field(self, source_mesh, target_mesh, field)
-
-  implicit none
-
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: source_mesh
-  type(mesh_type),                  intent(in)  :: target_mesh
-  type(field_real64_type), pointer, intent(out) :: field
-  class(id_abstract_pair_type), pointer         :: paired_object
-  integer(kind=i_def)                           :: intermesh_id
-
-  ! Make a unique ID for transform between source and target mesh
-  intermesh_id = self%compute_intermesh_id(source_mesh, target_mesh)
-
-  paired_object => self%get_paired_object(intermesh_id)
-
-  select type(this => paired_object)
-    type is (id_r64_field_pair_type)
-      field => this%get_field()
-    class default
-      call log_event('Paired ID object must be of r64 field type', LOG_LEVEL_ERROR)
-  end select
-
-end subroutine get_r64_intermesh_field
-
 !> @brief Sets a pointer to an integer field from the inventory
-!> @param[in]     mesh    The mesh of the integer field to be accessed
+!> @param[in]  key     The integer key of the integer field to be accessed
 !> @param[out] field   Field pointer to the integer field to be accessed
-subroutine get_integer_field(self, mesh, field)
+subroutine get_integer_field(self, key, field)
 
   implicit none
 
-  class(inventory_by_mesh_type),     intent(in)  :: self
-  type(mesh_type),                   intent(in)  :: mesh
+  class(inventory_by_integer_type),  intent(in)  :: self
+  integer(kind=i_def),               intent(in)  :: key
   type(integer_field_type), pointer, intent(out) :: field
-  class(id_abstract_pair_type),      pointer    :: paired_object
+  class(id_abstract_pair_type),      pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_integer_field_pair_type)
@@ -1519,18 +1340,18 @@ subroutine get_integer_field(self, mesh, field)
 end subroutine get_integer_field
 
 !> @brief Sets a pointer to an array of r32 fields from the inventory
-!> @param[in]  mesh          The mesh of the r32 field array to be accessed
+!> @param[in]  key           The integer key of the r32 field array to be accessed
 !> @param[out] field_array   Pointer to the array of r32 fields to be accessed
-subroutine get_r32_field_array(self, mesh, field_array)
+subroutine get_r32_field_array(self, key, field_array)
 
   implicit none
 
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: mesh
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
   type(field_real32_type), pointer, intent(out) :: field_array(:)
   class(id_abstract_pair_type), pointer         :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r32_field_array_pair_type)
@@ -1542,18 +1363,18 @@ subroutine get_r32_field_array(self, mesh, field_array)
 end subroutine get_r32_field_array
 
 !> @brief Sets a pointer to an array of r64 fields from the inventory
-!> @param[in]  mesh          The mesh of the r64 field array to be accessed
+!> @param[in]  key           The integer key of the r64 field array to be accessed
 !> @param[out] field_array   Pointer to the array of r64 fields to be accessed
-subroutine get_r64_field_array(self, mesh, field_array)
+subroutine get_r64_field_array(self, key, field_array)
 
   implicit none
 
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: mesh
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
   type(field_real64_type), pointer, intent(out) :: field_array(:)
   class(id_abstract_pair_type), pointer         :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r64_field_array_pair_type)
@@ -1565,18 +1386,18 @@ subroutine get_r64_field_array(self, mesh, field_array)
 end subroutine get_r64_field_array
 
 !> @brief Sets a pointer to a 2D array of r32 fields from the inventory
-!> @param[in]  mesh          The mesh of the r32 field array to be accessed
+!> @param[in]  key           The integer key of the r32 field array to be accessed
 !> @param[out] field_array   Pointer to the 2D array of r32 fields to be accessed
-subroutine get_r32_field_array_2d(self, mesh, field_array)
+subroutine get_r32_field_array_2d(self, key, field_array)
 
   implicit none
 
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: mesh
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
   type(field_real32_type), pointer, intent(out) :: field_array(:,:)
   class(id_abstract_pair_type), pointer         :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r32_field_array_2d_pair_type)
@@ -1588,18 +1409,18 @@ subroutine get_r32_field_array_2d(self, mesh, field_array)
 end subroutine get_r32_field_array_2d
 
 !> @brief Sets a pointer to a 2D array of r64 fields from the inventory
-!> @param[in]  mesh          The mesh of the r64 field array to be accessed
+!> @param[in]  key           The integer key of the r64 field array to be accessed
 !> @param[out] field_array   Pointer to the 2D array of r64 fields to be accessed
-subroutine get_r64_field_array_2d(self, mesh, field_array)
+subroutine get_r64_field_array_2d(self, key, field_array)
 
   implicit none
 
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: mesh
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
   type(field_real64_type), pointer, intent(out) :: field_array(:,:)
   class(id_abstract_pair_type), pointer         :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r64_field_array_2d_pair_type)
@@ -1611,18 +1432,18 @@ subroutine get_r64_field_array_2d(self, mesh, field_array)
 end subroutine get_r64_field_array_2d
 
 !> @brief Sets a pointer to an array of integer fields from the inventory
-!> @param[in]  mesh          The mesh of the integer field array to be accessed
+!> @param[in]  key           The integer key of the integer field array to be accessed
 !> @param[out] field_array   Pointer to the array of integer fields to be accessed
-subroutine get_integer_field_array(self, mesh, field_array)
+subroutine get_integer_field_array(self, key, field_array)
 
   implicit none
 
-  class(inventory_by_mesh_type),     intent(in)  :: self
-  type(mesh_type),                   intent(in)  :: mesh
+  class(inventory_by_integer_type),  intent(in)  :: self
+  integer(kind=i_def),               intent(in)  :: key
   type(integer_field_type), pointer, intent(out) :: field_array(:)
   class(id_abstract_pair_type),      pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_integer_field_array_pair_type)
@@ -1634,18 +1455,18 @@ subroutine get_integer_field_array(self, mesh, field_array)
 end subroutine get_integer_field_array
 
 !> @brief Sets a pointer to an integer from the inventory
-!> @param[in]  mesh    The mesh of the integer to be accessed
+!> @param[in]  key     The integer key of the integer to be accessed
 !> @param[out] number  Pointer to the integer to be accessed
-subroutine get_integer(self, mesh, number)
+subroutine get_integer(self, key, number)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in)  :: self
-  type(mesh_type),               intent(in)  :: mesh
-  integer(kind=i_def),  pointer, intent(out) :: number
-  class(id_abstract_pair_type),  pointer     :: paired_object
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
+  integer(kind=i_def),  pointer,    intent(out) :: number
+  class(id_abstract_pair_type),     pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_integer_pair_type)
@@ -1657,18 +1478,18 @@ subroutine get_integer(self, mesh, number)
 end subroutine get_integer
 
 !> @brief Sets a pointer to an integer_array from the inventory
-!> @param[in]  mesh     The mesh of the integer array to be accessed
+!> @param[in]  key      The integer key of the integer array to be accessed
 !> @param[out] numbers  Pointer to the integer_array to be accessed
-subroutine get_integer_array(self, mesh, numbers)
+subroutine get_integer_array(self, key, numbers)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in)  :: self
-  type(mesh_type),               intent(in)  :: mesh
-  integer(kind=i_def),  pointer, intent(out) :: numbers(:)
-  class(id_abstract_pair_type),  pointer     :: paired_object
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
+  integer(kind=i_def),  pointer,    intent(out) :: numbers(:)
+  class(id_abstract_pair_type),     pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_integer_array_pair_type)
@@ -1680,18 +1501,18 @@ subroutine get_integer_array(self, mesh, numbers)
 end subroutine get_integer_array
 
 !> @brief Sets a pointer to a real32 from the inventory
-!> @param[in]  mesh    The mesh of the real to be accessed
+!> @param[in]  key     The integer key of the real to be accessed
 !> @param[out] number  Pointer to the real to be accessed
-subroutine get_real32(self, mesh, number)
+subroutine get_real32(self, key, number)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in)  :: self
-  type(mesh_type),               intent(in)  :: mesh
-  real(kind=r_single),  pointer, intent(out) :: number
-  class(id_abstract_pair_type),  pointer     :: paired_object
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
+  real(kind=r_single),  pointer,    intent(out) :: number
+  class(id_abstract_pair_type),     pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_real32_pair_type)
@@ -1703,18 +1524,18 @@ subroutine get_real32(self, mesh, number)
 end subroutine get_real32
 
 !> @brief Sets a pointer to a real64 from the inventory
-!> @param[in]  mesh    The mesh of the real to be accessed
+!> @param[in]  key     The integer key of the real to be accessed
 !> @param[out] number  Pointer to the real to be accessed
-subroutine get_real64(self, mesh, number)
+subroutine get_real64(self, key, number)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in)  :: self
-  type(mesh_type),               intent(in)  :: mesh
-  real(kind=r_double),  pointer, intent(out) :: number
-  class(id_abstract_pair_type),  pointer     :: paired_object
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
+  real(kind=r_double),  pointer,    intent(out) :: number
+  class(id_abstract_pair_type),     pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_real64_pair_type)
@@ -1726,18 +1547,18 @@ subroutine get_real64(self, mesh, number)
 end subroutine get_real64
 
 !> @brief Sets a pointer to a logical from the inventory
-!> @param[in]  mesh       The mesh of the logical to be accessed
+!> @param[in]  key        The integer key of the logical to be accessed
 !> @param[out] bool_flag  Pointer to the logical to be accessed
-subroutine get_logical(self, mesh, bool_flag)
+subroutine get_logical(self, key, bool_flag)
 
   implicit none
 
-  class(inventory_by_mesh_type), intent(in)  :: self
-  type(mesh_type),               intent(in)  :: mesh
-  logical(kind=l_def),  pointer, intent(out) :: bool_flag
-  class(id_abstract_pair_type),  pointer     :: paired_object
+  class(inventory_by_integer_type), intent(in)  :: self
+  integer(kind=i_def),              intent(in)  :: key
+  logical(kind=l_def),  pointer,    intent(out) :: bool_flag
+  class(id_abstract_pair_type),     pointer     :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_logical_pair_type)
@@ -1749,18 +1570,18 @@ subroutine get_logical(self, mesh, bool_flag)
 end subroutine get_logical
 
 !> @brief Sets a pointer to an r32 operator from the inventory
-!> @param[in]  mesh          The mesh of the operator to be accessed
+!> @param[in]  key           The integer key of the operator to be accessed
 !> @param[out] operator_out  Pointer to be set to the desired operator
-subroutine get_r32_operator(self, mesh, operator_out)
+subroutine get_r32_operator(self, key, operator_out)
 
   implicit none
 
-  class(inventory_by_mesh_type),       intent(in)  :: self
-  type(mesh_type),                     intent(in)  :: mesh
+  class(inventory_by_integer_type),    intent(in)  :: self
+  integer(kind=i_def),                 intent(in)  :: key
   type(operator_real32_type), pointer, intent(out) :: operator_out
   class(id_abstract_pair_type), pointer            :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r32_operator_pair_type)
@@ -1772,18 +1593,18 @@ subroutine get_r32_operator(self, mesh, operator_out)
 end subroutine get_r32_operator
 
 !> @brief Sets a pointer to an r64 operator from the inventory
-!> @param[in]  mesh          The mesh of the operator to be accessed
+!> @param[in]  key           The integer key of the operator to be accessed
 !> @param[out] operator_out  Pointer to be set to the desired operator
-subroutine get_r64_operator(self, mesh, operator_out)
+subroutine get_r64_operator(self, key, operator_out)
 
   implicit none
 
-  class(inventory_by_mesh_type),       intent(in)  :: self
-  type(mesh_type),                     intent(in)  :: mesh
+  class(inventory_by_integer_type),    intent(in)  :: self
+  integer(kind=i_def),                 intent(in)  :: key
   type(operator_real64_type), pointer, intent(out) :: operator_out
   class(id_abstract_pair_type), pointer            :: paired_object
 
-  paired_object => self%get_paired_object(mesh%get_id())
+  paired_object => self%get_paired_object(key)
 
   select type(this => paired_object)
     type is (id_r64_operator_pair_type)
@@ -1794,40 +1615,4 @@ subroutine get_r64_operator(self, mesh, operator_out)
 
 end subroutine get_r64_operator
 
-!> @brief Computes a hash of two integers to create an intermesh ID
-!> @param[in] source_mesh_id  ID of source mesh
-!> @param[in] target_mesh_id  ID of target mesh
-!> @returns   intermesh_id    ID for the combination of source and target meshes
-function compute_intermesh_id(self, source_mesh, target_mesh) result(intermesh_id)
-
-  implicit none
-
-  class(inventory_by_mesh_type),    intent(in)  :: self
-  type(mesh_type),                  intent(in)  :: source_mesh
-  type(mesh_type),                  intent(in)  :: target_mesh
-
-  integer(kind=i_def) :: source_mesh_id
-  integer(kind=i_def) :: target_mesh_id
-  integer(kind=i_def) :: intermesh_id
-
-  source_mesh_id = source_mesh%get_id()
-  target_mesh_id = target_mesh%get_id()
-
-  if (source_mesh_id < 1) then
-    write(log_scratch_space, '(A,I8,A)') &
-      'source_mesh_id', source_mesh_id, 'is not a positive integer'
-    call log_event(log_scratch_space, LOG_LEVEL_ERROR)
-  end if
-  if (target_mesh_id < 1) then
-    write(log_scratch_space, '(A,I8,A)') &
-      'target_mesh_id', target_mesh_id, 'is not a positive integer'
-    call log_event(log_scratch_space, LOG_LEVEL_ERROR)
-  end if
-
-  ! Hash the source and target mesh IDs using the Hopcroft and Ullman pairing
-  intermesh_id = (source_mesh_id + target_mesh_id - 2) * &
-                 (source_mesh_id + target_mesh_id - 1) / 2 + source_mesh_id
-
-end function compute_intermesh_id
-
-end module inventory_by_mesh_mod
+end module inventory_by_integer_mod

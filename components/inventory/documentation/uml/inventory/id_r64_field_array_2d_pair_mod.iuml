@@ -1,0 +1,14 @@
+' (c) Crown copyright Met Office. All rights reserved.
+' The file LICENCE, distributed with this code, contains details of the terms
+' under which the code may be used.
+' Some of the content of this file has been produced with the assistance of
+' GitHub Copilot (Claude Sonnet 5).
+
+class id_r64_field_array_2d_pair_mod::id_r64_field_array_2d_pair_type {
+  -field_array_: field_real64_type
+
+  +initialise( <<in>> fs: function_space_type, <<in>> id: integer, <<in>> dim1: integer, <<in>> dim2: integer )
+  +copy_initialise( <<in>> field_array: field_real64_type(:,:), <<in>> id: integer ) :
+  +get_field_array( ) : field_real64_type(:,:)
+  <<destroy>>+destructor()
+}

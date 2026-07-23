@@ -2,6 +2,8 @@
 ! (C) Crown copyright 2022 Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
+! Some of the content of this file has been produced with the assistance of
+! GitHub Copilot (Claude Sonnet 5).
 !-----------------------------------------------------------------------------
 !
 !> @brief Holds and manages objects that are paired with local meshes
@@ -31,6 +33,8 @@ module inventory_by_local_mesh_mod
   use id_r32_field_array_pair_mod,      only: id_r32_field_array_pair_type
   use id_r64_field_array_pair_mod,      only: id_r64_field_array_pair_type
   use id_integer_field_array_pair_mod,  only: id_integer_field_array_pair_type
+  use id_r32_field_array_2d_pair_mod,   only: id_r32_field_array_2d_pair_type
+  use id_r64_field_array_2d_pair_mod,   only: id_r64_field_array_2d_pair_type
   use id_integer_pair_mod,              only: id_integer_pair_type
   use id_integer_array_pair_mod,        only: id_integer_array_pair_type
   use id_real32_pair_mod,               only: id_real32_pair_type
@@ -83,9 +87,13 @@ module inventory_by_local_mesh_mod
     procedure, public :: add_r32_field_array
     procedure, public :: add_r64_field_array
     procedure, public :: add_integer_field_array
-    generic           :: add_field_array => add_r32_field_array, &
-                                            add_r64_field_array, &
-                                            add_integer_field_array
+    procedure, public :: add_r32_field_array_2d
+    procedure, public :: add_r64_field_array_2d
+    generic           :: add_field_array => add_r32_field_array,     &
+                                            add_r64_field_array,     &
+                                            add_integer_field_array, &
+                                            add_r32_field_array_2d,  &
+                                            add_r64_field_array_2d
     procedure, public :: add_integer
     procedure, public :: add_integer_array
     procedure, public :: add_logical
@@ -104,9 +112,13 @@ module inventory_by_local_mesh_mod
     procedure, public :: copy_r32_field_array
     procedure, public :: copy_r64_field_array
     procedure, public :: copy_integer_field_array
-    generic           :: copy_field_array => copy_r32_field_array, &
-                                             copy_r64_field_array, &
-                                             copy_integer_field_array
+    procedure, public :: copy_r32_field_array_2d
+    procedure, public :: copy_r64_field_array_2d
+    generic           :: copy_field_array => copy_r32_field_array,     &
+                                             copy_r64_field_array,     &
+                                             copy_integer_field_array, &
+                                             copy_r32_field_array_2d,  &
+                                             copy_r64_field_array_2d
     ! Specific routines for getting different objects from the inventory
     ! To support new objects, add more routines here
     procedure, public :: get_r32_field
@@ -118,9 +130,13 @@ module inventory_by_local_mesh_mod
     procedure, public :: get_r32_field_array
     procedure, public :: get_r64_field_array
     procedure, public :: get_integer_field_array
-    generic           :: get_field_array => get_r32_field_array, &
-                                            get_r64_field_array, &
-                                            get_integer_field_array
+    procedure, public :: get_r32_field_array_2d
+    procedure, public :: get_r64_field_array_2d
+    generic           :: get_field_array => get_r32_field_array,     &
+                                            get_r64_field_array,     &
+                                            get_integer_field_array, &
+                                            get_r32_field_array_2d,  &
+                                            get_r64_field_array_2d
     procedure, public :: get_integer
     procedure, public :: get_integer_array
     procedure, public :: get_logical
@@ -793,6 +809,64 @@ subroutine add_r64_field_array(self, field_array, fs, array_size, local_mesh, ha
 
 end subroutine add_r64_field_array
 
+!> @brief Adds a 2D r32 field_array to the inventory and returns a pointer to it
+!> @param[out] field_array  Pointer to the 2D field_array that is to be added
+!> @param[in]  fs           Function space for the fields to be created
+!> @param[in]  dim1         Size of the first dimension of the field array
+!> @param[in]  dim2         Size of the second dimension of the field array
+!> @param[in]  local_mesh   The local mesh to pair the field_array with
+!> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
+!!                          default halo depth)
+subroutine add_r32_field_array_2d(self, field_array, fs, dim1, dim2, local_mesh, halo_depth)
+
+  implicit none
+
+  class(inventory_by_local_mesh_type), intent(inout) :: self
+  type(field_real32_type),    pointer, intent(out)   :: field_array(:,:)
+  type(function_space_type),  pointer, intent(in)    :: fs
+  integer(kind=i_def),                 intent(in)    :: dim1
+  integer(kind=i_def),                 intent(in)    :: dim2
+  type(local_mesh_type),               intent(in)    :: local_mesh
+  integer(i_def),            optional, intent(in)    :: halo_depth
+  type(id_r32_field_array_2d_pair_type)              :: paired_object
+
+  ! Set up the paired_object
+  call paired_object%initialise(fs, local_mesh%get_id(), dim1, dim2, &
+                                halo_depth=halo_depth)
+  call self%add_paired_object(paired_object)
+  call self%get_r32_field_array_2d(local_mesh, field_array)
+
+end subroutine add_r32_field_array_2d
+
+!> @brief Adds a 2D r64 field_array to the inventory and returns a pointer to it
+!> @param[out] field_array  Pointer to the 2D field_array that is to be added
+!> @param[in]  fs           Function space for the fields to be created
+!> @param[in]  dim1         Size of the first dimension of the field array
+!> @param[in]  dim2         Size of the second dimension of the field array
+!> @param[in]  local_mesh   The local mesh to pair the field_array with
+!> @param[in]  halo_depth   Optional halo depth for field (to overwrite the
+!!                          default halo depth)
+subroutine add_r64_field_array_2d(self, field_array, fs, dim1, dim2, local_mesh, halo_depth)
+
+  implicit none
+
+  class(inventory_by_local_mesh_type), intent(inout) :: self
+  type(field_real64_type),    pointer, intent(out)   :: field_array(:,:)
+  type(function_space_type),  pointer, intent(in)    :: fs
+  integer(kind=i_def),                 intent(in)    :: dim1
+  integer(kind=i_def),                 intent(in)    :: dim2
+  type(local_mesh_type),               intent(in)    :: local_mesh
+  integer(i_def),            optional, intent(in)    :: halo_depth
+  type(id_r64_field_array_2d_pair_type)              :: paired_object
+
+  ! Set up the paired_object
+  call paired_object%initialise(fs, local_mesh%get_id(), dim1, dim2, &
+                                halo_depth=halo_depth)
+  call self%add_paired_object(paired_object)
+  call self%get_r64_field_array_2d(local_mesh, field_array)
+
+end subroutine add_r64_field_array_2d
+
 !> @brief Adds an integer field_array to the inventory and returns a pointer to it
 !> @param[out] field_array  Pointer to the field_array that is to be added
 !> @param[in]  fs           Function space for the fields to be created
@@ -1004,6 +1078,42 @@ subroutine copy_r64_field_array(self, field_array, local_mesh)
 
 end subroutine copy_r64_field_array
 
+!> @brief Copies a 2D r32 field_array into the inventory
+!> @param[in] field_array The 2D field_array that is to be copied into the inventory
+!> @param[in] local_mesh  The local mesh to pair the field_array with
+subroutine copy_r32_field_array_2d(self, field_array, local_mesh)
+
+  implicit none
+
+  class(inventory_by_local_mesh_type),  intent(inout) :: self
+  type(field_real32_type),              intent(in)    :: field_array(:,:)
+  type(local_mesh_type),                intent(in)    :: local_mesh
+  type(id_r32_field_array_2d_pair_type)               :: paired_object
+
+  ! Set up the paired_object
+  call paired_object%copy_initialise(field_array, local_mesh%get_id())
+  call self%add_paired_object(paired_object)
+
+end subroutine copy_r32_field_array_2d
+
+!> @brief Copies a 2D r64 field_array into the inventory
+!> @param[in] field_array The 2D field_array that is to be copied into the inventory
+!> @param[in] local_mesh  The local mesh to pair the field_array with
+subroutine copy_r64_field_array_2d(self, field_array, local_mesh)
+
+  implicit none
+
+  class(inventory_by_local_mesh_type),  intent(inout) :: self
+  type(field_real64_type),              intent(in)    :: field_array(:,:)
+  type(local_mesh_type),                intent(in)    :: local_mesh
+  type(id_r64_field_array_2d_pair_type)               :: paired_object
+
+  ! Set up the paired_object
+  call paired_object%copy_initialise(field_array, local_mesh%get_id())
+  call self%add_paired_object(paired_object)
+
+end subroutine copy_r64_field_array_2d
+
 !> @brief Copies an integer field_array into the inventory
 !> @param[in] field_array The field_array that is to be copied into the inventory
 !> @param[in] local_mesh  The local mesh to pair the field_array with
@@ -1140,6 +1250,52 @@ subroutine get_r64_field_array(self, local_mesh, field_array)
   end select
 
 end subroutine get_r64_field_array
+
+!> @brief Sets a pointer to a 2D array of r32 fields from the inventory
+!> @param[in]  local_mesh   The local_mesh of the r32 field array to be accessed
+!> @param[out] field_array  Pointer to the 2D array of r32 fields to be accessed
+subroutine get_r32_field_array_2d(self, local_mesh, field_array)
+
+  implicit none
+
+  class(inventory_by_local_mesh_type), intent(in)  :: self
+  type(local_mesh_type),               intent(in)  :: local_mesh
+  type(field_real32_type),    pointer, intent(out) :: field_array(:,:)
+  class(id_abstract_pair_type),        pointer     :: paired_object
+
+  paired_object => self%get_paired_object(local_mesh%get_id())
+
+  select type(this => paired_object)
+    type is (id_r32_field_array_2d_pair_type)
+      field_array => this%get_field_array()
+    class default
+      call log_event('Paired ID object must be of r32 2D field_array type', LOG_LEVEL_ERROR)
+  end select
+
+end subroutine get_r32_field_array_2d
+
+!> @brief Sets a pointer to a 2D array of r64 fields from the inventory
+!> @param[in]  local_mesh   The local_mesh of the r64 field array to be accessed
+!> @param[out] field_array  Pointer to the 2D array of r64 fields to be accessed
+subroutine get_r64_field_array_2d(self, local_mesh, field_array)
+
+  implicit none
+
+  class(inventory_by_local_mesh_type), intent(in)  :: self
+  type(local_mesh_type),               intent(in)  :: local_mesh
+  type(field_real64_type),    pointer, intent(out) :: field_array(:,:)
+  class(id_abstract_pair_type),        pointer     :: paired_object
+
+  paired_object => self%get_paired_object(local_mesh%get_id())
+
+  select type(this => paired_object)
+    type is (id_r64_field_array_2d_pair_type)
+      field_array => this%get_field_array()
+    class default
+      call log_event('Paired ID object must be of r64 2D field_array type', LOG_LEVEL_ERROR)
+  end select
+
+end subroutine get_r64_field_array_2d
 
 !> @brief Sets a pointer to an array of integer fields from the inventory
 !> @param[in]  local_mesh   The local_mesh of the field array to be accessed
