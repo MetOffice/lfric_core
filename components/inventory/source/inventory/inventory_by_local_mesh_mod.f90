@@ -395,6 +395,18 @@ function get_paired_object(self, id) result(paired_object)
           paired_object => list_paired_object
           exit
         end if
+      type is (id_r32_field_array_2d_pair_type)
+        loop_id = list_paired_object%get_id()
+        if ( id == loop_id ) then
+          paired_object => list_paired_object
+          exit
+        end if
+      type is (id_r64_field_array_2d_pair_type)
+        loop_id = list_paired_object%get_id()
+        if ( id == loop_id ) then
+          paired_object => list_paired_object
+          exit
+        end if
       type is (id_integer_field_array_pair_type)
         loop_id = list_paired_object%get_id()
         if ( id == loop_id ) then
@@ -503,6 +515,18 @@ function paired_object_exists(self, id) result(exists)
           exists=.true.
           exit
         end if
+      type is (id_r32_field_array_2d_pair_type)
+        loop_id = list_paired_object%get_id()
+        if ( id == loop_id ) then
+          exists=.true.
+          exit
+        end if
+      type is (id_r64_field_array_2d_pair_type)
+        loop_id = list_paired_object%get_id()
+        if ( id == loop_id ) then
+          exists=.true.
+          exit
+        end if
       type is (id_integer_field_array_pair_type)
         loop_id = list_paired_object%get_id()
         if ( id == loop_id ) then
@@ -603,6 +627,18 @@ subroutine remove_paired_object(self, id)
           exit
         end if
       type is (id_r64_field_array_pair_type)
+        loop_id = list_paired_object%get_id()
+        if ( id == loop_id ) then
+          call self%paired_object_list(hash)%remove_item(loop)
+          exit
+        end if
+      type is (id_r32_field_array_2d_pair_type)
+        loop_id = list_paired_object%get_id()
+        if ( id == loop_id ) then
+          call self%paired_object_list(hash)%remove_item(loop)
+          exit
+        end if
+      type is (id_r64_field_array_2d_pair_type)
         loop_id = list_paired_object%get_id()
         if ( id == loop_id ) then
           call self%paired_object_list(hash)%remove_item(loop)
