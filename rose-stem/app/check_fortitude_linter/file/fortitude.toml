@@ -16,22 +16,34 @@ select = [
 "C001", # missing implicit none
 "C021", # real literal missing kind suffix
 "C022", # implicit-real-kind
+"C051", # trailing-backslash
 "C071", # assumed-size
 "C072", # character has assumed size but does not have intent(in)
 "C081", # initialisation-in-declaration and no explicit save/parameter
 "C091", # external-procedure
 "C092", # procedure not contained within module
 "C121", # use-all - use missing "only" clause
+"C122", # 'use' for intrinsic module missing 'intrinsic' modifier
 "C132", # default-public-accessibility
 "C141", # missing-exit-or-cycle-label
+"C143", # missing-end-label
+"C151", # misleading-inline-if-semicolon
+"C171", # escaped quotes in string literals split over two lines
 "OB011", # common-block, obsolescent
 "OB021", # entry-statement, obsolescent
+"OB031", # deprecated specific names of intrinsic functions
+"OB041", # computed go to statements are obsolescent
 "OB051", # pause-statement, deleted feature
 "OB061", # deprecated-character-syntax
 "MOD001", # don't use double-precision
+"MOD002", # double-precision-literal
+"MOD031", # Include statement is deprecated
 "MOD021", # deprecated-relational-operator
 "S101", # trailing-whitespace
 "S071", # missing-double-colon
+"S081", # unnecessary semicolon
+"S082", # multiple statements per line
+"S212", # Program and module in one file
 "PORT011", # literal-kind
 "PORT012", # literal-kind-suffix
 "PORT021", # star-kind, non-standard syntax
@@ -64,6 +76,7 @@ output-format = "grouped"              #group results by file
 "key_value_collection_mod.f90" = ["C072"]
 "local_mesh_mod.f90" = ["C081"]
 "log_mod.F90" = ["C081"]
+"reference_element_mod.F90" = ["C051"]
 
 # infrastructure/build:
 "content_mod.f90" = ["C081"]
