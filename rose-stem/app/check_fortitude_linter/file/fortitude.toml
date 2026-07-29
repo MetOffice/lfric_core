@@ -13,6 +13,7 @@ extend-exclude = ["lfric_mpi_mod.F90", "one_each_mod.f90"]
 select = [
 "E000", # io-error
 "E001", # syntax-error
+"E011", # invalid-character
 "C001", # missing implicit none
 "C021", # real literal missing kind suffix
 "C022", # implicit-real-kind
@@ -29,12 +30,16 @@ select = [
 "C143", # missing-end-label
 "C151", # misleading-inline-if-semicolon
 "C171", # escaped quotes in string literals split over two lines
+"C182", # multiple-allocations-with-stat
+"C191", # unreachable-statement
 "OB011", # common-block, obsolescent
 "OB021", # entry-statement, obsolescent
 "OB031", # deprecated specific names of intrinsic functions
 "OB041", # computed go to statements are obsolescent
 "OB051", # pause-statement, deleted feature
 "OB061", # deprecated-character-syntax
+"OB201", # deprecated-mpi-include
+"OB211", # deprecated-omp-include
 "MOD001", # don't use double-precision
 "MOD002", # double-precision-literal
 "MOD031", # Include statement is deprecated
@@ -44,6 +49,9 @@ select = [
 "S081", # unnecessary semicolon
 "S082", # multiple statements per line
 "S212", # Program and module in one file
+"S263", # bad-array-declaration
+"PORT001", # non-portable-io-unit
+"PORT031", # invalid-tab
 "PORT011", # literal-kind
 "PORT012", # literal-kind-suffix
 "PORT021", # star-kind, non-standard syntax
@@ -51,10 +59,10 @@ select = [
 "FORT002", # unused-allow-comment
 "FORT003", # redirected-allow-comment
 "FORT004", # duplicated-allow-comment
-"FORT005" # disabled-allow-comment
+"FORT005", # disabled-allow-comment
 ]
 
-output-format = "grouped"              #group results by file
+# output-format = "grouped"              #group results by file
 
 
 # Repos containing only a few files with errors for the above rules
@@ -86,6 +94,11 @@ output-format = "grouped"              #group results by file
 "epsilon_one_submod.f90" = ["C022"]
 "eta_mod.F90" = ["C022"]
 "one.f90" = ["C022"]
+"computed_mod.f90" = ["PORT001"]
+"enum_mod.f90" = ["PORT001"]
+"everything_mod.f90" = ["PORT001"]
+"multifile_mod.f90" = ["PORT001"]
+"simple_mod.f90" = ["PORT001"]
 
 # components/science:
 "sci_psykal_builtin_light_mod.f90" = ["C132"]
