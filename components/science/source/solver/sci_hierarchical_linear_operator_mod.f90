@@ -29,13 +29,14 @@ module sci_hierarchical_linear_operator_mod
      !> Abstract interface defined for the coarsening linear operator to the
      !> next level of the multigrid hierarchy.
      !>
-     !>@param[in] self a hierarchical linear operator
-     !>@param[in] fs_coarse coarse level function space
-     !>@param[inout] coarse_operator coarsened version on the next multigrid level
+     !>@param[in]    config           Application configuration object
+     !>@param[inout] coarse_operator  Coarsened version on the next multigrid level
      subroutine coarsen_interface(self, config, coarse_operator)
        import :: abstract_hierarchical_linear_operator_type
        import :: config_type
+
        class(abstract_hierarchical_linear_operator_type), intent(in) :: self
+
        type(config_type), intent(in) :: config
        class(abstract_hierarchical_linear_operator_type), allocatable, intent(inout) :: coarse_operator
      end subroutine coarsen_interface

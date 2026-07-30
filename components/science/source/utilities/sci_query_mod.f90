@@ -10,7 +10,6 @@ module sci_query_mod
   use constants_mod,   only: i_def, str_def
   use global_mesh_mod, only: global_mesh_type
   use local_mesh_mod,  only: local_mesh_type
-  use mesh_mod,        only: mesh_type
   use log_mod,         only: log_event, log_scratch_space, &
                              log_level_error
 
@@ -125,5 +124,3 @@ function check_lbc( mesh_name ) result ( answer )
 end function check_lbc
 
 end module sci_query_mod
-
-

@@ -161,18 +161,19 @@ contains
 
   !> @brief Applies the LMA mass matrices to the vector, y = M x.
   !>
-  !> @param[in,out] self The dense operator
-  !> @param[in] x Field vector to be read, size 2
-  !> @param[in,out] y Field vector to be written, size 2
+  !> @param[in]     config Application configuration object
+  !> @param[in]     x      Field vector to be read, size 2
+  !> @param[in,out] y      Field vector to be written, size 2
   subroutine apply_dense_op(self, config, x, y)
 
     implicit none
 
     class(dense_operator_type), intent(inout) :: self
-    type(config_type),          intent(in)    :: config
 
-    class(abstract_vector_type),          intent(in)    :: x
-    class(abstract_vector_type),          intent(inout) :: y
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(in)    :: x
+    class(abstract_vector_type), intent(inout) :: y
+
     type(field_type), pointer :: x_field1 => null(), &
                                  y_field1 => null(), &
                                  x_field2 => null(), &

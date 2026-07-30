@@ -64,9 +64,9 @@ module sci_iterative_solver_mod
     !> @details Apply the iterative solver for a given right hand side
     !> \f$b\f$.
     !>
-    !> @param[in] config Application configuration object
-    !> @param[inout] x  Resulting solution \f$x\f$
-    !> @param[in] b  Right hand side vector \f$b\f$
+    !> @param[in]    config Application configuration object
+    !> @param[inout] x      Resulting solution \f$x\f$
+    !> @param[in]    b      Right hand side vector \f$b\f$
     !>
     subroutine apply_interface(self, config, x, b)
 
@@ -75,6 +75,7 @@ module sci_iterative_solver_mod
       import :: config_type
 
       class(abstract_iterative_solver_type), intent(inout) :: self
+
       type(config_type),                     intent(in)    :: config
       class(abstract_vector_type),           intent(inout) :: x
       class(abstract_vector_type),           intent(inout) :: b
@@ -236,7 +237,7 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine fgmres_solve(self, config,x, b)
+     module subroutine fgmres_solve(self, config, x, b)
        class(fgmres_type),             intent(inout) :: self
        type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
@@ -275,7 +276,7 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine gcr_solve(self, config,x, b)
+     module subroutine gcr_solve(self, config, x, b)
        class(gcr_type),              intent(inout) :: self
        type(config_type),            intent(in)    :: config
        class(abstract_vector_type),  intent(inout) :: x
@@ -507,8 +508,8 @@ contains
   !> Over-rides the abstract interface to do the actual solve.
   !>
   !> @param[in]    config Application configuration object
-  !> @param[inout] b  "RHS" or boundary conditions.
-  !> @param[inout] x  Solution.
+  !> @param[inout] b      "RHS" or boundary conditions.
+  !> @param[inout] x      Solution.
   !>
   module subroutine cg_solve(self, config, x, b)
 
@@ -539,7 +540,7 @@ contains
     converged=.false.
 
     !set up the algorithm
-    call self%lin_op%apply(config, x,r) ! r = A.x
+    call self%lin_op%apply(config, x, r) ! r = A.x
     call r%scale(-1.0_r_def)    ! r = -A.x
     call r%axpy(1.0_r_def, b)   ! r = b - A.x
     r_nrm_0 = r%norm()          ! r_0 = ||r||_2
@@ -570,10 +571,10 @@ contains
     end if
     ! iterate until maximal number of iterations is reached
     do iter=1, self%max_iter
-       call self%lin_op%apply(config,p,z) ! z = A.p
-       alpha = rz / p%dot(z)              ! alpha = <r,z> / <p,A.p>
-       call x%axpy(alpha,p)               ! x -> x + alpha*p
-       call r%axpy(-alpha,z)              ! r -> r - alpha*A.p
+       call self%lin_op%apply(config, p, z) ! z = A.p
+       alpha = rz / p%dot(z)                ! alpha = <r,z> / <p,A.p>
+       call x%axpy(alpha,p)                 ! x -> x + alpha*p
+       call r%axpy(-alpha,z)                ! r -> r - alpha*A.p
 
        if ( self%monitor_convergence ) then
          r_nrm = r%norm()                  ! r = ||r||_2
@@ -660,10 +661,10 @@ contains
   end function bicgstab_constructor
 
   !> bicgstab solve. Over-rides the abstract interface to do the actual solve.
-  !> @param[in] config Application configuration object
-  !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
-  !>                 This the "RHS" or boundary conditions,
-  !> @param[inout] x an abstract vector which is the solution
+  !> @param[in]    config Application configuration object
+  !> @param[inout] b      An abstract vector which will be an actual vector of
+  !>                      unkown extended type. This the "RHS" or boundary conditions,
+  !> @param[inout] x      An abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
   module subroutine bicgstab_solve(self, config, x, b)
 
@@ -698,7 +699,7 @@ contains
     ! v = Ax
     call x%duplicate(v)
     call v%set_scalar(0.0_r_def)
-    call self%lin_op%apply(config,x,v)
+    call self%lin_op%apply(config, x, v)
     ! r = b - Ax
     call r%axpy(-1.0_r_def,v)
     ! store initial residual
@@ -749,7 +750,7 @@ contains
        ! now add on beta P
        call p%aypx(beta, y)
        ! apply the matrix
-       call self%lin_op%apply(config,p,v)
+       call self%lin_op%apply(config, p, v)
 
        alpha = rho/r0%dot(v)
        ! s = r - alpha * v
@@ -758,7 +759,7 @@ contains
        ! apply the preconditioner
        call self%prec%apply(config, s, z)
        ! apply the operator
-       call self%lin_op%apply(config,z,t)
+       call self%lin_op%apply(config, z, t)
 
        ! final scalars
        tt = t%dot(t)

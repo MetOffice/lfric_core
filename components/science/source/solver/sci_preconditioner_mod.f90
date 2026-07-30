@@ -27,10 +27,9 @@ module sci_preconditioner_mod
   abstract interface
      !> abstract interface defined for the apply procedure of a preconditioner
      !! y = P.x
-     !> @param[in] self a preconditioner
-     !> @param[in] config Application configuration object
-     !> @param[in]    x a vector that the preconditioner is applied to.
-     !> @param[inout] y a vector, the result.
+     !> @param[in]    config Application configuration object
+     !> @param[in]    x      A vector that the preconditioner is applied to.
+     !> @param[inout] y      A vector, the result.
      subroutine apply_interface(self, config, x, y)
 
        import :: abstract_vector_type
@@ -38,9 +37,10 @@ module sci_preconditioner_mod
        import :: config_type
 
        class(abstract_preconditioner_type), intent(inout) :: self
-       type(config_type),                   intent(in)    :: config
-       class(abstract_vector_type),         intent(in)    :: x
-       class(abstract_vector_type),         intent(inout) :: y
+
+       type(config_type),           intent(in)    :: config
+       class(abstract_vector_type), intent(in)    :: x
+       class(abstract_vector_type), intent(inout) :: y
      end subroutine apply_interface
   end interface
 

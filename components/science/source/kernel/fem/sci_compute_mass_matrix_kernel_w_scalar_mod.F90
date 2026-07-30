@@ -76,10 +76,10 @@ contains
   !! @param[in] chi3     3rd coordinate field in Wchi
   !! @param[in] panel_id Field giving the ID for mesh panels.
   !! @param[in] extended_mesh Compute on an extended mesh
-  !! @param[in] geometry
-  !! @param[in] topology
-  !! @param[in] coord_system
-  !! @param[in] scaled_radius
+  !! @param[in] geometry      Mesh geometry enumeration
+  !! @param[in] topology      Mesh topology enumeration
+  !! @param[in] coord_system  Finite-element coordinate system enumeration
+  !! @param[in] scaled_radius Scaled planet radius
   !! @param[in] ndf_w_scalar   The number of degrees of freedom per cell for w_scalar.
   !! @param[in] ndf_chi  The number of degrees of freedom per cell for chi.
   !! @param[in] basis_w_scalar 4-dim array holding SCALAR basis functions evaluated at

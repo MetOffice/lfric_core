@@ -84,10 +84,10 @@ contains
 !! @param[in] chi_3     3rd coordinate field
 !! @param[in] panel_id  Field giving the ID for mesh panels.
 !! @param[in] w2_field  W2_field needed to get function space components
-!! @param[in] geometry
-!! @param[in] topology
-!! @param[in] coord_system
-!! @param[in] scaled_radius
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] ndf       Number of degrees of freedom per cell
 !! @param[in] undf      Number of degrees of freedom
 !! @param[in] map       Dofmap for the cell at the base of the column

@@ -37,7 +37,7 @@ contains
 
 !---------------------------------------------------------------------------
 !> @brief      Returns mesh enumerations in line with science component values
-!> @param[in]  mesh Mesh object to query
+!> @param[in]  mesh     Mesh object to query
 !> @param[out] geometry [optional] Science component geometry enumeration
 !> @param[out] topology [optional] Science component topology enumeration
 !>

@@ -66,18 +66,18 @@ contains
 
   !> @brief Apply diagonal preconditioner to a field to obtain \f$y=D^-1x\f$.
   !>
-  !> @param[in] self Instance of diagonal_preconditioner_type
-  !> @param[in] x Field \f$x\f$ to apply preconditioner to
-  !> @param[in,out] y Resulting field \f$y=D^-1x\f$
+  !> @param[in]     config  Application configuration object
+  !> @param[in]     x       Field \f$x\f$ to apply preconditioner to
+  !> @param[in,out] y       Resulting field \f$y=D^-1x\f$
   subroutine apply_diagonal_preconditioner(self, config, x, y)
 
     implicit none
 
     class(diagonal_preconditioner_type), intent(inout) :: self
 
-    type(config_type),                   intent(in)    :: config
-    class(abstract_vector_type),         intent(in)    :: x
-    class(abstract_vector_type),         intent(inout) :: y
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(in)    :: x
+    class(abstract_vector_type), intent(inout) :: y
     integer(kind=i_def)                                :: i, nfields
 
     ! Workaround for PSyclone to get pointers of the correct type for x and y

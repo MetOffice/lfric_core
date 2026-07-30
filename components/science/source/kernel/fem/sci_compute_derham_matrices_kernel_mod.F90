@@ -107,10 +107,11 @@ contains
 !! @param[in] chi2 Physical coordinates in the 2nd dir.
 !! @param[in] chi3 Physical coordinates in the 3rd dir.
 !! @param[in] panel_id Field giving the ID for mesh panels.
-!! @param[in] geometry
-!! @param[in] topology
-!! @param[in] coord_system
-!! @param[in] scaled_radius
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
+!! @param[in] rehabilitate  Apply rehabilitation
 !! @param[in] ndf_w0 Number of degrees of freedom per cell for W0 space.
 !! @param[in] basis_w0 Basis functions evaluated at quadrature points for W0 space.
 !! @param[in] diff_basis_w0 Differential of basis functions evaluated at quadrature points for W0 space.

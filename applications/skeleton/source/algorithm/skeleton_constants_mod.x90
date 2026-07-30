@@ -29,7 +29,6 @@ module skeleton_constants_mod
   use operator_mod,                       only: operator_type
   use quadrature_xyoz_mod,                only: quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,       only: quadrature_rule_gaussian_type
-
   use timing_mod,                         only: start_timing, stop_timing, &
                                                 tik, LPROF
   use sci_mesh_enums_mod,                 only: get_mesh_enums
@@ -80,7 +79,8 @@ contains
     implicit none
 
     ! Arguments
-    type(modeldb_type),        intent(in) :: modeldb
+    type(modeldb_type), intent(in) :: modeldb
+
     type(mesh_type),  pointer, intent(in) :: mesh
     type(field_type),  target, intent(in) :: chi(:)
     type(field_type),  target, intent(in) :: panel_id

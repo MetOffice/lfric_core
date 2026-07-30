@@ -88,7 +88,9 @@ contains
 
     integer(i_def)   :: element_order_h
     integer(i_def)   :: element_order_v
-    integer(i_def)   :: geometry, topology, coord_system
+    integer(i_def)   :: geometry
+    integer(i_def)   :: topology
+    integer(i_def)   :: coord_system
     real(r_def)      :: scaled_radius
 
     ! Create continuous fields to project data into

@@ -71,7 +71,9 @@ document-api: api-documentation
 #
 unit-tests/%: export BIN_DIR ?= $(PROJECT_DIR)/test
 unit-tests/%: export CXX_LINK = TRUE
-unit-tests/%: export IMPORT_PARTS = $(CORE_ROOT_DIR)/infrastructure
+unit-tests/%: export IMPORT_PARTS = $(CORE_ROOT_DIR)/infrastructure \
+                                    $(CORE_ROOT_DIR)/components/inventory \
+                                    $(CORE_ROOT_DIR)/components/driver
 unit-tests/%: export META_FILE_DIR = rose-meta/lfric-science/HEAD
 unit-tests/%: export PROGRAMS = science_unit_tests
 unit-tests/%: export PROJECT = science

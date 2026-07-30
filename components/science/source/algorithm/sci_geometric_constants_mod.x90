@@ -23,6 +23,7 @@ module sci_geometric_constants_mod
   use mesh_collection_mod,           only: mesh_collection
   use timing_mod,                    only: start_timing, stop_timing, &
                                            tik, LPROF
+
   ! Object types
   use config_mod,                  only: config_type
   use field_mod,                   only: field_type
@@ -171,7 +172,8 @@ contains
     integer(kind=i_def)                :: k_h, k_v
     integer(tik)                       :: id
 
-    integer(kind=i_def) :: geometry, topology
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
     integer(kind=i_def) :: element_order_h
     integer(kind=i_def) :: element_order_v
     integer(kind=i_def) :: coord_system
@@ -508,22 +510,26 @@ contains
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
 
-    integer(i_def) :: element_order_h, element_order_v
-    integer(i_def) :: nqp_h_exact, nqp_v_exact
-    integer(i_def) :: geometry, topology, coord_system
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+    integer(i_def) :: nqp_h_exact
+    integer(i_def) :: nqp_v_exact
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
     real(r_def)    :: scaled_radius
 
     call get_mesh_enums(mesh, geometry, topology)
 
-    element_order_h = config%finite_element%element_order_h()
-    element_order_v = config%finite_element%element_order_v()
-    nqp_h_exact     = config%finite_element%nqp_h_exact()
-    nqp_v_exact     = config%finite_element%nqp_v_exact()
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    order_h       = config%finite_element%element_order_h()
+    order_v       = config%finite_element%element_order_v()
+    nqp_h_exact   = config%finite_element%nqp_h_exact()
+    nqp_v_exact   = config%finite_element%nqp_v_exact()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       detj_at_w3 => get_detj_at_w3_fv(config, mesh)
       return
     end if
@@ -543,10 +549,7 @@ contains
       ! Create the object as it doesn't exist yet
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      w3_fs => function_space_collection%get_fs( mesh,            &
-                                                 element_order_h, &
-                                                 element_order_v, &
-                                                 W3 )
+      w3_fs => function_space_collection%get_fs( mesh, order_h, order_v, W3 )
       call detj_at_w3_inventory_fe%add_field(detj_at_w3, w3_fs, mesh)
 
       ! @TODO #4487: it is inefficient to calculate this via mass matrices
@@ -577,7 +580,8 @@ contains
   end function get_detj_at_w3_fe
 
   !> @brief Returns the (finite volume) Det(J) values at W3 dof locations
-  !> @param[in]  mesh  Mesh to get the object for
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The Det(J) field
   function get_detj_at_w3_fv(config, mesh) result(detj_at_w3)
 
@@ -608,13 +612,15 @@ contains
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
 
-    integer(i_def) :: geometry, topology, coord_system
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
     real(r_def)    :: scaled_radius
 
     call get_mesh_enums(mesh, geometry, topology)
 
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
     if (.not. detj_at_w3_inventory_fv%is_initialised()) then

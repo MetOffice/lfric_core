@@ -68,18 +68,18 @@ contains
   !>
   !>@details Apply the trivial (null) preconditioner by setting \f$y=x\f$
   !>
-  !>@param[inout] self instance of type null_preconditioner_type
   !>@param[in]    config Application configuration object
-  !>@param[inout] x field-vector containing the right hand side of the pressure
-  !>@param[inout] y field-vector containing the solution
+  !>@param[inout] x      field-vector containing the right hand side of the pressure
+  !>@param[inout] y      field-vector containing the solution
   subroutine apply_null_preconditioner(self, config, x, y)
 
     implicit none
 
     class(null_preconditioner_type), intent(inout) :: self
-    type(config_type),               intent(in)    :: config
-    class(abstract_vector_type),     intent(in)    :: x
-    class(abstract_vector_type),     intent(inout) :: y
+
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(in)    :: x
+    class(abstract_vector_type), intent(inout) :: y
 
     select type(x)
     type is(field_vector_type)

@@ -73,11 +73,11 @@ contains
   !! @param[in] chi2 2nd coordinate field in Wchi
   !! @param[in] chi3 3rd coordinate field in Wchi
   !! @param[in] panel_id Field giving the ID for mesh panels
-  !! @param[in] geometry
-  !! @param[in] topology
-  !! @param[in] coord_system
-  !! @param[in] scaled_radius
-  !! @param[in] rehabilitate
+  !! @param[in] geometry      Mesh geometry enumeration
+  !! @param[in] topology      Mesh topology enumeration
+  !! @param[in] coord_system  Finite-element coordinate system enumeration
+  !! @param[in] scaled_radius Scaled planet radius
+  !! @param[in] rehabilitate  Apply rehabilitation
   !! @param[in] ndf_w3 Number of degrees of freedom per cell for the operator space
   !! @param[in] basis_w3 Scalar basis functions evaluated at quadrature points
   !! @param[in] ndf_chi Number of degrees of freedom per cell for the coordinate field

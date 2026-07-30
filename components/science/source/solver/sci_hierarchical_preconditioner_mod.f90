@@ -30,16 +30,16 @@ module sci_hierarchical_preconditioner_mod
      !> Abstract interface defined for the coarsening preconditioner to the
      !> next level of the multigrid hierarchy.
      !>
-     !>@param[inout] self a hierarchical preconditioner
-     !>@param[inout] other coarsened version on the next multigrid level
-     subroutine coarsen_interface(self, config,other)
+     !>@param[in]    config  Application configuration object
+     !>@param[inout] other   Coarsened version on the next multigrid level
+     subroutine coarsen_interface(self, config, other)
        import :: abstract_hierarchical_preconditioner_type
        import :: config_type
 
        class(abstract_hierarchical_preconditioner_type), intent(inout) :: self
+
        type(config_type), intent(in) :: config
        class(abstract_hierarchical_preconditioner_type), allocatable, intent(inout) :: other
-
      end subroutine coarsen_interface
   end interface
 
