@@ -280,17 +280,9 @@ contains
     type( field_collection_type ), pointer :: depository
     type( field_type ),            pointer :: diffusion_field
 
-    logical :: write_diag, io_benchmark
+    logical :: write_diag
 
     write_diag   = modeldb%config%io%write_diag()
-    io_benchmark = modeldb%config%io_demo%io_benchmark()
-
-    ! We don't update the diffusion field in the initial step, but need to
-    ! step the io_benchmark fields as they are derived from the diffusion
-    ! field
-    if (io_benchmark) then
-      call step_io_benchmark(modeldb)
-    end if
 
     ! Write diagnostic output
     if (write_diag) then
