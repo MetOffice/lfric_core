@@ -82,7 +82,7 @@ contains
 
       ! Update XIOS calendar
       if ( LPROF ) call start_timing( timing_id, 'xios.update_calendar' )
-      call xios_update_calendar( model_clock%get_step() - model_clock%get_first_step() + 1 )
+      call xios_update_calendar( model_clock%get_step() - model_clock%get_first_step() )
       if ( LPROF ) call stop_timing( timing_id, 'xios.update_calendar' )
 
       ! Read all files that need to be read from

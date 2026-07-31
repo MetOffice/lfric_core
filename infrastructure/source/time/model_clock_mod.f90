@@ -83,8 +83,8 @@ contains
     real(r_second),           intent(in) :: spinup_period
     type(model_clock_type) :: new_clock
 
-    if (first < 1) then
-      write(log_scratch_space, '("First clock step must be positive")')
+    if (first < 0.0_r_second) then
+      write(log_scratch_space, '("First clock step must not be negative")')
       call log_event(log_scratch_space, log_level_error)
     else
       new_clock%first_step = first
@@ -112,7 +112,7 @@ contains
     end if
 
     new_clock%current_step = new_clock%first_step
-    new_clock%initialisation_phase = (new_clock%current_step == 1_i_timestep)
+    new_clock%initialisation_phase = (new_clock%current_step == 0_i_timestep)
     new_clock%starting = .true.
     new_clock%ts_events = linked_list_type()
 
@@ -369,9 +369,9 @@ contains
     if (this%starting) then
       this%starting = .false.
       this%initialisation_phase = .false.
-    else
-      this%current_step = this%current_step + 1
     end if
+
+    this%current_step = this%current_step + 1
 
     ! Run timestep events
     loop => this%ts_events%get_head()
