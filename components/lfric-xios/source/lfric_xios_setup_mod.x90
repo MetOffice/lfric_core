@@ -161,14 +161,26 @@ contains
   !>
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
-  !>
-  subroutine init_xios_dimensions(chi, panel_id, alt_coords, alt_panel_ids)
+  !> @param[in]  geometry      Mesh geometry enumeration value
+  !> @param[in]  topology      Mesh topology enumeration value
+  !> @param[in]  coord_system  Finite-element coord-system enumeration value
+  !> @param[in]  scaled_radius Planet scaled radius
+  subroutine init_xios_dimensions( chi, panel_id,               &
+                                   geometry, topology,          &
+                                   coord_system, scaled_radius, &
+                                   alt_coords, alt_panel_ids )
 
     implicit none
 
     ! Arguments
-    type(field_type),           intent(in) :: chi(:)
-    type(field_type),           intent(in) :: panel_id
+    type(field_type), intent(in) :: chi(:)
+    type(field_type), intent(in) :: panel_id
+
+    integer(i_def),intent(in) :: geometry
+    integer(i_def),intent(in) :: topology
+    integer(i_def),intent(in) :: coord_system
+    real(r_def),   intent(in) :: scaled_radius
+
     type(field_type), optional, intent(in) :: alt_coords(:,:)
     type(field_type), optional, intent(in) :: alt_panel_ids(:)
 
@@ -176,12 +188,16 @@ contains
     type(mesh_type), pointer :: mesh => null()
 
     ! Initialise XIOS prime mesh
-    call init_xios_mesh( chi, panel_id, prime_mesh=.true. )
+    call init_xios_mesh( chi, panel_id, geometry, topology, &
+                         coord_system, scaled_radius, &
+                         prime_mesh=.true. )
 
     ! Initialise additional meshes
     if (present(alt_coords) .and. present(alt_panel_ids)) then
       do i = 1, size(alt_panel_ids)
-        call init_xios_mesh( alt_coords(i,:), alt_panel_ids(i), prime_mesh=.false. )
+        call init_xios_mesh( alt_coords(i,:), alt_panel_ids(i), &
+                             geometry, topology, coord_system,  &
+                             scaled_radius, prime_mesh=.false. )
       end do
     end if
 
@@ -201,16 +217,29 @@ contains
   !>
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
+  !> @param[in]  geometry      Mesh geometry enumeration value
+  !> @param[in]  topology      Mesh topology enumeration value
+  !> @param[in]  coord_system  Finite-element coord-system enumeration value
+  !> @param[in]  scaled_radius Planet scaled radius
   !> @param[in]  prime_mesh    Logical flag denoting if the mesh is the primary
   !!                           I/O mesh
   !>
-  subroutine init_xios_mesh(chi, panel_id, prime_mesh)
+  subroutine init_xios_mesh( chi, panel_id,               &
+                             geometry, topology,          &
+                             coord_system, scaled_radius, &
+                             prime_mesh )
 
     implicit none
 
     ! Arguments
     type(field_type),  intent(in) :: chi(:)
     type(field_type),  intent(in) :: panel_id
+
+    integer(i_def),intent(in) :: geometry
+    integer(i_def),intent(in) :: topology
+    integer(i_def),intent(in) :: coord_system
+    real(r_def),   intent(in) :: scaled_radius
+
     logical, optional, intent(in) :: prime_mesh
 
     ! Local variables
@@ -283,7 +312,7 @@ contains
      r2d = radians_to_degrees
     else
      r2d = 1.0_r_def
-    endif
+    end if
 
     ! Set up fields to hold the output coordinates
     output_field_fs => function_space_collection%get_fs( mesh, 0, 0, W0 )
@@ -301,7 +330,7 @@ contains
      r2d = radians_to_degrees
     else
      r2d = 1.0_r_def
-    endif
+    end if
 
     ! Calculate the local size of a W2H fs in order to determine
     ! how many edge dofs for the current partition
@@ -323,7 +352,9 @@ contains
         call sample_chi(i)%initialise( vector_space = output_field_fs )
       end do
       ! Convert to (X,Y,Z) coordinates
-      call invoke(nodal_xyz_coordinates_kernel_type(sample_chi, chi, panel_id))
+      call invoke(nodal_xyz_coordinates_kernel_type(sample_chi, chi, panel_id, &
+                                                    geometry, topology,        &
+                                                    coord_system, scaled_radius))
     else
       ! For planar geometries just re-use existing chi which are already (X,Y,Z)
       do i = 1,3

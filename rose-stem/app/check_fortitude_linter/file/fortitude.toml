@@ -8,20 +8,17 @@
 
 file-extensions= ["f90", "F90", "X90", "x90"]       #check these file types
 
+extend-exclude = ["lfric_mpi_mod.F90", "one_each_mod.f90"]
+
 select = [
 "E000", # io-error
 "E001", # syntax-error
 "C001", # missing implicit none
 "C021", # real literal missing kind suffix
 "C022", # implicit-real-kind
-"C031", # magic-number-in-array-size
-"C032", # magic unit in IO statement
-"C043", # missing action specifier when opening files
-"C051", # trailing-backslash
 "C071", # assumed-size
 "C072", # character has assumed size but does not have intent(in)
 "C081", # initialisation-in-declaration and no explicit save/parameter
-"C082", # pointer-initialisation-in-declaration
 "C091", # external-procedure
 "C092", # procedure not contained within module
 "C121", # use-all - use missing "only" clause
@@ -85,7 +82,7 @@ output-format = "grouped"              #group results by file
 "lfric_xios_process_output_mod.f90" = ["C081"]
 "lfric_xios_setup_mod.x90" = ["C081"]
 
-# components/science: 
+# components/science:
 "get_unit_test_planar_mesh_mod.f90" = ["C081"]
 "get_unit_test_qfaces_mod.f90" = ["C081"]
 "sci_psykal_light_mod.f90" = ["C132"]

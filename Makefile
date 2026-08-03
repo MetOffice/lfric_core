@@ -22,6 +22,7 @@ OPERATE_ON ?= infrastructure                \
               mesh_tools                    \
               applications/skeleton         \
               applications/simple_diffusion \
+              applications/coupled          \
               applications/lbc_demo         \
               applications/io_demo
 

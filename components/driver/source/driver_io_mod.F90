@@ -10,7 +10,7 @@
 !>
 module driver_io_mod
 
-  use constants_mod,           only: str_def, i_def, l_def
+  use constants_mod,           only: str_def, i_def, l_def, r_def
   use driver_modeldb_mod,      only: modeldb_type
   use driver_model_data_mod,   only: model_data_type
   use empty_io_context_mod,    only: empty_io_context_type
@@ -69,6 +69,8 @@ contains
   !> @param[inout] modeldb               Model state
   !> @param[in] chi_inventory            Contains the model's coordinate fields
   !> @param[in] panel_id_inventory       Contains the model's panel ID fields
+  !> @param[in] geometry                 Mesh geometry enumeration value
+  !> @param[in] topology                 Mesh topology enumeration value
   !> @param[in] populate_filelist        Optional procedure for creating a list of
   !!                                     file descriptions used by the model I/O
 
@@ -81,17 +83,22 @@ contains
                       modeldb,            &
                       chi_inventory,      &
                       panel_id_inventory, &
+                      geometry, topology, &
                       populate_filelist,  &
                       alt_mesh_names,     &
                       before_close )
 
+
     implicit none
 
-    character(*),                     intent(in)    :: context_name
-    character(*),                     intent(in)    :: mesh_name
-    class(modeldb_type),              intent(inout) :: modeldb
-    type(inventory_by_mesh_type),     intent(in)    :: chi_inventory
-    type(inventory_by_mesh_type),     intent(in)    :: panel_id_inventory
+    character(*),                 intent(in)    :: context_name
+    character(*),                 intent(in)    :: mesh_name
+    class(modeldb_type),          intent(inout) :: modeldb
+    type(inventory_by_mesh_type), intent(in)    :: chi_inventory
+    type(inventory_by_mesh_type), intent(in)    :: panel_id_inventory
+    integer(i_def),               intent(in)    :: geometry
+    integer(i_def),               intent(in)    :: topology
+
     procedure(filelist_populator), &
                    pointer, optional, intent(in)    :: populate_filelist
     character(len=str_def), optional, intent(in)    :: alt_mesh_names(:)
@@ -112,6 +119,7 @@ contains
                                  modeldb,            &
                                  chi_inventory,      &
                                  panel_id_inventory, &
+                                 geometry, topology, &
                                  populate_filelist,  &
                                  alt_mesh_names )
 
@@ -170,6 +178,8 @@ contains
   !> @param[in] modeldb             Model state
   !> @param[in] chi_inventory       Contains the model's coordinate fields
   !> @param[in] panel_id_inventory  Contains the model's panel ID fields
+  !> @param[in] geometry            Mesh geometry enumeration value
+  !> @param[in] topology            Mesh topology enumeration value
   !> @param[in] populate_filelist   Optional procedure for creating a list of
   !!                                file descriptions used by the model I/O
   !> @param[in] alt_mesh_names      Optional array of names for other meshes
@@ -179,16 +189,20 @@ contains
                                    modeldb,            &
                                    chi_inventory,      &
                                    panel_id_inventory, &
+                                   geometry, topology, &
                                    populate_filelist,  &
                                    alt_mesh_names )
 
     implicit none
 
-    character(*),                        intent(in)    :: context_name
-    character(*),                        intent(in)    :: mesh_name
-    class(modeldb_type),                 intent(inout) :: modeldb
-    type(inventory_by_mesh_type),        intent(in)    :: chi_inventory
-    type(inventory_by_mesh_type),        intent(in)    :: panel_id_inventory
+    character(*),                 intent(in)    :: context_name
+    character(*),                 intent(in)    :: mesh_name
+    class(modeldb_type),          intent(inout) :: modeldb
+    type(inventory_by_mesh_type), intent(in)    :: chi_inventory
+    type(inventory_by_mesh_type), intent(in)    :: panel_id_inventory
+    integer(i_def),               intent(in)    :: geometry
+    integer(i_def),               intent(in)    :: topology
+
     procedure(filelist_populator), &
                    pointer, optional,    intent(in)    :: populate_filelist
     character(len=str_def), optional,    intent(in)    :: alt_mesh_names(:)
@@ -210,6 +224,9 @@ contains
 
     integer(i_def) :: num_meshes, i, j
 
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
     mesh             => null()
     chi              => null()
     panel_id         => null()
@@ -219,6 +236,9 @@ contains
     mesh => mesh_collection%get_mesh(mesh_name)
 
     !==============================================================
+
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     call tmp_io_context%initialise(context_name)
     call modeldb%io_contexts%add_context(tmp_io_context)
@@ -268,6 +288,9 @@ contains
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
+                                               geometry, topology,     &
+                                               coord_system,           &
+                                               scaled_radius,          &
                                                alt_coords,             &
                                                alt_panel_ids )
       deallocate(alt_coords)
@@ -276,7 +299,10 @@ contains
       call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
-                                               modeldb%calendar )
+                                               modeldb%calendar,       &
+                                               geometry, topology,     &
+                                               coord_system,           &
+                                               scaled_radius )
     end if
 
     ! Attach context advancement to the model's clock

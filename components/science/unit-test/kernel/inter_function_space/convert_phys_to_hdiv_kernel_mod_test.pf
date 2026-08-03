@@ -7,79 +7,48 @@
 !! W2 wind field
 module convert_phys_to_hdiv_kernel_mod_test
 
-  use constants_mod,                 only : i_def, r_def
+  use constants_mod, only: i_def, r_def, rmdi
+
+  use base_mesh_config_mod,      only: geometry_planar, &
+                                       topology_fully_periodic
+  use finite_element_config_mod, only: coord_system_xyz
+
   use funit
 
   implicit none
 
   private
-  public :: convert_phys_to_hdiv_test_type, test_all
-
-  @TestCase
-  type, extends(TestCase) :: convert_phys_to_hdiv_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type convert_phys_to_hdiv_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_planar,    &
-                                          topology_fully_periodic
-    use sci_chi_transform_mod,     only : init_chi_transforms
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config, &
-                                          feign_base_mesh_config
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    class(convert_phys_to_hdiv_test_type), intent(inout) :: this
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_planar,         &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
-
     call init_chi_transforms(geometry_planar, topology_fully_periodic)
 
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(convert_phys_to_hdiv_test_type), intent(inout) :: this
-
-    call final_configuration()
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_convert_phys_to_hdiv_kernel_mod, only : convert_phys_to_hdiv_code
 
@@ -96,11 +65,8 @@ contains
                                                    get_w2_w2nodal_basis
 
     use get_unit_test_3x3x3_chi_mod,         only: get_w0_3x3x3_field
-    use base_mesh_config_mod,                only: geometry_planar
 
-   implicit none
-
-    class(convert_phys_to_hdiv_test_type), intent(inout) :: this
+    implicit none
 
     real(r_def), parameter :: tol = 1.0e-3_r_def
     real(r_def), parameter :: dx = 6000.0_r_def
@@ -109,6 +75,11 @@ contains
     real(r_def), parameter :: u_zonal = 5.0_r_def
     real(r_def), parameter :: u_meridional = 3.0_r_def
     real(r_def), parameter :: u_radial = 0.4_r_def
+
+    integer(i_def), parameter :: geometry = geometry_planar
+    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     real(r_def) :: answer
 
@@ -194,7 +165,10 @@ contains
                                     chi_data(:,2),                           &
                                     chi_data(:,3),                           &
                                     panel_id_data,                           &
-                                    geometry_planar,                         &
+                                    geometry,                                &
+                                    topology,                                &
+                                    coord_system,                            &
+                                    scaled_radius,                           &
                                     ndf_w2, undf_w2,                         &
                                     map_w2(:,cell), basis_w2,                &
                                     ndf_w0, undf_w0,                         &

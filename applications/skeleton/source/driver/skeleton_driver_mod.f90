@@ -79,11 +79,17 @@ contains
     integer(i_def) :: geometry
     integer(i_def) :: method
     integer(i_def) :: number_of_layers
+    integer(i_def) :: tile_size_x
+    integer(i_def) :: tile_size_y
     real(r_def)    :: domain_bottom
     real(r_def)    :: domain_height
     real(r_def)    :: scaled_radius
-    logical        :: check_partitions
 
+    logical :: check_partitions
+    logical :: inner_halo_tiles
+    logical :: prepartitioned
+
+    integer(i_def), allocatable :: tile_size(:,:)
     integer(i_def) :: i
     integer(i_def), parameter :: one_layer = 1_i_def
 
@@ -102,6 +108,17 @@ contains
     domain_height    = modeldb%config%extrusion%domain_height()
     number_of_layers = modeldb%config%extrusion%number_of_layers()
     scaled_radius    = modeldb%config%planet%scaled_radius()
+    prepartitioned   = modeldb%config%base_mesh%prepartitioned()
+
+    if (prepartitioned) then
+      tile_size_x = 1
+      tile_size_y = 1
+      inner_halo_tiles = .false.
+    else
+      tile_size_x = maxval([1,modeldb%config%partitioning%tile_size_x()])
+      tile_size_y = maxval([1,modeldb%config%partitioning%tile_size_y()])
+      inner_halo_tiles = modeldb%config%partitioning%inner_halo_tiles()
+    end if
 
     !=======================================================================
     ! Mesh
@@ -141,17 +158,24 @@ contains
     !-----------------------------------------------------------------------
     stencil_depth = 1
     check_partitions = .false.
+    allocate(tile_size(2,size(base_mesh_names)))
+    tile_size(1,:) = tile_size_x
+    tile_size(2,:) = tile_size_y
+
     call init_mesh( modeldb%config,              &
                     modeldb%mpi%get_comm_rank(), &
                     modeldb%mpi%get_comm_size(), &
                     base_mesh_names, extrusion,  &
+                    inner_halo_tiles, tile_size, &
                     stencil_depth, check_partitions )
 
     allocate( twod_names, source=base_mesh_names )
     do i=1, size(twod_names)
       twod_names(i) = trim(twod_names(i))//'_2d'
     end do
+
     call create_mesh( base_mesh_names, extrusion_2d, &
+                      inner_halo_tiles, tile_size,   &
                       alt_name=twod_names )
     call assign_mesh_maps( twod_names )
 
@@ -160,7 +184,7 @@ contains
     ! Build the FEM function spaces and coordinate fields
     !=======================================================================
     ! Create FEM specifics (function spaces and chi field)
-    call init_fem(mesh_collection, chi_inventory, panel_id_inventory)
+    call init_fem(modeldb%config, chi_inventory, panel_id_inventory)
 
     !=======================================================================
     ! Create and initialise prognostic fields

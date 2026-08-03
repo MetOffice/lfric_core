@@ -195,8 +195,15 @@ contains
     answer = local_mesh%is_topology_periodic()
     @assertEqual( .true., answer )
 
+    answer = local_mesh%is_topology_non_periodic()
+    @assertEqual( .false., answer )
+
+    answer = local_mesh%is_topology_channel()
+    @assertEqual( .false., answer )
+
     answer = local_mesh%is_coord_sys_xyz()
     @assertEqual( .true., answer )
+
 
     ! Check the local_mesh has the correct properties
     nverts_per_edge = local_mesh%get_nverts_per_edge()
@@ -209,6 +216,7 @@ contains
     @assertEqual( 1, num_panels_global_mesh )
     ncells_global_mesh = local_mesh%get_ncells_global_mesh()
     @assertEqual( 64, ncells_global_mesh )
+
 
     select case ( num_processes )
 

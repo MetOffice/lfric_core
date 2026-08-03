@@ -45,7 +45,9 @@ program lbc_demo
   call init_config(filename, required_namelists, &
                    config=modeldb%config)
 
-  call init_logger( modeldb%mpi%get_comm(), program_name )
+  call init_logger( modeldb%config, &
+                    modeldb%mpi%get_comm(), &
+                    program_name )
 
   ! Before anything else, test that the mesh provided was a regional domain.
   ! This application is not intended for cubed-sphere meshes.

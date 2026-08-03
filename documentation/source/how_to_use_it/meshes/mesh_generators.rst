@@ -48,7 +48,7 @@ Generates one (or more) 2D gridded meshes that each follow the base strategy.
  * Single panel of side ``n X m`` cells.
  * Located using combination of the specified domain centre and extents.
  * Axes aligned with `<longitude>,<latitude>` or `<x>,<y>`.
- * Allows periodicity of oppposing domain boundaries to be set [#f4]_.
+ * Allows periodicity of opposing domain boundaries to be set [#f4]_.
 
 --`usage:`
 
@@ -58,12 +58,12 @@ Generates one (or more) 2D gridded meshes that each follow the base strategy.
 .. rubric:: Footnotes
 
 .. [#f1] NetCDF(.nc) file compliant with UGRID v1.0 convention.
-.. [#f2] `Null Island`: where the prime medridian and the equator intersect,
-	 ``i.e.`` 0N, 0E.
+.. [#f2] `Null Island`: where the prime meridian and the equator intersect,
+   ``i.e.`` 0N, 0E.
 .. [#f3] For historical reasons, the planar mesh generator is not restricted
-	 to a planar surface domain. References to planar meshes with respect
-	 the following sections should be taken as a mesh produced by the
-	 `planar_mesh_generator` program.
+   to a planar surface domain. References to planar meshes with respect
+   to the following sections should be taken as a mesh produced by the
+   `planar_mesh_generator` program.
 .. [#f4] A pair of periodic domain boundaries are connected such, that where a
-	 field quantity exits the model domain crossing one of the boundaries,
-	 it re-enters the domain at the opposing domain boundary.
+   field quantity exits the model domain crossing one of the boundaries,
+   it re-enters the domain at the opposing domain boundary.
