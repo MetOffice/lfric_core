@@ -238,6 +238,20 @@ def test_get_directory(monkeypatch, tmp_path) -> None:
     assert lfric_base.app_dir == tmp_path / "app_dir"
 
 
+def test_python_search_path(monkeypatch):
+    '''
+    Test that new paths can be added to the Python search path.
+    '''
+    monkeypatch.setattr(sys, "argv", ["lfric_base.py"])
+    lfric_base = LFRicBase(name="test_name", app_dir=Path("."))
+    tools_path = str(lfric_base.lfric_core_root / "infrastructure" / "build" /
+                     "psyclone")
+    # pylint: disable=protected-access
+    assert lfric_base._add_python_paths == [tools_path]
+    lfric_base.add_python_search_path("/special_path")
+    assert lfric_base._add_python_paths == [tools_path, "/special_path"]
+
+
 def test_require_openmp(monkeypatch, caplog) -> None:
     '''
     Tests that using `-no-openmp` will abort with correct

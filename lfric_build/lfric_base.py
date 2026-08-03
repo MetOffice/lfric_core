@@ -129,6 +129,17 @@ class LFRicBase(FabBase):
         '''
         return self._lfric_core_root
 
+    def add_python_search_path(self, path: Union[str, Path]) -> None:
+        '''
+        Adds the specified path to the list of python search paths, which
+        will be added before PSyclone is executed. This allows an application
+        to add additional search paths required for the application (e.g.
+        the location of transmute scripts).
+
+        :param path: the search path to add.
+        '''
+        self._add_python_paths.append(str(path))
+
     def define_command_line_options(
             self,
             parser: Optional[argparse.ArgumentParser] = None
