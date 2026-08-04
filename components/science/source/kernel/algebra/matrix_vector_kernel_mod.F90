@@ -12,7 +12,7 @@ module matrix_vector_kernel_mod
                             GH_REAL, GH_READ, GH_INC, &
                             ANY_SPACE_1, ANY_SPACE_2, &
                             CELL_COLUMN
-  use constants_mod, only : i_def, r_single, r_double
+  use constants_mod, only : i_def, r_single, r_double, BLOCK_SIZE
   use kernel_mod,    only : kernel_type
 
   implicit none
@@ -87,15 +87,20 @@ contains
     real(kind=r_single), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
-    integer(kind=i_def) :: df, ik, df2, i1, i2, nl
+    integer(kind=i_def) :: df, ik, df2, i1, i2, nl, k, kk, kend
 
     nl = nlayers-1
-    ik = (cell-1)*nlayers +1
-    do df2 = 1, ndf2
-      i2 = map2(df2)
-      do df = 1, ndf1
-        i1 = map1(df)
-        lhs(i1:i1+nl) = lhs(i1:i1+nl) + matrix(ik:ik+nl,df,df2)*x(i2:i2+nl)
+    do k = 0, nl, BLOCK_SIZE
+      ik = (cell-1)*nlayers + 1
+      kend = min(BLOCK_SIZE-1, nl-k)
+      do df2 = 1, ndf2
+        i2 = map2(df2)
+        do df = 1, ndf1
+          i1 = map1(df)
+          do kk = 0, kend
+            lhs(i1+kk+k) = lhs(i1+kk+k) + matrix(ik+kk+k,df,df2)*x(i2+kk+k)
+          end do
+        end do
       end do
     end do
 
@@ -125,15 +130,21 @@ contains
     real(kind=r_double), dimension(undf1),              intent(inout) :: lhs
     real(kind=r_double), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
-    integer(kind=i_def) :: df, ik, df2, i1, i2, nl
+    ! Internal variables
+    integer(kind=i_def) :: df, ik, df2, i1, i2, nl, k, kk, kend
 
     nl = nlayers-1
-    ik = (cell-1)*nlayers +1
-    do df2 = 1, ndf2
-      i2 = map2(df2)
-      do df = 1, ndf1
-        i1 = map1(df)
-        lhs(i1:i1+nl) = lhs(i1:i1+nl) + matrix(ik:ik+nl,df,df2)*x(i2:i2+nl)
+    do k = 0, nl, BLOCK_SIZE
+      ik = (cell-1)*nlayers + 1
+      kend = min(BLOCK_SIZE-1, nl-k)
+      do df2 = 1, ndf2
+        i2 = map2(df2)
+        do df = 1, ndf1
+          i1 = map1(df)
+          do kk = 0, kend
+            lhs(i1+kk+k) = lhs(i1+kk+k) + matrix(ik+kk+k,df,df2)*x(i2+kk+k)
+          end do
+        end do
       end do
     end do
 
