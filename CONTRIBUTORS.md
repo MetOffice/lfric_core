@@ -28,3 +28,4 @@
 | mo-lucy-gordon   | Lucy Gordon            | Met Office            | 2026-03-18 |
 | shreybh1         | Shrey Bhardwaj         | Met Office            | 2026-03-26 |
 | hiker            | Joerg Henrichs         | Bureau of Meteorology | 2026-02-11 |
+| sebvdb           | Sebastiaan van de Bund | EPCC & University of Edinburgh | 2026-04-08 |
