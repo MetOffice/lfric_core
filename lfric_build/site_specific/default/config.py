@@ -15,11 +15,13 @@ from typing import List
 
 from fab.api import AddFlags, BuildConfig, Category, ToolRepository
 
-from default.setup_script_cray import setup_script_cray
-from default.setup_script_gnu import setup_script_gnu
-from default.setup_script_intel_classic import setup_script_intel_classic
-from default.setup_script_intel_llvm import setup_script_intel_llvm
-from default.setup_script_nvidia import setup_script_nvidia
+from site_specific.default.setup_script_cray import setup_script_cray
+from site_specific.default.setup_script_gnu import setup_script_gnu
+from site_specific.default.setup_script_intel_classic import (
+    setup_script_intel_classic)
+from site_specific.default.setup_script_intel_llvm import (
+    setup_script_intel_llvm)
+from site_specific.default.setup_script_nvidia import setup_script_nvidia
 
 
 class Config:

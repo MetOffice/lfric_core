@@ -40,30 +40,35 @@ class LFRicBase(FabBase):
     :param app_dir: the base directory of the application.
     :param root_symbol: the symbol (or list of symbols) of the main
         programs. Defaults to the parameter `name` if not specified.
+    :param site_specific_dir: the base directory for the site-specific
+        files. If not specified, it will default to "directory
+        of the calling script" / site_specific
 
     '''
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name: str,
                  app_dir: Path,
-                 root_symbol: Optional[Union[list[str], str]] = None
+                 root_symbol: Optional[Union[list[str], str]] = None,
+                 site_specific_dir: Optional[Path] = None
                  ):
 
         self._app_dir = app_dir
 
+        this_file = Path(__file__)
+        # The root directory of the LFRic Core
+        self._lfric_core_root = this_file.parents[1]
+
         # List of all precision preprocessor symbols and their default.
         # Used to add corresponding command line options, and then to define
         # the preprocessor definitions. Note that precision_other
-        # becomes RDEF.
+        # becomes RDEF. Must be defined before calling super().__init__
+        # (since it is required when defining command line options).
         self._all_precisions = [("precision_other", "64"),
                                 ("R_SOLVER_PRECISION", "32"),
                                 ("R_TRAN_PRECISION", "64"),
                                 ("R_BL_PRECISION", "64")]
 
-        super().__init__(name)
-
-        this_file = Path(__file__)
-        # The root directory of the LFRic Core
-        self._lfric_core_root = this_file.parents[1]
+        super().__init__(name, site_specific_dir=site_specific_dir)
 
         # If the user wants to overwrite the default root symbol (which
         # is `name`):
@@ -198,21 +203,6 @@ class LFRicBase(FabBase):
                          "link. Remove the '-no-omp' flag from the "
                          "command line.")
             sys.exit(-1)
-
-    def setup_site_specific_location(self):
-        '''
-        This method adds the required directories for site-specific
-        configurations to the Python search path. We want to add the
-        directory where this lfric_base class is located, and not the
-        directory in which the application script is (which is what
-        baf base would set up).
-        '''
-        this_dir = Path(__file__).parent
-        # We need to add the 'site_specific' directory to the path, so
-        # each config can import from 'default' (instead of having to
-        # use 'site_specific.default', which would hard-code the name
-        # `site_specific` in more scripts).
-        sys.path.insert(0, str(this_dir / "site_specific"))
 
     def define_preprocessor_flags_step(self) -> None:
         '''
