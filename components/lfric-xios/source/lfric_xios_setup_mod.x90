@@ -123,14 +123,13 @@ contains
     select type (calendar)
     type is (step_calendar_type)
 
+      step_offset = model_clock%get_step()
       if(start_at_zero) then
-        step_offset = model_clock%get_step()
         context_clock_step = 0_i_def
       else
         ! Set the start date by adding the number of steps since timestep 0 (the
         ! time start for a step calendar) to the time start
-        step_offset = model_clock%get_step() - 1
-        context_clock_step = model_clock%get_step() - 1_i_def
+        context_clock_step = model_clock%get_step()
       end if
 
       xios_since_timestep_zero%second &

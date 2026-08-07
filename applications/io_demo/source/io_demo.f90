@@ -25,7 +25,7 @@ program io_demo
   use random_number_generator_mod, only : random_number_generator_type
 
   use io_demo_mod,        only: io_demo_required_namelists
-  use io_demo_driver_mod, only: initialise, step, finalise
+  use io_demo_driver_mod, only: initialise, initial_step, step, finalise
   use timing_mod,         only: init_timing, final_timing
 
   implicit none
@@ -81,6 +81,9 @@ program io_demo
   call modeldb%io_contexts%initialise(program_name, 100)
   call log_event( 'Initialising ' // program_name // ' ...', log_level_trace )
   call initialise( program_name, modeldb)
+
+  ! Write initial diagnostic output
+  call initial_step( program_name, modeldb )
 
   do while (modeldb%clock%tick())
     call step( program_name, modeldb )
