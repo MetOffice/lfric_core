@@ -74,6 +74,7 @@ module sci_mapping_constants_mod
 
   ! Constants for mapping between meshes with different horizontal resolution
   type(inventory_by_mesh_type) :: intermesh_wghts_w2_inventory
+  type(inventory_by_mesh_type) :: intermesh_wghts_w2h_inventory
   type(inventory_by_mesh_type) :: intermesh_wghts_rdef_w3_inventory
   type(inventory_by_mesh_type) :: intermesh_wghts_rtran_w3_inventory
 
@@ -111,6 +112,7 @@ module sci_mapping_constants_mod
   public :: get_intermesh_weights_w3_rdef
   public :: get_intermesh_weights_w3_rtran
   public :: get_intermesh_weights_w2
+  public :: get_intermesh_weights_w2h
   public :: get_project_xdot_to_w2
   public :: get_project_ydot_to_w2
   public :: get_project_zdot_to_w2
@@ -694,6 +696,69 @@ contains
     call intermesh_wghts_w2_inventory%get_field(coarse_mesh, fine_mesh, weights)
 
   end function get_intermesh_weights_w2
+
+  !> @brief Returns a pointer to the weights for W2h prolongation
+  !> @param[in] fine_mesh    The fine mesh for the transform
+  !> @param[in] coarse_mesh  The coarse mesh for the transform
+  !> @return The field containing weights for W2h prolongation
+  function get_intermesh_weights_w2h(fine_mesh, coarse_mesh) result(weights)
+
+    use sci_weights_prolong_w2h_kernel_mod, only: weights_prolong_w2h_kernel_type
+
+    implicit none
+
+    type(mesh_type), pointer, intent(in) :: coarse_mesh
+    type(mesh_type), pointer, intent(in) :: fine_mesh
+    integer(kind=i_def)                  :: intermesh_id
+    logical(kind=l_def)                  :: constant_exists
+    type(field_type),            pointer :: weights
+    type(field_type)                     :: dummy_w2h_field
+    type(function_space_type),   pointer :: fine_w2h_fs
+    type(function_space_type),   pointer :: coarse_w2h_fs
+
+    ! Check inventory is initialised
+    if (.not. intermesh_wghts_w2h_inventory%is_initialised()) then
+      call intermesh_wghts_w2h_inventory%initialise(name='intermesh_weights_w2h')
+    end if
+
+    intermesh_id = intermesh_wghts_w2h_inventory%compute_intermesh_id(          &
+            coarse_mesh, fine_mesh                                             &
+    )
+    constant_exists = intermesh_wghts_w2h_inventory%paired_object_exists(       &
+            intermesh_id                                                       &
+    )
+
+    if (.not. constant_exists) then
+
+      if (.not. coarse_mesh%query_mesh_map(fine_mesh)) then
+        write(log_scratch_space, '(A,I6,A,I6)')                                &
+            'No mesh map exists for mapping between meshes ',                  &
+            coarse_mesh%get_id(), ' and ', fine_mesh%get_id()
+        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      end if
+
+      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+
+      coarse_w2h_fs => function_space_collection%get_fs(coarse_mesh, 0, 0, W2h)
+      fine_w2h_fs => function_space_collection%get_fs(fine_mesh, 0, 0, W2h)
+
+      call dummy_w2h_field%initialise( coarse_w2h_fs )
+      call invoke( setval_c(dummy_w2h_field, 0.0_r_def) )
+
+      call intermesh_wghts_w2h_inventory%add_field(                             &
+              weights, fine_w2h_fs, coarse_mesh, fine_mesh                      &
+      )
+
+      call invoke( setval_c(weights, 0.0_r_def),                               &
+                   weights_prolong_w2h_kernel_type(weights, dummy_w2h_field) )
+
+      if ( subroutine_timers ) call timer('runtime_constants.mapping')
+    end if
+
+    ! Get existing constant
+    call intermesh_wghts_w2h_inventory%get_field(coarse_mesh, fine_mesh, weights)
+
+  end function get_intermesh_weights_w2h
 
   !> @brief Returns a pointer to the weights for conservative W3 mapping
   !> @param[in] fine_mesh    The fine mesh for the transform
