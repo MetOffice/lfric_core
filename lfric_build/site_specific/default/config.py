@@ -13,7 +13,7 @@ This module contains the default Fab configuration class.
 import argparse
 from typing import List
 
-from fab.api import AddFlags, BuildConfig, Category, ToolRepository
+from fab.api import BuildConfig, Category, ToolRepository
 
 from site_specific.default.setup_script_cray import setup_script_cray
 from site_specific.default.setup_script_gnu import setup_script_gnu
@@ -141,6 +141,7 @@ class Config:
 
         :param build_config: the Fab build configuration instance
         '''
+        print("SiteConfig default GNU")
         setup_script_gnu(build_config, self.args)
 
     def setup_intel_classic(self, build_config: BuildConfig) -> None:
@@ -175,11 +176,3 @@ class Config:
         :param build_config: the Fab build configuration instance
         '''
         setup_script_nvidia(build_config, self.args)
-
-    def get_path_flags(self, build_config: BuildConfig) -> List[AddFlags]:
-        '''
-        Returns the path-specific flags to be used.
-        TODO FAB #313: Ideally we have only one kind of flag, but as a quick
-        work around we provide this method.
-        '''
-        return []

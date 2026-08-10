@@ -68,7 +68,7 @@ class LFRicBase(FabBase):
                                 ("R_TRAN_PRECISION", "64"),
                                 ("R_BL_PRECISION", "64")]
 
-        super().__init__(name, site_specific_dir=site_specific_dir)
+        super().__init__(name)
 
         # If the user wants to overwrite the default root symbol (which
         # is `name`):
