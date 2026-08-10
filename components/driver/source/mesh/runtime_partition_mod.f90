@@ -28,7 +28,7 @@ module runtime_partition_mod
 
   use local_mesh_collection_mod,  only: local_mesh_collection
   use global_mesh_collection_mod, only: global_mesh_collection
-    use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
   implicit none
 
@@ -205,7 +205,7 @@ subroutine create_local_mesh_maps( input_mesh_file, ugrid_2d )
 
   character(len=str_max_filename) :: input_mesh_file
 
-    type(ugrid_2d_type), intent(inout) :: ugrid_2d
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   character(str_def), allocatable :: source_mesh_names(:)
   character(str_def), allocatable :: target_mesh_names(:)
@@ -252,8 +252,8 @@ subroutine create_local_mesh_maps( input_mesh_file, ugrid_2d )
 
           ! Read in the global mesh map
           call ugrid_2d%file_handler_read_map( source_mesh_names(i), &
-                                      target_mesh_names(j), &
-                                      gid_mesh_map )
+                                               target_mesh_names(j), &
+                                               gid_mesh_map )
 
           ! Create the local mesh map
           ntarget_per_source_cell_x = size(gid_mesh_map, 1)

@@ -106,16 +106,15 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     !-------------------------------------
     ! Test construction of a biperiodic mesh
     !-------------------------------------
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
@@ -275,15 +274,14 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     !---------------------------------------
     ! Test construction of a cubed-sphere mesh
     !---------------------------------------
     filename = 'data/mesh_C4.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
@@ -444,12 +442,10 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
+    filename='data/mesh_C32_MG.nc'
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
     call ugrid_2d%file_handler_open(trim(filename))
-
-
-    filename='data/mesh_C32_MG.nc'
     !-------------------------------------------------
     ! Test construction of a cubed-sphere mesh is same
     !-------------------------------------------------
@@ -577,11 +573,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler_
 
-    allocate( ncdf_quad_type :: file_handler_ )
-    call ugrid_2d%set_file_handler( file_handler_ )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     !-------------------------------------------------
     ! Test construction of a cubed-sphere mesh is same
     !-------------------------------------------------
@@ -589,6 +580,9 @@ contains
 
     npanels  = 6
     filename='data/mesh_C32_MG.nc'
+    allocate( ncdf_quad_type :: file_handler_ )
+    call ugrid_2d%set_file_handler( file_handler_ )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     ! 1.0 First read all the requested global meshes into memory.
     ! This is done because the intergrid map ids are based

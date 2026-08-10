@@ -819,7 +819,7 @@ contains
 
     ! Create all the meshes: global and local
     do i=1, size(mesh_names)
-      call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
+      call ugrid_mesh_data%read_from_file( trim(filename), mesh_names(i), ugrid_2d )
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       call global_mesh_collection%add_new_global_mesh( global_mesh )

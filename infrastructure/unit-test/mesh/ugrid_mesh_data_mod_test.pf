@@ -108,15 +108,15 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
     !-------------------------------------
     ! Test ugrid_mesh_data object
     !-------------------------------------
     mesh_name_in = 'unit_test'
     filename = 'data/mesh_BiP8x8-750x250.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name_in, ugrid_2d)
 
     call ugrid_mesh_data%get_data(                     &
@@ -466,10 +466,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
     kgo_domain_extents(:,1)  = [ -4.0_r_def, -4.0_r_def]
     kgo_domain_extents(:,2)  = [ 16.0_r_def, -4.0_r_def]
     kgo_domain_extents(:,3)  = [ 16.0_r_def, 16.0_r_def]
@@ -477,6 +473,10 @@ contains
 
     mesh_name_in = 'SQ20'
     filename = 'data/dev_LAM_locals_20-24.nc'
+
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name_in, ugrid_2d)
 
     call ugrid_mesh_data%get_data(                     &

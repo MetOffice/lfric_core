@@ -56,9 +56,11 @@ module driver_mesh_mod
   use finite_element_config_mod, only: cellshape_quadrilateral
   use base_mesh_config_mod,      only: geometry_spherical, &
                                        topology_fully_periodic
-    use ugrid_2d_mod,   only: ugrid_2d_type
-    use ugrid_file_mod, only: ugrid_file_type
-    use ncdf_quad_mod,  only: ncdf_quad_type
+  use timing_mod,                only: start_timing, stop_timing, &
+                                       tik, LPROF
+  use ugrid_2d_mod,              only: ugrid_2d_type
+  use ugrid_file_mod,            only: ugrid_file_type
+  use ncdf_quad_mod,             only: ncdf_quad_type
 
   implicit none
 
@@ -149,10 +151,12 @@ subroutine init_mesh( config,                  &
   character(str_def) :: fmt_str, number_str
 
   integer(i_def) :: i, n_digit
+  integer(tik) :: timing_id
   type(ugrid_2d_type) :: ugrid_2d
 
   class(ugrid_file_type), allocatable :: file_handler
 
+  if ( LPROF ) call start_timing(timing_id, 'driver.init_mesh')
   !============================================================================
   ! Extract configuration variables
   !============================================================================
@@ -384,6 +388,7 @@ subroutine init_mesh( config,                  &
   call assign_mesh_maps(mesh_names)
 
   deallocate(stencil_depths)
+  if ( LPROF ) call stop_timing(timing_id, 'driver.init_mesh')
 
 end subroutine init_mesh
 

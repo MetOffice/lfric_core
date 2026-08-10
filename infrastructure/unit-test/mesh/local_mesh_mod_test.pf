@@ -151,16 +151,15 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     ! Create a local mesh from partitioning a global mesh on 1 and 4 processors
 
     num_processes = this%context%getNumProcesses()
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
     mesh_name = 'unit_test'
     npanels  = 1
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
@@ -501,13 +500,11 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler_
 
+    npanels  = 6
+    filename='data/mesh_C32_MG.nc'
     allocate( ncdf_quad_type :: file_handler_ )
     call ugrid_2d%set_file_handler( file_handler_ )
     call ugrid_2d%file_handler_open(trim(filename))
-
-
-    npanels  = 6
-    filename='data/mesh_C32_MG.nc'
 
     xproc = 1
     yproc = 1

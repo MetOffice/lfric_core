@@ -132,11 +132,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
       case (1)
@@ -157,6 +152,10 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
@@ -359,11 +358,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
       case (1)
@@ -384,6 +378,9 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_planar.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
@@ -616,11 +613,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
       case (1)
@@ -641,6 +633,9 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_trench_x.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
@@ -844,11 +839,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
       case (1)
@@ -869,6 +859,9 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_trench_y.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
@@ -1104,11 +1097,6 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
-    call ugrid_2d%file_handler_open(trim(filename))
-
-
     xproc = 1
     yproc = 1
     local_rank = this%getProcessRank()
@@ -1119,6 +1107,9 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_C4.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()

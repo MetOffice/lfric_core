@@ -500,7 +500,7 @@ subroutine file_handler_open(self, filename)
   if ( .not. allocated (self%file_handler) ) then
     call log_event('ugrid_2d file handler not set on open', log_level_error)
   end if
-  
+
   if ( .not. self%file_handler_file_open ) then
     call self%file_handler%file_open(trim(filename))
     self%file_handler_file_open = .true.
@@ -522,7 +522,7 @@ subroutine file_handler_close(self)
   if ( .not. allocated (self%file_handler) ) then
     call log_event('ugrid_2d file handler not set on close', log_level_error)
   end if
-  
+
   if ( self%file_handler_file_open ) then
     call self%file_handler%file_close()
     self%file_handler_file_open = .false.

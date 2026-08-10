@@ -12,7 +12,7 @@ module load_local_mesh_maps_mod
                                        log_scratch_space, &
                                        LOG_LEVEL_ERROR
   use ncdf_quad_mod,             only: ncdf_quad_type
-    use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
 
   use local_mesh_collection_mod, only: local_mesh_collection
@@ -106,8 +106,8 @@ subroutine load_local_mesh_maps_single_source( input_mesh_file, &
 
         ! Read in the local mesh map.
         call ugrid_2d%file_handler_read_map( source_mesh_name,     &
-                                    target_mesh_names(i), &
-                                    lid_mesh_map )
+                                             target_mesh_names(i), &
+                                             lid_mesh_map )
 
         target_mesh &
             => local_mesh_collection%get_local_mesh(target_mesh_names(i))

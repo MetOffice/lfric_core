@@ -46,7 +46,7 @@ subroutine load_global_mesh_multiple( input_mesh_file, &
   character(str_def),          intent(in) :: mesh_names(:)
 
   integer(i_def) :: i
-    type(ugrid_2d_type), intent(inout) :: ugrid_2d
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   do i=1, size(mesh_names)
     call load_global_mesh_single( input_mesh_file, &
@@ -73,7 +73,7 @@ subroutine load_global_mesh_single( input_mesh_file, &
   type(ugrid_mesh_data_type) :: ugrid_mesh_data
   type(global_mesh_type)     :: global_mesh
 
-    type(ugrid_2d_type), intent(inout) :: ugrid_2d
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   if (.not. global_mesh_collection%check_for(mesh_name)) then
 

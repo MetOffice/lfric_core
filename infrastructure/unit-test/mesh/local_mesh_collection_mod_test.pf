@@ -107,12 +107,12 @@ contains
 
     class(ugrid_file_type), allocatable :: file_handler
 
+    filename = 'data/mesh_BiP8x8-750x250.nc'
+    mesh_name = 'unit_test'
+
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
     call ugrid_2d%file_handler_open(trim(filename))
-
-    filename = 'data/mesh_BiP8x8-750x250.nc'
-    mesh_name = 'unit_test'
 
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
