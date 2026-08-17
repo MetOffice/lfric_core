@@ -860,10 +860,13 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
     end do
 
     datatype_mpi_val = datatype%get_datatype_mpi_val()
-    redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype_mpi_val)
+    redist = xt_redist_p2p_off_new(xmap, src_offsets, tgt_offsets, datatype_mpi_val)
 
     deallocate(src_offsets)
     deallocate(tgt_offsets)
+
+    call xt_idxlist_delete(tgt_idxlist)
+    call xt_idxlist_delete(src_idxlist)
   else
     call log_event( &
     'Call to generate_redistribution_map failed. Must initialise mpi first', &
@@ -903,7 +906,7 @@ function generate_exchange_map(src_indices, tgt_indices) result(xmap)
     ! generate exchange map
     comm = global_mpi%get_comm()
     xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, &
-                                    comm%get_comm_mpi_val() )
+                                 comm%get_comm_mpi_val() )
     call xt_idxlist_delete(tgt_idxlist)
     call xt_idxlist_delete(src_idxlist)
   else
