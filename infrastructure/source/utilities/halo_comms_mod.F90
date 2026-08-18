@@ -837,7 +837,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
   redist = 0
 #else
   type(xt_redist) :: redist
-  type(xt_idxlist) :: src_idxlist, tgt_idxlist
   integer(i_def), allocatable :: src_offsets(:)
   integer(i_def), allocatable :: tgt_offsets(:)
   integer(i_def) :: i
@@ -845,9 +844,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
 
   if( global_mpi%is_comm_set() )then
     ! create decomposition descriptors
-    src_idxlist = xt_idxvec_new( src_indices, size(src_indices) )
-    tgt_idxlist = xt_idxvec_new( tgt_indices, size(tgt_indices) )
-
     allocate(src_offsets( size(src_indices) ))
     allocate(tgt_offsets( size(tgt_indices) ))
 
@@ -864,9 +860,6 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
 
     deallocate(src_offsets)
     deallocate(tgt_offsets)
-
-    call xt_idxlist_delete(tgt_idxlist)
-    call xt_idxlist_delete(src_idxlist)
   else
     call log_event( &
     'Call to generate_redistribution_map failed. Must initialise mpi first', &
