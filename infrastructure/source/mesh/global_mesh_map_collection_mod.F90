@@ -149,8 +149,9 @@ function get_global_mesh_map( self,                   &
   logical(l_def) :: global_mesh_map_exists
 
   ! Pointer to linked list - used for looping through the list
-  type(linked_list_item_type),pointer :: loop => null()
+  type(linked_list_item_type),pointer :: loop
 
+  nullify(loop)
   global_mesh_map => null()
 
   global_mesh_map_id = generate_global_mesh_map_id( source_global_mesh_id, &
