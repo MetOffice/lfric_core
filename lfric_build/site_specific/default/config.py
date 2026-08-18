@@ -141,7 +141,6 @@ class Config:
 
         :param build_config: the Fab build configuration instance
         '''
-        print("SiteConfig default GNU")
         setup_script_gnu(build_config, self.args)
 
     def setup_intel_classic(self, build_config: BuildConfig) -> None:
