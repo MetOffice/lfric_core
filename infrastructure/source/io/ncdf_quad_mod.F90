@@ -26,8 +26,7 @@ use netcdf,  only: nf90_max_name, nf90_open, nf90_write, nf90_nowrite,    &
                    nf90_clobber, nf90_enddef, nf90_inquire_dimension,     &
                    nf90_inq_dimid, nf90_def_dim, nf90_create,             &
                    nf90_inq_attname, nf90_inquire_attribute,              &
-                   nf90_redef, nf90_close, nf90_put_att,                  &
-                   nf90_64bit_offset, nf90_netcdf4
+                   nf90_redef, nf90_close, nf90_put_att, nf90_64bit_offset
 
 use ugrid_file_mod, only: ugrid_file_type
 use file_mod,       only: file_mode_read, file_mode_write
@@ -319,7 +318,7 @@ subroutine file_new(self, file_name)
   ! Create the NetCDF file with 64-bit offsets to support large file sizes
   cmess = 'Creating file, "'//trim(self%file_name)//'"'
   ierr = nf90_create( path=trim(self%file_name),                 &
-                      cmode=ior(nf90_clobber,nf90_netcdf4), &
+                      cmode=ior(nf90_clobber,nf90_64bit_offset), &
                       ncid=self%ncid )
   call check_err(ierr, routine, cmess)
 
