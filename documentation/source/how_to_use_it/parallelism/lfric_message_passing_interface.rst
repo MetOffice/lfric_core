@@ -23,7 +23,7 @@ MPI library to perform the halo exchanges.
 
 That leaves a small selection of global communication functionality that needs
 to be supported, such as global reductions (min/max/sum) and broadcast of
-information from one process to all the others. 
+information from one process to all the others.
 
 This functionality is provided by calls to the system MPI library. These are
 encapsulated in a wrapper object. This insulates the rest of the model code from

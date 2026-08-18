@@ -15,7 +15,7 @@ functions in the `lfric_mpi` object are simple wrappers to MPI library
 functions. They provide a way to encapsulate the MPI functionality and insulate
 the rest of the code from changes to the external library.
 
-For details of the API to the ``lfric_mpi`` wrappers, see 
+For details of the API to the ``lfric_mpi`` wrappers, see
 :ref:`How to use: lfric_mpi <lfric_message_passing_interface>`
 
 Different versions
