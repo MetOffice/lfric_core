@@ -326,7 +326,7 @@ assigned the same ``write_interface``: the ``init_diag`` contains:
    write_behaviour => write_field_generic
    call field%set_write_behaviour(write_behaviour)
 
-After the diagnostic is computed, the``write_field`` method is called,
+After the diagnostic is computed, the ``write_field`` method is called,
 but only if the diagnostic flag was set to ``.true.``.
 
 .. code-block:: fortran

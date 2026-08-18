@@ -13,7 +13,8 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
 
-
+# For local deployment to ~/public_html/<repo>/<branch>
+REPO := $(notdir $(shell git rev-parse --show-toplevel))
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 DEPLOYDIR	  = $(HOME)/public_html
 
@@ -29,7 +30,10 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 deploy:
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(DEPLOYDIR)/$(BRANCH)" $(SPHINXOPTS) $(O)
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(DEPLOYDIR)/$(REPO)/$(BRANCH)" $(SPHINXOPTS) $(O)
+
+lint:
+	sphinx-lint --d "horizontal-tab" --max-line-length 80 "$(SOURCEDIR)"
 
 .PHONY: clean
 clean:
