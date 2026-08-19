@@ -20,8 +20,8 @@ Standards for XIOS Iodef Files
       section of every top-level iodef file.
    #. Non-global file settings are to be specified at the level of
       individual files.
-   #. ``id`` values shall be unique for a given ``XIOS`` ``XML` element
-      type.  
+   #. ``id`` values shall be unique for a given ``XIOS`` ``XML`` element
+      type.
 
 **Rationale**
 
