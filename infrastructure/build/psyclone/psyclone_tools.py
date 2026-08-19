@@ -14,21 +14,31 @@ their application in PSyclone optimisations scripts.
 from psyclone.domain.lfric import LFRicConstants
 from psyclone.psyGen import InvokeSchedule
 from psyclone.psyir.nodes import (
-    Loop, 
-    Routine, 
-    Directive, 
-    Container, 
+    Loop,
+    Routine,
+    Directive,
+    Container,
     OMPParallelDirective,
     OMPParallelDoDirective,
     OMPDoDirective,
     FileContainer,
     ProfileNode
 )
+try:
+    from psyclone.psyir.transformations import OMPParallelTrans
+except ImportError:
+    # Support for psyclone < 3.3
+    from psyclone.transformations import OMPParallelTrans
+try:
+    from psyclone.domain.lfric.transformations import (
+        LFRicRedundantComputationTrans)
+except ImportError:
+    # Support for psyclone < 3.3
+    from psyclone.transformations import LFRicRedundantComputationTrans
+
 from psyclone.transformations import (
-    Dynamo0p3ColourTrans,
-    Dynamo0p3OMPLoopTrans,
-    Dynamo0p3RedundantComputationTrans,
-    OMPParallelTrans,
+    LFRicColourTrans,
+    LFRicOMPLoopTrans,
     TransformationError
 )
 from psyclone.psyir.transformations import ProfileTrans
@@ -62,7 +72,7 @@ def redundant_computation_setval(psyir: FileContainer):
 
     """
     # Import redundant computation transformation
-    rtrans = Dynamo0p3RedundantComputationTrans()
+    rtrans = LFRicRedundantComputationTrans()
 
     # Loop over all the InvokeSchedule in the PSyIR object
     for subroutine in psyir.walk(InvokeSchedule):
@@ -84,7 +94,7 @@ def colour_loops(psyir: FileContainer, enable_tiling=False):
     """
     Applies the colouring transformation to all applicable loops and optionally
     enables tiling.
-    It creates the instance of `Dynamo0p3ColourTrans` only once.
+    It creates the instance of `LFRicColourTrans` only once.
 
     :param psyir: the PSyIR of the PSy-layer.
     :param enable_tiling: a bool to enable tiling. Default False.
@@ -92,7 +102,7 @@ def colour_loops(psyir: FileContainer, enable_tiling=False):
 
     """
     const = LFRicConstants()
-    ctrans = Dynamo0p3ColourTrans()
+    ctrans = LFRicColourTrans()
 
     # Loop over all the subroutines in the PSyIR object
     for subroutine in psyir.walk(Routine):
@@ -173,7 +183,7 @@ def openmp_parallelise_loops(psyir: FileContainer):
     :type psyir: :py:class:`psyclone.psyir.nodes.FileContainer`
 
     """
-    otrans = Dynamo0p3OMPLoopTrans()
+    otrans = LFRicOMPLoopTrans()
     oregtrans = OMPParallelTrans()
 
     # Loop over all the InvokeSchedule in the PSyIR object

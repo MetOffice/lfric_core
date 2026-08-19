@@ -19,6 +19,7 @@
         "io_demo_multifile-C24_azspice_gnu_fast-debug-32bit",
         "io_demo_temporal_reading-C12_azspice_gnu_fast-debug-64bit",
         "io_demo_temporal_reading-C12_azspice_gnu_fast-debug-32bit",
+        "io_demo_temporal_reading-C48_azspice_gnu_fast-debug-32bit",
         "io_demo_benchmark-C24_azspice_gnu_fast-debug-64bit",
         "io_demo_benchmark-C24_azspice_gnu_fast-debug-32bit",
         "io_demo_azspice_unit_tests",
@@ -57,6 +58,8 @@
         "io_demo_temporal_reading-C12_ex1a_cce_fast-debug-32bit",
         "io_demo_temporal_reading-C12_ex1a_gnu_fast-debug-64bit",
         "io_demo_temporal_reading-C12_ex1a_gnu_fast-debug-32bit",
+        "io_demo_temporal_reading-C48_ex1a_cce_fast-debug-32bit",
+        "io_demo_temporal_reading-C48_ex1a_gnu_fast-debug-64bit",
         "io_demo_benchmark-C24_ex1a_cce_fast-debug-32bit",
         "io_demo_benchmark-C24_ex1a_gnu_fast-debug-32bit",
         "io_demo_benchmark-C24_ex1a_gnu_fast-debug-64bit",
@@ -65,6 +68,10 @@
     "io_demo_ex1a_benchmark": [
         "io_demo_benchmark-nwp-C224_ex1a_cce_fast-debug-32bit",
         "io_demo_benchmark-nwp-C224_ex1a_gnu_fast-debug-32bit",
+    ],
+    "io_demo_ex1a_servers": [
+        "io_demo_temporal_reading-C48-server_ex1a_cce_fast-debug-32bit",
+        "io_demo_temporal_reading-C48-server_ex1a_gnu_fast-debug-64bit",
     ],
     "io_demo_ex1a": [
         "io_demo_ex1a_developer"

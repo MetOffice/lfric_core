@@ -16,15 +16,16 @@
 /
 
 &planar_mesh
-  edge_cells_x    = 30
-  edge_cells_y    = 30
-  domain_size     = 24.0, 22.0
-  domain_centre   = 0.0, 0.0
-  periodic_x      = .false.
-  periodic_y      = .false.
-  create_lbc_mesh = .true.
-  lbc_rim_depth   = 6
-  lbc_parent_mesh = 'primary'
+  edge_cells_x     = 30
+  edge_cells_y     = 30
+  domain_size      = 24.0, 22.0
+  domain_centre    = 0.0, 0.0
+  periodic_x       = .false.
+  periodic_y       = .false.
+  create_lbc_mesh  = .true.
+  lbc_rim_depth    = 6
+  lbc_parent_mesh  = 'primary'
+  stretch_function = 'uniform'
 /
 
 &partitions

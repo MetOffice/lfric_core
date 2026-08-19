@@ -95,10 +95,11 @@ contains
 
     class(function_space_collection_type), intent(inout) :: self
 
-    type(mesh_type), intent(in), pointer  :: mesh
-    integer(i_def),  intent(in)           :: element_order_h
-    integer(i_def),  intent(in)           :: element_order_v
-    integer(i_def),  intent(in)           :: lfric_fs
+    type(mesh_type), intent(in) :: mesh
+    integer(i_def),  intent(in) :: element_order_h
+    integer(i_def),  intent(in) :: element_order_v
+    integer(i_def),  intent(in) :: lfric_fs
+
     integer(i_def),  intent(in), optional :: ndata
     logical(l_def),  intent(in), optional :: ndata_first
 
