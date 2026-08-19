@@ -8,7 +8,7 @@
 !>        This can be used to remove excessively large values or clip any field
 !>        to any desired maximum value.
 module sci_enforce_upper_bound_kernel_mod
-  
+ 
   use, intrinsic :: iso_fortran_env, only: real32, real64
 
   use argument_mod,  only : arg_type,                  &

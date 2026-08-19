@@ -13,9 +13,9 @@
 
 
 module sci_mm_diagonal_kernel_mod
-  
+
   use, intrinsic :: iso_fortran_env, only: real32, real64
-  
+
   use argument_mod,            only : arg_type,              &
                                       GH_FIELD, GH_OPERATOR, &
                                       GH_READ, GH_INC,       &

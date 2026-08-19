@@ -7,9 +7,9 @@
 !> @brief This version is for use on continuous spaces and will force
 !>        halo exchanges on the input fields
 module matrix_vector_kernel_mod
-  
+
   use, intrinsic :: iso_fortran_env, only: real32, real64
-  
+ 
   use argument_mod,  only : arg_type,                 &
                             GH_FIELD, GH_OPERATOR,    &
                             GH_REAL, GH_READ, GH_INC, &

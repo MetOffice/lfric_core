@@ -7,9 +7,9 @@
 !>        output field, hence can be used for WTheta spaces and incrementing
 !>        W3 fields
 module dg_inc_matrix_vector_kernel_mod
-  
+
   use, intrinsic :: iso_fortran_env, only: real32, real64
-  
+
   use argument_mod,            only : arg_type,                  &
                                       GH_FIELD, GH_OPERATOR,     &
                                       GH_REAL, GH_READ,          &
