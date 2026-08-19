@@ -19,7 +19,7 @@ import pytest
 # security pattern to check whether `src` links are local and link to known
 # controlled facets of the local source tree.  Do not load from unknown sources.
 # allows strings that start with:
-# 'metadata/' etc/' './' '../metadata' '$SOURCE_ROOT/'
+# 'metadata/' etc/' './' '$SOURCE_ROOT/'
 # followed by alphabetic characters only
 security_re = re.compile(r'^(metadata/|etc/|\./|\$SOURCE_ROOT/)'
                          r'[a-zA-Z]+\w')
@@ -98,3 +98,6 @@ def test_unique_field_ids_within_context(aroot, test_file):
                            'with this `id` leading to indeterminate behaviour')
                 assert eid not in field_ids, err_str
                 field_ids.add(eid)
+
+if __name__ == '__main__':
+    pytest.main()
