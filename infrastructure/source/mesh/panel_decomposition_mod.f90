@@ -10,7 +10,7 @@ module panel_decomposition_mod
 
   use global_mesh_mod, only: global_mesh_type
   use global_mesh_collection_mod, only: global_mesh_collection_type
-  use constants_mod, only: i_def, l_def, r_def
+  use constants_mod, only: i_def, l_def, r_def, str_def
   use log_mod, only: log_event, log_scratch_space, &
                      LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG
 
@@ -124,6 +124,11 @@ module panel_decomposition_mod
     end function get_nprocs_interface
 
   end interface
+
+  interface calc_mapping_factor
+    module procedure calc_mapping_factor_multiple
+    module procedure calc_mapping_factor_single
+  end interface calc_mapping_factor
 
 contains
 
@@ -985,50 +990,92 @@ contains
   !>        to align partitions for mapped grids
   !> @param[in] global-mesh_collection The global mesh collection
   !> @param[in] global_mesh            The global mesh to calculate the factor for
-  function calc_mapping_factor( global_mesh_collection, global_mesh ) result(mp)
+  function calc_mapping_factor_multiple( global_mesh, &
+                                         global_mesh_collection ) result(mp)
+
     implicit none
 
-    type(global_mesh_collection_type), intent(in) :: global_mesh_collection
-    type(global_mesh_type), intent(in), pointer :: global_mesh
+    type(global_mesh_type), intent(in) :: global_mesh
+    type(global_mesh_collection_type), &
+                            intent(in) :: global_mesh_collection
 
     integer(i_def) :: mp
 
-    type(global_mesh_type), pointer :: comparison_global_mesh
-    integer(i_def) :: this_panel_width, shortest_panel_width, n_meshes, i
+    type(global_mesh_type), pointer :: reference_global_mesh
 
-    this_panel_width = calc_panel_width(global_mesh)
+    integer(i_def) :: panel_width, shortest_panel_width
+    integer(i_def) :: reference_panel_width
+    integer(i_def) :: i
 
-    n_meshes = global_mesh_collection%n_meshes()
+    character(str_def), allocatable :: mesh_names(:)
 
     shortest_panel_width = huge(0_i_def)
 
-    do i = 1, n_meshes
-      comparison_global_mesh => global_mesh_collection%get_mesh_by_id(i)
-      if ( associated(comparison_global_mesh) ) then
-        shortest_panel_width = min( shortest_panel_width, &
-                                    calc_panel_width(comparison_global_mesh))
+    panel_width = calc_panel_width(global_mesh)
+    mesh_names  = global_mesh_collection%get_mesh_names()
+
+    do i=1, size(mesh_names)
+
+      reference_global_mesh => global_mesh_collection%get_global_mesh(mesh_names(i))
+
+      if ( associated(reference_global_mesh) ) then
+        reference_panel_width = calc_panel_width(reference_global_mesh)
+        shortest_panel_width  = min( shortest_panel_width, reference_panel_width )
       end if
+
     end do
 
-    ! If no meshes were found, or if this_panel_width < shortest_panel_width, then return 1.
+    ! If no meshes were found, or 
+    ! if this_panel_width < shortest_panel_width, then return 1.
     if ( shortest_panel_width < huge(0_i_def) ) then
-      mp = max(1, this_panel_width / shortest_panel_width)
+      mp = max(1, panel_width / shortest_panel_width)
     else
       mp = 1
     end if
 
-  end function calc_mapping_factor
+  end function calc_mapping_factor_multiple
+
+
+  function calc_mapping_factor_single( global_mesh, reference_global_mesh ) result(mp)
+
+    implicit none
+
+    type(global_mesh_type), intent(in) :: global_mesh
+    type(global_mesh_type), intent(in) :: reference_global_mesh
+
+    integer(i_def) :: mp
+
+    integer(i_def) :: reference_panel_width
+    integer(i_def) :: panel_width
+    integer(i_def) :: shortest_panel_width
+
+    shortest_panel_width  = huge(0_i_def)
+    reference_panel_width = calc_panel_width(reference_global_mesh)
+    panel_width           = calc_panel_width(global_mesh)
+
+    shortest_panel_width = min( reference_panel_width, panel_width )
+
+    if ( shortest_panel_width < huge(0_i_def) ) then
+      mp = max(1, panel_width / shortest_panel_width)
+    else
+      mp = 1
+    end if
+
+  end function calc_mapping_factor_single
+
+
 
 
   !> @brief Calculate the width of the mesh panel. On a spherical mesh this is
   !>        the C number.
   !> @param[in] gloabl_mesh The mesh to calculate the panel width of
   function calc_panel_width( global_mesh ) result(panel_edge_ncells_x)
+
     use reference_element_mod, only : W, E
 
     implicit none
 
-    type(global_mesh_type), intent(in), pointer :: global_mesh
+    type(global_mesh_type), intent(in) :: global_mesh
 
     integer(i_def) :: void_cell    ! Cell id that marks the cell as a cell
                                    ! outside of the partition.

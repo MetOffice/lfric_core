@@ -33,6 +33,7 @@ module local_mesh_collection_mod
     generic,   public  :: get_local_mesh => get_mesh_by_id, &
                                             get_mesh_by_name
     procedure, public  :: get_mesh_names
+    procedure, public  :: n_meshes
     procedure, public  :: check_for
 
     procedure, public  :: clear
@@ -221,6 +222,21 @@ contains
     nullify(loop)
 
   end function get_mesh_by_name
+
+
+
+  function n_meshes(self) result(number_of_meshes)
+
+    implicit none
+
+    class(local_mesh_collection_type), intent(in) :: self
+
+    integer(i_def) :: number_of_meshes
+
+    number_of_meshes = self%local_mesh_list%get_length()
+
+    return
+  end function n_meshes
 
 
   !===========================================================================

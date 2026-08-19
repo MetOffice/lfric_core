@@ -12,7 +12,7 @@
 module ugrid_2d_mod
 
 use constants_mod,  only: i_def, r_def, str_def, str_longlong, l_def, &
-                          imdi, rmdi, cmdi
+                          imdi, rmdi, cmdi, str_max_filename
 use file_mod,       only: file_mode_write
 use ugrid_file_mod, only: ugrid_file_type
 
@@ -37,6 +37,9 @@ type, public :: ugrid_2d_type
   private
 
   character(str_def) :: mesh_name
+
+  character(str_def)          :: origin_name = cmdi
+  character(str_max_filename) :: origin_file = cmdi
 
   character(str_def) :: geometry
   character(str_def) :: topology
@@ -137,6 +140,8 @@ type, public :: ugrid_2d_type
 contains
   procedure :: get_n_meshes
   procedure :: get_mesh_names
+  procedure :: get_origin_file
+  procedure :: get_origin_name
   procedure :: get_dimensions
   procedure :: set_by_generator
   procedure :: set_file_handler
@@ -551,6 +556,9 @@ subroutine set_from_file_read(self, mesh_name, filename)
   call self%file_handler%file_close()
 
   self%populated_with_mesh = .true.
+
+  self%origin_file = trim(filename)
+  self%origin_name = trim(self%mesh_name)
 
   return
 end subroutine set_from_file_read
@@ -1680,6 +1688,29 @@ function is_local(self) result(answer)
 
 end function is_local
 
+function get_origin_name( self ) result ( origin_name )
+
+  implicit none
+
+  class(ugrid_2d_type), intent(in) :: self
+
+  character(str_def) :: origin_name
+
+  origin_name = self%origin_name
+
+end function get_origin_name
+
+function get_origin_file( self ) result ( origin_file )
+
+  implicit none
+
+  class(ugrid_2d_type), intent(in) :: self
+
+  character(str_max_filename) :: origin_file
+
+  origin_file = self%origin_file
+
+end function get_origin_file
 
 !-------------------------------------------------------------------------------
 !> @brief Finalizer routine which should automatically call clear

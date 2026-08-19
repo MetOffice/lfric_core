@@ -92,7 +92,8 @@ contains
   !>
   !> @param [in] model_clock  The model clock
   !> @param [in] calendar     The model calendar
-  subroutine  init_xios_calendar( model_clock, calendar, start_at_zero, context_clock_step )
+  subroutine  init_xios_calendar( model_clock, calendar, &
+                                  start_at_zero, context_clock_step )
 
     implicit none
 
@@ -185,7 +186,11 @@ contains
     type(field_type), optional, intent(in) :: alt_panel_ids(:)
 
     integer(i_def) :: i
-    type(mesh_type), pointer :: mesh => null()
+
+    type(mesh_type),           pointer :: mesh
+    type(function_space_type), pointer :: w0_domain_fs
+    type(function_space_type), pointer :: w3_domain_fs
+
 
     ! Initialise XIOS prime mesh
     call init_xios_mesh( chi, panel_id, geometry, topology, &
@@ -203,9 +208,12 @@ contains
 
     ! Initialise XIOS axes
     mesh => chi(1)%get_mesh()
-    call init_xios_axis( "vert_axis_full_levels", mesh, W0 )
-    call init_xios_axis( "vert_axis_half_levels", mesh, W3 )
-    call init_xios_axis( "radiation_levels", mesh, W0 )
+    w0_domain_fs => function_space_collection%get_fs(mesh, 0, 0, W0)
+    w3_domain_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
+
+    call init_xios_axis( "vert_axis_full_levels", w0_domain_fs )
+    call init_xios_axis( "vert_axis_half_levels", w3_domain_fs )
+    call init_xios_axis( "radiation_levels", w0_domain_fs )
 
   end subroutine init_xios_dimensions
 
@@ -282,11 +290,12 @@ contains
     integer(kind=i_def)      :: nodes_per_edge
     integer(kind=i_def)      :: nodes_per_face
     integer(kind=i_def)      :: num_edge_owned
-    type(mesh_type), pointer :: mesh => null()
-    type(mesh_type), pointer :: twod_mesh => null()
+    type(mesh_type), pointer :: mesh
+    type(mesh_type), pointer :: twod_mesh
 
-    type(function_space_type), pointer :: output_field_fs   => null()
-    type(function_space_type), pointer :: w2h_fs   => null()
+    type(function_space_type), pointer :: output_field_fs
+    type(function_space_type), pointer :: w2h_fs
+    type(function_space_type), pointer :: domain_fs
 
     ! Identify discontinuous spaces
     integer(kind=i_def) :: use_i_index(2) = (/ W3, Wtheta /)
@@ -296,6 +305,11 @@ contains
     real(kind=r_def) :: r2d
 
     logical :: mesh_is_prime_mesh
+
+    nullify(mesh, twod_mesh)
+    nullify(output_field_fs)
+    nullify(w2h_fs)
+    nullify(domain_fs)
 
     ! Set optional prime_mesh_flag
     if (present(prime_mesh)) then
@@ -394,24 +408,38 @@ contains
     if (mesh_is_prime_mesh) then
       call set_prime_io_mesh(mesh)
       call set_prime_io_mesh(twod_mesh)
-      call init_xios_ugrid_domain( "node", mesh, W0, sample_chi,  &
-                                   bnd_nodes_lon, bnd_nodes_lat,  &
+
+      domain_fs => function_space_collection%get_fs(mesh, 0, 0, W0)
+      call init_xios_ugrid_domain( "node", domain_fs, sample_chi, &
+                                   bnd_nodes_lon, bnd_nodes_lat, &
                                    "Mesh2d", nverts=1 )
-      call init_xios_ugrid_domain( "edge", mesh, W2H, sample_chi, &
-                                   bnd_edges_lon, bnd_edges_lat,  &
+
+      domain_fs => function_space_collection%get_fs(mesh, 0, 0, W2H)
+      call init_xios_ugrid_domain( "edge", domain_fs, sample_chi, &
+                                   bnd_edges_lon, bnd_edges_lat, &
                                    "Mesh2d", nverts=2 )
-      call init_xios_ugrid_domain( "face", mesh, W3,  sample_chi, &
-                                   bnd_faces_lon, bnd_faces_lat,  &
+
+      domain_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
+      call init_xios_ugrid_domain( "face", domain_fs, sample_chi, &
+                                   bnd_faces_lon, bnd_faces_lat, &
                                    "Mesh2d", nverts=4 )
     else
-      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_node", mesh, W0, &
-                                   sample_chi, bnd_nodes_lon, bnd_nodes_lat,      &
+
+      domain_fs => function_space_collection%get_fs(mesh, 0, 0, W0)
+      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_node", &
+                                   domain_fs, sample_chi, &
+                                   bnd_nodes_lon, bnd_nodes_lat, &
                                    trim(adjustl(mesh%get_mesh_name())), nverts=1 )
-      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_edge", mesh, W2H, &
-                                   sample_chi, bnd_edges_lon, bnd_edges_lat,       &
+
+      domain_fs => function_space_collection%get_fs(mesh, 0, 0, W2h)
+      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_edge", &
+                                   domain_fs, sample_chi, &
+                                   bnd_edges_lon, bnd_edges_lat, &
                                    trim(adjustl(mesh%get_mesh_name())), nverts=2 )
-      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_face", mesh, W3, &
-                                   sample_chi, bnd_faces_lon, bnd_faces_lat,      &
+      domain_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
+      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_face", &
+                                   domain_fs, sample_chi, &
+                                   bnd_faces_lon, bnd_faces_lat, &
                                    trim(adjustl(mesh%get_mesh_name())), nverts=4 )
     end if
 
@@ -902,22 +930,20 @@ contains
   !> @param[in]  nverts             Number of vertices bounding each domain
   !!                                element
   !>
-  subroutine init_xios_ugrid_domain( domain_id, mesh, fs_id, chi,       &
-                                     lon_bounds, lat_bounds, mesh_name, &
-                                     nverts )
+  subroutine init_xios_ugrid_domain( domain_id, domain_fs, chi, &
+                                     lon_bounds, lat_bounds,    &
+                                     mesh_name, nverts )
 
     implicit none
 
-    character(len=*),           intent(in)    :: domain_id
-    type(mesh_type), pointer,   intent(in)    :: mesh
-    integer(kind=i_def),        intent(in)    :: fs_id
+    character(len=*),          intent(in) :: domain_id
+    type(function_space_type), intent(in) :: domain_fs
+
     type(field_type),           intent(in)    :: chi(:)
     real(dp_xios), allocatable, intent(inout) :: lat_bounds(:,:)
     real(dp_xios), allocatable, intent(inout) :: lon_bounds(:,:)
     character(len=*),           intent(in)    :: mesh_name
     integer(kind=i_def),        intent(in)    :: nverts
-
-    type(function_space_type), pointer :: domain_fs   => null()
 
     type( field_type )              :: coord_output(3)
     type(field_proxy_type), target  :: proxy_coord_output(3)
@@ -942,6 +968,12 @@ contains
     ! set as 1.0 for planar mesh
     real(kind=r_def) :: r2d
 
+    type(mesh_type), pointer :: mesh
+    integer(kind=i_def)      :: fs_id
+
+    fs_id =  domain_fs%which()
+    mesh  => domain_fs%get_mesh()
+
     if ( mesh%is_geometry_spherical() ) then
       r2d = radians_to_degrees
     else
@@ -953,10 +985,6 @@ contains
     allocate(all_undfs(global_mpi%get_comm_size()))
 
     all_undfs = 0
-
-    ! Here we use information from the input function space to calculate the
-    ! physical coordinates for the horizontal domain
-    domain_fs => function_space_collection%get_fs( mesh, 0, 0, fs_id )
 
     ! Get the function space levels information
     dp_levels = real( domain_fs%get_levels(), kind=dp_xios )
@@ -1090,7 +1118,6 @@ contains
     deallocate(lat_data)
     deallocate(lon_data)
     deallocate(domain_index)
-    nullify(domain_fs)
 
   end subroutine init_xios_ugrid_domain
 
@@ -1103,22 +1130,18 @@ contains
   !> @param[in]  fs_id    The id of the function space corresponding to the
   !>                      domain
   !>
-  subroutine init_xios_axis( axis_id, mesh, fs_id )
+  subroutine init_xios_axis( axis_id, domain_fs )
 
     implicit none
 
-    character(len=*),         intent(in) :: axis_id
-    type(mesh_type), pointer, intent(in) :: mesh
-    integer(kind=i_def),      intent(in) :: fs_id
+    character(len=*),          intent(in) :: axis_id
+    type(function_space_type), intent(in) :: domain_fs
 
-    type(function_space_type), pointer :: domain_fs => null()
     real(dp_xios), allocatable         :: dp_levels(:)
     integer(kind=i_def)                :: n_levels
 
     type(xios_axisgroup) :: axis_definition
     type(xios_axis)      :: new_axis
-
-    domain_fs => function_space_collection%get_fs( mesh,0, 0, fs_id )
 
     ! Get the function space levels information
     dp_levels = real( domain_fs%get_levels(), kind=dp_xios )

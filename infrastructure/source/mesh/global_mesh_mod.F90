@@ -49,6 +49,9 @@ module global_mesh_mod
   ! Tag name of mesh.
     character(str_def) :: mesh_name
 
+    character(str_max_filename) :: origin_file = cmdi
+    character(str_def)          :: origin_name = cmdi
+
   ! Flag to indicate if this a mesh represents coverage
   ! of a global model.
     logical(l_def) :: global_model = .false.
@@ -172,6 +175,8 @@ module global_mesh_mod
 
   contains
     procedure, public :: get_mesh_name
+    procedure, public :: get_origin_name
+    procedure, public :: get_origin_file
     procedure, public :: get_npanels
     procedure, public :: get_mesh_periodicity
     procedure, public :: get_cell_id
@@ -258,13 +263,14 @@ contains
   !>
   !> @return Freshly minted global_mesh_type object.
   !>
-  function global_mesh_constructor( ugrid_mesh_data ) result(self)
+  function global_mesh_constructor( ugrid_mesh_data, rename_to ) result(self)
 
     use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
 
     implicit none
 
-    type(ugrid_mesh_data_type), intent(in) :: ugrid_mesh_data
+    type(ugrid_mesh_data_type),   intent(in) :: ugrid_mesh_data
+    character(str_def), optional, intent(in) :: rename_to
 
     type(global_mesh_type) :: self
 
@@ -277,7 +283,12 @@ contains
     ! loop counter over entities (vertices or edges).
     integer(i_def) :: ientity
 
+    global_mesh_id_counter = global_mesh_id_counter + 1
+
+    call self%set_id(global_mesh_id_counter)
+
     call ugrid_mesh_data%get_data( self%mesh_name, &
+                                   self%origin_file, &
                                    geometry, &
                                    topology, &
                                    coord_sys, &
@@ -307,9 +318,10 @@ contains
                                    self%edge_on_cell_2d, &
                                    self%vert_on_edge_2d )
 
-    global_mesh_id_counter = global_mesh_id_counter + 1
-
-    call self%set_id(global_mesh_id_counter)
+    self%origin_name = self%mesh_name
+    if (present(rename_to)) then
+      self%mesh_name = trim(rename_to)
+    end if
 
     select case (trim(geometry))
 
@@ -910,6 +922,32 @@ contains
     mesh_name = self%mesh_name
 
   end function get_mesh_name
+
+  function get_origin_name( self ) result ( origin_name )
+
+    implicit none
+
+    class(global_mesh_type), intent(in) :: self
+
+    character(str_def) :: origin_name
+
+    origin_name = self%origin_name
+
+  end function get_origin_name
+
+  function get_origin_file( self ) result ( origin_file )
+
+    implicit none
+
+    class(global_mesh_type), intent(in) :: self
+
+    character(str_max_filename) :: origin_file
+
+    origin_file = self%origin_file
+
+  end function get_origin_file
+
+
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

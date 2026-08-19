@@ -10,11 +10,11 @@
 !>
 module local_mesh_mod
 
-  use constants_mod,   only: r_def, i_def, i_halo_index,   &
-                             l_def, str_def, integer_type, &
-                             str_longlong,                 &
-                             imdi, rmdi, cmdi, emdi,       &
-                             degrees_to_radians,           &
+  use constants_mod,   only: r_def, i_def, i_halo_index,     &
+                             l_def, str_def, integer_type,   &
+                             str_longlong, str_max_filename, &
+                             imdi, rmdi, cmdi, emdi,         &
+                             degrees_to_radians,             &
                              radians_to_degrees
 
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
@@ -52,6 +52,10 @@ module local_mesh_mod
   !====================================
   ! Tag name of mesh.
     character(str_def) :: mesh_name
+
+    character(str_max_filename) :: origin_file = cmdi
+    character(str_def)          :: origin_name = cmdi
+
   ! Domain surface geometry.
     integer(i_def)     :: geometry = emdi
   ! Domain boundaries topology.
@@ -186,6 +190,8 @@ module local_mesh_mod
     procedure, public :: clear
 
     procedure, public :: get_mesh_name
+    procedure, public :: get_origin_file
+    procedure, public :: get_origin_name
     procedure, public :: get_nverts_per_cell
     procedure, public :: get_nverts_per_edge
     procedure, public :: get_nedges_per_cell
@@ -296,6 +302,9 @@ contains
     else
       self%mesh_name = global_mesh%get_mesh_name()
     end if
+
+    self%origin_file = global_mesh%get_origin_file()
+    self%origin_name = global_mesh%get_origin_name()
 
     ! Inherit mesh properties from the parent global mesh.
     if (global_mesh%is_geometry_spherical()) then
@@ -1133,7 +1142,7 @@ contains
   !> @param [in] ugrid_mesh_data  <ugrid_mesh_data_type> which was populated
   !>                              directly from file read
   !>
-  subroutine initialise_from_ugrid_data(self, ugrid_mesh_data)
+  subroutine initialise_from_ugrid_data(self, ugrid_mesh_data, rename_to)
 
     use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
 
@@ -1141,7 +1150,8 @@ contains
 
     class(local_mesh_type) :: self
 
-    type(ugrid_mesh_data_type), intent(in) :: ugrid_mesh_data
+    type(ugrid_mesh_data_type),   intent(in) :: ugrid_mesh_data
+    character(str_def), optional, intent(in) :: rename_to
 
     integer(i_def) :: nfaces            ! number of faces in this local mesh.
                                         ! should be same as last ghost cell
@@ -1165,6 +1175,7 @@ contains
     ! Get ugrid data which describes the mesh.
     call ugrid_mesh_data%get_data(     &
              self%mesh_name,           &
+             self%origin_file,         &
              geometry_str,             &
              topology_str,             &
              coord_sys_str,            &
@@ -1192,6 +1203,11 @@ contains
              self%cell_next,           &
              self%vert_on_cell,        &
              self%edge_on_cell )
+
+    self%origin_name = self%mesh_name
+    if (present(rename_to)) then
+      self%mesh_name = trim(rename_to)
+    end if
 
     select case (trim(geometry_str))
     case ('spherical')
@@ -1559,6 +1575,24 @@ contains
     mesh_name = self%mesh_name
 
   end function get_mesh_name
+
+  function get_origin_file( self ) result ( origin_file )
+    implicit none
+    class(local_mesh_type), intent(in) :: self
+    character(str_max_filename) :: origin_file
+
+    origin_file = self%origin_file
+
+  end function get_origin_file
+
+  function get_origin_name( self ) result ( origin_name )
+    implicit none
+    class(local_mesh_type), intent(in) :: self
+    character(str_def) :: origin_name
+
+    origin_name = self%origin_name
+
+  end function get_origin_name
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief   Returns the north pole location of mesh.

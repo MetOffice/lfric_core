@@ -36,8 +36,7 @@ contains
 !>                             populate <local_mesh_type> objects.
 !> @param[in] mesh_names       The names of the local mesh data to
 !>                             load from the <input_mesh_file>.
-subroutine load_local_mesh_multiple( input_mesh_file, &
-                                     mesh_names )
+subroutine load_local_mesh_multiple( input_mesh_file, mesh_names )
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
@@ -46,7 +45,7 @@ subroutine load_local_mesh_multiple( input_mesh_file, &
   integer(i_def) :: i
 
   do i=1, size(mesh_names)
-    call load_local_mesh_single( input_mesh_file, mesh_names(i) )
+    call load_local_mesh_single( input_mesh_file, mesh_names(i))
   end do
 
 end subroutine load_local_mesh_multiple
@@ -58,8 +57,7 @@ end subroutine load_local_mesh_multiple
 !>                             populate <local_mesh_type> objects.
 !> @param[in] mesh_name        The name of the local mesh data to
 !>                             load from the <input_mesh_file>.
-subroutine load_local_mesh_single( input_mesh_file, &
-                                   mesh_name )
+subroutine load_local_mesh_single( input_mesh_file, mesh_name )
 
   implicit none
 

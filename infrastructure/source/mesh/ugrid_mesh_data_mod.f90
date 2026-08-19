@@ -12,8 +12,10 @@
 
 module ugrid_mesh_data_mod
 
-  use constants_mod, only: r_def, i_def, l_def, str_def, &
-                           str_longlong, cmdi, imdi, rmdi
+  use constants_mod, only: r_def, i_def, l_def, str_def,   &
+                           str_longlong, cmdi, imdi, rmdi, &
+                           str_max_filename
+
   use log_mod,       only: log_event, log_scratch_space, &
                            LOG_LEVEL_ERROR, LOG_LEVEL_TRACE
 
@@ -25,8 +27,12 @@ module ugrid_mesh_data_mod
   integer(i_def), parameter :: GLOBAL_MESH_FLAG = 101
 
   type, public :: ugrid_mesh_data_type
+
     !> Name of ugrid mesh topology.
     character(str_def) :: global_mesh_name
+
+    character(str_max_filename) :: origin_file
+    character(str_def)          :: origin_name
 
     integer(i_def)     :: mesh_extents
     logical(l_def)     :: is_local_mesh
@@ -188,6 +194,8 @@ contains
 
     call self%clear()
 
+    self%origin_file = trim(filename)
+
     allocate( ncdf_quad_type :: file_handler )
     call ugrid_2d%set_file_handler( file_handler )
     call ugrid_2d%set_from_file_read( trim(global_mesh_name), trim(filename) )
@@ -248,6 +256,7 @@ contains
   !>
   subroutine get_data( self,      &
                        mesh_name, &
+                       origin,    &
                        geometry,  &
                        topology,  &
                        coord_sys, &
@@ -280,10 +289,13 @@ contains
     implicit none
 
     class (ugrid_mesh_data_type), intent(in) :: self
+
     character(str_def), intent(out) :: mesh_name
     character(str_def), intent(out) :: geometry
     character(str_def), intent(out) :: topology
     character(str_def), intent(out) :: coord_sys
+
+    character(str_max_filename), intent(out) :: origin
 
     integer(i_def), intent(out) :: nnode
     integer(i_def), intent(out) :: nedge
@@ -321,6 +333,7 @@ contains
     integer(i_def), optional, intent(out) :: max_stencil_depth
 
     mesh_name = self%global_mesh_name
+    origin    = self%origin_file
     geometry  = self%geometry
     topology  = self%topology
     coord_sys = self%coord_sys
@@ -650,6 +663,9 @@ contains
     else
       self%mesh_extents = GLOBAL_MESH_FLAG
     end if
+
+    self%origin_name = self%global_mesh_name
+    self%origin_file = ugrid_2d%get_origin_file()
 
     return
   end subroutine set_by_ugrid_2d
