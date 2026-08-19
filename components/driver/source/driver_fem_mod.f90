@@ -107,27 +107,10 @@ contains
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
     all_mesh_names = mesh_collection%get_mesh_names()
-!!$
-!!$    if (prime_mesh_name == cmdi) then
-!!$      mesh => mesh_collection%get_mesh(all_mesh_names(1))
-!!$    else
-!!$      mesh => mesh_collection%get_mesh(prime_mesh_name)
-!!$    end if
-!!$
-!!$    if (mesh%is_geometry_planar()) then
-!!$      geometry = geometry_planar
-!!$    else if (mesh%is_geometry_spherical()) then
-!!$      geometry = geometry_spherical
-!!$    end if
-!!$
-!!$    if (mesh%is_topology_periodic()) then
-!!$      topology = topology_fully_periodic
-!!$    else if (mesh%is_topology_non_periodic()) then
-!!$      topology = topology_non_periodic
-!!$    end if
-!!$
-!!$    call init_chi_transforms( geometry, topology, &
-!!$                              mesh_collection=mesh_collection )
+
+    call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))
+    call panel_id_inventory%initialise(name="panel_id", &
+                                       table_len=size(all_mesh_names))
 
     ! ======================================================================== !
     ! Loop through all 3D meshes
@@ -150,6 +133,7 @@ contains
         topology = topology_non_periodic
       end if
 
+      ! Initialise coordinate transformations
       call init_chi_transforms( geometry, topology, &
                                 mesh_collection=mesh_collection )
 

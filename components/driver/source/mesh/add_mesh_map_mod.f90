@@ -126,7 +126,6 @@ subroutine assign_mesh_maps( mesh_names )
           if (mesh_name_B /= cmdi) then
             mesh_A => mesh_collection%get_mesh(mesh_name_A)
             mesh_B => mesh_collection%get_mesh(mesh_name_B)
-!           call add_mesh_map( mesh_name_A, mesh_name_B )
             call add_mesh_map( mesh_A, mesh_B )
           end if
         end do

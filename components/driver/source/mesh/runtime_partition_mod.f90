@@ -12,7 +12,6 @@ module runtime_partition_mod
   use global_mesh_mod,         only: global_mesh_type
   use log_mod,                 only: log_event,         &
                                      log_scratch_space, &
-                                     log_level_info,   &
                                      log_level_error,   &
                                      log_level_debug
   use local_mesh_mod,          only: local_mesh_type
@@ -23,12 +22,11 @@ module runtime_partition_mod
                                      partitioner_cubedsphere,        &
                                      partitioner_planar
 
-  use panel_decomposition_mod, only: panel_decomposition_type!, &
-!                                     calc_mapping_factor
+  use panel_decomposition_mod, only: panel_decomposition_type
   use sci_query_mod, only: is_lbc
 
- use local_mesh_collection_mod,  only: local_mesh_collection
- use global_mesh_collection_mod, only: global_mesh_collection
+  use local_mesh_collection_mod,  only: local_mesh_collection
+  use global_mesh_collection_mod, only: global_mesh_collection
 
   implicit none
 
@@ -38,8 +36,8 @@ module runtime_partition_mod
   public :: create_local_mesh_maps
 
   interface create_local_mesh_maps
-    module procedure create_local_mesh_maps_king
-    module procedure create_local_mesh_maps_kong
+    module procedure create_local_mesh_maps_from_file
+    module procedure create_local_mesh_maps_from_object
   end interface create_local_mesh_maps
 
   integer, public, parameter :: mesh_cubedsphere = 34
@@ -203,7 +201,7 @@ end subroutine create_local_mesh
 !!           mesh object.
 !!
 !> @param[in]  input_mesh_file  Input file to load mesh maps from.
-subroutine create_local_mesh_maps_king( input_mesh_file )
+subroutine create_local_mesh_maps_from_file( input_mesh_file )
 
   implicit none
 
@@ -307,11 +305,11 @@ subroutine create_local_mesh_maps_king( input_mesh_file )
   call file_handler%file_close()
 
   return
-end subroutine create_local_mesh_maps_king
+end subroutine create_local_mesh_maps_from_file
 
 
 
-subroutine create_local_mesh_maps_kong( source_local_mesh )
+subroutine create_local_mesh_maps_from_object( source_local_mesh )
 
 
   implicit none
@@ -427,6 +425,6 @@ subroutine create_local_mesh_maps_kong( source_local_mesh )
   end if ! test if the source has any targets listed
 
   return
-end subroutine create_local_mesh_maps_kong
+end subroutine create_local_mesh_maps_from_object
 
 end module runtime_partition_mod
