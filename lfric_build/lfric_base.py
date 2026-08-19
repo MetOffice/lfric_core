@@ -40,16 +40,12 @@ class LFRicBase(FabBase):
     :param app_dir: the base directory of the application.
     :param root_symbol: the symbol (or list of symbols) of the main
         programs. Defaults to the parameter `name` if not specified.
-    :param site_specific_dir: the base directory for the site-specific
-        files. If not specified, it will default to "directory
-        of the calling script" / site_specific
 
     '''
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name: str,
                  app_dir: Path,
                  root_symbol: Optional[Union[list[str], str]] = None,
-                 site_specific_dir: Optional[Path] = None
                  ):
 
         self._app_dir = app_dir
