@@ -12,13 +12,14 @@
 !!          This kernel only works for the lowest-order elements.
 module sci_consist_w2v_to_sh_w2v_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,          only : arg_type,                  &
                                     GH_FIELD, GH_REAL,         &
                                     GH_READ, GH_WRITE,         &
                                     ANY_DISCONTINUOUS_SPACE_2, &
                                     CELL_COLUMN
   use constants_mod,         only : r_def, i_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,     only : W2v
   use kernel_mod,            only : kernel_type
 

@@ -9,6 +9,8 @@
 !> @brief Kernel to sample a field at nodal points of another field
 module sample_field_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,      &
                                     GH_FIELD, GH_REAL,        &
@@ -17,7 +19,6 @@ use argument_mod,            only : arg_type, func_type,      &
                                     GH_BASIS, CELL_COLUMN,    &
                                     GH_EVALUATOR
 use constants_mod,           only : i_def, r_def
-use, intrinsic :: iso_fortran_env, only: real32, real64
 
 implicit none
 

@@ -10,6 +10,8 @@
 !> @details Wrapper code for applying boundary conditions to a operator
 module sci_enforce_operator_bc_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type,                 &
                                     GH_OPERATOR, GH_REAL,     &
@@ -17,7 +19,6 @@ use argument_mod,            only : arg_type,                 &
                                     ANY_SPACE_1, ANY_SPACE_2, &
                                     CELL_COLUMN
 use constants_mod,           only : i_def
-use, intrinsic :: iso_fortran_env, only: real32, real64
 
 implicit none
 

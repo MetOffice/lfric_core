@@ -9,6 +9,8 @@
 !>
 module sci_compute_mass_matrix_kernel_w3_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,              only: arg_type, func_type,       &
                                        GH_OPERATOR, GH_FIELD,     &
                                        GH_READ, GH_WRITE,         &
@@ -18,7 +20,6 @@ module sci_compute_mass_matrix_kernel_w3_mod
                                        CELL_COLUMN, GH_QUADRATURE_XYoZ
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
   use constants_mod,             only: i_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,         only: W3
   use kernel_mod,                only: kernel_type
 

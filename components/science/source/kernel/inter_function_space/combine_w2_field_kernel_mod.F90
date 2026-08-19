@@ -6,6 +6,8 @@
 !> @brief Combine W2h and W2v fields into a single W2 field
 module combine_w2_field_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,                  only : arg_type, GH_INTEGER,      &
                                             GH_FIELD, GH_REAL,         &
                                             GH_WRITE, GH_READ,         &
@@ -13,7 +15,6 @@ module combine_w2_field_kernel_mod
                                             ANY_DISCONTINUOUS_SPACE_3, &
                                             CELL_COLUMN
   use constants_mod,                 only : i_def, l_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,             only : W2, W2h, W2v
   use kernel_mod,                    only : kernel_type
   use sci_face_selector_support_mod, only : face_from_face_selector

@@ -11,6 +11,8 @@
 !!          This method is only designed for the lowest order W2V space.
 module sci_restrict_w2v_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use argument_mod,            only: arg_type,                  &
                                    GH_FIELD, GH_REAL,         &
                                    GH_READ, GH_WRITE,         &
@@ -18,7 +20,6 @@ use argument_mod,            only: arg_type,                  &
                                    ANY_DISCONTINUOUS_SPACE_2, &
                                    CELL_COLUMN
 use constants_mod,           only: i_def, r_def
-use, intrinsic :: iso_fortran_env, only: real32, real64
 use fs_continuity_mod,       only: W2V
 use kernel_mod,              only: kernel_type
 

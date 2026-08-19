@@ -8,6 +8,8 @@
 
 module sci_combine_multidata_field_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only : arg_type,                  &
                                 GH_FIELD, GH_REAL,         &
                                 GH_SCALAR, GH_INTEGER,     &
@@ -18,7 +20,6 @@ module sci_combine_multidata_field_kernel_mod
                                 ANY_SPACE_2,               &
                                 ANY_SPACE_3
   use constants_mod,     only : i_def, l_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use kernel_mod,        only : kernel_type
 
   implicit none

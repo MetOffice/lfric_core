@@ -8,12 +8,13 @@
 
 module sci_w3_to_w2_average_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,          only : arg_type,          &
                                     GH_FIELD, GH_REAL, &
                                     GH_INC, GH_READ,   &
                                     CELL_COLUMN
   use constants_mod,         only : i_def, r_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,     only : W2, W3
   use kernel_mod,            only : kernel_type
   use reference_element_mod, only : B

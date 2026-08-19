@@ -13,12 +13,13 @@
 !>
 module sci_tri_solve_sh_rho_to_mr_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only: arg_type,          &
                                GH_FIELD, GH_REAL, &
                                GH_READ, GH_WRITE, &
                                CELL_COLUMN
   use constants_mod,     only: i_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod, only: W3, Wtheta
   use kernel_mod,        only: kernel_type
 

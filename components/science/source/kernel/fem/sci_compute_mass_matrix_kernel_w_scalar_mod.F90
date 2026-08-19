@@ -11,6 +11,8 @@
 !>
 module sci_compute_mass_matrix_kernel_w_scalar_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,            only: arg_type, func_type,       &
                                      GH_OPERATOR, GH_FIELD,     &
                                      GH_LOGICAL, GH_SCALAR,     &
@@ -21,7 +23,6 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
   use constants_mod,           only: i_def, l_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
   use fs_continuity_mod,       only: W0, Wtheta
   use kernel_mod,              only: kernel_type

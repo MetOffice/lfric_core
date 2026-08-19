@@ -11,13 +11,14 @@
 
 module sci_assign_field_random_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use argument_mod,            only : arg_type,            &
                                     GH_FIELD, GH_REAL,   &
                                     GH_INC, ANY_SPACE_1, &
                                     CELL_COLUMN, GH_READ, &
                                     GH_SCALAR
 use constants_mod,           only : i_def
-use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,              only : kernel_type
 
 implicit none

@@ -11,13 +11,14 @@
 !>          over cells and all dof's asscociated with that cell
 module sci_multiplicity_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type,            &
                                     GH_FIELD, GH_REAL,   &
                                     GH_INC, ANY_SPACE_1, &
                                     CELL_COLUMN
 use constants_mod,           only : i_def
-use, intrinsic :: iso_fortran_env, only: real32, real64
 
 implicit none
 

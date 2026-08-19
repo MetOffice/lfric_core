@@ -12,6 +12,8 @@
 !!          This method is only designed for the lowest order W2 spaces.
 module sci_restrict_w2_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use argument_mod,                  only: arg_type, GH_INTEGER,                 &
                                          GH_FIELD, GH_REAL,                    &
                                          GH_READ, GH_WRITE,                    &
@@ -20,7 +22,6 @@ use argument_mod,                  only: arg_type, GH_INTEGER,                 &
                                          ANY_DISCONTINUOUS_SPACE_2,            &
                                          ANY_DISCONTINUOUS_SPACE_3
 use constants_mod,                 only: i_def, r_def
-use, intrinsic :: iso_fortran_env, only: real32, real64
 use fs_continuity_mod,             only: W2
 use kernel_mod,                    only: kernel_type
 use reference_element_mod,         only: W, S, E, N, B

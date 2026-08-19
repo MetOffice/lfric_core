@@ -13,8 +13,9 @@
 
 module sci_prolong_scalar_weighted_kernel_mod
 
-use constants_mod,           only: i_def
 use, intrinsic :: iso_fortran_env, only: real32, real64
+
+use constants_mod,           only: i_def
 use kernel_mod,              only: kernel_type
 use argument_mod,            only: arg_type,                  &
                                    GH_FIELD, GH_REAL,         &

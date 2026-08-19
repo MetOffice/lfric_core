@@ -12,6 +12,8 @@
 !!          This kernel only works for the lowest-order elements.
 module sci_consist_w2h_to_sh_w2h_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,                  only : arg_type, GH_INTEGER,      &
                                             GH_FIELD, GH_REAL,         &
                                             GH_READ, GH_WRITE,         &
@@ -19,7 +21,6 @@ module sci_consist_w2h_to_sh_w2h_kernel_mod
                                             ANY_DISCONTINUOUS_SPACE_3, &
                                             CELL_COLUMN
   use constants_mod,                 only : i_def, r_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,             only : W2h
   use kernel_mod,                    only : kernel_type
   use sci_face_selector_support_mod, only : face_from_face_selector

@@ -8,6 +8,8 @@
 !>        This can be used to remove negative values or clip any field to
 !>        any desired minimum value.
 module sci_enforce_lower_bound_kernel_mod
+  
+  use, intrinsic :: iso_fortran_env, only: real32, real64
 
   use argument_mod,  only : arg_type,                  &
                             GH_FIELD, GH_SCALAR,       &
@@ -16,7 +18,6 @@ module sci_enforce_lower_bound_kernel_mod
                             ANY_DISCONTINUOUS_SPACE_1, &
                             CELL_COLUMN
   use constants_mod, only : i_def, r_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use kernel_mod,    only : kernel_type
 
   implicit none

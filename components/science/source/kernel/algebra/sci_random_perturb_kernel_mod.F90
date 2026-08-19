@@ -10,6 +10,8 @@
 
 module sci_random_perturb_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use argument_mod,               only : arg_type, func_type,            &
                                        GH_FIELD, GH_REAL, GH_SCALAR,   &
                                        GH_READ, GH_WRITE,              &
@@ -18,7 +20,6 @@ use argument_mod,               only : arg_type, func_type,            &
                                        GH_DIFF_BASIS,                  &
                                        CELL_COLUMN, GH_EVALUATOR
 use constants_mod,              only : i_def, rmdi
-use, intrinsic :: iso_fortran_env, only: real32, real64
 use kernel_mod,                 only : kernel_type
 use fs_continuity_mod,          only : WTHETA, W3
 

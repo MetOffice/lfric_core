@@ -10,8 +10,9 @@
 !> per panel for certain meshes such as cubed sphere.
 module sci_coordinate_jacobian_mod
 
-  use constants_mod,             only: l_def, i_def, r_def
   use, intrinsic :: iso_fortran_env, only: real32, real64
+
+  use constants_mod,             only: l_def, i_def, r_def
   use coord_transform_mod,       only: PANEL_ROT_MATRIX, &
                                        alphabetar2xyz,   &
                                        xyz2llr,          &

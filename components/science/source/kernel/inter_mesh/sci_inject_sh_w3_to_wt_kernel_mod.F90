@@ -11,13 +11,14 @@
 
 module sci_inject_sh_w3_to_wt_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,            only : arg_type,                  &
                                       GH_FIELD, GH_REAL,         &
                                       GH_READ, GH_WRITE,         &
                                       ANY_DISCONTINUOUS_SPACE_3, &
                                       CELL_COLUMN
   use constants_mod,           only : r_def, i_def
-  use, intrinsic :: iso_fortran_env, only: real32, real64
   use fs_continuity_mod,       only : Wtheta
 
   use kernel_mod,              only : kernel_type

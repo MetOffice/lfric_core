@@ -10,8 +10,9 @@
 !!        PSyclone and documented in issue 1099.
 module sci_operator_algebra_kernel_mod
 
-use constants_mod, only: r_def, i_def
 use, intrinsic :: iso_fortran_env, only: real32, real64
+
+use constants_mod, only: r_def, i_def
 use kernel_mod,    only: kernel_type
 use argument_mod,  only: arg_type, func_type,        &
                          GH_OPERATOR, GH_SCALAR,     &
