@@ -151,7 +151,7 @@ function get_global_mesh_map( self,                   &
   ! Pointer to linked list - used for looping through the list
   type(linked_list_item_type),pointer :: loop
 
-  nullify(loop)
+  loop => null()
   global_mesh_map => null()
 
   global_mesh_map_id = generate_global_mesh_map_id( source_global_mesh_id, &
