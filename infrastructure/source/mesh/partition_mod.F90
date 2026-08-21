@@ -975,8 +975,9 @@ contains
                                                     " num_x ",   num_x,   &
                                                     " num_y ",   num_y
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
-    write(log_scratch_space,"(a,i0,a,i0)") "Number of cells in partition ", num_x, " X ", num_y
-    call log_event( log_scratch_space, lOG_LEVEL_INFO )
+    write(log_scratch_space,"(a,i0,a,i0)") &
+        "Number of cells in partition ", num_x, " X ", num_y
+    call log_event( log_scratch_space, lOG_LEVEL_DEBUG )
 
     ! Create a linked list of all cells in the partition and at the same time
     ! create a linked-list of all edge cells known to the partition, excluding halos.

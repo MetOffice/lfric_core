@@ -12,7 +12,7 @@ module panel_decomposition_mod
   use global_mesh_collection_mod, only: global_mesh_collection_type
   use constants_mod, only: i_def, l_def, r_def, str_def
   use log_mod, only: log_event, log_scratch_space, &
-                     LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG
+                     log_level_error, log_level_debug
 
   implicit none
 
@@ -125,6 +125,7 @@ module panel_decomposition_mod
 
   end interface
 
+  ! Overload call to calculation of mapping factor 
   interface calc_mapping_factor
     module procedure calc_mapping_factor_multiple
     module procedure calc_mapping_factor_single
@@ -171,7 +172,7 @@ contains
 
     integer(i_def) :: num_xprocs, num_yprocs
 
-    call log_event("Using custom decomposition", LOG_LEVEL_INFO)
+    call log_event("using custom decomposition", log_level_debug)
 
     num_xprocs = self%num_xprocs
     num_yprocs = self%num_yprocs
@@ -181,7 +182,7 @@ contains
           "Total ranks per panel ", panel_ranks,              &
           " must be the product of xprocs ", self%num_xprocs, &
           " and yprocs ", self%num_yprocs
-      call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+      call log_event( log_scratch_space, log_level_error )
     end if
 
 
@@ -207,7 +208,7 @@ contains
       " partition_y_pos ",  partition_y_pos, &
       " partition_width ",  partition_width, &
       " partition_height ", partition_height
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    call log_event(log_scratch_space, log_level_debug)
 
   end subroutine get_custom_partition
 
@@ -284,7 +285,7 @@ contains
     integer(i_def) :: start_xprocs, start_width, i
     logical :: found_partition
 
-    call log_event("Using auto decomposition", LOG_LEVEL_INFO)
+    call log_event("Using auto decomposition", log_level_debug)
 
     ! For automatic partitioning, try to partition into the squarest
     ! possible partitions.
@@ -340,7 +341,7 @@ contains
     end do
 
     if (.not. found_partition) call log_event( &
-      "Could not automatically partition domain.", LOG_LEVEL_ERROR )
+      "Could not automatically partition domain.", log_level_error )
 
     call xy_defensive_checks( num_cells_x, &
                               num_cells_y, &
@@ -364,7 +365,7 @@ contains
       " partition_y_pos ",  partition_y_pos, &
       " partition_width ",  partition_width, &
       " partition_height ", partition_height
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    call log_event(log_scratch_space, log_level_debug)
 
   end subroutine get_auto_partition
 
@@ -426,7 +427,7 @@ contains
 
     integer(i_def) :: num_xprocs, num_yprocs
 
-    call log_event("Using row decomposition", LOG_LEVEL_INFO)
+    call log_event("Using row decomposition", log_level_debug)
 
     num_xprocs = panel_ranks
     num_yprocs = 1_i_def
@@ -453,7 +454,7 @@ contains
       " partition_y_pos ",  partition_y_pos, &
       " partition_width ",  partition_width, &
       " partition_height ", partition_height
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    call log_event(log_scratch_space, log_level_debug)
 
   end subroutine get_row_partition
 
@@ -515,7 +516,7 @@ contains
 
     integer(i_def) :: num_xprocs, num_yprocs
 
-    call log_event("Using column decomposiiton", LOG_LEVEL_INFO)
+    call log_event("Using column decomposiiton", log_level_debug)
 
     num_xprocs = 1_i_def
     num_yprocs = panel_ranks
@@ -542,7 +543,7 @@ contains
       " partition_y_pos ",  partition_y_pos, &
       " partition_width ",  partition_width, &
       " partition_height ", partition_height
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    call log_event(log_scratch_space, log_level_debug)
 
   end subroutine get_column_partition
 
@@ -606,7 +607,7 @@ contains
     integer(i_def) :: start_xprocs, start_width, i
     logical ::found_factors
 
-    call log_event("Using auto_nonuniform decomposition", LOG_LEVEL_INFO)
+    call log_event("Using auto_nonuniform decomposition", log_level_debug)
 
     mp_num_cells_x = num_cells_x / mapping_factor
     mp_num_cells_y = num_cells_y / mapping_factor
@@ -641,7 +642,7 @@ contains
     end do
 
     if (.not. found_factors) call log_event( &
-      "Could not automatically partition domain.", LOG_LEVEL_ERROR )
+      "Could not automatically partition domain.", log_level_error )
 
     call nonuniform_decomposition(relative_rank,    &
                                   panel_ranks,      &
@@ -659,7 +660,7 @@ contains
       " partition_y_pos ",  partition_y_pos, &
       " partition_width ",  partition_width, &
       " partition_height ", partition_height
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    call log_event(log_scratch_space, log_level_debug)
 
   end subroutine get_auto_nonuniform_partition
 
@@ -721,27 +722,27 @@ contains
 
     integer(i_def) :: num_xprocs
 
-    call log_event("Using guided_nonuniform decomposition", LOG_LEVEL_INFO)
+    call log_event("Using guided_nonuniform decomposition", log_level_debug)
 
     num_xprocs = self%num_xprocs
 
     ! Defensive checks
     if ( num_xprocs <= 0 ) then
       call log_event( "Number of x processes must be strictly positive.", &
-                      LOG_LEVEL_ERROR )
+                      log_level_error )
     end if
 
     if ( num_cells_x < num_xprocs ) then
       write(log_scratch_space, '(A)') &
           "Must have more cells than partitions in x direction."
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      call log_event(log_scratch_space, log_level_error)
     end if
 
     if ( check_constraints .and. ( mod(num_cells_x, num_xprocs) /= 0 ) ) then
       write(log_scratch_space, '(2(A,I0))')                        &
           "Requested number of ranks in x direction ", num_xprocs, &
           " must divide panel x dimension ", num_cells_x
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      call log_event(log_scratch_space, log_level_error)
     end if
 
     call nonuniform_decomposition(relative_rank,    &
@@ -760,7 +761,7 @@ contains
       " partition_y_pos ",  partition_y_pos, &
       " partition_width ",  partition_width, &
       " partition_height ", partition_height
-    call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+    call log_event(log_scratch_space, log_level_debug)
 
   end subroutine get_guided_nonuniform_partition
 
@@ -871,21 +872,21 @@ contains
       write(log_scratch_space, "(a,i0,a,i0,a)") &
         "Number of x processes ", num_xprocs, " and y processes ", num_yprocs, &
         " must both be strictly positive."
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      call log_event(log_scratch_space, log_level_error)
     end if
 
     if ( num_cells_x < num_xprocs ) then
       write(log_scratch_space, "(a,i0,a,i0)") &
         "Number of cells in x direction ", num_cells_x, &
         " must be greater than number of processes in x direction ", num_xprocs
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      call log_event(log_scratch_space, log_level_error)
     end if
 
     if ( num_cells_y < num_yprocs ) then
       write(log_scratch_space, "(a,i0,a,i0)") &
         "Number of cells in y direction ", num_cells_y, &
         " must be greater than number of processes in y direction ", num_yprocs
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      call log_event(log_scratch_space, log_level_error)
     end if
 
     ! Equal divisions are only required if there are maps between meshes
@@ -895,14 +896,14 @@ contains
         write(log_scratch_space, "(2(A,I0))")                      &
           "Requested number of ranks in x direction ", num_xprocs, &
           " must divide panel x dimension ", num_cells_x
-        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+        call log_event(log_scratch_space, log_level_error)
       end if
 
       if ( mod(num_cells_y, num_yprocs) /= 0 ) then
         write(log_scratch_space, "(2(A,I0))")                       &
            "Requested number of ranks in y direction ", num_yprocs, &
            " must divide panel y dimension ", num_cells_y
-        call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+        call log_event(log_scratch_space, log_level_error)
       end if
     end if
 
@@ -910,7 +911,7 @@ contains
       write(log_scratch_space, "(2(A,I0))")                           &
           "Requested number of partitions ", num_xprocs * num_yprocs, &
           " must equal available number of ranks per panel ", panel_ranks
-      call log_event(log_scratch_space, LOG_LEVEL_ERROR)
+      call log_event(log_scratch_space, log_level_error)
     end if
 
   end subroutine xy_defensive_checks
@@ -986,10 +987,11 @@ contains
   end subroutine nonuniform_decomposition
 
 
-  !> @brief Calculate the ratio in resolution between this and the coarsest mesh
-  !>        to align partitions for mapped grids
-  !> @param[in] global-mesh_collection The global mesh collection
-  !> @param[in] global_mesh            The global mesh to calculate the factor for
+  !> @brief Calculate the ratio in resolution between a given global mesh and
+  !>        all meshes in a given global_mesh_collection to align partitions
+  !>        for mapped grids
+  !> @param[in] global_mesh            Global mesh to calculate the factor for
+  !> @param[in] global_mesh_collection Global mesh collection with reference meshes.
   function calc_mapping_factor_multiple( global_mesh, &
                                          global_mesh_collection ) result(mp)
 
@@ -1025,7 +1027,7 @@ contains
 
     end do
 
-    ! If no meshes were found, or 
+    ! If no meshes were found, or
     ! if this_panel_width < shortest_panel_width, then return 1.
     if ( shortest_panel_width < huge(0_i_def) ) then
       mp = max(1, panel_width / shortest_panel_width)
@@ -1036,6 +1038,10 @@ contains
   end function calc_mapping_factor_multiple
 
 
+  !> @brief Calculate the ratio in resolution between a global mesh object and
+  !>        another used as reference to align partitions for mapped grids.
+  !> @param[in] global_mesh            Global mesh to calculate the factor for
+  !> @param[in] reference_global_mesh  Reference global mesh object
   function calc_mapping_factor_single( global_mesh, reference_global_mesh ) result(mp)
 
     implicit none
@@ -1062,8 +1068,6 @@ contains
     end if
 
   end function calc_mapping_factor_single
-
-
 
 
   !> @brief Calculate the width of the mesh panel. On a spherical mesh this is

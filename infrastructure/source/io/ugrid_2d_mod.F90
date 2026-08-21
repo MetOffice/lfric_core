@@ -16,7 +16,6 @@ use constants_mod,  only: i_def, r_def, str_def, str_longlong, l_def, &
 use file_mod,       only: file_mode_write
 use ugrid_file_mod, only: ugrid_file_type
 
-
 use local_mesh_map_collection_mod,  only: local_mesh_map_collection_type
 use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
 
@@ -1623,7 +1622,10 @@ subroutine clear(self)
 
   if (allocated(self%file_handler))           deallocate( self%file_handler )
 
-  self%mesh_name  = cmdi
+  self%mesh_name   = cmdi
+  self%origin_name = cmdi
+  self%origin_file = cmdi
+
   self%geometry   = cmdi
   self%topology   = cmdi
   self%coord_sys  = cmdi
@@ -1688,6 +1690,11 @@ function is_local(self) result(answer)
 
 end function is_local
 
+!------------------------------------------------------------------------------
+!> @brief  Returns original mesh name as referenced in the orignal source file.
+!> @return origin_name  Tag name of mesh that identifies it in the
+!>                      UGRID file that it was read in from.
+!
 function get_origin_name( self ) result ( origin_name )
 
   implicit none
@@ -1700,6 +1707,10 @@ function get_origin_name( self ) result ( origin_name )
 
 end function get_origin_name
 
+!---------------------------------------------------------------------------
+!> @brief  Returns name of source file from which the mesh data was read.
+!> @return origin_file  Filename of UGRID file that mesh data was read from.
+!
 function get_origin_file( self ) result ( origin_file )
 
   implicit none

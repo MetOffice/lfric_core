@@ -11,6 +11,9 @@ class local_mesh_collection_mod::local_mesh_collection_type {
   +clear()
 
   +add_new_local_mesh(<<in>>local_mesh_to_add: local_mesh_type ) : local_mesh_id <<integer>>
+  +n_meshes(): integer
+  +get_mesh_names(): string[:] <<allocatable>>
+  +check_for( <<in>>mesh_name: string): logical )
   +get_mesh_by_id( <<in>>local_mesh_id: integer ): local_mesh_type <<pointer>>
   +get_mesh_by_name( <<in>>local_mesh_name: string ): local_mesh_type <<pointer>>
   +get_local_mesh() <<generic>>: get_local_mesh_by_id(...), get_local_mesh_by_name(...)

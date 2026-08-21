@@ -47,10 +47,13 @@ module global_mesh_mod
   ! Mesh metadata information.
   !======================================================
   ! Tag name of mesh.
-    character(str_def) :: mesh_name
+    character(str_def) :: mesh_name = cmdi
 
+  ! Source file containing original data
     character(str_max_filename) :: origin_file = cmdi
-    character(str_def)          :: origin_name = cmdi
+
+  ! Original mesh name referenced in source file
+    character(str_def) :: origin_name = cmdi
 
   ! Flag to indicate if this a mesh represents coverage
   ! of a global model.
@@ -251,17 +254,19 @@ module global_mesh_mod
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> @brief Constructs a global mesh object from mesh file and reference
-  !>        element.
+  !> @brief Constructs a global mesh object.
   !>
-  !> This global mesh object holds the connectivities which fully describe
-  !> the 2D topology of the mesh.
+  !> @description This global mesh object holds the connectivities
+  !>              which fully describe the 2D topology of the mesh.
   !>
-  !> @param[in] filename         Filename for global 2D mesh(es) ugrid file.
-  !> @param[in] global_mesh_name Name of ugrid mesh topology to create
-  !>                             global mesh object from.
+  !> @param[in] ugrid_mesh_data Ugrid data object to construct global
+  !>                            mesh object from.
+  !> @param[in] rename_to       [optional] Name used to identify
+  !>                            the instance of the global_mesh_object.
+  !>                            If omitted, the name is inherited from
+  !>                            the ugrid_mesh_data object.
   !>
-  !> @return Freshly minted global_mesh_type object.
+  !> @return global_mesh_type object
   !>
   function global_mesh_constructor( ugrid_mesh_data, rename_to ) result(self)
 
@@ -909,7 +914,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief  Returns mesh tag name.
   !> @return mesh_name  Tag name of mesh that identifies it in the
-  !>                    UGRID file that it was read in from.
+  !>                    application.
   !>
   function get_mesh_name( self ) result ( mesh_name )
 
@@ -923,6 +928,12 @@ contains
 
   end function get_mesh_name
 
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Returns original mesh name as referenced in the orignal source file.
+  !> @return origin_name  Tag name of mesh that identifies it in the
+  !>                      UGRID file that it was read in from.
+  !>
   function get_origin_name( self ) result ( origin_name )
 
     implicit none
@@ -935,6 +946,11 @@ contains
 
   end function get_origin_name
 
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Returns name of source file from which the mesh data was read.
+  !> @return origin_file  Filename of UGRID file that mesh data was read from.
+  !>
   function get_origin_file( self ) result ( origin_file )
 
     implicit none
@@ -946,8 +962,6 @@ contains
     origin_file = self%origin_file
 
   end function get_origin_file
-
-
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -964,6 +978,7 @@ contains
   !> @return periodic_xy  Mesh domain periodicity in x/y-axes.
   !>
   function get_mesh_periodicity( self ) result ( periodic_xy )
+
     implicit none
 
     class(global_mesh_type), intent(in) :: self

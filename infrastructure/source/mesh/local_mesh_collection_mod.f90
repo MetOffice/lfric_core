@@ -28,12 +28,14 @@ module local_mesh_collection_mod
     type(linked_list_type) :: local_mesh_list
   contains
     procedure, public  :: add_new_local_mesh
+
+    procedure, public  :: n_meshes
+    procedure, public  :: get_mesh_names
+
     procedure, public  :: get_mesh_by_name
     procedure, public  :: get_mesh_by_id
     generic,   public  :: get_local_mesh => get_mesh_by_id, &
                                             get_mesh_by_name
-    procedure, public  :: get_mesh_names
-    procedure, public  :: n_meshes
     procedure, public  :: check_for
 
     procedure, public  :: clear
@@ -105,6 +107,27 @@ contains
     local_mesh_id = local_mesh_to_add%get_id()
 
   end function add_new_local_mesh
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief Returns the number of meshes in collection.
+  !>
+  !> @detail This function returns the number of unique mesh
+  !>         tag names in this collection.
+  !>
+  !> @return Number of mesh tag names available to query.
+  !>
+  function n_meshes(self) result(number_of_meshes)
+
+    implicit none
+
+    class(local_mesh_collection_type), intent(in) :: self
+
+    integer(i_def) :: number_of_meshes
+
+    number_of_meshes = self%local_mesh_list%get_length()
+
+    return
+  end function n_meshes
 
 
   !===========================================================================
@@ -225,18 +248,7 @@ contains
 
 
 
-  function n_meshes(self) result(number_of_meshes)
 
-    implicit none
-
-    class(local_mesh_collection_type), intent(in) :: self
-
-    integer(i_def) :: number_of_meshes
-
-    number_of_meshes = self%local_mesh_list%get_length()
-
-    return
-  end function n_meshes
 
 
   !===========================================================================

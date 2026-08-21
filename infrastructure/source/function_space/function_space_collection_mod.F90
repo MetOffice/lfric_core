@@ -226,7 +226,7 @@ contains
   ! with the given properties and return a pointer to it. A null pointer is
   ! returned if the requested function space does not exist.
   !
-  !> @param[in] mesh_id         ID of mesh object
+  !> @param[in] mesh            Mesh object
   !> @param[in] element_order_h function space order in horizontal
   !> @param[in] element_order_v function space order in vertical
   !> @param[in] lfric_fs        lfric id code for given supported function space

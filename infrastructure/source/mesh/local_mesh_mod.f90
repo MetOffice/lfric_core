@@ -51,11 +51,11 @@ module local_mesh_mod
   ! Variables referring to local mesh
   !====================================
   ! Tag name of mesh.
-    character(str_def) :: mesh_name
-
+    character(str_def) :: mesh_name = cmdi
+  ! Source file containing original data
     character(str_max_filename) :: origin_file = cmdi
-    character(str_def)          :: origin_name = cmdi
-
+  ! Original mesh name referenced in source file
+    character(str_def) :: origin_name = cmdi
   ! Domain surface geometry.
     integer(i_def)     :: geometry = emdi
   ! Domain boundaries topology.
@@ -1139,8 +1139,12 @@ contains
   !> @details Direct initialisation from a <ugrid_mesh_data_type> allows a local
   !>          mesh object to be populated directly from file read.
   !>
-  !> @param [in] ugrid_mesh_data  <ugrid_mesh_data_type> which was populated
-  !>                              directly from file read
+  !> @param [in] ugrid_mesh_data  Ugrid data object to construct local
+  !>                              mesh object from.
+  !> @param[in] rename_to         [optional] Name used to identify
+  !>                              the instance of the local_mesh_object.
+  !>                              If omitted, the name is inherited from
+  !>                              the ugrid_mesh_data object.
   !>
   subroutine initialise_from_ugrid_data(self, ugrid_mesh_data, rename_to)
 
@@ -1568,7 +1572,9 @@ contains
   !> @return mesh_name  Tag name of mesh.
   !>
   function get_mesh_name( self ) result ( mesh_name )
+
     implicit none
+
     class(local_mesh_type), intent(in) :: self
     character(str_def) :: mesh_name
 
@@ -1576,8 +1582,32 @@ contains
 
   end function get_mesh_name
 
-  function get_origin_file( self ) result ( origin_file )
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Returns original mesh name as referenced in the orignal source file.
+  !> @return origin_name  Tag name of mesh that identifies it in the
+  !>                      UGRID file that it was read in from.
+  !>
+  function get_origin_name( self ) result ( origin_name )
+
     implicit none
+
+    class(local_mesh_type), intent(in) :: self
+    character(str_def) :: origin_name
+
+    origin_name = self%origin_name
+
+  end function get_origin_name
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Returns name of source file from which the mesh data was read.
+  !> @return origin_file  Filename of UGRID file that mesh data was read from.
+  !>
+  function get_origin_file( self ) result ( origin_file )
+
+    implicit none
+
     class(local_mesh_type), intent(in) :: self
     character(str_max_filename) :: origin_file
 
@@ -1585,14 +1615,6 @@ contains
 
   end function get_origin_file
 
-  function get_origin_name( self ) result ( origin_name )
-    implicit none
-    class(local_mesh_type), intent(in) :: self
-    character(str_def) :: origin_name
-
-    origin_name = self%origin_name
-
-  end function get_origin_name
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief   Returns the north pole location of mesh.
