@@ -15,8 +15,8 @@ module add_mesh_map_mod
   use constants_mod, only: i_def, str_def, cmdi
   use log_mod,       only: log_event,         &
                            log_scratch_space, &
-                           LOG_LEVEL_ERROR,   &
-                           LOG_LEVEL_INFO
+                           log_level_error,   &
+                           log_level_info
 
 
   use extrusion_mod,       only: extrusion_type,           &
@@ -140,11 +140,9 @@ end subroutine assign_mesh_maps
 
 
 !> @brief       Creates integrid map between two mesh_type objects.
-!> @description The meshes should be contain valid local mesh integrid maps.
-!> @param[in] source_mesh_name  Name of source_mesh in the
-!!                              application mesh collection.
-!> @param[in] target_mesh_name  Name of source_mesh in the
-!!                              application mesh collection
+!> @description The meshes should contain valid local mesh integrid maps.
+!> @param[in] source_mesh  Soure mesh object
+!> @param[in] target_mesh  Target mesh object
 subroutine add_mesh_map( source_mesh, target_mesh )
 
   implicit none
@@ -159,15 +157,15 @@ subroutine add_mesh_map( source_mesh, target_mesh )
         'Unable to create intergrid map: Source('// &
          trim(source_mesh%get_mesh_name())//' and target('//    &
          trim(target_mesh%get_mesh_name())//') mesh IDs are the same'
-    call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+    call log_event( log_scratch_space, log_level_error )
   end if
 
   call source_mesh % add_mesh_map (target_mesh)
-  write(log_scratch_space,'(A,I0,A)')     &
+  write(log_scratch_space,'(a,i0,a)')     &
       'Adding intergrid map "'//          &
        trim(source_mesh%get_mesh_name())//'"-->"'//  &
        trim(target_mesh%get_mesh_name())//'"'
-  call log_event( log_scratch_space, LOG_LEVEL_INFO )
+  call log_event( log_scratch_space, log_level_info )
 
   return
 end subroutine add_mesh_map
