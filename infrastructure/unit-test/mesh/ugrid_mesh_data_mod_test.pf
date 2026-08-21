@@ -145,6 +145,7 @@ contains
                              edge_on_face_2d )
 
     @assertEqual(mesh_name_in, mesh_name_out)
+    @assertEqual(filename, origin_file)
     @assertEqual(64_i_def, nnode)
     @assertEqual(128_i_def, nedge)
     @assertEqual(64_i_def, nface)
