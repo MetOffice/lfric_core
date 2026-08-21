@@ -6,7 +6,7 @@
 !> @brief This version is for use on discontinous spaces and over-writes the
 !>        output field entirely, hence can only be used for W3 spaces
 module dg_matrix_vector_kernel_mod
- 
+
   use, intrinsic :: iso_fortran_env, only: real32, real64
 
   use constants_mod,           only : i_def
