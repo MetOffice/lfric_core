@@ -125,7 +125,7 @@ module panel_decomposition_mod
 
   end interface
 
-  ! Overload call to calculation of mapping factor 
+  ! Overload call to calculation of mapping factor
   interface calc_mapping_factor
     module procedure calc_mapping_factor_multiple
     module procedure calc_mapping_factor_single
