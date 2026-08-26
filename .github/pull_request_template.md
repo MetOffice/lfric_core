@@ -64,7 +64,7 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 
 ## PSyclone Approval
 
-- [ ] If you have edited any PSyclone-related code (e.g. PSyKAl-lite, Kernel interface, optimisation scripts, LFRic data structure code) then please contact the [HPC Optimisation Team](mailto:Sci_Weath_hpc_opt@metoffice.gov.uk)
+- [ ] If you have edited any PSyclone-related code (e.g. PSyKAl-lite, Kernel interface, optimisation scripts, LFRic data structure code) then please contact the [HPC Optimisation Team](mailto:ML-NC-Prediction-SMIT-HPCOptimisation@metoffice.gov.uk)
 
 # Sci/Tech Review
 
