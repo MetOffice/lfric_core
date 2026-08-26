@@ -1,0 +1,281 @@
+!-------------------------------------------------------------------------------
+! (c) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-------------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Met Office GitHub Copilot Enterprise.
+
+! This module contains mechanisms for caching fields stored in field collections
+! and resetting the original values in the field collection when required.
+
+module field_cache_alg_mod
+
+  ! Import required modules for field management and logging
+  use constants_mod, only : i_def
+  use field_collection_mod, only : field_collection_type
+  use field_mod, only : field_type
+  use integer_field_mod, only : integer_field_type
+  use field_array_mod, only : field_array_type
+  use pure_abstract_field_mod, only : pure_abstract_field_type
+  use log_mod, only : log_event, log_scratch_space, &
+      log_level_debug, log_level_error
+
+  implicit none
+
+  private
+
+  ! ============================================================================
+  ! TYPE DEFINITION: field_cache_type
+  ! ============================================================================
+  ! This type manages caching and resetting of fields from field collections.
+  ! It maintains a reference to the source field collection and stores copies
+  ! of selected fields for later restoration.
+  type, public :: field_cache_type
+    ! Pointer to the original field collection (not owned by this cache)
+    type(field_collection_type), pointer :: source_field_collection => null()
+    ! Collection storing cached copies of the fields
+    type(field_collection_type) :: cached_fields
+    ! Array of field names to cache and reset
+    character(:), allocatable :: field_names(:)
+  contains
+    procedure :: initialise
+    procedure :: cache_fields
+    procedure :: reset_fields
+    final :: finalise_field_cache
+  end type field_cache_type
+
+contains
+
+  !> Initialise the data cache with a field collection and a list of
+  !> fields to cache.
+  !> intent(in) field_collection - The field collection to cache fields from.
+  !> intent(in) field_names - The list of field names to cache.
+  subroutine initialise(this, source_field_collection, field_names)
+    class(field_cache_type), intent(inout) :: this
+    type(field_collection_type), pointer, intent(in) :: source_field_collection
+    character(*), dimension(:), intent(in) :: field_names
+
+    integer :: i
+
+    ! Store pointer to the source field collection
+    this%source_field_collection => source_field_collection
+
+    ! Store the field names to cache
+    this%field_names = field_names
+
+    ! Initialize an empty field collection to store cached field copies
+    call this%cached_fields%initialise(name = "cached_fields", table_len = 100_i_def)
+
+    ! Validate that all requested fields exist in the source collection
+    do i = 1, size(field_names)
+      if (.not. this%source_field_collection%field_exists(this%field_names(i))) then
+        write(log_scratch_space, &
+            '("Field ", A, " does not exist in source field collection")') trim(field_names(i))
+        call log_event(log_scratch_space, log_level_error)
+      end if
+    end do
+
+  end subroutine initialise
+
+  !> Cache the fields from the field collection into cached_fields.
+  subroutine cache_fields(this)
+    class(field_cache_type), intent(inout) :: this
+
+    ! Declare pointers to handle different field types in both source and
+    ! cache collections
+    class(pure_abstract_field_type), pointer :: field_ptr
+    type(field_type), pointer :: tmp_field_real_source_ptr, tmp_field_real_target_ptr
+    type(integer_field_type), pointer :: tmp_field_int_source_ptr, tmp_field_int_target_ptr
+    type(field_array_type), pointer :: tmp_field_array_source_ptr, tmp_field_array_target_ptr
+
+    ! Declare temporary field objects for creating new cached fields
+    type(field_type) :: tmp_field_real_target
+    type(integer_field_type) :: tmp_field_int_target
+    type(field_array_type) :: tmp_field_array_target
+
+    integer :: i, array_field_index
+
+    write(log_scratch_space, '("Caching fields from ", A, " field collection")') &
+        trim(this%source_field_collection%get_name())
+    call log_event(log_scratch_space, log_level_debug)
+
+    ! ========================================================================
+    ! Main loop: iterate through each field to cache
+    ! ========================================================================
+    do i = 1, size(this%field_names)
+      ! Retrieve the field from the source collection as an abstract type
+      call this%source_field_collection%get_abstract_field(this%field_names(i), &
+          field_ptr)
+
+      ! Select specific field type and handle appropriately
+      select type(field_ptr)
+
+      ! ====================================================================
+      ! Real valued field (field_type)
+      ! ====================================================================
+      ! TODO: Update to use real32 and real64 fields when PSyclone invokes support them
+      !
+      type is (field_type)
+        tmp_field_real_source_ptr => field_ptr
+        ! Create cached field copy if it doesn't already exist
+        if (.not. this%cached_fields%field_exists(this%field_names(i))) then
+          call tmp_field_real_source_ptr%copy_field_properties(tmp_field_real_target)
+          call this%cached_fields%add_field(tmp_field_real_target)
+        end if
+        ! Retrieve the cached field and copy current values from source
+        call this%cached_fields%get_field(this%field_names(i), tmp_field_real_target_ptr)
+        call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
+
+      ! ====================================================================
+      ! Integer valued field (integer_field_type)
+      ! ====================================================================
+      type is (integer_field_type)
+        tmp_field_int_source_ptr => field_ptr
+        ! Create cached field copy if it doesn't already exist
+        if (.not. this%cached_fields%field_exists(this%field_names(i))) then
+          call tmp_field_int_source_ptr%copy_field_properties(tmp_field_int_target)
+          call this%cached_fields%add_field(tmp_field_int_target)
+        end if
+        ! Retrieve the cached field and copy current values from source
+        call this%cached_fields%get_field(this%field_names(i), tmp_field_int_target_ptr)
+        call invoke(int_setval_x(tmp_field_int_target_ptr, tmp_field_int_source_ptr))
+
+      ! ====================================================================
+      ! Array of fields (field_array_type)
+      ! ====================================================================
+      type is (field_array_type)
+        tmp_field_array_source_ptr => field_ptr
+        ! Create cached field array if it doesn't already exist
+        if (.not. this%cached_fields%field_exists(this%field_names(i))) then
+          call tmp_field_array_target%initialise(size(tmp_field_array_source_ptr%bundle), &
+              name = tmp_field_array_source_ptr%get_name())
+          call this%cached_fields%add_field(tmp_field_array_target)
+        end if
+        ! Retrieve the cached field array
+        call this%cached_fields%get_field(tmp_field_array_source_ptr%get_name(), tmp_field_array_target_ptr)
+
+        ! Copy each field within the array from source to cache
+        do array_field_index = 1, size(tmp_field_array_source_ptr%bundle)
+          tmp_field_real_target_ptr => tmp_field_array_target_ptr%bundle(array_field_index)
+          tmp_field_real_source_ptr => tmp_field_array_source_ptr%bundle(array_field_index)
+          ! Copy field properties if not already set up
+          if (.not. tmp_field_real_target_ptr%is_initialised() ) then
+            call tmp_field_real_source_ptr%copy_field_properties(tmp_field_real_target_ptr)
+          end if
+          ! Copy data values from source to cached field
+          call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
+        end do
+
+      ! ====================================================================
+      ! Unsupported field type
+      ! ====================================================================
+      class default
+        write(log_scratch_space, &
+            '("Field ", A, " is of unsupported type, cannot cache")') &
+            trim(this%field_names(i))
+        call log_event(log_scratch_space, log_level_error)
+      end select
+    end do
+
+  end subroutine cache_fields
+
+  !> Reset the fields in the field collection to their original values
+  !> from cached_fields.
+  subroutine reset_fields(this)
+    class(field_cache_type), intent(inout) :: this
+
+    ! Declare pointers for source and target fields
+    class(pure_abstract_field_type), pointer :: field_ptr
+    type(field_type), pointer :: tmp_field_real_source_ptr, tmp_field_real_target_ptr
+    type(integer_field_type), pointer :: tmp_field_int_source_ptr, tmp_field_int_target_ptr
+    type(field_array_type), pointer :: tmp_field_array_source_ptr, tmp_field_array_target_ptr
+    integer :: i, array_field_index
+
+    ! ========================================================================
+    ! Validation: Check that there are cached fields to reset
+    ! ========================================================================
+    if (this%cached_fields%get_length() == 0) then
+      write(log_scratch_space, '("No cached fields to reset")')
+      call log_event(log_scratch_space, log_level_error)
+      return
+    end if
+
+    write(log_scratch_space, '("Resetting fields in field collection to cached values")')
+    call log_event(log_scratch_space, log_level_debug)
+
+    ! ========================================================================
+    ! Main loop: iterate through each field to reset
+    ! ========================================================================
+    do i = 1, size(this%field_names)
+      ! Retrieve the field from the source collection as an abstract type
+      call this%source_field_collection%get_abstract_field(this%field_names(i), &
+          field_ptr)
+
+      ! Select specific field type and handle appropriately
+      select type(field_ptr)
+
+      ! ====================================================================
+      !Real valued field (field_type)
+      ! ====================================================================
+      type is (field_type)
+        ! Get pointer to current field in source collection
+        tmp_field_real_target_ptr => field_ptr
+        ! Get pointer to cached version
+        call this%cached_fields%get_field(this%field_names(i), tmp_field_real_source_ptr)
+        ! Copy cached values back to source field
+        call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
+
+      ! ====================================================================
+      ! Integer valued field (integer_field_type)
+      ! ====================================================================
+      type is (integer_field_type)
+        ! Get pointer to current field in source collection
+        tmp_field_int_target_ptr => field_ptr
+        ! Get pointer to cached version
+        call this%cached_fields%get_field(this%field_names(i), tmp_field_int_source_ptr)
+        ! Copy cached values back to source field
+        call invoke(int_setval_x(tmp_field_int_target_ptr, tmp_field_int_source_ptr))
+
+      ! ====================================================================
+      ! Array of fields (field_array_type)
+      ! ====================================================================
+      type is (field_array_type)
+        ! Get pointer to current field array in source collection
+        tmp_field_array_target_ptr => field_ptr
+        ! Get pointer to cached field array
+        call this%cached_fields%get_field(this%field_names(i), tmp_field_array_source_ptr)
+
+        ! Copy each field within the array from cache back to source
+        do array_field_index = 1, size(tmp_field_array_source_ptr%bundle)
+          tmp_field_real_target_ptr => tmp_field_array_target_ptr%bundle(array_field_index)
+          tmp_field_real_source_ptr => tmp_field_array_source_ptr%bundle(array_field_index)
+          ! Copy cached data values back to source field
+          call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
+        end do
+
+      ! ====================================================================
+      ! Unsupported field type
+      ! ====================================================================
+      class default
+        write(log_scratch_space, &
+            '("Field ", A, " is of unsupported type, cannot cache")') &
+            trim(this%field_names(i))
+        call log_event(log_scratch_space, log_level_error)
+      end select
+    end do
+
+  end subroutine reset_fields
+
+  !> Finalise the data cache
+  subroutine finalise_field_cache(this)
+    type(field_cache_type), intent(inout) :: this
+
+    ! Clean up the pointer to the source field collection
+    if (associated(this%source_field_collection)) then
+      nullify(this%source_field_collection)
+    end if
+  end subroutine finalise_field_cache
+
+
+end module field_cache_alg_mod
