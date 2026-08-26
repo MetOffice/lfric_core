@@ -111,11 +111,11 @@ contains
       ! Select specific field type and handle appropriately
       select type(field_ptr)
 
-      ! ====================================================================
-      ! Real valued field (field_type)
-      ! ====================================================================
-      ! TODO: Update to use real32 and real64 fields when PSyclone invokes support them
-      !
+        ! ====================================================================
+        ! Real valued field (field_type)
+        ! ====================================================================
+        ! TODO: Update to use real32 and real64 fields when PSyclone invokes support them
+        !
       type is (field_type)
         tmp_field_real_source_ptr => field_ptr
         ! Create cached field copy if it doesn't already exist
@@ -127,9 +127,9 @@ contains
         call this%cached_fields%get_field(this%field_names(i), tmp_field_real_target_ptr)
         call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
 
-      ! ====================================================================
-      ! Integer valued field (integer_field_type)
-      ! ====================================================================
+        ! ====================================================================
+        ! Integer valued field (integer_field_type)
+        ! ====================================================================
       type is (integer_field_type)
         tmp_field_int_source_ptr => field_ptr
         ! Create cached field copy if it doesn't already exist
@@ -141,9 +141,9 @@ contains
         call this%cached_fields%get_field(this%field_names(i), tmp_field_int_target_ptr)
         call invoke(int_setval_x(tmp_field_int_target_ptr, tmp_field_int_source_ptr))
 
-      ! ====================================================================
-      ! Array of fields (field_array_type)
-      ! ====================================================================
+        ! ====================================================================
+        ! Array of fields (field_array_type)
+        ! ====================================================================
       type is (field_array_type)
         tmp_field_array_source_ptr => field_ptr
         ! Create cached field array if it doesn't already exist
@@ -153,23 +153,24 @@ contains
           call this%cached_fields%add_field(tmp_field_array_target)
         end if
         ! Retrieve the cached field array
-        call this%cached_fields%get_field(tmp_field_array_source_ptr%get_name(), tmp_field_array_target_ptr)
+        call this%cached_fields%get_field(tmp_field_array_source_ptr%get_name(), &
+                                          tmp_field_array_target_ptr)
 
         ! Copy each field within the array from source to cache
         do array_field_index = 1, size(tmp_field_array_source_ptr%bundle)
           tmp_field_real_target_ptr => tmp_field_array_target_ptr%bundle(array_field_index)
           tmp_field_real_source_ptr => tmp_field_array_source_ptr%bundle(array_field_index)
           ! Copy field properties if not already set up
-          if (.not. tmp_field_real_target_ptr%is_initialised() ) then
+          if (.not. tmp_field_real_target_ptr%is_initialised()) then
             call tmp_field_real_source_ptr%copy_field_properties(tmp_field_real_target_ptr)
           end if
           ! Copy data values from source to cached field
           call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
         end do
 
-      ! ====================================================================
-      ! Unsupported field type
-      ! ====================================================================
+        ! ====================================================================
+        ! Unsupported field type
+        ! ====================================================================
       class default
         write(log_scratch_space, &
             '("Field ", A, " is of unsupported type, cannot cache")') &
@@ -215,9 +216,9 @@ contains
       ! Select specific field type and handle appropriately
       select type(field_ptr)
 
-      ! ====================================================================
-      !Real valued field (field_type)
-      ! ====================================================================
+        ! ====================================================================
+        ! Real valued field (field_type)
+        ! ====================================================================
       type is (field_type)
         ! Get pointer to current field in source collection
         tmp_field_real_target_ptr => field_ptr
@@ -226,9 +227,9 @@ contains
         ! Copy cached values back to source field
         call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
 
-      ! ====================================================================
-      ! Integer valued field (integer_field_type)
-      ! ====================================================================
+        ! ====================================================================
+        ! Integer valued field (integer_field_type)
+        ! ====================================================================
       type is (integer_field_type)
         ! Get pointer to current field in source collection
         tmp_field_int_target_ptr => field_ptr
@@ -237,9 +238,9 @@ contains
         ! Copy cached values back to source field
         call invoke(int_setval_x(tmp_field_int_target_ptr, tmp_field_int_source_ptr))
 
-      ! ====================================================================
-      ! Array of fields (field_array_type)
-      ! ====================================================================
+        ! ====================================================================
+        ! Array of fields (field_array_type)
+        ! ====================================================================
       type is (field_array_type)
         ! Get pointer to current field array in source collection
         tmp_field_array_target_ptr => field_ptr
@@ -254,9 +255,9 @@ contains
           call invoke(setval_x(tmp_field_real_target_ptr, tmp_field_real_source_ptr))
         end do
 
-      ! ====================================================================
-      ! Unsupported field type
-      ! ====================================================================
+        ! ====================================================================
+        ! Unsupported field type
+        ! ====================================================================
       class default
         write(log_scratch_space, &
             '("Field ", A, " is of unsupported type, cannot cache")') &
