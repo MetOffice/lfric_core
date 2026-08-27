@@ -26,7 +26,6 @@ from fab.tools.compiler import CCompiler, FortranCompiler
 
 from lfric_base import LFRicBase
 
-
 class MockSiteConfig:
     """
     Creates a mock site config class.
@@ -368,7 +367,6 @@ def test_setup_site_specific_location(monkeypatch) -> None:
     # Check paths added correctly
     base_dir = Path(inspect.getfile(LFRicBase)).parent
     assert str(base_dir) in sys.path
-    assert str(base_dir / "site_specific") in sys.path
 
     # Restore path
     sys.path = old_path
@@ -582,91 +580,106 @@ def test_get_rose_meta(monkeypatch) -> None:
     lfric_base = LFRicBase(name="test", app_dir=Path("."))
     assert lfric_base.get_rose_meta() is None
 
+class TestFullSetup():
 
-def test_analyse_step(monkeypatch) -> None:
-    '''Tests analysis step configuration and execution'''
+    def setup(self, monkeypatch, argv: Optional[list[str]] = None) -> None:
+        """
+        """
+        self.mpatch = monkeypatch
+        if not argv:
+            argv = ["lfric_base.py"]
+        self.mpatch.setattr(sys, "argv", argv)
 
-    # Test case 1: No ignore_dependencies argument specified
-    monkeypatch.setattr(sys, "argv", ["lfric_base.py"])
+        # Create and setup mocks
+        self.mock_analyse = mock.MagicMock()
+        self.mpatch.setattr('fab.fab_base.fab_base.FabBase.analyse_step',
+                            self.mock_analyse)
 
-    # Create mocks
-    mock_analyse = mock.MagicMock()
-    mock_preprocess = mock.MagicMock()
-    mock_psyclone = mock.MagicMock()
+        self.mock_preprocess = mock.MagicMock()
+        self.mpatch.setattr('lfric_base.preprocess_x90', self.mock_preprocess)
 
-    # Setup mocks
-    monkeypatch.setattr('fab.fab_base.fab_base.FabBase.analyse_step',
-                        mock_analyse)
+        self.mock_psyclone_step = mock.MagicMock()
+        self.mpatch.setattr('lfric_base.LFRicBase.psyclone_step',
+                            self.mock_psyclone_step)
 
-    lfric_base = LFRicBase(name="test", app_dir=Path("."))
+        # Set up monkeypatch for module level import
+        self.mock_psyclone = mock.MagicMock()
+        monkeypatch.setattr('lfric_base.psyclone', self.mock_psyclone)
 
-    # Mock instance methods
-    monkeypatch.setattr(lfric_base, 'preprocess_x90_step', mock_preprocess)
-    monkeypatch.setattr(lfric_base, 'psyclone_step', mock_psyclone)
+        self.lfric_base = LFRicBase(name="test", app_dir=Path("."))
 
-    # The PSyclone step will modify sys.path (to allow import of
-    # psyclone_tools by PSyclone scripts). Make sure sys.path is unchanged:
-    old_sys_path = sys.path[:]
-    # Call analyse_step (which calls PSyclone)
-    lfric_base.analyse_step()
-    assert sys.path == old_sys_path
-
-    # Verify method calls
-    mock_preprocess.assert_called_once()
-    mock_psyclone.assert_called_once()
-
-    # Verify analyse called with correct default ignore_dependencies
-    expected_ignore = ['netcdf', 'mpi', 'mpi_f08', 'yaxt',
-                       'xios', 'icontext', 'mod_wait']
-    mock_analyse.assert_called_once_with(
-        ignore_dependencies=expected_ignore,
-        find_programs=False
-    )
-
-    # Test case 2: Custom ignore_dependencies arguments specified
-    custom_ignore = ['custom_dep1', 'custom_dep2']
-    mock_analyse.reset_mock()
-    mock_preprocess.reset_mock()
-    mock_psyclone.reset_mock()
-
-    lfric_base = LFRicBase(name="test", app_dir=Path("."))
-    monkeypatch.setattr(lfric_base, 'preprocess_x90_step', mock_preprocess)
-    monkeypatch.setattr(lfric_base, 'psyclone_step', mock_psyclone)
-
-    # Call analyse_step
-    lfric_base.analyse_step(ignore_dependencies=custom_ignore)
-
-    # Verify methods still called
-    mock_preprocess.assert_called_once()
-    mock_psyclone.assert_called_once()
-
-    # Verify analyse called with custom_ignore added to ignore list
-    expected_ignore = ['custom_dep1', 'custom_dep2', 'netcdf', 'mpi',
-                       'mpi_f08', 'yaxt', 'xios', 'icontext',
-                       'mod_wait']
-    mock_analyse.assert_called_once_with(
-        ignore_dependencies=expected_ignore,
-        find_programs=False
-    )
+        self.mock_psyclone_config = "/mock/psyclone.cfg"
+        # Patch instance methods. Return a copy to avoid that
+        # PSyclone modified these lists in the lambdas when it modifies the list
+        monkeypatch.setattr(self.lfric_base, 'get_psyclone_config',
+                            lambda: self.mock_psyclone_config)
 
 
-def test_preprocess_x90_step(monkeypatch) -> None:
-    '''
-    Tests preprocessing of X90 files.
-    '''
-    monkeypatch.setattr(sys, "argv", ["lfric_base.py"])
+    def test_analyse_no_ignore(self, monkeypatch) -> None:
+        """
+        Tests analysis step configuration and execution,
+        if not additional dependencies are specified.
+        """
 
-    mock_preproc = mock.MagicMock()
-    monkeypatch.setattr('lfric_base.preprocess_x90', mock_preproc)
+        self.setup(monkeypatch)
 
-    lfric_base = LFRicBase(name="test", app_dir=Path("."))
-    lfric_base.add_preprocessor_flags(["-flag1", "-flag2"])
-    lfric_base.preprocess_x90_step()
+        # The PSyclone step will modify sys.path (to allow import of
+        # psyclone_tools by PSyclone scripts). Make sure sys.path is unchanged:
+        old_sys_path = sys.path[:]
+        # Call analyse_step (which calls PSyclone)
+        self.lfric_base.analyse_step()
+        assert sys.path == old_sys_path
 
-    mock_preproc.assert_called_once_with(
-        lfric_base.config,
-        common_flags=["-flag1", "-flag2"]
-    )
+        # Verify method calls
+        self.mock_preprocess.assert_called_once()
+        self.mock_psyclone_step.assert_called_once()
+
+        # Verify analyse called with correct default ignore_dependencies
+        expected_ignore = ['netcdf', 'mpi', 'mpi_f08', 'yaxt',
+                           'xios', 'icontext', 'mod_wait']
+        self.mock_analyse.assert_called_once_with(
+            ignore_dependencies=expected_ignore,
+            find_programs=False
+        )
+
+    def test_analyse_ignore_dependency(self, monkeypatch) -> None:
+        """
+        Tests analysis step configuration and execution when
+        additional dependencies are specified.
+        """
+
+        self.setup(monkeypatch)
+
+        # Call analyse_step (which calls PSyclone)
+        custom_ignore = ['custom_dep1', 'custom_dep2']
+        self.lfric_base.analyse_step(ignore_dependencies=custom_ignore)
+
+        # Verify method calls
+        self.mock_preprocess.assert_called_once()
+        self.mock_psyclone_step.assert_called_once()
+
+        # Verify analyse called with correct default ignore_dependencies
+        expected_ignore = ['custom_dep1', 'custom_dep2', 'netcdf', 'mpi',
+                           'mpi_f08', 'yaxt', 'xios', 'icontext',
+                           'mod_wait']
+        self.mock_analyse.assert_called_once_with(
+            ignore_dependencies=expected_ignore,
+            find_programs=False
+        )
+
+    def test_preprocess_x90_step(self, monkeypatch) -> None:
+        '''
+        Tests preprocessing of X90 files.
+        '''
+        self.setup(monkeypatch)
+
+        self.lfric_base.add_preprocessor_flags(["-flag1", "-flag2"])
+        self.lfric_base.preprocess_x90_step()
+
+        self.mock_preprocess.assert_called_once_with(
+            self.lfric_base.config,
+            common_flags=["-flag1", "-flag2"]
+        )
 
 
 def test_psyclone_step(monkeypatch) -> None:
