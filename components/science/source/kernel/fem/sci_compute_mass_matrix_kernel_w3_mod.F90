@@ -122,23 +122,16 @@ contains
     integer(kind=i_def), dimension(ndf_chi), intent(in) :: map_chi
     integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
 
-==== BASE ====
-    real(kind=r_single), dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
-==== BASE ====
+    real(kind=real32), dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
+    real(kind=real32), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
+    real(kind=real32), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
+    real(kind=real32), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
 
-==== BASE ====
-    real(kind=r_single), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
-    real(kind=r_single), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
-    real(kind=r_single), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
-==== BASE ====
+    real(kind=real32), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+    real(kind=real32), dimension(undf_pid), intent(in) :: panel_id
 
-==== BASE ====
-    real(kind=r_single), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-    real(kind=r_single), dimension(undf_pid), intent(in) :: panel_id
-==== BASE ====
-
-    real(kind=real32),   dimension(nqp_h), intent(in) :: wqp_h
-    real(kind=real32),   dimension(nqp_v), intent(in) :: wqp_v
+    real(kind=real32), dimension(nqp_h), intent(in) :: wqp_h
+    real(kind=real32), dimension(nqp_v), intent(in) :: wqp_v
 
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
