@@ -19,33 +19,9 @@ module compute_map_u_operators_kernel_mod_test
   implicit none
 
   private
-  public :: set_up, tear_down, test_all
+  public :: test_all
 
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @before
-  subroutine set_up()
-
-    use sci_chi_transform_mod, only: init_chi_transforms
-
-    implicit none
-
-    call init_chi_transforms(geometry_spherical,topology_non_periodic)
-
-  end subroutine set_up
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @after
-  subroutine tear_down()
-
-    use sci_chi_transform_mod, only: final_chi_transforms
-
-    implicit none
-
-    call final_chi_transforms()
-
-  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test

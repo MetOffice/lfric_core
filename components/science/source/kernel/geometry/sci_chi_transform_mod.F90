@@ -79,20 +79,11 @@ contains
 !------------------------------------------------------------------------------
 !> @brief  Initialise the coordinate transform information
 !!
-!> @param[in] geometry           Mesh geometry enumeration value
-!> @param[in] topology           Mesh topology enumeration value
-!> @param[in] mesh_collection    Optional: a collection of meshes, which contain
-!!                               metadata used to determine the rotation matrix
-!!                               and stretching factors.
-!> @param[in] north_pole_arg     Optional: target north pole, used to generate
-!!                               the rotation matrix. This is incompatible with
-!!                               the mesh_collection argument, and ideally
-!!                               should only be used for unit-testing.
-!> @param[in] equator_lat_arg    Optional: Latitude of the equator of the mesh,
+!> @param[in] north_pole_arg     Target north pole [lon,lat], used to generate
+!!                               the rotation matrix.
+!> @param[in] null_island_arg    Null island [lon,lat]
+!> @param[in] equator_lat_arg    Latitude of the equator of the mesh,
 !!                               allowing a stretching to be described.
-!!                               This is incompatible with the mesh_collection
-!!                               argument, and ideally should only be used for
-!!                               unit-testing.
 !------------------------------------------------------------------------------
 subroutine init_chi_transforms( mesh_north_pole,  &
                                 mesh_null_island, &
@@ -122,14 +113,8 @@ subroutine init_chi_transforms( mesh_north_pole,  &
 
   ! Determine degrees of stretching / rotation.
   to_stretch = abs(equator_latitude) > EPS
-
-print*, 'North Pole ', abs(north_pole(2))
-print*, 'Null island(1) ', abs(null_island(1))
-print*, 'Null island(2) ', abs(null_island(2))
-
   to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS                        &
                 .or. abs(null_island(1)) > EPS .or. abs(null_island(2)) > EPS )
-print*, 'To rotate?', to_rotate
 
   ! Compute Schmidt stretch factor ---------------------------------------------
   stretch_factor = sqrt( (1.0_r_def - sin(equator_latitude))                &

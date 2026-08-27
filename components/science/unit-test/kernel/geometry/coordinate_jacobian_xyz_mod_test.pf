@@ -18,40 +18,10 @@ module coordinate_jacobian_xyz_mod_test
   type, extends(TestCase) :: jacobian_xyz_test_type
     private
   contains
-    procedure setUp
-    procedure tearDown
     procedure test_all
   end type jacobian_xyz_test_type
 
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    use sci_chi_transform_mod, only: init_chi_transforms
-
-    implicit none
-
-    class(jacobian_xyz_test_type), intent(inout) :: this
-
-    call init_chi_transforms(imdi, imdi)
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    use config_loader_mod,     only: final_configuration
-    use sci_chi_transform_mod, only: final_chi_transforms
-
-    implicit none
-
-    class(jacobian_xyz_test_type), intent(inout) :: this
-
-    call final_configuration()
-    call final_chi_transforms()
-
-  end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
