@@ -29,7 +29,9 @@ module driver_fem_mod
   ! Object types
   use config_mod, only: config_type
   use field_mod,  only: field_type
+
   use mesh_mod,   only: mesh_type
+  use local_mesh_mod,   only: local_mesh_type
   use inventory_by_mesh_mod, only: inventory_by_mesh_type
 
   ! Configuration modules
@@ -41,6 +43,11 @@ module driver_fem_mod
                                        coord_space_W0,   &
                                        coord_space_Wchi, &
                                        coord_space_Wtheta
+use sci_chi_transform_mod, only: get_mesh_rotation_matrix, &
+      get_inverse_mesh_rotation_matrix, &
+get_stretch_factor, &
+get_to_rotate, &
+get_to_stretch
 
   implicit none
 
@@ -84,10 +91,16 @@ contains
     integer(i_def)     :: coord_space, coord_order, coord_order_nonprime
     real(r_def)        :: scaled_radius
 
+    real(r_def) :: north_pole(2)
+    real(r_def) :: null_island(2)
+    real(r_def) :: equatorial_latitude
+
+    type(local_mesh_type), pointer :: local_mesh
+
     call log_event( 'FEM specifics: creating function spaces...', &
                     log_level_info )
 
-    nullify(mesh, twod_mesh, fs)
+    nullify(mesh, twod_mesh, local_mesh, fs)
 
     prime_mesh_name = cmdi
     if (config%namelist_exists('base_mesh')) then
@@ -133,9 +146,30 @@ contains
         topology = topology_non_periodic
       end if
 
-      ! Initialise coordinate transformations
-      call init_chi_transforms( geometry, topology, &
-                                mesh_collection=mesh_collection )
+      print*,'Spherical surface? ',  mesh%is_geometry_spherical()
+      print*,'Periodic topology?',   mesh%is_topology_periodic()
+      print*,'Coord_Sys_ll?',        mesh%is_coord_sys_ll()
+
+!     if ( (geometry == geometry_spherical) .and. &
+!          (topology == topology_fully_periodic) ) then
+
+      if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
+
+        ! Initialise coordinate transformations
+        local_mesh => mesh%get_local_mesh()
+        north_pole  = local_mesh%get_north_pole()
+        null_island = local_mesh%get_null_island()
+        equatorial_latitude = local_mesh%get_equatorial_latitude()
+
+        call init_chi_transforms( north_pole, null_island, &
+                                  equatorial_latitude)
+      end if
+
+      print*,'Rotation matrix ',  get_mesh_rotation_matrix()
+      print*,'Inverse Rotation matrix ', get_inverse_mesh_rotation_matrix()
+      print*,'SF ', get_stretch_factor()
+      print*,'Rotate? ', get_to_rotate()
+      print*,'Stretch? ', get_to_stretch()
 
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= twod) then

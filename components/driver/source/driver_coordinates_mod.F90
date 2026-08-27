@@ -170,21 +170,31 @@ contains
     local_mesh => mesh%get_local_mesh()
     panel_ncells = local_mesh%get_ncells_global_mesh()/local_mesh%get_num_panels_global_mesh()
 
-    ! Get *inverse* rotation matrix and stretching factor here
-    stretch_factor = get_stretch_factor()
-    inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
-    to_rotate = get_to_rotate()
+    ! Stretch factor is only valid if on a spherical surface.
+!    if (geometry == geometry_spherical) then
 
-    ! Throw an error if stretching factor is not 1 and not on cubed-sphere
-    if ( abs(stretch_factor - 1.0_r_def) > eps .and. .not.                     &
-         (geometry == geometry_spherical .and.                                 &
-          topology == topology_fully_periodic) ) then
-      call log_event(                                                          &
-        'driver_coordinates: Cannot determine coordinates if Schmidt ' //      &
-        'stretching factor is not 1 and mesh is not cubed-sphere',             &
-        log_level_error                                                        &
-      )
-    end if
+      to_rotate = get_to_rotate()
+      stretch_factor = get_stretch_factor()
+      inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
+
+!     if (topology == topology_fully_periodic) ) then
+
+        ! Get *inverse* rotation matrix and stretching factor here
+
+
+
+!!$    ! Throw an error if stretching factor is not 1 and not on cubed-sphere
+!!$    if ( abs(stretch_factor - 1.0_r_def) > eps .and. .not.                     &
+!!$         (geometry == geometry_spherical .and.                                 &
+!!$          topology == topology_fully_periodic) ) then
+!!$      call log_event(                                                          &
+!!$        'driver_coordinates: Cannot determine coordinates if Schmidt ' //      &
+!!$        'stretching factor is not 1 and mesh is not cubed-sphere',             &
+!!$        log_level_error                                                        &
+!!$      )
+!!$    end if
+
+!    end if
 
     panel_id_proxy%data = 1.0_r_def
 
