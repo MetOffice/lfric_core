@@ -6,7 +6,7 @@
 
 module convert_hcurl_field_kernel_mod_test
 
-  use constants_mod,                       only : i_def, r_def, imdi
+  use constants_mod,                       only : i_def, r_def
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w1_m3x3_q3x3x3_size, &
                                                   get_w3_m3x3_q3x3x3_size

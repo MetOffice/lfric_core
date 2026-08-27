@@ -8,7 +8,7 @@
 module coordinate_jacobian_xyz_mod_test
 
   use funit
-  use constants_mod, only : r_def, i_def, imdi
+  use constants_mod, only : r_def, i_def
 
   implicit none
 

@@ -8,7 +8,7 @@
 !>
 module mg_derham_mat_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, imdi
+  use constants_mod, only : i_def, r_def
   use funit
 
   implicit none

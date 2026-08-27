@@ -43,11 +43,11 @@ module driver_fem_mod
                                        coord_space_W0,   &
                                        coord_space_Wchi, &
                                        coord_space_Wtheta
-use sci_chi_transform_mod, only: get_mesh_rotation_matrix, &
-      get_inverse_mesh_rotation_matrix, &
-get_stretch_factor, &
-get_to_rotate, &
-get_to_stretch
+!use sci_chi_transform_mod, only: get_mesh_rotation_matrix, &
+!      get_inverse_mesh_rotation_matrix, &
+!get_stretch_factor, &
+!get_to_rotate, &
+!get_to_stretch
 
   implicit none
 
@@ -146,9 +146,9 @@ contains
         topology = topology_non_periodic
       end if
 
-      print*,'Spherical surface? ',  mesh%is_geometry_spherical()
-      print*,'Periodic topology?',   mesh%is_topology_periodic()
-      print*,'Coord_Sys_ll?',        mesh%is_coord_sys_ll()
+!      print*,'Spherical surface? ',  mesh%is_geometry_spherical()
+!      print*,'Periodic topology?',   mesh%is_topology_periodic()
+!      print*,'Coord_Sys_ll?',        mesh%is_coord_sys_ll()
 
 !     if ( (geometry == geometry_spherical) .and. &
 !          (topology == topology_fully_periodic) ) then
@@ -165,11 +165,11 @@ contains
                                   equatorial_latitude)
       end if
 
-      print*,'Rotation matrix ',  get_mesh_rotation_matrix()
-      print*,'Inverse Rotation matrix ', get_inverse_mesh_rotation_matrix()
-      print*,'SF ', get_stretch_factor()
-      print*,'Rotate? ', get_to_rotate()
-      print*,'Stretch? ', get_to_stretch()
+!      print*,'Rotation matrix ',  get_mesh_rotation_matrix()
+!      print*,'Inverse Rotation matrix ', get_inverse_mesh_rotation_matrix()
+!      print*,'SF ', get_stretch_factor()
+!      print*,'Rotate? ', get_to_rotate()
+!      print*,'Stretch? ', get_to_stretch()
 
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= twod) then

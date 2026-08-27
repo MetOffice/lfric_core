@@ -7,7 +7,7 @@
 !> Test the kernel for computing the operator to projec from W3 to W2b
 module project_w3_to_w2b_operator_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, imdi
+  use constants_mod, only : i_def, r_def
   use funit
 
   implicit none
