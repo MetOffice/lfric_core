@@ -9,7 +9,8 @@
 !>
 module sci_compute_mass_matrix_kernel_w3_mod
 
-<<<<<<< HEAD
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,                only: arg_type, func_type,              &
                                          GH_OPERATOR, GH_FIELD, GH_SCALAR, &
                                          GH_READ, GH_WRITE,                &
@@ -18,30 +19,12 @@ module sci_compute_mass_matrix_kernel_w3_mod
                                          ANY_DISCONTINUOUS_SPACE_3,        &
                                          GH_BASIS, GH_DIFF_BASIS,          &
                                          CELL_COLUMN, GH_QUADRATURE_XYoZ
-  use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-  use constants_mod,               only: i_def, r_def, l_def, &
-                                         r_single, r_double
+
+  use constants_mod,               only: i_def, r_def, l_def
   use fs_continuity_mod,           only: W3
   use kernel_mod,                  only: kernel_type
-=======
-  use, intrinsic :: iso_fortran_env, only: real32, real64
 
-  use argument_mod,              only: arg_type, func_type,       &
-                                       GH_OPERATOR, GH_FIELD,     &
-                                       GH_READ, GH_WRITE,         &
-                                       GH_REAL, ANY_SPACE_9,      &
-                                       ANY_DISCONTINUOUS_SPACE_3, &
-                                       GH_BASIS, GH_DIFF_BASIS,   &
-                                       CELL_COLUMN, GH_QUADRATURE_XYoZ
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-  use constants_mod,             only: i_def
-  use fs_continuity_mod,         only: W3
-  use kernel_mod,                only: kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system, rehabilitate
-  use planet_config_mod,         only: scaled_radius
->>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
 
   implicit none
 
@@ -116,11 +99,7 @@ contains
 
   ! REAL32 PRECISION
   ! ==================
-<<<<<<< HEAD
-  subroutine compute_mass_matrix_w3_code_r_single(                     &
-=======
-  subroutine compute_mass_matrix_w3_code_real32(   &
->>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
+  subroutine compute_mass_matrix_w3_code_real32(                       &
                                          cell, nlayers, ncell_3d, mm,  &
                                          chi1, chi2, chi3, panel_id,   &
                                          geometry, topology,           &
@@ -143,14 +122,20 @@ contains
     integer(kind=i_def), dimension(ndf_chi), intent(in) :: map_chi
     integer(kind=i_def), dimension(ndf_pid), intent(in) :: map_pid
 
-    real(kind=real32),   dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
+==== BASE ====
+    real(kind=r_single), dimension(ncell_3d,ndf_w3,ndf_w3), intent(inout) :: mm
+==== BASE ====
 
-    real(kind=real32),   dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
-    real(kind=real32),   dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
-    real(kind=real32),   dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
+==== BASE ====
+    real(kind=r_single), dimension(1,ndf_chi,nqp_h,nqp_v), intent(in) :: basis_chi
+    real(kind=r_single), dimension(3,ndf_chi,nqp_h,nqp_v), intent(in) :: diff_basis_chi
+    real(kind=r_single), dimension(1,ndf_w3,nqp_h,nqp_v),  intent(in) :: basis_w3
+==== BASE ====
 
-    real(kind=real32),   dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-    real(kind=real32),   dimension(undf_pid), intent(in) :: panel_id
+==== BASE ====
+    real(kind=r_single), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+    real(kind=r_single), dimension(undf_pid), intent(in) :: panel_id
+==== BASE ====
 
     real(kind=real32),   dimension(nqp_h), intent(in) :: wqp_h
     real(kind=real32),   dimension(nqp_v), intent(in) :: wqp_v

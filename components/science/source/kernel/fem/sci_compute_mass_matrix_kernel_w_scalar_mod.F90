@@ -22,14 +22,12 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
                                      ANY_DISCONTINUOUS_SPACE_3, &
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
-<<<<<<< HEAD
-  use constants_mod,           only: i_def, r_def, r_single, r_double, l_def
-=======
-  use constants_mod,           only: i_def, l_def
->>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
-  use sci_coordinate_jacobian_mod, only: coordinate_jacobian
+
+  use constants_mod,           only: i_def, r_def, l_def
   use fs_continuity_mod,       only: W0, Wtheta
   use kernel_mod,              only: kernel_type
+
+  use sci_coordinate_jacobian_mod, only: coordinate_jacobian
 
   implicit none
 
@@ -133,16 +131,12 @@ contains
 
     logical(kind=l_def), intent(in) :: extended_mesh
 
-<<<<<<< HEAD
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
 
-    real(kind=r_single), dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
-=======
     real(kind=real32),   dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
->>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
                                           intent(inout) :: mm
 
     real(kind=real32),   dimension(1,ndf_chi,nqp_h,nqp_v), &
@@ -244,16 +238,12 @@ contains
 
     logical(kind=l_def), intent(in) :: extended_mesh
 
-<<<<<<< HEAD
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
 
-    real(kind=r_single), dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
-=======
     real(kind=real32),   dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
->>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
                                           intent(inout) :: mm
 
     real(kind=real64),   dimension(1,ndf_chi,nqp_h,nqp_v), &
@@ -354,16 +344,12 @@ contains
 
     logical(kind=l_def), intent(in) :: extended_mesh
 
-<<<<<<< HEAD
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
 
-    real(kind=r_double), dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
-=======
     real(kind=real64),   dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
->>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
                                           intent(inout) :: mm
 
     real(kind=real64),   dimension(1,ndf_chi,nqp_h,nqp_v), &
