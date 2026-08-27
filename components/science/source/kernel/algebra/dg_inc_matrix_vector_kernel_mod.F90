@@ -7,13 +7,16 @@
 !>        output field, hence can be used for WTheta spaces and incrementing
 !>        W3 fields
 module dg_inc_matrix_vector_kernel_mod
+
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,            only : arg_type,                  &
                                       GH_FIELD, GH_OPERATOR,     &
                                       GH_REAL, GH_READ,          &
                                       GH_READWRITE, ANY_SPACE_1, &
                                       ANY_DISCONTINUOUS_SPACE_1, &
                                       CELL_COLUMN
-  use constants_mod,           only : i_def, r_single, r_double
+  use constants_mod,           only : i_def
   use kernel_mod,              only : kernel_type
 
   implicit none
@@ -41,8 +44,8 @@ module dg_inc_matrix_vector_kernel_mod
   ! Generic interface for real32 and real64 types
   interface dg_inc_matrix_vector_code
     module procedure  &
-      dg_inc_matrix_vector_code_r_single, &
-      dg_inc_matrix_vector_code_r_double
+      dg_inc_matrix_vector_code_real32, &
+      dg_inc_matrix_vector_code_real64
   end interface
 
 contains
@@ -64,9 +67,9 @@ contains
   !> @param[in]    map2     Dofmap for the cell at the base of the column for the input
   !!                        field
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
-  subroutine dg_inc_matrix_vector_code_r_single(cell,              &
+  subroutine dg_inc_matrix_vector_code_real32(  cell,              &
                                                 nlayers,           &
                                                 lhs, x,            &
                                                 ncell_3d,          &
@@ -83,9 +86,9 @@ contains
     integer(kind=i_def), dimension(ndf1), intent(in) :: map1
     integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-    real(kind=r_single), dimension(undf2),              intent(in)    :: x
-    real(kind=r_single), dimension(undf1),              intent(inout) :: lhs
-    real(kind=r_single), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+    real(kind=real32),   dimension(undf2),              intent(in)    :: x
+    real(kind=real32),   dimension(undf1),              intent(inout) :: lhs
+    real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
     integer(kind=i_def) :: df, df2, ik, i1, i2, nl
@@ -101,12 +104,12 @@ contains
       end do
     end do
 
-  end subroutine dg_inc_matrix_vector_code_r_single
+  end subroutine dg_inc_matrix_vector_code_real32
 
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
-  subroutine dg_inc_matrix_vector_code_r_double(cell,              &
+  subroutine dg_inc_matrix_vector_code_real64(  cell,              &
                                                 nlayers,           &
                                                 lhs, x,            &
                                                 ncell_3d,          &
@@ -123,9 +126,9 @@ contains
     integer(kind=i_def), dimension(ndf1), intent(in) :: map1
     integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-    real(kind=r_double), dimension(undf2),              intent(in)    :: x
-    real(kind=r_double), dimension(undf1),              intent(inout) :: lhs
-    real(kind=r_double), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+    real(kind=real64),   dimension(undf2),              intent(in)    :: x
+    real(kind=real64),   dimension(undf1),              intent(inout) :: lhs
+    real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
     integer(kind=i_def) :: df, df2, ik, i1, i2, nl
@@ -141,6 +144,6 @@ contains
       end do
     end do
 
-  end subroutine dg_inc_matrix_vector_code_r_double
+  end subroutine dg_inc_matrix_vector_code_real64
 
 end module dg_inc_matrix_vector_kernel_mod
