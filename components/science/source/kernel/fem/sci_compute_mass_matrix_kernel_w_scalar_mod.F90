@@ -11,6 +11,8 @@
 !>
 module sci_compute_mass_matrix_kernel_w_scalar_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,            only: arg_type, func_type,       &
                                      GH_OPERATOR, GH_FIELD,     &
                                      GH_LOGICAL, GH_SCALAR,     &
@@ -20,7 +22,11 @@ module sci_compute_mass_matrix_kernel_w_scalar_mod
                                      ANY_DISCONTINUOUS_SPACE_3, &
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
+<<<<<<< HEAD
   use constants_mod,           only: i_def, r_def, r_single, r_double, l_def
+=======
+  use constants_mod,           only: i_def, l_def
+>>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
   use fs_continuity_mod,       only: W0, Wtheta
   use kernel_mod,              only: kernel_type
@@ -99,7 +105,7 @@ contains
   !! @param[in] wqp_h    Quadrature weights horizontal
   !! @param[in] wqp_v    Quadrature weights vertical
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
   subroutine compute_mass_matrix_w_scalar_code_r32(             &
                                  cell, nlayers, ncell_3d, mm,   &
@@ -127,38 +133,42 @@ contains
 
     logical(kind=l_def), intent(in) :: extended_mesh
 
+<<<<<<< HEAD
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
 
     real(kind=r_single), dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
+=======
+    real(kind=real32),   dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
+>>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
                                           intent(inout) :: mm
 
-    real(kind=r_single), dimension(1,ndf_chi,nqp_h,nqp_v), &
+    real(kind=real32),   dimension(1,ndf_chi,nqp_h,nqp_v), &
                                              intent(in) :: basis_chi
-    real(kind=r_single), dimension(3,ndf_chi,nqp_h,nqp_v), &
+    real(kind=real32),   dimension(3,ndf_chi,nqp_h,nqp_v), &
                                              intent(in) :: diff_basis_chi
-    real(kind=r_single), dimension(1,ndf_w_scalar,nqp_h,nqp_v), &
+    real(kind=real32),   dimension(1,ndf_w_scalar,nqp_h,nqp_v), &
                                              intent(in) :: basis_w_scalar
 
-    real(kind=r_single), dimension(undf_chi), intent(in) :: chi1
-    real(kind=r_single), dimension(undf_chi), intent(in) :: chi2
-    real(kind=r_single), dimension(undf_chi), intent(in) :: chi3
-    real(kind=r_single), dimension(undf_pid), intent(in) :: panel_id
+    real(kind=real32),   dimension(undf_chi), intent(in) :: chi1
+    real(kind=real32),   dimension(undf_chi), intent(in) :: chi2
+    real(kind=real32),   dimension(undf_chi), intent(in) :: chi3
+    real(kind=real32),   dimension(undf_pid), intent(in) :: panel_id
 
-    real(kind=r_single), dimension(nqp_h),    intent(in) :: wqp_h
-    real(kind=r_single), dimension(nqp_v),    intent(in) :: wqp_v
+    real(kind=real32),   dimension(nqp_h),    intent(in) :: wqp_h
+    real(kind=real32),   dimension(nqp_v),    intent(in) :: wqp_v
 
     ! Internal variables
     integer(kind=i_def)                        :: df, df2, k, ik
     integer(kind=i_def)                        :: ipanel, qp1, qp2
-    real(kind=r_single), dimension(ndf_chi)         :: chi1_e
-    real(kind=r_single), dimension(ndf_chi)         :: chi2_e
-    real(kind=r_single), dimension(ndf_chi)         :: chi3_e
-    real(kind=r_single)                             :: integrand
-    real(kind=r_single), dimension(nqp_h,nqp_v)     :: dj
-    real(kind=r_single), dimension(3,3,nqp_h,nqp_v) :: jac
+    real(kind=real32),   dimension(ndf_chi)         :: chi1_e
+    real(kind=real32),   dimension(ndf_chi)         :: chi2_e
+    real(kind=real32),   dimension(ndf_chi)         :: chi3_e
+    real(kind=real32)                               :: integrand
+    real(kind=real32),   dimension(nqp_h,nqp_v)     :: dj
+    real(kind=real32),   dimension(3,3,nqp_h,nqp_v) :: jac
 
     if ( extended_mesh ) then
       ipanel = int(panel_id(1), i_def)
@@ -186,7 +196,7 @@ contains
 
       do df2 = 1, ndf_w_scalar
         do df = df2, ndf_w_scalar ! mass matrix is symmetric
-          mm(ik,df,df2) = 0.0_r_single
+          mm(ik,df,df2) = 0.0_real32
           do qp2 = 1, nqp_v
             do qp1 = 1, nqp_h
               integrand = wqp_h(qp1) * wqp_v(qp2) * &
@@ -234,36 +244,40 @@ contains
 
     logical(kind=l_def), intent(in) :: extended_mesh
 
+<<<<<<< HEAD
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
 
     real(kind=r_single), dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
+=======
+    real(kind=real32),   dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
+>>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
                                           intent(inout) :: mm
 
-    real(kind=r_double), dimension(1,ndf_chi,nqp_h,nqp_v), &
+    real(kind=real64),   dimension(1,ndf_chi,nqp_h,nqp_v), &
                                              intent(in) :: basis_chi
-    real(kind=r_double), dimension(3,ndf_chi,nqp_h,nqp_v), &
+    real(kind=real64),   dimension(3,ndf_chi,nqp_h,nqp_v), &
                                              intent(in) :: diff_basis_chi
-    real(kind=r_double), dimension(1,ndf_w_scalar,nqp_h,nqp_v), &
+    real(kind=real64),   dimension(1,ndf_w_scalar,nqp_h,nqp_v), &
                                              intent(in) :: basis_w_scalar
 
-    real(kind=r_double), dimension(undf_chi), intent(in) :: chi1, chi2, chi3
-    real(kind=r_double), dimension(undf_pid), intent(in) :: panel_id
+    real(kind=real64),   dimension(undf_chi), intent(in) :: chi1, chi2, chi3
+    real(kind=real64),   dimension(undf_pid), intent(in) :: panel_id
 
-    real(kind=r_double), dimension(nqp_h),    intent(in) :: wqp_h
-    real(kind=r_double), dimension(nqp_v),    intent(in) :: wqp_v
+    real(kind=real64),   dimension(nqp_h),    intent(in) :: wqp_h
+    real(kind=real64),   dimension(nqp_v),    intent(in) :: wqp_v
 
     ! Internal variables
     integer(kind=i_def)                        :: df, df2, k, ik
     integer(kind=i_def)                        :: ipanel, qp1, qp2
-    real(kind=r_double), dimension(ndf_chi)         :: chi1_e
-    real(kind=r_double), dimension(ndf_chi)         :: chi2_e
-    real(kind=r_double), dimension(ndf_chi)         :: chi3_e
-    real(kind=r_double)                             :: integrand
-    real(kind=r_double), dimension(nqp_h,nqp_v)     :: dj
-    real(kind=r_double), dimension(3,3,nqp_h,nqp_v) :: jac
+    real(kind=real64),   dimension(ndf_chi)         :: chi1_e
+    real(kind=real64),   dimension(ndf_chi)         :: chi2_e
+    real(kind=real64),   dimension(ndf_chi)         :: chi3_e
+    real(kind=real64)                               :: integrand
+    real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
+    real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 
     if ( extended_mesh ) then
       ipanel = int(panel_id(1), i_def)
@@ -291,14 +305,14 @@ contains
 
       do df2 = 1, ndf_w_scalar
         do df = df2, ndf_w_scalar ! mass matrix is symmetric
-          mm(ik,df,df2) = 0.0_r_single
+          mm(ik,df,df2) = 0.0_real32
           do qp2 = 1, nqp_v
             do qp1 = 1, nqp_h
               integrand = wqp_h(qp1) * wqp_v(qp2) * &
                    basis_w_scalar(1,df,qp1,qp2)   * &
                    basis_w_scalar(1,df2,qp1,qp2)  * &
                    dj(qp1,qp2)
-              mm(ik,df,df2) = mm(ik,df,df2) + real(integrand, kind=r_single)
+              mm(ik,df,df2) = mm(ik,df,df2) + real(integrand, kind=real32)
             end do
           end do
         end do
@@ -312,7 +326,7 @@ contains
   end subroutine compute_mass_matrix_w_scalar_code_r32r64
 
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
   subroutine compute_mass_matrix_w_scalar_code_r64(             &
                                  cell, nlayers, ncell_3d, mm,   &
@@ -340,38 +354,42 @@ contains
 
     logical(kind=l_def), intent(in) :: extended_mesh
 
+<<<<<<< HEAD
     integer(kind=i_def), intent(in) :: geometry
     integer(kind=i_def), intent(in) :: topology
     integer(kind=i_def), intent(in) :: coord_system
     real(kind=r_def),    intent(in) :: scaled_radius
 
     real(kind=r_double), dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
+=======
+    real(kind=real64),   dimension(ncell_3d,ndf_w_scalar,ndf_w_scalar), &
+>>>>>>> a117080c7 (change mixed-precision kernels to use iso-ieee kinds (#393))
                                           intent(inout) :: mm
 
-    real(kind=r_double), dimension(1,ndf_chi,nqp_h,nqp_v), &
+    real(kind=real64),   dimension(1,ndf_chi,nqp_h,nqp_v), &
                                              intent(in) :: basis_chi
-    real(kind=r_double), dimension(3,ndf_chi,nqp_h,nqp_v), &
+    real(kind=real64),   dimension(3,ndf_chi,nqp_h,nqp_v), &
                                              intent(in) :: diff_basis_chi
-    real(kind=r_double), dimension(1,ndf_w_scalar,nqp_h,nqp_v), &
+    real(kind=real64),   dimension(1,ndf_w_scalar,nqp_h,nqp_v), &
                                              intent(in) :: basis_w_scalar
 
-    real(kind=r_double), dimension(undf_chi), intent(in) :: chi1
-    real(kind=r_double), dimension(undf_chi), intent(in) :: chi2
-    real(kind=r_double), dimension(undf_chi), intent(in) :: chi3
-    real(kind=r_double), dimension(undf_pid), intent(in) :: panel_id
+    real(kind=real64),   dimension(undf_chi), intent(in) :: chi1
+    real(kind=real64),   dimension(undf_chi), intent(in) :: chi2
+    real(kind=real64),   dimension(undf_chi), intent(in) :: chi3
+    real(kind=real64),   dimension(undf_pid), intent(in) :: panel_id
 
-    real(kind=r_double), dimension(nqp_h),    intent(in) :: wqp_h
-    real(kind=r_double), dimension(nqp_v),    intent(in) :: wqp_v
+    real(kind=real64),   dimension(nqp_h),    intent(in) :: wqp_h
+    real(kind=real64),   dimension(nqp_v),    intent(in) :: wqp_v
 
     ! Internal variables
     integer(kind=i_def)                        :: df, df2, k, ik
     integer(kind=i_def)                        :: ipanel, qp1, qp2
-    real(kind=r_double), dimension(ndf_chi)         :: chi1_e
-    real(kind=r_double), dimension(ndf_chi)         :: chi2_e
-    real(kind=r_double), dimension(ndf_chi)         :: chi3_e
-    real(kind=r_double)                             :: integrand
-    real(kind=r_double), dimension(nqp_h,nqp_v)     :: dj
-    real(kind=r_double), dimension(3,3,nqp_h,nqp_v) :: jac
+    real(kind=real64),   dimension(ndf_chi)         :: chi1_e
+    real(kind=real64),   dimension(ndf_chi)         :: chi2_e
+    real(kind=real64),   dimension(ndf_chi)         :: chi3_e
+    real(kind=real64)                               :: integrand
+    real(kind=real64),   dimension(nqp_h,nqp_v)     :: dj
+    real(kind=real64),   dimension(3,3,nqp_h,nqp_v) :: jac
 
     if ( extended_mesh ) then
       ipanel = int(panel_id(1), i_def)
@@ -399,7 +417,7 @@ contains
 
       do df2 = 1, ndf_w_scalar
         do df = df2, ndf_w_scalar ! mass matrix is symmetric
-          mm(ik,df,df2) = 0.0_r_double
+          mm(ik,df,df2) = 0.0_real64
           do qp2 = 1, nqp_v
             do qp1 = 1, nqp_h
               integrand = wqp_h(qp1) * wqp_v(qp2) * &
