@@ -97,11 +97,6 @@ contains
 
     nullify(mesh, twod_mesh, local_mesh, fs)
 
-    prime_mesh_name = cmdi
-    if (config%namelist_exists('base_mesh')) then
-      prime_mesh_name = config%base_mesh%prime_mesh_name()
-    end if
-
     coord_system         = config%finite_element%coord_system()
     coord_order          = config%finite_element%coord_order()
     coord_space          = config%finite_element%coord_space()
@@ -115,6 +110,26 @@ contains
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
     all_mesh_names = mesh_collection%get_mesh_names()
+
+    prime_mesh_name = cmdi
+    if (config%namelist_exists('base_mesh')) then
+      prime_mesh_name = config%base_mesh%prime_mesh_name()
+      mesh => mesh_collection%get_mesh(prime_mesh_name)
+    else
+      mesh => mesh_collection%get_mesh(all_mesh_names(1))
+    end if
+
+    if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
+
+      ! Initialise any coordinate transformations
+      local_mesh => mesh%get_local_mesh()
+      north_pole  = local_mesh%get_north_pole()
+      null_island = local_mesh%get_null_island()
+      equatorial_latitude = local_mesh%get_equatorial_latitude()
+
+      call init_chi_transforms( north_pole, null_island, &
+                                equatorial_latitude )
+    end if
 
     call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))
     call panel_id_inventory%initialise(name="panel_id", &
@@ -139,18 +154,6 @@ contains
         topology = topology_fully_periodic
       else
         topology = topology_non_periodic
-      end if
-
-      if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
-
-        ! Initialise coordinate transformations
-        local_mesh => mesh%get_local_mesh()
-        north_pole  = local_mesh%get_north_pole()
-        null_island = local_mesh%get_null_island()
-        equatorial_latitude = local_mesh%get_equatorial_latitude()
-
-        call init_chi_transforms( north_pole, null_island, &
-                                  equatorial_latitude)
       end if
 
       ! Only create coordinates for 3D meshes
