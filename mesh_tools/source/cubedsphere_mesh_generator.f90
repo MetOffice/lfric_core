@@ -189,12 +189,12 @@ program cubedsphere_mesh_generator
 
   total_ranks = global_mpi%get_comm_size()
   local_rank  = global_mpi%get_comm_rank()
-  call initialise_logging( communicator%get_comm_mpi_val(), 'CubeGen' )
 
   call config%initialise( 'CubeGen' )
 
   call read_configuration( filename, config=config )
 
+  call initialise_logging( communicator%get_comm_mpi_val(), 'CubeGen' )
   deallocate( filename )
 
   mesh_file_prefix = config%mesh%mesh_file_prefix()
