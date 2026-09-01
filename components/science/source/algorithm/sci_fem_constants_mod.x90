@@ -48,7 +48,8 @@ module sci_fem_constants_mod
   use dg_inc_matrix_vector_kernel_mod,    only: dg_inc_matrix_vector_kernel_type
   use sci_multiplicity_kernel_mod,        only: multiplicity_kernel_type
 
-  use sci_mesh_enums_mod, only: topology_fully_periodic
+  use sci_mesh_enums_mod, only: get_mesh_enums, &
+                                topology_fully_periodic
 
   implicit none
 
