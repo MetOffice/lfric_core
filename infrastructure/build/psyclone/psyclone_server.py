@@ -29,7 +29,11 @@ Protocol (per job)
   the returned code.
 
 The server shuts itself down after ``PSYCLONE_SERVER_IDLE_TIMEOUT`` seconds
-without work, so no explicit stop step is required from the build.
+without work, so no explicit stop step is required from the build. It also
+watches the owning build process (``PSYCLONE_OWNER_PID``, the top-level make
+process group) and exits promptly if that process disappears, so manually
+killing the build - whether with SIGINT, SIGTERM or SIGKILL - never leaves an
+orphaned server running.
 
 State isolation
 ---------------
@@ -229,17 +233,24 @@ class PsycloneServer:
     :param str server_dir: directory holding the request FIFO and job dirs.
     :param int workers: number of worker processes to pre-fork.
     :param float idle_timeout: seconds of inactivity before shutting down.
+    :param owner_pid: pid of the owning build process (typically the top-level
+        make process group leader). When this process disappears the server
+        shuts down promptly, so that manually killing the build (with SIGINT,
+        SIGTERM or even SIGKILL) does not leave orphaned servers behind.
+    :type owner_pid: int or None
     """
 
-    def __init__(self, server_dir, workers, idle_timeout):
+    def __init__(self, server_dir, workers, idle_timeout, owner_pid=None):
         self._server_dir = server_dir
         self._workers = max(1, int(workers))
         self._idle_timeout = float(idle_timeout)
+        self._owner_pid = int(owner_pid) if owner_pid else None
         self._request_fifo = os.path.join(server_dir, "request.fifo")
         self._pid_file = os.path.join(server_dir, "server.pid")
         self._ready_file = os.path.join(server_dir, "server.ready")
         self._queue = Queue()
         self._pool = []
+        self._stopping = False
 
     def _prefork(self):
         """Start the worker pool."""
@@ -261,24 +272,82 @@ class PsycloneServer:
         with open(self._ready_file, "w", encoding="utf8") as handle:
             handle.write(str(os.getpid()))
 
+    def _owner_alive(self):
+        """
+        Return True if the owning build process is still running.
+
+        When no owner was supplied the server relies solely on the idle
+        timeout, so it is reported as alive. A process that has become a
+        zombie (killed but not yet reaped by its parent) is treated as dead,
+        so the server does not linger during that window.
+        """
+        if self._owner_pid is None:
+            return True
+        try:
+            os.kill(self._owner_pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            # Process exists but is owned by someone else - still alive.
+            return True
+        # The pid is in the process table; treat a zombie as dead.
+        try:
+            stat_path = f"/proc/{self._owner_pid}/stat"
+            with open(stat_path, encoding="utf8") as stat:
+                # Format: "pid (comm) state ...". The comm field may itself
+                # contain spaces and parentheses, so split on the last ") ".
+                state = stat.read().rsplit(") ", 1)[1].split(None, 1)[0]
+            if state == "Z":
+                return False
+        except (OSError, IndexError):
+            # No procfs (non-Linux) or transient read error - assume alive.
+            pass
+        return True
+
+    def _install_signal_handlers(self):
+        """Break the dispatch loop cleanly on termination signals."""
+        def _handler(_signum, _frame):
+            self._stopping = True
+
+        for signal_name in ("SIGTERM", "SIGINT", "SIGHUP"):
+            signal_number = getattr(signal, signal_name, None)
+            if signal_number is not None:
+                signal.signal(signal_number, _handler)
+
     def _shutdown(self):
-        """Ask all workers to stop and clean up server files."""
-        for _ in self._pool:
-            self._queue.put(_SHUTDOWN)
-        for process in self._pool:
-            process.join(timeout=10)
-            if process.is_alive():
-                process.terminate()
+        """Stop all workers promptly and clean up server files."""
+        # Remove the coordination files first so that clients immediately see
+        # the server as gone (and a new build can start a fresh one) even if
+        # reaping the workers takes a moment.
         for path in (self._ready_file, self._pid_file, self._request_fifo):
             try:
                 os.remove(path)
             except OSError:
                 pass
 
+        # Ask workers to stop, but do not rely on them draining the queue -
+        # terminate them directly so shutdown is bounded and cannot hang if a
+        # worker is busy inside PSyclone.
+        for process in self._pool:
+            if process.is_alive():
+                process.terminate()
+        for process in self._pool:
+            process.join(timeout=2)
+            if process.is_alive():
+                process.kill()
+
+        # Prevent the queue's background feeder thread from blocking process
+        # exit if it still holds buffered data.
+        try:
+            self._queue.cancel_join_thread()
+        except Exception:  # pylint: disable=broad-except
+            pass
+
     def serve(self):
         """Run the dispatch loop until the idle timeout expires."""
         self._create_request_fifo()
         self._prefork()
+        self._install_signal_handlers()
 
         # Open the read end first (non-blocking) so that opening the write end
         # does not deadlock waiting for a reader. The write handle is then kept
@@ -302,8 +371,12 @@ class PsycloneServer:
 
         buffer = b""
         last_activity = time.monotonic()
-        while True:
-            ready, _, _ = select.select([reader_fd], [], [], 1.0)
+        while not self._stopping:
+            try:
+                ready, _, _ = select.select([reader_fd], [], [], 1.0)
+            except InterruptedError:
+                # A signal interrupted the wait; re-check the stop flag.
+                continue
             if ready:
                 chunk = os.read(reader_fd, 65536)
                 if chunk:
@@ -316,6 +389,10 @@ class PsycloneServer:
                         if job_dir:
                             self._queue.put(job_dir)
                             last_activity = time.monotonic()
+            # Shut down promptly if the owning build has gone away, otherwise
+            # fall back to the inactivity timeout.
+            if not self._owner_alive():
+                return
             if time.monotonic() - last_activity > self._idle_timeout:
                 return
 
@@ -326,7 +403,8 @@ def main():
     workers = os.environ.get("PSYCLONE_WORKERS") or os.cpu_count() or 1
     idle_timeout = os.environ.get(
         "PSYCLONE_SERVER_IDLE_TIMEOUT", DEFAULT_IDLE_TIMEOUT)
-    server = PsycloneServer(server_dir, workers, idle_timeout)
+    owner_pid = os.environ.get("PSYCLONE_OWNER_PID")
+    server = PsycloneServer(server_dir, workers, idle_timeout, owner_pid)
     server.serve()
 
 

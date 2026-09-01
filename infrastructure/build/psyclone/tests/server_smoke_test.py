@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -172,7 +173,52 @@ def test_server_matches_direct_and_isolates_state():
         shutil.rmtree(workspace, ignore_errors=True)
 
 
+def test_server_shuts_down_when_owner_dies():
+    """The server exits promptly (not after its idle timeout) once the owning
+    build process is killed, so a manually interrupted build leaves no
+    orphaned servers behind."""
+    server_module = os.path.join(PSYCLONE_DIR, "psyclone_server.py")
+    workspace = tempfile.mkdtemp(prefix="psyclone-owner-")
+    try:
+        # A stand-in for the top-level make process.
+        owner = subprocess.Popen(["sleep", "300"])
+        env = dict(os.environ,
+                   PSYCLONE_SERVER_DIR=workspace,
+                   PSYCLONE_WORKERS="2",
+                   # A long idle timeout so that only owner-death can stop the
+                   # server quickly.
+                   PSYCLONE_SERVER_IDLE_TIMEOUT="300",
+                   PSYCLONE_OWNER_PID=str(owner.pid))
+        server = subprocess.Popen([sys.executable, server_module], env=env)
+        try:
+            ready = os.path.join(workspace, "server.ready")
+            for _ in range(120):
+                if os.path.exists(ready):
+                    break
+                time.sleep(0.25)
+            assert os.path.exists(ready), "server never became ready"
+
+            # Kill the owner; the server should follow within a few seconds.
+            owner.kill()
+            owner.wait()
+            for _ in range(100):
+                if server.poll() is not None:
+                    break
+                time.sleep(0.1)
+            assert server.poll() is not None, (
+                "server did not shut down after its owner was killed")
+            assert not os.path.exists(ready), "server did not clean up"
+        finally:
+            if server.poll() is None:
+                server.kill()
+            if owner.poll() is None:
+                owner.kill()
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
+
+
 if __name__ == "__main__":
     test_server_matches_direct_and_isolates_state()
+    test_server_shuts_down_when_owner_dies()
     print("PSyclone server smoke test passed")
 

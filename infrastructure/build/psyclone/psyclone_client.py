@@ -36,6 +36,7 @@ import time
 ENV_SERVER_DIR = "PSYCLONE_SERVER_DIR"
 ENV_WORKERS = "PSYCLONE_WORKERS"
 ENV_DISABLE = "PSYCLONE_SERVER_DISABLE"
+ENV_OWNER_PID = "PSYCLONE_OWNER_PID"
 
 # How long to wait for the server to become ready, and for a job result.
 SERVER_START_TIMEOUT = 60.0
@@ -116,6 +117,15 @@ def _start_server(server_dir):
 
         env = dict(os.environ)
         env[ENV_SERVER_DIR] = server_dir
+        # Tie the server's lifetime to the owning build. The process group of
+        # this client is led by the top-level make process, so the server can
+        # watch that pid and exit promptly if the build is killed (by SIGINT,
+        # SIGTERM or SIGKILL) rather than lingering until its idle timeout.
+        if ENV_OWNER_PID not in env:
+            try:
+                env[ENV_OWNER_PID] = str(os.getpgrp())
+            except OSError:
+                pass
 
         pid_file = os.path.join(server_dir, "server.pid")
         # Launch the server fully detached so it outlives this make recipe.
