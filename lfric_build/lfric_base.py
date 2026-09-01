@@ -263,8 +263,11 @@ class LFRicBase(FabBase):
                     dst_label='psyclone_config')
 
         # Copy the optimisation scripts into a separate directory
-        grab_folder(self.config, src=self.app_dir / 'optimisation',
-                    dst_label='optimisation')
+        opt_dir = self.app_dir / 'optimisation'
+        if opt_dir.exists():
+            # Some apps (mesh tools) don't have optimisations
+            grab_folder(self.config, src=opt_dir,
+                        dst_label='optimisation')
 
     def find_source_files_step(
             self,

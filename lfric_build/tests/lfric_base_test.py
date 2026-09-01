@@ -426,10 +426,6 @@ def test_grab_files_step(monkeypatch) -> None:
         mock.call(lfric_base.config,
                   src=mock_core/'etc',
                   dst_label='psyclone_config'),
-        # PSyclone optimisation scripts
-        mock.call(lfric_base.config,
-                  src=Path('optimisation'),
-                  dst_label='optimisation')
     ]
 
     # Check both number of calls and call arguments
