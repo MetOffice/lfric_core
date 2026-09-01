@@ -9,7 +9,7 @@ module convert_phys_to_hdiv_kernel_mod_test
 
   use constants_mod, only: i_def, r_def, rmdi
 
-  use base_mesh_config_mod,      only: geometry_planar, &
+  use sci_mesh_enums_mod,        only: geometry_planar, &
                                        topology_fully_periodic
   use finite_element_config_mod, only: coord_system_xyz
 

@@ -34,7 +34,7 @@ module sci_compute_sample_u_ops_kernel_mod
   use coord_transform_mod,     only : sphere2cart_vector
   use reference_element_mod,   only : W, S, N, E, T, B
 
-  use base_mesh_config_mod, only: geometry_spherical, geometry_planar
+  use sci_mesh_enums_mod, only: geometry_spherical, geometry_planar
 
   implicit none
 

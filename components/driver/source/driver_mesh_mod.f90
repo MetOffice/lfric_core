@@ -54,7 +54,7 @@ module driver_mesh_mod
 
   ! Configuration modules
   use finite_element_config_mod, only: cellshape_quadrilateral
-  use base_mesh_config_mod,      only: geometry_spherical, &
+  use sci_mesh_enums_mod,        only: geometry_spherical, &
                                        topology_fully_periodic
 
   implicit none

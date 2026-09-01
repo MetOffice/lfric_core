@@ -10,10 +10,9 @@ module chi_transform_mod_test
 
   use constants_mod, only : i_def, r_def, str_long, PI, rmdi
 
-  use base_mesh_config_mod, only: geometry_spherical,      &
-                                  geometry_planar,         &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
+  use sci_mesh_enums_mod, only: geometry_spherical,      &
+                                topology_fully_periodic, &
+                                topology_non_periodic
 
   use finite_element_config_mod, only: coord_system_native, &
                                        coord_system_xyz

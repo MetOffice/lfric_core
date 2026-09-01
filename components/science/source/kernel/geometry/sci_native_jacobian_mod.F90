@@ -29,7 +29,7 @@ module sci_native_jacobian_mod
 
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_system_native
-  use base_mesh_config_mod,      only: geometry_planar, &
+  use sci_mesh_enums_mod,        only: geometry_planar, &
                                        topology_fully_periodic
 
   implicit none
