@@ -34,3 +34,4 @@
 | ukmo-juan-castillo  | Juan M. Castillo    | Met Office            | 2026-03-24 |
 | mcdalvi          | Mohit Dalvi            | Met Office            | 2026-06-19 |
 | cjohnson-pi      | Christine Johnson      | Met Office            | 2026-06-29 |
+| DrTVockerodtMO   | Terence Vockerodt      | Met Office            | 2026-08-17 |

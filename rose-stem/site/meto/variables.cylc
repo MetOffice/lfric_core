@@ -83,7 +83,7 @@
 {% else %}
     {% do site_vars.update({"node_type": "milan"}) %}
     {% do site_vars.update({"node_cores": 128 }) %}
-    {% do site_vars.update({"node_mem": 238}) %}
+    {% do site_vars.update({"node_mem": 237}) %}
 {% endif %}
 
 {% include "site/meto/common/default_directives.cylc" %}
