@@ -34,8 +34,9 @@
 {% set restart_stem_name = checkpoint_dir~"/restart_"~task_family~"-" %}
 
 {# Set the pre-script command for canned tests #}
-{% set canned_prescript = "cp -r $SOURCE_DIRECTORY/"~task_values["example_dir"]~"/* "~
-                          "$CYLC_TASK_WORK_DIR" %}
+{# Copy the source, dereferencing symbolic links #}
+{% set canned_prescript = "cp -rL $SOURCE_DIRECTORY/"~task_values["example_dir"]~"/* "~
+                          "$CYLC_TASK_WORK_DIR  "%}
 
 {# Set the post script command - should be a list of strings #}
 {% set post_script_commands = [
@@ -143,6 +144,7 @@
             CHECKPOINT_STEM_FILE  = {{restart_stem_name}}
             CANNED_PRESCRIPT      = {{canned_prescript}}
             XIOS_SERVER_MODE      = {{task_values["xios_server_mode"]}}
+            XIOS_SERVER_MODE_XML  = {{(task_values["xios_server_mode"]).__str__().lower() }}
             XIOS_SERVER_RANKS     = {{task_values["xios_server_ranks"]}}
             xios_nodes            = {{task_values["xios_nodes"]}}
             mpi_parts_xios        = {{task_values["mpi_parts_xios"]}}
