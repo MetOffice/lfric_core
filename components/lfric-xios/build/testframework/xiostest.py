@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 ##############################################################################
-# (C) Crown copyright 2024 Met Office. All rights reserved.
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
 ##############################################################################
+"""
+Test framework for LFRic-XIOS integration tests. Provides a base class which
+sets up the test environment and provides utility functions for generating
+input data, generating configuration files, checking output data against KGO
+files, and plotting input and output data for visual comparison.
+"""
 from pathlib import Path
 import os
 import subprocess
@@ -11,9 +17,7 @@ import sys
 import shutil
 from typing import List, Optional
 
-from testframework import MpiTest
-import xarray as xr
-import matplotlib.pyplot as plt
+from testframework import MpiTest # pylint: disable=no-name-in-module
 
 
 ##############################################################################
@@ -22,7 +26,9 @@ class LFRicXiosTest(MpiTest):
     Base for LFRic-XIOS integration tests.
     """
 
-    def __init__(self, command=sys.argv[1], processes:int=1, iodef_file: Optional[Path]="iodef.xml"):
+    def __init__( self, command=sys.argv[1],
+                        processes:int=1,
+                        iodef_file: Optional[Path]="iodef.xml" ):
 
         self.iodef_file = Path(iodef_file)
 
@@ -60,10 +66,10 @@ class LFRicXiosTest(MpiTest):
             ['ncgen', '-k', 'nc4', '-o', f'{dest_path}', f'{source_path }'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            check=False,
             )
         if proc.returncode != 0:
-            raise Exception("Test data generation failed:\n" + f"{proc.stderr}")
-
+            raise Exception("Test data generation failed:\n" + f"{proc.stderr}\n")
 
     def gen_config(self, config_source: Path, config_out: Path, new_config: dict):
         """
@@ -71,19 +77,19 @@ class LFRicXiosTest(MpiTest):
         in resources/configs directory and generates dest file in test working directory.
         """
         filename = Path(self.resources_dir, 'configs', config_source)
-        config = filename.read_text().splitlines()
+        config = filename.read_text(encoding="utf-8").splitlines()
         for key in new_config.keys():
-            for i in range(len(config)):
-                if key in config[i]:
-                    if type(new_config[key]) == str:
+            for i, line in enumerate(config):
+                if key in line:
+                    if isinstance(new_config[key], str):
                         config[i] = f"  {key}='{new_config[key]}'"
                     else:
                         config[i] = f"  {key}={new_config[key]}"
 
-        Path(self.test_working_dir, config_out).write_text('\n'.join(config) + '\n')
+        Path(self.test_working_dir, config_out).write_text('\n'.join(config) + '\n',
+                                                           encoding="utf-8")
 
-
-    def performTest(self):
+    def performTest(self): # pylint: disable=invalid-name ; This needs to be fixed in the base class
         """
         Removes any old log files and runs the executable.
         """
@@ -94,69 +100,45 @@ class LFRicXiosTest(MpiTest):
 
         return super().performTest()
 
-
-    def nc_kgo_check(self, output: Path, kgo: Path):
+    @classmethod
+    def nc_kgo_check(cls, output: Path, kgo: Path):
         """
         Compare output files with nccmp.
         """
         proc = subprocess.run(
-            ['nccmp', '-Fdm', '--exclude=Mesh2d', '--tolerance=0.000001', f'{output}', f'{kgo}'],
+            ['nccmp',
+             '-Fdm',
+             '--exclude=Mesh2d,Mesh2d_face_edges,Mesh2d_face_links', # We use a unit test mesh in the integration tests, so the values for these connectivity fields are incorrect. pylint: disable=line-too-long
+             '--tolerance=0.000001',
+             f'{output}',
+             f'{kgo}'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            check=False,
             )
 
-        return proc.returncode, proc.stderr
-    
-    def nc_data_match(self, in_file: Path, out_file: Path, varname: str):
-        """
-        Contextually compare output data.
-        """
-        ds_in = xr.open_dataset(in_file, engine='netcdf4', decode_timedelta=False)
-        ds_out = xr.open_dataset(out_file, engine='netcdf4', decode_timedelta=False)
+        kgo_check_okay = (proc.returncode == 0)
+        if not kgo_check_okay:
+            print(f"{proc.stderr}\n")
 
-        comparison_window = [max(min(ds_out['time'].values), min(ds_in['time'].values)),
-                            min(max(ds_out['time'].values), max(ds_in['time'].values))]
-
-        ds_in_comp = ds_in.sel(time=slice(comparison_window[0], comparison_window[1]))
-        ds_out_comp = ds_out.sel(time=slice(comparison_window[0], comparison_window[1]))
-
-        if ds_in_comp['time'].size == 0:
-            return False
-        else:
-            result = [(ds_in_comp['time'] == ds_out_comp['time']).values.all(),
-                    (ds_in_comp[varname] == ds_out_comp[varname]).values.all()]
-            return all(result)
+        return kgo_check_okay
 
     def plot_output(self, in_file: Path, out_file: Path, varname: str):
         """
-        Visually compare input and output data.
+        Visually compare input and output data. If the environment variable
+        PLOT_TEST_OUTPUT is not set as True, No plot will be generated. This
+        routine depends on the matplotlib package.
         """
 
-        def get_ts_data(file_path, field_id):
+        if os.environ.get('PLOT_TEST_OUTPUT', False):
+            sys.path.append(str((Path(__file__).parent.parent.parent /
+                                 "integration-test" / "tools")))
+            from plot_output import plot_test_output # pylint: disable=import-outside-toplevel, import-error
 
-            ds = xr.open_dataset(file_path, engine='netcdf4', decode_timedelta=False)
-            ts = ds[field_id].mean(ds[field_id].dims[1::])
-            time = ds[field_id].coords['time']
+            plot_path = self.test_working_dir / f"{type(self).__name__}.png"
+            plot_test_output(in_file, out_file, varname, plot_path)
 
-            return ts, time
-
-        input_ts, input_time = get_ts_data(in_file, varname)
-        output_ts, output_time = get_ts_data(out_file, varname)
-
-        plt.rcParams["font.family"] = "serif"
-        _, ax = plt.subplots(figsize=([10.8, 4.8]))
-        ax.scatter(output_time, output_ts, c='C0', s=50)
-        ax.plot(output_time, output_ts, linestyle='--', lw=2, label="Model output data")
-        ax.scatter(input_time, input_ts, c='C3', marker='s', s=100, label="Input data")
-
-        ax.set_xlabel("Date/Time")
-        ax.set_ylabel("Mean model data")
-
-        plt.legend(frameon=False)
-        plt.savefig(f"{self.test_working_dir}/{type(self).__name__}.png", bbox_inches="tight")
-        plt.close()
-
-    def post_execution(self, return_code):
+    def post_execution(self, return_code: int): # pylint: disable=unused-argument
         """
         Cache XIOS logging output for analysis.
         """
@@ -169,7 +151,7 @@ class LFRicXiosTest(MpiTest):
         os.chdir(self.test_top_level)
 
 
-class XiosOutput:
+class XiosOutput: # pylint: disable=too-few-public-methods
     """
     Simple class to hold XIOS output log information
     """
@@ -177,8 +159,7 @@ class XiosOutput:
     def __init__(self, filename):
         self.path: Path = Path(filename)
 
-        with open(self.path, "rt") as handle:
-            self.contents = handle.read()
+        self.contents = self.path.read_text(encoding="utf-8")
 
     def exists(self):
         """

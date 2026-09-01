@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##############################################################################
-# (C) Crown copyright 2024 Met Office. All rights reserved.
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
 ##############################################################################
@@ -9,12 +9,12 @@ Simple test which initialises a minimal `lfric_xios_context_type` object and
 then destroys it. This will also create an attached XIOS context.
 """
 
-from testframework import TestEngine, TestFailed
-from xiostest import LFRicXiosTest
 import sys
+from testframework import TestEngine, TestFailed # pylint: disable=import-error
+from xiostest import LFRicXiosTest # pylint: disable=import-error
 
 ###############################################################################
-class LfricXiosContextTest(LFRicXiosTest):
+class LfricXiosContextTest(LFRicXiosTest): # pylint: disable=R0903
     """
     Tests the lfric_xios_context_type by creating and destroying it
     """
@@ -23,7 +23,7 @@ class LfricXiosContextTest(LFRicXiosTest):
         super().__init__(command=[sys.argv[1], "context.nml"], processes=1)
         self.gen_config( "context.nml", "context.nml", {} )
 
-    def test(self, returncode: int, out: str, err: str):
+    def test(self, returncode: int, out: str, err: str): # pylint: disable=unused-argument
         """
         Test the output of the context test
         """
