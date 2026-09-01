@@ -51,12 +51,22 @@ module driver_io_mod
     !> @brief Callback interface for bespoke IO configuration
     !> @param[in] config    configuration to be passed in at call site
     !> @param[in] clock     Clock to be passed in at call site
-    subroutine io_configuration_callback(config,clock)
+    !> @param[in] legacy_read_intent The intention to read a legacy chkpnt
+    !>                               (may be overridden for some fields)
+    !> @param[in] legacy_read_intent The intention to write a legacy chkpnt
+    !>                               (may be overridden for some fields)
+    subroutine io_configuration_callback( config,             &
+                                          clock,              &
+                                          legacy_read_intent, &
+                                          legacy_write_intent )
       use config_mod, only: config_type
       use clock_mod, only : clock_type
+      use constants_mod, only : l_def
       implicit none
       type(config_type), intent(in) :: config
       class(clock_type), intent(in) :: clock
+      logical(l_def),    intent(in) :: legacy_read_intent
+      logical(l_def),    intent(in) :: legacy_write_intent
     end subroutine io_configuration_callback
   end interface
 
@@ -109,6 +119,9 @@ contains
 
     logical(l_def) :: use_xios_io
 
+    logical(l_def), pointer :: legacy_read_intent
+    logical(l_def), pointer :: legacy_write_intent
+
     use_xios_io = modeldb%config%io%use_xios_io()
 
     ! Allocate IO context type based on model configuration
@@ -125,8 +138,17 @@ contains
 
       call modeldb%io_contexts%get_io_context(context_name, context)
       call context%set_current()
+
+      call modeldb%values%get_value( 'legacy_read_chkpnt_intent', &
+                                     legacy_read_intent )
+      call modeldb%values%get_value( 'legacy_write_chkpnt_intent', &
+                                     legacy_write_intent )
+
       if (present(before_close)) then
-        call before_close(modeldb%config, modeldb%clock)
+        call before_close(modeldb%config, &
+                          modeldb%clock, &
+                          legacy_read_intent, &
+                          legacy_write_intent)
       end if
 
       call context%close_context_definition()

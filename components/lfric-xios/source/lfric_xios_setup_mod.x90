@@ -266,8 +266,8 @@ contains
 
     ! Checkpoint domain parameters
     character(len=str_def)            :: domain_name, domain_fs_name
-    integer(kind=i_def),    parameter :: domain_function_spaces(5) &
-                                          = (/W0, W1, W2, W3, Wtheta/)
+    integer(kind=i_def),    parameter :: domain_function_spaces(7) &
+                                          = (/W0, W1, W2, W3, Wtheta, W2H, W2V/)
     integer(kind=i_def) :: fs_index
 
     ! Variables needed to compute output domain coordinates in lat-long
@@ -288,8 +288,9 @@ contains
     type(function_space_type), pointer :: output_field_fs   => null()
     type(function_space_type), pointer :: w2h_fs   => null()
 
-    ! Identify discontinuous spaces
-    integer(kind=i_def) :: use_i_index(2) = (/ W3, Wtheta /)
+
+    ! Function spaces that can be written as layers of data
+    integer(kind=i_def) :: use_i_index(4) = (/ W3, Wtheta, W2H, W2V /)
 
     ! Factor to convert coords from radians to degrees if needed
     ! set as 1.0 for planar mesh
