@@ -40,7 +40,7 @@ module sci_mapping_constants_mod
   use timing_mod,                        only: start_timing, stop_timing, &
                                                tik, LPROF
 
-  use sci_mesh_enums, only: get_mesh_enums
+  use sci_mesh_enums_mod, only: get_mesh_enums
 
   ! Object types
   use config_mod, only: config_type

@@ -24,7 +24,7 @@ module sci_geometric_constants_mod
   use timing_mod,                    only: start_timing, stop_timing, &
                                            tik, LPROF
 
-  use sci_mesh_enums, only: get_mesh_enums, geometry_spherical
+  use sci_mesh_enums_mod, only: get_mesh_enums, geometry_spherical
 
   ! Object types
   use config_mod,                  only: config_type
