@@ -15,6 +15,7 @@ use constants_mod,  only: i_def, r_def, str_def, str_longlong, l_def, &
                           imdi, rmdi, cmdi
 use file_mod,       only: file_mode_write
 use ugrid_file_mod, only: ugrid_file_type
+use log_mod,        only: log_event, log_level_error
 
 
 use local_mesh_map_collection_mod,  only: local_mesh_map_collection_type
@@ -133,6 +134,7 @@ type, public :: ugrid_2d_type
   class(ugrid_file_type), allocatable :: file_handler
 
   logical :: populated_with_mesh = .false.
+  logical :: file_handler_file_open = .false.
 
 contains
   procedure :: get_n_meshes
@@ -140,6 +142,9 @@ contains
   procedure :: get_dimensions
   procedure :: set_by_generator
   procedure :: set_file_handler
+  procedure :: file_handler_open
+  procedure :: file_handler_close
+  procedure :: file_handler_read_map
   procedure :: set_from_file_read
   procedure :: write_to_file
   procedure :: append_to_file
@@ -258,9 +263,7 @@ subroutine get_mesh_names(self, filename, mesh_names)
   character(len=*),     intent(in)    :: filename
   character(len=*),     intent(out)   :: mesh_names(:)
 
-  call self%file_handler%file_open(trim(filename))
   call self%file_handler%get_mesh_names(mesh_names)
-  call self%file_handler%file_close()
 
   return
 end subroutine get_mesh_names
@@ -279,9 +282,7 @@ subroutine get_n_meshes(self, filename, n_meshes)
   character(len=*),     intent(in)    :: filename
   integer(i_def),       intent(out)   :: n_meshes
 
-  call self%file_handler%file_open(trim(filename))
   n_meshes = self%file_handler%get_n_meshes()
-  call self%file_handler%file_close()
 
   return
 end subroutine get_n_meshes
@@ -484,6 +485,96 @@ subroutine set_file_handler(self, file_handler)
 end subroutine set_file_handler
 
 !-------------------------------------------------------------------------------
+!> @brief   Open the filename file using the file_handler
+!> @details Receives a filename and opens the filename using the
+!>          file_handler, which must be already set.
+!>
+!> @param[in] filename The filename to open.
+!-------------------------------------------------------------------------------
+subroutine file_handler_open(self, filename)
+  implicit none
+
+  class(ugrid_2d_type), intent(inout) :: self
+  character(len=*),     intent(in) :: filename
+
+  if ( .not. allocated (self%file_handler) ) then
+    call log_event('ugrid_2d file handler not set on open', log_level_error)
+  end if
+
+  if ( .not. self%file_handler_file_open ) then
+    call self%file_handler%file_open(trim(filename))
+    self%file_handler_file_open = .true.
+  end if
+  return
+end subroutine file_handler_open
+
+!-------------------------------------------------------------------------------
+!> @brief   Closes the file using the file_handler
+!> @details Closes the file using the provided
+!>          file_handler, which must be already set.
+!>
+!-------------------------------------------------------------------------------
+subroutine file_handler_close(self)
+  implicit none
+
+  class(ugrid_2d_type), intent(inout) :: self
+
+  if ( .not. allocated (self%file_handler) ) then
+    call log_event('ugrid_2d file handler not set on close', log_level_error)
+  end if
+
+  if ( self%file_handler_file_open ) then
+    call self%file_handler%file_close()
+    self%file_handler_file_open = .false.
+  end if
+  return
+end subroutine file_handler_close
+
+!-------------------------------------------------------------------------------
+!> @brief   Call `read-map` on the file_handler.
+!> @details Wrapper to enable the ugrid_2d object's file_handler to call its
+!>          `read_map` subroutine and pass through relevant arguments.
+!>          The file_handler must be set on the object and the file open.
+!>
+!>  @param[in]      source_mesh_name    Name of the source mesh object
+!>  @param[in]      target_mesh_name    Name of the target mesh object
+!>  @param[out]     mesh_map            Intergrid mapping array which maps
+!>                                      source mesh cells to target mesh
+!>                                      cells. Allocatable integer array,
+!>                                      returned as
+!>                                      [n target cells per source x,
+!>                                       n target cells per source y,
+!>                                       n source cells]
+!-------------------------------------------------------------------------------
+subroutine file_handler_read_map( self,             &
+                                  source_mesh_name, &
+                                  target_mesh_name, &
+                                  mesh_map )
+
+  implicit none
+
+  class(ugrid_2d_type), intent(inout) :: self
+  character(str_def), intent(inout)  :: source_mesh_name
+  character(str_def), intent(inout)  :: target_mesh_name
+  integer(i_def),     intent(out), allocatable :: mesh_map(:,:,:)
+
+  if ( .not. allocated (self%file_handler) ) then
+    call log_event('ugrid_2d file handler not set on close', log_level_error)
+  end if
+
+  if ( .not. self%file_handler_file_open ) then
+    call log_event('ugrid_2d file handler file not open on read_map', &
+                    log_level_error)
+  end if
+
+  call self%file_handler%read_map(source_mesh_name, &
+                                  target_mesh_name, &
+                                  mesh_map )
+
+  return
+end subroutine file_handler_read_map
+
+!-------------------------------------------------------------------------------
 !> @brief   Reads ugrid information and populates internal arrays.
 !> @details Calls back to the file handler strategy (component) in order to
 !>          read the ugrid mesh data and populate internal arrays with data
@@ -504,11 +595,10 @@ subroutine set_from_file_read(self, mesh_name, filename)
 
   self%mesh_name = trim(mesh_name)
 
-  call self%file_handler%file_open(trim(filename))
 
   if (.not. self%file_handler%is_mesh_present(trim(mesh_name))) then
     self%populated_with_mesh = .false.
-    call self%file_handler%file_close()
+
     return
   end if
 
@@ -546,9 +636,6 @@ subroutine set_from_file_read(self, mesh_name, filename)
        self%edge_on_cell_gid,                                       &
 
        self%nmaps, self%target_mesh_names )
-
-
-  call self%file_handler%file_close()
 
   self%populated_with_mesh = .true.
 

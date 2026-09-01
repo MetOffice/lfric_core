@@ -13,6 +13,9 @@ module ugrid_mesh_data_mod_test
   use lfric_mpi_mod,       only: global_mpi, &
                                  lfric_comm_type
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   use pfunit
 
@@ -101,13 +104,20 @@ contains
 
     character(str_def)      :: coord_units_xy(2)
     character(str_longlong) :: constructor_inputs
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     !-------------------------------------
     ! Test ugrid_mesh_data object
     !-------------------------------------
     mesh_name_in = 'unit_test'
     filename = 'data/mesh_BiP8x8-750x250.nc'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name_in)
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name_in, ugrid_2d)
 
     call ugrid_mesh_data%get_data(                     &
                              mesh_name_out,            &
@@ -187,6 +197,8 @@ contains
     @assertEqual( [128_i_def, 24_i_def, 121_i_def, 120_i_def], edge_on_face_2d(:,64) )
 
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
 
     if ( allocated(target_global_mesh_names) ) deallocate( target_global_mesh_names )
 
@@ -450,6 +462,10 @@ contains
       271,272,273,231,     273,274,275,233,     275,276,277,235,    277,278,279,237, &
       279,280,281,239 ], (/4, kgo_n_faces/) )
 
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
+
     kgo_domain_extents(:,1)  = [ -4.0_r_def, -4.0_r_def]
     kgo_domain_extents(:,2)  = [ 16.0_r_def, -4.0_r_def]
     kgo_domain_extents(:,3)  = [ 16.0_r_def, 16.0_r_def]
@@ -457,7 +473,11 @@ contains
 
     mesh_name_in = 'SQ20'
     filename = 'data/dev_LAM_locals_20-24.nc'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name_in)
+
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name_in, ugrid_2d)
 
     call ugrid_mesh_data%get_data(                     &
                              mesh_name_out,            &
@@ -561,6 +581,8 @@ contains
     @assertEqual( kgo_edge_on_cell_gid, edge_on_cell_gid )
 
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
 
   end subroutine test_ugrid_local_mesh_data
 

@@ -23,6 +23,9 @@ module mesh_map_mod_test
                                         partitioner_cubedsphere_serial
   use ugrid_mesh_data_mod,        only: ugrid_mesh_data_type
   use panel_decomposition_mod,    only: custom_decomposition_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   use pfunit
 
@@ -163,6 +166,13 @@ contains
     procedure (partitioner_interface), pointer :: partitioner_ptr => null()
     type(custom_decomposition_type) :: decomposition
     type(lfric_comm_type) :: lfric_comm
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
+
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
@@ -180,7 +190,7 @@ contains
 
     ! Get coarse mesh
     name = 'C4'
-    call ugrid_mesh_data%read_from_file(trim(filename), name)
+    call ugrid_mesh_data%read_from_file( trim(filename), name, ugrid_2d )
     coarse_global_mesh = global_mesh_type( ugrid_mesh_data )
     coarse_global_mesh_ptr => coarse_global_mesh
     call ugrid_mesh_data%clear()
@@ -201,10 +211,12 @@ contains
     this%coarse_mesh = mesh_type( coarse_local_mesh_ptr, extrusion )
     ! Get fine mesh
     name = 'C8'
-    call ugrid_mesh_data%read_from_file(trim(filename), name)
+    call ugrid_mesh_data%read_from_file( trim(filename), name, ugrid_2d )
     fine_global_mesh = global_mesh_type( ugrid_mesh_data )
     fine_global_mesh_ptr => fine_global_mesh
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
 
     fine_partition   = partition_type( fine_global_mesh_ptr,   &
                                        partitioner_ptr,        &
