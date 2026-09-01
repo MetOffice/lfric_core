@@ -21,6 +21,12 @@ PSYCLONE_PSYKAL_EXTRAS ?= -l all
 # repeated cost of loading the Python libraries from disk. It is a drop-in
 # replacement for the "psyclone" binary and falls back to it automatically if
 # the server is unavailable. Override PSYCLONE=psyclone to bypass the server.
+#
+# The server's lifetime is pinned to the owning make process: lfric.mk exports
+# PSYCLONE_OWNER_PID (the pid of the top-level make) and the server exits as
+# soon as that process does, so no server survives the build that started it.
+# Should that variable be unset the client determines the owner itself, by
+# finding the outermost make process in its own ancestry.
 PSYCLONE ?= $(LFRIC_BUILD)/psyclone/psyclone_client.py
 #
 # Number of pre-forked PSyclone worker processes. Sized to the build

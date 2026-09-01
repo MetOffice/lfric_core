@@ -29,11 +29,13 @@ Protocol (per job)
   the returned code.
 
 The server shuts itself down after ``PSYCLONE_SERVER_IDLE_TIMEOUT`` seconds
-without work, so no explicit stop step is required from the build. It also
-watches the owning build process (``PSYCLONE_OWNER_PID``, the top-level make
-process group) and exits promptly if that process disappears, so manually
-killing the build - whether with SIGINT, SIGTERM or SIGKILL - never leaves an
-orphaned server running.
+without work, so no explicit stop step is required from the build. More
+importantly its lifetime is *pinned to the owning make process*
+(``PSYCLONE_OWNER_PID``/``PSYCLONE_OWNER_START``, resolved by the client): the
+dispatch loop polls that process once a second and exits as soon as it goes
+away. A build that finishes normally therefore takes its server with it, and
+one that is killed manually - with SIGINT, SIGTERM or SIGKILL, at any level of
+recursive make - never leaves an orphaned server behind.
 
 State isolation
 ---------------
@@ -52,12 +54,19 @@ leak from one algorithm file to the next:
 
 import json
 import os
+import shutil
 import signal
 import sys
 import time
 import traceback
 from multiprocessing import Process, Queue
 from queue import Empty
+
+try:
+    import psyclone_procs
+except ImportError:  # pragma: no cover - executed from an unusual sys.path
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import psyclone_procs
 
 
 # Sentinel placed on the work queue to ask a worker to exit.
@@ -233,18 +242,26 @@ class PsycloneServer:
     :param str server_dir: directory holding the request FIFO and job dirs.
     :param int workers: number of worker processes to pre-fork.
     :param float idle_timeout: seconds of inactivity before shutting down.
-    :param owner_pid: pid of the owning build process (typically the top-level
-        make process group leader). When this process disappears the server
-        shuts down promptly, so that manually killing the build (with SIGINT,
-        SIGTERM or even SIGKILL) does not leave orphaned servers behind.
+    :param owner_pid: pid of the owning make process. When it disappears the
+        server shuts down promptly, so that a finished build - or one killed
+        manually with SIGINT, SIGTERM or even SIGKILL - leaves no orphaned
+        servers behind.
     :type owner_pid: int or None
+    :param owner_start: the owner's process start time, recorded when it was
+        resolved, used to detect pid reuse.
+    :type owner_start: str or None
+    :param bool remove_dir: True if ``server_dir`` was created for this build
+        alone and so should be deleted on shutdown.
     """
 
-    def __init__(self, server_dir, workers, idle_timeout, owner_pid=None):
+    def __init__(self, server_dir, workers, idle_timeout, owner_pid=None,
+                 owner_start=None, remove_dir=False):
         self._server_dir = server_dir
         self._workers = max(1, int(workers))
         self._idle_timeout = float(idle_timeout)
         self._owner_pid = int(owner_pid) if owner_pid else None
+        self._owner_start = owner_start or None
+        self._remove_dir = remove_dir
         self._request_fifo = os.path.join(server_dir, "request.fifo")
         self._pid_file = os.path.join(server_dir, "server.pid")
         self._ready_file = os.path.join(server_dir, "server.ready")
@@ -274,35 +291,17 @@ class PsycloneServer:
 
     def _owner_alive(self):
         """
-        Return True if the owning build process is still running.
+        Return True if the owning make process is still running.
 
         When no owner was supplied the server relies solely on the idle
         timeout, so it is reported as alive. A process that has become a
         zombie (killed but not yet reaped by its parent) is treated as dead,
-        so the server does not linger during that window.
+        so the server does not linger during that window, as is a pid that has
+        since been reused by an unrelated process.
+
+        :rtype: bool
         """
-        if self._owner_pid is None:
-            return True
-        try:
-            os.kill(self._owner_pid, 0)
-        except ProcessLookupError:
-            return False
-        except PermissionError:
-            # Process exists but is owned by someone else - still alive.
-            return True
-        # The pid is in the process table; treat a zombie as dead.
-        try:
-            stat_path = f"/proc/{self._owner_pid}/stat"
-            with open(stat_path, encoding="utf8") as stat:
-                # Format: "pid (comm) state ...". The comm field may itself
-                # contain spaces and parentheses, so split on the last ") ".
-                state = stat.read().rsplit(") ", 1)[1].split(None, 1)[0]
-            if state == "Z":
-                return False
-        except (OSError, IndexError):
-            # No procfs (non-Linux) or transient read error - assume alive.
-            pass
-        return True
+        return psyclone_procs.owner_alive(self._owner_pid, self._owner_start)
 
     def _install_signal_handlers(self):
         """Break the dispatch loop cleanly on termination signals."""
@@ -342,6 +341,11 @@ class PsycloneServer:
             self._queue.cancel_join_thread()
         except Exception:  # pylint: disable=broad-except
             pass
+
+        # A directory created for this build alone goes with it, leaving no
+        # trace of the server once make has finished.
+        if self._remove_dir:
+            shutil.rmtree(self._server_dir, ignore_errors=True)
 
     def serve(self):
         """Run the dispatch loop until the idle timeout expires."""
@@ -404,7 +408,10 @@ def main():
     idle_timeout = os.environ.get(
         "PSYCLONE_SERVER_IDLE_TIMEOUT", DEFAULT_IDLE_TIMEOUT)
     owner_pid = os.environ.get("PSYCLONE_OWNER_PID")
-    server = PsycloneServer(server_dir, workers, idle_timeout, owner_pid)
+    owner_start = os.environ.get("PSYCLONE_OWNER_START")
+    remove_dir = os.environ.get("PSYCLONE_SERVER_DIR_TRANSIENT") == "1"
+    server = PsycloneServer(server_dir, workers, idle_timeout, owner_pid,
+                            owner_start, remove_dir)
     server.serve()
 
 
