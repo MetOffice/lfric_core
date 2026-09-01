@@ -13,7 +13,7 @@ This module contains the default Fab configuration class.
 import argparse
 from typing import List
 
-from fab.api import BuildConfig, ProfileFlags
+from fab.api import BuildConfig, DependencyInfo, ProfileFlags
 
 from site_specific.default.setup_script_cray import setup_script_cray
 from site_specific.default.setup_script_gnu import setup_script_gnu
@@ -86,7 +86,7 @@ class Config:
         # initialising compilers
         self._args = args
 
-    def update_repos(self, dep_info):
+    def update_repos(self, dep_info: DependencyInfo):
         """
         This method is called by the main script to allow each site to
         replace the URLs of repos with e.g. local mirrors.
