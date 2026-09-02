@@ -84,6 +84,7 @@ contains
     character(str_def) :: mesh_name, prime_mesh_name
     integer(i_def)     :: geometry, topology, coord_system
     integer(i_def)     :: coord_space, coord_order, coord_order_nonprime
+    integer(i_def)     :: n_meshes
     real(r_def)        :: scaled_radius
 
     real(r_def) :: north_pole(2)
@@ -109,9 +110,8 @@ contains
 
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
+    n_meshes       = mesh_collection%n_meshes()
     all_mesh_names = mesh_collection%get_mesh_names()
-
-    prime_mesh_name = cmdi
 
     ! Set initial chi transformation to match input meshes.
     ! Assumption:
@@ -120,37 +120,43 @@ contains
     ! in the configuration that the application is to run on. Where this is
     ! not set, use the 1st mesh in the collection.
     !
-    if (config%namelist_exists('base_mesh')) then
-      prime_mesh_name = config%base_mesh%prime_mesh_name()
-      mesh => mesh_collection%get_mesh(prime_mesh_name)
-    else
-      mesh => mesh_collection%get_mesh(all_mesh_names(1))
-    end if
+!    if (config%namelist_exists('base_mesh')) then
+!      prime_mesh_name = config%base_mesh%prime_mesh_name()
+!      mesh => mesh_collection%get_mesh(prime_mesh_name)
+!    else
+!print*, 'n_meshes=', mesh_collection%n_meshes()
+!print*, 'all_mesh_names=', all_mesh_names
+!     mesh => mesh_collection%get_mesh(all_mesh_names(1))
+!    end if
+!     if (size(all_mesh_names) > 0) then
+!       mesh => mesh_collection%get_mesh(all_mesh_names(1))
+!     else
+!call log_event('no meshes', log_level_error)
+!     end if
 
-    if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
-
-      ! Initialise any coordinate transformations
-      local_mesh => mesh%get_local_mesh()
-      north_pole  = local_mesh%get_north_pole()
-      null_island = local_mesh%get_null_island()
-      equatorial_latitude = local_mesh%get_equatorial_latitude()
-
-      call init_chi_transforms( north_pole, null_island, equatorial_latitude )
-
-    end if
-
-    call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))
-    call panel_id_inventory%initialise(name="panel_id", &
-                                       table_len=size(all_mesh_names))
+    call chi_inventory%initialise(name="chi", table_len=n_meshes)
+    call panel_id_inventory%initialise(name="panel_id", table_len=n_meshes)
 
     ! ======================================================================== !
     ! Loop through all 3D meshes
     ! ======================================================================== !
 
-    do i = 1, size(all_mesh_names)
+    do i=1, n_meshes
 
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()
+
+      if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
+
+        ! Initialise any coordinate transformations
+        local_mesh => mesh%get_local_mesh()
+        north_pole  = local_mesh%get_north_pole()
+        null_island = local_mesh%get_null_island()
+        equatorial_latitude = local_mesh%get_equatorial_latitude()
+
+        call init_chi_transforms( north_pole, null_island, equatorial_latitude )
+
+      end if
 
       if (mesh%is_geometry_spherical()) then
         geometry = geometry_spherical
