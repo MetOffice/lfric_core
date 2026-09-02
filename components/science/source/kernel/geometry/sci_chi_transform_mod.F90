@@ -43,9 +43,10 @@ implicit none
 private
 
 ! ---------------------------------------------------------------------------- !
-! Private matrices or values that need computing once
+! Private matrices or values
 ! ---------------------------------------------------------------------------- !
-
+! Set values to reflect, unrotated, unstretched [lon,lat]
+! spherical mesh surface
 real(kind=r_def)    :: chi2xyz_rot_mat(3,3) = 0.0_r_def
 real(kind=r_def)    :: xyz2chi_rot_mat(3,3) = 0.0_r_def
 real(kind=r_def)    :: stretch_factor = 1.0_r_def
@@ -77,13 +78,15 @@ public :: get_to_stretch
 contains
 
 !------------------------------------------------------------------------------
-!> @brief  Initialise the coordinate transform information
-!!
-!> @param[in] north_pole_arg     Target north pole [lon,lat], used to generate
-!!                               the rotation matrix.
-!> @param[in] null_island_arg    Null island [lon,lat]
-!> @param[in] equator_lat_arg    Latitude of the equator of the mesh,
-!!                               allowing a stretching to be described.
+!> @brief  Initialise the coordinate transform information.
+!! @description  This routine should only be called for meshes with spherical
+!!               geometries. All arguments given as [longitude, latitude] on an
+!!               unrotated frame of reference. Stretching to the
+!!               mesh_equator_latitude is via Schmit transform.
+!> @param[in] mesh_north_pole        Target north pole location [lon,lat], used to
+!>                                   generate the rotation matrix.
+!> @param[in] mesh_null_island       Target Null island location [lon,lat]
+!> @param[in] mesh_equator_latitude  Target equator latitude [lat].
 !------------------------------------------------------------------------------
 subroutine init_chi_transforms( mesh_north_pole,  &
                                 mesh_null_island, &
@@ -113,11 +116,12 @@ subroutine init_chi_transforms( mesh_north_pole,  &
 
   ! Determine degrees of stretching / rotation.
   to_stretch = abs(equator_latitude) > EPS
-  to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS                        &
-                .or. abs(null_island(1)) > EPS .or. abs(null_island(2)) > EPS )
+  to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS .or. &
+                abs(null_island(1)) > EPS .or.               &
+                abs(null_island(2)) > EPS )
 
   ! Compute Schmidt stretch factor ---------------------------------------------
-  stretch_factor = sqrt( (1.0_r_def - sin(equator_latitude))                &
+  stretch_factor = sqrt( (1.0_r_def - sin(equator_latitude)) &
                          / (1.0_r_def + sin(equator_latitude)) )
 
   ! Compute rotation matrix ----------------------------------------------------
@@ -148,6 +152,9 @@ end subroutine init_chi_transforms
 subroutine final_chi_transforms()
 
   implicit none
+
+  ! Reset values to reflect, unrotated, unstretched [lon,lat]
+  ! spherical mesh surface
 
   to_stretch = .false.
   to_rotate = .false.

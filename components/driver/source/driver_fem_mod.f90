@@ -112,6 +112,14 @@ contains
     all_mesh_names = mesh_collection%get_mesh_names()
 
     prime_mesh_name = cmdi
+
+    ! Set initial chi transformation to match input meshes.
+    ! Assumption:
+    ! All [lat,lon] spherical surface meshes in the mesh collection will have
+    ! been rotated/stretched to the same degree. So choose the principle mesh
+    ! in the configuration that the application is to run on. Where this is
+    ! not set, use the 1st mesh in the collection.
+    !
     if (config%namelist_exists('base_mesh')) then
       prime_mesh_name = config%base_mesh%prime_mesh_name()
       mesh => mesh_collection%get_mesh(prime_mesh_name)
@@ -127,8 +135,8 @@ contains
       null_island = local_mesh%get_null_island()
       equatorial_latitude = local_mesh%get_equatorial_latitude()
 
-      call init_chi_transforms( north_pole, null_island, &
-                                equatorial_latitude )
+      call init_chi_transforms( north_pole, null_island, equatorial_latitude )
+
     end if
 
     call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))

@@ -170,11 +170,6 @@ contains
     local_mesh => mesh%get_local_mesh()
     panel_ncells = local_mesh%get_ncells_global_mesh()/local_mesh%get_num_panels_global_mesh()
 
-    ! Stretch factor and rotation valid on a spherical surface.
-    to_rotate = get_to_rotate()
-    stretch_factor = get_stretch_factor()
-    inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
-
     panel_id_proxy%data = 1.0_r_def
 
     if ( coord_system == coord_system_xyz .or. &
@@ -219,6 +214,11 @@ contains
     else if ( geometry == geometry_spherical .and. &
               topology /= topology_fully_periodic ) then
 
+      ! Allow for Rotated/Schmit stretched meshes
+      to_rotate = get_to_rotate()
+      stretch_factor = get_stretch_factor()
+      inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
+
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
         call calc_panel_id( nlayers_pid,         &
@@ -253,6 +253,11 @@ contains
 
     else if ( geometry == geometry_spherical .and. &
               topology == topology_fully_periodic ) then
+
+      ! Allow for Rotated/Schmit stretched meshes
+      to_rotate = get_to_rotate()
+      stretch_factor = get_stretch_factor()
+      inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
