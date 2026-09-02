@@ -1,0 +1,15 @@
+class ops_timer_mod::ops_timer_type {
+  -name : character <<allocatable>>
+  -start_time : real64 = 0.0
+  -pause_start : real64 = 0.0
+  -paused_time : real64 = 0.0
+  -running : logical = .false.
+  -paused : logical = .false.
+
+  +start_timer(<<in>>name: character<<len=*>>)
+  +stop_timer()
+  +pause_timer()
+  +resume_timer()
+  +elapsed(): real64
+  +<<destroy>>destructor()
+}
