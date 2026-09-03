@@ -22,7 +22,7 @@ module sci_convert_phys_to_hdiv_kernel_mod
   use fs_continuity_mod,       only : W2
   use kernel_mod,              only : kernel_type
 
-  use base_mesh_config_mod, only: geometry_spherical
+  use sci_mesh_enums_mod, only: geometry_spherical
 
   implicit none
 

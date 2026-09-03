@@ -24,6 +24,8 @@ module sci_geometric_constants_mod
   use timing_mod,                    only: start_timing, stop_timing, &
                                            tik, LPROF
 
+  use sci_mesh_enums_mod, only: get_mesh_enums, geometry_spherical
+
   ! Object types
   use config_mod,                  only: config_type
   use field_mod,                   only: field_type
@@ -35,10 +37,6 @@ module sci_geometric_constants_mod
   use local_mesh_mod,              only: local_mesh_type
 
   ! Configuration
-  use base_mesh_config_mod,      only: geometry_spherical,      &
-                                       geometry_planar,         &
-                                       topology_fully_periodic, &
-                                       topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
 
   implicit none
@@ -190,6 +188,8 @@ contains
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
 
+    call get_mesh_enums(mesh, topology=topology)
+
     f_lat = config%base_mesh%f_lat()
     f_lon = config%idealised%f_lon()
 
@@ -213,14 +213,6 @@ contains
     if (mesh%is_geometry_spherical()) then
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
-
-      if (mesh%is_topology_periodic()) then
-        topology = topology_fully_periodic
-      else if (mesh%is_topology_non_periodic()) then
-        topology = topology_non_periodic
-      else
-        call log_event('compute_latlon: Unsupported topology selection',log_level_error)
-      end if
 
       call invoke( compute_latlon_kernel_type(lat, long, chi, panel_id, &
                                               geometry_spherical,       &
@@ -782,7 +774,7 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
+    type(config_type), intent(in) :: config
     type(mesh_type),   intent(in) :: mesh
 
     type(field_type),          pointer :: dz_w3
@@ -972,8 +964,8 @@ contains
 
     implicit none
 
-    type(config_type), intent(in)          :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     integer(kind=i_def) :: local_mesh_id
 
@@ -995,11 +987,7 @@ contains
       call dA_msl_proj_inventory%initialise(name="dA_msl_proj")
     end if
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     planet_radius = config%extrusion%planet_radius()
     domain_height = config%extrusion%domain_height()
@@ -1340,11 +1328,8 @@ contains
 
     real(kind=r_def) :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry= geometry_spherical
-    else
-      geometry= geometry_planar
-    end if
+
+    call get_mesh_enums(mesh, geometry)
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1470,11 +1455,7 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()

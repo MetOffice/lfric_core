@@ -48,6 +48,9 @@ module sci_fem_constants_mod
   use dg_inc_matrix_vector_kernel_mod,    only: dg_inc_matrix_vector_kernel_type
   use sci_multiplicity_kernel_mod,        only: multiplicity_kernel_type
 
+  use sci_mesh_enums_mod, only: get_mesh_enums, &
+                                topology_fully_periodic
+
   implicit none
 
   private
@@ -210,7 +213,6 @@ contains
                                   only: compute_mass_matrix_kernel_w1_type
     use sci_edge_lump_w2_mass_matrix_kernel_mod,     &
                                   only: edge_lump_w2_mass_matrix_kernel_type
-    use base_mesh_config_mod,     only: topology, topology_fully_periodic
 
     implicit none
 
@@ -229,6 +231,11 @@ contains
     type(field_type)                      :: dummy_field
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
+
+    integer(i_def) :: topology
+
+    mesh => mesh_collection%get_mesh(mesh_id)
+    call get_mesh_enums(mesh, topology=topology)
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -266,7 +273,6 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
     constant_exists = inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
@@ -328,7 +334,6 @@ contains
                                   only: compute_mass_matrix_kernel_w1_type
     use sci_edge_lump_w2_mass_matrix_kernel_mod,     &
                                   only: edge_lump_w2_mass_matrix_kernel_type
-    use base_mesh_config_mod,     only: topology, topology_fully_periodic
 
     implicit none
 
@@ -347,6 +352,11 @@ contains
     type(field_type)                      :: dummy_field
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
+
+    integer(i_def) :: topology
+
+    mesh => mesh_collection%get_mesh(mesh_id)
+    call get_mesh_enums(mesh, topology=topology)
 
     ! Point to appropriate inventory for this space
     select case (space)
@@ -378,7 +388,6 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
     constant_exists = inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then

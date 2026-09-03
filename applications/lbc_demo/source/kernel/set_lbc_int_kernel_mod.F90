@@ -14,7 +14,7 @@ module set_lbc_int_kernel_mod
   use constants_mod, only: r_def, i_def, l_def, radians_to_degrees
   use kernel_mod,    only: kernel_type
 
-  use base_mesh_config_mod, only: geometry_spherical
+  use sci_mesh_enums_mod, only: geometry_spherical
 
   implicit none
 

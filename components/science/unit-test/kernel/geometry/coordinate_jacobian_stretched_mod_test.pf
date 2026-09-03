@@ -21,7 +21,7 @@ contains
   @before
   subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_spherical, &
+    use sci_mesh_enums_mod,        only : geometry_spherical, &
                                           topology_non_periodic
     use extrusion_config_mod,      only : method_uniform, &
                                           stretching_method_linear

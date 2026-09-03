@@ -18,11 +18,13 @@ module driver_coordinates_mod
                                  schmidt_transform_xyz,            &
                                  inverse_schmidt_transform_xyz
 
+  use sci_mesh_enums_mod,  only: get_mesh_enums,          &
+                                 geometry_planar,         &
+                                 geometry_spherical,      &
+                                 topology_fully_periodic, &
+                                 topology_non_periodic
+
   ! Configuration modules
-  use base_mesh_config_mod, only: geometry_planar,         &
-                                  geometry_spherical,      &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
   use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
@@ -64,7 +66,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
     type(field_type),  intent(inout) :: chi(3)
     type(field_type),  intent(inout) :: panel_id
 
@@ -108,17 +110,7 @@ contains
 
     nullify( map, map_pid, dof_coords, reference_element )
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
