@@ -14,7 +14,9 @@
 !!          fine(i) = mask(i) * coarse(j), for i=1,Nf
 module sci_prolong_scalar_masked_kernel_mod
 
-use constants_mod, only: i_def, r_double, r_single
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
+use constants_mod, only: i_def
 use kernel_mod,    only: kernel_type
 use argument_mod,  only: arg_type,                  &
                          GH_FIELD, GH_REAL,         &
@@ -45,8 +47,8 @@ public :: prolong_scalar_masked_kernel_code
   ! Generic interface for real32 and real64 types
   interface prolong_scalar_masked_kernel_code
     module procedure  &
-      prolong_scalar_masked_code_r_single, &
-      prolong_scalar_masked_code_r_double
+      prolong_scalar_masked_code_real32, &
+      prolong_scalar_masked_code_real64
   end interface
 
 contains
@@ -73,9 +75,9 @@ contains
   !!                                         grid for this mesh partition
   !> @param[in]     map_coarse               DoFmap of cells on the coarse grid
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
-  subroutine prolong_scalar_masked_code_r_single( nlayers,                 &
+  subroutine prolong_scalar_masked_code_real32(   nlayers,                 &
                                                   cell_map,                &
                                                   ncell_fine_per_coarse_x, &
                                                   ncell_fine_per_coarse_y, &
@@ -100,9 +102,9 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=r_single), intent(in)    :: coarse_field(undf_coarse)
-    real(kind=r_single), intent(inout) :: fine_field(undf_fine)
-    real(kind=r_single), intent(in)    :: mask_fine(undf_fine)
+    real(kind=real32),   intent(in)    :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(inout) :: fine_field(undf_fine)
+    real(kind=real32),   intent(in)    :: mask_fine(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
 
@@ -126,11 +128,11 @@ contains
       end do
     end do
 
-  end subroutine prolong_scalar_masked_code_r_single
+  end subroutine prolong_scalar_masked_code_real32
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
-  subroutine prolong_scalar_masked_code_r_double( nlayers,                 &
+  subroutine prolong_scalar_masked_code_real64(   nlayers,                 &
                                                   cell_map,                &
                                                   ncell_fine_per_coarse_x, &
                                                   ncell_fine_per_coarse_y, &
@@ -155,9 +157,9 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=r_double), intent(in)    :: coarse_field(undf_coarse)
-    real(kind=r_double), intent(inout) :: fine_field(undf_fine)
-    real(kind=r_double), intent(in)    :: mask_fine(undf_fine)
+    real(kind=real64),   intent(in)    :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(inout) :: fine_field(undf_fine)
+    real(kind=real64),   intent(in)    :: mask_fine(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
 
@@ -181,6 +183,6 @@ contains
       end do
     end do
 
-  end subroutine prolong_scalar_masked_code_r_double
+  end subroutine prolong_scalar_masked_code_real64
 
 end module sci_prolong_scalar_masked_kernel_mod
