@@ -1,0 +1,119 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright 2017 Met Office. All rights reserved.
+! For further details please refer to the file LICENCE which you should have
+! received as part of this distribution.
+!-----------------------------------------------------------------------------
+!> @brief Test the functionality of timer_mod
+!>
+!> @details A pFUnit test module to exercise the timer facilities.
+!>
+module ops_timer_mod_test
+
+  use pfunit
+  use lfric_mpi_mod, only : global_mpi, &
+                            lfric_comm_type
+  use sleep_mod,     only : c_sleep
+
+  implicit none
+
+  private
+
+  public set_up, tear_down
+  public test_ops_timer_pause_and_resume
+  public test_ops_timer_pause_and_stop
+  !
+  ! pFUnit depends on symbol spill
+  !
+  public MPITestMethod
+
+contains
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @before
+  subroutine set_up( this )
+
+    implicit none
+
+    class(MPITestMethod), intent(inout) :: this
+    type(lfric_comm_type) :: lfric_comm
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
+
+    ! Store the MPI communicator for later use
+    call global_mpi%initialise(lfric_comm)
+
+  end subroutine set_up
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @after
+  subroutine tear_down( this )
+
+    implicit none
+
+    class(MPITestMethod), intent(inout) :: this
+
+    ! Clear the stored MPI communicator
+    call global_mpi%finalise()
+
+  end subroutine tear_down
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_ops_timer_pause_and_resume(this)
+
+    use ops_timer_mod, only: ops_timer_type
+
+    implicit none
+
+    class(MPITestMethod), intent(inout) :: this
+
+    type(ops_timer_type) :: ops_timer
+
+    ! Timer is paused but not resumed before timeris stopped
+    call ops_timer%start_timer(name='pause_and_resume')
+    ! before pausing, sleep for 2 seconds - the elapsed time should be near to
+    ! this since there is no other work happening in this timed region.
+    call c_sleep(2)
+
+    ! Pause for 2 seconds, not timing during this
+    call ops_timer%pause_timer()
+    call c_sleep(1)
+    call ops_timer%resume_timer()
+
+    ! Call stop_timer
+    ! Have been timing for ~4s but paused for 2. Elapsed time should be ~2s
+    call ops_timer%stop_timer()
+
+    @assertTrue(ops_timer%elapsed() .lt. 2.01)
+
+  end subroutine test_ops_timer_pause_and_resume
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_ops_timer_pause_and_stop(this)
+
+    use ops_timer_mod, only: ops_timer_type
+
+    implicit none
+
+    class(MPITestMethod), intent(inout) :: this
+
+    type(ops_timer_type) :: ops_timer
+
+    ! Timer is paused but not resumed before timeris stopped
+    call ops_timer%start_timer(name='pause_and_stop')
+    ! before pausing, sleep for 2 seconds.
+    call c_sleep(2)
+
+    ! Pause for 2 seconds, not timing during this
+    call ops_timer%pause_timer()
+    call c_sleep(1)
+
+    ! Have been timing for ~4s but paused for 2. Elapsed time should be ~2s
+    ! Call stop_timer before calling resume_timer
+    call ops_timer%stop_timer()
+
+    @assertTrue(ops_timer%elapsed() .lt. 2.01)
+
+  end subroutine test_ops_timer_pause_and_stop
+
+end module ops_timer_mod_test
