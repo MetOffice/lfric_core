@@ -1,0 +1,19 @@
+# This file controls which files are being processed by PSyclone,
+# both using PSyclone's transmute ability (transformation generic
+# Fortran files), and its DSL (kernel based) capability.
+
+# This file for mesh tools specify a single PSyclone DSL phase,
+# but not using any script at all.
+
+phases:
+  # Just a single phase: running PSyclone in DSL mode
+  - dsl
+
+dsl:
+  comment: "PSylone DSL Phase"
+  api: lfric
+
+  script_dir: psykal
+
+  # Do not use any script for any file
+  no_script: \*

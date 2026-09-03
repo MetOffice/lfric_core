@@ -1,0 +1,31 @@
+# This file controls which files are being processed by PSyclone,
+# both using PSyclone's transmute ability (transformation generic
+# Fortran files), and its DSL (kernel based) capability.
+
+# First we specify the phases for PSyclone. This allows
+# any apps to run transmute and DSL steps in any order just by
+# changing (or supplying a different) PSyclone-info file.
+# In this file, we only run a single DSL phase.
+
+phases:
+  # Just a single phase: running PSyclone in DSL mode
+  - dsl
+
+dsl:
+  comment: "PSylone DSL Phase"
+  api: lfric
+
+  script_dir: psykal
+
+  # These two directives reproduce the current LFRic default PSyclone triggering:
+
+  # Run optimisation/.../global.py on all x90 files (x90 because this is
+  # the dsl section, as specified in the artefacts above)
+  global.py: \*
+
+  # This represents existing functionality: if there is a file-specific .py
+  # file, use it. The specification of '*' does not trigger an error
+  # if there is no file_specific script (while explicitly putting a name
+  # in the file list will trigger an error if the corresponding PSyclone
+  # script does not exist. This way, errors are caught early).
+  file_specific: \*
