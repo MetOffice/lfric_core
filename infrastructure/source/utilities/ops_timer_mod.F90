@@ -11,10 +11,13 @@
 !>
 module ops_timer_mod
 
-  use iso_fortran_env, only: real64, int64, output_unit
-#ifndef NO_MPI
+  use constants_mod, only: r_double, i_def
+
+#ifdef NO_MPI
+  ! No "use mpi" in non-mpi build
+#else
 #ifdef LEGACY_MPI
-  use mpi, only: mpi_wtime
+  use mpi,     only: mpi_wtime
 #else
   use mpi_f08, only: mpi_wtime
 #endif
@@ -26,15 +29,15 @@ module ops_timer_mod
   private
 
 #ifdef NO_MPI
-  integer(int64), save :: crate = -1_int64
+  integer(i_def), save :: crate = -1_i_def
 #endif
 
   type, public :: ops_timer_type
      private
      character(:), allocatable :: name
-     real(real64)              :: start_time  = 0.0_real64
-     real(real64)              :: pause_start = 0.0_real64
-     real(real64)              :: paused_time = 0.0_real64
+     real(r_double)              :: start_time  = 0.0_r_double
+     real(r_double)              :: pause_start = 0.0_r_double
+     real(r_double)              :: paused_time = 0.0_r_double
      logical                   :: running     = .false.
      logical                   :: paused      = .false.
    contains
@@ -61,11 +64,11 @@ contains
     this%running = .true.
 
 #ifdef NO_MPI
-    if (crate <= 0_int64) call system_clock(count_rate=crate)
+    if (crate <= 0_i_def) call system_clock(count_rate=crate)
     block
-      integer(int64) :: count
+      integer(i_def) :: count
       call system_clock(count=count)
-      this%start_time = real(count, real64)
+      this%start_time = real(count, r_double)
     end block
 #else
     this%start_time = mpi_wtime()
@@ -77,13 +80,19 @@ contains
 !> @result  time_taken   The time measured by the ops_timer instance
   function elapsed(this) result(time_taken)
 
-    class(ops_timer_type), intent(in) :: this
-    real(real64) :: time_taken
+    class(ops_timer_type), intent(inout) :: this
+    real(r_double) :: time_taken
+#ifdef NO_MPI
+    integer(i_def) :: now
+#endif
+
+    ! Close off any outstanding pause before calculating the elapsed time,
+    ! otherwise the timer will not be using an accurate paused_time.
+    if (this%paused) call this%resume_timer()
 
 #ifdef NO_MPI
-    integer(int64) :: now
     call system_clock(count=now)
-    time_taken = (real(now, real64) - this%start_time) / real(crate, real64)
+    time_taken = (real(now, r_double) - this%start_time) / real(crate, r_double)
     time_taken = time_taken - this%paused_time
 #else
     time_taken = (mpi_wtime() - this%start_time) - this%paused_time
@@ -103,11 +112,11 @@ contains
     this%paused = .true.
 
 #ifdef NO_MPI
-    if (crate <= 0_int64) call system_clock(count_rate=crate)
+    if (crate <= 0_i_def) call system_clock(count_rate=crate)
     block
-      integer(int64) :: count
+      integer(i_def) :: count
       call system_clock(count=count)
-      this%pause_start = real(count, real64)
+      this%pause_start = real(count, r_double)
     end block
 #else
     this%pause_start = mpi_wtime()
@@ -120,7 +129,7 @@ contains
   subroutine resume_timer(this)
 
     class(ops_timer_type), intent(inout) :: this
-    real(real64) :: time_taken
+    real(r_double) :: time_taken
 
     if (.not. this%running) return
     if (.not. this%paused) return
@@ -128,9 +137,9 @@ contains
 
 #ifdef NO_MPI
     block
-      integer(int64) :: now
+      integer(i_def) :: now
       call system_clock(count=now)
-      time_taken = (real(now, real64) - this%pause_start) / real(crate, real64)
+      time_taken = (real(now, r_double) - this%pause_start) / real(crate, r_double)
     end block
 #else
     time_taken = mpi_wtime() - this%pause_start
@@ -148,17 +157,13 @@ contains
 
     if (.not. this%running) return
 
-    ! Close off any outstanding pause before the timer is marked as stopped,
-    ! otherwise resume_timer will short-circuit on its "running" guard.
-    if (this%paused) call this%resume_timer()
-
-    this%running = .false.
-
     ! All ops_timer output is marked by the (OPS TIMER) identifier so it can
     ! be found easily
     write(log_scratch_space,'(3A,F21.4,A)') &
-         '(OPS TIMER) Time taken for ', this%name, ' : ', this%elapsed(), ' (s)'
+    '(OPS TIMER) Time taken for ', this%name, ' : ', this%elapsed(), ' (s)'
     call log_event(log_scratch_space, log_level_always)
+
+    this%running = .false.
 
   end subroutine stop_timer
 

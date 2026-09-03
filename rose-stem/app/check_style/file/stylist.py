@@ -40,6 +40,7 @@ allowed_mpi = (
     "lfric_mpi_mod_test",
     "lfric_abort_mod",
     "lfric_mpi_mod",
+    "ops_timer_mod",
     "log_mod",
 )
 
