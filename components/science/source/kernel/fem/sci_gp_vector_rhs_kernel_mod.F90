@@ -8,8 +8,10 @@
 module sci_gp_vector_rhs_kernel_mod
 
   use argument_mod,              only : arg_type, func_type,       &
-                                        GH_FIELD, GH_REAL, GH_INC, &
-                                        GH_READ, ANY_SPACE_1,      &
+                                        GH_FIELD, GH_SCALAR,       &
+                                        GH_REAL, GH_INTEGER,       &
+                                        GH_INC, GH_READ,           &
+                                        ANY_SPACE_1,               &
                                         ANY_SPACE_2, ANY_SPACE_9,  &
                                         ANY_DISCONTINUOUS_SPACE_3, &
                                         GH_BASIS, GH_DIFF_BASIS,   &
@@ -21,11 +23,7 @@ module sci_gp_vector_rhs_kernel_mod
   use coord_transform_mod,       only : cart2sphere_vector
   use fs_continuity_mod,         only : W0, W2
   use kernel_mod,                only : kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology, &
-                                       geometry_spherical
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
+  use sci_mesh_enums_mod,        only : geometry_spherical
 
   implicit none
 
@@ -39,12 +37,16 @@ module sci_gp_vector_rhs_kernel_mod
   !>
   type, public, extends(kernel_type) :: gp_vector_rhs_kernel_type
     private
-    type(arg_type) :: meta_args(5) = (/                                     &
-         arg_type(GH_FIELD*3, GH_REAL, GH_INC,  ANY_SPACE_1),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),               &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ, W2)                         &
+    type(arg_type) :: meta_args(9) = (/                                     &
+         arg_type(GH_FIELD*3, GH_REAL, GH_INC,  ANY_SPACE_1),               & ! rhs1, rhs2, rhs3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),               & ! field
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, W2),                        & ! w2_field
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(3) = (/                                   &
          func_type(ANY_SPACE_1, GH_BASIS),                                  &
@@ -82,6 +84,10 @@ contains
 !! @param[in] chi_3     3rd coordinate field
 !! @param[in] panel_id  Field giving the ID for mesh panels.
 !! @param[in] w2_field  W2_field needed to get function space components
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] ndf       Number of degrees of freedom per cell
 !! @param[in] undf      Number of degrees of freedom
 !! @param[in] map       Dofmap for the cell at the base of the column
@@ -111,6 +117,8 @@ subroutine gp_vector_rhs_code(nlayers,                           &
                               rhs1, rhs2, rhs3, field,           &
                               chi_1, chi_2, chi_3,               &
                               panel_id, w2_field,                &
+                              geometry, topology, coord_system,  &
+                              scaled_radius,                     &
                               ndf, undf, map, basis,             &
                               ndf_f, undf_f, map_f, f_basis,     &
                               ndf_chi, undf_chi,                 &
@@ -148,6 +156,11 @@ subroutine gp_vector_rhs_code(nlayers,                           &
   real(kind=r_def), dimension(undf_pid),     intent(in) :: panel_id
   real(kind=r_def), dimension(nqp_h),        intent(in) ::  wqp_h
   real(kind=r_def), dimension(nqp_v),        intent(in) ::  wqp_v
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df2, k, qp1, qp2

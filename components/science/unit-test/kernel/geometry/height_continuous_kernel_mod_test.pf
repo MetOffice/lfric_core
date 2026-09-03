@@ -7,8 +7,7 @@
 !! This test is parametrised to test both planar and spherical geometries.
 module height_continuous_kernel_mod_test
 
-    use base_mesh_config_mod,                only : geometry_planar,           &
-                                                    geometry_spherical
+
     use constants_mod,                       only : i_def, r_def, str_long
     use funit
     use get_unit_test_w2nodal_basis_mod,     only : get_w0_w2nodal_basis
@@ -16,6 +15,8 @@ module height_continuous_kernel_mod_test
                                                     get_w2_m3x3_q3x3x3_size
     use get_unit_test_m3x3_dofmap_mod,       only : get_w0_m3x3_dofmap,        &
                                                     get_w2_m3x3_dofmap
+    use sci_mesh_enums_mod,                  only : geometry_planar,           &
+                                                    geometry_spherical
 
   implicit none
 

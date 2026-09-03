@@ -10,9 +10,9 @@ module coordinate_jacobian_alphabetaz_mod_test
   use funit
   use constants_mod, only: r_def, i_def
 
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       topology_fully_periodic
   use finite_element_config_mod, only: coord_system_native
+  use sci_mesh_enums_mod,        only: geometry_spherical, &
+                                       topology_fully_periodic
 
   implicit none
 

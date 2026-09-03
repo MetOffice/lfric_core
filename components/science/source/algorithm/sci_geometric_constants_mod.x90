@@ -33,12 +33,9 @@ module sci_geometric_constants_mod
   use inventory_by_local_mesh_mod, only: inventory_by_local_mesh_type
   use mesh_mod,                    only: mesh_type
   use local_mesh_mod,              only: local_mesh_type
+  use sci_mesh_enums_mod,          only: get_mesh_enums, geometry_spherical
 
   ! Configuration
-  use base_mesh_config_mod,      only: geometry_spherical,      &
-                                       geometry_planar,         &
-                                       topology_fully_periodic, &
-                                       topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
 
   implicit none
@@ -175,6 +172,7 @@ contains
     integer(kind=i_def)                :: k_h, k_v
     integer(tik)                       :: id
 
+    integer(kind=i_def) :: geometry
     integer(kind=i_def) :: topology
     integer(kind=i_def) :: element_order_h
     integer(kind=i_def) :: element_order_v
@@ -184,6 +182,8 @@ contains
     real(kind=r_def) :: scaled_radius
 
     if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
+
+    call get_mesh_enums(mesh, geometry, topology)
 
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
@@ -214,18 +214,9 @@ contains
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
 
-      if (mesh%is_topology_periodic()) then
-        topology = topology_fully_periodic
-      else if (mesh%is_topology_non_periodic()) then
-        topology = topology_non_periodic
-      else
-        call log_event('compute_latlon: Unsupported topology selection',log_level_error)
-      end if
-
       call invoke( compute_latlon_kernel_type(lat, long, chi, panel_id, &
-                                              geometry_spherical,       &
-                                              topology, coord_system,   &
-                                              scaled_radius) )
+                                              geometry, topology,       &
+                                              coord_system, scaled_radius) )
     else
       call invoke( setval_c(lat, f_lat), &
                    setval_c(long, f_lon) )
@@ -519,17 +510,27 @@ contains
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
 
-    integer(kind=i_def) :: element_order_h, element_order_v
-    integer(kind=i_def) :: nqp_h_exact, nqp_v_exact
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+    integer(i_def) :: nqp_h_exact
+    integer(i_def) :: nqp_v_exact
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
 
-    element_order_h = config%finite_element%element_order_h()
-    element_order_v = config%finite_element%element_order_v()
-    nqp_h_exact = config%finite_element%nqp_h_exact()
-    nqp_v_exact = config%finite_element%nqp_v_exact()
+    call get_mesh_enums(mesh, geometry, topology)
+
+    order_h       = config%finite_element%element_order_h()
+    order_v       = config%finite_element%element_order_v()
+    nqp_h_exact   = config%finite_element%nqp_h_exact()
+    nqp_v_exact   = config%finite_element%nqp_v_exact()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      detj_at_w3 => get_detj_at_w3_fv(mesh)
+    if (order_h == 0 .and. order_v == 0) then
+      detj_at_w3 => get_detj_at_w3_fv(config, mesh)
       return
     end if
 
@@ -548,10 +549,7 @@ contains
       ! Create the object as it doesn't exist yet
       if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
 
-      w3_fs => function_space_collection%get_fs( mesh,            &
-                                                 element_order_h, &
-                                                 element_order_v, &
-                                                 W3 )
+      w3_fs => function_space_collection%get_fs( mesh, order_h, order_v, W3 )
       call detj_at_w3_inventory_fe%add_field(detj_at_w3, w3_fs, mesh)
 
       ! @TODO #4487: it is inefficient to calculate this via mass matrices
@@ -565,6 +563,10 @@ contains
                                                             chi,               &
                                                             panel_id,          &
                                                             extended_mesh,     &
+                                                            geometry,          &
+                                                            topology,          &
+                                                            coord_system,      &
+                                                            scaled_radius,     &
                                                             qr),               &
                    setval_c(detj_at_w3, 0.0_r_def),                            &
                    mm_diagonal_kernel_type(detj_at_w3, mm_w3) )
@@ -578,9 +580,10 @@ contains
   end function get_detj_at_w3_fe
 
   !> @brief Returns the (finite volume) Det(J) values at W3 dof locations
-  !> @param[in]  mesh  Mesh to get the object for
+  !> @param[in] config  Application namelist configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @return The Det(J) field
-  function get_detj_at_w3_fv(mesh) result(detj_at_w3)
+  function get_detj_at_w3_fv(config, mesh) result(detj_at_w3)
 
     ! @TODO #4487: update these imports
     ! use sci_calc_detj_at_w3_kernel_mod, &
@@ -594,7 +597,8 @@ contains
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     logical(kind=l_def)                   :: constant_exists
     type(field_type),             pointer :: detj_at_w3
@@ -607,6 +611,16 @@ contains
     logical(kind=l_def)                   :: extended_mesh
     type(quadrature_rule_gaussian_type)   :: quadrature_rule
     integer(tik)                          :: id
+
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
+
+    call get_mesh_enums(mesh, geometry, topology)
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
     if (.not. detj_at_w3_inventory_fv%is_initialised()) then
@@ -636,6 +650,10 @@ contains
                                                             chi,               &
                                                             panel_id,          &
                                                             extended_mesh,     &
+                                                            geometry,          &
+                                                            topology,          &
+                                                            coord_system,      &
+                                                            scaled_radius,     &
                                                             qr),               &
                    setval_c(detj_at_w3, 0.0_r_def),                            &
                    mm_diagonal_kernel_type(detj_at_w3, mm_w3) )
@@ -995,11 +1013,7 @@ contains
       call dA_msl_proj_inventory%initialise(name="dA_msl_proj")
     end if
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     planet_radius = config%extrusion%planet_radius()
     domain_height = config%extrusion%domain_height()
@@ -1340,11 +1354,7 @@ contains
 
     real(kind=r_def) :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry= geometry_spherical
-    else
-      geometry= geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     element_order_h = config%finite_element%element_order_h()
     element_order_v = config%finite_element%element_order_v()
@@ -1470,11 +1480,7 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
+    call get_mesh_enums(mesh, geometry)
 
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()

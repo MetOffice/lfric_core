@@ -15,7 +15,7 @@
 module skeleton_constants_mod
 
   ! Infrastructure
-  use constants_mod,                      only: str_def, i_def, l_def
+  use constants_mod,                      only: str_def, r_def, i_def, l_def
   use driver_modeldb_mod,                 only: modeldb_type
   use field_mod,                          only: field_type
   use fs_continuity_mod,                  only: W0, W1, W2, W2broken, &
@@ -31,6 +31,7 @@ module skeleton_constants_mod
   use quadrature_rule_gaussian_mod,       only: quadrature_rule_gaussian_type
   use timing_mod,                         only: start_timing, stop_timing, &
                                                 tik, LPROF
+  use sci_mesh_enums_mod,                 only: get_mesh_enums
 
   ! Kernels
   use sci_compute_derham_matrices_kernel_mod, only: compute_derham_matrices_kernel_type
@@ -109,6 +110,10 @@ contains
 
     integer(i_def) :: order_h, order_v
     integer(i_def) :: nqp_h_exact, nqp_v_exact
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
 
     integer(tik) :: id
 
@@ -116,10 +121,14 @@ contains
 
     call log_event( "Skeleton: creating runtime constants", LOG_LEVEL_INFO )
 
-    order_h     = modeldb%config%finite_element%element_order_h()
-    order_v     = modeldb%config%finite_element%element_order_v()
-    nqp_h_exact = modeldb%config%finite_element%nqp_h_exact()
-    nqp_v_exact = modeldb%config%finite_element%nqp_v_exact()
+    call get_mesh_enums(mesh, geometry, topology)
+
+    order_h       = modeldb%config%finite_element%element_order_h()
+    order_v       = modeldb%config%finite_element%element_order_v()
+    nqp_h_exact   = modeldb%config%finite_element%nqp_h_exact()
+    nqp_v_exact   = modeldb%config%finite_element%nqp_v_exact()
+    coord_system  = modeldb%config%finite_element%coord_system()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     !=========== Create function spaces required for setup ==================!
 
@@ -167,13 +176,16 @@ contains
     call curl_inventory%add_operator( curl, w2_fs, w1_fs, mesh )
     call broken_div_inventory%add_operator( broken_div, w3_fs, w2b_fs, mesh )
 
-    call invoke( name = "create_de_rham_matrices",                      &
-                 compute_derham_matrices_kernel_type(mm_w0, mm_w1,      &
-                                                     mm_w2, mm_w2b,     &
-                                                     mm_w3, mm_wtheta,  &
-                                                     grad, curl,        &
-                                                     div, broken_div,   &
-                                                     chi, panel_id, qr) )
+    call invoke( name = "create_de_rham_matrices",                       &
+                 compute_derham_matrices_kernel_type(mm_w0, mm_w1,       &
+                                                     mm_w2, mm_w2b,      &
+                                                     mm_w3, mm_wtheta,   &
+                                                     grad, curl,         &
+                                                     div, broken_div,    &
+                                                     chi, panel_id,      &
+                                                     geometry, topology, &
+                                                     coord_system,       &
+                                                     scaled_radius, qr) )
 
     !===================== Add operators to inventories =======================!
 

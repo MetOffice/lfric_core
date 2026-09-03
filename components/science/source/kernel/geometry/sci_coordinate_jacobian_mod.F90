@@ -24,10 +24,10 @@ module sci_coordinate_jacobian_mod
                                        get_to_stretch,           &
                                        get_to_rotate,            &
                                        get_stretch_factor
+  use sci_mesh_enums_mod,        only: geometry_planar, &
+                                       topology_fully_periodic
 
   ! Configuration modules
-  use base_mesh_config_mod,      only: geometry_planar, &
-                                       topology_fully_periodic
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_system_native
 

@@ -26,8 +26,7 @@ use argument_mod,            only : arg_type, func_type,       &
 use constants_mod,           only : r_def, i_def
 use fs_continuity_mod,       only : W1
 use log_mod,                 only : log_event, LOG_LEVEL_ERROR
-
-use base_mesh_config_mod, only: geometry_spherical, geometry_planar
+use sci_mesh_enums_mod,      only : geometry_spherical, geometry_planar
 
 implicit none
 

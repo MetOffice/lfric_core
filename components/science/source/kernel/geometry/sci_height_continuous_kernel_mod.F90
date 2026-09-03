@@ -15,10 +15,10 @@ module sci_height_continuous_kernel_mod
                                        GH_READ, GH_INC,                        &
                                        ANY_SPACE_1, ANY_SPACE_9,               &
                                        CELL_COLUMN, GH_BASIS, GH_EVALUATOR
-  use base_mesh_config_mod,      only: geometry_spherical
   use constants_mod,             only: r_def, i_def, l_def
   use finite_element_config_mod, only: coord_system_xyz
   use kernel_mod,                only: kernel_type
+  use sci_mesh_enums_mod,        only: geometry_spherical
 
   implicit none
   private

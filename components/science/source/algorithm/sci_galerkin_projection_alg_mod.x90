@@ -9,6 +9,7 @@
 !>
 module sci_galerkin_projection_alg_mod
 
+  use config_mod,                    only: config_type
   use constants_mod,                 only: r_def, i_def
   use function_space_collection_mod, only: function_space_collection
   use field_mod,                     only: field_type
@@ -17,10 +18,12 @@ module sci_galerkin_projection_alg_mod
   use sci_gp_vector_rhs_kernel_mod,  only: gp_vector_rhs_kernel_type
   use log_mod,                       only: log_event, log_scratch_space, &
                                            log_level_debug, log_level_error
+  use mesh_mod,                      only: mesh_type
   use operator_mod,                  only: operator_type
   use quadrature_xyoz_mod,           only: quadrature_xyoz_type
   use sci_mass_matrix_solver_alg_mod, &
                                      only: mass_matrix_solver_alg
+  use sci_mesh_enums_mod,            only: get_mesh_enums
 
   implicit none
 
@@ -43,6 +46,7 @@ contains
   !>          into orthogonal components and the galerkin projection of each
   !>          component is computed.
   !>
+  !> @param[in]  config    Application configuration object
   !> @param[out] f_out     Field to project onto.
   !> @param[in]  f_in      Field to project.
   !> @param[in]  chi       Field entity co-ordinates.
@@ -52,13 +56,16 @@ contains
   !> @todo Ideally this function would not take chi and panel_id, these would
   !>       be available through the input field. That is some way off though.
   !>
-  subroutine galerkin_projection_algorithm( f_out,    &
+  subroutine galerkin_projection_algorithm( config,   &
+                                            f_out,    &
                                             f_in,     &
                                             chi,      &
                                             panel_id, &
                                             qr)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     ! Field to output
     type(field_type),           intent(inout) :: f_out(:)
@@ -76,13 +83,27 @@ contains
     type(field_type) :: w2_field
     integer(i_def)   :: out_fs
     integer(i_def)   :: idx
+
+    type(mesh_type), pointer :: mesh
+
     integer(i_def)   :: element_order_h
     integer(i_def)   :: element_order_v
+    integer(i_def)   :: geometry
+    integer(i_def)   :: topology
+    integer(i_def)   :: coord_system
+    real(r_def)      :: scaled_radius
 
     ! Create continuous fields to project data into
     out_fs = f_out(1)%which_function_space()
+
+    mesh => f_in%get_mesh()
     element_order_h = f_in%get_element_order_h()
     element_order_v = f_in%get_element_order_v()
+
+    call get_mesh_enums(mesh, geometry, topology)
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     do idx = 1, size(f_out)
       ! A Galerkin projection doesn't make sense between meshes.
       ! This check could usefully be an assertion if Fortran gains support
@@ -108,7 +129,9 @@ contains
       if ( size(f_out) == 1 ) then
         write( log_scratch_space, '(A)' ) '    scalar field ... '
         call log_event( log_scratch_space, log_level_debug )
-        call invoke( gp_rhs_kernel_type(rhs(1), f_in, chi, panel_id, qr) )
+        call invoke( gp_rhs_kernel_type(rhs(1), f_in, chi, panel_id,      &
+                                        geometry, topology, coord_system, &
+                                        scaled_radius, qr) )
       else
         write( log_scratch_space, '(A)' ) '    vector field ... '
         call log_event( log_scratch_space, log_level_debug )
@@ -121,14 +144,13 @@ contains
           )                                                &
         )
 
-        call invoke( &
-          gp_vector_rhs_kernel_type( &
-            rhs, f_in, chi, panel_id, w2_field, qr &
-          ) &
-        )
+        call invoke(                                                     &
+          gp_vector_rhs_kernel_type( rhs, f_in, chi, panel_id, w2_field, &
+                                     geometry, topology, coord_system,   &
+                                     scaled_radius, qr ) )
       end if
       do idx = 1, size(f_out)
-        call mass_matrix_solver_alg( f_out(idx), rhs(idx) )
+        call mass_matrix_solver_alg( config, f_out(idx), rhs(idx) )
       end do
     end if
 
