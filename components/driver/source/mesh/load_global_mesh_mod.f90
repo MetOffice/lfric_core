@@ -14,8 +14,8 @@ module load_global_mesh_mod
                                  LOG_LEVEL_INFO
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
 
-
-  use global_mesh_collection_mod, only: global_mesh_collection
+  use global_mesh_collection_mod, only: global_mesh_collection_type, &
+                                        global_mesh_collection
 
   implicit none
 
@@ -37,18 +37,34 @@ contains
 !> @param[in] mesh_names       The names of the global meshes to load
 !>                             from the <input_mesh_file>.
 subroutine load_global_mesh_multiple( input_mesh_file, &
-                                      mesh_names )
+                                      mesh_names,      &
+                                      rename_to )
+
 
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
   character(str_def),          intent(in) :: mesh_names(:)
 
+  character(str_def), optional :: rename_to(:)
+
+  character(str_def), allocatable :: names(:)
+
   integer(i_def) :: i
+
+
+  allocate(names, source=mesh_names)
+
+  if ( present(rename_to) ) then
+    if (size(rename_to) == size(mesh_names)) then
+      deallocate(names)
+      allocate(names, source=rename_to)
+    end if
+  end if
 
   do i=1, size(mesh_names)
     call load_global_mesh_single( input_mesh_file, &
-                                  mesh_names(i) )
+                                  mesh_names(i), rename_to=names(i) )
   end do
 
 end subroutine load_global_mesh_multiple
@@ -61,17 +77,29 @@ end subroutine load_global_mesh_multiple
 !> @param[in] mesh_name        The name of the global mesh to load
 !>                             from the <input_mesh_file>.
 subroutine load_global_mesh_single( input_mesh_file, &
-                                    mesh_name )
+                                    mesh_name, rename_to )
 
   implicit none
 
-  character(str_max_filename), intent(in) :: input_mesh_file
-  character(str_def),          intent(in) :: mesh_name
+  character(*), intent(in) :: input_mesh_file
+  character(*), intent(in) :: mesh_name
+
+  character(*), optional, intent(in) :: rename_to
+
 
   type(ugrid_mesh_data_type) :: ugrid_mesh_data
   type(global_mesh_type)     :: global_mesh
 
-  if (.not. global_mesh_collection%check_for(mesh_name)) then
+  character(str_def) :: name
+
+
+  if ( present(rename_to) ) then
+    name=rename_to
+  else
+    name=mesh_name
+  end if
+
+  if (.not. global_mesh_collection%check_for(name)) then
 
     write(log_scratch_space,'(A)') &
         'Reading global mesh: "'//trim(mesh_name)//'"'
@@ -81,7 +109,7 @@ subroutine load_global_mesh_single( input_mesh_file, &
     call ugrid_mesh_data%read_from_file( trim(input_mesh_file), &
                                          mesh_name )
 
-    global_mesh = global_mesh_type( ugrid_mesh_data )
+    global_mesh = global_mesh_type( ugrid_mesh_data, rename_to=name )
     call ugrid_mesh_data%clear()
 
     call global_mesh_collection%add_new_global_mesh ( global_mesh )

@@ -15,8 +15,8 @@ module add_mesh_map_mod
   use constants_mod, only: i_def, str_def, cmdi
   use log_mod,       only: log_event,         &
                            log_scratch_space, &
-                           LOG_LEVEL_ERROR,   &
-                           LOG_LEVEL_INFO
+                           log_level_error,   &
+                           log_level_info
 
 
   use extrusion_mod,       only: extrusion_type,           &
@@ -24,13 +24,10 @@ module add_mesh_map_mod
                                  geometric_extrusion_type, &
                                  quadratic_extrusion_type
   use local_mesh_mod,      only: local_mesh_type
+  use mesh_collection_mod, only: mesh_collection
   use mesh_mod,            only: mesh_type
   use sci_query_mod,       only: check_lbc
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
-
-
-  use local_mesh_collection_mod, only: local_mesh_collection
-  use mesh_collection_mod,       only: mesh_collection
 
   implicit none
 
@@ -54,10 +51,15 @@ subroutine assign_mesh_maps( mesh_names )
   character(str_def), allocatable :: target_mesh_names(:)
   character(str_def), allocatable :: local_mesh_names(:)
 
-  type(mesh_type),       pointer :: mesh       => null()
-  type(local_mesh_type), pointer :: local_mesh => null()
+  type(mesh_type),       pointer :: mesh
+  type(local_mesh_type), pointer :: local_mesh
+
+  type(mesh_type),       pointer :: mesh_A
+  type(mesh_type),       pointer :: mesh_B
 
   integer(i_def) :: i, j, k
+
+  nullify( mesh, mesh_A, mesh_B, local_mesh )
 
   if (size(mesh_names) > 1) then
 
@@ -122,7 +124,9 @@ subroutine assign_mesh_maps( mesh_names )
           end do
 
           if (mesh_name_B /= cmdi) then
-            call add_mesh_map( mesh_name_A, mesh_name_B )
+            mesh_A => mesh_collection%get_mesh(mesh_name_A)
+            mesh_B => mesh_collection%get_mesh(mesh_name_B)
+            call add_mesh_map( mesh_A, mesh_B )
           end if
         end do
 
@@ -136,55 +140,32 @@ end subroutine assign_mesh_maps
 
 
 !> @brief       Creates integrid map between two mesh_type objects.
-!> @description The meshes should be contain valid local mesh integrid maps.
-!> @param[in] source_mesh_name  Name of source_mesh in the
-!!                              application mesh collection.
-!> @param[in] target_mesh_name  Name of source_mesh in the
-!!                              application mesh collection
-subroutine add_mesh_map( source_mesh_name, &
-                         target_mesh_name )
+!> @description The meshes should contain valid local mesh integrid maps.
+!> @param[in] source_mesh  Soure mesh object
+!> @param[in] target_mesh  Target mesh object
+subroutine add_mesh_map( source_mesh, target_mesh )
 
   implicit none
 
-  character(len=str_def), intent(in) :: source_mesh_name
-  character(len=str_def), intent(in) :: target_mesh_name
+  type(mesh_type), intent(inout) :: source_mesh
+  type(mesh_type), intent(inout) :: target_mesh
 
-  type(mesh_type), pointer :: source_mesh => null()
-  type(mesh_type), pointer :: target_mesh => null()
-
-
-  source_mesh => mesh_collection % get_mesh( source_mesh_name )
-  target_mesh => mesh_collection % get_mesh( target_mesh_name )
-
-  if ( associated(source_mesh) .and. &
-       associated(target_mesh) ) then
-
-    ! Mesh tag names may be different but "could point to the same mesh
-    ! So check the IDs are not the same
-    if (source_mesh%get_id() == target_mesh%get_id()) then
-      write(log_scratch_space,'(A)')                  &
-          'Unable to create intergrid map: Source('// &
-          trim(source_mesh_name)//' and target('//    &
-          trim(target_mesh_name)//') mesh IDs are the same'
-      call log_event( log_scratch_space, LOG_LEVEL_ERROR )
-    end if
-
-    call source_mesh % add_mesh_map (target_mesh)
-    write(log_scratch_space,'(A,I0,A)')     &
-        'Adding intergrid map "'//          &
-         trim(source_mesh_name)//'"-->"'//  &
-         trim(target_mesh_name)//'"'
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-  else
-    write(log_scratch_space,'(A,I0,A)')          &
-        'Unable to create mesh map between "'//  &
-        trim(source_mesh_name)//'"-"'//          &
-        trim(target_mesh_name)//'"'
-    call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+  ! Mesh tag names may be different but "could point to the same mesh
+  ! So check the IDs are not the same
+  if (source_mesh%get_id() == target_mesh%get_id()) then
+    write(log_scratch_space,'(A)')                  &
+        'Unable to create intergrid map: Source('// &
+         trim(source_mesh%get_mesh_name())//' and target('//    &
+         trim(target_mesh%get_mesh_name())//') mesh IDs are the same'
+    call log_event( log_scratch_space, log_level_error )
   end if
 
-  nullify(source_mesh)
-  nullify(target_mesh)
+  call source_mesh % add_mesh_map (target_mesh)
+  write(log_scratch_space,'(a,i0,a)')     &
+      'Adding intergrid map "'//          &
+       trim(source_mesh%get_mesh_name())//'"-->"'//  &
+       trim(target_mesh%get_mesh_name())//'"'
+  call log_event( log_scratch_space, log_level_info )
 
   return
 end subroutine add_mesh_map

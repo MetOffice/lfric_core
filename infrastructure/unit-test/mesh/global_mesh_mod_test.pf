@@ -22,60 +22,43 @@ module global_mesh_mod_test
   implicit none
 
   private
+
+  public :: set_up, tear_down
   public :: test_cubedsphere_global_mesh,           &
             test_cubedsphere_single_file_intergrid, &
             test_cubedsphere_adding_intergrid_map,  &
-            test_biperiodic_global_mesh,            &
-            setUp, tearDown
-
-  @testCase
-  type, public, extends( TestCase ) :: global_mesh_test_type
-    private
-  contains
-    private
-    procedure, public :: setUp
-    procedure, public :: tearDown
-    procedure, public :: test_cubedsphere_global_mesh
-    procedure, public :: test_biperiodic_global_mesh
-    procedure, public :: test_cubedsphere_single_file_intergrid
-    procedure, public :: test_cubedsphere_adding_intergrid_map
-
-  end type global_mesh_test_type
+            test_biperiodic_global_mesh
 
   character(str_def), parameter :: mesh_name = 'unit_test'
   integer(i_def),     parameter :: npanels = 6
 
 contains
 
-  subroutine setUp( this )
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @before
+  subroutine set_up()
 
     implicit none
 
-    class( global_mesh_test_type ), intent( inout ) :: this
-
-    ! Create top level collections
     global_mesh_collection = global_mesh_collection_type()
 
-  end subroutine setUp
+  end subroutine set_up
 
-  subroutine tearDown( this )
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @after
+  subroutine tear_down()
 
     implicit none
-
-    class( global_mesh_test_type ), intent( inout ) :: this
 
     call global_mesh_collection%clear()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
-  ! Test global_mesh module functionality
-  !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
-  subroutine test_biperiodic_global_mesh( this )
+  subroutine test_biperiodic_global_mesh()
 
     implicit none
-
-    class( global_mesh_test_type ), intent( inout ) :: this
 
     type(ugrid_mesh_data_type) :: ugrid_mesh_data
     type(global_mesh_type)     :: global_mesh
@@ -103,11 +86,11 @@ contains
     !-------------------------------------
     ! Test construction of a biperiodic mesh
     !-------------------------------------
-
     filename = 'data/mesh_BiP8x8-750x250.nc'
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+
 
     ! Check the global mesh id
     global_mesh_id1 = global_mesh%get_id()
@@ -230,12 +213,11 @@ contains
   end subroutine test_biperiodic_global_mesh
 
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
-  subroutine test_cubedsphere_global_mesh( this )
+  subroutine test_cubedsphere_global_mesh()
 
     implicit none
-
-    class( global_mesh_test_type ), intent( inout ) :: this
 
     type(ugrid_mesh_data_type)        :: ugrid_mesh_data
     type(global_mesh_type)            :: global_mesh
@@ -259,17 +241,31 @@ contains
     real(r_def)    :: cell_coords(2)
     real(r_def)    :: vert_coords(2)
 
+    character(str_max_filename) :: test_str1
+    character(str_def)          :: test_str2
+
+    character(str_def), parameter :: new_name = 'mesh_under_test'
+
     !---------------------------------------
     ! Test construction of a cubed-sphere mesh
     !---------------------------------------
     filename = 'data/mesh_C4.nc'
     call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
-    global_mesh = global_mesh_type( ugrid_mesh_data )
+    global_mesh = global_mesh_type( ugrid_mesh_data, rename_to=new_name )
     call ugrid_mesh_data%clear()
 
     ! Check the global mesh id
     global_mesh_id2 = global_mesh%get_id()
     @assertTrue(global_mesh_id2 > 0)
+
+    test_str1 = global_mesh%get_origin_file()
+    @assertTrue(trim(test_str1) == trim(filename))
+
+    test_str2 = global_mesh%get_origin_name()
+    @assertTrue(trim(test_str2) == trim(mesh_name))
+
+    test_str2 = global_mesh%get_mesh_name()
+    @assertTrue(trim(test_str2) == new_name)
 
     ! Check getting a cell id from an x- and y-distance from a starting cell.
     ! First test that providing zero distances gives same id
@@ -386,15 +382,13 @@ contains
 
   end subroutine test_cubedsphere_global_mesh
 
-
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
-  subroutine test_cubedsphere_single_file_intergrid(this)
+  subroutine test_cubedsphere_single_file_intergrid()
 
-    use ncdf_quad_mod,     only: ncdf_quad_type
+    use ncdf_quad_mod, only: ncdf_quad_type
 
     implicit none
-
-    class( global_mesh_test_type ), intent( inout ) :: this
 
     type(ugrid_mesh_data_type)  :: ugrid_mesh_data
 
@@ -506,14 +500,13 @@ contains
   end subroutine test_cubedsphere_single_file_intergrid
 
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
-  subroutine test_cubedsphere_adding_intergrid_map(this)
+  subroutine test_cubedsphere_adding_intergrid_map()
 
-    use ncdf_quad_mod,     only: ncdf_quad_type
+    use ncdf_quad_mod, only: ncdf_quad_type
 
     implicit none
-
-    class( global_mesh_test_type ), intent( inout ) :: this
 
     type(ugrid_mesh_data_type)  :: ugrid_mesh_data
 
@@ -636,7 +629,6 @@ contains
     target_name='C32'
     target_mesh_ptr => global_mesh_collection%get_global_mesh( target_name )
     global_mesh_map => global_mesh_ptr%get_global_mesh_map( target_mesh_ptr%get_id() )
-
 
   end subroutine test_cubedsphere_adding_intergrid_map
 

@@ -260,9 +260,9 @@ contains
 
     implicit none
 
-    class(field_{{kind}}_type), intent(inout)        :: self
-    type(function_space_type), pointer, intent(in) :: vector_space
-    character(*), optional, intent(in)             :: name
+    class(field_{{kind}}_type), intent(inout) :: self
+    type(function_space_type),  intent(in)    :: vector_space
+    character(*),     optional, intent(in)    :: name
     {{type}}({{kind}}), target, optional, intent(in)     :: override_data( : )
     integer(i_def), optional, intent(in)           :: halo_depth
 

@@ -106,7 +106,6 @@ contains
     type(function_space_type), pointer :: fs
 
     integer(i_def)       :: ndata_sz
-    integer(i_def)       :: mesh_id
     character(str_short) :: name
     logical(l_def)       :: ndata_first_sz
 
@@ -135,10 +134,8 @@ contains
       call log_event(log_scratch_space, LOG_LEVEL_ERROR)
     end if
 
-    mesh_id = mesh%get_id()
-
     fs => get_existing_fs( self,            &
-                           mesh_id,         &
+                           mesh,            &
                            element_order_h, &
                            element_order_v, &
                            lfric_fs,        &
@@ -148,7 +145,7 @@ contains
     if (.not. associated(fs)) then
 
       call self%fs_list%insert_item(                 &
-               function_space_type( mesh_id,         &
+               function_space_type( mesh,            &
                                     element_order_h, &
                                     element_order_v, &
                                     lfric_fs,        &
@@ -161,7 +158,7 @@ contains
       call log_event(log_scratch_space, LOG_LEVEL_TRACE)
 
       fs => get_existing_fs( self,            &
-                             mesh_id,         &
+                             mesh,            &
                              element_order_h, &
                              element_order_v, &
                              lfric_fs,        &
@@ -229,7 +226,7 @@ contains
   ! with the given properties and return a pointer to it. A null pointer is
   ! returned if the requested function space does not exist.
   !
-  !> @param[in] mesh_id         ID of mesh object
+  !> @param[in] mesh            Mesh object
   !> @param[in] element_order_h function space order in horizontal
   !> @param[in] element_order_v function space order in vertical
   !> @param[in] lfric_fs        lfric id code for given supported function space
@@ -238,7 +235,7 @@ contains
   !> @param[in] ndata_first     Flag to set data to be layer first (false) or
   !!                            ndata first (true)
   function get_existing_fs( self,            &
-                            mesh_id,         &
+                            mesh,            &
                             element_order_h, &
                             element_order_v, &
                             lfric_fs,        &
@@ -248,7 +245,9 @@ contains
     implicit none
 
     class(function_space_collection_type) :: self
-    integer(i_def), intent(in) :: mesh_id
+
+    type(mesh_type), intent(in) :: mesh
+
     integer(i_def), intent(in) :: element_order_h
     integer(i_def), intent(in) :: element_order_v
     integer(i_def), intent(in) :: lfric_fs
@@ -285,7 +284,7 @@ contains
         fs_id = generate_fs_id(lfric_fs,        &
                                element_order_h, &
                                element_order_v, &
-                               mesh_id,         &
+                               mesh%get_id(),   &
                                ndata,           &
                                ndata_first)
 
