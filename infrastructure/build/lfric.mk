@@ -24,18 +24,9 @@
 #              files" performance, i.e. probably not Lustre.
 #              Default: ./working
 # VERBOSE: Set in order to see actual commands issued by the build system.
-# PURGE_SUITES: Set to non-zero value to clean out exisiting rose suites of
-#               same name. (this is also the default action)
-#               Set to zero to not clean out existing rose suite.
 # TEST_SUITE_TARGETS: Space separated list of target identifiers to be used
 #                     when launching the test suite. Default is "meto-azspice
 #                     meto-ex1a"
-# SUITE_GROUP_ABRV: Set to a non-zero value to cause the names of the rose
-#                   stem groups to always be abbreviated in the suite name.
-#                   Set to zero to cause the names to always be unabbreviated.
-#                   The default is abbreviated for multi-group runs, but
-#                   unabbreviated for single-group runs.
-#
 ##############################################################################
 
 .SECONDEXPANSION:
@@ -158,13 +149,6 @@ endif
 
 export Q QUIET_ARG VERBOSE_REDIRECT
 
-# Set flag to perform a fresh rose stem suite
-
-CLEAN_OPT ?= '--new'
-ifeq '$(PURGE_SUITES)' '0'
-  CLEAN_OPT =
-endif
-
 # We only want to send terminal control characters if there is a terminal to
 # interpret them...
 #
@@ -202,13 +186,7 @@ define ANNOUNCE_BODY
 *******************************************************************************
 Error
 
-The Cylc 7 test suite is no longer in use, please use the Cylc 8 suite.
-
-New commands:
-
-export CYLC_VERSION=8
-rose stem --group=developer
-cylc play <working_copy_name>
+The Cylc 7 test suite is no longer in use.
 
 *******************************************************************************
 
@@ -262,18 +240,6 @@ api-documentation: ALWAYS
 	      echo USE_MDFILE_AS_MAINPAGE=$(CONFIG_DIR)/$$(sed -n -e 's/\s*USE_MDFILE_AS_MAINPAGE\s*=\s*//p' $(CONFIG_DIR)/Doxyfile); \
 	      echo OUTPUT_DIRECTORY=$(DOCUMENT_DIR) ) \
 	    | doxygen - $(VERBOSE_REDIRECT)
-
-##############################################################################
-# Launch test suite
-#
-# SUITE_CONFIG    - Path to rose-stem directory.
-# SUITE_BASE_NAME - Name for suites.
-# SUITE_GROUP_NAME_ABRV - Name(s) of the rose stem group(s) with abbreviations applied.
-#
-.PHONY: launch-test-suite
-launch-test-suite:
-	$(error $(ANNOUNCE_BODY) )
-
 
 ##############################################################################
 # Generate configuration source.

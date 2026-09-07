@@ -10,13 +10,15 @@
 !> @details Wrapper code for applying boundary conditions to a operator
 module sci_enforce_operator_bc_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type,                 &
                                     GH_OPERATOR, GH_REAL,     &
                                     GH_READWRITE,             &
                                     ANY_SPACE_1, ANY_SPACE_2, &
                                     CELL_COLUMN
-use constants_mod,           only : r_single, r_double, i_def
+use constants_mod,           only : i_def
 
 implicit none
 
@@ -42,8 +44,8 @@ public :: enforce_operator_bc_code
   ! Generic interface for real32 and real64 types
   interface enforce_operator_bc_code
     module procedure  &
-      enforce_operator_bc_code_r_single, &
-      enforce_operator_bc_code_r_double
+      enforce_operator_bc_code_real32, &
+      enforce_operator_bc_code_real64
   end interface
 
 contains
@@ -58,9 +60,9 @@ contains
 !> @param[in] boundary_value Flags (= 0) for dofs that live on the
 !!            vertical boundaries of the cell (=1 for other dofs)
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine enforce_operator_bc_code_r_single(cell, nlayers,                   &
+subroutine enforce_operator_bc_code_real32(  cell, nlayers,                   &
                                              ncell_3d, op,                    &
                                              ndf1, ndf2, boundary_value       &
                                             )
@@ -72,7 +74,7 @@ subroutine enforce_operator_bc_code_r_single(cell, nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf1, ndf2
   integer(kind=i_def), dimension(ndf1,2), intent(in) :: boundary_value
 
-  real(kind=r_single), dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
+  real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
 
   ! Local variables
   integer(kind=i_def) :: df, k, ik
@@ -80,19 +82,19 @@ subroutine enforce_operator_bc_code_r_single(cell, nlayers,                   &
   k = 1
   ik = (cell-1)*nlayers + k
   do df = 1,ndf1
-    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,1), r_single)
+    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,1), real32)
   end do
   k = nlayers
   ik = (cell-1)*nlayers + k
   do df = 1,ndf1
-    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,2), r_single)
+    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,2), real32)
   end do
 
-end subroutine enforce_operator_bc_code_r_single
+end subroutine enforce_operator_bc_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine enforce_operator_bc_code_r_double(cell, nlayers,                   &
+subroutine enforce_operator_bc_code_real64(  cell, nlayers,                   &
                                              ncell_3d, op,                    &
                                              ndf1, ndf2, boundary_value       &
                                             )
@@ -104,7 +106,7 @@ subroutine enforce_operator_bc_code_r_double(cell, nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf1, ndf2
   integer(kind=i_def), dimension(ndf1,2), intent(in) :: boundary_value
 
-  real(kind=r_double), dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
+  real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(inout) :: op
 
   ! Local variables
   integer(kind=i_def) :: df, k, ik
@@ -112,13 +114,13 @@ subroutine enforce_operator_bc_code_r_double(cell, nlayers,                   &
   k = 1
   ik = (cell-1)*nlayers + k
   do df = 1,ndf1
-    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,1), r_double)
+    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,1), real64)
   end do
   k = nlayers
   ik = (cell-1)*nlayers + k
   do df = 1,ndf1
-    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,2), r_double)
+    op(ik,df,:) = op(ik,df,:)*real(boundary_value(df,2), real64)
   end do
 
-end subroutine enforce_operator_bc_code_r_double
+end subroutine enforce_operator_bc_code_real64
 end module sci_enforce_operator_bc_kernel_mod

@@ -17,11 +17,13 @@
 !>
 module sci_tri_solve_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only: arg_type,          &
                                GH_FIELD, GH_REAL, &
                                GH_READ, GH_WRITE, &
                                CELL_COLUMN
-  use constants_mod,     only: r_double, r_single, i_def
+  use constants_mod,     only: i_def
   use fs_continuity_mod, only: W3
   use kernel_mod,        only: kernel_type
 
@@ -50,8 +52,8 @@ module sci_tri_solve_kernel_mod
   ! Generic interface for real32 and real64 types
   interface tri_solve_code
     module procedure  &
-      tri_solve_code_r_single, &
-      tri_solve_code_r_double
+      tri_solve_code_real32, &
+      tri_solve_code_real64
   end interface
 
 contains
@@ -67,9 +69,9 @@ contains
 !> @param[in]  undf Size of all field arrays
 !> @param[in]  map Array containing the address of the first dof in the column
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine tri_solve_code_r_single(nlayers,                    &
+subroutine tri_solve_code_real32(  nlayers,                    &
                                    y, x,                       &
                                    tri_0, tri_plus, tri_minus, &
                                    ndf, undf, map)
@@ -81,24 +83,24 @@ subroutine tri_solve_code_r_single(nlayers,                    &
 
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
 
-  real(kind=r_single), dimension(undf), intent(inout) :: y
-  real(kind=r_single), dimension(undf), intent(in)    :: x
-  real(kind=r_single), dimension(undf), intent(in)    :: tri_0
-  real(kind=r_single), dimension(undf), intent(in)    :: tri_plus
-  real(kind=r_single), dimension(undf), intent(in)    :: tri_minus
+  real(kind=real32),   dimension(undf), intent(inout) :: y
+  real(kind=real32),   dimension(undf), intent(in)    :: x
+  real(kind=real32),   dimension(undf), intent(in)    :: tri_0
+  real(kind=real32),   dimension(undf), intent(in)    :: tri_plus
+  real(kind=real32),   dimension(undf), intent(in)    :: tri_minus
 
-  integer(kind=i_def)                  :: k, ij
-  real(kind=r_single), dimension(nlayers) :: x_new, tri_plus_new
-  real(kind=r_single)                     :: denom
+  integer(kind=i_def)                     :: k, ij
+  real(kind=real32),   dimension(nlayers) :: x_new, tri_plus_new
+  real(kind=real32)                       :: denom
 
   k  = 0
   ij = map(1)
-  denom = 1.0_r_single/tri_0(ij+k)
+  denom = 1.0_real32/tri_0(ij+k)
   tri_plus_new(1) = tri_plus(ij+k)*denom
   x_new(1)        = x(ij+k)       *denom
 
   do k = 1,nlayers-1
-    denom = 1.0_r_single/(tri_0(ij+k) - tri_minus(ij+k)*tri_plus_new(k))
+    denom = 1.0_real32/(tri_0(ij+k) - tri_minus(ij+k)*tri_plus_new(k))
     tri_plus_new(k+1) = tri_plus(ij+k)*denom
     x_new(k+1)        = (x(ij+k) - tri_minus(ij+k)*x_new(k))*denom
   end do
@@ -109,11 +111,11 @@ subroutine tri_solve_code_r_single(nlayers,                    &
     y(ij+k) = x_new(k+1) - tri_plus_new(k+1)*y(ij+k+1)
   end do
 
-end subroutine tri_solve_code_r_single
+end subroutine tri_solve_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine tri_solve_code_r_double(nlayers,                    &
+subroutine tri_solve_code_real64(  nlayers,                    &
                                    y, x,                       &
                                    tri_0, tri_plus, tri_minus, &
                                    ndf, undf, map)
@@ -125,24 +127,24 @@ subroutine tri_solve_code_r_double(nlayers,                    &
 
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
 
-  real(kind=r_double), dimension(undf), intent(inout) :: y
-  real(kind=r_double), dimension(undf), intent(in)    :: x
-  real(kind=r_double), dimension(undf), intent(in)    :: tri_0
-  real(kind=r_double), dimension(undf), intent(in)    :: tri_plus
-  real(kind=r_double), dimension(undf), intent(in)    :: tri_minus
+  real(kind=real64),   dimension(undf), intent(inout) :: y
+  real(kind=real64),   dimension(undf), intent(in)    :: x
+  real(kind=real64),   dimension(undf), intent(in)    :: tri_0
+  real(kind=real64),   dimension(undf), intent(in)    :: tri_plus
+  real(kind=real64),   dimension(undf), intent(in)    :: tri_minus
 
-  integer(kind=i_def)                  :: k, ij
-  real(kind=r_double), dimension(nlayers) :: x_new, tri_plus_new
-  real(kind=r_double)                     :: denom
+  integer(kind=i_def)                     :: k, ij
+  real(kind=real64),   dimension(nlayers) :: x_new, tri_plus_new
+  real(kind=real64)                       :: denom
 
   k  = 0
   ij = map(1)
-  denom = 1.0_r_double/tri_0(ij+k)
+  denom = 1.0_real64/tri_0(ij+k)
   tri_plus_new(1) = tri_plus(ij+k)*denom
   x_new(1)        = x(ij+k)       *denom
 
   do k = 1,nlayers-1
-    denom = 1.0_r_double/(tri_0(ij+k) - tri_minus(ij+k)*tri_plus_new(k))
+    denom = 1.0_real64/(tri_0(ij+k) - tri_minus(ij+k)*tri_plus_new(k))
     tri_plus_new(k+1) = tri_plus(ij+k)*denom
     x_new(k+1)        = (x(ij+k) - tri_minus(ij+k)*x_new(k))*denom
   end do
@@ -153,6 +155,6 @@ subroutine tri_solve_code_r_double(nlayers,                    &
     y(ij+k) = x_new(k+1) - tri_plus_new(k+1)*y(ij+k+1)
   end do
 
-end subroutine tri_solve_code_r_double
+end subroutine tri_solve_code_real64
 
 end module sci_tri_solve_kernel_mod

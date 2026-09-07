@@ -16,9 +16,6 @@ directory), build and run any unit tests, and build and run any
 integration tests. The Makefile supports options to execute any of
 these choices individually.
 
-The Makefile can be used to run the Rose Stem system test
-suite: run ``make test-suite``.
-
 Each Makefile takes other optional arguments, for example to
 obtain verbose output or to choose different sets of compile
 options. Each application or component will describe the options
