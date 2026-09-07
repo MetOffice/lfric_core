@@ -16,7 +16,11 @@ module key_value_collection_mod
   use, intrinsic :: iso_fortran_env, only: int32, int64, real32, real64
 
   use constants_mod,        only: i_def, l_def, str_def
-  use io_value_mod,         only: io_value_type
+  use io_value_mod,         only: io_value_type, &
+                                  int32_io_value_type, int64_io_value_type, &
+                                  real32_io_value_type, real64_io_value_type, &
+                                  int32_arr_io_value_type, int64_arr_io_value_type, &
+                                  real32_arr_io_value_type, real64_arr_io_value_type
   use key_value_mod,        only: key_value_type, &
                                   int32_key_value_type, int64_key_value_type, &
                                   int32_arr_key_value_type, int64_arr_key_value_type, &
@@ -75,7 +79,6 @@ module key_value_collection_mod
     procedure, private :: get_logical_arr_value
     procedure, private :: get_str_arr_value
     procedure, private :: get_abstract_value
-    !! TODO: DO I NEED TO HAVE ADDITIONAL METHODS FOR get_int32_io_value, ETC?
     generic            :: get_value => get_int32_value,       &
                                        get_int64_value,       &
                                        get_real32_value,      &
@@ -307,10 +310,16 @@ subroutine get_int32_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (int32_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (int32_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+
     end select
 
     loop => loop%next
@@ -349,10 +358,15 @@ subroutine get_int64_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (int64_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (int64_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -391,10 +405,15 @@ subroutine get_real32_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (real32_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (real32_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -433,10 +452,15 @@ subroutine get_real64_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (real64_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (real64_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -475,10 +499,10 @@ subroutine get_logical_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (logical_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -517,10 +541,10 @@ subroutine get_str_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (str_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -559,10 +583,15 @@ subroutine get_int32_arr_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (int32_arr_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (int32_arr_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -601,10 +630,15 @@ subroutine get_int64_arr_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (int64_arr_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (int64_arr_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -643,10 +677,15 @@ subroutine get_real32_arr_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (real32_arr_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (real32_arr_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -685,10 +724,15 @@ subroutine get_real64_arr_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (real64_arr_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
+      type is (real64_arr_io_value_type)
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -727,10 +771,10 @@ subroutine get_logical_arr_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (logical_arr_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -769,10 +813,10 @@ subroutine get_str_arr_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       type is (str_arr_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
@@ -812,10 +856,10 @@ subroutine get_abstract_value(self, key, value)
     ! 'cast' to the data type
     select type(listitem => loop%payload)
       class is (abstract_key_value_type)
-      if ( trim(key) == trim(listitem%get_key()) ) then
-          value => listitem%value
-          exit
-      end if
+        if ( trim(key) == trim(listitem%get_key()) ) then
+            value => listitem%value
+            exit
+        end if
     end select
 
     loop => loop%next
