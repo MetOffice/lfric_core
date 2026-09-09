@@ -10,8 +10,8 @@ module w3_to_w2_displacement_kernel_mod_test
   use constants_mod,         only: i_def, r_def, PI, l_def
   use reference_element_mod, only: S, E, N, W
 
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       topology_fully_periodic
+  use mesh_mod,                  only: geometry_spherical, &
+                                       topology_periodic
   use finite_element_config_mod, only: coord_system_native
 
   use funit
@@ -32,7 +32,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms(geometry_spherical, topology_fully_periodic)
+    call init_chi_transforms(geometry_spherical, topology_periodic)
 
   end subroutine set_up
 
@@ -66,7 +66,7 @@ contains
     real(r_def),  parameter :: dz = 2.0_r_def
 
     integer(i_def), parameter :: geometry = geometry_spherical
-    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: topology = topology_periodic
     integer(i_def), parameter :: coord_system = coord_system_native
     real(r_def),    parameter :: scaled_radius = 1900000.0_r_def
 
