@@ -5,9 +5,9 @@
 class local_mesh_mod::local_mesh_type {
 
   -mesh_name:           string
-  -geometry:            integer
-  -topology:            integer
-  -coord_sys:           integer
+  -mesh_geometry:       integer
+  -mesh_topology:       integer
+  -mesh_coord_sys:      integer
   -coord_units_xy:      string[2]
   -north_pole:          real[2]
   -null_island:         real[2]
@@ -73,6 +73,10 @@ class local_mesh_mod::local_mesh_type {
   +is_topology_periodic(): logical
   +is_coord_sys_xyz(): logical
   +is_coord_sys_ll(): logical
+
+  +geometry(): integer
+  +topology(): integer
+  +coord_sys(): integer
 
   +get_north_pole(): real[2]
   +get_null_island(): real[2]
