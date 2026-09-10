@@ -24,6 +24,7 @@ use coord_transform_mod,       only : alphabetar2xyz,          &
                                       schmidt_transform_xyz,   &
                                       inverse_schmidt_transform_xyz
 use log_mod,                   only : log_event,               &
+                                      log_level,               &
                                       log_scratch_space,       &
                                       LOG_LEVEL_ERROR,         &
                                       LOG_LEVEL_DEBUG,         &
@@ -42,14 +43,19 @@ implicit none
 private
 
 ! ---------------------------------------------------------------------------- !
-! Private matrices or values that need computing once
+! Private matrices or values
 ! ---------------------------------------------------------------------------- !
+! Set values to reflect, unrotated, unstretched [lon,lat]
+! spherical mesh surface
+real(kind=r_def)    :: chi2xyz_rot_mat(3,3) = 0.0_r_def
+real(kind=r_def)    :: xyz2chi_rot_mat(3,3) = 0.0_r_def
+real(kind=r_def)    :: stretch_factor = 1.0_r_def
+logical(kind=l_def) :: to_rotate = .false.
+logical(kind=l_def) :: to_stretch = .false.
 
-real(kind=r_def)    :: chi2xyz_rot_mat(3,3)
-real(kind=r_def)    :: xyz2chi_rot_mat(3,3)
-real(kind=r_def)    :: stretch_factor
-logical(kind=l_def) :: to_rotate
-logical(kind=l_def) :: to_stretch
+real(r_def) ::  north_pole(2)  = [0.0_r_def, PI/2.0_r_def]
+real(r_def) ::  null_island(2) = [0.0_r_def, 0.0_r_def]
+real(r_def) ::  equator_latitude = 0.0_r_def
 
 ! ---------------------------------------------------------------------------- !
 ! Public subroutines
@@ -72,137 +78,51 @@ public :: get_to_stretch
 contains
 
 !------------------------------------------------------------------------------
-!> @brief  Initialise the coordinate transform information
-!!
-!> @param[in] geometry           Mesh geometry enumeration value
-!> @param[in] topology           Mesh topology enumeration value
-!> @param[in] mesh_collection    Optional: a collection of meshes, which contain
-!!                               metadata used to determine the rotation matrix
-!!                               and stretching factors.
-!> @param[in] north_pole_arg     Optional: target north pole, used to generate
-!!                               the rotation matrix. This is incompatible with
-!!                               the mesh_collection argument, and ideally
-!!                               should only be used for unit-testing.
-!> @param[in] equator_lat_arg    Optional: Latitude of the equator of the mesh,
-!!                               allowing a stretching to be described.
-!!                               This is incompatible with the mesh_collection
-!!                               argument, and ideally should only be used for
-!!                               unit-testing.
+!> @brief  Initialise the coordinate transform information.
+!! @description  This routine should only be called for meshes with spherical
+!!               geometries. All arguments given as [longitude, latitude] on an
+!!               unrotated frame of reference. Stretching to the
+!!               mesh_equator_latitude is via Schmit transform.
+!> @param[in] mesh_north_pole        Target north pole location [lon,lat], used to
+!>                                   generate the rotation matrix.
+!> @param[in] mesh_null_island       Target Null island location [lon,lat]
+!> @param[in] mesh_equator_latitude  Target equator latitude [lat].
 !------------------------------------------------------------------------------
-subroutine init_chi_transforms( geometry, topology, &
-                                mesh_collection,    &
-                                north_pole_arg,     &
-                                equator_lat_arg )
-
-  use local_mesh_mod,      only: local_mesh_type
-  use mesh_collection_mod, only: mesh_collection_type
-  use mesh_mod,            only: mesh_type
+subroutine init_chi_transforms( mesh_north_pole,  &
+                                mesh_null_island, &
+                                mesh_equator_latitude )
 
   implicit none
 
-  integer(i_def), intent(in) :: geometry
-  integer(i_def), intent(in) :: topology
+  real(r_def), intent(in) :: mesh_north_pole(2)
+  real(r_def), intent(in) :: mesh_null_island(2)
+  real(r_def), intent(in) :: mesh_equator_latitude
 
-  type(mesh_collection_type), optional, intent(in) :: mesh_collection
-  real(kind=r_def),           optional, intent(in) :: north_pole_arg(2)
-  real(kind=r_def),           optional, intent(in) :: equator_lat_arg
-
-  type(mesh_type),         pointer :: mesh
-  type(local_mesh_type),   pointer :: local_mesh
-  character(str_def),  allocatable :: all_mesh_names(:)
-
-  real(kind=r_def) :: north_pole(2)
-  real(kind=r_def) :: null_island(2)
-  real(kind=r_def) :: equatorial_latitude
-
-  ! -------------------------------------------------------------------------- !
-  ! Extract stretching and rotation information from mesh
-  ! -------------------------------------------------------------------------- !
-
-  ! Begin by assuming no stretching and no rotation
-  to_stretch = .false.
-  to_rotate = .false.
-  north_pole(1) = PI
-  north_pole(2) = PI/2.0_r_def
-  null_island(1) = 0.0_r_def
-  null_island(2) = 0.0_r_def
-  equatorial_latitude = 0.0_r_def
-
-  if ( present(mesh_collection) .and.                                          &
-       (present(equator_lat_arg) .or. present(north_pole_arg)) ) then
-    call log_event(                                                            &
-      'init_chi_transform: mesh_compatible argument cannot be passed with ' // &
-      'another argument', LOG_LEVEL_ERROR                                      &
-    )
+  ! Update North Pole
+  if ( (abs(mesh_north_pole(1) - rmdi) > EPS) .and. &
+       (abs(mesh_north_pole(2) - rmdi) > EPS) ) then
+    north_pole(:) = mesh_north_pole(:)
   end if
 
-  if (present(mesh_collection)) then
-    ! NB:
-    ! At this stage, we will assume that the stretching and rotation are the same
-    ! for all meshes. If they weren't, we would need to extract a different factor
-    ! and different rotation matrix for each mesh. The chi2*** transforms would
-    ! also need to take mesh_id as an argument, which would be a major API change
-    ! since it would need passing through each kernel.
-    ! Therefore, extract first mesh from collection ...
-    all_mesh_names = mesh_collection%get_mesh_names()
-    if (SIZE(all_mesh_names) > 0) then
-      mesh => mesh_collection%get_mesh(all_mesh_names(1))
-    else
-      call log_event(                                                          &
-        'init_chi_transform: unable to determine mesh rotation and ' //        &
-        'stretching because there are no meshes!', LOG_LEVEL_ERROR             &
-      )
-    end if
+  ! Update Null Island
+  if ( (abs(mesh_null_island(1) - rmdi) > EPS) .and. &
+       (abs(mesh_null_island(2) - rmdi) > EPS) ) then
+    null_island(:) = mesh_null_island(:)
+  end if
 
-    ! Extract rotation and stretching information from global mesh
-    local_mesh => mesh%get_local_mesh()
-    north_pole = local_mesh%get_north_pole()
-    null_island = local_mesh%get_null_island()
-    equatorial_latitude = local_mesh%get_equatorial_latitude()
+  if ( abs(mesh_equator_latitude - rmdi) > EPS ) then
+    equator_latitude = mesh_equator_latitude
+  end if
 
-    ! If any variables are unset, set them to defaults here --------------------
-    if ( abs(north_pole(1) - rmdi) < EPS                                       &
-         .or. abs(north_pole(2) - rmdi) < EPS ) then
-      north_pole(1) = 0.0_r_def
-      north_pole(2) = PI/2.0_r_def
-      call log_event(                                                          &
-        'Mesh North Pole not set, so using (lon=0, lat=pi/2) as default',      &
-         LOG_LEVEL_WARNING                                                     &
-      )
-    end if
-    if ( abs(null_island(1) - rmdi) < EPS                                      &
-         .or. abs(null_island(2) - rmdi) < EPS ) then
-      null_island(1) = 0.0_r_def
-      null_island(2) = 0.0_r_def
-      call log_event(                                                          &
-        'Mesh Null Island not set, so using (lon=0, lat=0) as default',        &
-         LOG_LEVEL_WARNING                                                     &
-      )
-    end if
-    if ( abs(equatorial_latitude - rmdi) < EPS .or.                            &
-         geometry == geometry_planar .or. topology /= topology_fully_periodic ) then
-      equatorial_latitude = 0.0_r_def
-      call log_event(                                                          &
-        'Equatorial latitude for mesh not set, so using 0.0 as default',       &
-         LOG_LEVEL_WARNING                                                     &
-      )
-    end if
-  end if ! present(mesh_collection)
-
-  if (present(north_pole_arg)) north_pole = north_pole_arg
-  if (present(equator_lat_arg)) equatorial_latitude = equator_lat_arg
-
-
-  ! Now that parameters have been read in, determine if stretching or rotation
-  ! are actually happening
-  to_stretch = abs(equatorial_latitude) > EPS
-  ! It's probably safer to check both the null island and the north pole here
-  to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS                        &
-                .or. abs(null_island(1)) > EPS .or. abs(null_island(2)) > EPS )
+  ! Determine degrees of stretching / rotation.
+  to_stretch = abs(equator_latitude) > EPS
+  to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS .or. &
+                abs(null_island(1)) > EPS .or.               &
+                abs(null_island(2)) > EPS )
 
   ! Compute Schmidt stretch factor ---------------------------------------------
-  stretch_factor = sqrt( (1.0_r_def - sin(equatorial_latitude))                &
-                         / (1.0_r_def + sin(equatorial_latitude)) )
+  stretch_factor = sqrt( (1.0_r_def - sin(equator_latitude)) &
+                         / (1.0_r_def + sin(equator_latitude)) )
 
   ! Compute rotation matrix ----------------------------------------------------
   chi2xyz_rot_mat = mesh_rotation_matrix(north_pole)
@@ -210,13 +130,19 @@ subroutine init_chi_transforms( geometry, topology, &
   ! Compute inverse rotation matrix --------------------------------------------
   xyz2chi_rot_mat = matrix_invert_3x3(chi2xyz_rot_mat)
 
-  write(log_scratch_space,'(A,L6,A,2E16.8)')                                   &
-    'Mesh rotation: ', to_rotate, ' north pole: ', north_pole(1), north_pole(2)
-  call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
-  write(log_scratch_space,'(A,L6,A,E16.8,A,E16.8)')                            &
-    'Mesh stretching: ', to_stretch, ' stretching factor: ', stretch_factor,   &
-    '   latitude of equator: ', equatorial_latitude
-  call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+  if (log_level() == log_level_debug) then
+    write(log_scratch_space,'(A,E12.5)') &
+        'Stretching to equator latitude = ', equator_latitude
+    call log_event(log_scratch_space, log_level_debug)
+
+    write(log_scratch_space,'(A,2E12.5)') &
+        'Rotating to north pole = ', north_pole
+    call log_event(log_scratch_space, log_level_debug)
+
+    write(log_scratch_space,'(A,2E12.5)') &
+        'Rotating to Null island = ', null_island
+    call log_event(log_scratch_space, log_level_debug)
+  end if
 
 end subroutine init_chi_transforms
 
@@ -227,11 +153,18 @@ subroutine final_chi_transforms()
 
   implicit none
 
+  ! Reset values to reflect, unrotated, unstretched [lon,lat]
+  ! spherical mesh surface
+
   to_stretch = .false.
   to_rotate = .false.
-  stretch_factor = rmdi
+  stretch_factor = 1.0_r_def
   chi2xyz_rot_mat(:,:) = 0.0_r_def
   xyz2chi_rot_mat(:,:) = 0.0_r_def
+
+  north_pole  = [0.0_r_def, PI/2.0_r_def]
+  null_island = [0.0_r_def, 0.0_r_def]
+  equator_latitude = 0.0_r_def
 
 end subroutine final_chi_transforms
 
