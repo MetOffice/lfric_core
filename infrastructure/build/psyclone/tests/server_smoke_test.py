@@ -3,6 +3,8 @@
 #  The file LICENCE, distributed with this code, contains details of the terms
 #  under which the code may be used.
 # -----------------------------------------------------------------------------
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 """
 Smoke test for the persistent PSyclone server (psyclone_server.py) and its
 client (psyclone_client.py).

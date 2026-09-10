@@ -4,6 +4,8 @@
 #  The file LICENCE, distributed with this code, contains details of the terms
 #  under which the code may be used.
 # -----------------------------------------------------------------------------
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 """
 Thin client that submits a single PSyclone job to the persistent
 :mod:`psyclone_server` and blocks for the result.
@@ -95,7 +97,6 @@ def _resolve_owner():
                        or psyclone_procs.start_time(pid))
             return pid, started
 
-# TODO Do we need this additional functionality??
     pid = psyclone_procs.outermost_make_pid()
     if pid is None:
         for fallback in (os.getpgrp(), os.getppid()):

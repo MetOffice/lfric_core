@@ -3,6 +3,8 @@
 #  The file LICENCE, distributed with this code, contains details of the terms
 #  under which the code may be used.
 # -----------------------------------------------------------------------------
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 """
 Persistent PSyclone server for the LFRic build system.
 

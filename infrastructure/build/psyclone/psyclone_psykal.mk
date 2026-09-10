@@ -3,6 +3,8 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 #
 # Run this make file to generate PSyKAl source in WORKING_DIR from algorithms
 # and kernels in SOURCE_DIR. Transformation scripts are sought in

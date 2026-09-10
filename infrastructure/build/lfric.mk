@@ -3,6 +3,8 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 #
 # Include this file from your model make file in order to gain access to the
 # LFRic build system. Include it at the end of the make file as it contains
@@ -37,6 +39,7 @@
 #                   unabbreviated for single-group runs.
 #
 ##############################################################################
+
 
 .SECONDEXPANSION:
 
