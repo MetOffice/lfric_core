@@ -199,7 +199,11 @@ contains
 
     character(20), parameter :: lfric_dict = 'lfric_dictionary'
     character(str_def) :: file_id
+#if (RDEF_PRECISION == 32)
+    integer(i_def), parameter :: dflt_prec = 4
+#else
     integer(i_def), parameter :: dflt_prec = 8
+#endif
 
     type(xios_file)    :: file
     character(str_def) :: field_id
