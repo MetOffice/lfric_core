@@ -46,7 +46,8 @@ Output
 
 The stopwatch output always uses the following format:
 
-.. code-block
+.. code-block:: text
+
     (STOPWATCH) Time taken for <stopwatch_name> : <elapsed_time> (s)
 
 
