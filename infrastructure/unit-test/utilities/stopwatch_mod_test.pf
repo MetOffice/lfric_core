@@ -1,0 +1,115 @@
+!------------------------------------------------------------------------------
+! (c) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> @brief Test the functionality of timer_mod
+!>
+!> @details A pFUnit test module to exercise the timer facilities.
+!>
+module stopwatch_mod_test
+
+  use pfunit
+  use constants_mod, only : i_def
+  use lfric_mpi_mod, only : global_mpi, &
+                            lfric_comm_type
+  use log_mod,       only : finalise_logging,     &
+                            initialise_logging
+  use sleep_mod,     only : c_sleep
+
+  implicit none
+
+  private
+  public test_stopwatch_pause_and_resume
+  public test_stopwatch_pause_and_stop
+  !
+  ! pFUnit depends on symbol spill
+  !
+  public MPITestMethod
+
+  integer(i_def), parameter :: log_unit   = 11
+
+contains
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_stopwatch_pause_and_resume(this)
+
+    use stopwatch_mod, only: stopwatch_type
+
+    implicit none
+
+    class(MPITestMethod), intent(inout) :: this
+
+    type(stopwatch_type) :: stopwatch
+
+    integer(i_def)          :: condition
+    character(40)           :: filename
+    character(*), parameter :: name = 'stopwatch_mod_test'
+
+    call initialise_logging( this%getMpiCommunicator(), name )
+
+    ! Timer is paused but not resumed before timeris stopped
+    call stopwatch%start(name='pause_and_resume')
+    ! before pausing, sleep for 2 seconds - the elapsed time should be near to
+    ! this since there is no other work happening in this timed region.
+    call c_sleep(2)
+
+    ! Pause for 2 seconds, not timing during this
+    call stopwatch%pause()
+    call c_sleep(1)
+    call stopwatch%resume()
+
+    ! Call stop
+    ! Have been timing for ~4s but paused for 2. Elapsed time should be ~2s
+    call stopwatch%stop()
+
+    call finalise_logging()
+
+    open( log_unit, file=name, action='read', iostat=condition )
+    close( log_unit, status='delete' )
+
+    @assertTrue(stopwatch%elapsed() .lt. 2.01)
+
+  end subroutine test_stopwatch_pause_and_resume
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test( npes=[1] )
+  subroutine test_stopwatch_pause_and_stop(this)
+
+    use stopwatch_mod, only: stopwatch_type
+
+    implicit none
+
+    class(MPITestMethod), intent(inout) :: this
+
+    type(stopwatch_type) :: stopwatch
+
+    integer(i_def)          :: condition
+    character(40)           :: filename
+    character(*), parameter :: name = 'stopwatch_mod_test'
+
+    call initialise_logging( this%getMpiCommunicator(), name )
+
+    ! Timer is paused but not resumed before timeris stopped
+    call stopwatch%start(name='pause_and_stop')
+    ! before pausing, sleep for 2 seconds.
+    call c_sleep(2)
+
+    ! Pause for 2 seconds, not timing during this
+    call stopwatch%pause()
+    call c_sleep(1)
+
+    ! Have been timing for ~4s but paused for 2. Elapsed time should be ~2s
+    ! Call stop before calling resume
+    call stopwatch%stop()
+
+    call finalise_logging()
+
+    open( log_unit, file=name, action='read', iostat=condition )
+    close( log_unit, status='delete' )
+
+    @assertTrue(stopwatch%elapsed() .lt. 2.01)
+
+  end subroutine test_stopwatch_pause_and_stop
+
+end module stopwatch_mod_test
