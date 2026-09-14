@@ -32,11 +32,15 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the PSy layer
 type, public, extends(kernel_type) :: project_w3_to_w2b_operator_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                                           &
-       arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W2broken, W3),              &
-       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),               &
-       arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3), &
-       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ)                               &
+  type(arg_type) :: meta_args(8) = (/                                           &
+       arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W2broken, W3),              & ! projection_operator
+       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),               & ! chi1, chi2, chi3
+       arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                              & ! geometry
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                              & ! topology
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                              & ! coord_system
+       arg_type(GH_SCALAR,   GH_REAL,    GH_READ),                              & ! scaled_radius
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ)                               & ! direction
        /)
   type(func_type) :: meta_funcs(3) = (/                                         &
        func_type(W2broken,    GH_BASIS),                                        &
@@ -69,6 +73,10 @@ contains
 !> @param[in]     chi2                2nd coordinate field in Wchi
 !> @param[in]     chi3                3rd coordinate field in Wchi
 !> @param[in]     panel_id            Field giving the ID for mesh panels.
+!! @param[in]     geometry            Mesh geometry enumeration
+!! @param[in]     topology            Mesh topology enumeration
+!! @param[in]     coord_system        Finite-element coordinate system enumeration
+!! @param[in]     scaled_radius       Scaled planet radius
 !> @param[in]     direction           Index of the vector component (1,2 or 3) to project
 !> @param[in]     ndf_w2b             Number of degrees of freedom per cell for vector space
 !> @param[in]     basis_w2b           Basis functions for the vector space at quadrature points
@@ -91,6 +99,9 @@ subroutine project_w3_to_w2b_operator_code( cell, nlayers,              &
                                             projection_operator,        &
                                             chi1, chi2, chi3,           &
                                             panel_id,                   &
+                                            geometry, topology,         &
+                                            coord_system,               &
+                                            scaled_radius,              &
                                             direction,                  &
                                             ndf_w2b, basis_w2b,         &
                                             ndf_w3, basis_w3,           &
@@ -100,10 +111,6 @@ subroutine project_w3_to_w2b_operator_code( cell, nlayers,              &
                                             nqp_h, nqp_v, wqp_h, wqp_v )
 
   use sci_coordinate_jacobian_mod, only: pointwise_coordinate_jacobian
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -124,6 +131,11 @@ subroutine project_w3_to_w2b_operator_code( cell, nlayers,              &
   real(kind=r_def), dimension(undf_pid),                intent(in)    :: panel_id
 
   integer(kind=i_def), intent(in) :: direction
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   real(kind=r_def), intent(in) :: wqp_h(nqp_h)
   real(kind=r_def), intent(in) :: wqp_v(nqp_v)

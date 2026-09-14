@@ -8,8 +8,10 @@
 module sci_calc_dA_at_w2_kernel_mod
 
   use argument_mod,          only : arg_type, func_type,       &
-                                    GH_FIELD, GH_REAL, GH_INC, &
-                                    GH_READ, ANY_SPACE_1,      &
+                                    GH_FIELD, GH_SCALAR,       &
+                                    GH_REAL, GH_INTEGER,       &
+                                    GH_INC, GH_READ,           &
+                                    ANY_SPACE_1,               &
                                     GH_BASIS, GH_DIFF_BASIS,   &
                                     ANY_DISCONTINUOUS_SPACE_3, &
                                     CELL_COLUMN, GH_EVALUATOR
@@ -30,10 +32,14 @@ module sci_calc_dA_at_w2_kernel_mod
   !>
   type, public, extends(kernel_type) :: calc_dA_at_w2_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                    &
-         arg_type(GH_FIELD,   GH_REAL, GH_INC,  W2),                       &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_1),              &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3) &
+    type(arg_type) :: meta_args(7) = (/                                     &
+         arg_type(GH_FIELD,   GH_REAL, GH_INC,  W2),                        & ! dA
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_1),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(1) = (/                                  &
          func_type(ANY_SPACE_1, GH_BASIS, GH_DIFF_BASIS)                   &
@@ -57,6 +63,10 @@ contains
 !> @param[in]  chi2           The array of coordinates in the second direction
 !> @param[in]  chi3           The array of coordinates in the third direction
 !> @param[in]  panel_id       A field giving the ID for mesh panels.
+!! @param[in]  geometry       Mesh geometry enumeration
+!! @param[in]  topology       Mesh topology enumeration
+!! @param[in]  coord_system   Finite-element coordinate system enumeration
+!! @param[in]  scaled_radius  Scaled planet radius
 !> @param[in]  ndf_w2         The number of degrees of freedom per cell for the output field
 !> @param[in]  undf_w2        The number of unique degrees of freedom for the output field
 !> @param[in]  map_w2         Integer array holding the dofmap for the cell at the base of the column for the output field
@@ -72,17 +82,16 @@ subroutine calc_dA_at_w2_code( nlayers,                                  &
                                dA,                                       &
                                chi1, chi2, chi3,                         &
                                panel_id,                                 &
+                               geometry, topology,                       &
+                               coord_system, scaled_radius,              &
                                ndf_w2, undf_w2, map_w2,                  &
                                ndf_chi, undf_chi, map_chi,               &
                                basis_chi, diff_basis_chi,                &
                                ndf_pid, undf_pid, map_pid                &
                               )
 
-  use sci_coordinate_jacobian_mod, only: coordinate_jacobian, coordinate_jacobian_inverse
-
-  use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry, topology
-  use planet_config_mod,         only: scaled_radius
+  use sci_coordinate_jacobian_mod, only: coordinate_jacobian, &
+                                         coordinate_jacobian_inverse
 
   implicit none
 
@@ -104,6 +113,11 @@ subroutine calc_dA_at_w2_code( nlayers,                                  &
   real(kind=r_def), dimension(3,ndf_chi,ndf_w2), intent(in) :: diff_basis_chi
   real(kind=r_def), dimension(1,ndf_chi,ndf_w2), intent(in) :: basis_chi
   integer(kind=i_def), dimension(ndf_pid), intent(in)       :: map_pid
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def) :: df, k

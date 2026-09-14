@@ -15,6 +15,7 @@
 module sci_mapping_constants_mod
 
   ! Infrastructure
+  use config_mod,                        only: config_type
   use constants_mod,                     only: i_def, r_def, l_def, str_def
   use extrusion_mod,                     only: PRIME_EXTRUSION, &
                                                DOUBLE_LEVEL,    &
@@ -39,16 +40,6 @@ module sci_mapping_constants_mod
   use r_tran_field_mod,                  only: r_tran_field_type
   use timing_mod,                        only: start_timing, stop_timing, &
                                                tik, LPROF
-
-  ! Object types
-  use config_mod, only: config_type
-
-  ! Configuration modules
-  use base_mesh_config_mod, only: geometry_spherical,      &
-                                  geometry_planar,         &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
-
 
   ! Other algorithms
   use sci_geometric_constants_mod, only: get_coordinates, &
@@ -145,15 +136,17 @@ contains
 
   !> @brief Creates the operators for projecting a vector of components in W3
   !!        to a field in W2
-  !> @param[in] mesh  The mesh to compute the operators for
-  subroutine create_cartesian_components_to_w2_matrices(mesh)
+  !> @param[in] config  Application configuration object
+  !> @param[in] mesh    The mesh to compute the operators for
+  subroutine create_cartesian_components_to_w2_matrices(config, mesh)
 
     use sci_project_ws_to_w2_operator_kernel_mod, &
                                     only: project_ws_to_w2_operator_kernel_type
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),         pointer :: project_xdot_to_w2
     type(operator_type),         pointer :: project_ydot_to_w2
@@ -167,6 +160,11 @@ contains
     integer(kind=i_def),       parameter :: ydirection = 2_i_def
     integer(kind=i_def),       parameter :: zdirection = 3_i_def
 
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
+
     if (.not. project_xdot_to_w2_inventory%is_initialised()) then
       call project_xdot_to_w2_inventory%initialise(name='project_xdot_to_w2')
     end if
@@ -177,6 +175,11 @@ contains
       call project_zdot_to_w2_inventory%initialise(name='project_zdot_to_w2')
     end if
 
+    geometry = mesh%geometry()
+    topology = mesh%topology()
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     chi => get_coordinates(mesh)
     panel_id => get_panel_id(mesh)
@@ -191,12 +194,21 @@ contains
 
     call invoke( project_ws_to_w2_operator_kernel_type(project_xdot_to_w2,     &
                                                        chi, panel_id,          &
+                                                       geometry, topology,     &
+                                                       coord_system,           &
+                                                       scaled_radius,          &
                                                        xdirection, qr),        &
                  project_ws_to_w2_operator_kernel_type(project_ydot_to_w2,     &
                                                        chi, panel_id,          &
+                                                       geometry, topology,     &
+                                                       coord_system,           &
+                                                       scaled_radius,          &
                                                        ydirection, qr),        &
                  project_ws_to_w2_operator_kernel_type(project_zdot_to_w2,     &
                                                        chi, panel_id,          &
+                                                       geometry, topology,     &
+                                                       coord_system,           &
+                                                       scaled_radius,          &
                                                        zdirection, qr) )
 
   end subroutine
@@ -230,18 +242,8 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -309,18 +311,8 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -557,19 +549,21 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the Wtheta to shifted W3 integrals
-  !> @param[in] prime_extrusion_mesh  The prime extrusion mesh for the transform
+  !> @param[in] config  Application configuration object
+  !> @param[in] mesh    Mesh for the transform
   !> @return The integrals for transforming a mixing ratio in Wtheta
   !> to a density in shifted W3
-  function get_proj_mr_to_sh_rho_rhs_op(prime_extrusion_mesh) result(integrals)
+  function get_proj_mr_to_sh_rho_rhs_op(config, mesh) result(integrals)
 
     use sci_proj_mr_to_sh_rho_rhs_op_kernel_mod, &
                                       only: proj_mr_to_sh_rho_rhs_op_kernel_type
 
     implicit none
 
-    type(mesh_type), pointer, intent(in) :: prime_extrusion_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+
     type(mesh_type),             pointer :: double_level_mesh
-    integer(kind=i_def)                  :: prime_mesh_id
     type(field_type),            pointer :: integrals(:)
     type(field_type),            pointer :: double_level_chi(:)
     type(field_type),            pointer :: panel_id
@@ -581,6 +575,17 @@ contains
     logical(kind=l_def)                  :: constant_exists
     integer(tik)                         :: id
 
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def) :: scaled_radius
+
+    geometry = mesh%geometry()
+    topology = mesh%topology()
+
+    coord_system = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Check inventory is initialised
     if (.not. proj_mr_to_sh_rho_inventory%is_initialised()) then
       call proj_mr_to_sh_rho_inventory%initialise(                             &
@@ -588,28 +593,27 @@ contains
       )
     end if
 
-    prime_mesh_id = prime_extrusion_mesh%get_id()
     constant_exists = proj_mr_to_sh_rho_inventory%paired_object_exists(        &
-            prime_mesh_id                                                      &
+            mesh%get_id()                                                      &
     )
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
 
-      panel_id => get_panel_id(prime_extrusion_mesh)
+      panel_id => get_panel_id(mesh)
       double_level_mesh => mesh_collection%get_mesh(                           &
-              prime_extrusion_mesh, DOUBLE_LEVEL                               &
+              mesh, DOUBLE_LEVEL                                               &
       )
       double_level_chi => get_coordinates(double_level_mesh)
       qr => get_qr_fv()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
-      w3_fs => function_space_collection%get_fs(prime_extrusion_mesh, 0, 0, W3)
-      wtheta_fs => function_space_collection%get_fs(prime_extrusion_mesh, 0, 0, Wtheta)
+      w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
+      wtheta_fs => function_space_collection%get_fs(mesh, 0, 0, Wtheta)
 
       call proj_mr_to_sh_rho_inventory%add_field_array(                        &
-              integrals, w3_fs, 4, prime_extrusion_mesh                        &
+              integrals, w3_fs, 4, mesh                                        &
       )
 
       do k = 1, 4
@@ -620,6 +624,9 @@ contains
       call invoke( proj_mr_to_sh_rho_rhs_op_kernel_type(integrals,             &
                                                         double_level_chi,      &
                                                         panel_id,              &
+                                                        geometry, topology,    &
+                                                        coord_system,          &
+                                                        scaled_radius,         &
                                                         dummy_theta,           &
                                                         qr) )
 
@@ -627,7 +634,7 @@ contains
     end if
 
     ! Get existing constant
-    call proj_mr_to_sh_rho_inventory%get_field_array(prime_extrusion_mesh, integrals)
+    call proj_mr_to_sh_rho_inventory%get_field_array(mesh, integrals)
 
   end function get_proj_mr_to_sh_rho_rhs_op
 
@@ -696,15 +703,19 @@ contains
   end function get_intermesh_weights_w2
 
   !> @brief Returns a pointer to the weights for conservative W3 mapping
+  !> @param[in] config       Application configuration object
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
-  function get_intermesh_weights_w3_rdef(fine_mesh, coarse_mesh) result(weights_rdef)
+  function get_intermesh_weights_w3_rdef(config, fine_mesh, coarse_mesh) &
+                                  result(weights_rdef)
 
     use sci_fem_constants_mod,               only: get_mass_matrix_diagonal_fv
     use sci_weights_intermesh_w3_kernel_mod, only: weights_intermesh_w3_kernel_type
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type(mesh_type), pointer, intent(in) :: coarse_mesh
     type(mesh_type), pointer, intent(in) :: fine_mesh
@@ -741,8 +752,8 @@ contains
       end if
 
       ! @TODO #4487: this would be better as just the cell volumes
-      mm_w3_fine => get_mass_matrix_diagonal_fv(W3, fine_mesh%get_id())
-      mm_w3_coarse => get_mass_matrix_diagonal_fv(W3, coarse_mesh%get_id())
+      mm_w3_fine   => get_mass_matrix_diagonal_fv(config, fine_mesh, W3)
+      mm_w3_coarse => get_mass_matrix_diagonal_fv(config, coarse_mesh, W3)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
@@ -768,12 +779,16 @@ contains
   end function get_intermesh_weights_w3_rdef
 
   !> @brief Returns a pointer to the weights for conservative W3 mapping
+  !> @param[in] config       Application configuration object
   !> @param[in] fine_mesh    The fine mesh for the transform
   !> @param[in] coarse_mesh  The coarse mesh for the transform
   !> @return The field containing weights for conservative W3 mapping
-  function get_intermesh_weights_w3_rtran(fine_mesh, coarse_mesh) result(weights_rtran)
+  function get_intermesh_weights_w3_rtran(config, fine_mesh, coarse_mesh) &
+                                   result(weights_rtran)
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type(mesh_type), pointer, intent(in) :: coarse_mesh
     type(mesh_type), pointer, intent(in) :: fine_mesh
@@ -800,7 +815,9 @@ contains
 
     if (.not. constant_exists) then
       ! Create the object as it doesn't exist yet
-      weights_rdef => get_intermesh_weights_w3_rdef(fine_mesh, coarse_mesh)
+      weights_rdef => get_intermesh_weights_w3_rdef(config,    &
+                                                    fine_mesh, &
+                                                    coarse_mesh)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
@@ -827,13 +844,15 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the operator projection from xdot to W2
-  !> @param[in]  mesh  Mesh to get the object for
+  !> @param[in]  config  Application configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
-  function get_project_xdot_to_w2(mesh) result(proj_op)
+  function get_project_xdot_to_w2(config, mesh) result(proj_op)
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -845,19 +864,23 @@ contains
 
     constant_exists = project_xdot_to_w2_inventory%paired_object_exists(mesh%get_id())
 
-    if (.not. constant_exists) call create_cartesian_components_to_w2_matrices(mesh)
+    if (.not. constant_exists) then
+      call create_cartesian_components_to_w2_matrices(config, mesh)
+    end if
 
     call project_xdot_to_w2_inventory%get_operator(mesh, proj_op)
 
   end function get_project_xdot_to_w2
 
   !> @brief Returns a pointer to the operator projection from ydot to W2
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  config  Application configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
-  function get_project_ydot_to_w2(mesh) result(proj_op)
+  function get_project_ydot_to_w2(config, mesh) result(proj_op)
 
     implicit none
 
+    type(config_type), intent(in) :: config
     type(mesh_type), intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
@@ -870,20 +893,24 @@ contains
 
     constant_exists = project_ydot_to_w2_inventory%paired_object_exists(mesh%get_id())
 
-    if (.not. constant_exists) call create_cartesian_components_to_w2_matrices(mesh)
+    if (.not. constant_exists) then
+      call create_cartesian_components_to_w2_matrices(config, mesh)
+    end if
 
     call project_ydot_to_w2_inventory%get_operator(mesh, proj_op)
 
   end function get_project_ydot_to_w2
 
   !> @brief Returns a pointer to the operator projection from zdot to W2
-  !> @param[in]  mesh  Mesh to get the object for
+  !> @param[in]  config  Application configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
-  function get_project_zdot_to_w2(mesh) result(proj_op)
+  function get_project_zdot_to_w2(config, mesh) result(proj_op)
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
@@ -895,7 +922,9 @@ contains
 
     constant_exists = project_zdot_to_w2_inventory%paired_object_exists(mesh%get_id())
 
-    if (.not. constant_exists) call create_cartesian_components_to_w2_matrices(mesh)
+    if (.not. constant_exists) then
+      call create_cartesian_components_to_w2_matrices(config, mesh)
+    end if
 
     call project_zdot_to_w2_inventory%get_operator(mesh, proj_op)
 
@@ -1109,18 +1138,8 @@ contains
     integer(kind=i_def),      parameter :: xdirection = 1_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1191,18 +1210,8 @@ contains
     integer(kind=i_def),      parameter :: ydirection = 2_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1274,18 +1283,8 @@ contains
     integer(kind=i_def),      parameter :: zdirection = 3_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1358,18 +1357,8 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 

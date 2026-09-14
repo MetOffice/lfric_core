@@ -17,8 +17,8 @@ module lfric_xios_process_output_mod
   use constants_mod,              only: i_def, str_max_filename
   use file_mod,                   only: FILE_MODE_WRITE,     &
                                         FILE_OP_OPEN
-  use io_config_mod,              only: file_convention,       &
-                                        file_convention_ugrid
+!!$  use io_config_mod,              only: file_convention,       &
+!!$                                        file_convention_ugrid
   use lfric_mpi_mod,              only: global_mpi
   use lfric_ncdf_field_mod,       only: lfric_ncdf_field_type
   use lfric_ncdf_file_mod,        only: lfric_ncdf_file_type

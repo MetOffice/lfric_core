@@ -9,10 +9,9 @@ module convert_phys_to_hdiv_kernel_mod_test
 
   use constants_mod, only: i_def, r_def, rmdi
 
-  use base_mesh_config_mod,      only: geometry_planar, &
-                                       topology_fully_periodic
+  use mesh_mod,                  only: geometry_planar, &
+                                       topology_periodic
   use finite_element_config_mod, only: coord_system_xyz
-
   use funit
 
   implicit none
@@ -30,7 +29,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms(geometry_planar, topology_fully_periodic)
+    call init_chi_transforms(geometry_planar, topology_periodic)
 
   end subroutine set_up
 
@@ -77,7 +76,7 @@ contains
     real(r_def), parameter :: u_radial = 0.4_r_def
 
     integer(i_def), parameter :: geometry = geometry_planar
-    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: topology = topology_periodic
     integer(i_def), parameter :: coord_system = coord_system_xyz
     real(r_def),    parameter :: scaled_radius = rmdi
 

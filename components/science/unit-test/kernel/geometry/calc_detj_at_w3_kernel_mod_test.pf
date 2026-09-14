@@ -8,7 +8,8 @@
 !>
 module calc_detj_at_w3_kernel_mod_test
 
-    use constants_mod, only: imdi, i_def, r_def, r_single, r_double
+    use constants_mod, only: rmdi, imdi, i_def, r_def, r_single, r_double
+    use finite_element_config_mod, only : coord_system_xyz
     use funit
 
     use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
@@ -42,24 +43,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
 
     class(calc_detj_at_w3_test_type), intent(inout) :: this
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -68,14 +56,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
     class(calc_detj_at_w3_test_type), intent(inout) :: this
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -94,6 +80,11 @@ contains
     real(kind=r_def),    parameter :: dx = 11.0_r_def
     real(kind=r_def),    parameter :: dy = 17.0_r_def
     real(kind=r_def),    parameter :: dz = 23.0_r_def
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Fields
     real(kind=r_double), allocatable :: detj_w3_p(:)
@@ -159,6 +150,10 @@ contains
                                chi2,             &
                                chi3,             &
                                panel_id,         &
+                               geometry,         &
+                               topology,         &
+                               coord_system,     &
+                               scaled_radius,    &
                                ndf_w3,           &
                                undf_w3,          &
                                map_w3(:,cell),   &
@@ -202,6 +197,11 @@ contains
     real(kind=r_def),    parameter :: dx = 11.0_r_def
     real(kind=r_def),    parameter :: dy = 17.0_r_def
     real(kind=r_def),    parameter :: dz = 23.0_r_def
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Fields
     real(kind=r_single), allocatable :: detj_w3_p(:)
@@ -267,6 +267,10 @@ contains
                                chi2,             &
                                chi3,             &
                                panel_id,         &
+                               geometry,         &
+                               topology,         &
+                               coord_system,     &
+                               scaled_radius,    &
                                ndf_w3,           &
                                undf_w3,          &
                                map_w3(:,cell),   &

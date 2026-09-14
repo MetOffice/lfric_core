@@ -25,7 +25,9 @@
 module sci_proj_mr_to_sh_rho_rhs_op_kernel_mod
 
   use argument_mod,      only : arg_type, func_type,                    &
-                                GH_FIELD, GH_REAL, GH_WRITE, GH_READ,   &
+                                GH_FIELD, GH_SCALAR,                    &
+                                GH_REAL, GH_INTEGER,                    &
+                                GH_WRITE, GH_READ,                      &
                                 ANY_SPACE_9, ANY_DISCONTINUOUS_SPACE_3, &
                                 GH_BASIS, GH_DIFF_BASIS,                &
                                 CELL_COLUMN, GH_QUADRATURE_XYoZ
@@ -45,10 +47,14 @@ module sci_proj_mr_to_sh_rho_rhs_op_kernel_mod
   !>
   type, public, extends(kernel_type) :: proj_mr_to_sh_rho_rhs_op_kernel_type
     private
-    type(arg_type) :: meta_args(4) = (/                                      &
+    type(arg_type) :: meta_args(8) = (/                                      &
          arg_type(GH_FIELD*4, GH_REAL, GH_WRITE, W3),                        & ! I_lower/upper
          arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               & ! chi_dl
          arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ),                          & ! scaled_radius
          arg_type(GH_FIELD,   GH_REAL, GH_READ,  Wtheta)                     & ! dummy_theta
          /)
     type(func_type) :: meta_funcs(2) = (/                                    &
@@ -81,6 +87,10 @@ contains
 !! @param[in] chi_dl_2 The 2nd coordinate field in Wchi for double level mesh.
 !! @param[in] chi_dl_3 The 3rd coordinate field in Wchi for double level mesh.
 !! @param[in] panel_id A field giving the ID for the mesh panels.
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] dummy_theta An unused dummy variable in Wtheta.
 !! @param[in] ndf_w3 The number of degrees of freedom per cell for w3
 !! @param[in] undf_w3 The number of unique degrees of freedom for w3
@@ -111,7 +121,8 @@ subroutine proj_mr_to_sh_rho_rhs_op_code(                                      &
                                           I_upper_i_i,                         &
                                           I_upper_i_im1,                       &
                                           chi_dl_1, chi_dl_2, chi_dl_3,        &
-                                          panel_id,                            &
+                                          panel_id, geometry, topology,        &
+                                          coord_system, scaled_radius,         &
                                           dummy_theta,                         &
                                           ndf_w3, undf_w3, map_w3,             &
                                           ndf_chi_dl, undf_chi_dl, map_chi_dl, &
@@ -124,10 +135,6 @@ subroutine proj_mr_to_sh_rho_rhs_op_code(                                      &
                                          )
 
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-
-  use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry, topology
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -153,6 +160,11 @@ subroutine proj_mr_to_sh_rho_rhs_op_code(                                      &
   real(kind=r_def), dimension(undf_chi_dl), intent(in)   :: chi_dl_1, chi_dl_2, chi_dl_3
   real(kind=r_def), dimension(nqp_h), intent(in)         :: wqp_h
   real(kind=r_def), dimension(nqp_v), intent(in)         :: wqp_v
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                                    :: df, k
