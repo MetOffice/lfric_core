@@ -94,9 +94,21 @@ class LFRicBase(FabBase):
         base_paths = [self.config.source_root,
                       self.config.build_output]
         script_root = self.config.source_root / "optimisation"
-        template_data = {"site": self.site,
-                         "platform": self.platform,
-                         "target": self.target}
+
+        # Setup variables to be used in templated name. Not sure
+        # if site and platform will be required long term,
+        # likely $target is all we need to support.
+        if self.args.psyclone_opt_dir == "'$site-$platform'":
+            # This is the default. Note that atm there is a '-'
+            # between site and platform for the PSyclone scripts
+            # (while in Fab it's a '_').
+            template_data = {"site": self.site,
+                             "platform": self.platform,
+                             "target": f"{self.site}-{self.platform}"}
+        else:
+            template_data = {"site": self.site,
+                             "platform": self.platform,
+                             "target": self.args.psyclone_opt_dir}
         self._psyclone_control = PsycloneControl(script_root=script_root,
                                                  base_paths=base_paths,
                                                  template_data=template_data)
@@ -163,10 +175,16 @@ class LFRicBase(FabBase):
             '--no-xios', action="store_true", default=False,
             help="Disable compilation with XIOS.")
 
-        parser.add_argument(
+        psy_args = parser.add_argument_group("PSyclone parameters")
+        psy_args.add_argument(
             '--psyclone-control', action="append",
             help="PSyclone configuration files, controlling when to "
                  "run the various PSyclone phases.")
+
+        psy_args.add_argument(
+            '--psyclone-opt-dir', type=str, default="'$site-$platform'",
+            help="Subdirectory under optimisation from which to load"
+                 "scripts")
 
         # Precision related command line arguments
         # ----------------------------------------
