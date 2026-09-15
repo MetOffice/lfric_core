@@ -12,11 +12,13 @@
 !>          Only written for the lowest order elements.
 module sci_sort_column_above_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only: arg_type,             &
                                GH_FIELD, GH_SCALAR,  &
                                GH_REAL, GH_READ,     &
                                GH_READWRITE, CELL_COLUMN
-  use constants_mod,     only: r_double, r_single, i_def, r_def
+  use constants_mod,     only: i_def, r_def
   use fs_continuity_mod, only: Wtheta
   use kernel_mod,        only: kernel_type
 
@@ -48,8 +50,8 @@ module sci_sort_column_above_kernel_mod
   ! Generic interface for real32 and real64 types
   interface sort_column_above_code
     module procedure  &
-      sort_column_above_code_r_single, &
-      sort_column_above_code_r_double
+      sort_column_above_code_real32, &
+      sort_column_above_code_real64
   end interface
 contains
 
@@ -63,9 +65,9 @@ contains
 !> @param[in]     undf_wth               Num of DoFs per partition for Wtheta
 !> @param[in]     map_wth                DoFmap for Wtheta
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine sort_column_above_code_r_single(nlayers,                   &
+subroutine sort_column_above_code_real32(  nlayers,                   &
                                            theta,                     &
                                            height_wth,                &
                                            height_to_sort_above,      &
@@ -80,13 +82,13 @@ subroutine sort_column_above_code_r_single(nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   real(kind=r_def),    intent(in) :: height_to_sort_above
 
-  real(kind=r_single), dimension(undf_wth), intent(inout) :: theta
+  real(kind=real32),   dimension(undf_wth), intent(inout) :: theta
   real(kind=r_def),    dimension(undf_wth), intent(in)    :: height_wth
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt, k_low
-  real(kind=r_single) :: theta_k
+  real(kind=real32)   :: theta_k
 
   ! Work out level to sort about
   k_low = nlayers + 1
@@ -111,11 +113,11 @@ subroutine sort_column_above_code_r_single(nlayers,                   &
     theta(map_wth(1) + kcnt) = theta_k
   end do
 
-end subroutine sort_column_above_code_r_single
+end subroutine sort_column_above_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine sort_column_above_code_r_double(nlayers,                   &
+subroutine sort_column_above_code_real64(  nlayers,                   &
                                            theta,                     &
                                            height_wth,                &
                                            height_to_sort_above,      &
@@ -130,13 +132,13 @@ subroutine sort_column_above_code_r_double(nlayers,                   &
   integer(kind=i_def), intent(in) :: ndf_wth, undf_wth
   real(kind=r_def),    intent(in) :: height_to_sort_above
 
-  real(kind=r_double), dimension(undf_wth), intent(inout) :: theta
+  real(kind=real64),   dimension(undf_wth), intent(inout) :: theta
   real(kind=r_def),    dimension(undf_wth), intent(in)    :: height_wth
   integer(kind=i_def), dimension(ndf_wth),  intent(in)    :: map_wth
 
   ! Internal variables
   integer(kind=i_def) :: k, kcnt, k_low
-  real(kind=r_double) :: theta_k
+  real(kind=real64)   :: theta_k
 
   ! Work out level to sort about
   k_low = nlayers + 1
@@ -161,6 +163,6 @@ subroutine sort_column_above_code_r_double(nlayers,                   &
     theta(map_wth(1) + kcnt) = theta_k
   end do
 
-end subroutine sort_column_above_code_r_double
+end subroutine sort_column_above_code_real64
 
 end module sci_sort_column_above_kernel_mod

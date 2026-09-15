@@ -11,12 +11,14 @@
 
 module sci_assign_field_random_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use argument_mod,            only : arg_type,            &
                                     GH_FIELD, GH_REAL,   &
                                     GH_INC, ANY_SPACE_1, &
                                     CELL_COLUMN, GH_READ, &
                                     GH_SCALAR
-use constants_mod,           only : r_single, r_double, i_def
+use constants_mod,           only : i_def
 use kernel_mod,              only : kernel_type
 
 implicit none
@@ -44,8 +46,8 @@ public :: assign_field_random_code
   ! Generic interface for real32 and real64 types
   interface assign_field_random_code
     module procedure  &
-      assign_field_random_code_r_single, &
-      assign_field_random_code_r_double
+      assign_field_random_code_real32, &
+      assign_field_random_code_real64
   end interface
 
 contains
@@ -58,9 +60,9 @@ contains
 !> @param[in] undf Unique number of degrees of freedom  for the output field
 !> @param[in] map Dofmap for the cell at the base of the column for the output field
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine assign_field_random_code_r_single(nlayers,       &
+subroutine assign_field_random_code_real32(  nlayers,       &
                                              x,             &
                                              scale,         &
                                              ndf, undf, map)
@@ -70,12 +72,12 @@ subroutine assign_field_random_code_r_single(nlayers,       &
   integer(kind=i_def),                     intent(in)    :: nlayers
   integer(kind=i_def),                     intent(in)    :: undf, ndf
   integer(kind=i_def), dimension(ndf),     intent(in)    :: map
-  real   (kind=r_single), dimension(undf), intent(inout) :: x
-  real   (kind=r_single),                  intent(in)    :: scale
+  real   (kind=real32),   dimension(undf), intent(inout) :: x
+  real   (kind=real32),                    intent(in)    :: scale
 
   ! Internal variables
   integer(kind=i_def)              :: df, k
-  real(kind=r_single), dimension(ndf) :: random_values
+  real(kind=real32),   dimension(ndf) :: random_values
 
   do k = 0, nlayers-1
     call random_number(random_values(:))
@@ -84,11 +86,11 @@ subroutine assign_field_random_code_r_single(nlayers,       &
     end do
   end do
 
-end subroutine assign_field_random_code_r_single
+end subroutine assign_field_random_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine assign_field_random_code_r_double(nlayers,       &
+subroutine assign_field_random_code_real64(  nlayers,       &
                                              x,             &
                                              scale,         &
                                              ndf, undf, map)
@@ -98,12 +100,12 @@ subroutine assign_field_random_code_r_double(nlayers,       &
   integer(kind=i_def),                     intent(in)    :: nlayers
   integer(kind=i_def),                     intent(in)    :: undf, ndf
   integer(kind=i_def),    dimension(ndf),  intent(in)    :: map
-  real   (kind=r_double), dimension(undf), intent(inout) :: x
-  real   (kind=r_double),                  intent(in)    :: scale
+  real   (kind=real64),   dimension(undf), intent(inout) :: x
+  real   (kind=real64),                    intent(in)    :: scale
 
   ! Internal variables
   integer(kind=i_def)              :: df, k
-  real(kind=r_double), dimension(ndf) :: random_values
+  real(kind=real64),   dimension(ndf) :: random_values
 
   do k = 0, nlayers-1
     call random_number(random_values(:))
@@ -112,6 +114,6 @@ subroutine assign_field_random_code_r_double(nlayers,       &
     end do
   end do
 
-end subroutine assign_field_random_code_r_double
+end subroutine assign_field_random_code_real64
 
 end module sci_assign_field_random_kernel_mod
