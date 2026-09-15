@@ -7,7 +7,7 @@
 !>  @brief Support for configuring input/output files
 module lfric_xios_metafile_mod
 
-  use constants_mod,                 only: str_def, i_def, l_def
+  use constants_mod,                 only: str_def, i_def, l_def, imdi
   use log_mod,                       only: log_event,                         &
                                            log_level_error,                   &
                                            log_level_info,                    &
@@ -52,56 +52,6 @@ private
 public :: metafile_type, add_field
 
 contains
-
-  !> @brief Support for legacy checkpoints
-  !> @details This affects lbc and gungho prognostics, which have traditionally been
-  !> using the legacy checkpoint domains checkpoint_W3, checkpoint_W2 etc.
-  !> @param[in] field    XIOS field object
-  !> @param[in] field_id XIOS fielld id
-  subroutine handle_legacy_fields(field, field_id)
-    implicit none
-
-    type(xios_field), intent(in) :: field
-    character(*), intent(in) :: field_id
-
-    character(20), parameter :: Wtheta = 'checkpoint_Wtheta'
-    character(20), parameter :: W3 = 'checkpoint_W3'
-    character(20), parameter :: W2 = 'checkpoint_W2'
-
-    character(20), parameter :: wtheta_fields(7) = [character(20) :: &
-      'theta', 'm_v', 'm_cl', 'm_r', 'm_ci', 'm_s', 'm_g']
-    character(20), parameter :: w3_fields(3) =  [character(20) ::  &
-     'rho', 'exner', 'ageofair']
-    character(20), parameter :: w2_fields(1) = [character(20) :: &
-      'u']
-    character(20), parameter :: lbc_wtheta_fields(7) = [character(20) ::  &
-      'lbc_theta', 'lbc_m_v', 'lbc_m_cl', 'lbc_m_r', 'lbc_m_ci', 'lbc_m_s', 'lbc_m_g']
-    character(20), parameter :: lbc_w3_fields(2) = [character(20) :: &
-      'lbc_rho', 'lbc_exner']
-    character(20), parameter :: lbc_w2_fields(3) = [character(20) :: &
-      'lbc_u', 'boundary_u_diff', 'boundary_u_driving']
-
-    character(20) :: domain_id
-
-    if (any(wtheta_fields == field_id)) then
-      domain_id = Wtheta
-    else if (any(w3_fields == field_id)) then
-      domain_id = W3
-    else if (any(w2_fields == field_id)) then
-      domain_id = W2
-    else if (any(lbc_wtheta_fields == field_id)) then
-      domain_id = Wtheta
-    else if (any(lbc_w3_fields == field_id)) then
-      domain_id = W3
-    else if (any(lbc_w2_fields == field_id)) then
-      domain_id = W2
-    else
-      domain_id = ''
-      call log_event('unexpected legacy field: ' // trim(field_id), log_level_error)
-    end if
-
-    call xios_set_attr(field, domain_ref=domain_id)
-  end subroutine handle_legacy_fields
 
   !> @brief Get file handle from XIOS
   !> @param[inout] self  Metafile object
@@ -187,8 +137,8 @@ contains
   !> @param[in] mode           ID prefix to be used, .e.g, "checkpoint_"
   !> @param[in] operation      XIOS field operation, e.g., "once"
   !> @param[in] id_as_name     Use dictionary field ID as field name?
-  !> @param[in] legacy         Use legacy checkpointing domain?
-  subroutine add_field(metafile, dict_field_id, mode, operation, id_as_name, legacy)
+  !> @param[in] legacy         Use legacy domains for checkpointing
+  subroutine add_field( metafile, dict_field_id, mode, operation, id_as_name, legacy )
     implicit none
     type(metafile_type), intent(in) :: metafile(:)
     character(*), intent(in) :: dict_field_id
@@ -210,7 +160,7 @@ contains
     character(str_def) :: axis_ref
     integer(i_def)     :: prec
     logical(l_def)     :: use_id_as_name
-    logical(l_def)     :: use_legacy
+    logical(l_def)     :: use_ugrid_ckp, use_legacy
     integer(i_def)     :: i
 
     use_id_as_name = .false.
@@ -218,6 +168,10 @@ contains
 
     use_legacy = .false.
     if (present(legacy)) use_legacy = legacy
+
+    ! Flag to use UGRID for checkpointing, disabled until XIOS supports UGRID
+    ! for full set of checkpoint fields
+    use_ugrid_ckp = .false.
 
     do i = 1, size(metafile)
       file_id = metafile(i)%get_id()
@@ -258,14 +212,23 @@ contains
         if (use_legacy) then
           call handle_legacy_fields(field, dict_field_id)
         else
+          ! Set correct domain/grid IDs for fields
           grid_ref = get_field_grid_ref(dict_field_id)
           if (grid_ref /= '') then
-            call xios_set_attr(field, grid_ref=grid_ref)
+            if (use_ugrid_ckp) then
+              call xios_set_attr(field, grid_ref=trim(grid_ref))
+            else
+              call xios_set_attr(field, grid_ref=trim(grid_ref)//"_cf")
+            end if
           else
             domain_ref = get_field_domain_ref(dict_field_id)
             axis_ref = get_field_axis_ref(dict_field_id)
-            if (domain_ref /= '') call xios_set_attr(field, domain_ref=domain_ref)
-            if (axis_ref /= '') call xios_set_attr(field, axis_ref=axis_ref)
+            if (use_ugrid_ckp) then
+              if (domain_ref /= '') call xios_set_attr(field, domain_ref=trim(domain_ref))
+            else
+              if (domain_ref /= '') call xios_set_attr(field, domain_ref=trim(domain_ref)//"_cf")
+            end if
+            if (axis_ref /= '') call xios_set_attr(field, axis_ref=trim(axis_ref))
           end if
         end if
       end if
@@ -277,5 +240,55 @@ contains
 
     end do
   end subroutine add_field
+
+  !> @brief Support for legacy I/O
+  !> @details This affects lbc and gungho prognostics, which have traditionally been
+  !> using the legacy domains legacy_W3, legacy_W2 etc.
+  !> @param[in] field    XIOS field object
+  !> @param[in] field_id XIOS fielld id
+  subroutine handle_legacy_fields(field, field_id)
+    implicit none
+
+    type(xios_field), intent(in) :: field
+    character(*), intent(in) :: field_id
+
+    character(20), parameter :: Wtheta = 'legacy_Wtheta'
+    character(20), parameter :: W3 = 'legacy_W3'
+    character(20), parameter :: W2 = 'legacy_W2'
+
+    character(20), parameter :: wtheta_fields(7) = [character(20) :: &
+      'theta', 'm_v', 'm_cl', 'm_r', 'm_ci', 'm_s', 'm_g']
+    character(20), parameter :: w3_fields(3) =  [character(20) ::  &
+     'rho', 'exner', 'ageofair']
+    character(20), parameter :: w2_fields(1) = [character(20) :: &
+      'u']
+    character(20), parameter :: lbc_wtheta_fields(7) = [character(20) ::  &
+      'lbc_theta', 'lbc_m_v', 'lbc_m_cl', 'lbc_m_r', 'lbc_m_ci', 'lbc_m_s', 'lbc_m_g']
+    character(20), parameter :: lbc_w3_fields(2) = [character(20) :: &
+      'lbc_rho', 'lbc_exner']
+    character(20), parameter :: lbc_w2_fields(3) = [character(20) :: &
+      'lbc_u', 'boundary_u_diff', 'boundary_u_driving']
+
+    character(20) :: domain_id
+
+    if (any(wtheta_fields == field_id)) then
+      domain_id = Wtheta
+    else if (any(w3_fields == field_id)) then
+      domain_id = W3
+    else if (any(w2_fields == field_id)) then
+      domain_id = W2
+    else if (any(lbc_wtheta_fields == field_id)) then
+      domain_id = Wtheta
+    else if (any(lbc_w3_fields == field_id)) then
+      domain_id = W3
+    else if (any(lbc_w2_fields == field_id)) then
+      domain_id = W2
+    else
+      domain_id = ''
+      call log_event('unexpected legacy field: ' // trim(field_id), log_level_error)
+    end if
+
+    call xios_set_attr(field, domain_ref=domain_id)
+  end subroutine handle_legacy_fields
 
 end module lfric_xios_metafile_mod

@@ -23,9 +23,6 @@ module lfric_xios_setup_mod
   use function_space_collection_mod, only: function_space_collection
   use fs_continuity_mod,             only: W0, W1, W2, W3, Wtheta, W2H, W2V, &
                                            name_from_functionspace
-  use io_config_mod,                 only: file_convention,       &
-                                           file_convention_ugrid, &
-                                           file_convention_cf
   use lfric_mpi_mod,                 only: global_mpi
   use lfric_xios_file_mod,           only: lfric_xios_file_type
   use lfric_xios_process_output_mod, only: xyz_scaling_factor
@@ -33,7 +30,8 @@ module lfric_xios_setup_mod
   use lfric_core_version_mod,        only: lfric_core_version_char
   use linked_list_mod,               only: linked_list_type, linked_list_item_type
   use log_mod,                       only: log_event, log_level_error, &
-                                           log_level_warning, log_level_info
+                                           log_level_warning, log_level_info, &
+                                           log_level_trace
   use mesh_mod,                      only: mesh_type
   use mesh_collection_mod,           only: mesh_collection
   use model_clock_mod,               only: model_clock_type
@@ -264,10 +262,10 @@ contains
     ! Levels variables
     integer(kind=i_def) :: nfull_levels
 
-    ! Checkpoint domain parameters
+    ! Legacy domain parameters
     character(len=str_def)            :: domain_name, domain_fs_name
-    integer(kind=i_def),    parameter :: domain_function_spaces(5) &
-                                          = (/W0, W1, W2, W3, Wtheta/)
+    integer(kind=i_def),    parameter :: domain_function_spaces(7) &
+                                          = (/W0, W1, W2, W3, Wtheta, W2H, W2V/)
     integer(kind=i_def) :: fs_index
 
     ! Variables needed to compute output domain coordinates in lat-long
@@ -288,8 +286,8 @@ contains
     type(function_space_type), pointer :: output_field_fs   => null()
     type(function_space_type), pointer :: w2h_fs   => null()
 
-    ! Identify discontinuous spaces
-    integer(kind=i_def) :: use_i_index(2) = (/ W3, Wtheta /)
+    ! Function spaces that can be written as layers of data
+    integer(kind=i_def) :: use_i_index(4) = (/ W3, Wtheta, W2H, W2V /)
 
     ! Factor to convert coords from radians to degrees if needed
     ! set as 1.0 for planar mesh
@@ -390,47 +388,73 @@ contains
     bnd_nodes_lon=(reshape(nodes_lon_local(1:coord_dim_owned), (/1, coord_dim_owned/) ) )
     bnd_nodes_lat=(reshape(nodes_lat_local(1:coord_dim_owned), (/1, coord_dim_owned/) ) )
 
-    ! Initialise XIOS UGRID domains
+    ! Initialise XIOS domains
     if (mesh_is_prime_mesh) then
       call set_prime_io_mesh(mesh)
       call set_prime_io_mesh(twod_mesh)
-      call init_xios_ugrid_domain( "node", mesh, W0, sample_chi,  &
+      ! UGRID domains
+      call init_xios_domain( "node", mesh, W0, sample_chi,  &
                                    bnd_nodes_lon, bnd_nodes_lat,  &
                                    "Mesh2d", nverts=1 )
-      call init_xios_ugrid_domain( "edge", mesh, W2H, sample_chi, &
+      call init_xios_domain( "edge", mesh, W2H, sample_chi, &
                                    bnd_edges_lon, bnd_edges_lat,  &
                                    "Mesh2d", nverts=2 )
-      call init_xios_ugrid_domain( "face", mesh, W3,  sample_chi, &
+      call init_xios_domain( "face", mesh, W3,  sample_chi, &
                                    bnd_faces_lon, bnd_faces_lat,  &
                                    "Mesh2d", nverts=4 )
+
+      ! CF domains (different domain names for each mesh entity) - these may not needed,
+      ! so future effort could be made to make this optional
+      call init_xios_domain( "node_cf", mesh, W0, sample_chi,  &
+                             bnd_nodes_lon, bnd_nodes_lat,  &
+                             "node_cf", nverts=1 )
+      call init_xios_domain( "edge_cf", mesh, W2H, sample_chi, &
+                             bnd_edges_lon, bnd_edges_lat,  &
+                             "edge_cf", nverts=2 )
+      call init_xios_domain( "face_cf", mesh, W3,  sample_chi, &
+                             bnd_faces_lon, bnd_faces_lat,  &
+                             "face_cf", nverts=4 )
     else
-      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_node", mesh, W0, &
-                                   sample_chi, bnd_nodes_lon, bnd_nodes_lat,      &
-                                   trim(adjustl(mesh%get_mesh_name())), nverts=1 )
-      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_edge", mesh, W2H, &
-                                   sample_chi, bnd_edges_lon, bnd_edges_lat,       &
-                                   trim(adjustl(mesh%get_mesh_name())), nverts=2 )
-      call init_xios_ugrid_domain( trim(adjustl(mesh%get_mesh_name()))//"_face", mesh, W3, &
-                                   sample_chi, bnd_faces_lon, bnd_faces_lat,      &
-                                   trim(adjustl(mesh%get_mesh_name())), nverts=4 )
+      ! UGRID domains
+      call init_xios_domain( trim(adjustl(mesh%get_mesh_name()))//"_node", mesh, W0, &
+                             sample_chi, bnd_nodes_lon, bnd_nodes_lat,      &
+                             trim(adjustl(mesh%get_mesh_name())), nverts=1 )
+      call init_xios_domain( trim(adjustl(mesh%get_mesh_name()))//"_edge", mesh, W2H, &
+                             sample_chi, bnd_edges_lon, bnd_edges_lat,       &
+                             trim(adjustl(mesh%get_mesh_name())), nverts=2 )
+      call init_xios_domain( trim(adjustl(mesh%get_mesh_name()))//"_face", mesh, W3, &
+                             sample_chi, bnd_faces_lon, bnd_faces_lat,      &
+                             trim(adjustl(mesh%get_mesh_name())), nverts=4 )
+
+      ! CF domains (different domain names for each mesh entity) - these may not needed,
+      ! so future effort could be made to make this optional
+      call init_xios_domain( trim(adjustl(mesh%get_mesh_name()))//"_node_cf", mesh, W0, &
+                             sample_chi, bnd_nodes_lon, bnd_nodes_lat,      &
+                             trim(adjustl(mesh%get_mesh_name()))//"_node_cf", nverts=1 )
+      call init_xios_domain( trim(adjustl(mesh%get_mesh_name()))//"_edge_cf", mesh, W2H, &
+                             sample_chi, bnd_edges_lon, bnd_edges_lat,       &
+                             trim(adjustl(mesh%get_mesh_name()))//"_edge_cf", nverts=2 )
+      call init_xios_domain( trim(adjustl(mesh%get_mesh_name()))//"_face_cf", mesh, W3, &
+                             sample_chi, bnd_faces_lon, bnd_faces_lat,      &
+                             trim(adjustl(mesh%get_mesh_name()))//"_face_cf", nverts=4 )
     end if
 
-    ! Create all the regular checkpoint domains based on current function spaces
+    ! Create all the regular legacy domains based on current function spaces
     ! Loop over function spaces we need to create domains for (just for the prime mesh):
     if (mesh_is_prime_mesh) then
       do fs_index = lbound(domain_function_spaces, 1), &
                     ubound(domain_function_spaces, 1)
 
         domain_fs_name = name_from_functionspace(domain_function_spaces(fs_index))
-        domain_name = "checkpoint_" // trim(domain_fs_name)
+        domain_name = "legacy_" // trim(domain_fs_name)
 
         ! Enable use of the XIOS i_index for relevant function spaces
         if (any( use_i_index == domain_function_spaces(fs_index) )) then
-          call checkpoint_domain_init( domain_function_spaces(fs_index), &
+          call legacy_domain_init( domain_function_spaces(fs_index), &
                                        trim(domain_name), mesh, &
                                        sample_chi, .true. )
         else
-          call checkpoint_domain_init( domain_function_spaces(fs_index), &
+          call legacy_domain_init( domain_function_spaces(fs_index), &
                                        trim(domain_name), mesh, &
                                        sample_chi, .false. )
         end if
@@ -477,20 +501,6 @@ contains
 
     ! Configure global file definition
     call xios_get_handle("file_definition", file_definition)
-
-    select case(file_convention)
-    case (file_convention_ugrid)
-      call xios_set_attr( file_definition, convention="UGRID" )
-      call xios_set_attr(file_definition, convention_str="CF-1.12 UGRID-1.0")
-
-    case (file_convention_cf)
-      call xios_set_attr( file_definition, convention="CF" )
-      call xios_set_attr(file_definition, convention_str="CF-1.12")
-
-    case default
-      call log_event("Invalid choice for file convention", log_level_error)
-
-    end select
 
     core_version_char = lfric_core_version_char()
     call xios_set_attr(file_definition, description="LFRic file format " // &
@@ -700,7 +710,7 @@ contains
 
   end subroutine calc_xios_domain_coords
 
-  !> @brief    Performs XIOS checkpoint domain initialisation
+  !> @brief    Performs XIOS legacy domain initialisation
   !>
   !> @param[in]  fs_id              Function space id
   !> @param[in]  domain_name        XIOS domain name
@@ -713,8 +723,8 @@ contains
   !> @param[in]  k_order_v          Function space order vertical (optional,
   !!                                default = 0)
   !>
-  subroutine checkpoint_domain_init(fs_id, domain_name, mesh, &
-                                    chi, use_index, k_order_h, k_order_v)
+  subroutine legacy_domain_init(fs_id, domain_name, mesh, &
+                                chi, use_index, k_order_h, k_order_v)
 
     implicit none
 
@@ -731,13 +741,13 @@ contains
     integer(kind=i_def) :: i
     integer(kind=i_def) :: k_ord_h, k_ord_v, ord_idx
 
-    ! Checkpoint domain
-    integer(kind=i_def)                     :: ibegin_checkpoint
-    real(dp_xios), allocatable              :: checkpoint_lon(:)
-    real(dp_xios), allocatable              :: checkpoint_lat(:)
-    real(dp_xios), allocatable              :: bnd_checkpoint_lon(:,:)
-    real(dp_xios), allocatable              :: bnd_checkpoint_lat(:,:)
-    integer(kind=i_halo_index), allocatable :: cp_domain_index(:)
+    ! legacy domain
+    integer(kind=i_def)                     :: ibegin
+    real(dp_xios), allocatable              :: lon(:)
+    real(dp_xios), allocatable              :: lat(:)
+    real(dp_xios), allocatable              :: bnd_lon(:,:)
+    real(dp_xios), allocatable              :: bnd_lat(:,:)
+    integer(kind=i_halo_index), allocatable :: legacy_domain_index(:)
 
 
     ! Variables needed to compute output domain coordinates in lat-long
@@ -750,9 +760,9 @@ contains
 
     ! Variables for the gather to determine global domain sizes
     ! from the local partitioned ones
-    integer(kind=i_def)              :: global_undf_checkpoint
+    integer(kind=i_def)              :: global_undf
     integer(kind=i_def), allocatable :: local_undf(:)
-    integer(kind=i_def), allocatable :: all_undfs_checkpoint_domain(:)
+    integer(kind=i_def), allocatable :: all_undfs_domain(:)
 
     ! Factor to convert coords from radians to degrees if needed
     ! set as 1.0 for planar mesh
@@ -778,9 +788,9 @@ contains
 
     ! Set up arrays to hold number of dofs for local and global domains
     allocate(local_undf(1))
-    allocate(all_undfs_checkpoint_domain(global_mpi%get_comm_size()))
+    allocate(all_undfs_domain(global_mpi%get_comm_size()))
 
-    all_undfs_checkpoint_domain = 0
+    all_undfs_domain = 0
 
     ! Create appropriate function space in order to be able to get the
     ! physical coordinates
@@ -813,54 +823,54 @@ contains
 
     !!!!!!!!!!!!  Global domain calculation !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    call global_mpi%all_gather ( local_undf, all_undfs_checkpoint_domain, 1 )
+    call global_mpi%all_gather ( local_undf, all_undfs_domain, 1 )
 
     ! Now get the global sum of undf across all ranks to set the global domain sizes
-    ! for checkpoint domain
-    global_undf_checkpoint = sum(all_undfs_checkpoint_domain)
+    ! for legacy domain
+    global_undf = sum(all_undfs_domain)
 
     ! Calculate ibegin for each rank as we have the array of undfs in order
     ! we can just sum to get it.
     if (global_mpi%get_comm_rank() == 0) then
-      ibegin_checkpoint = 0
+      ibegin = 0
     else
-      ibegin_checkpoint = sum(all_undfs_checkpoint_domain(1:global_mpi%get_comm_rank()))
+      ibegin = sum(all_undfs_domain(1:global_mpi%get_comm_rank()))
     end if
 
-    ! Allocate coordinate arrays to be the size required for checkpoint domain.
+    ! Allocate coordinate arrays to be the size required for legacy domain.
     ! Essentially up to last owned dof of the current partition.
-    allocate( checkpoint_lon( size( proxy_coord_output(1)%data(1: local_undf(1)))) )
-    allocate( checkpoint_lat( size( proxy_coord_output(2)%data(1: local_undf(1)))) )
+    allocate( lon( size( proxy_coord_output(1)%data(1: local_undf(1)))) )
+    allocate( lat( size( proxy_coord_output(2)%data(1: local_undf(1)))) )
 
     ! Populate the arrays with data
-    checkpoint_lon =  proxy_coord_output(1)%data(1: local_undf(1)) * r2d
-    checkpoint_lat =  proxy_coord_output(2)%data(1: local_undf(1)) * r2d
+    lon =  proxy_coord_output(1)%data(1: local_undf(1)) * r2d
+    lat =  proxy_coord_output(2)%data(1: local_undf(1)) * r2d
 
-    allocate(bnd_checkpoint_lon(1,size(checkpoint_lon)))
-    allocate(bnd_checkpoint_lat(1,size(checkpoint_lat)))
+    allocate(bnd_lon(1,size(lon)))
+    allocate(bnd_lat(1,size(lat)))
 
     ! Construct bounds arrays
-    bnd_checkpoint_lon=(reshape(checkpoint_lon, (/1, size(checkpoint_lon)/) ) )
-    bnd_checkpoint_lat=(reshape(checkpoint_lat, (/1, size(checkpoint_lat)/) ) )
+    bnd_lon=(reshape(lon, (/1, size(lon)/) ) )
+    bnd_lat=(reshape(lat, (/1, size(lat)/) ) )
 
     ! Create the XIOS domain
     call xios_get_handle("domain_definition", domain_definition)
     call xios_add_child(domain_definition, new_domain, trim(domain_name))
 
     ! Give coordinate information to the XIOS domain
-    call xios_set_domain_attr(trim(domain_name), ni_glo=global_undf_checkpoint,    &
-                              ibegin=ibegin_checkpoint, ni=local_undf(1),          &
+    call xios_set_domain_attr(trim(domain_name), ni_glo=global_undf,    &
+                              ibegin=ibegin, ni=local_undf(1),          &
                               type='unstructured', nvertex=1)
-    call xios_set_domain_attr(trim(domain_name), lonvalue_1d=checkpoint_lon,       &
-                              latvalue_1d=checkpoint_lat)
-    call xios_set_domain_attr(trim(domain_name), bounds_lon_1d=bnd_checkpoint_lon, &
-                              bounds_lat_1d=bnd_checkpoint_lat)
+    call xios_set_domain_attr(trim(domain_name), lonvalue_1d=lon,       &
+                              latvalue_1d=lat)
+    call xios_set_domain_attr(trim(domain_name), bounds_lon_1d=bnd_lon, &
+                              bounds_lat_1d=bnd_lat)
 
     ! If we have requested to use domain index then get it and use it
     if (use_index) then
 
       ! Populate domain_index for this rank
-      call output_field_fs%get_global_dof_id(cp_domain_index)
+      call output_field_fs%get_global_dof_id(legacy_domain_index)
 
       ! temporary fix for higher-order domain decomposition
       if (k_ord_h > 0 .or. k_ord_v > 0) then
@@ -869,42 +879,42 @@ contains
         ord_idx = 1
       end if
 
-      ! Pass local portion of domain_index (up to undf)
-      call xios_set_domain_attr(domain_name, i_index=int(cp_domain_index(1:local_undf(1))/ord_idx))
+      ! Pass local portion of legacy_domain_index (up to undf)
+      call xios_set_domain_attr(domain_name, i_index=int(legacy_domain_index(1:local_undf(1))/ord_idx))
 
     end if
 
-    if ( allocated(cp_domain_index) )    deallocate(cp_domain_index)
-    if ( allocated(checkpoint_lon) )     deallocate(checkpoint_lon)
-    if ( allocated(checkpoint_lat) )     deallocate(checkpoint_lat)
-    if ( allocated(bnd_checkpoint_lon) ) deallocate(bnd_checkpoint_lon)
-    if ( allocated(bnd_checkpoint_lat) ) deallocate(bnd_checkpoint_lat)
-    if ( allocated(local_undf) )      deallocate(local_undf)
-    if ( allocated(all_undfs_checkpoint_domain) ) deallocate(all_undfs_checkpoint_domain)
+    if ( allocated(legacy_domain_index) ) deallocate(legacy_domain_index)
+    if ( allocated(lon) )                 deallocate(lon)
+    if ( allocated(lat) )                 deallocate(lat)
+    if ( allocated(bnd_lon) )             deallocate(bnd_lon)
+    if ( allocated(bnd_lat) )             deallocate(bnd_lat)
+    if ( allocated(local_undf) )          deallocate(local_undf)
+    if ( allocated(all_undfs_domain) )    deallocate(all_undfs_domain)
 
     nullify( output_field_fs )
     return
-  end subroutine checkpoint_domain_init
+  end subroutine legacy_domain_init
 
   !> @brief   Initialises unstructured XIOS domain from function space
   !> @details Calculates coordinates from function space and local mesh, obtains
   !>          local portion of the domain index and passes information to XIOS
   !>          domain object
   !>
-  !> @param[in]  domain_id          The name of the XIOS domain
-  !> @param[in]  mesh               The partitioned mesh
-  !> @param[in]  fs_id              The id of the function space corresponding
-  !!                                to the domain
-  !> @param[in]  chi                Input coordinate field
-  !> @param[in]  lon_bounds         Longitude coords of the domain bounds
-  !> @param[in]  lat_bounds         Latitude coords of the domain bounds
-  !> @param[in]  mesh_name          Name of the consolidated mesh
-  !> @param[in]  nverts             Number of vertices bounding each domain
-  !!                                element
+  !> @param[in]  domain_id_       The name of the XIOS domain
+  !> @param[in]  mesh             The partitioned mesh
+  !> @param[in]  fs_id            The id of the function space corresponding
+  !!                              to the domain
+  !> @param[in]  chi              Input coordinate field
+  !> @param[in]  lon_bounds       Longitude coords of the domain bounds
+  !> @param[in]  lat_bounds       Latitude coords of the domain bounds
+  !> @param[in]  mesh_name        Name of the consolidated mesh
+  !> @param[in]  nverts           Number of vertices bounding each domain
+  !!                              element
   !>
-  subroutine init_xios_ugrid_domain( domain_id, mesh, fs_id, chi,       &
-                                     lon_bounds, lat_bounds, mesh_name, &
-                                     nverts )
+  subroutine init_xios_domain( domain_id, mesh, fs_id, chi,    &
+                               lon_bounds, lat_bounds, domain_name, &
+                               nverts )
 
     implicit none
 
@@ -914,7 +924,7 @@ contains
     type(field_type),           intent(in)    :: chi(:)
     real(dp_xios), allocatable, intent(inout) :: lat_bounds(:,:)
     real(dp_xios), allocatable, intent(inout) :: lon_bounds(:,:)
-    character(len=*),           intent(in)    :: mesh_name
+    character(len=*),           intent(in)    :: domain_name
     integer(kind=i_def),        intent(in)    :: nverts
 
     type(function_space_type), pointer :: domain_fs   => null()
@@ -941,6 +951,8 @@ contains
     ! Factor to convert coords from radians to degrees if needed
     ! set as 1.0 for planar mesh
     real(kind=r_def) :: r2d
+
+    call log_event("Creating XIOS domain ["//trim(domain_id)//"].", log_level_trace)
 
     if ( mesh%is_geometry_spherical() ) then
       r2d = radians_to_degrees
@@ -1051,8 +1063,7 @@ contains
     ! UGRID and planar (projected coordinates).
     ! Post processing will be applied to these files to work around
     ! XIOS limitations, pending feature development in XIOS.
-    if ( mesh%is_geometry_planar()        .and. &
-         file_convention == file_convention_ugrid ) then
+    if ( mesh%is_geometry_planar() ) then
       lat_data = lat_data * xyz_scaling_factor
       lon_data = lon_data * xyz_scaling_factor
       lat_bounds = lat_bounds * xyz_scaling_factor
@@ -1076,10 +1087,7 @@ contains
     call xios_set_domain_attr( trim(domain_id), bounds_lon_1d=lon_bounds, &
                                bounds_lat_1d=lat_bounds )
 
-    ! Consolidate the domains into a single 2D UGRID mesh
-    if (file_convention == file_convention_ugrid) then
-      call xios_set_domain_attr( trim(domain_id), name=trim(mesh_name) )
-    end if
+    call xios_set_domain_attr( trim(domain_id), name=trim(domain_name), dim_i_name=trim(domain_name) )
 
     ! Pass local portion of domain_index to XIOS
     call xios_set_domain_attr( domain_id, i_index=int( domain_index( 1 : local_domain_size ) ) )
@@ -1092,7 +1100,7 @@ contains
     deallocate(domain_index)
     nullify(domain_fs)
 
-  end subroutine init_xios_ugrid_domain
+  end subroutine init_xios_domain
 
   !> @brief   Initialises XIOS axis from function space and mesh
   !> @details Calculates vertical levels and coordinates from function space

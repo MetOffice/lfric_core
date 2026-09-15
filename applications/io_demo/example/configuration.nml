@@ -60,20 +60,20 @@ coord_system='native'
 
 &io_demo
   multifile_io          = .false.
-  io_benchmark          = .false.
+  io_benchmark          = .true.
   temporal_reading      = .false.
   n_benchmark_fields    = 10
   benchmark_sleep_time  = 0
 /
 
 &logging
-  run_log_level='info'
+  run_log_level='trace'
 /
 
 &time
   calendar = 'timestep'
   timestep_start = '1'
-  timestep_end = '90'
+  timestep_end = '9'
   calendar_type='gregorian'
   calendar_start='2016-01-01 15:00:00'
   calendar_origin='2016-01-01 15:00:00'

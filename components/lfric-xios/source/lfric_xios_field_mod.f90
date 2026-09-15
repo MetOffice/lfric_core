@@ -116,18 +116,21 @@ end function lfric_xios_field_constructor
 
 !> Registers a representation of the model field with the associated XIOS field
 !> group
-subroutine register(self)
+subroutine register(self, ugrid)
 
   implicit none
 
   class(lfric_xios_field_type), intent(inout) :: self
+  logical, optional,            intent(in)    :: ugrid
 
   type(xios_fieldgroup) :: fieldgroup_hdl
   type(xios_domain)     :: domain
   type(xios_axis)       :: vert_axis, ndata_axis
   type(xios_gridgroup)  :: grid_definition
   type(xios_grid)       :: new_grid
-  character(str_def)    :: domain_id, axis_id, grid_id
+  character(str_def)    :: domain_id, axis_id, grid_id, grid_tag
+
+  logical :: ugrid_format
 
   type(mesh_type),           pointer :: mesh => null()
   type(function_space_type), pointer :: vspace => null()
@@ -135,6 +138,11 @@ subroutine register(self)
   call log_event( "Registering XIOS field ["//trim(self%xios_id)//      &
                   "] with field group ["//trim(self%fieldgroup_id)//"]", &
                   log_level_trace )
+
+  ugrid_format = .true.
+  if (present(ugrid)) then
+    ugrid_format = ugrid
+  end if
 
   ! If this field is already registered with XIOS, get the existing handle,
   ! otherwise a new one will be created below as part of `xios_add_child`.
@@ -168,6 +176,14 @@ subroutine register(self)
     axis_id  ="vert_axis_half_levels"
   end select
 
+  ! Use CF domains if not UGRID
+  grid_tag = "_grid"
+  if (.not. ugrid_format) then
+    domain_id = trim(domain_id)//"_cf"
+    print*, domain_id
+    grid_tag  = "_cf_grid"
+  end if
+
   mesh => self%model_field%get_mesh()
   ! If field had only a single layer of DoFs then define this using a domain,
   ! otherwise use a grid.
@@ -179,12 +195,12 @@ subroutine register(self)
 
     ! Create grid ID using function space information.
     if (vspace%get_ndata() == 1) then
-      grid_id = trim(name_from_functionspace(self%model_field%which_function_space()))//"_grid"
+      grid_id = trim(name_from_functionspace(self%model_field%which_function_space()))//trim(grid_tag)
     else if (mesh%get_nlayers() == 1) then
-      grid_id = trim(domain_id)//"_"//char(vspace%get_ndata())//"_grid"
+      grid_id = trim(domain_id)//"_"//char(vspace%get_ndata())//trim(grid_tag)
     else
       grid_id = trim(name_from_functionspace(self%model_field%which_function_space()))// &
-                "_ndata_"//char(vspace%get_ndata())//"_grid"
+                "_ndata_"//char(vspace%get_ndata())//trim(grid_tag)
     end if
 
     ! If this grid does not already exist, create it.

@@ -18,7 +18,8 @@ module io_benchmark_setup_mod
   use fs_continuity_mod,             only: Wtheta
   use function_space_mod,            only: function_space_type
   use function_space_collection_mod, only: function_space_collection
-  use lfric_xios_file_mod,           only: lfric_xios_file_type, OPERATION_TIMESERIES
+  use lfric_xios_file_mod,           only: lfric_xios_file_type, OPERATION_TIMESERIES, &
+                                           CONVENTION_UGRID
   use lfric_xios_read_mod,           only: read_field_generic
   use lfric_xios_write_mod,          only: write_field_generic
   use linked_list_mod,               only: linked_list_type
@@ -101,7 +102,8 @@ contains
                                                       io_mode=FILE_MODE_WRITE,              &
                                                       operation=OPERATION_TIMESERIES,       &
                                                       freq=diagnostic_frequency,            &
-                                                      fields_in_file=io_benchmark_fields ) )
+                                                      fields_in_file=io_benchmark_fields,   &
+                                                      file_convention=CONVENTION_UGRID ) )
 
   nullify(io_benchmark_fields)
 
