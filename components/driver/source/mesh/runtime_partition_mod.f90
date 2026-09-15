@@ -138,9 +138,7 @@ subroutine create_local_mesh( mesh_names,              &
   integer(i_def), intent(in) :: local_rank
   integer(i_def), intent(in) :: total_ranks
   integer(i_def), intent(in) :: stencil_depths(:)
-
   logical(l_def), intent(in) :: generate_inner_halos
-
   integer(i_def), intent(in) :: mapping_factors(:)
 
   logical(l_def), intent(in), optional :: enforce_constraints
@@ -213,7 +211,7 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
   character(str_def), allocatable :: source_mesh_names(:)
   character(str_def), allocatable :: target_mesh_names(:)
 
-  integer(i_def) :: i, j!, n, x, y
+  integer(i_def) :: i, j
   integer(i_def) :: n_meshes
 
   type(global_mesh_type), pointer :: source_global_mesh

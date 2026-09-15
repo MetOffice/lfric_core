@@ -46,10 +46,9 @@ subroutine load_global_mesh_multiple( input_mesh_file, &
 
   implicit none
 
-  character(str_max_filename), intent(in) :: input_mesh_file
-  character(str_def),          intent(in) :: mesh_names(:)
-
-  character(str_def), optional :: rename_to(:)
+  character(str_max_filename),  intent(in) :: input_mesh_file
+  character(str_def),           intent(in) :: mesh_names(:)
+  character(str_def), optional, intent(in) :: rename_to(:)
 
   character(str_def), allocatable :: names(:)
 

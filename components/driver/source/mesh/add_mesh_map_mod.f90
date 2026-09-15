@@ -15,8 +15,8 @@ module add_mesh_map_mod
   use constants_mod, only: i_def, str_def, cmdi
   use log_mod,       only: log_event,         &
                            log_scratch_space, &
-                           log_level_error,   &
-                           log_level_info
+                           LOG_LEVEL_ERROR,   &
+                           LOG_LEVEL_INFO
 
 
   use extrusion_mod,       only: extrusion_type,           &

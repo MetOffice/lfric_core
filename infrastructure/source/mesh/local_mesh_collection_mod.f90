@@ -247,10 +247,6 @@ contains
   end function get_mesh_by_name
 
 
-
-
-
-
   !===========================================================================
   !> @brief   Requests a local mesh object with specified ID from
   !>          the collection.

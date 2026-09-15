@@ -22,6 +22,7 @@ module function_space_mod
   use log_mod,              only : log_event, log_scratch_space,               &
                                    LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR,           &
                                    LOG_LEVEL_INFO
+  use mesh_collection_mod,  only : mesh_collection
   use fs_continuity_mod,    only : W0, W1, W2, W3, Wtheta, W2broken, W2trace,  &
                                    W2Htrace, W2Vtrace, W2V, W2H, Wchi,         &
                                    W2Hbroken
@@ -425,7 +426,7 @@ contains
   !> @param[in] ndata_first      Flag to set data to be layer first (false) or
   !!                             ndata first (true)
   !> @return    A pointer to the function space held in this module
-  function fs_constructor( mesh,                                               &
+  function fs_constructor( mesh_id,                                            &
                            element_order_h,                                    &
                            element_order_v,                                    &
                            lfric_fs,                                           &
@@ -434,7 +435,7 @@ contains
 
     implicit none
 
-    type(mesh_type), target,  intent(in) :: mesh
+    integer(i_def),           intent(in) :: mesh_id
     integer(i_def),           intent(in) :: element_order_h
     integer(i_def),           intent(in) :: element_order_v
     integer(i_def),           intent(in) :: lfric_fs
@@ -460,12 +461,12 @@ contains
       instance%ndata = 1
     end if
 
-    instance%mesh => mesh
+    instance%mesh => mesh_collection%get_mesh(mesh_id)
     instance%fs = lfric_fs
     instance%element_order_h = element_order_h
     instance%element_order_v = element_order_v
 
-    id = generate_fs_id(lfric_fs, element_order_h, element_order_v, mesh%get_id(), &
+    id = generate_fs_id(lfric_fs, element_order_h, element_order_v, mesh_id, &
                         instance%ndata, instance%ndata_first)
     call instance%set_id(id)
 

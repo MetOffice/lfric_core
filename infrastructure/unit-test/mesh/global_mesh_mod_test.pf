@@ -91,7 +91,6 @@ contains
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
 
-
     ! Check the global mesh id
     global_mesh_id1 = global_mesh%get_id()
     @assertTrue(global_mesh_id1 > 0)
