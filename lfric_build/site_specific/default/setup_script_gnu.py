@@ -49,20 +49,14 @@ def setup_script_gnu(build_config: BuildConfig,
     # The base flags
     # ==============
 
-    # TODO: It should use -Werror=conversion, but:
-    # Most lfric_atm dependencies contain code with implicit lossy
-    # conversions.
     # This should be restricted to only the files/directories
     # that need it, but this needs Fab updates.
 
     gfortran.add_flags(
         ['-ffree-line-length-none', '-Wall', '-g',
-         '-Werror=character-truncation',
-         '-Werror=unused-value',
-         '-Werror=tabs',
+         '-Werror=character-truncation', '-Werror=unused-value',
+         '-Werror=tabs', '-Werror=conversion',
          '-std=f2008',
-         '-fdefault-real-8',
-         '-fdefault-double-8',
          ],
         "base")
 
