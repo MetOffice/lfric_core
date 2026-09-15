@@ -8,6 +8,7 @@
 Unit tests for the psyclone_control module.
 """
 
+import os
 from pathlib import Path
 import pytest
 import yaml
@@ -205,3 +206,50 @@ def test_get_script_matching_logic(tmp_path):
     valid_script_path = opt_dir / "file_specific.py"
     valid_script_path.touch()
     assert info.get_script(base_src / "file_specific.x90") == valid_script_path
+
+
+def test_psyclone_control_template(tmp_path):
+    """
+    Test handling of templates.
+    """
+    yaml_content_1 = """
+phases:
+  - dsl
+dsl:
+  comment: "PSyclone DSL Phase"
+  api: lfric
+  script_dir: ${site}_${platform}/psykal
+  global.py: \\*
+  file_specific: \\*
+"""
+    os.chdir(tmp_path)
+    yaml_file_1 = tmp_path / "psyclone_info.yaml"
+    yaml_file_1.write_text(yaml_content_1, encoding="utf-8")
+
+    base_paths = [tmp_path / "src", tmp_path / "build"]
+    script_root = tmp_path / "scripts"
+
+    # Create a script (since it will be checked if the script exists)
+    global_path = script_root / "SITE_PLATFORM" / "psykal" / "global.py"
+    global_path.parent.mkdir(parents=True, exist_ok=True)
+    global_path.write_text("PSyclone script\n")
+    file_specific_path = script_root / "SITE_PLATFORM" / "psykal" / "file.py"
+    file_specific_path.parent.mkdir(parents=True, exist_ok=True)
+    file_specific_path.write_text("PSyclone script\n")
+
+    template_data = {"site": "SITE", "platform": "PLATFORM"}
+    pc = PsycloneControl(script_root=script_root, base_paths=base_paths,
+                         template_data=template_data)
+    # Read file
+    pc.read(yaml_file_1)
+
+    # Check expected behaviour
+    info = pc.get_info("dsl")
+    assert info._relative_script_dir == "SITE_PLATFORM/psykal"
+    assert info.opt_path == script_root / "SITE_PLATFORM" / "psykal"
+
+    # Test that we get the expected global file:
+    script = info.get_script(Path("any_file.f90"))
+    assert script == global_path
+    script = info.get_script(tmp_path / "src" / "file.f90")
+    assert script == file_specific_path

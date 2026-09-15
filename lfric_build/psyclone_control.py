@@ -10,6 +10,7 @@
 This module reads in a psyclone_info.yaml file.
 '''
 from pathlib import Path
+from string import Template
 from typing import Optional
 import yaml
 
@@ -36,7 +37,8 @@ class PsycloneInfo:
 
     def __init__(self, name: str,
                  base_paths: list[Path],
-                 script_root: Path) -> None:
+                 script_root: Path,
+                 template_data: Optional[dict[str, str]] = None) -> None:
         self._base_paths = base_paths
         self._script_root = script_root
         # This will be initialised/updated each time when reading an info file.
@@ -46,11 +48,12 @@ class PsycloneInfo:
         self._comment: str = ""
         self._api: str = ""
         self._rules: list[tuple[str, list[str]]] = []
+        self._template_data = template_data
 
     @property
     def name(self) -> str:
         """
-        :returns: the name of this phas.
+        :returns: the name of this phase.
         """
         return self._name
 
@@ -92,7 +95,9 @@ class PsycloneInfo:
             elif rule == "api":
                 self._api = info["api"]
             elif rule == "script_dir":
-                self._relative_script_dir = info["script_dir"]
+                script_template = Template(info["script_dir"])
+                self._relative_script_dir = (
+                    script_template.substitute(self._template_data))
             else:
                 self._read_rule(rule, info[rule])
 
@@ -225,6 +230,8 @@ class PsycloneControl:
 
     Details of each phase will be stored in PsycloneInfo instances.
 
+    :param script_root: the root directory to find optimisation scripts in
+        (e.g. .../lfric_atm/optimisation)
     :param base_paths:
     :param fab_base: The FabBase derived application script. This is required
         to get site, platform and config information when searching for
@@ -233,7 +240,8 @@ class PsycloneControl:
 
     def __init__(self,
                  script_root: Path,
-                 base_paths: list[Path]) -> None:
+                 base_paths: list[Path],
+                 template_data: Optional[dict[str, str]] = None) -> None:
         # Keep a copy in case that the user modifies the list later
         self._base_paths = base_paths[:]
         self._script_root = script_root
@@ -242,6 +250,10 @@ class PsycloneControl:
         # A list of all PSyclone info files that were read.
         # Only used to add useful comments to the yaml output.
         self._all_files_read: list[Path] = []
+        if not template_data:
+            self._template_data = {}
+        else:
+            self._template_data = template_data
 
     @property
     def all_phases(self) -> list[str]:
@@ -306,6 +318,7 @@ class PsycloneControl:
             if key not in self._psyclone_info:
                 self._psyclone_info[key] = PsycloneInfo(key,
                                                         self._base_paths,
-                                                        self._script_root)
+                                                        self._script_root,
+                                                        self._template_data)
 
             self._psyclone_info[key].update(dependencies[key])

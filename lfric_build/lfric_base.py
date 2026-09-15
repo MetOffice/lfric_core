@@ -93,10 +93,13 @@ class LFRicBase(FabBase):
         # which is used in matching.
         base_paths = [self.config.source_root,
                       self.config.build_output]
-        script_root = (self.config.source_root / "optimisation" /
-                       f"{self.site}-{self.platform}")
+        script_root = self.config.source_root / "optimisation"
+        template_data = {"site": self.site,
+                         "platform": self.platform,
+                         "target": self.target}
         self._psyclone_control = PsycloneControl(script_root=script_root,
-                                                 base_paths=base_paths)
+                                                 base_paths=base_paths,
+                                                 template_data=template_data)
 
         # If the PSyclone step is running, this stores the currently
         # executed PSyclone information. This is used in the

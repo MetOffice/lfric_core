@@ -15,7 +15,7 @@ dsl:
   comment: "PSylone DSL Phase"
   api: lfric
 
-  script_dir: psykal
+  script_dir: ${site}-${platform}/psykal
 
   # These two directives reproduce the current LFRic default PSyclone triggering:
 
