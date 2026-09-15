@@ -242,6 +242,7 @@ contains
 
     character(str_max_filename) :: test_str1
     character(str_def)          :: test_str2
+    character(str_def)          :: test_str3
 
     character(str_def), parameter :: new_name = 'mesh_under_test'
 
@@ -263,8 +264,8 @@ contains
     test_str2 = global_mesh%get_origin_name()
     @assertTrue(trim(test_str2) == trim(mesh_name))
 
-    test_str2 = global_mesh%get_mesh_name()
-    @assertTrue(trim(test_str2) == new_name)
+    test_str3 = global_mesh%get_mesh_name()
+    @assertTrue(trim(test_str3) == new_name)
 
     ! Check getting a cell id from an x- and y-distance from a starting cell.
     ! First test that providing zero distances gives same id
