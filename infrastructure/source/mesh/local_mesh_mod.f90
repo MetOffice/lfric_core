@@ -1584,7 +1584,7 @@ contains
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> @brief  Returns original mesh name as referenced in the orignal source file.
+  !> @brief  Returns original mesh name as referenced in the original source file.
   !> @return origin_name  Tag name of mesh that identifies it in the
   !>                      UGRID file that it was read in from.
   !>

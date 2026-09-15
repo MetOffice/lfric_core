@@ -118,6 +118,7 @@ end subroutine get_partition_strategy
 !> @param[in]  stencil_depths         Depth of cells outside the base cell
 !!                                    of stencil for each mesh.
 !> @param[in]  partitioner_ptr        Mesh partitioning strategy
+!> @param[in]  mapping_factors        Partitioning constraints applied to each mesh.
 !> @param[in]  enforce_constraints    Apply defensive checking for multigrid
 !>                                    configurations (Optional).
 subroutine create_local_mesh( mesh_names,              &
@@ -211,20 +212,14 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
 
   character(str_def), allocatable :: source_mesh_names(:)
   character(str_def), allocatable :: target_mesh_names(:)
-  integer(i_def),     allocatable :: gid_mesh_map(:,:,:)
-  integer(i_def),     allocatable :: lid_mesh_map(:,:,:)
 
-  integer(i_def) :: i, j, n, x, y
+  integer(i_def) :: i, j!, n, x, y
   integer(i_def) :: n_meshes
 
   type(global_mesh_type), pointer :: source_global_mesh
 
   type(local_mesh_type), pointer :: source_local_mesh
   type(local_mesh_type), pointer :: target_local_mesh
-
-  integer(i_def) :: ntarget_per_source_cell_x, ntarget_per_source_cell_y
-  integer(i_def) :: ncells
-  integer(i_def) :: target_local_mesh_id
 
   nullify(source_local_mesh, source_global_mesh)
   nullify(target_local_mesh)
@@ -251,43 +246,12 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
 
       ! Loop over each target mesh
       do j=1, size(target_mesh_names)
+
         target_local_mesh => &
            local_mesh_collection%get_local_mesh( target_mesh_names(j) )
 
         if ( associated(target_local_mesh) ) then
-
-          ! Read in the global mesh map
-          call file_handler%read_map( source_mesh_names(i), &
-                                      target_mesh_names(j), &
-                                      gid_mesh_map )
-
-          ! Create the local mesh map
-          ntarget_per_source_cell_x = size(gid_mesh_map, 1)
-          ntarget_per_source_cell_y = size(gid_mesh_map, 2)
-          ncells = source_local_mesh%get_num_cells_in_layer()
-          allocate( lid_mesh_map( ntarget_per_source_cell_x, &
-                                  ntarget_per_source_cell_y, &
-                                  ncells ) )
-
-          ! Convert global cell IDs in the global mesh map
-          ! into local cell IDs in a local mesh map
-          do x=1, ntarget_per_source_cell_x
-            do y=1, ntarget_per_source_cell_y
-              do n=1, ncells
-                lid_mesh_map(x, y, n) = target_local_mesh%get_lid_from_gid( &
-                    gid_mesh_map(x, y, source_local_mesh%get_gid_from_lid(n)) )
-              end do
-            end do
-          end do
-
-          ! Put the local mesh map in the local mesh
-          target_local_mesh_id = target_local_mesh%get_id()
-          call source_local_mesh%add_local_mesh_map( target_local_mesh_id, &
-                                                     lid_mesh_map )
-
-          if ( allocated(gid_mesh_map) ) deallocate( gid_mesh_map )
-          if ( allocated(lid_mesh_map) ) deallocate( lid_mesh_map )
-
+          call load_map( source_local_mesh, target_local_mesh, file_handler )
         end if
 
       end do
@@ -295,8 +259,9 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
       if ( allocated( target_mesh_names ) ) then
         deallocate( target_mesh_names )
       end if
-    end if
-  end do
+    end if ! allocated(target_mesh_names)
+
+  end do ! n_meshes
 
   if ( allocated( source_mesh_names ) ) then
     deallocate( source_mesh_names)
@@ -308,42 +273,46 @@ subroutine create_local_mesh_maps_from_file( input_mesh_file )
 end subroutine create_local_mesh_maps_from_file
 
 
-
+!> @brief    Creates the local mesh intergrid maps from available global
+!!           intergrid maps from file.
+!> @details  Global meshes which have been read into the model's global mesh
+!!           collection will have a list of target mesh names. These target mesh
+!!           names (if any) indicate the valid intergrid maps available in the
+!!           mesh file.
+!!
+!!           This routine will read in the appropriate intergrid
+!!           maps convert the LiD-LiD map them to the appropriate local
+!!           mesh object.
+!!
+!!           This routine extracts the correct mesh map by querying
+!!           the origin name/file of the source_local_mesh.
+!> @param[in]  source_local_mesh  Source mesh to add intergrid maps to.
 subroutine create_local_mesh_maps_from_object( source_local_mesh )
-
 
   implicit none
 
-   type(local_mesh_type), intent(inout) :: source_local_mesh
-
+  type(local_mesh_type), intent(inout) :: source_local_mesh
 
   type(ncdf_quad_type) :: file_handler
 
-  integer(i_def),     allocatable :: gid_mesh_map(:,:,:)
-  integer(i_def),     allocatable :: lid_mesh_map(:,:,:)
-
-  integer(i_def) :: i, j, n, x, y
+  integer(i_def) :: i, j
   integer(i_def) :: n_meshes
 
   type(global_mesh_type), pointer :: source_global_mesh
+  type(local_mesh_type),  pointer :: target_local_mesh
 
-  type(local_mesh_type), pointer :: target_local_mesh
-
-  integer(i_def) :: ntarget_per_source_cell_x, ntarget_per_source_cell_y
-  integer(i_def) :: ncells
-  integer(i_def) :: target_local_mesh_id, n_targets
+  integer(i_def) :: n_targets
 
   character(str_def), allocatable :: target_names(:)
-
   character(str_def), allocatable :: all_mesh_names(:)
   character(str_def) :: mesh_name
-
-  character(str_max_filename) :: origin_file, target_origin_file
-  character(str_def) :: origin_name, target_origin_name
+  character(str_def) :: origin_name
+  character(str_def) :: target_origin_name
+  character(str_max_filename) :: origin_file
+  character(str_max_filename) :: target_origin_file
 
   nullify(source_global_mesh)
   nullify(target_local_mesh)
-
 
   ! Written assume mesh maps are read from input files of non-partitioned meshes
   allocate( all_mesh_names, &
@@ -355,9 +324,6 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
 
   source_global_mesh => global_mesh_collection%get_global_mesh( mesh_name )
   call source_global_mesh%get_target_mesh_names(target_names)
-
-  ! Read in the maps for each global mesh
-  !=================================================================
 
   if (allocated(target_names)) then
 
@@ -381,37 +347,7 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
           if ( (trim(origin_file) == trim(target_origin_file)) .and. &
                (trim(target_names(j)) == trim(target_origin_name)) ) then
 
-            ! Read in the global mesh map
-            call file_handler%read_map( origin_name,        &
-                                        target_origin_name, &
-                                        gid_mesh_map )
-
-            ! Create the local mesh map
-            ntarget_per_source_cell_x = size(gid_mesh_map, 1)
-            ntarget_per_source_cell_y = size(gid_mesh_map, 2)
-            ncells = source_local_mesh%get_num_cells_in_layer()
-            allocate( lid_mesh_map( ntarget_per_source_cell_x, &
-                                    ntarget_per_source_cell_y, &
-                                    ncells ) )
-
-            ! Convert global cell IDs in the global mesh map
-            ! into local cell IDs in a local mesh map
-            do x=1, ntarget_per_source_cell_x
-              do y=1, ntarget_per_source_cell_y
-                do n=1, ncells
-                  lid_mesh_map(x, y, n) = target_local_mesh%get_lid_from_gid( &
-                      gid_mesh_map(x, y, source_local_mesh%get_gid_from_lid(n)) )
-                end do
-              end do
-            end do
-
-            ! Put the local mesh map in the local mesh
-            target_local_mesh_id = target_local_mesh%get_id()
-            call source_local_mesh%add_local_mesh_map( target_local_mesh_id, &
-                                                       lid_mesh_map )
-
-            if ( allocated(gid_mesh_map) ) deallocate( gid_mesh_map )
-            if ( allocated(lid_mesh_map) ) deallocate( lid_mesh_map )
+            call load_map( source_local_mesh, target_local_mesh, file_handler )
 
           end if ! Checking if this is the correct target mesh
         end if ! The pointer is associated
@@ -426,5 +362,67 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
 
   return
 end subroutine create_local_mesh_maps_from_object
+
+!> @brief    Private routine to load assign intergrid mesh maps to local meshes
+!> @details  No checking is provided in this private routine. It is assumed that
+!>           all checks and file open/closing have been done by calling routine
+!> @param[in]  source_mesh  Source local mesh to add intergrid maps to.
+!> @param[in]  target_mesh  Target local mesh to map to.
+!> @param[in]  file_handler Open file handler to file.
+subroutine load_map(source_mesh, target_mesh, file_handler)
+
+  implicit none
+
+  type(local_mesh_type), intent(inout) :: source_mesh
+  type(local_mesh_type), intent(in)    :: target_mesh
+  type(ncdf_quad_type),  intent(in)    :: file_handler
+
+  character(str_def) :: source_name
+  character(str_def) :: target_name
+
+  integer(i_def), allocatable :: lid_mesh_map(:,:,:)
+  integer(i_def), allocatable :: gid_mesh_map(:,:,:)
+
+  integer(i_def) :: ntarget_per_source_cell_x
+  integer(i_def) :: ntarget_per_source_cell_y
+  integer(i_def) :: ncells
+
+  integer(i_def) :: x, y, n
+
+  source_name = source_mesh%get_origin_name()
+  target_name = target_mesh%get_origin_name()
+
+  ! Read in the global mesh map
+  call file_handler%read_map( source_name, &
+                              target_name, &
+                              gid_mesh_map )
+
+  ! Create the local mesh map
+  ntarget_per_source_cell_x = size(gid_mesh_map, 1)
+  ntarget_per_source_cell_y = size(gid_mesh_map, 2)
+  ncells = source_mesh%get_num_cells_in_layer()
+  allocate( lid_mesh_map( ntarget_per_source_cell_x, &
+                          ntarget_per_source_cell_y, &
+                          ncells ) )
+
+  ! Convert global cell IDs in the global mesh map
+  ! into local cell IDs in a local mesh map
+  do x=1, ntarget_per_source_cell_x
+    do y=1, ntarget_per_source_cell_y
+      do n=1, ncells
+        lid_mesh_map(x,y,n) = target_mesh%get_lid_from_gid( &
+                                  gid_mesh_map(x,y,source_mesh%get_gid_from_lid(n)) )
+      end do
+    end do
+  end do
+
+  ! Put the local mesh map in the local mesh
+  call source_mesh%add_local_mesh_map( target_mesh%get_id(), &
+                                       lid_mesh_map )
+
+  if ( allocated(gid_mesh_map) ) deallocate( gid_mesh_map )
+  if ( allocated(lid_mesh_map) ) deallocate( lid_mesh_map )
+
+end subroutine load_map
 
 end module runtime_partition_mod

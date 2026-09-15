@@ -36,6 +36,9 @@ contains
 !>                             populate <global_mesh_type> object.
 !> @param[in] mesh_names       The names of the global meshes to load
 !>                             from the <input_mesh_file>.
+!> @param[in] rename_to        [Optional] Alternative names to store
+!>                              meshes in memory, array length should match
+!>                              the mesh_names argument.
 subroutine load_global_mesh_multiple( input_mesh_file, &
                                       mesh_names,      &
                                       rename_to )
@@ -76,6 +79,8 @@ end subroutine load_global_mesh_multiple
 !>                             populate <global_mesh_type> object.
 !> @param[in] mesh_name        The name of the global mesh to load
 !>                             from the <input_mesh_file>.
+!> @param[in] rename_to        [Optional] Alternative name to store
+!>                              mesh in memory.
 subroutine load_global_mesh_single( input_mesh_file, &
                                     mesh_name, rename_to )
 
