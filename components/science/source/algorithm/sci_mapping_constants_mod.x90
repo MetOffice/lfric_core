@@ -666,9 +666,14 @@ contains
     if (.not. constant_exists) then
 
       if (.not. coarse_mesh%query_mesh_map(fine_mesh)) then
-        write(log_scratch_space, '(A,I6,A,I6)')                                &
-            'No mesh map exists for mapping between meshes ',                  &
-            coarse_mesh%get_id(), ' and ', fine_mesh%get_id()
+
+        write(log_scratch_space, '(2(A,I0),A)')                &
+            'No mesh map exists for mapping between meshes '// &
+            trim(coarse_mesh%get_mesh_name())//'(',            &
+            coarse_mesh%get_id(),                              &
+            ') and '//trim(fine_mesh%get_mesh_name())//'(',    &
+            fine_mesh%get_id(), &
+            ')'
         call log_event(log_scratch_space, LOG_LEVEL_ERROR)
       end if
 
@@ -734,9 +739,12 @@ contains
     if (.not. constant_exists) then
 
       if (.not. coarse_mesh%query_mesh_map(fine_mesh)) then
-        write(log_scratch_space, '(A,I6,A,I6)')                                &
-            'No mesh map exists for mapping between meshes ',                  &
-            coarse_mesh%get_id(), ' and ', fine_mesh%get_id()
+        write(log_scratch_space, '(2(A,I0),A)')                 &
+            'No mesh map exists for mapping between meshes '  //&
+            trim(coarse_mesh%get_mesh_name()) //'(',            &
+            coarse_mesh%get_id(), ') and ' //                   &
+            trim(fine_mesh%get_mesh_name()) //'(',              &
+            fine_mesh%get_id(), ')'
         call log_event(log_scratch_space, LOG_LEVEL_ERROR)
       end if
 

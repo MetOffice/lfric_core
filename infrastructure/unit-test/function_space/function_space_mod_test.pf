@@ -620,10 +620,10 @@ contains
 
     type(function_space_type) :: test_fs
 
-    type(stencil_dofmap_type), pointer :: stencil_dofmap   => null()
-    integer(i_def),            pointer :: stencil_map(:,:) => null()
-    integer(i_def),            pointer :: map(:)           => null()
-    type(mesh_type),           pointer :: mesh             => null()
+    type(stencil_dofmap_type), pointer :: stencil_dofmap
+    integer(i_def),            pointer :: stencil_map(:,:)
+    integer(i_def),            pointer :: map(:)
+    type(mesh_type),           pointer :: mesh
 
     test_fs = function_space_type( this%mesh_id,         &
                                    this%element_order_h, &
@@ -659,10 +659,10 @@ contains
 
     type(function_space_type) :: test_fs
 
-    type(stencil_dofmap_type), pointer :: stencil_dofmap   => null()
-    integer(i_def),            pointer :: stencil_map(:,:) => null()
-    integer(i_def),            pointer :: map(:)           => null()
-    type(mesh_type),           pointer :: mesh             => null()
+    type(stencil_dofmap_type), pointer :: stencil_dofmap
+    integer(i_def),            pointer :: stencil_map(:,:)
+    integer(i_def),            pointer :: map(:)
+    type(mesh_type),           pointer :: mesh
 
     test_fs = function_space_type( this%mesh_id,         &
                                    this%element_order_h, &
@@ -698,10 +698,10 @@ contains
 
     type(function_space_type) :: test_fs
 
-    type(stencil_dofmap_type), pointer :: stencil_dofmap   => null()
-    integer(i_def),            pointer :: stencil_map(:,:) => null()
-    integer(i_def),            pointer :: map(:)           => null()
-    type(mesh_type),           pointer :: mesh             => null()
+    type(stencil_dofmap_type), pointer :: stencil_dofmap
+    integer(i_def),            pointer :: stencil_map(:,:)
+    integer(i_def),            pointer :: map(:)
+    type(mesh_type),           pointer :: mesh
 
     integer :: i
 
@@ -736,7 +736,7 @@ contains
     class(test_function_space_type), intent(inout) :: this
 
     type(function_space_type) :: test_fs
-    type(mesh_type),  pointer :: mesh_out => null()
+    type(mesh_type),  pointer :: mesh_out
 
     test_fs = function_space_type( this%mesh_id,         &
                                    this%element_order_h, &
@@ -775,8 +775,8 @@ contains
     class(test_function_space_type), intent(inout) :: this
 
     type(function_space_type)              :: test_fs
-    type(mesh_type),               pointer :: mesh           => null()
-    integer(i_def),                pointer :: entity_dofs(:) => null()
+    type(mesh_type),               pointer :: mesh
+    integer(i_def),                pointer :: entity_dofs(:)
 
     integer(i_def) :: reference(this%ndof_cell)
     integer(i_def) :: edge_array(12)

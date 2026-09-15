@@ -170,7 +170,7 @@ contains
   !> @detail This function returns the number of unique mesh
   !>         tag names in this collection.
   !>
-  !> @return Number of mesh tag names avaible to query.
+  !> @return Number of mesh tag names available to query.
   !>
   function n_meshes(self) result(number_of_meshes)
 
