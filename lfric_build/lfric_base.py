@@ -19,7 +19,7 @@ from pathlib import Path
 import sys
 from typing import cast, Optional, Iterable, Union
 
-from fab.api import (ArtefactSet, BuildConfig, Category, Exclude, grab_folder,
+from fab.api import (ArtefactSet, BuildConfig, Category, Exclude, grab_files,
                      Include, input_to_output_fpath, Linker, preprocess_x90,
                      psyclone, psyclone_transmute, step, SuffixFilter)
 from fab.fab_base.fab_base import FabBase
@@ -255,19 +255,19 @@ class LFRicBase(FabBase):
 
         # pylint: disable=redefined-builtin
         for dir in dirs:
-            grab_folder(self.config, src=self.lfric_core_root / dir,
-                        dst_label='')
+            grab_files(self.config, src=self.lfric_core_root / dir,
+                       dst_label='')
 
         # Copy the PSyclone Config file into a separate directory
-        grab_folder(self.config, src=self.lfric_core_root / "etc",
-                    dst_label='psyclone_config')
+        grab_files(self.config, src=self.lfric_core_root / "etc",
+                   dst_label='psyclone_config')
 
         # Copy the optimisation scripts into a separate directory
         opt_dir = self.app_dir / 'optimisation'
         if opt_dir.exists():
             # Some apps (mesh tools) don't have optimisations
-            grab_folder(self.config, src=opt_dir,
-                        dst_label='optimisation')
+            grab_files(self.config, src=opt_dir,
+                       dst_label='optimisation')
 
     def find_source_files_step(
             self,

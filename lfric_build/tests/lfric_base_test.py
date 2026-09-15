@@ -26,6 +26,7 @@ from fab.tools.compiler import CCompiler, FortranCompiler
 
 from lfric_base import LFRicBase
 
+
 class MockSiteConfig:
     """
     Creates a mock site config class.
@@ -396,7 +397,7 @@ def test_grab_files_step(monkeypatch) -> None:
     mock_core = Path("/mock/core")
 
     # Setup mocks
-    monkeypatch.setattr('lfric_base.grab_folder', mock_grab)
+    monkeypatch.setattr('lfric_base.grab_files', mock_grab)
 
     lfric_base = LFRicBase(name="test", app_dir=Path("."))
     monkeypatch.setattr(lfric_base, '_lfric_core_root', mock_core)
@@ -404,7 +405,7 @@ def test_grab_files_step(monkeypatch) -> None:
     # Call method under test
     lfric_base.grab_files_step()
 
-    # Verify grab_folder called for all required directories
+    # Verify grab_files called for all required directories
     expected_calls = [
         # Source directories
         mock.call(lfric_base.config,
@@ -576,6 +577,7 @@ def test_get_rose_meta(monkeypatch) -> None:
     lfric_base = LFRicBase(name="test", app_dir=Path("."))
     assert lfric_base.get_rose_meta() is None
 
+
 class TestFullSetup():
 
     def setup(self, monkeypatch, argv: Optional[list[str]] = None) -> None:
@@ -606,10 +608,10 @@ class TestFullSetup():
 
         self.mock_psyclone_config = "/mock/psyclone.cfg"
         # Patch instance methods. Return a copy to avoid that
-        # PSyclone modified these lists in the lambdas when it modifies the list
+        # PSyclone modified these lists in the lambdas when it modifies
+        # the list
         monkeypatch.setattr(self.lfric_base, 'get_psyclone_config',
                             lambda: self.mock_psyclone_config)
-
 
     def test_analyse_no_ignore(self, monkeypatch) -> None:
         """
