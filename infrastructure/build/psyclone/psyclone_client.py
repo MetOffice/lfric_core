@@ -146,18 +146,6 @@ def _server_dir(owner_pid):
     :rtype: tuple[str, bool]
     :raises RuntimeError: if no usable directory could be created.
     """
-    # TODO Remove this section
-    # explicit = os.environ.get(ENV_SERVER_DIR)
-    # if explicit:
-    #     if not _usable_dir(explicit):
-    #         raise RuntimeError(f"unusable server directory: {explicit}")
-    #     return explicit, False
-    #
-    # if owner_pid:
-    #     shared = os.path.join(tempfile.gettempdir(),
-    #                           f"{SERVER_DIR_PREFIX}-{os.getuid()}-{owner_pid}")
-    #     if _usable_dir(shared):
-    #         return shared, True
 
     working = os.environ.get("WORKING_DIR", "working")
     fallback = os.path.join(working, ".psyclone-server")
