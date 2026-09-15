@@ -4,6 +4,9 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 # Generate a make file snippet holding build information about a source file.
 #
 # This snippet consists of a dependency list built up from which modules a

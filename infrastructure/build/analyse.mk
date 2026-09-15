@@ -3,6 +3,8 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 #
 # Scan all Fortran source files in the current directory and build up
 # dependency information.

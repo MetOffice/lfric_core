@@ -5,6 +5,9 @@
 # should have received as part of this distribution.
 ##############################################################################
 # Manages a database of dependency information.
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 
 import logging
 import sqlite3
