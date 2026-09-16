@@ -82,7 +82,7 @@ contains
 !! @description  This routine should only be called for meshes with spherical
 !!               geometries. All arguments given as [longitude, latitude] on an
 !!               unrotated frame of reference. Stretching to the
-!!               mesh_equator_latitude is via Schmit transform.
+!!               mesh_equator_latitude is via Schmidt transform.
 !> @param[in] mesh_north_pole        Target north pole location [lon,lat], used to
 !>                                   generate the rotation matrix.
 !> @param[in] mesh_null_island       Target Null island location [lon,lat]
