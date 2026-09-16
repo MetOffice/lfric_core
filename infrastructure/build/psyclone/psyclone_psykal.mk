@@ -29,7 +29,12 @@ PSYCLONE_PSYKAL_EXTRAS ?= -l all
 # soon as that process does, so no server survives the build that started it.
 # Should that variable be unset the client determines the owner itself, by
 # finding the outermost make process in its own ancestry.
-PSYCLONE ?= $(LFRIC_BUILD)/psyclone/psyclone_client.py
+PSYCLONE_MODE ?= standard
+ifeq ($(PSYCLONE_MODE),server)
+    PSYCLONE ?= $(LFRIC_BUILD)/psyclone/psyclone_client.py
+else
+	PSYCLONE = psyclone
+endif
 #
 # Number of pre-forked PSyclone worker processes. Sized to the build
 # parallelism where known (MAKE_THREADS), otherwise to the number of
