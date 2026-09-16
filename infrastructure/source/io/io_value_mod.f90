@@ -38,7 +38,7 @@ module io_value_mod
 
   !> @brief Value with associated I/O methods
   !>        that can be stored in a key-value pair
-  type, extends(key_value_type) :: io_value_type
+  type, abstract, extends(key_value_type) :: io_value_type
 
     procedure(io_write_interface), pointer :: write_method => null()
     procedure(io_read_interface),  pointer :: checkpoint_read_method => null()
