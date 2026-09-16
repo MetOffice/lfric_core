@@ -250,7 +250,6 @@ subroutine checkpoint_write_value(io_value, value_name)
 
   select type(io_value)
 
-    ! TODO: SEE NOTES IN write_value_generic ABOVE
     type is (real32_arr_io_value_type)
       call checkpointer(real(io_value%value, dp_xios))
 
@@ -272,8 +271,8 @@ subroutine checkpoint_write_value(io_value, value_name)
   contains
 
     subroutine checkpointer(value)
-      ! after concretising io_value and converting its value to double precision,
-      ! the writing process is the same for io_value types, so this nested subroutine avoids code duplication
+      ! after concretising io_value, the writing process is the same for all
+      ! io_value types, so this nested subroutine avoids code duplication
 
       real(dp_xios) :: value(:)
       real(dp_xios), allocatable  :: dp_equiv(:)
@@ -571,6 +570,9 @@ subroutine write_checkpoint( fields, values, clock, checkpoint_stem_name, &
   contains
 
     subroutine checkpointer_io_value(io_value)
+      ! after concretising io_value, the checkpointing process is the same for all
+      ! io_value types, so this nested subroutine avoids code duplication
+
       class(io_value_type), intent(inout) :: io_value
 
       if (io_value%can_write_checkpoint()) then
