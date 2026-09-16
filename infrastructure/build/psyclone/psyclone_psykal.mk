@@ -31,7 +31,7 @@ PSYCLONE_PSYKAL_EXTRAS ?= -l all
 # finding the outermost make process in its own ancestry.
 PSYCLONE_MODE ?= standard
 ifeq ($(PSYCLONE_MODE),server)
-    PSYCLONE ?= $(LFRIC_BUILD)/psyclone/psyclone_client.py
+    PSYCLONE = $(LFRIC_BUILD)/psyclone/psyclone_client.py
 else
 	PSYCLONE = psyclone
 endif
