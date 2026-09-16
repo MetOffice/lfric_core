@@ -214,7 +214,7 @@ contains
     else if ( geometry == geometry_spherical .and. &
               topology /= topology_fully_periodic ) then
 
-      ! Allow for Rotated/Schmit stretched meshes
+      ! Allow for Rotated/Schmidt stretched meshes
       to_rotate = get_to_rotate()
       stretch_factor = get_stretch_factor()
       inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
@@ -254,7 +254,7 @@ contains
     else if ( geometry == geometry_spherical .and. &
               topology == topology_fully_periodic ) then
 
-      ! Allow for Rotated/Schmit stretched meshes
+      ! Allow for Rotated/Schmidt stretched meshes
       to_rotate = get_to_rotate()
       stretch_factor = get_stretch_factor()
       inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
