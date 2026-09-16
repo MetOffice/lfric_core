@@ -87,8 +87,8 @@ subroutine write_value_generic(io_value, value_name)
   character(*), optional, intent(in) :: value_name
 
   integer(i_def)              :: array_dims
+  real(dp_xios), allocatable  :: dp_equiv(:)
   character(:),  allocatable  :: value_key
-  ! real(dp_xios), allocatable  :: dp_equiv(:)
 
   if (present(value_name)) then
     value_key = value_name
@@ -104,30 +104,37 @@ subroutine write_value_generic(io_value, value_name)
 
   select type(io_value)
 
-    ! TODO: NOT SURE WHAT THE BEST APPROACH IS...
-    ! TODO: WHY DID THE CODE COPY io_value%value INTO A LOCAL ARRAY INSTEAD OF JUST PASSING IT DIRECTLY TO xios_send_field ?!?
-    ! TODO: FURTHERMORE, WHY RESHAPE THE LOCAL ARRAY IF IT IS ALWAYS 1D ?!?
-    ! TODO: AND FINALLY, WHICH IS THE BETTER APPROACH:
-    ! TODO: 1) REPEATING THE CODE BLOCK FOR EACH TYPE
-    ! TODO: 2) HAVING A NESTED SUBROUTINE WHICH IS CALLED IN EACH TYPE
-    ! TODO: 3) JUST CALLING xios_send_field DIRECTLY IN EACH TYPE, W/OUT BOTHERING W/ A LOCAL ARRAY OR RESHAPING
     type is (real32_arr_io_value_type)
-      ! array_dims = size(io_value%value)
-      ! allocate(dp_equiv(array_dims))
-      ! dp_equiv = real(io_value%value, dp_xios)
-      ! call xios_send_field( trim(value_key), &
-      !                 reshape(dp_equiv, (/ 1, array_dims /)) )
-      ! deallocate(dp_equiv)
-      call writer(real(io_value%value, dp_xios))
+      array_dims = size(io_value%value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
 
     type is (real64_arr_io_value_type)
-      call writer(real(io_value%value, dp_xios))
+      array_dims = size(io_value%value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
 
     type is (int32_arr_io_value_type)
-      call writer(real(io_value%value, dp_xios))
+      array_dims = size(io_value%value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
 
     type is (int64_arr_io_value_type)
-      call writer(real(io_value%value, dp_xios))
+      array_dims = size(io_value%value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
 
     class default
         call log_event( 'Unsupported value for writing w/ XIOS; Only real & integer arrays are supported', &
@@ -135,37 +142,9 @@ subroutine write_value_generic(io_value, value_name)
 
   end select
 
-  contains
-
-    subroutine writer(value)
-      ! after concretising io_value and converting its value to double precision,
-      ! the writing process is the same for io_value types, so this nested subroutine avoids code duplication
-
-      real(dp_xios) :: value(:)
-      real(dp_xios), allocatable  :: dp_equiv(:)
-
-      array_dims = size(value)
-      allocate(dp_equiv(array_dims))
-      dp_equiv = real(value, dp_xios)
-      call xios_send_field( trim(value_key), &
-                      reshape(dp_equiv, (/ 1, array_dims /)) )
-      deallocate(dp_equiv)
-
-    end subroutine writer
-
-  !     array_dims = size(io_value%data)
-  !     if ( xios_is_valid_field(trim(value_id)) ) then
-  !       allocate(dp_equiv(array_dims))
-  !       dp_equiv = real(io_value%data,dp_xios)
-  !       call xios_send_field( trim(value_id), &
-  !                       reshape(dp_equiv, (/ 1, array_dims /)) )
-  !       deallocate(dp_equiv)
-  !     else
-  !       call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
-  !                       LOG_LEVEL_ERROR )
-  !     end if
-
 end subroutine write_value_generic
+
+
 
 !>  @brief  Write field data to UGRIDs via XIOS
 !>
