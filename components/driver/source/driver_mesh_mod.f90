@@ -51,7 +51,7 @@ module driver_mesh_mod
 
   use global_mesh_collection_mod, only: global_mesh_collection
   use local_mesh_collection_mod,  only: local_mesh_collection
-  use mesh_mod           ,        only: geometry_spherical, &
+  use mesh_mod,                   only: geometry_spherical, &
                                         topology_periodic
 
   ! Configuration modules
