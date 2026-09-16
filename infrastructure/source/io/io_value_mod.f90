@@ -33,7 +33,6 @@ module io_value_mod
   public :: int32_arr_io_value_type,  int64_arr_io_value_type
   public :: real32_io_value_type,     real64_io_value_type
   public :: real32_arr_io_value_type, real64_arr_io_value_type
-  !!public :: get_io_value, io_read_interface, io_write_interface
   public :: io_read_interface, io_write_interface
 
   !> @brief Value with associated I/O methods
@@ -460,39 +459,5 @@ function can_write_checkpoint(self) result(checkpointable)
   end if
 
 end function can_write_checkpoint
-
-!! moved to "key_value_collection_iterator_mod.f90"
-!!!> @brief A helper function to retrieve an io_value_type object
-!!!>        from a key-value collection
-!!!> @param[in] collection The collection from which to get the io_value
-!!!> @param[in] key The key of the io_value
-!!!> @return io_value Pointer to the extracted io_value; null if there is none
-!!function get_io_value(collection, key) result(io_value)
-!!
-!!  type(key_value_collection_type), intent(in) :: collection
-!!  character(*),                    intent(in) :: key
-!!
-!!  class(io_value_type),  pointer :: io_value
-!!  class(key_value_type), pointer :: abstract_value
-!!
-!!  type(key_value_collection_iterator_type) :: iterator
-!!
-!!  io_value => null()
-!!  call iterator%initialise(collection)
-!!  do
-!!    if (.not. iterator%has_next()) exit
-!!    abstract_value => iterator%next()
-!!    if (trim(abstract_value%get_key()) == trim(key)) then
-!!      select type (concrete_value => abstract_value)
-!!        class is (io_value_type)
-!!          io_value => concrete_value
-!!        class default
-!!          call log_event( "Item in collection w/ key " // trim(key) // &
-!!                          "is not io_value_type", LOG_LEVEL_ERROR )
-!!      end select
-!!    end if
-!!  end do
-!!
-!!end function get_io_value
 
 end module io_value_mod
