@@ -17,10 +17,10 @@ module lfric_xios_write_mod
   use linked_list_mod,      only: linked_list_item_type
   use field_real32_mod,     only: field_real32_type, field_real32_proxy_type
   use field_real64_mod,     only: field_real64_type, field_real64_proxy_type
-  use io_value_mod,         only: io_value_type
-  use integer_io_value_mod, only: integer_io_value_type
-  use key_value_mod,        only: key_value_type, abstract_key_value_type, &
-                                  abstract_value_type
+  use io_value_mod,         only: int32_arr_io_value_type, int64_arr_io_value_type, &
+                                  real32_arr_io_value_type, real64_arr_io_value_type, &
+                                  io_value_type
+  use key_value_mod,        only: key_value_type
   use key_value_collection_mod, &
                             only: key_value_collection_type
   use key_value_collection_iterator_mod, &
@@ -68,18 +68,11 @@ module lfric_xios_write_mod
             write_field_generic,      &
             write_empty_field,        &
             checkpoint_write_value,   &
-            checkpoint_write_r_def_value,   &
-            checkpoint_write_integer_value,   &
             write_value_generic,      &
             write_state,              &
             write_checkpoint,         &
             create_checkpoint_list,   &
             checkpoint_time
-
-  interface checkpoint_write_value
-    procedure :: checkpoint_write_r_def_value
-    procedure :: checkpoint_write_integer_value
-  end interface checkpoint_write_value
 
 contains
 
@@ -90,55 +83,68 @@ contains
 !> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine write_value_generic(io_value, value_name)
-  class(abstract_value_type), intent(in) :: io_value
+  class(io_value_type), intent(in) :: io_value
   character(*), optional, intent(in) :: value_name
 
   integer(i_def)              :: array_dims
-  character(:),  allocatable  :: value_id
   real(dp_xios), allocatable  :: dp_equiv(:)
+  character(:),  allocatable  :: value_key
+
+  if (present(value_name)) then
+    value_key = value_name
+  else
+    value_key = io_value%get_key()
+  end if
+
+  if ( .not. xios_is_valid_field(trim(value_key)) ) then
+    call log_event( 'No XIOS field with id="'//trim(value_key)//'" is defined', &
+                    LOG_LEVEL_ERROR )
+    return
+  end if
 
   select type(io_value)
-  type is (io_value_type)
-    if (present(value_name)) then
-      value_id = value_name
-    else
-      value_id = io_value%io_id
-    end if
 
-    array_dims = size(io_value%data)
-    if ( xios_is_valid_field(trim(value_id)) ) then
-      ! Support 32-bit and 64-bit input by converting to XIOS real kind
+    type is (real32_arr_io_value_type)
+      array_dims = size(io_value%value)
       allocate(dp_equiv(array_dims))
-      dp_equiv = real(io_value%data, dp_xios)
-      call xios_send_field( trim(value_id), &
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
                       reshape(dp_equiv, (/ 1, array_dims /)) )
       deallocate(dp_equiv)
-    else
-      call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
-                      LOG_LEVEL_ERROR )
-    end if
-  type is (integer_io_value_type)
-    if (present(value_name)) then
-      value_id = value_name
-    else
-      value_id = io_value%io_id
-    end if
 
-    array_dims = size(io_value%data)
-    if ( xios_is_valid_field(trim(value_id)) ) then
-      ! Integers must be converted to XIOS real kind
+    type is (real64_arr_io_value_type)
+      array_dims = size(io_value%value)
       allocate(dp_equiv(array_dims))
-      dp_equiv = real(io_value%data,dp_xios)
-      call xios_send_field( trim(value_id), &
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
                       reshape(dp_equiv, (/ 1, array_dims /)) )
       deallocate(dp_equiv)
-    else
-      call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
-                      LOG_LEVEL_ERROR )
-    end if
+
+    type is (int32_arr_io_value_type)
+      array_dims = size(io_value%value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
+
+    type is (int64_arr_io_value_type)
+      array_dims = size(io_value%value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%value, dp_xios)
+      call xios_send_field( trim(value_key), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
+
+    class default
+        call log_event( 'Unsupported value for writing w/ XIOS; Only real & integer arrays are supported', &
+                         LOG_LEVEL_ERROR )
+
   end select
 
 end subroutine write_value_generic
+
+
 
 !>  @brief  Write field data to UGRIDs via XIOS
 !>
@@ -218,71 +224,69 @@ subroutine write_empty_field(field_name, field_proxy)
 
 end subroutine write_empty_field
 
-!> @brief Checkpoint an r_def io_value with XIOS
+!> @brief Checkpoint an io_value with XIOS
 !> @details This routine assumes there is an XIOS field
 !>          with the "checkpoint_" prefix
 !> @param[in]  io_value The io_value to write data from
 !> @param[in]  value_name The id defined in the XIOS context
 !>
-subroutine checkpoint_write_r_def_value(io_value, value_name)
-  class(io_value_type), intent(in)   :: io_value
+subroutine checkpoint_write_value(io_value, value_name)
+  class(io_value_type), intent(in) :: io_value
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
   integer(i_def)     :: array_dims
-  real(dp_xios), allocatable :: dp_equiv(:)
 
-  if(present(value_name)) then
+  if (present(value_name)) then
     checkpoint_id = trim(value_name)
   else
-    checkpoint_id = trim(io_value%io_id)
+    checkpoint_id = trim(io_value%get_key())
   end if
-  array_dims = size(io_value%data)
-  if ( xios_is_valid_field(trim(checkpoint_id)) ) then
-    allocate(dp_equiv(array_dims))
-    dp_equiv = real(io_value%data, dp_xios)
-    call xios_send_field( trim(checkpoint_id), &
-                    reshape(dp_equiv, (/ 1, array_dims /)) )
-    deallocate(dp_equiv)
-  else
-    call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
+
+  if ( .not. xios_is_valid_field(checkpoint_id) ) then
+    call log_event( 'No XIOS field with id="'//checkpoint_id//'" is defined', &
                     LOG_LEVEL_ERROR )
   end if
 
-end subroutine checkpoint_write_r_def_value
+  select type(io_value)
 
-!> @brief Checkpoint an integer io_value with XIOS
-!> @details This routine assumes there is an XIOS field
-!>          with the "checkpoint_" prefix
-!> @param[in] io_value The io_value to write data from
-!> @param[in]  value_name The id defined in the XIOS context
-!>
-subroutine checkpoint_write_integer_value(io_value, value_name)
-  class(integer_io_value_type), intent(in) :: io_value
-  character(*), optional, intent(in) :: value_name
+    type is (real32_arr_io_value_type)
+      call checkpointer(real(io_value%value, dp_xios))
 
-  character(str_def) :: checkpoint_id
-  integer(i_def)     :: array_dims
-  real(dp_xios), allocatable :: dp_equiv(:)
+    type is (real64_arr_io_value_type)
+      call checkpointer(real(io_value%value, dp_xios))
 
-  if(present(value_name)) then
-    checkpoint_id = trim(value_name)
-  else
-    checkpoint_id = trim(io_value%io_id)
-  end if
-  array_dims = size(io_value%data)
-  if ( xios_is_valid_field(trim(checkpoint_id)) ) then
-    allocate(dp_equiv(array_dims))
-    dp_equiv = real(io_value%data, dp_xios)
-    call xios_send_field( trim(checkpoint_id), &
-                          reshape(dp_equiv, (/ 1, array_dims /)) )
-    deallocate(dp_equiv)
-  else
-    call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
-                    LOG_LEVEL_ERROR )
-  end if
+    type is (int32_arr_io_value_type)
+      call checkpointer(real(io_value%value, dp_xios))
 
-end subroutine checkpoint_write_integer_value
+    type is (int64_arr_io_value_type)
+      call checkpointer(real(io_value%value, dp_xios))
+
+    class default
+        call log_event( 'Unsupported value for checkpointing w/ XIOS; Only real & integer arrays are supported', &
+                         LOG_LEVEL_ERROR )
+
+  end select
+
+  contains
+
+    subroutine checkpointer(value)
+      ! after concretising io_value, the writing process is the same for all
+      ! io_value types, so this nested subroutine avoids code duplication
+
+      real(dp_xios) :: value(:)
+      real(dp_xios), allocatable  :: dp_equiv(:)
+
+      array_dims = size(value)
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(value, dp_xios)
+      call xios_send_field( checkpoint_id, &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
+
+    end subroutine checkpointer
+
+end subroutine checkpoint_write_value
 
 !>  @brief    I/O handler for writing an XIOS netcdf checkpoint
 !>  @details  Note this routine accepts a filename but doesn't use it - this is
@@ -310,20 +314,20 @@ subroutine checkpoint_write_xios(xios_field_name, file_name, field_proxy)
   select type(field_proxy)
 
     type is (field_real32_proxy_type)
-    send_field = field_proxy%data(1:undf)
+      send_field = field_proxy%data(1:undf)
 
     type is (field_real64_proxy_type)
-    send_field = field_proxy%data(1:undf)
+      send_field = field_proxy%data(1:undf)
 
     type is (integer_field_proxy_type)
-    if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
-      call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
-                      '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
-    end if
-    send_field = real( field_proxy%data(1:undf), dp_xios )
+      if ( any( abs(field_proxy%data(1:undf)) > xios_max_int) ) then
+        call log_event( 'Data for integer field "'// trim(adjustl(xios_field_name)) // &
+                        '" contains values too large for 16-bit precision', LOG_LEVEL_WARNING )
+      end if
+      send_field = real( field_proxy%data(1:undf), dp_xios )
 
     class default
-    call log_event( "Invalid type for input field proxy", LOG_LEVEL_ERROR )
+      call log_event( "Invalid type for input field proxy", LOG_LEVEL_ERROR )
 
   end select
 
@@ -452,7 +456,6 @@ subroutine write_checkpoint( fields, values, clock, checkpoint_stem_name, &
   type(field_collection_iterator_type) :: iter
   type(key_value_collection_iterator_type) :: val_iter
   class(key_value_type), pointer :: kv
-  class(abstract_value_type), pointer :: abstract_val
 
   class(field_parent_type), pointer    :: fld => null()
 
@@ -461,11 +464,13 @@ subroutine write_checkpoint( fields, values, clock, checkpoint_stem_name, &
   character(:), allocatable            :: split_stem_name(:)
 
   if(checkpoint_time(clock, checkpoint_times)) then
+
     ! Create the field prefix from the checkpoint stem name and current time step
     split_stem_name = split_string( trim(checkpoint_stem_name), '/' )
     write(field_prefix,'(A,A,I10.10,A)') &
           trim(split_stem_name(size(split_stem_name))),"_", &
           clock%get_step(), "_"
+
     call iter%initialise(fields)
     do
        if ( .not.iter%has_next() ) exit
@@ -476,67 +481,68 @@ subroutine write_checkpoint( fields, values, clock, checkpoint_stem_name, &
        if ( present(suffix) ) xios_field_id = trim(adjustl(xios_field_id)) // trim(adjustl(suffix))
        select type(fld)
        type is (field_real32_type)
-          if ( fld%can_checkpoint() ) then
-             write(log_scratch_space,'(2A)') &
-                  "Checkpointing ", xios_field_id
-             call log_event(log_scratch_space, LOG_LEVEL_INFO)
-             call fld%write_checkpoint( xios_field_id,      &
-                                        trim(ts_fname(checkpoint_stem_name, &
-                                        "",                                 &
-                                        xios_field_id,      &
-                                        clock%get_step(),                   &
-                                        "")) )
-          else if ( fld%can_write() ) then
-             write(log_scratch_space,'(2A)') &
-                  "Writing checkpoint for ", xios_field_id
-             call log_event(log_scratch_space, LOG_LEVEL_INFO)
-             call fld%write_field( trim(field_prefix) // trim(xios_field_id) )
-          else
-             call log_event( 'Writing not set up for '// xios_field_id, &
+        if ( fld%can_checkpoint() ) then
+          write(log_scratch_space,'(2A)') &
+                "Checkpointing ", xios_field_id
+          call log_event(log_scratch_space, LOG_LEVEL_INFO)
+          call fld%write_checkpoint( trim(adjustl(fld%get_name()) ),      &
+                                      trim(ts_fname(checkpoint_stem_name, &
+                                      "",                                 &
+                                      xios_field_id,                      &
+                                      clock%get_step(),                   &
+                                      "")) )
+        else if ( fld%can_write() ) then
+          write(log_scratch_space,'(2A)') &
+                "Writing checkpoint for ", xios_field_id
+          call log_event(log_scratch_space, LOG_LEVEL_INFO)
+          call fld%write_field( trim(field_prefix) // trim(xios_field_id) )
+        else
+            call log_event( 'Writing not set up for '// xios_field_id, &
                             LOG_LEVEL_INFO )
-          end if
-       type is (field_real64_type)
-          if ( fld%can_checkpoint() ) then
-             write(log_scratch_space,'(2A)') &
-                  "Checkpointing ", xios_field_id
-             call log_event(log_scratch_space, LOG_LEVEL_INFO)
-             call fld%write_checkpoint( xios_field_id,      &
-                                        trim(ts_fname(checkpoint_stem_name, &
-                                        "",                                 &
-                                        xios_field_id,      &
-                                        clock%get_step(),                   &
-                                        "")) )
-          else if ( fld%can_write() ) then
-             write(log_scratch_space,'(2A)') &
-                  "Writing checkpoint for ", xios_field_id
-             call log_event(log_scratch_space, LOG_LEVEL_INFO)
-             call fld%write_field( trim(field_prefix) // trim(xios_field_id) )
-          else
-             call log_event( 'Writing not set up for '// xios_field_id, &
+        end if
+      type is (field_real64_type)
+        if ( fld%can_checkpoint() ) then
+          write(log_scratch_space,'(2A)') &
+                "Checkpointing ", xios_field_id
+          call log_event(log_scratch_space, LOG_LEVEL_INFO)
+          call fld%write_checkpoint( trim(adjustl(fld%get_name()) ),      &
+                                      trim(ts_fname(checkpoint_stem_name, &
+                                      "",                                 &
+                                      xios_field_id,                      &
+                                      clock%get_step(),                   &
+                                      "")) )
+        else if ( fld%can_write() ) then
+          write(log_scratch_space,'(2A)') &
+                "Writing checkpoint for ", xios_field_id
+          call log_event(log_scratch_space, LOG_LEVEL_INFO)
+          call fld%write_field( trim(field_prefix) // trim(xios_field_id) )
+        else
+            call log_event( 'Writing not set up for '// xios_field_id, &
                             LOG_LEVEL_INFO )
-          end if
+        end if
        type is (integer_field_type)
-          if ( fld%can_checkpoint() ) then
-             write(log_scratch_space,'(2A)') &
-                  "Checkpointing ", xios_field_id
-             call log_event(log_scratch_space, LOG_LEVEL_INFO)
-             call fld%write_checkpoint( trim(adjustl(fld%get_name()) ),     &
-                                        trim(ts_fname(checkpoint_stem_name, &
-                                        "",                                 &
-                                        xios_field_id,      &
-                                        clock%get_step(),                   &
-                                        "")) )
-          else if ( fld%can_write() ) then
-             write(log_scratch_space,'(2A)') &
-                  "Writing checkpoint for ", xios_field_id
-             call log_event(log_scratch_space, LOG_LEVEL_INFO)
-             call fld%write_field( trim(field_prefix) // trim(xios_field_id) )
-          else
-             call log_event( 'Writing not set up for '// xios_field_id, &
-                  LOG_LEVEL_INFO )
-          end if
+        if ( fld%can_checkpoint() ) then
+          write(log_scratch_space,'(2A)') &
+                "Checkpointing ", xios_field_id
+          call log_event(log_scratch_space, LOG_LEVEL_INFO)
+          call fld%write_checkpoint( trim(adjustl(fld%get_name()) ),      &
+                                      trim(ts_fname(checkpoint_stem_name, &
+                                      "",                                 &
+                                      xios_field_id,                      &
+                                      clock%get_step(),                   &
+                                      "")) )
+        else if ( fld%can_write() ) then
+          write(log_scratch_space,'(2A)') &
+                "Writing checkpoint for ", xios_field_id
+          call log_event(log_scratch_space, LOG_LEVEL_INFO)
+          call fld%write_field( trim(field_prefix) // trim(xios_field_id) )
+        else
+            call log_event( 'Writing not set up for '// xios_field_id, &
+                            LOG_LEVEL_INFO )
+        end if
        class default
-          call log_event('write_checkpoint:Invalid type of field, not supported supported',LOG_LEVEL_ERROR)
+          call log_event( 'write_checkpoint:Invalid type of field, not supported supported', &
+                          LOG_LEVEL_ERROR )
        end select
     end do
 
@@ -545,34 +551,38 @@ subroutine write_checkpoint( fields, values, clock, checkpoint_stem_name, &
     do
       if (.not. val_iter%has_next()) exit
       kv => val_iter%next()
-      select type(kv_typed => kv)
-        type is (abstract_key_value_type)
-          abstract_val => kv_typed%value
-          select type (io_value_object => abstract_val)
-            type is (io_value_type)
-              if(io_value_object%can_write_checkpoint()) then
-                call log_event( 'Writing checkpoint for ' // &
-                                trim(io_value_object%io_id), &
-                                LOG_LEVEL_INFO )
-                call io_value_object%write_checkpoint( &
-                        trim(field_prefix) // trim(io_value_object%io_id))
-              end if
-            type is (integer_io_value_type)
-              if(io_value_object%can_write_checkpoint()) then
-                call log_event( 'Writing checkpoint for ' // &
-                                trim(io_value_object%io_id), &
-                                LOG_LEVEL_INFO )
-                call io_value_object%write_checkpoint( &
-                        trim(field_prefix) // trim(io_value_object%io_id))
-              end if
-          end select
+      select type(kv)
+        type is (real32_arr_io_value_type)
+          call checkpointer_io_value(kv)
+        type is (real64_arr_io_value_type)
+          call checkpointer_io_value(kv)
+        type is (int32_arr_io_value_type)
+          call checkpointer_io_value(kv)
+        type is (int64_arr_io_value_type)
+          call checkpointer_io_value(kv)
       end select
     end do
   end if
 
   nullify(fld)
-  nullify(abstract_val)
   nullify(kv)
+
+  contains
+
+    subroutine checkpointer_io_value(io_value)
+      ! after concretising io_value, the checkpointing process is the same for all
+      ! io_value types, so this nested subroutine avoids code duplication
+
+      class(io_value_type), intent(inout) :: io_value
+
+      if (io_value%can_write_checkpoint()) then
+        call log_event( 'Writing checkpoint for ' // trim(io_value%get_key()), &
+                        LOG_LEVEL_INFO )
+        call io_value%write_checkpoint( &
+                trim(field_prefix) // trim(io_value%get_key()) )
+      end if
+
+    end subroutine checkpointer_io_value
 
 end subroutine write_checkpoint
 

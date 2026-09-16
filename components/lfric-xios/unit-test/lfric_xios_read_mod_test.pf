@@ -12,8 +12,9 @@ module lfric_xios_read_mod_test
   use lfric_xios_utils_mod,           only : set_prime_io_mesh
   use halo_routing_collection_mod,    only : halo_routing_collection_type, &
                                              halo_routing_collection
-  use io_value_mod,                   only : io_value_type
-  use integer_io_value_mod,           only : integer_io_value_type
+  use io_value_mod,                   only : io_value_type,           &
+                                             int32_arr_io_value_type, &
+                                             real64_arr_io_value_type
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use local_mesh_mod,                 only : local_mesh_type
@@ -29,6 +30,9 @@ module lfric_xios_read_mod_test
   implicit none
 
   private
+
+  integer(i_def), parameter :: EXIT_CODE_ON_ERROR = 1
+
   public :: test_lfric_xios_read
 
 
@@ -39,8 +43,8 @@ module lfric_xios_read_mod_test
     type(function_space_type), pointer :: w2h_fs => null()
     type(function_space_type), pointer :: wth_fs => null()
     type(function_space_type), pointer :: w3_fs  => null()
-    type(io_value_type)                :: value_real
-    type(integer_io_value_type)        :: value_integer
+    class(io_value_type),      pointer :: value_real => null()
+    class(io_value_type),      pointer :: value_int  => null()
     type(mesh_type),           pointer :: mesh   => null()
     type(local_mesh_type)              :: unit_test_local_mesh
   contains
@@ -125,11 +129,10 @@ contains
   @Test
   subroutine test_lfric_xios_read( this )
 
-    use lfric_xios_read_mod,      only: checkpoint_read_xios,    &
-                                        read_field_generic,      &
-                                        checkpoint_read_r_def_value,   &
-                                        checkpoint_read_integer_value, &
-                                        read_state,              &
+    use lfric_xios_read_mod,      only: checkpoint_read_xios,   &
+                                        read_field_generic,     &
+                                        checkpoint_read_value,  &
+                                        read_state,             &
                                         read_field_time_var
 
     implicit none
@@ -241,14 +244,29 @@ contains
     expected_int_result = (/(i,i=1,size(W0_data))/)
 
     int_data=999
-    call this%value_real%init("my_real",W0_data)
-    call this%value_integer%init("my_integer",int_data)
+    this%value_real => io_value_type("my_real", W0_data)
+    this%value_int => io_value_type("my_integer", int_data)
 
-    call checkpoint_read_r_def_value(this%value_real)
-    call checkpoint_read_integer_value(this%value_integer)
+    call checkpoint_read_value(this%value_real)
+    call checkpoint_read_value(this%value_int)
 
-    @assertEqual(this%value_real%data, real(expected_real_result, r_def))
-    @assertEqual(this%value_integer%data, expected_int_result)
+    select type(concrete_value_real => this%value_real)
+      type is (real64_arr_io_value_type)
+        @assertEqual(concrete_value_real%value, real(expected_real_result, r_def))
+      class default
+        write( 6, &
+           '("io_value_type with unsupported value")' )
+        stop EXIT_CODE_ON_ERROR
+    end select
+
+    select type(concrete_value_int => this%value_int)
+      type is (int32_arr_io_value_type)
+        @assertEqual(concrete_value_int%value, expected_int_result)
+      class default
+        write( 6, &
+           '("io_value_type with unsupported value")' )
+        stop EXIT_CODE_ON_ERROR
+    end select
 
     deallocate(int_data, expected_real_result, expected_int_result)
 

@@ -15,18 +15,23 @@
 module key_value_collection_iterator_mod
 
   use constants_mod,            only: l_def
+  use io_value_mod,             only: io_value_type
   use key_value_mod,            only: key_value_type
   use linked_list_mod,          only: linked_list_item_type
+  use log_mod,                  only: log_event, log_level_error
   use key_value_collection_mod, only: key_value_collection_type
 
   implicit none
 
   private
 
+  public :: key_value_collection_iterator_type
+  public :: get_io_value
+
   !-----------------------------------------------------------------------------
   ! Type that iterates through a key_value collection
   !-----------------------------------------------------------------------------
-  type, public :: key_value_collection_iterator_type
+  type :: key_value_collection_iterator_type
     private
     !> A pointer to the key_value collection being iterated over
     type(key_value_collection_type), pointer :: collection
@@ -97,5 +102,38 @@ function has_next(self) result(next)
   next = .true.
   if(.not.associated(self%current)) next = .false.
 end function has_next
+
+!> @brief A helper function to retrieve an io_value_type object
+!>        from a key-value collection
+!> @param[in] collection The collection from which to get the io_value
+!> @param[in] key The key of the io_value
+!> @return io_value Pointer to the extracted io_value; null if there is none
+function get_io_value(collection, key) result(io_value)
+
+  type(key_value_collection_type), intent(in) :: collection
+  character(*),                    intent(in) :: key
+
+  class(io_value_type),  pointer :: io_value
+  class(key_value_type), pointer :: abstract_value
+
+  type(key_value_collection_iterator_type) :: iterator
+
+  io_value => null()
+  call iterator%initialise(collection)
+  do
+    if (.not. iterator%has_next()) exit
+    abstract_value => iterator%next()
+    if (trim(abstract_value%get_key()) == trim(key)) then
+      select type (concrete_value => abstract_value)
+        class is (io_value_type)
+          io_value => concrete_value
+        class default
+          call log_event( "Item in collection w/ key " // trim(key) // &
+                          "is not io_value_type", log_level_error )
+      end select
+    end if
+  end do
+
+end function get_io_value
 
 end module key_value_collection_iterator_mod

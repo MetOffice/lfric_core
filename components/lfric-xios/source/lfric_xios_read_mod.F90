@@ -10,14 +10,14 @@
 !>
 module lfric_xios_read_mod
 
-  use, intrinsic :: iso_fortran_env, only : real32, real64
+  use, intrinsic :: iso_fortran_env, only : real32, real64, int32, int64
 
   use constants_mod,            only: i_def, l_def, str_def, r_def, rmdi, &
                                       LARGE_DP_NEGATIVE
   use lfric_xios_constants_mod, only: dp_xios
-  use key_value_mod,            only: abstract_value_type
-  use io_value_mod,             only: io_value_type
-  use integer_io_value_mod,     only: integer_io_value_type
+  use io_value_mod,             only: int32_arr_io_value_type, int64_arr_io_value_type, &
+                                      real32_arr_io_value_type, real64_arr_io_value_type, &
+                                      io_value_type
   use field_mod,                only: field_type, field_proxy_type
   use field_real32_mod,         only: field_real32_type, field_real32_proxy_type
   use field_real64_mod,         only: field_real64_type, field_real64_proxy_type
@@ -64,17 +64,10 @@ module lfric_xios_read_mod
   private
   public :: checkpoint_read_xios,    &
             checkpoint_read_value,   &
-            checkpoint_read_r_def_value,   &
-            checkpoint_read_integer_value,   &
             read_field_generic,      &
             read_state,              &
             read_checkpoint,         &
             read_field_time_var
-
-  interface checkpoint_read_value
-    procedure :: checkpoint_read_r_def_value
-    procedure :: checkpoint_read_integer_value
-  end interface checkpoint_read_value
 
 contains
 
@@ -122,77 +115,71 @@ subroutine checkpoint_read_xios(xios_field_name, file_name, field_proxy)
 
 end subroutine checkpoint_read_xios
 
-!> @brief Read r_def data from an XIOS checkpoint file into the io_value
+!> @brief Read the data from an XIOS checkpoint file into the io_value
 !> @param[in,out] io_value The io_value to read data into
 !> @param[in]  value_name The id defined in the XIOS context
 !>
-subroutine checkpoint_read_r_def_value(io_value, value_name)
+subroutine checkpoint_read_value(io_value, value_name)
   class(io_value_type), intent(inout) :: io_value
   character(*), optional, intent(in)  :: value_name
+
   character(str_def) :: restart_id
   integer(i_def)     :: array_dims
-  integer(tik)   :: timing_id
+  integer(tik)       :: timing_id
   real(dp_xios), allocatable  :: dp_equiv(:)
 
-  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.chkpt_readrv')
+  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.chkpt_readv')
 
   if(present(value_name)) then
     restart_id = trim(value_name)
   else
-    restart_id = "restart_" // trim(io_value%io_id)
+    restart_id = "restart_" // io_value%get_key()
   end if
-  array_dims = size(io_value%data)
 
-  if ( xios_is_valid_field(trim(restart_id)) ) then
-    allocate(dp_equiv(array_dims))
-    call xios_recv_field( trim(restart_id), &
-                          dp_equiv(1:array_dims) )
-    io_value%data = real(dp_equiv,r_def)
-    deallocate(dp_equiv)
-  else
-    call log_event( 'No XIOS field with id="'//trim(restart_id)//'" is defined', &
+  if ( .not. xios_is_valid_field(trim(restart_id)) ) then
+    call log_event( 'No XIOS field with id="' // restart_id // '" is defined', &
                     LOG_LEVEL_ERROR )
   end if
 
-  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.chkpt_readrv')
+  select type(concrete_io_value => io_value)
 
-end subroutine checkpoint_read_r_def_value
+    type is (int32_arr_io_value_type)
+      array_dims = size(concrete_io_value%value)
+      allocate(dp_equiv(array_dims))
+      call xios_recv_field( restart_id, dp_equiv(1:array_dims) )
+      concrete_io_value%value = int(dp_equiv, int32)
+      deallocate(dp_equiv)
 
-!> @brief Read int data from an XIOS checkpoint file into the io_value
-!> @param[in,out] io_value The io_value to read data into
-!> @param[in]  value_name The id defined in the XIOS context
-!>
-subroutine checkpoint_read_integer_value(io_value, value_name)
-  class(integer_io_value_type), intent(inout) :: io_value
-  character(*), optional, intent(in)  :: value_name
-  character(str_def) :: restart_id
-  integer(i_def)     :: array_dims
-  integer(tik)   :: timing_id
-  real(dp_xios), allocatable  :: dp_equiv(:)
+    type is (int64_arr_io_value_type)
+      array_dims = size(concrete_io_value%value)
+      allocate(dp_equiv(array_dims))
+      call xios_recv_field( restart_id, dp_equiv(1:array_dims) )
+      concrete_io_value%value = int(dp_equiv, int64)
+      deallocate(dp_equiv)
 
-  if ( LPROF ) call start_timing(timing_id, 'lfric_xios.chkpt_readiv')
+    type is (real32_arr_io_value_type)
+      array_dims = size(concrete_io_value%value)
+      allocate(dp_equiv(array_dims))
+      call xios_recv_field( restart_id, dp_equiv(1:array_dims) )
+      concrete_io_value%value = real(dp_equiv, real32)
+      deallocate(dp_equiv)
 
-  if(present(value_name)) then
-    restart_id = trim(value_name)
-  else
-    restart_id = "restart_" // trim(io_value%io_id)
-  end if
-  array_dims = size(io_value%data)
+    type is (real64_arr_io_value_type)
+      array_dims = size(concrete_io_value%value)
+      allocate(dp_equiv(array_dims))
+      call xios_recv_field( restart_id, dp_equiv(1:array_dims) )
+      concrete_io_value%value = real(dp_equiv, real64)
+      deallocate(dp_equiv)
 
-  if ( xios_is_valid_field(trim(restart_id)) ) then
-    allocate(dp_equiv(array_dims))
-    call xios_recv_field( trim(restart_id), &
-                          dp_equiv(1:array_dims) )
-    io_value%data = int(dp_equiv,i_def)
-    deallocate(dp_equiv)
-  else
-    call log_event( 'No XIOS field with id="'//trim(restart_id)//'" is defined', &
-                    LOG_LEVEL_ERROR )
-  end if
+    class default
+      call log_event( "Unsupported type for checkpoint read value: " //  restart_id, &
+                      LOG_LEVEL_ERROR )
 
-  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.chkpt_readiv')
+  end select
 
-end subroutine checkpoint_read_integer_value
+  if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.chkpt_readv')
+
+end subroutine checkpoint_read_value
 
 !>  @brief    Post-processing after reading field data
 !>  @details  Performs a halo swap if necessary

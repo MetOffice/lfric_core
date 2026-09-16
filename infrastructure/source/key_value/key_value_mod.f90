@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------------
-! (C) Crown copyright 2023 Met Office. All rights reserved.
+! (C) Crown copyright Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ module key_value_mod
   end type str_key_value_type
 
   !===============================================
-  ! int32_key_value_type: 32-bit integer key-value pair
+  ! int32_arr_key_value_type: 32-bit integer array key-value pair
   !===============================================
   type, extends(key_value_type) :: int32_arr_key_value_type
     integer(int32), allocatable :: value(:)
@@ -136,7 +136,7 @@ module key_value_mod
   end type int32_arr_key_value_type
 
   !===============================================
-  ! int64_key_value_type: 64-bit integer key-value pair
+  ! int64_arr_key_value_type: 64-bit integer array key-value pair
   !===============================================
   type, extends(key_value_type) :: int64_arr_key_value_type
     integer(int64), allocatable :: value(:)
@@ -145,7 +145,7 @@ module key_value_mod
   end type int64_arr_key_value_type
 
   !===============================================
-  ! int32_key_value_type: 32-bit integer key-value pair
+  ! real32_arr_key_value_type: 32-bit real array key-value pair
   !===============================================
   type, extends(key_value_type) :: real32_arr_key_value_type
     real(real32), allocatable :: value(:)
@@ -154,7 +154,7 @@ module key_value_mod
   end type real32_arr_key_value_type
 
   !===============================================
-  ! int64_key_value_type: 64-bit integer key-value pair
+  ! real64_arr_key_value_type: 64-bit real array key-value pair
   !===============================================
   type, extends(key_value_type) :: real64_arr_key_value_type
     real(real64), allocatable :: value(:)
@@ -163,7 +163,7 @@ module key_value_mod
   end type real64_arr_key_value_type
 
   !==============================================
-  ! logical_arr_key_value_type: Logical key-value pair
+  ! logical_arr_key_value_type: Logical array key-value pair
   !==============================================
   type, extends(key_value_type) :: logical_arr_key_value_type
     logical, allocatable :: value(:)

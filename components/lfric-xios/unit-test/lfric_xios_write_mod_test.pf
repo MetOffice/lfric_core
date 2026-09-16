@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------------
-! (C) Crown copyright 2020 Met Office. All rights reserved.
+! (C) Crown copyright Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
@@ -12,8 +12,9 @@ module lfric_xios_write_mod_test
   use lfric_xios_utils_mod,           only : set_prime_io_mesh
   use halo_routing_collection_mod,    only : halo_routing_collection_type, &
                                              halo_routing_collection
-  use io_value_mod,                   only : io_value_type
-  use integer_io_value_mod,           only : integer_io_value_type
+  use io_value_mod,                   only : io_value_type,           &
+                                             int32_arr_io_value_type, &
+                                             real64_arr_io_value_type
   use function_space_collection_mod,  only : function_space_collection_type, &
                                              function_space_collection
   use local_mesh_mod,                 only : local_mesh_type
@@ -30,6 +31,9 @@ module lfric_xios_write_mod_test
   implicit none
 
   private
+
+  integer(i_def), parameter :: EXIT_CODE_ON_ERROR = 1
+
   public :: test_lfric_xios_write
 
 
@@ -40,10 +44,10 @@ module lfric_xios_write_mod_test
     type(function_space_type), pointer :: w2h_fs => null()
     type(function_space_type), pointer :: wth_fs => null()
     type(function_space_type), pointer :: w3_fs => null()
-    type(io_value_type)                :: value_real
-    type(integer_io_value_type)        :: value_integer
     type(mesh_type),           pointer :: mesh   => null()
     type(local_mesh_type)              :: unit_test_local_mesh
+    class(io_value_type),      pointer :: value_real => null()
+    class(io_value_type),      pointer :: value_int => null()
 
   contains
     procedure setUp
@@ -128,10 +132,9 @@ contains
   @Test
   subroutine test_lfric_xios_write( this )
 
-    use lfric_xios_write_mod,     only: write_field_generic,            &
-                                        checkpoint_write_r_def_value,   &
-                                        checkpoint_write_integer_value, &
-                                        write_value_generic,            &
+    use lfric_xios_write_mod,     only: write_field_generic,     &
+                                        checkpoint_write_value,  &
+                                        write_value_generic,     &
                                         write_state
 
     implicit none
@@ -257,38 +260,67 @@ contains
       int_data(i) = 2**25 + i
     end do
 
-    call this%value_real%init("my_real",W0_data)
-    call this%value_integer%init("my_integer",int_data)
+    this%value_real => io_value_type("my_real", W0_data)
+    this%value_int => io_value_type("my_integer", int_data)
 
     allocate( W0_result(size(W0_data)) )
     allocate( int_result(size(int_data)) )
     W0_result = -999.0_dp_xios
 
     ! Test the checkpoint write methods
-    call checkpoint_write_r_def_value(this%value_real)
+    call checkpoint_write_value(this%value_real)
     call get_latest_data(W0_result)
+
     ! In applications, the read process would convert back to r_def
-    @assertEqual(this%value_real%data,real(W0_result, r_def))
+    select type(concrete_value_real => this%value_real)
+      type is (real64_arr_io_value_type)
+        @assertEqual(concrete_value_real%value, real(W0_result, r_def))
+      class default
+        write( 6, &
+           '("io_value_type with unsupported value")' )
+        stop EXIT_CODE_ON_ERROR
+    end select
 
     ! Underlying code converts this to a real for writing to XIOS
-    call checkpoint_write_integer_value(this%value_integer)
+    call checkpoint_write_value(this%value_int)
     call get_latest_data(W0_result)
     ! In applications, the read process would convert back to integer
     int_result = int(W0_result,i_def)
-    @assertEqual(this%value_integer%data,int_result)
+    select type(concrete_value_int => this%value_int)
+      type is (int32_arr_io_value_type)
+        @assertEqual(concrete_value_int%value, int_result)
+      class default
+        write( 6, &
+           '("io_value_type with unsupported value")' )
+        stop EXIT_CODE_ON_ERROR
+    end select
 
     ! Test the generic write methods
     W0_result = -999.0_dp_xios
     call write_value_generic(this%value_real)
     call get_latest_data(W0_result)
     ! Allow for IO value data to be a real32 XIOS reals
-    @assertEqual(real(this%value_real%data, dp_xios),W0_result)
+    select type(concrete_value_real => this%value_real)
+      type is (real64_arr_io_value_type)
+        @assertEqual(concrete_value_real%value, W0_result)
+      class default
+        write( 6, &
+           '("io_value_type with unsupported value")' )
+        stop EXIT_CODE_ON_ERROR
+    end select
 
     W0_result = -999.0_dp_xios
-    call write_value_generic(this%value_integer)
+    call write_value_generic(this%value_int)
     call get_latest_data(W0_result)
     ! Allow for IO value data to be a real32 XIOS reals
-    @assertEqual(this%value_integer%data, int(W0_result))
+    select type(concrete_value_int => this%value_int)
+      type is (int32_arr_io_value_type)
+        @assertEqual(concrete_value_int%value, int(W0_result))
+      class default
+        write( 6, &
+           '("io_value_type with unsupported value")' )
+        stop EXIT_CODE_ON_ERROR
+    end select
 
     deallocate(W0_result, int_result, int_data)
 
