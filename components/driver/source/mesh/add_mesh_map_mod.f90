@@ -139,9 +139,9 @@ subroutine assign_mesh_maps( mesh_names )
 end subroutine assign_mesh_maps
 
 
-!> @brief       Creates integrid map between two mesh_type objects.
-!> @description The meshes should contain valid local mesh integrid maps.
-!> @param[in] source_mesh  Soure mesh object
+!> @brief   Creates integrid map between two mesh_type objects.
+!> @details The meshes should contain valid local mesh intergrid maps.
+!> @param[in] source_mesh  Source mesh object
 !> @param[in] target_mesh  Target mesh object
 subroutine add_mesh_map( source_mesh, target_mesh )
 
@@ -150,7 +150,7 @@ subroutine add_mesh_map( source_mesh, target_mesh )
   type(mesh_type), intent(inout) :: source_mesh
   type(mesh_type), intent(inout) :: target_mesh
 
-  ! Mesh tag names may be different but "could point to the same mesh
+  ! Mesh tag names may be different but could point to the same mesh
   ! So check the IDs are not the same
   if (source_mesh%get_id() == target_mesh%get_id()) then
     write(log_scratch_space,'(A)')                  &

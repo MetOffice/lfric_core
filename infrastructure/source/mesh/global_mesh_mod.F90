@@ -256,8 +256,8 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief Constructs a global mesh object.
   !>
-  !> @description This global mesh object holds the connectivities
-  !>              which fully describe the 2D topology of the mesh.
+  !> @details This global mesh object holds the connectivities
+  !>          which fully describe the 2D topology of the mesh.
   !>
   !> @param[in] ugrid_mesh_data Ugrid data object to construct global
   !>                            mesh object from.

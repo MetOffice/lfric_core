@@ -22,7 +22,6 @@ module function_space_mod
   use log_mod,              only : log_event, log_scratch_space,               &
                                    LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR,           &
                                    LOG_LEVEL_INFO
-  use mesh_collection_mod,  only : mesh_collection
   use fs_continuity_mod,    only : W0, W1, W2, W3, Wtheta, W2broken, W2trace,  &
                                    W2Htrace, W2Vtrace, W2V, W2H, Wchi,         &
                                    W2Hbroken
@@ -35,6 +34,7 @@ module function_space_mod
                                    compute_global_vert_dof_id_2d
   use linked_list_data_mod, only : linked_list_data_type
   use linked_list_mod,      only : linked_list_type, linked_list_item_type
+  use mesh_collection_mod,  only : mesh_collection
   use timing_mod,           only : start_timing, stop_timing, &
                                    tik, LPROF
 

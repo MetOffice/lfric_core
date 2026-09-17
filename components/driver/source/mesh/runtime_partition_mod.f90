@@ -312,7 +312,7 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
   nullify(source_global_mesh)
   nullify(target_local_mesh)
 
-  ! Written assume mesh maps are read from input files of non-partitioned meshes
+  ! Assume mesh maps are read from input files of non-partitioned meshes
   allocate( all_mesh_names, &
             source=local_mesh_collection%get_mesh_names() )
 

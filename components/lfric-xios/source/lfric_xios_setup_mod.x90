@@ -92,8 +92,7 @@ contains
   !>
   !> @param [in] model_clock  The model clock
   !> @param [in] calendar     The model calendar
-  subroutine  init_xios_calendar( model_clock, calendar, &
-                                  start_at_zero, context_clock_step )
+  subroutine  init_xios_calendar( model_clock, calendar, start_at_zero, context_clock_step )
 
     implicit none
 

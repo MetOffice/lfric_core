@@ -1139,7 +1139,7 @@ contains
   !> @details Direct initialisation from a <ugrid_mesh_data_type> allows a local
   !>          mesh object to be populated directly from file read.
   !>
-  !> @param [in] ugrid_mesh_data  Ugrid data object to construct local
+  !> @param[in] ugrid_mesh_data   Ugrid data object to construct local
   !>                              mesh object from.
   !> @param[in] rename_to         [optional] Name used to identify
   !>                              the instance of the local_mesh_object.
