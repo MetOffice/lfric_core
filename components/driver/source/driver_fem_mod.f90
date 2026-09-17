@@ -115,11 +115,7 @@ contains
       prime_mesh_name = config%base_mesh%prime_mesh_name()
     end if
 
-    if (trim(prime_mesh_name) == trim(cmdi)) then
-      mesh => mesh_collection%get_mesh(all_mesh_names(1))
-    else
-      mesh => mesh_collection%get_mesh(prime_mesh_name)
-    end if
+    mesh => mesh_collection%get_mesh(all_mesh_names(1))
 
     if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
 
