@@ -139,7 +139,7 @@ subroutine assign_mesh_maps( mesh_names )
 end subroutine assign_mesh_maps
 
 
-!> @brief   Creates integrid map between two mesh_type objects.
+!> @brief   Creates intergrid map between two mesh_type objects.
 !> @details The meshes should contain valid local mesh intergrid maps.
 !> @param[in] source_mesh  Source mesh object
 !> @param[in] target_mesh  Target mesh object
