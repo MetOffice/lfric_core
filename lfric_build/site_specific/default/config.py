@@ -13,13 +13,15 @@ This module contains the default Fab configuration class.
 import argparse
 from typing import List
 
-from fab.api import AddFlags, BuildConfig, Category, ToolRepository
+from fab.api import BuildConfig, DependencyInfo, ProfileFlags
 
-from default.setup_script_cray import setup_script_cray
-from default.setup_script_gnu import setup_script_gnu
-from default.setup_script_intel_classic import setup_script_intel_classic
-from default.setup_script_intel_llvm import setup_script_intel_llvm
-from default.setup_script_nvidia import setup_script_nvidia
+from site_specific.default.setup_script_cray import setup_script_cray
+from site_specific.default.setup_script_gnu import setup_script_gnu
+from site_specific.default.setup_script_intel_classic import (
+    setup_script_intel_classic)
+from site_specific.default.setup_script_intel_llvm import (
+    setup_script_intel_llvm)
+from site_specific.default.setup_script_nvidia import setup_script_nvidia
 
 
 class Config:
@@ -58,27 +60,13 @@ class Config:
 
         :param build_config: the Fab build configuration instance
         '''
-        # First create the default compiler profiles for all available
-        # compilers. While we have a tool box with exactly one compiler
-        # in it, compiler wrappers will require more than one compiler
-        # to be initialised - so we just initialise all of them (including
-        # the linker):
-        tr = ToolRepository()
-        for compiler in (tr[Category.C_COMPILER] +
-                         tr[Category.FORTRAN_COMPILER] +
-                         tr[Category.LINKER]):
-            # Define a base profile, which contains the common
-            # compilation flags. This 'base' is not accessible to
-            # the user, so it's not part of the profile list. Also,
-            # make it inherit from the default profile '', so that
-            # a user does not have to specify the 'base' profile.
-            # Note that we set this even if a compiler is not available.
-            # This is required in case that compilers are not in PATH,
-            # so e.g. mpif90-ifort works, but ifort cannot be found.
-            # We still need to be able to set and query flags for ifort.
-            compiler.define_profile("base", inherit_from="")
-            for profile in self.get_valid_profiles():
-                compiler.define_profile(profile, inherit_from="base")
+        # First create the default compiler profiles.
+        # Define a base profile, which contains the common
+        # compilation flags. This 'base' is not accessible to
+        # the user, so it's not part of the profile list.
+        ProfileFlags.define_profile("base")
+        for profile in self.get_valid_profiles():
+            ProfileFlags.define_profile(profile, inherit_from="base")
 
         self.setup_intel_classic(build_config)
         self.setup_intel_llvm(build_config)
@@ -97,6 +85,27 @@ class Config:
         # Keep a copy of the args, so they can be used when
         # initialising compilers
         self._args = args
+
+    def update_repos(self, dep_info: DependencyInfo):
+        """
+        This method is called by the main script to allow each site to
+        replace the URLs of repos with e.g. local mirrors.
+        """
+
+        # A simplified example to use mirrors could be (which would
+        # typically be implemented in a derived, site-specific class)
+        # root = Path("/root/of/mirrors")
+        # mirrors = {"git@github.com:MetOffice/casim.git": root / "casim",
+        #            "git@github.com:MetOffice/jules.git": root / "jules",
+        #             }
+        # for dependency in dep_info.get_repo_names():
+        #     repo_infos = dep_info.get_repo_info(dependency)
+        #     for source_ref in repo_infos:
+        #         if source_ref.source in mirrors:
+        #             logger.info(f"Using mirror "
+        #                         f"'{mirrors[source_ref.source]}' for "
+        #                         f"'{source_ref.source}")
+        #             source_ref.source = mirrors[source_ref.source]
 
     def setup_cray(self, build_config: BuildConfig) -> None:
         '''
@@ -152,11 +161,3 @@ class Config:
         :param build_config: the Fab build configuration instance
         '''
         setup_script_nvidia(build_config, self.args)
-
-    def get_path_flags(self, build_config: BuildConfig) -> List[AddFlags]:
-        '''
-        Returns the path-specific flags to be used.
-        TODO FAB #313: Ideally we have only one kind of flag, but as a quick
-        work around we provide this method.
-        '''
-        return []
