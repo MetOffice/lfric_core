@@ -49,6 +49,7 @@
         [[[environment]]]
             USE_VERNIER=yes
             USE_TIMING_WRAPPER=yes
+            PSYCLONE_MODE=server
         [[[directives]]]
             -l tmpsize=12GB
 
