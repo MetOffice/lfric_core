@@ -6,6 +6,9 @@
 ##############################################################################
 # Process previously analysed dependency database. For fun and profit!
 
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Set, Tuple

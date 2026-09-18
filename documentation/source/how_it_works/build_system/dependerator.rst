@@ -38,7 +38,13 @@ Examine the Source
 
 To harvest pertinent information the ``DependencyAnalyser`` tool is used::
 
-    infrastructure/build/tools/DependencyAnalyser <database file> <source file>
+    infrastructure/build/tools/DependencyAnalyser <database file> <source file>...
+
+More than one source file may be presented to a single invocation and doing so
+is strongly preferred. Starting a Python interpreter, importing its modules and
+opening the database once per source file was found to dominate the cost of
+this stage. When several files are presented they are read and preprocessed by
+a pool of threads and recorded in the database within a single transaction.
 
 The database is used to maintain the harvested information in preparation for the
 second stage. This is what is referred to by the first argument and is created
