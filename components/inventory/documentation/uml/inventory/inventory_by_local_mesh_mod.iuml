@@ -1,6 +1,8 @@
 ' (C) Crown copyright 2022 Met Office. All rights reserved.
 ' The file LICENCE, distributed with this code, contains details of the terms
 ' under which the code may be used.
+' Some of the content of this file has been produced with the assistance of
+' Met Office GitHub Copilot Enterprise.
 
 class inventory_by_local_mesh_mod::inventory_by_local_mesh_type {
   -paired_object_list: linked_list_type
@@ -22,6 +24,8 @@ class inventory_by_local_mesh_mod::inventory_by_local_mesh_type {
   +add_field_array( <<out>> field_array: field_real32_type, <<in>> fs: function_space_type, <<in>> array_size: integer, <<in>> local_mesh: local_mesh_type, <<in, optional>> halo_depth: integer ) :
   +add_field_array( <<out>> field_array: field_real64_type, <<in>> fs: function_space_type, <<in>> array_size: integer, <<in>> local_mesh: local_mesh_type, <<in, optional>> halo_depth: integer ) :
   +add_field_array( <<out>> field_array: integer_field_type, <<in>> fs: function_space_type, <<in>> array_size: integer, <<in>> local_mesh: local_mesh_type, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: field_real32_type(:,:), <<in>> fs: function_space_type, <<in>> dim1: integer, <<in>> dim2: integer, <<in>> local_mesh: local_mesh_type, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: field_real64_type(:,:), <<in>> fs: function_space_type, <<in>> dim1: integer, <<in>> dim2: integer, <<in>> local_mesh: local_mesh_type, <<in, optional>> halo_depth: integer ) :
   +add_integer( <<in>> number: integer, <<in>> local_mesh: local_mesh_type ) :
   +add_integer_array( <<in>> numbers: integer, <<in>> local_mesh: local_mesh_type ) :
   +add_logical( <<in>> bool_flag: logical, <<in>> local_mesh: local_mesh_type ) :
@@ -33,12 +37,16 @@ class inventory_by_local_mesh_mod::inventory_by_local_mesh_type {
   +copy_field_array( <<in>> field_array: field_real32_type, <<in>> local_mesh: local_mesh_type ) :
   +copy_field_array( <<in>> field_array: field_real64_type, <<in>> local_mesh: local_mesh_type ) :
   +copy_field_array( <<in>> field_array: integer_field_type, <<in>> local_mesh: local_mesh_type ) :
+  +copy_field_array( <<in>> field_array: field_real32_type(:,:), <<in>> local_mesh: local_mesh_type ) :
+  +copy_field_array( <<in>> field_array: field_real64_type(:,:), <<in>> local_mesh: local_mesh_type ) :
   +get_field( <<in>> local_mesh: local_mesh_type, <<out>> field: field_real32_type ) :
   +get_field( <<in>> local_mesh: local_mesh_type, <<out>> field: field_real64_type ) :
   +get_field( <<in>> local_mesh: local_mesh_type, <<out>> field: integer_field_type ) :
   +get_field_array( <<in>> local_mesh: local_mesh_type, <<out>> field_array: field_real32_type ) :
   +get_field_array( <<in>> local_mesh: local_mesh_type, <<out>> field_array: field_real64_type ) :
   +get_field_array( <<in>> local_mesh: local_mesh_type, <<out>> field_array: integer_field_type ) :
+  +get_field_array( <<in>> local_mesh: local_mesh_type, <<out>> field_array: field_real32_type(:,:) ) :
+  +get_field_array( <<in>> local_mesh: local_mesh_type, <<out>> field_array: field_real64_type(:,:) ) :
   +get_integer( <<in>> local_mesh: local_mesh_type, <<out>> number: integer ) :
   +get_integer_array( <<in>> local_mesh: local_mesh_type, <<out>> numbers: integer ) :
   +get_logical( <<in>> local_mesh: local_mesh_type, <<out>> bool_flag: logical ) :
