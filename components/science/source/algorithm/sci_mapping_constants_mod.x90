@@ -43,13 +43,6 @@ module sci_mapping_constants_mod
   ! Object types
   use config_mod, only: config_type
 
-  ! Configuration modules
-  use base_mesh_config_mod, only: geometry_spherical,      &
-                                  geometry_planar,         &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
-
-
   ! Other algorithms
   use sci_geometric_constants_mod, only: get_coordinates, &
                                          get_panel_id
@@ -230,18 +223,8 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -309,18 +292,8 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1109,18 +1082,8 @@ contains
     integer(kind=i_def),      parameter :: xdirection = 1_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1191,18 +1154,8 @@ contains
     integer(kind=i_def),      parameter :: ydirection = 2_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1274,18 +1227,8 @@ contains
     integer(kind=i_def),      parameter :: zdirection = 3_i_def
     integer(tik)                        :: id
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -1358,18 +1301,8 @@ contains
     integer(kind=i_def) :: coord_system
     real(kind=r_def)    :: scaled_radius
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 

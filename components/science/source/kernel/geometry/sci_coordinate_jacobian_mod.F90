@@ -19,15 +19,14 @@ module sci_coordinate_jacobian_mod
                                        xyz2ll,           &
                                        llr2xyz,          &
                                        schmidt_transform_lat
-
+  use mesh_mod,                  only: geometry_planar, &
+                                       topology_periodic
   use sci_chi_transform_mod,     only: get_mesh_rotation_matrix, &
                                        get_to_stretch,           &
                                        get_to_rotate,            &
                                        get_stretch_factor
 
   ! Configuration modules
-  use base_mesh_config_mod,      only: geometry_planar, &
-                                       topology_fully_periodic
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_system_native
 
@@ -209,7 +208,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       ! Native coordinates for a cubed-sphere mesh
       to_rotate = get_to_rotate()
       to_stretch = get_to_stretch()
@@ -372,7 +371,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       ! Native coordinates for a cubed-sphere mesh
       to_rotate = get_to_rotate()
       to_stretch = get_to_stretch()
@@ -549,7 +548,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       ! Native coordinates for a cubed-sphere mesh
       to_rotate = get_to_rotate()
       to_stretch = get_to_stretch()
@@ -690,7 +689,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       ! Native coordinates for a cubed-sphere mesh
       to_rotate = get_to_rotate()
       to_stretch = get_to_stretch()
@@ -981,7 +980,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       ! Native coordinates for a cubed-sphere mesh
       alpha  = 0.0_real32
       beta   = 0.0_real32
@@ -1100,7 +1099,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       ! Native coordinates for a cubed-sphere mesh
       alpha  = 0.0_real64
       beta   = 0.0_real64

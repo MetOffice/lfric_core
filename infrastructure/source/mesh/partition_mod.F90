@@ -25,7 +25,6 @@ module partition_mod
   use sort_mod,        only : bubble_sort
   use log_mod,         only : log_event,         &
                               log_scratch_space, &
-                              LOG_LEVEL_INFO,    &
                               LOG_LEVEL_ERROR,   &
                               LOG_LEVEL_DEBUG
   use constants_mod,   only: i_def, r_def, l_def
