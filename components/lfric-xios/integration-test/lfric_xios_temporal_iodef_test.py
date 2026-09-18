@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##############################################################################
-# (C) Crown copyright 2025 Met Office. All rights reserved.
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
 ##############################################################################
@@ -12,87 +12,99 @@ The tests cover the reading of a piece of non-cyclic temporal data with data
 points ranging from 15:01 to 15:10 in 10 1-minute intervals. The model start
 time is changed to change how the model interacts with the data.
 """
-from testframework import TestEngine, TestFailed
-from xiostest import LFRicXiosTest
 from pathlib import Path
 import sys
+from testframework import TestEngine, TestFailed # pylint: disable=import-error
+from xiostest import LFRicXiosTest # pylint: disable=import-error
+
 
 ###############################################################################
-class LfricXiosFullNonCyclicIodefTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
+class LfricXiosFullNonCyclicIodefTest(LFRicXiosTest): # pylint: disable=too-few-public-methods
     """
-    Tests the LFRic-XIOS temporal reading functionality for a full set of non-cyclic data
+    Tests the LFRic-XIOS temporal reading functionality for a full set of
+    non-cyclic data
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"], processes=1, iodef_file="iodef_temporal.xml")
+        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"],
+                         processes=1, iodef_file="iodef_temporal.xml")
         self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
+        self.gen_data('non_cyclic_full_kgo.cdl', 'non_cyclic_full_kgo.nc')
         self.gen_config( "non_cyclic_base.nml", "non_cyclic_full.nml", {} )
 
-    def test(self, returncode: int, out: str, err: str):
+    def test(self, returncode: int, out: str, err: str): # pylint: disable=unused-argument
         """
         Test the output of the context test
         """
 
         if returncode != 0:
             print(out)
-            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
-                             f"stderr:\n" +
-                             f"{err}")
-        if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
-                                  Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
-                                  'temporal_field'):
-            raise TestFailed("Output data does not match input data for same time values")
+            raise TestFailed(
+                f"Unexpected failure of test executable: {returncode}\n" +
+                f"stderr:\n {err}")
+        if not self.nc_kgo_check(
+                Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
+                Path(self.test_working_dir, 'non_cyclic_full_kgo.nc')):
+            raise TestFailed("Output data does not match input data for same " \
+                             "time values")
 
         return "Reading full set of non-cylic data okay..."
 
 
-class LfricXiosFullNonCyclicIodefHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
+class LfricXiosFullNonCyclicIodefHighFreqTest(LFRicXiosTest): # pylint: disable=too-few-public-methods
     """
     Tests the LFRic-XIOS temporal reading functionality for a full set of
     non-cyclic data at higher model frequency
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"], processes=1, iodef_file="iodef_temporal.xml")
+        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"],
+                         processes=1, iodef_file="iodef_temporal.xml")
         self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
-        self.gen_config( "non_cyclic_base.nml", "non_cyclic_full.nml", {"dt": 10.0,
+        self.gen_data('non_cyclic_high_freq_iodef_kgo.cdl',
+                      'non_cyclic_high_freq_kgo.nc')
+        self.gen_config( "non_cyclic_base.nml", "non_cyclic_full.nml",
+                         {"dt": 10.0,
                           "timestep_end": '60'} )
 
-    def test(self, returncode: int, out: str, err: str):
+    def test(self, returncode: int, out: str, err: str): # pylint: disable=unused-argument
         """
         Test the output of the context test
         """
 
         if returncode != 0:
             print(out)
-            raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
-                             f"stderr:\n" +
-                             f"{err}")
-        if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_temporal_input.nc'),
-                                  Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
-                                  'temporal_field'):
-            raise TestFailed("Output data does not match input data for same time values")
+            raise TestFailed(
+                f"Unexpected failure of test executable: {returncode}\n" +
+                f"stderr:\n {err}")
+        if not self.nc_kgo_check(
+                Path(self.test_working_dir, 'lfric_xios_temporal_output.nc'),
+                Path(self.test_working_dir, 'non_cyclic_high_freq_kgo.nc')):
+            raise TestFailed("Output data does not match input data for same " \
+                             "time values")
 
         return "Reading full set of non-cylic data okay..."
 
 
-class LfricXiosFullNonCyclicIodefNoFreqTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
+class LfricXiosFullNonCyclicIodefNoFreqTest(LFRicXiosTest): # pylint: disable=too-few-public-methods
     """
-    Tests the error handling for the case where there is no frequency set in either
-    the iodef or the fortran configuration.
+    Tests the error handling for the case where there is no frequency set in
+    either the iodef or the fortran configuration.
     """
 
     def __init__(self):
-        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"], processes=1)
+        super().__init__(command=[sys.argv[1], "non_cyclic_full.nml"],
+                         processes=1)
         self.gen_data('temporal_data.cdl', 'lfric_xios_temporal_input.nc')
         self.gen_config( "non_cyclic_base.nml", "non_cyclic_full.nml", {} )
 
-    def test(self, returncode: int, out: str, err: str):
+    def test(self, returncode: int, out: str, err: str): # pylint: disable=unused-argument
         """
         Test the output of the context test
         """
 
-        expected_error_code = "ERROR: Frequency for file [lfric_xios_temporal_input] not defined in XIOS or LFRic"
+        expected_error_code = "ERROR: Frequency for file [lfric_xios_temporal_input] " \
+                              "not defined in XIOS or LFRic"
 
         if returncode == 1:
             errorcode = err.split("\n")[0].split("0:")[1]
