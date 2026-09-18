@@ -29,11 +29,11 @@ use log_mod,                   only : log_event,               &
                                       LOG_LEVEL_DEBUG,         &
                                       LOG_LEVEL_WARNING
 use matrix_invert_mod,         only : matrix_invert_3x3
+use mesh_mod,                  only : geometry_spherical, &
+                                      geometry_planar,    &
+                                      topology_periodic
 
 ! Configuration modules
-use base_mesh_config_mod,      only: geometry_spherical, &
-                                     geometry_planar,    &
-                                     topology_fully_periodic
 use finite_element_config_mod, only: coord_system_xyz, &
                                      coord_system_native
 
@@ -180,7 +180,7 @@ subroutine init_chi_transforms( geometry, topology, &
       )
     end if
     if ( abs(equatorial_latitude - rmdi) < EPS .or.                            &
-         geometry == geometry_planar .or. topology /= topology_fully_periodic ) then
+         geometry == geometry_planar .or. topology /= topology_periodic ) then
       equatorial_latitude = 0.0_r_def
       call log_event(                                                          &
         'Equatorial latitude for mesh not set, so using 0.0 as default',       &
@@ -278,7 +278,7 @@ subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id,                   &
     y = chi_2
     z = chi_3
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, using (lon,lat,z) coordinates
     call llr2xyz(chi_1, chi_2, chi_3+scaled_radius, x, y, z)
 
@@ -369,7 +369,7 @@ subroutine chir2xyz( chi_1, chi_2, chi_3, panel_id,    &
     y = chi_2
     z = chi_3
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, using (lon,lat,z) coordinates
     call llr2xyz(chi_1, chi_2, chi_3, x, y, z)
 
@@ -457,7 +457,7 @@ subroutine chi2llr( chi_1, chi_2, chi_3, panel_id,                   &
     ! chi uses (geocentric) Cartesian coordinates
     call xyz2llr(chi_1, chi_2, chi_3, lon, lat, radius)
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, already using (lon,lat,z) coordinates
     ! may need to rotate these to the physical (lon,lat) coordinates
 
@@ -536,7 +536,7 @@ subroutine chi2abr( chi_1, chi_2, chi_3, panel_id,                   &
 
   real(kind=r_def) :: xyz(3)
 
-  if (topology /= topology_fully_periodic .or. geometry /= geometry_spherical) then
+  if (topology /= topology_periodic .or. geometry /= geometry_spherical) then
     call log_event(                                                            &
   'chi2abr can only be used on cubed-sphere meshes', LOG_LEVEL_ERROR       &
   )

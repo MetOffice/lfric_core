@@ -14,6 +14,7 @@ module gen_planar_mod
 !-------------------------------------------------------------------------------
 
   use calc_global_cell_map_mod,       only: calc_global_cell_map
+  use config_mod,                     only: config_type
   use constants_mod,                  only: r_def, i_def, l_def, str_def, &
                                             str_long, imdi, rmdi, emdi,   &
                                             str_longlong,                 &
@@ -2597,11 +2598,11 @@ end function is_generated
 !> @brief Sets common partition parameters to be applied to global meshes
 !>        of this type.
 !>
-!> @param[out]  decomposition     Object containing decomposition parameters and
-!>                                method
+!> @param[in]   config            Application configuration object
+!> @param[out]  decomposition     Panel decomposition object
 !> @param[out]  partitioner_ptr   Mesh partitioning strategy.
 !>==============================================================================
-subroutine set_partition_parameters( decomposition, partitioner_ptr )
+subroutine set_partition_parameters( config, decomposition, partitioner_ptr )
 
   use panel_decomposition_mod, only: panel_decomposition_type,           &
                                      auto_decomposition_type,            &
@@ -2614,11 +2615,7 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
   use partition_mod, only: partitioner_interface, &
                            partitioner_planar
 
-  ! Configuration modules.
-  use partitions_config_mod, only: n_partitions,                        &
-                                   panel_xproc, panel_yproc,            &
-                                   panel_decomposition,                 &
-                                   panel_decomposition_auto,            &
+  use partitions_config_mod, only: panel_decomposition_auto,            &
                                    panel_decomposition_row,             &
                                    panel_decomposition_column,          &
                                    panel_decomposition_custom,          &
@@ -2627,12 +2624,21 @@ subroutine set_partition_parameters( decomposition, partitioner_ptr )
 
   implicit none
 
-  class(panel_decomposition_type), intent(out), allocatable :: decomposition
+  type(config_type),                intent(in)   :: config
+  class(panel_decomposition_type),  intent(out), &
+                                    allocatable  :: decomposition
+  procedure(partitioner_interface), intent(out), &
+                                    pointer      :: partitioner_ptr
 
-  procedure(partitioner_interface), &
-                  intent(out), pointer :: partitioner_ptr
+  integer(i_def) :: n_partitions
+  integer(i_def) :: panel_xproc
+  integer(i_def) :: panel_yproc
+  integer(i_def) :: panel_decomposition
 
-  partitioner_ptr => null()
+  n_partitions = config%partitions%n_partitions()
+  panel_xproc  = config%partitions%panel_xproc()
+  panel_yproc  = config%partitions%panel_yproc()
+  panel_decomposition = config%partitions%panel_decomposition()
 
   partitioner_ptr => partitioner_planar
   call log_event( "Using planar partitioner", LOG_LEVEL_INFO )

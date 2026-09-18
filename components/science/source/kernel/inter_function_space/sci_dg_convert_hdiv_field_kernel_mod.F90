@@ -13,7 +13,8 @@ module sci_dg_convert_hdiv_field_kernel_mod
 
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,         &
-                                    GH_FIELD, GH_REAL,           &
+                                    GH_FIELD, GH_SCALAR,         &
+                                    GH_REAL, GH_INTEGER,         &
                                     GH_READWRITE,                &
                                     GH_READ, ANY_SPACE_9,        &
                                     ANY_SPACE_2,                 &
@@ -33,11 +34,15 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: dg_convert_hdiv_field_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                                          &
-       arg_type(GH_FIELD*3, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1), &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),                    &
-       arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),                    &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3)       &
+  type(arg_type) :: meta_args(8) = (/                                          &
+       arg_type(GH_FIELD*3, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1), & ! physical_field1, physical_field2, physical_field3
+       arg_type(GH_FIELD,   GH_REAL,    GH_READ, ANY_SPACE_2),                 & ! computational_field
+       arg_type(GH_FIELD*3, GH_REAL,    GH_READ, ANY_SPACE_9),                 & ! chi1, chi2, chi3
+       arg_type(GH_FIELD,   GH_REAL,    GH_READ, ANY_DISCONTINUOUS_SPACE_3),   & ! panel_id
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                              & ! geometry
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                              & ! topology
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                              & ! coord_system
+       arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                               & ! scaled_radius
        /)
   type(func_type) :: meta_funcs(2) = (/                                        &
        func_type(ANY_SPACE_2, GH_BASIS),                                       &
@@ -67,6 +72,10 @@ contains
 !> @param[in] chi2 Coordinates in the second direction
 !> @param[in] chi3 Coordinates in the third direction
 !> @param[in] panel_id A field giving the ID for mesh panels
+!! @param[in] geometry       Mesh geometry enumeration
+!! @param[in] topology       Mesh topology enumeration
+!! @param[in] coord_system   Finite-element coordinate system enumeration
+!! @param[in] scaled_radius  Scaled planet radius
 !> @param[in] ndf1 Number of degrees of freedom per cell for the physical field
 !> @param[in] undf1 Number of unique degrees of freedom for the physical field
 !> @param[in] map1 Dofmap for the cell at the base of the column for the physical field
@@ -92,6 +101,8 @@ subroutine dg_convert_hdiv_field_code(nlayers,                                 &
                                       computational_field,                     &
                                       chi1, chi2, chi3,                        &
                                       panel_id,                                &
+                                      geometry, topology,                      &
+                                      coord_system, scaled_radius,             &
                                       ndf1, undf1, map1,                       &
                                       ndf2, undf2, map2,                       &
                                       basis2,                                  &
@@ -100,10 +111,6 @@ subroutine dg_convert_hdiv_field_code(nlayers,                                 &
                                       ndf_pid, undf_pid, map_pid               &
                                    )
   use sci_coordinate_jacobian_mod, only: pointwise_coordinate_jacobian
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -130,6 +137,11 @@ subroutine dg_convert_hdiv_field_code(nlayers,                                 &
   real(kind=r_def), dimension(1,ndf_chi,ndf1), intent(in)   :: basis_chi
   real(kind=r_def), dimension(3,ndf_chi,ndf1), intent(in)   :: diff_basis_chi
   real(kind=r_def), dimension(3,ndf2,ndf1),    intent(in)   :: basis2
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def) :: df, df2, k, dfx

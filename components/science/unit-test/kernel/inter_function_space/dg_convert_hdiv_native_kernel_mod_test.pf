@@ -4,7 +4,8 @@
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
 module dg_convert_hdiv_native_kernel_mod_test
-  use constants_mod,                       only : i_def, r_def, imdi
+
+  use constants_mod,                       only : i_def, r_def, imdi, rmdi
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w2_m3x3_q3x3x3_size, &
                                                   get_w3_m3x3_q3x3x3_size
@@ -16,6 +17,8 @@ module dg_convert_hdiv_native_kernel_mod_test
   use get_unit_test_w3nodal_basis_mod,     only : get_w2_w3nodal_basis
   use get_unit_test_3x3x3_chi_mod,         only : get_w0_3x3x3_field
   use funit
+
+  use finite_element_config_mod, only : coord_system_xyz
 
   implicit none
 
@@ -39,24 +42,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
 
     class(dg_convert_hdiv_native_kernel_test_type), intent(inout) :: this
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -65,14 +55,12 @@ contains
 
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
     class(dg_convert_hdiv_native_kernel_test_type), intent(inout) :: this
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -92,6 +80,11 @@ contains
     real(r_def), parameter :: dx = 6000.0_r_def, &
                               dy = 1000.0_r_def, &
                               dz = 2000.0_r_def
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     real(kind=r_def) :: answer, use_tol
     integer(i_def) :: nlayers, ncells, ncell_3d, cell, icell
@@ -175,6 +168,8 @@ contains
                                      chi2,                               &
                                      chi3,                               &
                                      panel_id,                           &
+                                     geometry, topology,                 &
+                                     coord_system, scaled_radius,        &
                                      ndf_w3, undf_w3, map_w3(:,cell),    &
                                      ndf_w2, undf_w2, map_w2(:,cell),    &
                                      basis_w2,                           &

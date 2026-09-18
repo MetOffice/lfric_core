@@ -430,7 +430,7 @@ contains
 
     call self%set_id(global_mesh_id_counter)
 
-    ! The feigner in the mesh unit test sets geometry to spherical,
+    ! The mesh unit test sets geometry to spherical,
     ! so make the global mesh used in the mesh unit tests consistent.
     self%geometry  = spherical_domain
     self%topology  = non_periodic_domain

@@ -12,7 +12,7 @@ module panel_decomposition_mod
   use global_mesh_collection_mod, only: global_mesh_collection_type
   use constants_mod, only: i_def, l_def, r_def
   use log_mod, only: log_event, log_scratch_space, &
-                     LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG
+                     LOG_LEVEL_ERROR, LOG_LEVEL_DEBUG
 
   implicit none
 
@@ -166,7 +166,7 @@ contains
 
     integer(i_def) :: num_xprocs, num_yprocs
 
-    call log_event("Using custom decomposition", LOG_LEVEL_INFO)
+    call log_event("Using custom decomposition", LOG_LEVEL_DEBUG)
 
     num_xprocs = self%num_xprocs
     num_yprocs = self%num_yprocs
@@ -279,7 +279,7 @@ contains
     integer(i_def) :: start_xprocs, start_width, i
     logical :: found_partition
 
-    call log_event("Using auto decomposition", LOG_LEVEL_INFO)
+    call log_event("Using auto decomposition", LOG_LEVEL_DEBUG)
 
     ! For automatic partitioning, try to partition into the squarest
     ! possible partitions.
@@ -421,7 +421,7 @@ contains
 
     integer(i_def) :: num_xprocs, num_yprocs
 
-    call log_event("Using row decomposition", LOG_LEVEL_INFO)
+    call log_event("Using row decomposition", LOG_LEVEL_DEBUG)
 
     num_xprocs = panel_ranks
     num_yprocs = 1_i_def
@@ -510,7 +510,7 @@ contains
 
     integer(i_def) :: num_xprocs, num_yprocs
 
-    call log_event("Using column decomposiiton", LOG_LEVEL_INFO)
+    call log_event("Using column decomposiiton", LOG_LEVEL_DEBUG)
 
     num_xprocs = 1_i_def
     num_yprocs = panel_ranks
@@ -601,7 +601,7 @@ contains
     integer(i_def) :: start_xprocs, start_width, i
     logical ::found_factors
 
-    call log_event("Using auto_nonuniform decomposition", LOG_LEVEL_INFO)
+    call log_event("Using auto_nonuniform decomposition", LOG_LEVEL_DEBUG)
 
     mp_num_cells_x = num_cells_x / mapping_factor
     mp_num_cells_y = num_cells_y / mapping_factor
@@ -716,7 +716,7 @@ contains
 
     integer(i_def) :: num_xprocs
 
-    call log_event("Using guided_nonuniform decomposition", LOG_LEVEL_INFO)
+    call log_event("Using guided_nonuniform decomposition", LOG_LEVEL_DEBUG)
 
     num_xprocs = self%num_xprocs
 

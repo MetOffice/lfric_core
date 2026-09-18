@@ -146,9 +146,9 @@ program cubedsphere_mesh_generator
   integer(i_def) :: topology
   integer(i_def) :: geometry
 
-  logical(l_def) :: generate_inner_halos
+!  logical(l_def) :: generate_inner_halos
 
-  integer(i_def) :: max_stencil_depth
+!  integer(i_def) :: max_stencil_depth
   integer(i_def) :: n_partitions
   integer(i_def), allocatable :: partition_range(:)
 
@@ -212,10 +212,8 @@ program cubedsphere_mesh_generator
   equatorial_latitude = config%cubedsphere_mesh%equatorial_latitude()
 
   if (partition_mesh) then
-    max_stencil_depth    = config%partitions%max_stencil_depth()
-    n_partitions         = config%partitions%n_partitions()
-    partition_range      = config%partitions%partition_range()
-    generate_inner_halos = config%partitions%generate_inner_halos()
+    n_partitions    = config%partitions%n_partitions()
+    partition_range = config%partitions%partition_range()
   end if
 
   if (rotate_mesh) then
@@ -739,7 +737,7 @@ program cubedsphere_mesh_generator
     !---------------------------------------------------------------
     ! Get partitioning parameters.
     !---------------------------------------------------------------
-    call set_partition_parameters( decomposition, partitioner_ptr )
+    call set_partition_parameters( config, decomposition, partitioner_ptr )
 
     write( log_scratch_space,'(A)' )          &
         '=================================='//&
@@ -753,24 +751,22 @@ program cubedsphere_mesh_generator
 
     thread_id = 0
 
-!$omp parallel default(firstprivate) shared(global_mesh_collection)
+!$omp parallel default(firstprivate) shared(global_mesh_collection, config)
 !$omp do schedule(static)
 
     do partition_id=start_partition, end_partition
 
       thread_id = omp_get_thread_num()
 
-      call generate_local_objects( local_mesh_collection,           &
-                                   global_mesh_collection,          &
-                                   mesh_names, partition_id,        &
-                                   n_partitions, max_stencil_depth, &
-                                   generate_inner_halos,            &
+      call generate_local_objects( config, partition_id,        &
+                                   local_mesh_collection,       &
+                                   global_mesh_collection,      &
                                    decomposition, partitioner_ptr )
 
       !---------------------------------------------------------------
       ! Output local meshes to UGRID file.
       !---------------------------------------------------------------
-      call write_local_meshes( partition_id,           &
+      call write_local_meshes( config, partition_id,   &
                                global_mesh_collection, &
                                local_mesh_collection,  &
                                output_basename )

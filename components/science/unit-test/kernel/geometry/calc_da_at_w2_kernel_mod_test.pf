@@ -8,7 +8,7 @@
 !>
 module calc_dA_at_w2_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, imdi
+  use constants_mod, only : i_def, r_def, imdi, rmdi
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w2_m3x3_q3x3x3_size, &
@@ -20,6 +20,8 @@ module calc_dA_at_w2_kernel_mod_test
 
   use get_unit_test_q3x3x3_basis_mod,      only : get_w0_q3x3x3_diff_basis, &
                                                   get_w0_q3x3x3_basis
+
+  use finite_element_config_mod, only : coord_system_xyz
 
   use funit
 
@@ -42,24 +44,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
 
     class(calc_dA_at_w2_test_type), intent(inout) :: this
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -68,14 +57,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
     class(calc_dA_at_w2_test_type), intent(inout) :: this
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -96,6 +83,11 @@ contains
     real(kind=r_def), parameter :: dy   = 7.0_r_def
     real(kind=r_def), parameter :: dz   = 13.0_r_def
     real(kind=r_def), parameter :: dzdx = 0.75_r_def   ! slope to mimic orography
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Reference element parameters for the faces of the cube.
     integer(i_def), parameter :: W=1 !< "West" face of the cell.
@@ -180,6 +172,9 @@ contains
                              chi2,                     &
                              chi3,                     &
                              panel_id,                 &
+                             geometry, topology,       &
+                             coord_system,             &
+                             scaled_radius,            &
                              ndf_w2,                   &
                              undf_w2,                  &
                              map_w2(:, cell),          &

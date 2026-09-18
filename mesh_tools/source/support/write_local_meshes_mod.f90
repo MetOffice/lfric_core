@@ -9,13 +9,13 @@
 !>          appended with the relevant partition number.
 module write_local_meshes_mod
 
+  use config_mod,            only: config_type
   use calc_cell_centres_mod, only: calc_cell_centres_global_model, &
                                    calc_cell_centres_regional_model
 
-  use constants_mod, only: i_def, r_def, str_def, &
-                           str_max_filename,      &
-                           radians_to_degrees,    &
-                           degrees_to_radians
+  use constants_mod, only: l_def, i_def, r_def, str_def, &
+                           str_max_filename, &
+                           radians_to_degrees, degrees_to_radians
   use log_mod,       only: log_event, log_scratch_space, &
                            log_level_info
   use omp_lib,       only: omp_get_thread_num
@@ -32,13 +32,7 @@ module write_local_meshes_mod
   use ugrid_2d_mod,                   only: ugrid_2d_type
   use ugrid_file_mod,                 only: ugrid_file_type
 
-  ! Configuration modules
-  use mesh_config_mod,        only: coord_sys, coord_sys_ll, n_meshes,   &
-                                    mesh_names
-  use partitions_config_mod,  only: n_partitions, partition_range
-  use planar_mesh_config_mod, only: edge_cells_x, edge_cells_y,   &
-                                    domain_size, create_lbc_mesh, &
-                                    lbc_parent_mesh
+  use mesh_config_mod, only: coord_sys, coord_sys_ll
 
   implicit none
 
@@ -54,18 +48,21 @@ contains
 !>          (1 per partition). Additionally, for planar meshes, local LBC mesh
 !>          objects are produce if an lbc_parent_name is specified.
 !>
+!> @param[in] config             Application configuration object
 !> @param[in] partition_id       Partition number being written.
 !> @param[in] global_mesh_bank   Collection of generated global meshes.
 !> @param[in] local_mesh_bank    Collection of generated local meshes.
 !> @param[in] output_basename    UGRID output file basename.
 !-----------------------------------------------------------------------------
-subroutine write_local_meshes( partition_id,     &
+subroutine write_local_meshes( config,           &
+                               partition_id,     &
                                global_mesh_bank, &
                                local_mesh_bank,  &
                                output_basename )
 
   implicit none
 
+  type(config_type),                 intent(in) :: config
   integer(i_def),                    intent(in) :: partition_id
   type(global_mesh_collection_type), intent(in) :: global_mesh_bank
   type(local_mesh_collection_type),  intent(in) :: local_mesh_bank
@@ -110,8 +107,34 @@ subroutine write_local_meshes( partition_id,     &
   integer(i_def)     :: n_digit
   character(str_def) :: fmt_str, number_str
 
+  integer(i_def) :: n_meshes
+  integer(i_def) :: n_partitions
+  integer(i_def) :: edge_cells_x(2)
+  integer(i_def) :: edge_cells_y(2)
+  integer(i_def) :: coord_sys
+  logical(l_def) :: create_lbc_mesh
+
+  real(r_def)    :: domain_size(2)
+
+  character(str_def) :: lbc_parent_mesh
+  character(str_def), allocatable :: mesh_names(:)
+
   ! Counters
   integer(i_def) :: i
+
+  n_meshes        = config%mesh%n_meshes()
+  mesh_names      = config%mesh%mesh_names()
+  coord_sys       = config%mesh%coord_sys()
+  n_partitions    = config%partitions%n_partitions()
+
+  create_lbc_mesh = .false.
+  if (config%namelist_exists('planar_mesh')) then
+    edge_cells_x    = config%planar_mesh%edge_cells_x()
+    edge_cells_y    = config%planar_mesh%edge_cells_y()
+    domain_size     = config%planar_mesh%domain_size()
+    create_lbc_mesh = config%planar_mesh%create_lbc_mesh()
+    lbc_parent_mesh = config%planar_mesh%lbc_parent_mesh()
+  end if
 
   nullify(global_lbc_mesh_maps_ptr)
   nullify(global_lbc_mesh_map_ptr)

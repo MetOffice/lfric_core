@@ -154,8 +154,8 @@ program planar_mesh_generator
   integer(i_def) :: topology
   integer(i_def) :: geometry
 
-  logical(l_def) :: generate_inner_halos
-  integer(i_def) :: max_stencil_depth
+!  logical(l_def) :: generate_inner_halos
+!  integer(i_def) :: max_stencil_depth
   integer(i_def) :: n_partitions
   integer(i_def), allocatable :: partition_range(:)
   real(r_def),    allocatable :: domain_size(:)
@@ -239,10 +239,8 @@ program planar_mesh_generator
   stretch_function = config%planar_mesh%stretch_function()
 
   if (partition_mesh) then
-    max_stencil_depth    = config%partitions%max_stencil_depth()
-    n_partitions         = config%partitions%n_partitions()
-    partition_range      = config%partitions%partition_range()
-    generate_inner_halos = config%partitions%generate_inner_halos()
+    n_partitions    = config%partitions%n_partitions()
+    partition_range = config%partitions%partition_range()
   end if
 
   if (rotate_mesh) then
@@ -842,10 +840,7 @@ program planar_mesh_generator
     !---------------------------------------------------------------
     ! Get partitioning parameters.
     !---------------------------------------------------------------
-    call set_partition_parameters( decomposition, partitioner_ptr )
-
-
-
+    call set_partition_parameters( config, decomposition, partitioner_ptr )
 
     !---------------------------------------------------------------
     ! Create local meshes for partitions.
@@ -855,36 +850,22 @@ program planar_mesh_generator
 
     thread_id = 0
 
-!$omp parallel default(firstprivate) shared(global_mesh_collection)
+!$omp parallel default(firstprivate) shared(global_mesh_collection, config)
 !$omp do schedule(static)
 
     do partition_id=start_partition, end_partition
 
       thread_id = omp_get_thread_num()
 
-      if ( create_lbc_mesh ) then
-        call generate_local_objects(                   &
-                      local_mesh_collection,           &
-                      global_mesh_collection,          &
-                      mesh_names, partition_id,        &
-                      n_partitions, max_stencil_depth, &
-                      generate_inner_halos,            &
-                      decomposition, partitioner_ptr,  &
-                      lbc_parent_mesh )
-      else
-        call generate_local_objects(                   &
-                      local_mesh_collection,           &
-                      global_mesh_collection,          &
-                      mesh_names, partition_id,        &
-                      n_partitions, max_stencil_depth, &
-                      generate_inner_halos,            &
-                      decomposition, partitioner_ptr )
-      end if
+      call generate_local_objects( config, partition_id,   &
+                                   local_mesh_collection,  &
+                                   global_mesh_collection, &
+                                   decomposition, partitioner_ptr )
 
       !---------------------------------------------------------------
       ! Output local meshes to UGRID file
       !---------------------------------------------------------------
-      call write_local_meshes( partition_id,           &
+      call write_local_meshes( config, partition_id,   &
                                global_mesh_collection, &
                                local_mesh_collection,  &
                                output_basename )

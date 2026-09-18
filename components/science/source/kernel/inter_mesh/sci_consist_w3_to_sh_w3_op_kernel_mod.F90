@@ -78,7 +78,7 @@ subroutine consist_w3_to_sh_w3_op_code( cell,           &
                                         ndf_w3_sh       &
                                       )
 
-  use sci_coordinate_jacobian_mod, only: coordinate_jacobian
+!  use sci_coordinate_jacobian_mod, only: coordinate_jacobian
 
 
   implicit none
