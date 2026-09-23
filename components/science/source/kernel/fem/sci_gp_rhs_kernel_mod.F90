@@ -7,14 +7,16 @@
 !> @brief Kernel which projects a field into into a given space
 
 module sci_gp_rhs_kernel_mod
+
 use kernel_mod,              only : kernel_type
 use constants_mod,           only : r_def, i_def
-use argument_mod,            only : arg_type, func_type,       &
-                                    GH_FIELD, GH_REAL, GH_INC, &
-                                    GH_READ, ANY_SPACE_9,      &
-                                    ANY_SPACE_1, ANY_SPACE_2,  &
-                                    ANY_DISCONTINUOUS_SPACE_3, &
-                                    GH_BASIS, GH_DIFF_BASIS,   &
+use argument_mod,            only : arg_type, func_type,          &
+                                    GH_FIELD, GH_SCALAR,          &
+                                    GH_REAL, GH_INTEGER,          &
+                                    GH_INC, GH_READ, ANY_SPACE_9, &
+                                    ANY_SPACE_1, ANY_SPACE_2,     &
+                                    ANY_DISCONTINUOUS_SPACE_3,    &
+                                    GH_BASIS, GH_DIFF_BASIS,      &
                                     CELL_COLUMN, GH_QUADRATURE_XYoZ
 
 implicit none
@@ -27,11 +29,15 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: gp_rhs_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                                    &
-       arg_type(GH_FIELD,   GH_REAL, GH_INC,  ANY_SPACE_1),              &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),              &
-       arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),              &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3) &
+  type(arg_type) :: meta_args(8) = (/                                     &
+       arg_type(GH_FIELD,   GH_REAL, GH_INC,  ANY_SPACE_1),               & ! rhs
+       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_2),               & ! field
+       arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               & ! chi1, chi2, chi3
+       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! geometry
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! topology
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! coord_system
+       arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          & ! scaled_radius
        /)
   type(func_type) :: meta_funcs(3) = (/                                  &
        func_type(ANY_SPACE_1, GH_BASIS),                                 &
@@ -63,6 +69,10 @@ contains
 !! @param[in] chi_2 2nd coordinate field in Wchi
 !! @param[in] chi_3 3rd coordinate field in Wchi
 !! @param[in] panel_id Field giving the ID for mesh panels
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] ndf Number of degrees of freedom per cell
 !! @param[in] undf Number of (local) unique degrees of freedom of the field rhs
 !! @param[in] map Dofmap for the cell at the base of the column
@@ -87,6 +97,8 @@ contains
 subroutine gp_rhs_code(nlayers,                       &
                        rhs, field,                    &
                        chi_1, chi_2, chi_3, panel_id, &
+                       geometry, topology,            &
+                       coord_system, scaled_radius,   &
                        ndf, undf, map, basis,         &
                        ndf_f, undf_f, map_f, f_basis, &
                        ndf_chi, undf_chi, map_chi,    &
@@ -95,10 +107,6 @@ subroutine gp_rhs_code(nlayers,                       &
                        nqp_h, nqp_v, wqp_h, wqp_v     )
 
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -123,6 +131,11 @@ subroutine gp_rhs_code(nlayers,                       &
   real(kind=r_def), dimension(undf_f),   intent(in)    :: field
   real(kind=r_def), dimension(nqp_h),    intent(in)    ::  wqp_h
   real(kind=r_def), dimension(nqp_v),    intent(in)    ::  wqp_v
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df2, k, qp1, qp2, ipanel

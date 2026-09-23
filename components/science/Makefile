@@ -71,9 +71,7 @@ document-api: api-documentation
 #
 unit-tests/%: export BIN_DIR ?= $(PROJECT_DIR)/test
 unit-tests/%: export CXX_LINK = TRUE
-#unit-tests/%: export EXTERNAL_STATIC_LIBRARIES += pfunit
 unit-tests/%: export IMPORT_PARTS = $(CORE_ROOT_DIR)/infrastructure \
-#                                    $(CORE_ROOT_DIR)/components/lfric-xios \
                                     $(CORE_ROOT_DIR)/components/inventory \
                                     $(CORE_ROOT_DIR)/components/driver
 unit-tests/%: export META_FILE_DIR = rose-meta/lfric-science/HEAD

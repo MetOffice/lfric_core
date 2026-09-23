@@ -30,19 +30,33 @@ module local_mesh_mod
                                             LOG_LEVEL_INFO, LOG_LEVEL_DEBUG
   use partition_mod,                  only: partition_type
 
+#if !defined(INFRASTRUCTURE_UNIT_TEST) && !defined(MESH_TOOLS)
+  use base_mesh_config_mod, only:                                  &
+          config_geometry_spherical    => geometry_spherical,      &
+          config_geometry_planar       => geometry_planar,         &
+          config_topology_periodic     => topology_fully_periodic, &
+          config_topology_non_periodic => topology_non_periodic
+#endif
+
   implicit none
 
   private
 
-  integer(i_def), parameter :: spherical_domain = 601
-  integer(i_def), parameter :: planar_domain    = 602
+#if !defined(INFRASTRUCTURE_UNIT_TEST) && !defined(MESH_TOOLS)
+  integer(i_def), parameter, public :: geometry_spherical    = config_geometry_spherical    ! 101
+  integer(i_def), parameter, public :: geometry_planar       = config_geometry_planar       ! 202
+  integer(i_def), parameter, public :: topology_non_periodic = config_topology_non_periodic ! 301
+  integer(i_def), parameter, public :: topology_periodic     = config_topology_periodic     ! 503
+#else
+  integer(i_def), parameter, public :: geometry_spherical    = 101_i_def
+  integer(i_def), parameter, public :: geometry_planar       = 202_i_def
+  integer(i_def), parameter, public :: topology_non_periodic = 301_i_def
+  integer(i_def), parameter, public :: topology_periodic     = 503_i_def
+#endif
+  integer(i_def), parameter, public :: topology_channel      = 402_i_def
 
-  integer(i_def), parameter :: non_periodic_domain = 701
-  integer(i_def), parameter :: channel_domain      = 702
-  integer(i_def), parameter :: periodic_domain     = 703
-
-  integer(i_def), parameter :: lon_lat_coords = 801
-  integer(i_def), parameter :: xyz_coords     = 802
+  integer(i_def), parameter, public :: coord_sys_ll  = 601_i_def
+  integer(i_def), parameter, public :: coord_sys_xyz = 702_i_def
 
   type, extends(linked_list_data_type), public :: local_mesh_type
 
@@ -53,11 +67,11 @@ module local_mesh_mod
   ! Tag name of mesh.
     character(str_def) :: mesh_name
   ! Domain surface geometry.
-    integer(i_def)     :: geometry = emdi
+    integer(i_def)     :: mesh_geometry = emdi
   ! Domain boundaries topology.
-    integer(i_def)     :: topology = emdi
+    integer(i_def)     :: mesh_topology = emdi
   ! Co-ordinate system used to specify node locations.
-    integer(i_def)     :: coord_sys = emdi
+    integer(i_def)     :: mesh_coord_sys = emdi
   ! Co-ordinate units along xy-axes.
     character(str_def) :: coord_units_xy(2) = cmdi
   ! Marker id for cells that do not exist for mesh.
@@ -226,7 +240,9 @@ module local_mesh_mod
     procedure, public :: get_north_pole
     procedure, public :: get_null_island
     procedure, public :: get_equatorial_latitude
-
+    procedure, public :: geometry
+    procedure, public :: topology
+    procedure, public :: coord_sys
     procedure, public :: get_global_domain_extents
 
     procedure, public :: is_geometry_spherical
@@ -299,23 +315,23 @@ contains
 
     ! Inherit mesh properties from the parent global mesh.
     if (global_mesh%is_geometry_spherical()) then
-      self%geometry = spherical_domain
+      self%mesh_geometry = geometry_spherical
     else if (global_mesh%is_geometry_planar()) then
-      self%geometry = planar_domain
+      self%mesh_geometry = geometry_planar
     end if
 
     if (global_mesh%is_topology_non_periodic()) then
-      self%topology = non_periodic_domain
+      self%mesh_topology = topology_non_periodic
     else if (global_mesh%is_topology_channel()) then
-      self%topology = channel_domain
+      self%mesh_topology = topology_channel
     else if (global_mesh%is_topology_periodic()) then
-      self%topology = periodic_domain
+      self%mesh_topology = topology_periodic
     end if
 
     if (global_mesh%is_coord_sys_xyz()) then
-      self%coord_sys = xyz_coords
+      self%mesh_coord_sys = coord_sys_xyz
     else if (global_mesh%is_coord_sys_ll()) then
-      self%coord_sys = lon_lat_coords
+      self%mesh_coord_sys = coord_sys_ll
     end if
 
     self%domain_extents      = global_mesh%get_domain_extents()
@@ -705,9 +721,9 @@ contains
   self%nverts_per_cell    = local_lam_mesh%get_nverts_per_cell()
   self%nverts_per_edge    = local_lam_mesh%get_nverts_per_edge()
 
-  self%geometry  = local_lam_mesh%geometry
-  self%coord_sys = local_lam_mesh%coord_sys
-  self%topology  = non_periodic_domain
+  self%mesh_geometry  = local_lam_mesh%geometry()
+  self%mesh_coord_sys = local_lam_mesh%mesh_coord_sys
+  self%mesh_topology  = topology_non_periodic
 
   self%npanels            = 1_i_def
   self%max_stencil_depth  = 0_i_def
@@ -1148,16 +1164,18 @@ contains
     integer(i_def) :: max_face_per_node ! Only needed for global meshes that
                                         ! are to be partitioned.
 
-    logical(i_def) :: periodic_xy(2) = .false.
+    logical(l_def) :: periodic_xy(2)
 
-    character(str_def)       :: geometry_str
-    character(str_def)       :: topology_str
-    character(str_def)       :: coord_sys_str
+    character(str_def) :: geometry_str
+    character(str_def) :: topology_str
+    character(str_def) :: coord_sys_str
 
     if (.not. ugrid_mesh_data%is_local()) then
       call log_event( 'Insufficient data to initialise local mesh', &
                       LOG_LEVEL_ERROR )
     end if
+
+    periodic_xy(2) = .false.
 
     local_mesh_id_counter = local_mesh_id_counter + 1
     call self%set_id( local_mesh_id_counter )
@@ -1195,14 +1213,14 @@ contains
 
     select case (trim(geometry_str))
     case ('spherical')
-      self%geometry = spherical_domain
+      self%mesh_geometry = geometry_spherical
     case ('planar')
-      self%geometry = planar_domain
+      self%mesh_geometry = geometry_planar
     end select
 
     select case (trim(coord_sys_str))
     case ('ll')
-      self%coord_sys=lon_lat_coords
+      self%mesh_coord_sys = coord_sys_ll
 
       ! Ensure units are in radians
       if ( (trim(self%coord_units_xy(1)) == 'degrees_east') .and. &
@@ -1219,16 +1237,16 @@ contains
       end if
 
     case ('xyz')
-      self%coord_sys = xyz_coords
+      self%mesh_coord_sys = coord_sys_xyz
     end select
 
     select case (trim(topology_str))
     case ('channel')
-      self%topology = channel_domain
+      self%mesh_topology = topology_channel
     case ('non_periodic')
-      self%topology = non_periodic_domain
+      self%mesh_topology = topology_non_periodic
     case ('periodic')
-      self%topology = periodic_domain
+      self%mesh_topology = topology_periodic
     end select
 
 
@@ -1295,9 +1313,9 @@ contains
 
     self%mesh_name = 'unit_test'
 
-    self%geometry  = planar_domain
-    self%topology  = periodic_domain
-    self%coord_sys = xyz_coords
+    self%mesh_geometry  = geometry_planar
+    self%mesh_topology  = topology_periodic
+    self%mesh_coord_sys = coord_sys_xyz
     self%void_cell = -9999_i_def
 
     local_mesh_id_counter = local_mesh_id_counter + 1
@@ -1632,7 +1650,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%geometry == spherical_domain )
+    answer = ( self%mesh_geometry == geometry_spherical )
 
   end function is_geometry_spherical
 
@@ -1650,7 +1668,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%geometry == planar_domain )
+    answer = ( self%mesh_geometry == geometry_planar )
 
   end function is_geometry_planar
 
@@ -1669,7 +1687,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%topology == non_periodic_domain )
+    answer = ( self%mesh_topology == topology_non_periodic )
 
   end function is_topology_non_periodic
 
@@ -1688,7 +1706,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%topology == channel_domain )
+    answer = ( self%mesh_topology == topology_channel )
 
   end function is_topology_channel
 
@@ -1707,7 +1725,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%topology == periodic_domain )
+    answer = ( self%mesh_topology == topology_periodic )
 
   end function is_topology_periodic
 
@@ -1726,7 +1744,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%coord_sys == xyz_coords )
+    answer = ( self%mesh_coord_sys == coord_sys_xyz )
 
   end function is_coord_sys_xyz
 
@@ -1745,7 +1763,7 @@ contains
 
     logical (l_def) :: answer
 
-    answer = ( self%coord_sys == lon_lat_coords )
+    answer = ( self%mesh_coord_sys == coord_sys_ll )
 
   end function is_coord_sys_ll
 
@@ -2505,7 +2523,54 @@ contains
 
   end function get_mesh_maps
 
+  !==============================================================================
+  !> @brief   Returns mesh geometry enumeration
+  !> @return  geometry_enumeration  Integer enumeration identifying the mesh
+  !>                                surface geometry type
+  !>
+  function geometry( self ) result( geometry_enumeration )
 
+    implicit none
+
+    class(local_mesh_type), intent(in)  :: self
+    integer(i_def) :: geometry_enumeration
+
+    geometry_enumeration = self%mesh_geometry
+
+  end function geometry
+
+  !==============================================================================
+  !> @brief     Returns mesh topology enumeration
+  !> @return    topology_enumeration  Integer enumeration identifying the mesh
+  !>                                  domain boundary connectivity type
+  !>
+  function topology( self ) result( topology_enumeration )
+
+    implicit none
+
+    class(local_mesh_type), intent(in) :: self
+    integer(i_def) :: topology_enumeration
+
+    topology_enumeration = self%mesh_topology
+
+  end function topology
+
+
+  !==============================================================================
+  !> @brief     Returns mesh topology enumeration
+  !> @return    coord_sys_enumeration  Integer enumeration identifying the mesh
+  !>                                   coordinate system.
+  !>
+  function coord_sys( self ) result( coord_sys_enumeration )
+
+    implicit none
+
+    class(local_mesh_type), intent(in) :: self
+    integer(i_def) :: coord_sys_enumeration
+
+    coord_sys_enumeration = self%mesh_coord_sys
+
+  end function coord_sys
 
   !==============================================================================
   !> @brief   Populates a <ugrid_2d_type> object with this local mesh object's
