@@ -20,31 +20,23 @@ module height_discontinuous_kernel_mod_test
     use get_unit_test_3x3x3_chi_mod,         only : get_w0_3x3x3_field
     use get_unit_test_w3nodal_basis_mod,     only : get_w0_w3nodal_basis
     use get_unit_test_wthetanodal_basis_mod, only : get_w0_wthetanodal_basis
+    use mesh_mod,                            only : geometry_planar
+
   implicit none
 
   private
   public :: test_all
 
-  @TestCase
-  type, extends(TestCase), public :: height_discontinuous_kernel_test_type
-    private
-  contains
-    procedure test_all
-  end type height_discontinuous_kernel_test_type
-
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
-    use base_mesh_config_mod,                only : geometry_planar
     use finite_element_config_mod,           only : coord_system_xyz
     use sci_height_discontinuous_kernel_mod, only : height_discontinuous_code
 
     implicit none
-
-    class(height_discontinuous_kernel_test_type), intent(inout) :: this
 
     real(r_def), parameter :: dx     = 4.0_r_def, &
                               dy     = 3.0_r_def, &
