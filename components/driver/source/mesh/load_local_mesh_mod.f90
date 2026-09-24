@@ -16,6 +16,7 @@ module load_local_mesh_mod
   use sci_query_mod,       only: is_lbc
 
   use local_mesh_collection_mod, only: local_mesh_collection
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
   implicit none
 
@@ -37,16 +38,17 @@ contains
 !> @param[in] mesh_names       The names of the local mesh data to
 !>                             load from the <input_mesh_file>.
 subroutine load_local_mesh_multiple( input_mesh_file, &
-                                     mesh_names )
+                                     mesh_names, ugrid_2d )
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
   character(str_def),          intent(in) :: mesh_names(:)
 
   integer(i_def) :: i
+    type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   do i=1, size(mesh_names)
-    call load_local_mesh_single( input_mesh_file, mesh_names(i) )
+    call load_local_mesh_single( input_mesh_file, mesh_names(i), ugrid_2d )
   end do
 
 end subroutine load_local_mesh_multiple
@@ -59,7 +61,7 @@ end subroutine load_local_mesh_multiple
 !> @param[in] mesh_name        The name of the local mesh data to
 !>                             load from the <input_mesh_file>.
 subroutine load_local_mesh_single( input_mesh_file, &
-                                   mesh_name )
+                                   mesh_name, ugrid_2d )
 
   implicit none
 
@@ -70,11 +72,12 @@ subroutine load_local_mesh_single( input_mesh_file, &
   type(local_mesh_type)      :: local_mesh
 
   integer(i_def) :: local_mesh_id
+    type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   if (.not. local_mesh_collection%check_for(mesh_name)) then
 
     ! Load mesh data into local_mesh
-    call ugrid_mesh_data%read_from_file( input_mesh_file, mesh_name )
+    call ugrid_mesh_data%read_from_file( input_mesh_file, mesh_name, ugrid_2d )
 
     if (ugrid_mesh_data%contains_mesh()) then
 

@@ -16,6 +16,7 @@ module ugrid_mesh_data_mod
                            str_longlong, cmdi, imdi, rmdi
   use log_mod,       only: log_event, log_scratch_space, &
                            LOG_LEVEL_ERROR, LOG_LEVEL_TRACE
+    use ugrid_2d_mod,   only: ugrid_2d_type
 
   implicit none
 
@@ -170,11 +171,7 @@ contains
   !> @param[in] global_mesh_name Name of ugrid mesh topology to create
   !>                             global mesh object from.
   !>
-  subroutine read_from_file( self, filename, global_mesh_name )
-
-    use ugrid_2d_mod,   only: ugrid_2d_type
-    use ugrid_file_mod, only: ugrid_file_type
-    use ncdf_quad_mod,  only: ncdf_quad_type
+  subroutine read_from_file( self, filename, global_mesh_name, ugrid_2d )
 
     implicit none
 
@@ -182,14 +179,10 @@ contains
     character(*),                 intent(in)    :: filename
     character(*),                 intent(in)    :: global_mesh_name
 
-    type(ugrid_2d_type) :: ugrid_2d
-
-    class(ugrid_file_type), allocatable :: file_handler
+    type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
     call self%clear()
 
-    allocate( ncdf_quad_type :: file_handler )
-    call ugrid_2d%set_file_handler( file_handler )
     call ugrid_2d%set_from_file_read( trim(global_mesh_name), trim(filename) )
 
     self%populated_with_mesh = .false.
@@ -204,8 +197,6 @@ contains
 
       self%populated_with_mesh = .true.
     end if
-
-    if (allocated(file_handler)) deallocate( file_handler )
 
   end subroutine read_from_file
 

@@ -16,6 +16,9 @@ module global_mesh_collection_mod_test
   use global_mesh_collection_mod,     only: global_mesh_collection_type, &
                                             global_mesh_collection
   use ugrid_mesh_data_mod,            only: ugrid_mesh_data_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   use funit
 
@@ -91,12 +94,20 @@ contains
     character(str_max_filename)     :: filename
 
     integer (i_def) :: global_mesh_id
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     filename = CubedSphereFile
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
     global_mesh_ptr => global_mesh_collection % &
@@ -124,12 +135,20 @@ contains
     character(str_max_filename)     :: filename
 
     integer (i_def) :: global_mesh_id
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     filename = BiPeriodicFile
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
     global_mesh_ptr => global_mesh_collection % &
@@ -216,6 +235,14 @@ contains
     integer (i_def) :: kgo_integer
 
     type(ncdf_quad_type) :: file_handler
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler_
+
+    allocate( ncdf_quad_type :: file_handler_ )
+    call ugrid_2d%set_file_handler( file_handler_ )
+    call ugrid_2d%file_handler_open(trim(filename))
+
 
     ! First read all the requested global meshes into memory.
     ! This is done because the intergrid map ids are based
@@ -224,7 +251,7 @@ contains
     do i=1, size(multigrid_mesh_names)
 
       call ugrid_mesh_data%read_from_file( trim(filename), &
-                                           multigrid_mesh_names(i) )
+                                           multigrid_mesh_names(i), ugrid_2d )
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       multigrid_ids(i) = global_mesh%get_id()
@@ -233,11 +260,13 @@ contains
 
     do i=1, size(another_chain)
       call ugrid_mesh_data%read_from_file( trim(filename), &
-                                           another_chain(i) )
+                                           another_chain(i), ugrid_2d )
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       call global_mesh_collection%add_new_global_mesh( global_mesh )
     end do
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler_)) deallocate( file_handler_ )
 
     ! Now get the ids of the `chains` from the collection
     do i=1, size(multigrid_mesh_names)

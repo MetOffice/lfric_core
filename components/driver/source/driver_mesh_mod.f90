@@ -56,6 +56,11 @@ module driver_mesh_mod
   use finite_element_config_mod, only: cellshape_quadrilateral
   use base_mesh_config_mod,      only: geometry_spherical, &
                                        topology_fully_periodic
+  use timing_mod,                only: start_timing, stop_timing, &
+                                       tik, LPROF
+  use ugrid_2d_mod,              only: ugrid_2d_type
+  use ugrid_file_mod,            only: ugrid_file_type
+  use ncdf_quad_mod,             only: ncdf_quad_type
 
   implicit none
 
@@ -146,7 +151,12 @@ subroutine init_mesh( config,                  &
   character(str_def) :: fmt_str, number_str
 
   integer(i_def) :: i, n_digit
+  integer(tik) :: timing_id
+  type(ugrid_2d_type) :: ugrid_2d
 
+  class(ugrid_file_type), allocatable :: file_handler
+
+  if ( LPROF ) call start_timing(timing_id, 'driver.init_mesh')
   !============================================================================
   ! Extract configuration variables
   !============================================================================
@@ -212,7 +222,6 @@ subroutine init_mesh( config,                  &
     allocate(names, source=mesh_names)
   end if
 
-
   !===========================================================================
   ! Create local mesh objects:
   !   Two code pathes presented, either:
@@ -245,6 +254,18 @@ subroutine init_mesh( config,                  &
     write(number_str, fmt_str) local_rank
     write(input_mesh_file, '(A, "_", A, "-", I0, ".nc")') &
         trim(file_prefix), trim(number_str), total_ranks
+    !====
+    ! Open mesh file
+    ! Once!
+    !====
+    write(log_scratch_space, '(A)')                   &
+                    'opening file: "'// trim(input_mesh_file) // &
+                    '" with MPI-IO for shared access'
+    call log_event(log_scratch_space, LOG_LEVEL_debug)
+
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(input_mesh_file))
 
     call log_event( 'Using pre-partitioned mesh file:', log_level_debug )
     call log_event( '   '//trim(input_mesh_file), log_level_debug )
@@ -256,7 +277,7 @@ subroutine init_mesh( config,                  &
     !===========================================================
     ! Each partitioned mesh file will contain meshes of the
     ! same name as all other partitions.
-    call load_local_mesh( input_mesh_file, mesh_names )
+    call load_local_mesh( input_mesh_file, mesh_names, ugrid_2d )
 
     ! Apply configuration related checks to ensure that these
     ! meshes are suitable for the supplied application
@@ -273,7 +294,7 @@ subroutine init_mesh( config,                  &
     ! need to be loaded after the relevant local meshes have
     ! been loaded.
     tmp_mesh_names = local_mesh_collection%get_mesh_names()
-    call load_local_mesh_maps( input_mesh_file, tmp_mesh_names )
+    call load_local_mesh_maps( input_mesh_file, tmp_mesh_names, ugrid_2d )
     if (allocated(tmp_mesh_names)) deallocate(tmp_mesh_names)
 
   else
@@ -298,6 +319,19 @@ subroutine init_mesh( config,                  &
     end if
     write(input_mesh_file,'(A)') trim(file_prefix) // '.nc'
 
+    !====
+    ! Open mesh file
+    ! Once!
+    !====
+    write(log_scratch_space, '(A)')                   &
+                    'opening file: "'// trim(input_mesh_file) // &
+                    '" with MPI-IO for shared access'
+    call log_event(log_scratch_space, LOG_LEVEL_debug)
+
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(input_mesh_file))
+
     ! 2.2a Set constants that will control partitioning.
     !===========================================================
     call get_partition_parameters( config%partitioning, mesh_selection, &
@@ -306,7 +340,7 @@ subroutine init_mesh( config,                  &
 
     ! 2.2b Read in all global meshes from input file
     !===========================================================
-    call load_global_mesh( input_mesh_file, mesh_names )
+    call load_global_mesh( input_mesh_file, mesh_names, ugrid_2d )
 
     ! 2.2c Apply configuration related checks to ensure that these
     !      meshes are suitable for the supplied application
@@ -328,12 +362,16 @@ subroutine init_mesh( config,                  &
     ! 2.2f Read in the global intergrid mesh mappings,
     !      then create the associated local mesh maps
     !===========================================================
-    call create_local_mesh_maps( input_mesh_file )
+    call create_local_mesh_maps( input_mesh_file, ugrid_2d )
 
     ! Clear the global mesh
     call global_mesh_collection%clear()
 
   end if  ! prepartitioned
+
+  call ugrid_2d%file_handler_close()
+  if (allocated(file_handler)) deallocate( file_handler )
+
 
   !============================================================================
   ! 3.0 Extrude the specified meshes from local mesh objects into
@@ -350,6 +388,7 @@ subroutine init_mesh( config,                  &
   call assign_mesh_maps(mesh_names)
 
   deallocate(stencil_depths)
+  if ( LPROF ) call stop_timing(timing_id, 'driver.init_mesh')
 
 end subroutine init_mesh
 

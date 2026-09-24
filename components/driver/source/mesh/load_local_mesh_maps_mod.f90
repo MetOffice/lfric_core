@@ -12,6 +12,7 @@ module load_local_mesh_maps_mod
                                        log_scratch_space, &
                                        LOG_LEVEL_ERROR
   use ncdf_quad_mod,             only: ncdf_quad_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
 
   use local_mesh_collection_mod, only: local_mesh_collection
@@ -39,18 +40,19 @@ contains
 !> @param[in]  source_mesh_name   The name of the local source mesh to
 !>                                load maps from the <input_mesh_file>.
 subroutine load_local_mesh_maps_multiple_source( input_mesh_file, &
-                                                 source_mesh_names )
+                                                 source_mesh_names, ugrid_2d )
 
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
-  character(str_def),          intent(in) :: source_mesh_names(:)
+  character(str_def),          intent(inout) :: source_mesh_names(:)
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   integer(i_def) :: i
 
   do i=1, size(source_mesh_names)
     call load_local_mesh_maps_single_source( input_mesh_file, &
-                                             source_mesh_names(i) )
+                                             source_mesh_names(i), ugrid_2d )
   end do
 
 end subroutine load_local_mesh_maps_multiple_source
@@ -67,22 +69,21 @@ end subroutine load_local_mesh_maps_multiple_source
 !> @param[in]  source_mesh_name   The name of the local source mesh to load
 !>                                maps from the <input_mesh_file>.
 subroutine load_local_mesh_maps_single_source( input_mesh_file, &
-                                               source_mesh_name )
+                                               source_mesh_name, ugrid_2d )
 
   implicit none
 
   character(str_max_filename), intent(in) :: input_mesh_file
-  character(str_def),          intent(in) :: source_mesh_name
+  character(str_def),          intent(inout) :: source_mesh_name
 
   character(str_def), allocatable :: target_mesh_names(:)
   integer(i_def),     allocatable :: lid_mesh_map(:,:,:)
 
   integer(i_def) :: i
 
-  type(ncdf_quad_type) :: file_handler
-
   type(local_mesh_type), pointer :: source_mesh => null()
   type(local_mesh_type), pointer :: target_mesh => null()
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   integer(i_def) :: target_mesh_id
 
@@ -100,15 +101,13 @@ subroutine load_local_mesh_maps_single_source( input_mesh_file, &
 
   if (allocated(target_mesh_names)) then
 
-    call file_handler%file_open(trim(input_mesh_file))
-
     do i=1, size(target_mesh_names)
       if ( local_mesh_collection%check_for( target_mesh_names(i) ) ) then
 
         ! Read in the local mesh map.
-        call file_handler%read_map( source_mesh_name,     &
-                                    target_mesh_names(i), &
-                                    lid_mesh_map )
+        call ugrid_2d%file_handler_read_map( source_mesh_name,     &
+                                             target_mesh_names(i), &
+                                             lid_mesh_map )
 
         target_mesh &
             => local_mesh_collection%get_local_mesh(target_mesh_names(i))
@@ -122,8 +121,6 @@ subroutine load_local_mesh_maps_single_source( input_mesh_file, &
 
       end if
     end do
-
-    call file_handler%file_close()
 
     deallocate( target_mesh_names )
 

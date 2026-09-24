@@ -33,6 +33,9 @@ use local_mesh_collection_mod,     only: local_mesh_collection_type, &
                                          local_mesh_collection
 use ugrid_mesh_data_mod,           only: ugrid_mesh_data_type
 use panel_decomposition_mod,       only: custom_decomposition_type
+use ugrid_2d_mod,   only: ugrid_2d_type
+use ugrid_file_mod, only: ugrid_file_type
+use ncdf_quad_mod,  only: ncdf_quad_type
 
 implicit none
 
@@ -132,6 +135,13 @@ logical(l_def), parameter :: enforce_constraints = .true.
 
 procedure (partitioner_interface), pointer :: partitioner_ptr => null()
 type(custom_decomposition_type) :: decomposition
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler_
+
+    allocate( ncdf_quad_type :: file_handler_ )
+    call ugrid_2d%set_file_handler( file_handler_ )
+    call ugrid_2d%file_handler_open(trim(filename))
 
 call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
 
@@ -150,7 +160,7 @@ function_space_collection = function_space_collection_type()
 
 ! Create all the meshes: global and local
 do i=1, size(mesh_names)
-  call ugrid_mesh_data%read_from_file(trim(filename), mesh_names(i))
+  call ugrid_mesh_data%read_from_file(trim(filename), mesh_names(i), ugrid_2d)
   global_mesh = global_mesh_type( ugrid_mesh_data )
   call ugrid_mesh_data%clear()
   call global_mesh_collection%add_new_global_mesh( global_mesh )
@@ -167,6 +177,8 @@ do i=1, size(mesh_names)
   call global_mesh%clear()
   call local_mesh%clear()
 enddo
+call ugrid_2d%file_handler_close()
+if (allocated(file_handler_)) deallocate( file_handler_ )
 
 ! Now all the meshes exist, read in global mesh maps, convert them to local ids
 ! and associate them with the approprate source local mesh

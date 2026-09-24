@@ -16,6 +16,9 @@ module global_mesh_mod_test
   use global_mesh_collection_mod, only: global_mesh_collection_type, &
                                         global_mesh_collection
   use ugrid_mesh_data_mod,        only: ugrid_mesh_data_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   use funit
 
@@ -99,15 +102,24 @@ contains
 
     real(r_def)    :: vert_coords(2)
     real(r_def)    :: cell_coords(2)
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     !-------------------------------------
     ! Test construction of a biperiodic mesh
     !-------------------------------------
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
 
     ! Check the global mesh id
     global_mesh_id1 = global_mesh%get_id()
@@ -258,14 +270,23 @@ contains
 
     real(r_def)    :: cell_coords(2)
     real(r_def)    :: vert_coords(2)
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     !---------------------------------------
     ! Test construction of a cubed-sphere mesh
     !---------------------------------------
     filename = 'data/mesh_C4.nc'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
 
     ! Check the global mesh id
     global_mesh_id2 = global_mesh%get_id()
@@ -417,15 +438,23 @@ contains
 
     type(global_mesh_type) :: global_mesh
     character(str_def)     :: mesh_name = 'C4'
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     filename='data/mesh_C32_MG.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
     !-------------------------------------------------
     ! Test construction of a cubed-sphere mesh is same
     !-------------------------------------------------
     mesh_name = 'C4'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
 
     ! Check details of C4 mesh
 
@@ -540,6 +569,9 @@ contains
     type(global_mesh_map_type), pointer :: global_mesh_map => null()
     type(global_mesh_type)              :: global_mesh
     integer(i_def), allocatable         :: mesh_map(:,:,:)
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler_
 
     !-------------------------------------------------
     ! Test construction of a cubed-sphere mesh is same
@@ -548,18 +580,23 @@ contains
 
     npanels  = 6
     filename='data/mesh_C32_MG.nc'
+    allocate( ncdf_quad_type :: file_handler_ )
+    call ugrid_2d%set_file_handler( file_handler_ )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     ! 1.0 First read all the requested global meshes into memory.
     ! This is done because the intergrid map ids are based
     ! on the global mesh ids. So all the required global mesh
     ! topologies must be read in first.
     do i=1, size(multigrid_mesh_names)
-      call ugrid_mesh_data%read_from_file(trim(filename), multigrid_mesh_names(i))
+      call ugrid_mesh_data%read_from_file(trim(filename), multigrid_mesh_names(i), ugrid_2d)
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       MultiGrid_ids(i) = global_mesh%get_id()
       call global_mesh_collection%add_new_global_mesh( global_mesh )
     end do
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler_)) deallocate( file_handler_ )
 
     ! Check that each ID appears only once
     !
