@@ -1980,8 +1980,8 @@ contains
 
     if ( self%monitor_convergence ) then
           write(log_scratch_space, &
-              '("chebyshev[",I4,"], final residual = ",E16.8, ", initial = ",E16.8, ", rate = ",E16.8 )') &
-                final_iter, sum(final_norm)/sum(init_norm), sum(init_norm), sum(old_norm)/sum(final_norm)
+              '("chebyshev[",I4,"], final residual = ",E16.8, ", initial = ",E16.8 )') &
+                final_iter, sum(final_norm)/sum(init_norm), sum(init_norm)
       if ( .not. all(converged) .and.  self%fail_on_non_converged ) then
           call log_event(log_scratch_space,LOG_LEVEL_ERROR)
       else
