@@ -4,6 +4,9 @@
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
 ###############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise.
+
 """Test harness for the dummy_test integration test.
 
 Validates that a constant-valued test field is correctly created and
