@@ -92,7 +92,7 @@ The stopwatch output always uses the following format:
 
 .. code-block:: text
 
-    (STOPWATCH) Time taken for <stopwatch_name> : <elapsed_time> (s)
+    (STOPWATCH) Total time for <stopwatch_name> : <elapsed_time> (s)
 
 
 Reusing Watches
