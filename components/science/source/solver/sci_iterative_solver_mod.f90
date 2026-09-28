@@ -1558,7 +1558,7 @@ contains
             iv_final = iv
             final_error(:) = 0.0_r_def
             ! In gungho, for the semi-implicit solver the fields are organised:
-            ! (pressure, horizontal velocity, vertical velocity).
+            ! (horizontal velocity, pressure, vertical velocity).
             ! Since the vertical velocity term generally controls the convergence
             ! this is tested first and so the testing loop goes backwards through the field vector
             do n = n_fields,1,-1
@@ -1893,6 +1893,10 @@ contains
     n_fields = x%vector_size()
     allocate( init_norm(n_fields), final_norm(n_fields), &
               old_norm(n_fields), converged(n_fields))
+
+    ! Initialise final_norm to a default number to avoid issues
+    ! when monitor_convergence = .true. but the norm isn't computed
+    final_norm(:) = 1.0_r_def
 
     ! Chebyshev iteration for solving M x = b with preconditioner D
 
