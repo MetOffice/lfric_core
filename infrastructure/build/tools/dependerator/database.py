@@ -5,11 +5,15 @@
 # should have received as part of this distribution.
 ##############################################################################
 # Manages a database of dependency information.
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 
 import logging
 import sqlite3
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from contextlib import contextmanager
 from pathlib import Path
 from time import time
 from typing import Dict, Generator, List, Optional, Tuple
@@ -77,18 +81,75 @@ class SQLiteDatabase(_Database):
         start_time = time()
         self._database = sqlite3.connect(str(filename), timeout=5.0)
         self._database.row_factory = sqlite3.Row
+
+        # The database is a build artefact which can always be regenerated
+        # from source. As such we do not need the expensive durability
+        # guarantees SQLite offers by default.
+        #
+        self._database.execute("PRAGMA journal_mode = WAL")
+        self._database.execute("PRAGMA synchronous = OFF")
+        self._database.execute("PRAGMA temp_store = MEMORY")
+
+        self._closed = False
+
         message = "Time to initialise database: {0}"
         logging.getLogger(__name__).debug(message.format(time() - start_time))
 
     ###########################################################################
-    # Destructor.
+    # Context manager support so the database may be closed deterministically
+    # rather than relying on garbage collection.
     #
-    def __del__(self):
+    def __enter__(self) -> "SQLiteDatabase":
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback) -> None:
+        self.close()
+
+    ###########################################################################
+    # Commits any outstanding changes and closes the database.
+    #
+    # It is safe to call this more than once.
+    #
+    def close(self) -> None:
+        if self._closed:
+            return
+
         start_time = time()
         self._database.commit()
         self._database.close()
+        self._closed = True
         message = "Time to finalise database: {0}"
         logging.getLogger(__name__).debug(message.format(time() - start_time))
+
+    ###########################################################################
+    # Groups a number of operations into a single transaction.
+    #
+    # Without this each query is committed separately which, when many files
+    # are processed by one run, is a significant overhead.
+    #
+    @contextmanager
+    def transaction(self):
+        try:
+            yield self
+        except Exception:
+            self._database.rollback()
+            raise
+        else:
+            self._database.commit()
+
+    ###########################################################################
+    # Destructor.
+    #
+    # Retained as a safety net for code which does not close the database
+    # explicitly.
+    #
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:  # pylint: disable=broad-except
+            # There is nothing useful to be done if this fails during
+            # interpreter shut down.
+            pass
 
     ###########################################################################
     # Creates a table if it does not already exist.

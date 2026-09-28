@@ -5,6 +5,9 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 """
 Generate a make file snippet holding dependency information about a Fortran
 program.
@@ -77,34 +80,38 @@ if __name__ == '__main__':
         args.objectdir = outputDirectory
 
     backend = database.SQLiteDatabase(args.database)
-    fortranStore = database.FortranDependencies(backend)
-    processor = process.FortranProcessor(fortranStore,
-                                         args.objectdir, args.moduledir)
-
-    fileStore = database.FileDependencies(backend)
-    processor.determine_compile_file_dependencies(fileStore,
-                                                  args.moduleobjects)
-
-    start_time = time()
     try:
-        with args.output.open('wt') as listFile:
-            print('# Object dependencies', file=listFile)
+        fortranStore = database.FortranDependencies(backend)
+        processor = process.FortranProcessor(fortranStore,
+                                             args.objectdir, args.moduledir)
 
-            for filename, prerequisites in fileStore.get_dependencies():
-                if filename.suffix == '.mod':
-                    filename = f'$(MOD_DIR)/{filename.name}'
-                prereq_strings: List[str] = []
-                for prereq in prerequisites:
-                    if prereq.suffix == '.mod':
-                        prereq_strings.append(f'$(MOD_DIR)/{prereq.name}')
-                    else:  # prereq.suffix != '.mod'
-                        prereq_strings.append(str(prereq))
-                print(f'{filename} : {" ".join(prereq_strings)}',
-                      file=listFile)
-    except Exception:  # pylint: disable=broad-except
-        os.unlink(args.output)
-        traceback.print_exc(file=sys.stdout)
-        sys.exit(1)
+        fileStore = database.FileDependencies(backend)
+        with backend.transaction():
+            processor.determine_compile_file_dependencies(fileStore,
+                                                          args.moduleobjects)
+
+        start_time = time()
+        try:
+            with args.output.open('wt') as listFile:
+                print('# Object dependencies', file=listFile)
+
+                for filename, prerequisites in fileStore.get_dependencies():
+                    if filename.suffix == '.mod':
+                        filename = f'$(MOD_DIR)/{filename.name}'
+                    prereq_strings: List[str] = []
+                    for prereq in prerequisites:
+                        if prereq.suffix == '.mod':
+                            prereq_strings.append(f'$(MOD_DIR)/{prereq.name}')
+                        else:  # prereq.suffix != '.mod'
+                            prereq_strings.append(str(prereq))
+                    print(f'{filename} : {" ".join(prereq_strings)}',
+                          file=listFile)
+        except Exception:  # pylint: disable=broad-except
+            os.unlink(args.output)
+            traceback.print_exc(file=sys.stdout)
+            sys.exit(1)
+        finally:
+            message = f"Time to write out dependencies: {time() - start_time}"
+            logger.debug(message)
     finally:
-        message = f"Time to write out dependencies: {time() - start_time}"
-        logger.debug(message)
+        backend.close()
