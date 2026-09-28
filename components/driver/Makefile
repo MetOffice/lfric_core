@@ -96,8 +96,9 @@ unit-tests: unit-tests/run
 # Integration tests
 #
 integration-tests/%: export BIN_DIR      ?= $(PROJECT_DIR)/test
-integration-tests/%: export IMPORT_PARTS  = $(INTERNAL_DEPENDENCIES)
-integration-tests/%: export IMPORT_PARTS += $(CORE_ROOT_DIR)/components/testing
+integration-tests/%: export IMPORT_PARTS  = $(INTERNAL_DEPENDENCIES) \
+											$(CORE_ROOT_DIR)/components/science \
+											$(CORE_ROOT_DIR)/components/testing
 integration-tests/%: export META_FILE_DIR = rose-meta/lfric-driver/HEAD
 integration-tests/%: export PROJECT       = driver
 integration-tests/%: export SOURCE_DIR    = source

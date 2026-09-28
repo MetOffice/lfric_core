@@ -89,7 +89,7 @@ contains
     type(custom_decomposition_type), allocatable :: decomposition
     type(partition_type)                         :: partitioner
 
-    call ugrid_data%read_from_file('./tiny_world.nc', 'tiny')
+    call ugrid_data%read_from_file('../tiny_world.nc', 'tiny')
     allocate( global_mesh, source=global_mesh_type( ugrid_data ) )
     decomposition = custom_decomposition_type( num_xprocs=1_i_def, num_yprocs=1_i_def )
     partitioner_proc => partitioner_cubedsphere
