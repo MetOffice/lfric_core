@@ -17,6 +17,7 @@ module coupling_mod
                                             namsrcfld, namdstfld, oasis_in,    &
                                             oasis_get_ncpl, oasis_get_freqs,   &
                                             prism_real
+  use xios,                          only : xios_oasis_enddef
 #endif
 
   use constants_mod,                 only : i_def, r_def, str_def, i_halo_index
@@ -420,6 +421,7 @@ contains
     ! Coupling frequency of each model
     integer(i_def)                              :: cpl_freqs(nmax)
 
+    call xios_oasis_enddef
     call oasis_enddef (kinfo)
 
     ! Check that each field has the same the coupling frequency for

@@ -9,7 +9,8 @@
                       'module purge ; '~
                       'module use /home/users/lfricadmin/lmod'%}
 
-{% set azspice_compiler_gnu = 'module load lfric/vn3.2' %}
+{% set azspice_compiler_gnu = 'module load lfric/vn3.2 ; '~
+                              'module load xios/3.0.4.0'%}
 
 {% set azspice_run = 'ulimit -s unlimited' %}
 
@@ -17,7 +18,7 @@
 
 {% set azspice_tech = 'module load lfric/vn3.2' %}
 
-{% set azspice_coupled_gnu = 'ml xios/2.2701-oasis ; '~
+{% set azspice_coupled_gnu = 'ml xios/3.0.4.0-oasis ; '~
                              'ml oasis/3-mct5.0' %}
 
     [[AZSPICE_BASE]]
