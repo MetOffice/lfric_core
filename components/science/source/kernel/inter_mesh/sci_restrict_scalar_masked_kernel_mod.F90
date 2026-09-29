@@ -17,7 +17,9 @@
 !!          coarse(j) = sum_{i=1,Nf} mask(i) * fine(i) /  sum_{i=1,Nf} mask(i)
 module sci_restrict_scalar_masked_kernel_mod
 
-use constants_mod, only: i_def, r_double, r_single
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
+use constants_mod, only: i_def
 use kernel_mod,    only: kernel_type
 use argument_mod,  only: arg_type,                  &
                          GH_FIELD, GH_REAL,         &
@@ -48,8 +50,8 @@ public :: restrict_scalar_masked_kernel_code
   ! Generic interface for real32 and real64 types
   interface restrict_scalar_masked_kernel_code
     module procedure  &
-      restrict_scalar_masked_code_r_single, &
-      restrict_scalar_masked_code_r_double
+      restrict_scalar_masked_code_real32, &
+      restrict_scalar_masked_code_real64
   end interface
 
 contains
@@ -76,9 +78,9 @@ contains
   !!                                         for this mesh partition
   !> @param[in]     map_fine                 DoFmap of cells on the fine grid
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
-  subroutine restrict_scalar_masked_code_r_single( nlayers,                 &
+  subroutine restrict_scalar_masked_code_real32(   nlayers,                 &
                                                    cell_map,                &
                                                    ncell_fine_per_coarse_x, &
                                                    ncell_fine_per_coarse_y, &
@@ -103,17 +105,17 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=r_single), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=r_single), intent(in)    :: fine_field(undf_fine)
-    real(kind=r_single), intent(in)    :: mask_fine(undf_fine)
+    real(kind=real32),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real32),   intent(in)    :: fine_field(undf_fine)
+    real(kind=real32),   intent(in)    :: mask_fine(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
-    real(kind=r_single) :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
+    real(kind=real32)   :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
 
     ! Total number of interior, non-zero, fine-level cells i.e. cells
     ! that have mask value of 1
     ! Assume this value is identical for all dofs and vertical levels.
-    non_zero_cells = 0.0_r_single
+    non_zero_cells = 0.0_real32
     do y_idx = 1, ncell_fine_per_coarse_y
       do x_idx = 1, ncell_fine_per_coarse_x
         non_zero_cells = non_zero_cells + &
@@ -122,10 +124,10 @@ contains
     end do
 
     ! Prevent divide by zero
-    if (non_zero_cells > 0.5_r_single) then
-      denom = 1.0_r_single/non_zero_cells
+    if (non_zero_cells > 0.5_real32) then
+      denom = 1.0_real32/non_zero_cells
     else
-      denom = 1.0_r_single
+      denom = 1.0_real32
     end if
 
     ! Loop over vertical layers from bottom to top
@@ -136,7 +138,7 @@ contains
     ! as a 3D field - but it may be stored as a 2D field in the future).
     df = 1
     top_df = nlayers - 2 + ndf
-    coarse_value(:) = 0.0_r_single
+    coarse_value(:) = 0.0_real32
 
     ! Average over the interior, non-zero cells
     ! Build up 1D array of new coarse values for this column
@@ -156,11 +158,11 @@ contains
       coarse_field(map_coarse(df) + k) = coarse_value(k+1)
     end do
 
-  end subroutine restrict_scalar_masked_code_r_single
+  end subroutine restrict_scalar_masked_code_real32
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
-  subroutine restrict_scalar_masked_code_r_double( nlayers,                 &
+  subroutine restrict_scalar_masked_code_real64(   nlayers,                 &
                                                    cell_map,                &
                                                    ncell_fine_per_coarse_x, &
                                                    ncell_fine_per_coarse_y, &
@@ -185,17 +187,17 @@ contains
     integer(kind=i_def), intent(in)    :: map_fine(ndf, ncell_fine)
     integer(kind=i_def), intent(in)    :: map_coarse(ndf)
     integer(kind=i_def), intent(in)    :: undf_fine, undf_coarse
-    real(kind=r_double), intent(inout) :: coarse_field(undf_coarse)
-    real(kind=r_double), intent(in)    :: fine_field(undf_fine)
-    real(kind=r_double), intent(in)    :: mask_fine(undf_fine)
+    real(kind=real64),   intent(inout) :: coarse_field(undf_coarse)
+    real(kind=real64),   intent(in)    :: fine_field(undf_fine)
+    real(kind=real64),   intent(in)    :: mask_fine(undf_fine)
 
     integer(kind=i_def) :: df, k, x_idx, y_idx, top_df
-    real(kind=r_double) :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
+    real(kind=real64)   :: denom, non_zero_cells, coarse_value(nlayers-1+ndf)
 
     ! Total number of interior, non-zero, fine-level cells i.e. cells
     ! that have mask value of 1
     ! Assume this value is identical for all dofs and vertical levels.
-    non_zero_cells = 0.0_r_double
+    non_zero_cells = 0.0_real64
     do y_idx = 1, ncell_fine_per_coarse_y
       do x_idx = 1, ncell_fine_per_coarse_x
         non_zero_cells = non_zero_cells + &
@@ -204,10 +206,10 @@ contains
     end do
 
     ! Prevent divide by zero
-    if (non_zero_cells > 0.5_r_double) then
-      denom = 1.0_r_double/non_zero_cells
+    if (non_zero_cells > 0.5_real64) then
+      denom = 1.0_real64/non_zero_cells
     else
-      denom = 1.0_r_double
+      denom = 1.0_real64
     end if
 
     ! Loop over vertical layers from bottom to top
@@ -218,7 +220,7 @@ contains
     ! as a 3D field - but it may be stored as a 2D field in the future).
     df = 1
     top_df = nlayers - 2 + ndf
-    coarse_value(:) = 0.0_r_double
+    coarse_value(:) = 0.0_real64
 
     ! Average over the interior, non-zero cells
     ! Build up 1D array of new coarse values for this column
@@ -238,6 +240,6 @@ contains
       coarse_field(map_coarse(df) + k) = coarse_value(k+1)
     end do
 
-  end subroutine restrict_scalar_masked_code_r_double
+  end subroutine restrict_scalar_masked_code_real64
 
 end module sci_restrict_scalar_masked_kernel_mod

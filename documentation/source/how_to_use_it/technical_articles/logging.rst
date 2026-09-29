@@ -121,7 +121,7 @@ message prior to calling ``log_event``.
 Log Level Controlled Calculations
 ---------------------------------
 
-Where a log message is outputting a value that requires some computation, 
+Where a log message is outputting a value that requires some computation,
 a check against the ``log_at_level`` function may be used to find out if it's
 necessary.
 

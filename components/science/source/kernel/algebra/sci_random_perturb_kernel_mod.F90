@@ -10,6 +10,8 @@
 
 module sci_random_perturb_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use argument_mod,               only : arg_type, func_type,            &
                                        GH_FIELD, GH_REAL, GH_SCALAR,   &
                                        GH_READ, GH_WRITE,              &
@@ -17,7 +19,7 @@ use argument_mod,               only : arg_type, func_type,            &
                                        ANY_SPACE_9, GH_BASIS,          &
                                        GH_DIFF_BASIS,                  &
                                        CELL_COLUMN, GH_EVALUATOR
-use constants_mod,              only : r_single, r_double, i_def, rmdi
+use constants_mod,              only : i_def, rmdi
 use kernel_mod,                 only : kernel_type
 use fs_continuity_mod,          only : WTHETA, W3
 
@@ -49,16 +51,16 @@ public random_perturb_code
 ! Generic interface for real32 and real64 types
 interface random_perturb_code
   module procedure  &
-    random_perturb_code_r_single, &
-    random_perturb_code_r_double
+    random_perturb_code_real32, &
+    random_perturb_code_real64
 end interface
 
 contains
 
 ! ==================
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine random_perturb_code_r_single(nlayers, theta, height_wtheta,     &
+subroutine random_perturb_code_real32(  nlayers, theta, height_wtheta,     &
                         theta_pert_size, theta_pert_start, theta_pert_end, &
                         ndf_wtheta, undf_wtheta, map_wtheta)
 
@@ -68,18 +70,18 @@ integer(kind=i_def), intent(in) :: nlayers
 integer(kind=i_def), intent(in) :: ndf_wtheta
 integer(kind=i_def), intent(in) :: undf_wtheta
 integer(kind=i_def), intent(in),    dimension(ndf_wtheta)  :: map_wtheta
-real(kind=r_single), intent(inout), dimension(undf_wtheta) :: theta
-real(kind=r_single), intent(in),    dimension(undf_wtheta) :: height_wtheta
-real(kind=r_single), intent(in) :: theta_pert_size
-real(kind=r_single), intent(in) :: theta_pert_start
-real(kind=r_single), intent(in) :: theta_pert_end
+real(kind=real32),   intent(inout), dimension(undf_wtheta) :: theta
+real(kind=real32),   intent(in),    dimension(undf_wtheta) :: height_wtheta
+real(kind=real32),   intent(in) :: theta_pert_size
+real(kind=real32),   intent(in) :: theta_pert_start
+real(kind=real32),   intent(in) :: theta_pert_end
 
 integer(kind=i_def) :: k
-real(kind=r_single)    :: pert(0:nlayers-1)
+real(kind=real32)    :: pert(0:nlayers-1)
 
 call random_number(pert)
 
-pert(:) = 2.0_r_single * theta_pert_size * ( pert(:) - 0.5_r_single )
+pert(:) = 2.0_real32 * theta_pert_size * ( pert(:) - 0.5_real32 )
 
 do k = 0, nlayers - 1
   if ( height_wtheta(map_wtheta(1) + k) <= theta_pert_end .and.    &
@@ -88,12 +90,12 @@ do k = 0, nlayers - 1
   end if
 end do
 
-end subroutine random_perturb_code_r_single
+end subroutine random_perturb_code_real32
 
 ! ==================
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine random_perturb_code_r_double(nlayers, theta, height_wtheta,     &
+subroutine random_perturb_code_real64(  nlayers, theta, height_wtheta,     &
                         theta_pert_size, theta_pert_start, theta_pert_end, &
                         ndf_wtheta, undf_wtheta, map_wtheta)
 
@@ -103,18 +105,18 @@ integer(kind=i_def), intent(in) :: nlayers
 integer(kind=i_def), intent(in) :: ndf_wtheta
 integer(kind=i_def), intent(in) :: undf_wtheta
 integer(kind=i_def), intent(in),    dimension(ndf_wtheta)  :: map_wtheta
-real(kind=r_double), intent(inout), dimension(undf_wtheta) :: theta
-real(kind=r_double), intent(in),    dimension(undf_wtheta) :: height_wtheta
-real(kind=r_double), intent(in) :: theta_pert_size
-real(kind=r_double), intent(in) :: theta_pert_start
-real(kind=r_double), intent(in) :: theta_pert_end
+real(kind=real64),   intent(inout), dimension(undf_wtheta) :: theta
+real(kind=real64),   intent(in),    dimension(undf_wtheta) :: height_wtheta
+real(kind=real64),   intent(in) :: theta_pert_size
+real(kind=real64),   intent(in) :: theta_pert_start
+real(kind=real64),   intent(in) :: theta_pert_end
 
 integer(kind=i_def) :: k
-real(kind=r_double)    :: pert(0:nlayers-1)
+real(kind=real64)    :: pert(0:nlayers-1)
 
 call random_number(pert)
 
-pert(:) = 2.0_r_double * theta_pert_size * ( pert(:) - 0.5_r_double )
+pert(:) = 2.0_real64 * theta_pert_size * ( pert(:) - 0.5_real64 )
 
 do k = 0, nlayers - 1
   if ( height_wtheta(map_wtheta(1) + k) <= theta_pert_end .and.    &
@@ -123,6 +125,6 @@ do k = 0, nlayers - 1
   end if
 end do
 
-end subroutine random_perturb_code_r_double
+end subroutine random_perturb_code_real64
 
 end module sci_random_perturb_kernel_mod

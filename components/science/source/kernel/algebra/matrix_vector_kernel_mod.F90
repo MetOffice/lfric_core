@@ -7,12 +7,15 @@
 !> @brief This version is for use on continuous spaces and will force
 !>        halo exchanges on the input fields
 module matrix_vector_kernel_mod
+
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,  only : arg_type,                 &
                             GH_FIELD, GH_OPERATOR,    &
                             GH_REAL, GH_READ, GH_INC, &
                             ANY_SPACE_1, ANY_SPACE_2, &
                             CELL_COLUMN
-  use constants_mod, only : i_def, r_single, r_double
+  use constants_mod, only : i_def
   use kernel_mod,    only : kernel_type
 
   implicit none
@@ -40,8 +43,8 @@ module matrix_vector_kernel_mod
   ! Generic interface for real32 and real64 types
   interface matrix_vector_code
     module procedure  &
-      matrix_vector_code_r_single, &
-      matrix_vector_code_r_double
+      matrix_vector_code_real32, &
+      matrix_vector_code_real64
   end interface
 
 contains
@@ -63,9 +66,9 @@ contains
   !> @param[in]    map2     Dofmap for the cell at the base of the column for the input
   !!                        field
 
-  ! R_SINGLE PRECISION
+  ! REAL32 PRECISION
   ! ==================
-  subroutine matrix_vector_code_r_single(cell,              &
+  subroutine matrix_vector_code_real32(  cell,              &
                                          nlayers,           &
                                          lhs, x,            &
                                          ncell_3d,          &
@@ -82,9 +85,9 @@ contains
     integer(kind=i_def), dimension(ndf1), intent(in) :: map1
     integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-    real(kind=r_single), dimension(undf2),              intent(in)    :: x
-    real(kind=r_single), dimension(undf1),              intent(inout) :: lhs
-    real(kind=r_single), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+    real(kind=real32),   dimension(undf2),              intent(in)    :: x
+    real(kind=real32),   dimension(undf1),              intent(inout) :: lhs
+    real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     ! Internal variables
     integer(kind=i_def) :: df, ik, df2, i1, i2, nl
@@ -99,12 +102,12 @@ contains
       end do
     end do
 
-  end subroutine matrix_vector_code_r_single
+  end subroutine matrix_vector_code_real32
 
 
-  ! R_DOUBLE PRECISION
+  ! REAL64 PRECISION
   ! ==================
-  subroutine matrix_vector_code_r_double(cell,              &
+  subroutine matrix_vector_code_real64(  cell,              &
                                          nlayers,           &
                                          lhs, x,            &
                                          ncell_3d,          &
@@ -121,9 +124,9 @@ contains
     integer(kind=i_def), dimension(ndf1), intent(in) :: map1
     integer(kind=i_def), dimension(ndf2), intent(in) :: map2
 
-    real(kind=r_double), dimension(undf2),              intent(in)    :: x
-    real(kind=r_double), dimension(undf1),              intent(inout) :: lhs
-    real(kind=r_double), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+    real(kind=real64),   dimension(undf2),              intent(in)    :: x
+    real(kind=real64),   dimension(undf1),              intent(inout) :: lhs
+    real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
     integer(kind=i_def) :: df, ik, df2, i1, i2, nl
 
@@ -137,6 +140,6 @@ contains
       end do
     end do
 
-  end subroutine matrix_vector_code_r_double
+  end subroutine matrix_vector_code_real64
 
 end module matrix_vector_kernel_mod

@@ -89,14 +89,17 @@ time you will want to commit changes to the upstream repository. A
 ``.gitignore`` file, found at the top-level of the directory tree, should
 prevent you inadvertently including build artefacts in your commit if you ever
 run a ``git add .`` command. But do use ``git status`` to be sure of what your
-changeset includes. Note that it is always safer to use ``git add <filename>`` on the specific files you want to add/change.
+changeset includes. Note that it is always safer to use ``git add <filename>``
+on the specific files you want to add/change.
 
 Running ``make clean`` will remove the working, test and bin directories.
 
 After building an application from the command line, it can be useful to do a
 quick test to ensure it can run. Most applications in the lfric and lfric_apps
 repository hold a simple example configuration in their ``example`` directory
-(which is also included in the ``.gitignore`` file, so if you want to add or change files in the ``example`` directory, you will need to use ``git add -f ...``).
+(which is also included in the ``.gitignore`` file, so if you want to add or
+change files in the ``example`` directory, you will need to use ``git add -f
+...``).
 
 After building, go into to the example directory and run the application, as
 follows:
@@ -115,15 +118,16 @@ Running the Cylc test suite
 
 To run the test suites, Cylc and Rose need to be installed.
 
-The ``rose stem`` command selects the group of tests to run. Then ``cylc play``
-starts the suite running. For example, to run the developer tests for all the
-applications and components within an LFRic working copy, run the following from
-the top-level of the working copy:
+The tests are defined in the ``rose-stem`` directory within the the top-level of
+the clone of the repository. To run the developer tests for all the
+applications, ``cd`` to the top-level directory and run the following:
 
 .. code-block::
 
-   rose stem --group=developer
-   cylc play <working_copy_name>
+   cylc vip -z group=developer -n NAME ./rose-stem
+
+The ``NAME`` argument defines the name of the suite, which will be the name of
+the top-level directory created or used within the ``~/cylc-run`` directory.
 
 Building the documentation
 --------------------------

@@ -6,7 +6,18 @@ test: no-optimisation/confirm \
       override/confirm \
       override-global-opt/confirm \
       override-local-opt/confirm \
-      override-both-opt/confirm
+      override-both-opt/confirm \
+      server-smoke
+
+# Confirms the persistent PSyclone server produces output identical to a
+# direct invocation and that consecutive jobs remain isolated.
+#
+.PHONY: server-smoke
+server-smoke:
+	$(info *** PSyclone server smoke test)
+	$(PYTHON) server_smoke_test.py
+
+PYTHON ?= python3
 
 # Tests operation without transformation scripts. Both preprocessed and
 # non-preprocessed algorithms are present.

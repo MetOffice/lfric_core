@@ -26,7 +26,8 @@ module lfric_xios_time_axis_mod
   use lfric_ncdf_field_mod, only: lfric_ncdf_field_type
   use lfric_ncdf_file_mod,  only: lfric_ncdf_file_type
   use lfric_xios_read_mod,  only: read_field_time_var
-  use lfric_xios_utils_mod, only: parse_date_as_xios, seconds_from_date
+  use lfric_xios_utils_mod, only: parse_date_as_xios, seconds_from_date, &
+                                  read_time_data
   use lfric_xios_diag_mod,  only: get_field_axis_ref
   use linked_list_data_mod, only: linked_list_data_type
   use log_mod,              only: log_event, log_scratch_space, &
@@ -80,8 +81,6 @@ module lfric_xios_time_axis_mod
     procedure, public :: initialise
     !> Sets up aspects of time_axis after XIOS is initialised
     procedure, public :: setup
-    !> Reads time data with XIOS
-    procedure, private :: read_time_data
     !> Getter for time axis name
     procedure, public :: get_name
     !> Procedure for cycling through time data to find the correct entry
@@ -121,7 +120,7 @@ module lfric_xios_time_axis_mod
     end subroutine regridder
   end interface
 
-  public :: regridder
+  public :: regridder, read_time_dim
 
 contains
 
@@ -202,6 +201,7 @@ contains
 
     type(xios_date)             :: start_date, time_origin
     character(str_max_filename) :: file_name
+    integer(i_def)              :: i
 
     call log_event( "Performing post-XIOS context set-up for time_axis_type ["// &
                     trim(self%name)//"]", LOG_LEVEL_TRACE )
@@ -223,115 +223,10 @@ contains
     end do
 
     ! Read time data
-    call self%read_time_data(trim(file_name))
+    self%time_data = read_time_data(trim(file_name))
+    self%index_data = (/ (i, i=1, size(self%time_data)) /)
 
   end subroutine setup
-
-  !>  @brief  Read time data into time axis using NetCDF tools
-  subroutine read_time_data(self, file_path)
-
-    implicit none
-
-    class(time_axis_type), intent(inout) :: self
-    character(len=*),      intent(in)    :: file_path
-
-    ! Local variables for XIOS interface
-    integer(i_def)                :: time_axis_size, i, t
-    real(r_def), allocatable      :: input_data(:)
-    character(str_def)            :: time_units, ref_date_str, var_id, dim_id
-    character(str_long)           :: unit_attr
-    character(str_def), parameter :: valid_units(4) = &
-                                  (/'seconds', 'days   ', 'hours  ', 'months '/)
-    type(xios_duration)           :: ref_time, mean_time, month_duration
-    type(xios_date)               :: ref_date
-    integer(i_def),     parameter :: len_date = 18 ! Length of CF date is 18 characters
-    integer(i_def),     parameter :: len_delim = 7 ! Delimiter between unit and
-                                                   ! date is 7 characters
-
-    ! NetCDF reading variables
-    type(lfric_ncdf_file_type)  :: file_ncdf
-    type(lfric_ncdf_dims_type)  :: time_dim
-    type(lfric_ncdf_field_type) :: time_var
-
-    file_ncdf = lfric_ncdf_file_type( trim(file_path)//".nc", &
-                                      open_mode=FILE_OP_OPEN, &
-                                      io_mode=FILE_MODE_READ )
-
-    ! Plant func ancils have non-CF-compliant time representation so we need to
-    ! account for that for the time being
-    if (file_ncdf%contains_var("time")) then
-      var_id = "time"
-      dim_id = "time"
-    else if (file_ncdf%contains_var("month_number")) then
-      var_id = "month_number"
-      dim_id = "month_number"
-    else
-      call log_event( "Invalid representation of time in file ["// &
-                      trim(file_path)//"]", log_level_error)
-    end if
-
-    ! Get size of time axis from file
-    time_dim = lfric_ncdf_dims_type(trim(dim_id), file_ncdf)
-    time_axis_size = time_dim%get_size()
-    allocate( input_data( time_axis_size ) )
-    allocate( self%time_data( time_axis_size ) )
-    allocate( self%index_data( time_axis_size ) )
-    self%index_data = (/ (i, i=1, size(input_data)) /)
-
-    ! Read the time data from the ancil file
-    time_var = lfric_ncdf_field_type(trim(var_id), file_ncdf)
-    call time_var%read_data(input_data)
-
-    ! Read time units and reference date from file
-    if (file_ncdf%contains_var("time")) then
-      unit_attr = time_var%get_char_attribute("units")
-      time_units = unit_attr( 1 : len(trim(unit_attr))-len_date-len_delim )
-      if ( .not. any( valid_units == trim(adjustl(time_units)) ) ) then
-        write( log_scratch_space,'(A,A)' ) "Invalid units for "//trim(self%name)// &
-                                           " time axis: "// trim(time_units)
-        call log_event( log_scratch_space, LOG_LEVEL_ERROR )
-      end if
-      ref_date_str = unit_attr( len(trim(unit_attr))-len_date : len(trim(unit_attr)) )
-      ref_date = parse_date_as_xios(trim(adjustl(ref_date_str)))
-    else if (file_ncdf%contains_var("month_number")) then
-      ! Non CF files are given the bare minimum treatment
-      time_units = "months"
-      ref_date = xios_date(1970, 01, 01, 00, 00, 00)
-    end if
-
-    call file_ncdf%close_file()
-
-    ! Convert input time data to xios_date type
-    do t = 1, time_axis_size
-      ref_time = xios_duration(0, 0, 0, 0, 0, 0)
-      if ( trim(adjustl(time_units)) == "seconds" ) then
-        ref_time%second = input_data(t)
-      else if ( trim(adjustl(time_units)) == "hours" ) then
-        ref_time%hour = input_data(t)
-      else if ( trim(adjustl(time_units)) == "days" ) then
-        ref_time%day = input_data(t)
-      else if ( trim(adjustl(time_units)) == "months" ) then
-        ! Offset months backwards to account for monthly mean
-        ref_time%month = input_data(t) - 1
-      end if
-      self%time_data(t) = ref_date + ref_time
-    end do
-
-    ! Correct "months" data to be monthly mean - centred on middle of month.
-    ! This can't be done above as the conversion to seconds can only be done
-    ! with xios_date objects, not xios_durations
-    if ( time_units == "months" ) then
-      mean_time = xios_duration(0, 0, 0, 0, 0, 0)
-      month_duration = xios_duration(0, 1, 0, 0, 0, 0)
-      do t = 1, time_axis_size
-        mean_time%second = ( &
-          seconds_from_date(self%time_data(t)+month_duration) - &
-          seconds_from_date(self%time_data(t)) ) / 2
-        self%time_data(t) = self%time_data(t) + mean_time
-      end do
-    end if
-
-  end subroutine read_time_data
 
   !> @brief Returns the time_axis name.
   !> @return output_name The time axis name
@@ -726,5 +621,18 @@ contains
                  X_plus_Y( model_field, field_time_entries(1), interp_gradient ) )
 
   end subroutine interp_field_1d
+
+  function read_time_dim(path) result(time_dim)
+
+    implicit none
+
+    character(*), intent(in) :: path
+    type(xios_date), allocatable :: time_data(:)
+    integer(i_def) :: time_dim
+
+    time_data = read_time_data(path)
+    time_dim = size(time_data)
+
+  end function read_time_dim
 
 end module lfric_xios_time_axis_mod

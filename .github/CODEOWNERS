@@ -25,9 +25,9 @@
 /infrastructure/**/function_space/  @mike-hobson # @MetOffice/core-capability-development
 /infrastructure/**/io/              @andrewcoughtrie # @mo-rickywong
 /infrastructure/**/key_value/       @mo-rickywong # @mike-hobson
-/infrastructure/**/kernel_metadata/ @teranivy # @stevemullerworth
+/infrastructure/**/kernel_metadata/ @christophermaynard # @stevemullerworth
 /infrastructure/**/mesh/            @mo-rickywong # @mike-hobson
-/infrastructure/**/PSYKE/           @christophermaynard # @teranivy
+/infrastructure/**/PSYKE/           @christophermaynard
 /infrastructure/**/quadrature/      @thomasmelvin # @tommbendall
 /infrastructure/**/scalar/          @mike-hobson # @MetOffice/core-capability-development
 /infrastructure/**/time/            @matthewhambley # @andrewcoughtrie
@@ -56,7 +56,7 @@ rose-stem/site/meto/macros/            @james-bruten-mo # @jennyhickson
 rose-stem/apps                         # Mostly updated by macros, no codeowner
 
 # Other
-/etc/psyclone.cfg   @teranivy # @MetOffice/ToolsCollabDev
+/etc/psyclone.cfg   @christophermaynard
 /.github/           @andrewcoughtrie # @yaswant
 LICENSE             @stevemullerworth # @yaswant
 

@@ -51,6 +51,7 @@ module lfric_xios_context_mod
     type(xios_context)     :: handle
     type(linked_list_type) :: filelist
     integer(i_def)         :: context_clock_step = 1_i_def
+    type(lfric_comm_type)  :: communicator
 
     logical :: uses_timer = .false.
     logical :: xios_context_initialised = .false.
@@ -147,6 +148,8 @@ contains
       zero_start = .false.
     end if
 
+    this%communicator = communicator
+
     call xios_context_initialize( this%get_context_name(), &
                                   communicator%get_comm_mpi_val() )
     call xios_get_handle( this%get_context_name(), this%handle )
@@ -191,6 +194,8 @@ contains
     ! can be defined after this point
     if ( LPROF ) call start_timing(timing_id, 'xios.close_context_definition')
     call log_event('XIOS context definition closing', log_level_debug)
+    ! Set an MPI barrier to support MPI-IO metadata interaction synchronisation.
+    call this%communicator%barrier_mpi()
     call xios_close_context_definition()
     if ( LPROF ) call stop_timing(timing_id, 'xios.close_context_definition')
     call log_event('XIOS context definition closed', log_level_debug)
