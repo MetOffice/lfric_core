@@ -43,7 +43,7 @@ module test_field_mod
     procedure, public :: copy_from_lfric => copy_32_from_lfric
     procedure, public :: copy_to_lfric => copy_32_to_lfric
     procedure, public :: get_data => get_data_32
-    final destroy_32
+    final :: destroy_32
   end type test_field_32_type
 
   interface test_field_32_type
@@ -65,7 +65,7 @@ module test_field_mod
     procedure, public :: copy_from_lfric => copy_64_from_lfric
     procedure, public :: copy_to_lfric => copy_64_to_lfric
     procedure, public :: get_data => get_data_64
-    final destroy_64
+    final :: destroy_64
   end type test_field_64_type
 
   interface test_field_64_type

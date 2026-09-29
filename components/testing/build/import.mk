@@ -21,4 +21,5 @@ import-testing:
             SOURCE_DIR=$(PROJECT_SOURCE) \
             OPTIMISATION_PATH=$(OPTIMISATION_PATH)
 	# Copy support files and utilities to binary directory
+	$Qmkdir -p $(BIN_DIR)
 	$Qrsync -a $(PROJECT_SUPPORT_DIR)/ $(BIN_DIR)
