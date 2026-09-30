@@ -20,9 +20,8 @@ import pytest
 # controlled facets of the local source tree.  Do not load from unknown sources.
 # allows strings that start with:
 # 'metadata/' etc/' './' '$SOURCE_ROOT/'
-# followed by alphabetic characters only
-security_re = re.compile(r'^(metadata/|etc/|\./|\$SOURCE_ROOT/)'
-                         r'[a-zA-Z]+\w')
+# followed by alphanumeric characters only
+security_re = re.compile(r'^((?:metadata/|etc/|\./|\$SOURCE_ROOT/)\w+)')
 
 def src_replace(parent, path):
     """
