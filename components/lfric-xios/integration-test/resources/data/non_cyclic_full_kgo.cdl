@@ -1,4 +1,4 @@
-netcdf lfric_xios_write_test {
+netcdf lfric_xios_temporal_output {
 dimensions:
 	axis_nbounds = 2 ;
 	Two = 2 ;
@@ -64,7 +64,7 @@ variables:
 		Mesh2d_face_edges:cf_role = "face_edge_connectivity" ;
 		Mesh2d_face_edges:long_name = "Maps every face to its edges." ;
 		Mesh2d_face_edges:start_index = 0 ;
-		Mesh2d_face_edges:_FillValue = 999999 ;
+		Mesh2d_face_edges:_FillValue = -999 ;
 	int Mesh2d_edge_face_links(nMesh2d_edge, Two) ;
 		Mesh2d_edge_face_links:cf_role = "edge_face_connectivity" ;
 		Mesh2d_edge_face_links:long_name = "neighbor faces for edges" ;
@@ -75,7 +75,7 @@ variables:
 		Mesh2d_face_links:cf_role = "face_face_connectivity" ;
 		Mesh2d_face_links:long_name = "Indicates which other faces neighbor each face" ;
 		Mesh2d_face_links:start_index = 0 ;
-		Mesh2d_face_links:_FillValue = 999999 ;
+		Mesh2d_face_links:_FillValue = -999 ;
 		Mesh2d_face_links:flag_values = -1 ;
 		Mesh2d_face_links:flag_meanings = "out_of_mesh" ;
 	float vert_axis_half_levels(vert_axis_half_levels) ;
@@ -85,8 +85,8 @@ variables:
 		time:standard_name = "time" ;
 		time:long_name = "Time axis" ;
 		time:calendar = "gregorian" ;
-		time:units = "seconds since 2024-01-01 15:00:00" ;
-		time:time_origin = "2024-01-01 15:00:00" ;
+		time:units = "seconds since 2024-01-01 15:01:00" ;
+		time:time_origin = "2024-01-01 15:01:00" ;
 		time:bounds = "time_bounds" ;
 	double time_bounds(time, axis_nbounds) ;
 	double temporal_field(time, vert_axis_half_levels, nMesh2d_face) ;
@@ -99,15 +99,15 @@ variables:
 		temporal_field:coordinates = "Mesh2d_face_y Mesh2d_face_x" ;
 
 // global attributes:
-		:name = "lfric_xios_write_test" ;
+		:name = "lfric_xios_temporal_output" ;
 		:title = "Created by xios" ;
-		:timeStamp = "2025-Feb-26 11:47:23 GMT" ;
-		:uuid = "4f0f6d47-9240-4356-b1f6-b02f8adc4fe4" ;
+		:timeStamp = "2026-Apr-29 13:27:11 GMT" ;
+		:uuid = "227c7dc7-aa21-448d-82b4-4488bb9391dd" ;
 		:description = "LFRic file format v0.2.0" ;
 		:Conventions = "UGRID-1.0" ;
 data:
 
- Mesh2d = 13795354 ;
+ Mesh2d = 2008642325 ;
 
  Mesh2d_node_x = 0 ;
 
@@ -169,11 +169,6 @@ data:
   600, 600 ;
 
  temporal_field =
-  20, 20, 20, 20, 20, 20, 20, 20, 20,
-  20, 20, 20, 20, 20, 20, 20, 20, 20,
-  20, 20, 20, 20, 20, 20, 20, 20, 20,
-  20, 20, 20, 20, 20, 20, 20, 20, 20,
-  20, 20, 20, 20, 20, 20, 20, 20, 20,
   6.66666666666667, 6.66666666666667, 6.66666666666667, 6.66666666666667, 
     6.66666666666667, 6.66666666666667, 6.66666666666667, 6.66666666666667, 
     6.66666666666667,
@@ -272,6 +267,20 @@ data:
   40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
     40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
     40.6349206349206,
+  40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206,
+  40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206,
+  40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206,
+  40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206,
+  40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
+    40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 0,
   40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
     40.6349206349206, 40.6349206349206, 40.6349206349206, 40.6349206349206, 
     40.6349206349206,

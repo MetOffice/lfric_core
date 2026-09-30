@@ -12,6 +12,7 @@ module lfric_xios_diag_mod_test
   use funit
 
   use constants_mod, only: str_def
+  use log_mod,       only: log_set_level, LOG_LEVEL_ERROR
 
   implicit none
 
@@ -45,6 +46,9 @@ contains
 
     character(str_def) :: str
     real(real64) :: val
+
+    ! Set log level to error to ignore log messages for warnings triggered by tests
+    call log_set_level(LOG_LEVEL_ERROR)
 
     @assertTrue(file_is_enabled('lfric_diag_no_flag'))
     @assertTrue(file_is_enabled('lfric_diag_enabled'))
@@ -91,7 +95,7 @@ contains
     call set_variable('var1', val)
     @assertEqual(get_variable('var1'), val)
     @assertEqual(get_variable('var1', 999.0*val), val)
-    ! verify that call with tolerant setting succeedds
+    ! verify that call with tolerant setting succeeds
     call set_variable('does_not_exist', val, .true.)
     val = 9.876_real64
     @assertEqual(get_variable('does_not_exist', val), val)
