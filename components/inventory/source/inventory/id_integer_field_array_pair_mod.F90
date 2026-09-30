@@ -117,7 +117,7 @@ contains
         call self%field_array_(i)%field_final()
       end do
       deallocate(self%field_array_)
-    endif
+    end if
   end subroutine destructor
 
 end module id_integer_field_array_pair_mod
