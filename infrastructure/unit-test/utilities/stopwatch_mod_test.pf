@@ -48,7 +48,7 @@ contains
 
     call initialise_logging( this%getMpiCommunicator(), name )
 
-    ! Timer is paused but not resumed before timeris stopped
+    ! Timer is paused but not resumed before timer is stopped
     call stopwatch%start(name='pause_and_resume')
     ! before pausing, sleep for 2 seconds - the elapsed time should be near to
     ! this since there is no other work happening in this timed region.
