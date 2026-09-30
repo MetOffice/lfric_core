@@ -90,7 +90,7 @@ contains
 
     call initialise_logging( this%getMpiCommunicator(), name )
 
-    ! Timer is paused but not resumed before timeris stopped
+    ! Timer is paused but not resumed before timer is stopped
     call stopwatch%start(name='pause_and_stop')
     ! before pausing, sleep for 2 seconds.
     call c_sleep(2)
