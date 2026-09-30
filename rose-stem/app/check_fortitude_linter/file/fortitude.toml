@@ -44,10 +44,12 @@ select = [
 "MOD002", # double-precision-literal
 "MOD031", # Include statement is deprecated
 "MOD021", # deprecated-relational-operator
+"MOD041", # attribute specified separately to variable declaration
 "S101", # trailing-whitespace
 "S071", # missing-double-colon
 "S081", # unnecessary semicolon
 "S082", # multiple statements per line
+"S211", # multiple modules in one file
 "S212", # Program and module in one file
 "S263", # bad-array-declaration
 "PORT001", # non-portable-io-unit
@@ -99,6 +101,7 @@ select = [
 "everything_mod.f90" = ["PORT001"]
 "multifile_mod.f90" = ["PORT001"]
 "simple_mod.f90" = ["PORT001"]
+"gamma_mod.f90" = ["S211"]
 
 # components/science:
 "sci_psykal_builtin_light_mod.f90" = ["C132"]
