@@ -21,14 +21,12 @@ module stopwatch_mod
   implicit none
   private
 
-  integer(int64), save :: crate = -1_int64
-
   type, public :: stopwatch_type
      private
      character(:), allocatable :: name
-     real(real64)              :: start_time  = 0.0_real64
-     real(real64)              :: pause_start = 0.0_real64
-     real(real64)              :: paused_time = 0.0_real64
+     real(int64)               :: start_time  = 0
+     real(int64)               :: pause_start = 0
+     real(int64)               :: paused_time = 0
      logical                   :: running     = .false.
      logical                   :: paused      = .false.
    contains
@@ -59,7 +57,6 @@ contains
     this%name    = trim(name)
     this%running = .true.
 
-    if (crate <= 0_int64) call system_clock(count_rate=crate)
     call system_clock(count=count)
     this%start_time = real(count, real64)
 
@@ -72,7 +69,11 @@ contains
 
     class(stopwatch_type), intent(inout) :: this
     real(real64)   :: time_taken
+    real(real64)   :: paused_time
     integer(int64) :: now
+    integer(int64) :: crate
+
+    call system_clock(count_rate=crate)
 
     ! Close off any outstanding pause before calculating the elapsed time,
     ! otherwise the timer will not be using an accurate paused_time.
@@ -80,7 +81,8 @@ contains
 
     call system_clock(count=now)
     time_taken = (real(now, real64) - this%start_time) / real(crate, real64)
-    time_taken = time_taken - this%paused_time
+    paused_time = real(this%paused_time, real64) / real(crate, real64)
+    time_taken = time_taken - paused_time
 
   end function elapsed
 
@@ -91,16 +93,15 @@ contains
 
     class(stopwatch_type), intent(inout) :: this
 
-    integer(int64) :: count
+    integer(int64) :: now
 
     if (.not. this%running) return
     ! If paused already, nothing to do
     if (this%paused) return
     this%paused = .true.
 
-    if (crate <= 0_int64) call system_clock(count_rate=crate)
-    call system_clock(count=count)
-    this%pause_start = real(count, real64)
+    call system_clock(count=now)
+    this%pause_start = now
 
   end subroutine pause
 
@@ -117,7 +118,7 @@ contains
     this%paused = .false.
 
     call system_clock(count=now)
-    time_taken = (real(now, real64) - this%pause_start) / real(crate, real64)
+    time_taken = now - this%pause_start
 
     this%paused_time = this%paused_time + time_taken
 
@@ -153,9 +154,9 @@ contains
     if (this%running) call this%stop()
 
     ! Reset values to defaults in case of re-use
-    this%start_time  = 0.0_real64
-    this%pause_start = 0.0_real64
-    this%paused_time = 0.0_real64
+    this%start_time  = 0
+    this%pause_start = 0
+    this%paused_time = 0
     this%paused      = .false.
     this%running     = .false.
 
