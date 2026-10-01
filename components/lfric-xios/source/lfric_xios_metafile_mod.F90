@@ -108,7 +108,7 @@ contains
   !> @param[in] file_id  XIOS id of file
   subroutine metafile_init(self, file_id)
     implicit none
-    class(metafile_type), intent(in out) :: self
+    class(metafile_type), intent(inout) :: self
 
     character(*), intent(in) :: file_id
     call log_event('Initialising metafile for file id: ' // trim(file_id), log_level_debug)
