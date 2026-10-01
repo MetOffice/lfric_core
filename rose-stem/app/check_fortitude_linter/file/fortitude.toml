@@ -29,6 +29,7 @@ select = [
 "C141", # missing-exit-or-cycle-label
 "C143", # missing-end-label
 "C151", # misleading-inline-if-semicolon
+"C161", # nonportable-shortcircuit-inquiry
 "C171", # escaped quotes in string literals split over two lines
 "C182", # multiple-allocations-with-stat
 "C191", # unreachable-statement
@@ -51,6 +52,8 @@ select = [
 "S082", # multiple statements per line
 "S211", # multiple modules in one file
 "S212", # Program and module in one file
+"S231", # keywords-missing-space
+"S232", # keyword-has-whitespace
 "S263", # bad-array-declaration
 "PORT001", # non-portable-io-unit
 "PORT031", # invalid-tab

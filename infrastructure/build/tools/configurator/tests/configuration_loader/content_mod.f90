@@ -172,13 +172,14 @@ contains
     integer(i_def) :: i
     logical        :: configuration_found = .true.
 
-    if (present(success_mask) &
-        .and. (size(success_mask, 1) /= size(names, 1))) then
-      write(error_unit, '(A)') &
-          'Arguments "names" and "success_mask" to function' //&
-          '"ensure_configuration" are different shapes.'
-      flush(error_unit)
-      stop 1
+    if (present(success_mask)) then
+        if ((size(success_mask, 1) /= size(names, 1))) then
+          write(error_unit, '(A)') &
+            'Arguments "names" and "success_mask" to function' //&
+            '"ensure_configuration" are different shapes.'
+          flush(error_unit)
+          stop 1
+        end if
     end if
 
     ensure_configuration = .true.
