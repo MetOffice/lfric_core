@@ -173,7 +173,7 @@ contains
     logical        :: configuration_found = .true.
 
     if (present(success_mask)) then
-        if ((size(success_mask, 1) /= size(names, 1))) then
+        if (size(success_mask, 1) /= size(names, 1)) then
           write(error_unit, '(A)') &
             'Arguments "names" and "success_mask" to function' //&
             '"ensure_configuration" are different shapes.'
