@@ -65,10 +65,10 @@ select = [
 "FORT002", # unused-allow-comment
 "FORT003", # redirected-allow-comment
 "FORT004", # duplicated-allow-comment
-"FORT005", # disabled-allow-comment
+"FORT005" # disabled-allow-comment
 ]
 
-# output-format = "grouped"              #group results by file
+output-format = "grouped"              #group results by file
 
 
 # Repos containing only a few files with errors for the above rules
