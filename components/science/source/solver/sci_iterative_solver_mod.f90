@@ -1938,7 +1938,7 @@ contains
       call x%axpby(wa_over_b, z, w, xo)
       call x%axpy(1.0_r_def-w, xp)
 
-      ! residiual = norm(b - M*x)
+      ! residual = norm(b - M*x)
       if ( self%monitor_convergence ) then
         converged(:) = .false.
         final_iter = iter
