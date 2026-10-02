@@ -1581,13 +1581,13 @@ subroutine write_coordinates(self)
   ! Arguments
   class(ugrid_2d_type), intent(in) :: self
 
-  integer(i_def) :: node_unit
+  integer(i_def) :: inode
 
-  open(newunit = node_unit, file='nodes.dat')
+  open(56, file='nodes.dat')
   do inode = 1, self%num_nodes
-    write(node_unit,*) self%node_coordinates(:,inode)
+    write(56,*) self%node_coordinates(:,inode)
   end do
-  close(node_unit)
+  close(56)
 
   return
 end subroutine write_coordinates

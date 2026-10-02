@@ -17,7 +17,6 @@ select = [
 "C001", # missing implicit none
 "C021", # real literal missing kind suffix
 "C022", # implicit-real-kind
-"C032", # literal integers as units in IO statements
 "C051", # trailing-backslash
 "C071", # assumed-size
 "C072", # character has assumed size but does not have intent(in)
@@ -100,11 +99,11 @@ select = [
 "epsilon_one_submod.f90" = ["C022"]
 "eta_mod.F90" = ["C022"]
 "one.f90" = ["C022"]
-"computed_mod.f90" = ["PORT001", "C032"]
-"enum_mod.f90" = ["PORT001", "C032"]
-"everything_mod.f90" = ["PORT001", "C032"]
-"multifile_mod.f90" = ["PORT001", "C032"]
-"simple_mod.f90" = ["PORT001", "C032"]
+"computed_mod.f90" = ["PORT001"]
+"enum_mod.f90" = ["PORT001"]
+"everything_mod.f90" = ["PORT001"]
+"multifile_mod.f90" = ["PORT001"]
+"simple_mod.f90" = ["PORT001"]
 "gamma_mod.f90" = ["S211"]
 
 # components/science:
