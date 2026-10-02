@@ -126,7 +126,8 @@ contains
       equatorial_latitude = local_mesh%get_equatorial_latitude()
 
       call init_chi_transforms( north_pole, null_island, equatorial_latitude )
-
+    else
+      call init_chi_transforms()
     end if
 
     call chi_inventory%initialise(name="chi", table_len=n_meshes)

@@ -22,29 +22,20 @@ module convert_hdiv_field_kernel_mod_test
   implicit none
 
   private
-  public :: convert_hdiv_field_kernel_test_type, test_all
-
-  @TestCase
-  type, extends(TestCase) :: convert_hdiv_field_kernel_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type convert_hdiv_field_kernel_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
     use finite_element_config_mod, only : cellshape_quadrilateral, &
                                           coord_system_xyz, coord_space_wchi
     use feign_config_mod,          only : feign_finite_element_config
+    use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
-
-    class(convert_hdiv_field_kernel_test_type), intent(inout) :: this
 
     call feign_finite_element_config(           &
              cellshape=cellshape_quadrilateral, &
@@ -56,31 +47,32 @@ contains
              element_order_v=0_i_def,           &
              rehabilitate=.true. )
 
-  end subroutine setUp
+    call init_chi_transforms()
+
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
-    use config_loader_mod, only: final_configuration
+    use config_loader_mod,     only: final_configuration
+    use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(convert_hdiv_field_kernel_test_type), intent(inout) :: this
-
     call final_configuration()
+    call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use, intrinsic :: iso_fortran_env, only: real64
     use sci_convert_hdiv_field_kernel_mod, only: convert_hdiv_field_code
 
     implicit none
-
-    class(convert_hdiv_field_kernel_test_type), intent(inout) :: this
 
     real(r_def), parameter :: tol = 1.0e-10_r_def    ! r_def 64bit
     real(r_def), parameter :: dx = 6000.0_r_def, &

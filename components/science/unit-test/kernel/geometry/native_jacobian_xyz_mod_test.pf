@@ -12,27 +12,42 @@ module native_jacobian_xyz_mod_test
 
   implicit none
 
-  public :: jacobian_xyz_test_type, test_all
-
-  @TestCase
-  type, extends(TestCase) :: jacobian_xyz_test_type
-    private
-  contains
-    procedure test_all
-  end type jacobian_xyz_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @before
+  subroutine set_up()
+
+    use sci_chi_transform_mod, only : init_chi_transforms
+
+    implicit none
+
+    call init_chi_transforms()
+
+  end subroutine set_up
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @after
+  subroutine tear_down()
+
+    use sci_chi_transform_mod, only: final_chi_transforms
+
+    implicit none
+
+    call final_chi_transforms()
+
+  end subroutine tear_down
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_native_jacobian_mod,   only: native_jacobian
     use finite_element_config_mod, only: coord_system_xyz
 
     implicit none
-
-    class(jacobian_xyz_test_type), intent(inout) :: this
 
     real(kind=r_def) :: tol, zero, two, eight
 
