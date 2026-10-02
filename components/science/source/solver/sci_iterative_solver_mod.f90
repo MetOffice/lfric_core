@@ -1959,7 +1959,6 @@ contains
           end if
         end do
         if ( all(converged) ) exit
-        end if
 
       end if
 
