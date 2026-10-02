@@ -90,8 +90,8 @@ contains
     integer(kind=i_def) :: df, ik, df2, i1, i2, nl, k, kk, kend
 
     nl = nlayers-1
+    ik = (cell-1)*nlayers + 1
     do k = 0, nl, BLOCK_SIZE
-      ik = (cell-1)*nlayers + 1
       kend = min(BLOCK_SIZE-1, nl-k)
       do df2 = 1, ndf2
         i2 = map2(df2)
@@ -134,8 +134,8 @@ contains
     integer(kind=i_def) :: df, ik, df2, i1, i2, nl, k, kk, kend
 
     nl = nlayers-1
+    ik = (cell-1)*nlayers + 1
     do k = 0, nl, BLOCK_SIZE
-      ik = (cell-1)*nlayers + 1
       kend = min(BLOCK_SIZE-1, nl-k)
       do df2 = 1, ndf2
         i2 = map2(df2)
