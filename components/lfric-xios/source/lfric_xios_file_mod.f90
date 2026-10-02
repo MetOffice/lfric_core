@@ -427,10 +427,11 @@ subroutine register_with_context(self)
     call xios_add_child(self%handle, file_fields, self%field_group_id)
   end if
 
-  ! Set up read_access attribute for fields in file
-   if (self%mode_is_read()) then
-     call xios_set_attr(file_fields, read_access=.true.)
-   end if
+  ! Set mpi-io metadata read for file & read_access attribute for fields in file
+  if (self%mode_is_read()) then
+    call xios_set_attr(self%handle, read_metadata_par=.true.)
+    call xios_set_attr(file_fields, read_access=.true.)
+ end if
 
   ! Set up fields in file
   if (allocated(self%fields)) then

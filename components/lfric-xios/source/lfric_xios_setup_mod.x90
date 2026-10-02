@@ -185,7 +185,7 @@ contains
     type(field_type), optional, intent(in) :: alt_panel_ids(:)
 
     integer(i_def) :: i
-    type(mesh_type), pointer :: mesh => null()
+    type(mesh_type), pointer :: mesh
 
     ! Initialise XIOS prime mesh
     call init_xios_mesh( chi, panel_id, geometry, topology, &
@@ -282,11 +282,11 @@ contains
     integer(kind=i_def)      :: nodes_per_edge
     integer(kind=i_def)      :: nodes_per_face
     integer(kind=i_def)      :: num_edge_owned
-    type(mesh_type), pointer :: mesh => null()
-    type(mesh_type), pointer :: twod_mesh => null()
+    type(mesh_type), pointer :: mesh
+    type(mesh_type), pointer :: twod_mesh
 
-    type(function_space_type), pointer :: output_field_fs   => null()
-    type(function_space_type), pointer :: w2h_fs   => null()
+    type(function_space_type), pointer :: output_field_fs
+    type(function_space_type), pointer :: w2h_fs
 
     ! Identify discontinuous spaces
     integer(kind=i_def) :: use_i_index(2) = (/ W3, Wtheta /)
@@ -296,6 +296,10 @@ contains
     real(kind=r_def) :: r2d
 
     logical :: mesh_is_prime_mesh
+
+    nullify(mesh, twod_mesh)
+    nullify(output_field_fs)
+    nullify(w2h_fs)
 
     ! Set optional prime_mesh_flag
     if (present(prime_mesh)) then
@@ -917,7 +921,7 @@ contains
     character(len=*),           intent(in)    :: mesh_name
     integer(kind=i_def),        intent(in)    :: nverts
 
-    type(function_space_type), pointer :: domain_fs   => null()
+    type(function_space_type), pointer :: domain_fs
 
     type( field_type )              :: coord_output(3)
     type(field_proxy_type), target  :: proxy_coord_output(3)
@@ -1111,7 +1115,7 @@ contains
     type(mesh_type), pointer, intent(in) :: mesh
     integer(kind=i_def),      intent(in) :: fs_id
 
-    type(function_space_type), pointer :: domain_fs => null()
+    type(function_space_type), pointer :: domain_fs
     real(dp_xios), allocatable         :: dp_levels(:)
     integer(kind=i_def)                :: n_levels
 

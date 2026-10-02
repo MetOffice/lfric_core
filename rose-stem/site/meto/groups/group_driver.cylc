@@ -8,6 +8,7 @@
 {# azspice Groups #}
 {% do site_groups.update({
     "driver_azspice_developer": [
+        "driver_azspice_integration_tests",
         "driver_azspice_unit_tests",
     ],
     "driver_azspice": [
@@ -16,12 +17,17 @@
     "driver_azspice_unit_tests": [
         "driver_unit_tests_azspice_gnu_32bit",
         "driver_unit_tests_azspice_gnu_64bit"
+    ],
+    "driver_azspice_integration_tests": [
+        "driver_integration_tests_azspice_gnu_32bit",
+        "driver_integration_tests_azspice_gnu_64bit"
     ]
     }) %}
 
 {# EX1A Groups #}
 {% do site_groups.update({
     "driver_ex1a_developer": [
+        "driver_ex1a_integration_tests",
         "driver_ex1a_unit_tests",
     ],
     "driver_ex1a": [
@@ -30,6 +36,10 @@
     "driver_ex1a_unit_tests": [
         "driver_unit_tests_ex1a_gnu_32bit",
         "driver_unit_tests_ex1a_gnu_64bit"
+    ],
+    "driver_ex1a_integration_tests": [
+        "driver_integration_tests_ex1a_gnu_32bit",
+        "driver_integration_tests_ex1a_gnu_64bit"
     ]
     }) %}
 
@@ -48,22 +58,28 @@
     "driver_unit_tests": [
         "driver_azspice_unit_tests",
         "driver_ex1a_unit_tests"
-    ]
+    ],
+    "driver_integration_tests": [
+        "driver_azspice_integration_tests",
+        "driver_ex1a_integration_tests"
+    ],
     }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.driver_developer) %}
 {% do site_groups.all.extend(site_groups.driver) %}
 {% do site_groups.unit_tests.extend(site_groups.driver_unit_tests) %}
+{% do site_groups.integration_tests.extend(site_groups.driver_integration_tests) %}
 
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.driver_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.driver_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.driver_azspice_unit_tests) %}
-
+{% do site_groups.azspice_integration_tests.extend(site_groups.driver_azspice_integration_tests) %}
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.driver_ex1a_developer) %}
 {% do site_groups.ex1a.extend(site_groups.driver_ex1a) %}
 {% do site_groups.ex1a_unit_tests.extend(site_groups.driver_ex1a_unit_tests) %}
+{% do site_groups.ex1a_integration_tests.extend(site_groups.driver_ex1a_integration_tests) %}
 
 {% do LOG.debug("Finished in site/meto/groups/group_driver.cylc") %}
