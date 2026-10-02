@@ -36,3 +36,4 @@
 | mcdalvi          | Mohit Dalvi            | Met Office            | 2026-06-19 |
 | cjohnson-pi      | Christine Johnson      | Met Office            | 2026-06-29 |
 | DrTVockerodtMO   | Terence Vockerodt      | Met Office            | 2026-08-17 |
+| mo-claudiosanchez | Claudio Sanchez       | Met Office            | 2026-07-23 |

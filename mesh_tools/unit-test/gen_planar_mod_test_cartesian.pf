@@ -1316,8 +1316,8 @@ contains
                                   trim(adjustl(x_str))//','// &
                                   trim(adjustl(y_str))//']'
 
-    write(x_str, '(F10.2)') context%domain_centre(1)
-    write(y_str, '(F10.2)') context%domain_centre(2)
+    write(x_str, '(F10.6)') context%domain_centre(1)
+    write(y_str, '(F10.6)') context%domain_centre(2)
     write(domain_centre_str, '(A)') ';domain_centre=['//        &
                                     trim(adjustl(x_str))//','// &
                                     trim(adjustl(y_str))//']'
