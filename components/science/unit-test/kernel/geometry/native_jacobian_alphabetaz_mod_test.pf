@@ -25,11 +25,11 @@ contains
   @before
   subroutine set_up()
 
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    call init_chi_transforms(geometry_spherical, topology_fully_periodic)
+    call init_chi_transforms()
 
   end subroutine set_up
 

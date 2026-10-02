@@ -8,54 +8,41 @@
 module coordinate_jacobian_xyz_mod_test
 
   use funit
-  use constants_mod, only : r_def, i_def, imdi
+  use constants_mod, only : r_def, i_def
 
   implicit none
 
-  public :: jacobian_xyz_test_type, test_all
-
-  @TestCase
-  type, extends(TestCase) :: jacobian_xyz_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type jacobian_xyz_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
     use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    class(jacobian_xyz_test_type), intent(inout) :: this
+    call init_chi_transforms()
 
-    call init_chi_transforms(imdi, imdi)
-
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(jacobian_xyz_test_type), intent(inout) :: this
-
-    call final_configuration()
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_coordinate_jacobian_mod,                                           &
                                  only : coordinate_jacobian,                   &
@@ -68,8 +55,6 @@ contains
                                          topology_non_periodic
 
     implicit none
-
-    class(jacobian_xyz_test_type), intent(inout) :: this
 
     real(kind=r_def) :: tol, zero, one, two, eight
 

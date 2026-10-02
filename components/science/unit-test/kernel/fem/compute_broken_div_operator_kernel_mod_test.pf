@@ -7,7 +7,7 @@
 !>
 module compute_broken_div_operator_kernel_mod_test
 
-    use constants_mod, only : i_def, r_def, imdi
+    use constants_mod, only : i_def, r_def
     use get_unit_test_m3x3_dofmap_mod, &
       only : get_w0_m3x3_dofmap, &
              get_w3_m3x3_dofmap
@@ -30,21 +30,13 @@ module compute_broken_div_operator_kernel_mod_test
   implicit none
 
   private
-  public :: test_all
-
-  @TestCase
-  type, extends(TestCase), public :: compute_broken_div_operator_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type compute_broken_div_operator_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
     use finite_element_config_mod, only : cellshape_quadrilateral, &
                                           coord_system_xyz, coord_space_wchi
@@ -52,8 +44,6 @@ contains
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
-
-    class(compute_broken_div_operator_test_type), intent(inout) :: this
 
     call feign_finite_element_config(                           &
              cellshape=cellshape_quadrilateral,                 &
@@ -65,35 +55,32 @@ contains
              element_order_v=1_i_def,                           &
              rehabilitate=.true. )
 
-    call init_chi_transforms(imdi, imdi)
+    call init_chi_transforms()
 
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
     use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(compute_broken_div_operator_test_type), intent(inout) :: this
-
     call final_configuration()
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_compute_broken_div_operator_kernel_mod, &
       only : compute_broken_div_operator_code
 
     implicit none
-
-    class(compute_broken_div_operator_test_type), intent(inout) :: this
 
     real(r_def), parameter :: tol = 1.0e-6_r_def
     real(r_def), parameter :: dx = 6000.0_r_def

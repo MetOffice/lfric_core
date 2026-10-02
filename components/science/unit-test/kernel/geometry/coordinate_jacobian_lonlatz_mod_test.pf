@@ -26,7 +26,11 @@ contains
   @before
   subroutine set_up()
 
+    use sci_chi_transform_mod, only: init_chi_transforms
+
     implicit none
+
+    call init_chi_transforms()
 
   end subroutine set_up
 
@@ -47,7 +51,6 @@ contains
   subroutine test_all()
 
     use, intrinsic :: iso_fortran_env, only: real64
-    use sci_chi_transform_mod,   only : init_chi_transforms
     use sci_coordinate_jacobian_mod,                                           &
                                  only : coordinate_jacobian,                   &
                                         coordinate_jacobian_inverse,           &
@@ -131,8 +134,6 @@ contains
     end do
 
     basis(:,:,:,:) = 0.125_r_def
-
-    call init_chi_transforms(geometry, topology)
 
     call coordinate_jacobian(coord_system, geometry, topology, scaled_radius, &
                              ndf, ngp, ngp, longitude, latitude, height,      &
