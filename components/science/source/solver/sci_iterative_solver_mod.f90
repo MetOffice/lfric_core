@@ -1878,7 +1878,7 @@ contains
     class(abstract_vector_type), intent(inout) :: b
 
     integer(i_def) :: iter, final_iter
-    real(r_def), allocatable, dimension(:) :: init_norm, final_norm, old_norm
+    real(r_def), allocatable, dimension(:) :: init_norm, final_norm
     real(r_def) :: a1, a2, w, a_over_b, wa_over_b
 
     class(abstract_vector_type), allocatable :: z
@@ -1891,8 +1891,7 @@ contains
     logical(kind=l_def), allocatable :: converged(:)
 
     n_fields = x%vector_size()
-    allocate( init_norm(n_fields), final_norm(n_fields), &
-              old_norm(n_fields), converged(n_fields))
+    allocate( init_norm(n_fields), final_norm(n_fields), converged(n_fields))
 
     ! Initialise final_norm to a default number to avoid issues
     ! when monitor_convergence = .true. but the norm isn't computed
@@ -1915,7 +1914,6 @@ contains
       do n = 1,n_fields
         init_norm(n) = max(1.0_r_def, b%field_norm(n))
       end do
-      old_norm(:) = init_norm(:)
     end if
 
     ! Set up scalars
@@ -1960,10 +1958,7 @@ contains
             exit
           end if
         end do
-        if ( all(converged) ) then
-          exit
-        else
-          old_norm = final_norm
+        if ( all(converged) ) exit
         end if
 
       end if
@@ -1981,7 +1976,7 @@ contains
     if ( self%monitor_convergence ) then
           write(log_scratch_space, &
               '("chebyshev[",I4,"], final residual = ",E16.8, ", initial = ",E16.8 )') &
-                final_iter, sum(final_norm)/sum(init_norm), sum(init_norm)
+                final_iter, sum(final_norm/init_norm), sum(init_norm)
       if ( .not. all(converged) .and.  self%fail_on_non_converged ) then
           call log_event(log_scratch_space,LOG_LEVEL_ERROR)
       else
