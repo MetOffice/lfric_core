@@ -28,17 +28,6 @@ module compute_mass_matrix_kernel_w3_mod_test
   public :: set_up, tear_down
   public :: test_r_single, test_r_double, test_mixed_precision
 
-!  @TestCase
-!  type, extends(TestCase), public :: compute_mass_matrix_w3_test_type
-!    private
-!  contains
-!    procedure setUp
-!    procedure tearDown
-!    procedure test_r_single
-!    procedure test_r_double
-!    procedure test_mixed_precision
-!  end type compute_mass_matrix_w3_test_type
-
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

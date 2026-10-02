@@ -34,17 +34,6 @@ module compute_mass_matrix_kernel_wtheta_mod_test
   public :: set_up, tear_down
   public :: test_r_single, test_mixed_precision, test_r_double
 
-!  @TestCase
-!  type, extends(TestCase), public :: compute_mass_matrix_wtheta_test_type
-!    private
-!  contains
-!    procedure setUp
-!    procedure tearDown
-!    procedure test_r_single
-!    procedure test_mixed_precision
-!    procedure test_r_double
-!  end type compute_mass_matrix_wtheta_test_type
-
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
