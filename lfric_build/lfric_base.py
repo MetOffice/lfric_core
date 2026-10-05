@@ -13,6 +13,8 @@ script.
 """
 
 import argparse
+import logging
+import os
 from pathlib import Path
 import sys
 from typing import List, Optional, Iterable, Union
@@ -25,6 +27,10 @@ from fab.fab_base.fab_base import FabBase
 from configurator import configurator
 from templaterator import Templaterator
 
+# Add a logger and connect it to stdout.
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
 
 class LFRicBase(FabBase):
     '''
@@ -32,14 +38,18 @@ class LFRicBase(FabBase):
 
     :param name: the name to be used for the workspace. Note that
         the name of the compiler will be added to it.
+    :param app_dir: the base directory of the application.
     :param root_symbol: the symbol (or list of symbols) of the main
         programs. Defaults to the parameter `name` if not specified.
 
     '''
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name: str,
+                 app_dir: Path,
                  root_symbol: Optional[Union[List[str], str]] = None
                  ):
+
+        self._app_dir = app_dir
 
         # List of all precision preprocessor symbols and their default.
         # Used to add corresponding command line options, and then to define
@@ -75,6 +85,20 @@ class LFRicBase(FabBase):
             msg = (f"LFRic needs NetCDF, but the linker '{linker.name}' "
                    f"has no NetCDF library setting defined. Aborting.")
             raise RuntimeError(msg) from err
+
+    @property
+    def app_dir(self) -> Path:
+        """
+        :returns: the root directory of the application.
+        """
+        return self._app_dir
+
+    @property
+    def lfric_core_root(self) -> Path:
+        '''
+        :returns: the root directory of the LFRic core repository.
+        '''
+        return self._lfric_core_root
 
     def define_command_line_options(
             self,
@@ -114,12 +138,21 @@ class LFRicBase(FabBase):
 
         return parser
 
-    @property
-    def lfric_core_root(self) -> Path:
+    def handle_command_line_options(self,
+                                    parser: argparse.ArgumentParser) -> None:
         '''
-        :returns: the root directory of the LFRic core repository.
+        Make sure that openmp is not disabled, since LFRic will not build
+        without (because some files use openmp without openmp sentinels).
+
+        :param argparse.ArgumentParser parser: the argument parser.
         '''
-        return self._lfric_core_root
+        super().handle_command_line_options(parser)
+
+        if not self.args.openmp:
+            logger.error("LFRic requires OpenMP in order to compile and "
+                         "link. Remove the '-no-omp' flag from the "
+                         "command line.")
+            sys.exit(-1)
 
     def setup_site_specific_location(self):
         '''
@@ -167,7 +200,7 @@ class LFRicBase(FabBase):
 
     def get_linker_flags(self) -> List[str]:
         '''
-        This method overwrites the base class get_liner_flags. It passes the
+        This method overwrites the base class get_linker_flags. It passes the
         libraries that LFRic uses to the linker. Currently, these libraries
         include yaxt, xios, netcdf and hdf5.
 
@@ -196,8 +229,7 @@ class LFRicBase(FabBase):
                         dst_label='')
 
         # Copy the PSyclone Config file into a separate directory
-        dir = "etc"
-        grab_folder(self.config, src=self.lfric_core_root / dir,
+        grab_folder(self.config, src=self.lfric_core_root / "etc",
                     dst_label='psyclone_config')
 
     def find_source_files_step(
@@ -216,7 +248,6 @@ class LFRicBase(FabBase):
         self.configurator_step()
 
         path_filter_list = list(path_filters) if path_filters else []
-        path_filter_list.append(Exclude('unit-test', '/test/'))
         super().find_source_files_step(path_filters=path_filter_list)
 
         self.templaterator_step(self.config)
@@ -345,15 +376,18 @@ class LFRicBase(FabBase):
             psyclone_cli_args.extend(additional_parameters)
 
         # To avoid impacting other code, store the original search path
-        old_sys_path = sys.path[:]
-        sys.path.extend(self._add_python_paths)
+        orig_pythonpath = os.environ.get("PYTHONPATH", "")
+        add_python_paths = ":".join(str(i) for i in self._add_python_paths)
+        os.environ["PYTHONPATH"] = (f"{add_python_paths}:"
+                                    f"{orig_pythonpath}")
         psyclone(self.config, kernel_roots=[(self.config.build_output /
                                              "kernel")],
                  transformation_script=self.get_transformation_script,
                  api="lfric",
                  cli_args=psyclone_cli_args,
                  ignore_dependencies=ignore_dependencies)
-        sys.path = old_sys_path
+        # Reset PYTHONPATH
+        os.environ["PYTHONPATH"] = orig_pythonpath
 
     def get_psyclone_config(self) -> str:
         '''
@@ -383,7 +417,7 @@ class LFRicBase(FabBase):
         optimisation_path = (config.source_root / "optimisation" /
                              f"{self.site}-{self.platform}" / "psykal")
         relative_path = None
-        # The soure file might be either in build_output (e.g. a preprocessed
+        # The source file might be either in build_output (e.g. a preprocessed
         # .X90 file), or still in source (.x90 file). Check if the file
         # is in one of the two sub-trees, and use the relative path to
         # check if there is a file-specific optimisation script

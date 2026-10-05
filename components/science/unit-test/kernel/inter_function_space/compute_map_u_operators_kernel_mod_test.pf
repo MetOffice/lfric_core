@@ -7,14 +7,19 @@
 module compute_map_u_operators_kernel_mod_test
 
   use constants_mod, only : i_def, pi, r_def
+
+  use base_mesh_config_mod,      only: geometry_spherical, &
+                                       topology_non_periodic
+  use finite_element_config_mod, only: coord_system_native
+
   use funit
+
+
 
   implicit none
 
   private
   public :: set_up, tear_down, test_all
-
-  real(r_def), parameter :: planet_radius = 6000000.0_r_def
 
 contains
 
@@ -22,46 +27,9 @@ contains
   @before
   subroutine set_up()
 
-    use base_mesh_config_mod,      only : geometry_spherical, &
-                                          topology_non_periodic
-    use extrusion_config_mod,      only : method_uniform, &
-                                          stretching_method_linear
-    use sci_chi_transform_mod,     only : init_chi_transforms
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_native, coord_space_wchi
-    use feign_config_mod,          only : feign_extrusion_config,      &
-                                          feign_finite_element_config, &
-                                          feign_base_mesh_config,      &
-                                          feign_planet_config
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_spherical,      &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_non_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_extrusion_config( method=method_uniform,       &
-                                 planet_radius=planet_radius, &
-                                 domain_height=10.0_r_def,    &
-                                 number_of_layers=4_i_def,    &
-                                 stretching_height=0.5_r_def, &
-                                 stretching_method=stretching_method_linear, &
-                                 eta_values=(/0.5_r_def/) )
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true.,               &
-             coord_order = 0_i_def,             &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_native )
-
-    call feign_planet_config( scaling_factor=1.0_r_def )
 
     call init_chi_transforms(geometry_spherical,topology_non_periodic)
 
@@ -71,12 +39,10 @@ contains
   @after
   subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tear_down
@@ -116,12 +82,20 @@ contains
                             only : get_gaussian_q3x3x3_quadrature_weights_xy, &
                                    get_gaussian_q3x3x3_quadrature_weights_z
 
-   implicit none
+    implicit none
+
+    real(r_def), parameter :: planet_radius = 6000000.0_r_def
+    real(r_def), parameter :: scaling = 1.0_r_def
 
     real(r_def), parameter :: tol = 1.0e-3_r_def
     real(r_def), parameter :: dlon = 1.0_r_def/planet_radius, &
                               dlat = 1.0_r_def/planet_radius, &
                               dz = 1.0_r_def
+
+    integer(i_def), parameter :: geometry = geometry_spherical
+    integer(i_def), parameter :: topology = topology_non_periodic
+    integer(i_def), parameter :: coord_system = coord_system_native
+    real(r_def),    parameter :: scaled_radius = scaling*planet_radius
 
     real(r_def) :: answer
 
@@ -222,13 +196,17 @@ contains
     u_up_data(:)     =  0.0_r_def
     panel_id_data(:) =  1.0_r_def
 
-    call compute_map_u_operators_code( cell, nlayers, ncell_3d,                 &
+    call compute_map_u_operators_code( cell, nlayers, ncell_3d,          &
                                 u_lon_map, ncell_3d, u_lat_map,          &
                                 ncell_3d, u_up_map,                      &
                                 chi_data(:,1),                           &
                                 chi_data(:,2),                           &
                                 chi_data(:,3),                           &
                                 panel_id_data,                           &
+                                geometry,                                &
+                                topology,                                &
+                                coord_system,                            &
+                                scaled_radius,                           &
                                 ndf_w2, basis_w2,                        &
                                 ndf_w3, basis_w3,                        &
                                 ndf_wt, basis_wt,                        &

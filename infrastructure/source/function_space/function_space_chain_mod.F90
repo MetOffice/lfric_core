@@ -11,8 +11,6 @@
 !> then add pointers to function_space_type objects in the chain order
 !> required.
 !>
-!> e.g. MultiGrid, Physics
-!>
 !> Entry function space (Head of Chain)<br>
 !> Primal mesh <-> Coarsen(Primal)x1 <-> Coarsen(Primal)x2
 !> <-> Coarsen(Primal)x3<br>
@@ -96,26 +94,6 @@ module function_space_chain_mod
   interface function_space_chain_type
     module procedure function_space_chain_constructor
   end interface
-
-  !> @name Global variables
-  !>
-  !> @todo An alternative to global variables will be needed in order to
-  !>       support multi-instance models.
-  !>
-  !> @{
-  type(function_space_chain_type), public, allocatable :: &
-  single_layer_function_space_chain
-  type(function_space_chain_type), public, allocatable :: &
-  multigrid_function_space_chain
-  type(function_space_chain_type), public, allocatable :: &
-  W2_multigrid_function_space_chain
-  type(function_space_chain_type), public, allocatable :: &
-  Wtheta_multigrid_function_space_chain
-  type(function_space_chain_type), public, allocatable :: &
-  W2h_multigrid_function_space_chain
-  type(function_space_chain_type), public, allocatable :: &
-  W2v_multigrid_function_space_chain
-  !> @}
 
   !=============================================================================
 contains ! Module procedures

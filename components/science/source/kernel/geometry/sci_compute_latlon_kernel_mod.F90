@@ -8,14 +8,16 @@
 module sci_compute_latlon_kernel_mod
 
   use argument_mod,         only: arg_type, func_type,       &
-                                  GH_FIELD, GH_REAL,         &
+                                  GH_FIELD, GH_SCALAR,       &
+                                  GH_INTEGER, GH_REAL,       &
                                   GH_WRITE, GH_READ,         &
-                                  ANY_SPACE_1, &
+                                  ANY_SPACE_1,               &
                                   ANY_DISCONTINUOUS_SPACE_3, &
                                   ANY_SPACE_9, GH_BASIS,     &
                                   CELL_COLUMN, GH_EVALUATOR
   use constants_mod,        only: r_def, i_def
   use kernel_mod,           only: kernel_type
+
   use sci_chi_transform_mod, only: chi2llr
 
   implicit none
@@ -29,12 +31,17 @@ module sci_compute_latlon_kernel_mod
   !>
   type, public, extends(kernel_type) :: compute_latlon_kernel_type
     private
-    type(arg_type) :: meta_args(4) = (/                                      &
-         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1), &
-         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1), &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3)  &
+    type(arg_type) :: meta_args(8) = (/                                      &
+         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1),               & ! latitude
+         arg_type(GH_FIELD,   GH_REAL, GH_WRITE, ANY_SPACE_1),               & ! longitude
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ,  ANY_SPACE_9),               & ! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                           & ! scaled_radius
          /)
+
     type(func_type) :: meta_funcs(1) = (/                                    &
          func_type(ANY_SPACE_9, GH_BASIS)                                    &
          /)
@@ -61,6 +68,10 @@ contains
 !> @param[in]     chi_2     Second component of the coordinate field
 !> @param[in]     chi_3     Third component of the coordinate field
 !> @param[in]     panel_id  A field giving the ID for mesh panels
+!> @param[in] geometry      Mesh geometry enumeration value
+!> @param[in] topology      Mesh topology enumeration value
+!> @param[in] coord_system  Finite-Element coord-system enumeration value
+!> @param[in] scaled_radius Planet scaled radius
 !> @param[in]     ndf_x     Number of degrees of freedom per cell for height
 !> @param[in]     undf_x    Number of unique degrees of freedom for height
 !> @param[in]     map_x     Dofmap for the cell at the base of the column for height
@@ -71,15 +82,16 @@ contains
 !> @param[in]     ndf_pid   Number of degrees of freedom per cell for panel_id
 !> @param[in]     undf_pid  Number of unique degrees of freedom for panel_id
 !> @param[in]     map_pid   Dofmap for the cell at the base of the column for panel_id
-subroutine compute_latlon_code(nlayers,                         &
-                               latitude, longitude,             &
-                               chi_1, chi_2, chi_3,             &
-                               panel_id,                        &
-                               ndf_x, undf_x, map_x,            &
-                               ndf_chi, undf_chi, map_chi,      &
-                               basis_chi,                       &
-                               ndf_pid, undf_pid, map_pid       &
-                               )
+subroutine compute_latlon_code( nlayers,                     &
+                                latitude, longitude,         &
+                                chi_1, chi_2, chi_3,         &
+                                panel_id,                    &
+                                geometry, topology,          &
+                                coord_system, scaled_radius, &
+                                ndf_x, undf_x, map_x,        &
+                                ndf_chi, undf_chi, map_chi,  &
+                                basis_chi,                   &
+                                ndf_pid, undf_pid, map_pid )
 
   implicit none
 
@@ -92,6 +104,11 @@ subroutine compute_latlon_code(nlayers,                         &
   real(kind=r_def), dimension(undf_x), intent(inout) :: latitude, longitude
   real(kind=r_def), dimension(undf_chi), intent(in)  :: chi_1, chi_2, chi_3
   real(kind=r_def), dimension(undf_pid), intent(in)  :: panel_id
+
+ integer(kind=i_def), intent(in) :: geometry
+ integer(kind=i_def), intent(in) :: topology
+ integer(kind=i_def), intent(in) :: coord_system
+ real(kind=r_def),    intent(in) :: scaled_radius
 
   integer(kind=i_def), dimension(ndf_x), intent(in)          :: map_x
   integer(kind=i_def), dimension(ndf_chi), intent(in)        :: map_chi
@@ -112,7 +129,9 @@ subroutine compute_latlon_code(nlayers,                         &
         coords(2) = coords(2) + chi_2(map_chi(df_chi)+k)*basis_chi(1,df_chi,df_x)
         coords(3) = coords(3) + chi_3(map_chi(df_chi)+k)*basis_chi(1,df_chi,df_x)
       end do
-      call chi2llr(coords(1), coords(2), coords(3), ipanel, lon, lat, radius)
+      call chi2llr(coords(1), coords(2), coords(3), ipanel, &
+                   geometry, topology, coord_system, scaled_radius, &
+                   lon, lat, radius)
       latitude(map_x(df_x) + k) = lat
       longitude(map_x(df_x) + k) = lon
     end do

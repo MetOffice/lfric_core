@@ -5,7 +5,7 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/macros/macros_ex1a.cylc") %}
 
-{% set ex1a_cores_per_node = 128 %}
+{% set ex1a_cores_per_node = site_vars.node_cores %}
 {% set ex1a_socket_per_node = 2 %}
 
 {% macro normal_queue(mpi_ranks,
@@ -67,7 +67,7 @@
             -l select={{ lfric_nodes +
                          ocean_nodes|int +
                          river_nodes|int +
-                         xios_nodes|int }}
+                         xios_nodes|int }}:coretype={{site_vars.node_type}}:mem={{site_vars.node_mem}}GB
 {% endmacro %}
 
 
@@ -92,7 +92,8 @@
 
     {% set total_other_ranks = xios_nodes + ocean_nodes + river_nodes %}
     {% set lfric_cores = mpi_ranks * threads %}
-    {% if lfric_cores >= ex1a_cores_per_node or total_other_ranks > 0 %}
+    {# Jobs are always routed to the shared queue on Milan, so use Milan threshold #}
+    {% if lfric_cores >= 128 or total_other_ranks > 0 %}
         {# This needs to be run on the normal queue #}
         {{ normal_queue(mpi_ranks, threads, xios_nodes, ocean_nodes, river_nodes, ranks_per_node) }}
     {% else %}

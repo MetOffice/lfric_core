@@ -54,8 +54,7 @@ Quick List of most-commonly forgotten things
 --------------------------------------------
 
 * File names must match the name of the module they contain.
-* ``implicit none`` must be included in every module and every
-  subroutine/function it contains.
+* ``implicit none`` must be included in every module.
 * ``use`` statements must have ``only`` statements and must only use things that
   are actually used.
 * Procedures must have Doxygen comments with a short (typically one-line)

@@ -1,6 +1,7 @@
 # Files should only ever be removed or renamed in this file, never added
 #
 components/driver/source/driver_comm_mod.F90
+components/driver/source/mesh/multigrid_mod.f90
 components/lfric-xios/source/lfric_xios_file_mod.f90
 components/lfric-xios/source/lfric_xios_mock_mod.f90
 components/lfric-xios/source/lfric_xios_process_output_mod.f90
@@ -11,7 +12,6 @@ components/science/source/algorithm/sci_geometric_constants_mod.x90
 components/science/source/algorithm/sci_mapping_constants_mod.x90
 components/science/source/kernel/geometry/sci_chi_transform_mod.F90
 infrastructure/source/field/halo_routing_collection_mod.f90
-infrastructure/source/function_space/function_space_chain_mod.F90
 infrastructure/source/function_space/function_space_collection_mod.F90
 infrastructure/source/io/io_utility_mod.f90
 infrastructure/source/mesh/global_mesh_collection_mod.F90

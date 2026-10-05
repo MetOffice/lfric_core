@@ -27,6 +27,8 @@ use constants_mod,           only : r_def, i_def
 use fs_continuity_mod,       only : W1
 use log_mod,                 only : log_event, LOG_LEVEL_ERROR
 
+use base_mesh_config_mod, only: geometry_spherical, geometry_planar
+
 implicit none
 
 private
@@ -36,12 +38,16 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the PSy layer
 type, public, extends(kernel_type) :: project_ws_to_w1_operator_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                                               &
-       arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W1, ANY_DISCONTINUOUS_SPACE_1), &
-       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),                   &
-       arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     &
-       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ)                                   &
-       /)
+  type(arg_type) :: meta_args(8) = (/                                               &
+       arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W1, ANY_DISCONTINUOUS_SPACE_1), &! projection_operator
+       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),                   & ! chi_1, chi_2, chi_3
+       arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     & ! panel_id
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! direction
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! geometry
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! topology
+       arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                                  & ! coord_system
+       arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                                   & ! scaled_radius
+   /)
   type(func_type) :: meta_funcs(3) = (/                              &
        func_type(W1,                        GH_BASIS),               &
        func_type(ANY_DISCONTINUOUS_SPACE_1, GH_BASIS),               &
@@ -74,6 +80,10 @@ contains
 !> @param[in]     chi3                3rd coordinate field in Wchi
 !> @param[in]     panel_id            Field giving the ID for mesh panels.
 !> @param[in]     direction           Index of the vector component (1,2 or 3) to project
+!> @param[in]     geometry            Mesh geometry enumeration value
+!> @param[in]     topology            Mesh topology enumeration value
+!> @param[in]     coord_system        Finite-Element coord-system enumeration value
+!> @param[in]     scaled_radius       Planet scaled radius
 !> @param[in]     ndf_w1              Number of degrees of freedom per cell for vector space
 !> @param[in]     basis_w1            Basis functions for the vector space at quadrature points
 !> @param[in]     ndf_ws              Number of degrees of freedom per cell for scalar space
@@ -96,6 +106,10 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                                            chi1, chi2, chi3,           &
                                            panel_id,                   &
                                            direction,                  &
+                                           geometry,                   &
+                                           topology,                   &
+                                           coord_system,               &
+                                           scaled_radius,              &
                                            ndf_w1, basis_w1,           &
                                            ndf_ws, basis_ws,           &
                                            ndf_wx, undf_wx, map_wx,    &
@@ -107,12 +121,6 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
                                          pointwise_coordinate_jacobian_inverse
   use sci_chi_transform_mod,   only: chi2llr
   use coord_transform_mod,     only: sphere2cart_vector
-
-  use base_mesh_config_mod,      only: geometry, topology, &
-                                       geometry_spherical, &
-                                       geometry_planar
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -136,6 +144,11 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
 
   real(kind=r_def), intent(in) :: wqp_h(nqp_h)
   real(kind=r_def), intent(in) :: wqp_v(nqp_v)
+
+  integer(i_def), intent(in) :: geometry
+  integer(i_def), intent(in) :: topology
+  integer(i_def), intent(in) :: coord_system
+  real(r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                 :: df_x, df_s, df_1, ik, k, qp_h, qp_v
@@ -173,8 +186,9 @@ subroutine project_ws_to_w1_operator_code( cell, nlayers,              &
 
           llr(:) = 0.0_r_def
 
-          call chi2llr(coords(1), coords(2), coords(3), &
-                       ipanel, llr(1), llr(2), llr(3))
+          call chi2llr(coords(1), coords(2), coords(3), ipanel,         &
+                       geometry, topology, coord_system, scaled_radius, &
+                       llr(1), llr(2), llr(3))
         end if
 
         call pointwise_coordinate_jacobian(coord_system, geometry,          &

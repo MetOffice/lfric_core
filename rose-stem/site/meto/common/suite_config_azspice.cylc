@@ -7,18 +7,18 @@
 
 {% set azspice_base = 'umask 0022 ; '~
                       'module purge ; '~
-                      'module use /home/users/lfricadmin/lmod ; ' %}
+                      'module use /home/users/lfricadmin/lmod'%}
 
-{% set azspice_compiler_gnu = 'module load lfric/vn3.1' %}
+{% set azspice_compiler_gnu = 'module load lfric/vn3.2' %}
 
 {% set azspice_run = 'ulimit -s unlimited' %}
 
 {% set azspice_scitools = 'module load scitools/production-os47-1' %}
 
-{% set azspice_tech = 'module load lfric/vn3.1' %}
+{% set azspice_tech = 'module load lfric/vn3.2' %}
 
-{% set azspice_coupled_gnu = 'ml xios/2701-oasis ; '~
-                                  'ml oasis/3-mct5.0' %}
+{% set azspice_coupled_gnu = 'ml xios/2.2701-oasis ; '~
+                             'ml oasis/3-mct5.0' %}
 
     [[AZSPICE_BASE]]
         platform = spice
@@ -33,6 +33,7 @@
         [[[environment]]]
             USE_VERNIER=true
             USE_TIMING_WRAPPER=true
+            PSYCLONE_MODE=server
         [[[directives]]]
             --gres=tmp:1024
             --export=NONE
@@ -92,7 +93,7 @@
 
     [[AZSPICE_TECH_TESTS_GNU]]
         inherit=AZSPICE_TECH_TESTS,AZSPICE_GNU
-        {{ generate_script("pre-script", [azspice_base, azspice_compiler_gnu, azspice_scitools]) }}
+        {{ generate_script("pre-script", [azspice_base, azspice_compiler_gnu]) }}
 
     [[AZSPICE_TECH]]
         inherit=AZSPICE_TECH_BASE

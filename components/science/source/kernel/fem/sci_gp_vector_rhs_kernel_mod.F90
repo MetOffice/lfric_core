@@ -220,7 +220,8 @@ subroutine gp_vector_rhs_code(nlayers,                           &
             end do
 
             ! Obtain (X,Y,Z) coordinates for converting components of u
-            call chi2xyz(coords(1), coords(2), coords(3), ipanel, &
+            call chi2xyz(coords(1), coords(2), coords(3), ipanel,         &
+                         geometry, topology, coord_system, scaled_radius, &
                          x_at_quad(1), x_at_quad(2), x_at_quad(3))
 
             u_physical(:) = cart2sphere_vector(x_at_quad, u_at_quad)

@@ -23,7 +23,7 @@ module lfric_mpi_mod
                  mpi_character,                                         &
                  mpi_init, mpi_finalize,                                &
                  mpi_comm_dup, mpi_comm_free,                           &
-                 mpi_comm_size, mpi_comm_rank
+                 mpi_comm_size, mpi_comm_rank, mpi_barrier
 #else
   use mpi_f08, only: mpi_comm, mpi_datatype, mpi_comm_world,                &
                      mpi_sum, mpi_min, mpi_max, mpi_success,                &
@@ -32,7 +32,7 @@ module lfric_mpi_mod
                      mpi_character,                                         &
                      mpi_init, mpi_finalize,                                &
                      mpi_comm_dup, mpi_comm_free,                           &
-                     mpi_comm_size, mpi_comm_rank
+                     mpi_comm_size, mpi_comm_rank, mpi_barrier
 #endif
 ! The above use statement should include mpi_bcast, mpi_allreduce and
 ! mpi_allgather, but an apparent bug in Cray mpich causes a failure if
@@ -150,6 +150,7 @@ module lfric_mpi_mod
   contains
     procedure, public :: get_comm_mpi_val
     procedure, public :: set_comm_mpi_val
+    procedure, public :: barrier_mpi
   end type
 
 #ifdef NO_MPI
@@ -1525,6 +1526,23 @@ contains
 #endif
 #endif
   end subroutine set_comm_mpi_val
+
+  !> Call an MPI Barrier, synchronising ranks in the communicator.
+  subroutine barrier_mpi(self)
+    implicit none
+    class(lfric_comm_type), intent(in)  :: self
+    integer :: ierr
+
+#ifdef NO_MPI
+    ! null operation, barrier is non-existant
+    ierr = 0
+#else
+    call mpi_barrier(self%comm, ierr)
+    if (ierr /= mpi_success) then
+      call log_event('Unable to progress through MPI barrier', LOG_LEVEL_ERROR )
+    end if
+#endif
+  end subroutine barrier_mpi
 
   !> Returns the integer datatype
   !>

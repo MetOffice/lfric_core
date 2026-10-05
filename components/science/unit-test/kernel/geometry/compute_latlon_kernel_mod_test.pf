@@ -6,7 +6,7 @@
 
 module compute_latlon_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, pi, imdi
+  use constants_mod, only : i_def, r_def, pi, imdi, rmdi
   use get_unit_test_m3x3_dofmap_mod, &
     only : get_w3_m3x3_dofmap, get_wchi_m3x3_dofmap
   use get_unit_test_m3x3_q3x3x3_sizes_mod, &
@@ -16,78 +16,47 @@ module compute_latlon_kernel_mod_test
 
   use funit
 
+  use finite_element_config_mod, only: coord_system_xyz
+
   implicit none
 
   private
-  public test_all
+  public :: set_up, tear_down, test_all
 
-  @TestCase
-  type, extends(TestCase), public  :: compute_latlon_kernel_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type compute_latlon_kernel_test_type
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
-    use sci_chi_transform_mod,      only : init_chi_transforms
-    use feign_config_mod,           only : feign_finite_element_config
-    use finite_element_config_mod,  only : cellshape_quadrilateral, &
-                                           coord_system_xyz, coord_space_wchi
-
-
-    use extrusion_config_mod, only: method_uniform
+  use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
-
-    class(compute_latlon_kernel_test_type), intent(inout) :: this
-
-    integer(kind=i_def) :: nlayers
-
-    call feign_finite_element_config(      &
-        cellshape=cellshape_quadrilateral, &
-        coord_order=0_i_def,               &
-        coord_order_nonprime=1_i_def,      &
-        coord_space=coord_space_wchi,      &
-        coord_system=coord_system_xyz,     &
-        element_order_h=0_i_def,           &
-        element_order_v=0_i_def,           &
-        rehabilitate=.true. )
 
     call init_chi_transforms(imdi, imdi)
 
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
     use sci_chi_transform_mod, only: final_chi_transforms
-    use config_loader_mod,     only: final_configuration
 
     implicit none
 
-    class(compute_latlon_kernel_test_type), intent(inout) :: this
-
-    ! Finalise namelists
-    call final_configuration()
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_compute_latlon_kernel_mod, only: compute_latlon_code
 
     implicit none
-
-    class(compute_latlon_kernel_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: tol = 1.0e-12_r_def
     integer(i_def), parameter :: nlayers = 1
@@ -101,6 +70,11 @@ contains
 
     real(r_def), allocatable :: latitude(:), longitude(:)
     real(r_def), allocatable :: lat_answer(:), lon_answer(:)
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     call get_w3_m3x3_q3x3x3_size( ndf_w3, undf_w3, unused, &
                                   unused, unused, unused,  &
@@ -133,6 +107,8 @@ contains
                              latitude, longitude,             &
                              chi_1, chi_2, chi_3,             &
                              panel_id,                        &
+                             geometry, topology,              &
+                             coord_system, scaled_radius,     &
                              ndf_w3, undf_w3, map_w3(:,1),    &
                              ndf_chi, undf_chi, map_chi(:,1), &
                              basis_chi(:,:,1,:),              &

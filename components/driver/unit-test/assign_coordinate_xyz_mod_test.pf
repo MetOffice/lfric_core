@@ -8,81 +8,33 @@
 module assign_coordinate_xyz_mod_test
 
   use constants_mod, only : r_def, i_def
+
+  use base_mesh_config_mod, only: geometry_planar, topology_fully_periodic
   use funit
 
   implicit none
 
   private
-  public :: assign_coordinate_xyz_test_type, test_all
-
-  @TestCase
-  type, extends(TestCase) :: assign_coordinate_xyz_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type assign_coordinate_xyz_test_type
+  public :: test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    use base_mesh_config_mod,      only : geometry_planar, &
-                                          topology_fully_periodic
-    use feign_config_mod,          only : feign_base_mesh_config, &
-                                          feign_finite_element_config
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-
-    implicit none
-
-    class(assign_coordinate_xyz_test_type), intent(inout) :: this
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_planar,         &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_finite_element_config( cellshape=cellshape_quadrilateral, &
-                                      coord_order=0_i_def,               &
-                                      coord_order_nonprime=1_i_def,      &
-                                      coord_space=coord_space_wchi,      &
-                                      coord_system=coord_system_xyz,     &
-                                      element_order_h=0_i_def,           &
-                                      element_order_v=0_i_def,           &
-                                      rehabilitate=.true. )
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    use config_loader_mod, only: final_configuration
-
-    implicit none
-
-    class(assign_coordinate_xyz_test_type), intent(inout) :: this
-
-    call final_configuration()
-
-  end subroutine tearDown
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use driver_coordinates_mod, only : assign_coordinate_xyz
 
-    implicit none
 
-    class(assign_coordinate_xyz_test_type), intent(inout) :: this
+
+    implicit none
 
     real(kind=r_def), parameter :: tol = 1.0e-3_r_def, &
                                    one = 1.0_r_def
+
+    integer(i_def), parameter :: geometry = geometry_planar
+    integer(i_def), parameter :: topology = topology_fully_periodic
+    real(r_def),    parameter :: scaled_radius = 1.0_r_def
 
     integer(kind=i_def) :: nlayers, ndf, nverts, i, undf, ndf_pid, undf_pid
     integer(kind=i_def) :: map(1), map_pid(1)
@@ -116,8 +68,9 @@ contains
 
     call assign_coordinate_xyz( nlayers, ndf, nverts, undf, map, dz, x, y, z, &
                                 vertices_phys, nodal_coord, vertices_comp,    &
-                                2.0_r_def, 0.0_r_def, panel_id, ndf_pid,      &
-                                undf_pid, map_pid )
+                                2.0_r_def, 0.0_r_def, panel_id,               &
+                                geometry, topology, scaled_radius,            &
+                                ndf_pid, undf_pid, map_pid )
 
     @assertEqual( one, x(1), tol )
     @assertEqual( one, y(1), tol )

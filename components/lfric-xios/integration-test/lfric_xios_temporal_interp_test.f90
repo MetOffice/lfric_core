@@ -8,12 +8,11 @@
 !
 program lfric_xios_temporal_interp_test
 
-  use constants_mod,          only: i_timestep, r_second
+  use constants_mod,          only: i_timestep, r_second, r_def, i_def
   use event_mod,              only: event_action
   use event_actor_mod,        only: event_actor_type
   use field_mod,              only: field_type, field_proxy_type
   use file_mod,               only: FILE_MODE_READ, FILE_MODE_WRITE
-  use io_context_mod,         only: callback_clock_arg
   use lfric_xios_action_mod,  only: advance
   use lfric_xios_context_mod, only: lfric_xios_context_type
   use lfric_xios_driver_mod,  only: lfric_xios_initialise, lfric_xios_finalise
@@ -29,7 +28,6 @@ program lfric_xios_temporal_interp_test
   type(test_db_type)                                 :: test_db
   type(lfric_xios_context_type), target, allocatable :: io_context
 
-  procedure(callback_clock_arg), pointer :: before_close
   type(linked_list_type),        pointer :: file_list
   class(event_actor_type),       pointer :: context_actor
   procedure(event_action),       pointer :: context_advance
@@ -38,8 +36,18 @@ program lfric_xios_temporal_interp_test
   type(xios_date) :: date
   integer(i_timestep) :: file_freq
 
+  integer(i_def) :: geometry
+  integer(i_def) :: topology
+  integer(i_def) :: coord_system
+  real(r_def)    :: scaled_radius
+
   call test_db%initialise()
   call lfric_xios_initialise( "test", test_db%comm, .false. )
+
+  geometry      = test_db%config%base_mesh%geometry()
+  topology      = test_db%config%base_mesh%topology()
+  coord_system  = test_db%config%finite_element%coord_system()
+  scaled_radius = test_db%config%planet%scaled_radius()
 
   ! =============================== Start test ================================
 
@@ -65,12 +73,11 @@ program lfric_xios_temporal_interp_test
                                                     freq=1,                               &
                                                     fields_in_file=test_db%temporal_fields ) )
 
-  before_close => null()
-  call io_context%initialise_xios_context( test_db%comm,                    &
-                                           test_db%chi,  test_db%panel_id,  &
-                                           test_db%clock, test_db%calendar, &
-                                           before_close )
-
+  call io_context%initialise_xios_context( test_db%comm,                     &
+                                           test_db%chi, test_db%panel_id,    &
+                                           test_db%clock, test_db%calendar,  &
+                                           geometry, topology, coord_system, &
+                                           scaled_radius )
 
   context_advance => advance
   context_actor => io_context

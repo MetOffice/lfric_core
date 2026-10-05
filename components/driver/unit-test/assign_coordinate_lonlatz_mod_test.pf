@@ -13,46 +13,9 @@ module assign_coordinate_lonlatz_mod_test
   implicit none
 
   private
-  public :: set_up, tear_down, test_all
-
-  real(kind=r_def), parameter :: radius = 19.0_r_def
+  public :: test_all
 
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @before
-  subroutine set_up()
-
-    use extrusion_config_mod, only : method_uniform, &
-                                     stretching_method_linear
-    use feign_config_mod,     only : feign_extrusion_config, &
-                                     feign_planet_config
-
-    implicit none
-
-    call feign_extrusion_config( method=method_uniform,                      &
-                                 planet_radius=radius,                       &
-                                 domain_height=10.0_r_def,                   &
-                                 number_of_layers=5_i_def,                   &
-                                 stretching_method=stretching_method_linear, &
-                                 stretching_height=15.0_r_def,               &
-                                 eta_values=(/0.5_r_def/) )
-
-    call feign_planet_config( scaling_factor=1.0_r_def )
-
-  end subroutine set_up
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @after
-  subroutine tear_down()
-
-    use config_loader_mod, only : final_configuration
-
-    implicit none
-
-    call final_configuration()
-
-  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
@@ -63,6 +26,8 @@ contains
 
     implicit none
 
+    real(kind=r_def), parameter :: radius = 19.0_r_def
+    real(kind=r_def), parameter :: scaled_radius = 19.0_r_def
     real(kind=r_def), parameter :: dh = 2.4_r_def
     real(kind=r_def), parameter :: tol = 1.0e-10_r_def  ! for r_def 64-bit
     real(kind=r_def)            :: use_tol
@@ -118,17 +83,18 @@ contains
 
     ! Test with no rotation ----------------------------------------------------
     to_rotate = .false.
-    inverse_rot_matrix = reshape([[1.0_r_def, 0.0_r_def, 0.0_r_def],           &
-                                  [0.0_r_def, 1.0_r_def, 0.0_r_def],           &
-                                  [0.0_r_def, 0.0_r_def, 1.0_r_def]],          &
+    inverse_rot_matrix = reshape([[1.0_r_def, 0.0_r_def, 0.0_r_def],  &
+                                  [0.0_r_def, 1.0_r_def, 0.0_r_def],  &
+                                  [0.0_r_def, 0.0_r_def, 1.0_r_def]], &
                                  shape=[3,3])
 
-    call assign_coordinate_lonlatz(nlayers, ndf_chi, nverts,                   &
-                                   undf_chi, map_chi,                          &
-                                   longitude, latitude, height,                &
-                                   verts_XYZ, nodal_coord, verts_ref,          &
-                                   to_rotate, inverse_rot_matrix,              &
-                                   panel_id, ndf_pid, undf_pid, map_pid        )
+    call assign_coordinate_lonlatz(nlayers, ndf_chi, nverts,          &
+                                   undf_chi, map_chi,                 &
+                                   longitude, latitude, height,       &
+                                   verts_XYZ, nodal_coord, verts_ref, &
+                                   to_rotate, inverse_rot_matrix,     &
+                                   panel_id, scaled_radius,           &
+                                   ndf_pid, undf_pid, map_pid)
 
     ! The answer should be the central point of the box
     ! lon = 5*pi/12, lat = 5*pi/24, h = dh / 2
@@ -158,18 +124,19 @@ contains
     ! Rotation matrix corresponding to North pole at lon=pi/2 and lat=pi/2
     to_rotate = .true.
     ! The corresponding rotation matrix is:
-    inverse_rot_matrix = reshape(                                              &
-      [[ 0.0_r_def, -1.0_r_def,  0.0_r_def],                                   &
-       [ 1.0_r_def,  0.0_r_def,  0.0_r_def],                                   &
-       [ 0.0_r_def,  0.0_r_def,  1.0_r_def]],                                  &
+    inverse_rot_matrix = reshape(             &
+      [[ 0.0_r_def, -1.0_r_def,  0.0_r_def],  &
+       [ 1.0_r_def,  0.0_r_def,  0.0_r_def],  &
+       [ 0.0_r_def,  0.0_r_def,  1.0_r_def]], &
       shape=[3,3])
 
-    call assign_coordinate_lonlatz(nlayers, ndf_chi, nverts,                   &
-                                   undf_chi, map_chi,                          &
-                                   longitude, latitude, height,                &
-                                   verts_XYZ, nodal_coord, verts_ref,          &
-                                   to_rotate, inverse_rot_matrix,              &
-                                   panel_id, ndf_pid, undf_pid, map_pid        )
+    call assign_coordinate_lonlatz(nlayers, ndf_chi, nverts,          &
+                                   undf_chi, map_chi,                 &
+                                   longitude, latitude, height,       &
+                                   verts_XYZ, nodal_coord, verts_ref, &
+                                   to_rotate, inverse_rot_matrix,     &
+                                   panel_id, scaled_radius,           &
+                                   ndf_pid, undf_pid, map_pid)
 
     ! The answer should be the central point of the box
     ! lon = -pi/12, lat = 5*pi/24, h = dh / 2

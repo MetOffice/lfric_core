@@ -21,7 +21,7 @@ code and technical code. The scientific codes are kernels and algorithms
 represented by the "KAl" in the name. Algorithms call kernels through the
 technical code, called the Parallel System or "PSy layer" code which is the code
 that PSyclone can generate. The PSy layer code can deal with issues relating to
-distributed and shared memory paralellism.
+distributed and shared memory parallelism.
 
 A benefit of such separation is that technical changes to code required by
 different platforms or compilers can be isolated to the PSy layer. Further, if
@@ -213,10 +213,10 @@ Dofs, dof-maps and function spaces
 The LFRic Infrastructure supports finite difference (FD), finite volume
 (FV) and finite element methods (FEM). Simply put, in FV and FEM, the
 value of a field at any point within a cell is computed as the sum of
-one or more  **basis functions** each multiplied by a different data
+one or more **basis functions** each multiplied by a different data
 point. A basis function is a spatial function whose value varies within
 the cell but is zero outside the cell. In FV and FEM terminology, each
-data point is referred to as a  **degree of freedom** or **dof**.
+data point is referred to as a **degree of freedom** or **dof**.
 
 The representation of the field as a combination of dofs and basis
 functions is referred to as a **function space**. Formally, the value of
@@ -524,7 +524,7 @@ LFRic Function spaces and element orders
 This section introduces the LFRic function space object which
 underpins fields used in LFRic. In previous sections it was noted that
 the function space is a concept in the finite element method whereby
-data and basis functions can define a field that spacially varies
+data and basis functions can define a field that spatially varies
 within an individual cell, and this was illustrated for individual
 cells in the previous section on :ref:`dof-maps and function spaces
 <dofs>`. The implementation of the function space object in
@@ -587,7 +587,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
 
 .. tab-set::
 
-    .. tab-item:: ​ :math:`\mathbb{W}_0`
+    .. tab-item::  :math:`\mathbb{W}_0`
        :name: k0_w0_dofs
 
        .. grid:: 2
@@ -608,7 +608,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
                   lowest order. The field is fully continuous so dofs are shared
                   with all neighbouring cells.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_1`
+    .. tab-item::  :math:`\mathbb{W}_1`
        :name: w1_dofs
 
        .. grid:: 2
@@ -638,7 +638,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
                   **Expanded view of** :math:`\mathbb{W}_1` at next lowest order
                   showing the details of the locations of dofs.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_2`
+    .. tab-item::  :math:`\mathbb{W}_2`
        :name: k0_w2_dofs
 
        .. grid:: 2
@@ -667,7 +667,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
                   on faces illustrating that basis functions are continuous
                   normal to the faces.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_3`
+    .. tab-item::  :math:`\mathbb{W}_3`
        :name: w3_dofs
 
        .. grid:: 2
@@ -955,9 +955,9 @@ more arguments than the original ``invoke`` call, and each argument
 will be described when the :ref:`PSy layer code generation example
 <psy example>` is introduced.  All of the arguments and the
 order of the arguments derive entirely from the kernel metadata. In
-fact, the PSyclone toolset includes a :ref:`psyclone:stub-generation` 
-which will generate the following subroutine call and all the argument 
-declarations based on the above metadata. See the PSyclone documentation 
+fact, the PSyclone toolset includes a :ref:`psyclone:stub-generation`
+which will generate the following subroutine call and all the argument
+declarations based on the above metadata. See the PSyclone documentation
 for details.
 
 .. code-block:: fortran
@@ -991,6 +991,80 @@ going upwards in the column are obtained by successively incrementing
 all the dof addresses in the original map as can be seen by examining
 the dof numbering in the :ref:`illustrations <w2_w3_vert_3d>` of the
 :math:`\mathbb{W}_{2}` and :math:`\mathbb{W}_{3}` spaces.
+
+Face Selectors
+^^^^^^^^^^^^^^
+The LFRic infrastructure is designed to loop over columns, allowing efficient
+vectorisation and parallelisation across the horizontal domain. However, some
+science kernels need to operate on horizontal faces rather than entities within
+cells. Since faces are shared between two adjacent columns, we face a
+computational challenge: each face is adjacent to two columns, and we must
+ensure that the face computation is performed only once, not twice.
+
+Face selector fields provide the solution to this problem.
+They consist of two 2D fields:
+
+1. **East-West (E/W) face selector**: indicates which east or west faces
+   in each column should be computed
+
+2. **North-South (N/S) face selector**: indicates which south or north faces
+   in each column should be computed
+
+These selectors contain information about which faces in each column should be
+included in the computation, ensuring that every face is computed exactly once
+as the kernel loops over all columns.
+
+In the new method, the face selector fields are extended to take integer values
+of -1, 0, 1, or 2, allowing for a more flexible and correct assignment of faces
+to columns. The interpretation of each value is given in :ref:`the table below <tab_new_face_selector>`.
+
+.. table:: Interpretation of face selector field values.
+   :name: tab_new_face_selector
+
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | Face Selector Value      | E/W Field Meaning                    | N/S Field Meaning                    |
+   +==========================+======================================+======================================+
+   | -1                       | Compute east face only               | Compute north face only              |
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | 0                        | Compute no E/W faces                 | Compute no N/S faces                 |
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | 1                        | Compute west face only               | Compute south face only              |
+   +--------------------------+--------------------------------------+--------------------------------------+
+   | 2                        | Compute both west and east faces     | Compute both south and north faces   |
+   +--------------------------+--------------------------------------+--------------------------------------+
+
+With this definition, the sum of the *absolute values* of the face selector fields
+gives the total number of faces computed per column.
+This interpretation is demonstrated in the :ref:`diagram below <face_selector_diagram>`.
+In this example, columns 0, 1, 2 and 3 have E/W selector values of 1, 2, -1 and -1
+respectively, meaning the five vertical faces are each computed exactly once.
+Rows 0, 1, 2 and 3 have N/S selector values of 1, 2, -1 and -1 respectively,
+similarly covering all horizontal faces exactly once.
+
+.. figure:: images/face_selector_diagram.svg
+   :name: face_selector_diagram
+
+   Diagram illustrating how the face selector values are interpreted, using a
+   4x4 column grid. Each cell centre displays two values:
+   the E/W face selector (top) and the N/S face selector (bottom).
+   Triangle bases lie on the face edge with the apex
+   pointing towards the column that will perform the computation for that face.
+
+To use the face selector fields in a kernel, the kernel metadata should specify
+that the kernel is writing to a continuous :math:`\mathbb{W}_{2}` or
+:math:`\mathbb{W}_{2H}` field. The face selector fields are passed as arguments
+to the kernel, and faces are looped over via code like the following:
+
+.. code-block:: fortran
+
+   do j = 1, ABS(face_selector_ew(map_w3_2d(1))) + ABS(face_selector_ns(map_w3_2d(1)))
+     df = face_from_face_selector(j, face_selector_ew(map_w3_2d(1)), face_selector_ns(map_w3_2d(1)))
+     ! Perform computations on face df
+   end do
+
+The routine ``face_from_face_selector`` takes the face selector values and
+the loop index to determine which face is being computed in the current iteration of the loop.
+
 
 The PSy layer code
 ------------------

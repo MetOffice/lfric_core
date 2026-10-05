@@ -57,7 +57,7 @@ platforms:
 More specialist software for developing, building and running LFRic
 applications:
 
- * PSyclone (3.2.2), a code generation library used by LFRic for generating
+ * PSyclone (3.3.1), a code generation library used by LFRic for generating
    portable performance code. The `PSyclone documentation
    <https://psyclone.readthedocs.io/en/stable/>`_ list its own software
    dependencies, which include some Python packages and the following Fortran

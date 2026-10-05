@@ -51,7 +51,7 @@ version, and finally the next entity / argument.
 
 The ``fs_type`` refers to one of a number of available function space
 types. A `high-level description
-<https://psyclone.readthedocs.io/en/stable/dynamo0p3.html#supported-function-spaces>`_
+<https://psyclone.readthedocs.io/en/stable/user_guide/lfric.html#supported-function-spaces>`_
 of supported function spaces can be found in the PSyclone
 documentation. Refer to GungHo documentation for a comprehensive
 description of each function space.

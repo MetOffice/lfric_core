@@ -33,6 +33,8 @@ module gen_planar_mod_test_cartesian
                              topology_channel,      &
                              topology_periodic
 
+  use planar_mesh_config_mod, only: stretch_function_uniform
+
   implicit none
 
   private
@@ -1266,19 +1268,24 @@ contains
     type(reference_cube_type) :: cube_element
     cube_element = reference_cube_type()
 
-    mesh_gen = gen_planar_type( reference_element=cube_element,        &
-                                mesh_name=mesh_name,                   &
-                                geometry=geometry_planar,              &
-                                topology=context%topology,             &
-                                coord_sys=context%coord_sys,           &
-                                edge_cells_x=context%x_size,           &
-                                edge_cells_y=context%y_size,           &
-                                fine_mesh_edge_cells_x=context%x_size, &
-                                fine_mesh_edge_cells_y=context%y_size, &
-                                periodic_x=context%x_periodic,         &
-                                periodic_y=context%y_periodic,         &
-                                domain_size=context%domain_size,       &
-                                domain_centre=context%domain_centre )
+    mesh_gen = gen_planar_type( reference_element =                       &
+                                                cube_element,             &
+                                mesh_name     = mesh_name,                &
+                                geometry      = geometry_planar,          &
+                                topology      = context%topology,         &
+                                coord_sys     = context%coord_sys,        &
+                                edge_cells_x  = context%x_size,           &
+                                edge_cells_y  = context%y_size,           &
+                                fine_mesh_edge_cells_x =                  &
+                                                context%x_size,           &
+                                fine_mesh_edge_cells_y =                  &
+                                                context%y_size,           &
+                                periodic_x    = context%x_periodic,       &
+                                periodic_y    = context%y_periodic,       &
+                                stretch_function =                        &
+                                                stretch_function_uniform, &
+                                domain_size   = context%domain_size,      &
+                                domain_centre = context%domain_centre )
 
     ! Test metadata retrieval
     call mesh_gen%get_metadata( mesh_name          = test_str(1),            &

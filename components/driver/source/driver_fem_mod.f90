@@ -9,117 +9,139 @@
 !>           * Populates the global function space collection with function spaces
 !>             required by the model. Corresponding coordinate (chi) and panel_id
 !>             inventories are also captured.
-!>           * Initialises function space chains for use by the model.
 module driver_fem_mod
 
-  use base_mesh_config_mod,           only: prime_mesh_name,                   &
-                                            geometry,                          &
-                                            geometry_spherical,                &
-                                            geometry_planar,                   &
-                                            topology,                          &
-                                            topology_non_periodic
-  use sci_chi_transform_mod,          only: init_chi_transforms, &
-                                            final_chi_transforms
-  use constants_mod,                  only: i_def, l_def, str_def
-  use extrusion_mod,                  only: TWOD, PRIME_EXTRUSION
-  use finite_element_config_mod,      only: coord_order,                       &
-                                            coord_order_nonprime,              &
-                                            coord_system,                      &
-                                            coord_system_xyz,                  &
-                                            coord_space,                       &
-                                            coord_space_W0,                    &
-                                            coord_space_Wchi,                  &
-                                            coord_space_Wtheta
-  use field_mod,                      only: field_type
-  use fs_continuity_mod,              only: W0, W2, W3, Wtheta, Wchi, W2v, W2h
-  use function_space_mod,             only: function_space_type
-  use function_space_collection_mod,  only: function_space_collection
-  use function_space_chain_mod,       only: function_space_chain_type,          &
-                                            single_layer_function_space_chain,  &
-                                            multigrid_function_space_chain,     &
-                                            W2_multigrid_function_space_chain,  &
-                                            W2v_multigrid_function_space_chain, &
-                                            W2h_multigrid_function_space_chain, &
-                                            wtheta_multigrid_function_space_chain
-  use driver_coordinates_mod,         only: assign_coordinate_field
-  use inventory_by_mesh_mod,          only: inventory_by_mesh_type
-  use log_mod,                        only: log_event,         &
-                                            LOG_LEVEL_INFO,    &
-                                            LOG_LEVEL_ERROR,   &
-                                            log_scratch_space
-  use mesh_mod,                       only: mesh_type
-  use mesh_collection_mod,            only: mesh_collection_type
+  use constants_mod,                 only: i_def, r_def, l_def, &
+                                           str_def, imdi, cmdi
+  use extrusion_mod,                 only: twod, prime_extrusion
+  use fs_continuity_mod,             only: W0, W3, Wtheta, Wchi
+  use function_space_mod,            only: function_space_type
+  use function_space_collection_mod, only: function_space_collection
+  use driver_coordinates_mod,        only: assign_coordinate_field
+  use log_mod,                       only: log_event,       &
+                                           log_level_info,  &
+                                           log_level_error, &
+                                           log_scratch_space
+  use mesh_collection_mod,           only: mesh_collection
+  use sci_chi_transform_mod,         only: init_chi_transforms, &
+                                           final_chi_transforms
 
-  use base_mesh_config_mod, only: geometry, topology
+  ! Object types
+  use config_mod, only: config_type
+  use field_mod,  only: field_type
+  use mesh_mod,   only: mesh_type
+  use inventory_by_mesh_mod, only: inventory_by_mesh_type
+
+  ! Configuration modules
+  use base_mesh_config_mod,      only: geometry_spherical,    &
+                                       geometry_planar,       &
+                                       topology_non_periodic, &
+                                       topology_fully_periodic
+  use finite_element_config_mod, only: coord_system_xyz, &
+                                       coord_space_W0,   &
+                                       coord_space_Wchi, &
+                                       coord_space_Wtheta
 
   implicit none
 
   private
-  public :: init_fem, init_function_space_chains, final_fem
+  public :: init_fem, final_fem
 
 contains
 
   !> @brief  Initialises the coordinate fields (chi) and FEM components.
   !>
-  !> @param[in]      mesh_collection      Collection of all meshes to set up
-  !!                                      coordinates for
+  !> @param[in]      config               Application namelist configuration object
   !> @param[in,out]  chi_inventory        Inventory object, containing all of
   !!                                      the chi fields indexed by mesh
   !> @param[in,out]  panel_id_inventory   Inventory object, containing all of
   !!                                      the fields with the ID of mesh panels
-  subroutine init_fem( mesh_collection, chi_inventory, panel_id_inventory )
+  subroutine init_fem(config, chi_inventory, panel_id_inventory)
 
     implicit none
 
     ! Coordinate field
-    type(mesh_collection_type),    intent(in)    :: mesh_collection
-    type(inventory_by_mesh_type),  intent(inout) :: chi_inventory
-    type(inventory_by_mesh_type),  intent(inout) :: panel_id_inventory
+    type(config_type), intent(in) :: config
+
+    type(inventory_by_mesh_type), intent(inout) :: chi_inventory
+    type(inventory_by_mesh_type), intent(inout) :: panel_id_inventory
 
     character(str_def),    allocatable :: all_mesh_names(:)
-    type(mesh_type),           pointer :: mesh => null()
-    type(mesh_type),           pointer :: twod_mesh => null()
+    type(mesh_type),           pointer :: mesh
+    type(mesh_type),           pointer :: twod_mesh
     type(field_type)                   :: chi(3)
     type(field_type)                   :: panel_id
-    type(function_space_type), pointer :: fs => null()
-    integer(kind=i_def)                :: chi_space, coord, i
-    integer(kind=i_def)                :: coord_order_h, coord_order_v
-    integer(kind=i_def)                :: this_coord_order
-    integer(kind=i_def)                :: halo_depth
-    logical(kind=l_def)                :: is_valid
+    type(function_space_type), pointer :: fs
 
-    character(str_def) :: mesh_name
+    integer(i_def) :: chi_space, coord, i
+    integer(i_def) :: coord_order_h, coord_order_v
+    integer(i_def) :: this_coord_order
+    integer(i_def) :: halo_depth
+    logical(l_def) :: is_valid
 
-    call log_event( 'FEM specifics: creating function spaces...', log_level_info )
+    character(str_def) :: mesh_name, prime_mesh_name
+    integer(i_def)     :: geometry, topology, coord_system
+    integer(i_def)     :: coord_space, coord_order, coord_order_nonprime
+    real(r_def)        :: scaled_radius
+
+    call log_event( 'FEM specifics: creating function spaces...', &
+                    log_level_info )
+
+    nullify(mesh, twod_mesh, fs)
+
+    prime_mesh_name = cmdi
+    if (config%namelist_exists('base_mesh')) then
+      prime_mesh_name = config%base_mesh%prime_mesh_name()
+    end if
+
+    coord_system         = config%finite_element%coord_system()
+    coord_order          = config%finite_element%coord_order()
+    coord_space          = config%finite_element%coord_space()
+    coord_order_nonprime = config%finite_element%coord_order_nonprime()
+    scaled_radius        = config%planet%scaled_radius()
 
     ! ======================================================================== !
     ! Initialise coordinates
     ! ======================================================================== !
 
-    ! Initialise coordinate transformations
-    call init_chi_transforms( geometry, topology, &
-                              mesh_collection=mesh_collection )
-
     ! To loop through mesh collection, get all mesh names
     ! Then get mesh from collection using these names
     all_mesh_names = mesh_collection%get_mesh_names()
 
-    call chi_inventory%initialise(name="chi", table_len=SIZE(all_mesh_names))
-    call panel_id_inventory%initialise(name="panel_id", table_len=SIZE(all_mesh_names))
+    call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))
+    call panel_id_inventory%initialise(name="panel_id", &
+                                       table_len=size(all_mesh_names))
 
     ! ======================================================================== !
     ! Loop through all 3D meshes
     ! ======================================================================== !
 
-    do i = 1, SIZE(all_mesh_names)
+    do i = 1, size(all_mesh_names)
+
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()
 
+      if (mesh%is_geometry_spherical()) then
+        geometry = geometry_spherical
+      else
+        geometry = geometry_planar
+      end if
+
+      if (mesh%is_topology_periodic()) then
+        topology = topology_fully_periodic
+      else
+        topology = topology_non_periodic
+      end if
+
+      ! Initialise coordinate transformations
+      call init_chi_transforms( geometry, topology, &
+                                mesh_collection=mesh_collection )
+
       ! Only create coordinates for 3D meshes
-      if (mesh%get_extrusion_id() /= TWOD) then
+      if (mesh%get_extrusion_id() /= twod) then
 
         ! Initialise panel ID field object -------------------------------------
-        twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
+        twod_mesh => mesh_collection%get_mesh(mesh, twod)
         fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
         halo_depth = twod_mesh%get_halo_depth()
         call panel_id%initialise(fs, halo_depth=halo_depth)
@@ -136,19 +158,15 @@ contains
         select case (coord_space)
         case (coord_space_W0)
           ! Check domain/topology is valid
-          is_valid = (                                                         &
-              geometry == geometry_spherical                                   &
-              .and. coord_system == coord_system_xyz                           &
-            ) .or. (                                                           &
-              geometry == geometry_planar                                      &
-              .and. topology == topology_non_periodic                          &
-          )
+          is_valid = ( geometry     == geometry_spherical .and. &
+                       coord_system == coord_system_xyz )       &
+                .or. ( geometry     == geometry_planar .and.    &
+                       topology     == topology_non_periodic )
           if (.not. is_valid) then
-            call log_event(                                                    &
-                    'Coordinate space W0 is only valid for non-periodic ' //   &
-                    'planar domains or when using the xyz coordinate system.', &
-                    LOG_LEVEL_ERROR                                            &
-            )
+            write(log_scratch_space,'(A)')                               &
+                'Coordinate space W0 is only valid for non-periodic ' // &
+                'planar domains or when using the xyz coordinate system.'
+            call log_event(log_scratch_space, log_level_error)
           end if
 
           ! Correct the coord_order for W0 polynomials being 1 order above W3
@@ -162,7 +180,7 @@ contains
           chi_space = Wtheta
 
         case default
-          call log_event('Invalid value for coord_space', LOG_LEVEL_ERROR)
+          call log_event('Invalid value for coord_space', log_level_error)
         end select
 
         ! Set horizontal and vertical coordinate orders separately
@@ -184,16 +202,17 @@ contains
         end if
 
         ! Create coordinate space
-        fs => function_space_collection%get_fs(                                &
-            mesh, coord_order_h, coord_order_v, chi_space                      &
-        )
+        fs => function_space_collection%get_fs( mesh,          &
+                                                coord_order_h, &
+                                                coord_order_v, &
+                                                chi_space )
 
         do coord = 1, size(chi)
           call chi(coord)%initialise(fs, halo_depth=halo_depth)
         end do
 
         ! Set coordinate fields --------------------------------------------------
-        call assign_coordinate_field(chi, panel_id, mesh)
+        call assign_coordinate_field( config, mesh, chi, panel_id)
 
         ! Add fields to inventory
         call chi_inventory%copy_field_array(chi, mesh)
@@ -206,74 +225,6 @@ contains
     call log_event( 'FEM specifics created', log_level_info )
 
   end subroutine init_fem
-
-  !> @brief  Initialises the function space chains used in multigrid.
-  !> @param[in]      mesh_collection      Collection of all meshes to set up
-  !!                                      coordinates for
-  !> @param[in]      multigrid_mesh_names Names of the multigrid meshes
-  subroutine init_function_space_chains( mesh_collection, multigrid_mesh_names )
-
-    implicit none
-
-    type(mesh_collection_type), intent(in) :: mesh_collection
-    character(str_def),         intent(in) :: multigrid_mesh_names(:)
-
-    type(mesh_type),               pointer :: mesh => null()
-    type(mesh_type),               pointer :: twod_mesh => null()
-    type(function_space_type),     pointer :: fs => null()
-    integer(kind=i_def)                    :: i
-
-    call log_event( 'FEM specifics: creating function space chains...', LOG_LEVEL_INFO )
-
-    ! ======================================================================== !
-    ! Create function space chains
-    ! ======================================================================== !
-
-    multigrid_function_space_chain        = function_space_chain_type()
-    w2_multigrid_function_space_chain     = function_space_chain_type()
-    w2v_multigrid_function_space_chain    = function_space_chain_type()
-    w2h_multigrid_function_space_chain    = function_space_chain_type()
-    wtheta_multigrid_function_space_chain = function_space_chain_type()
-
-    write(log_scratch_space,'(A,I1,A)')                      &
-        'Initialising MultiGrid ', size(multigrid_mesh_names), &
-        '-level function space chain.'
-    call log_event( log_scratch_space, LOG_LEVEL_INFO )
-
-    do i = 1, size(multigrid_mesh_names)
-
-      mesh => mesh_collection%get_mesh( multigrid_mesh_names(i) )
-
-      ! Make sure this function_space is in the collection
-      fs => function_space_collection%get_fs( mesh, 0, 0, W3 )
-      call multigrid_function_space_chain%add( fs )
-
-      fs => function_space_collection%get_fs( mesh, 0, 0, W2 )
-      call w2_multigrid_function_space_chain%add( fs )
-
-      fs => function_space_collection%get_fs( mesh, 0, 0, W2v )
-      call w2v_multigrid_function_space_chain%add( fs )
-
-      fs => function_space_collection%get_fs( mesh, 0, 0, W2h )
-      call w2h_multigrid_function_space_chain%add( fs )
-
-      fs => function_space_collection%get_fs( mesh, 0, 0, Wtheta )
-      call wtheta_multigrid_function_space_chain%add( fs )
-    end do
-
-    single_layer_function_space_chain = function_space_chain_type()
-    do i = 1, size(multigrid_mesh_names)
-      mesh => mesh_collection%get_mesh( multigrid_mesh_names(i) )
-      twod_mesh => mesh_collection%get_mesh( mesh, TWOD )
-      fs => function_space_collection%get_fs( twod_mesh, 0, 0, W3 )
-      call single_layer_function_space_chain%add( fs )
-    end do
-
-    nullify(mesh, twod_mesh, fs)
-
-    call log_event( 'Function space chains created', LOG_LEVEL_INFO )
-
-  end subroutine init_function_space_chains
 
   !> @brief  Finalises the function_space_collection.
   subroutine final_fem()

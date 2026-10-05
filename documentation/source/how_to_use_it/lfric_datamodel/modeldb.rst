@@ -129,30 +129,52 @@ of values very powerful. Anything from the object that encapsulates a
 time-stepping algorith to the object that stores all the
 atmosphere-ocean coupling information can be stored in modeldb.
 
-Prior to using the ``values`` collection, it must be have been initialised
-as shown in the code below.
+To initalise a values collection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Prior to using the ``values`` collection, it must be initialised:
+
+.. code-block:: fortran
+
+   call modeldb%values%initialise()
 
 To put a value in
 ^^^^^^^^^^^^^^^^^
+
+This will store a value equal to ``my_value`` in the collection which can be
+accessed with the key string ``my_key``.
 
 .. code-block:: fortran
 
    real(real64) :: my_value
 
    my_value = 7.0_real64
-   call modeldb%values%initialise()
-   call modeldb%values%add_key_value('my_value', my_value)
+   call modeldb%values%add_key_value('my_key', my_value)
 
-Again, this will put a copy of the value into the collection
+To check whether a key exists
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To check whether a key string is already in use, for example, when unsure that a
+required value has been initialised:
+
+.. code-block:: fortran
+
+   logical(l_def)            :: key_exists
+   real(real64), parameter   :: initial_value = 3.45_real64
+
+   key_exists = modeldb%values%key_value_exists('result_value')
+   if ( .not. key_exists) then
+     call modeldb%values%add_key_value('result_value', initial_value)
+   end if
 
 To get a value out
 ^^^^^^^^^^^^^^^^^^
 
 .. code-block:: fortran
 
-   real(real64), pointer :: my_value
+   real(real64), pointer :: result_value
 
-   call modeldb%values%get_value("my_value", my_value)
+   call modeldb%values%get_value('result_value', result_value)
 
 This returns a pointer to the value held in the collection. Any
 subsequent maths performed on what is returned (the pointer) will

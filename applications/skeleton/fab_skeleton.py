@@ -23,9 +23,10 @@ from fab.steps.grab.folder import grab_folder
 sys.path.insert(0, str(Path(__file__).parents[2] / "lfric_build"))
 
 from lfric_base import LFRicBase  # noqa: E402
+from pfunit_mixin import PfUnitMixin  # noqa: E402
 
 
-class FabSkeleton(LFRicBase):
+class FabSkeleton(PfUnitMixin, LFRicBase):
     """
     A Fab-based build script for skeleton. It relies on the LFRicBase class
     to implement the actual functionality, and only provides the required
@@ -35,7 +36,9 @@ class FabSkeleton(LFRicBase):
     """
 
     def __init__(self, name: str = "skeleton") -> None:
-        super().__init__(name=name)
+
+        app_dir = Path(__file__).parent
+        super().__init__(name=name, app_dir=app_dir)
         # Store the root of this apps for later
         this_file = Path(__file__).resolve()
         self._this_root = this_file.parent
@@ -45,12 +48,8 @@ class FabSkeleton(LFRicBase):
         Grabs the required source files and optimisation scripts.
         """
         super().grab_files_step()
-        dirs = ['applications/skeleton/source/']
-
-        # pylint: disable=redefined-builtin
-        for dir in dirs:
-            grab_folder(self.config, src=self.lfric_core_root / dir,
-                        dst_label='')
+        grab_folder(self.config, src=self.app_dir / "source",
+                    dst_label='')
 
         # Copy the optimisation scripts into a separate directory
         grab_folder(self.config, src=self._this_root / "optimisation",

@@ -8,11 +8,11 @@
 module coordinate_jacobian_alphabetaz_mod_test
 
   use funit
-  use constants_mod, only : r_def, i_def
+  use constants_mod, only: r_def, i_def
 
-  use base_mesh_config_mod,      only : geometry_spherical, &
-                                        topology_fully_periodic
-  use finite_element_config_mod, only : coord_system_native
+  use base_mesh_config_mod,      only: geometry_spherical, &
+                                       topology_fully_periodic
+  use finite_element_config_mod, only: coord_system_native
 
   implicit none
 
@@ -38,12 +38,10 @@ contains
   @after
   subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tear_down

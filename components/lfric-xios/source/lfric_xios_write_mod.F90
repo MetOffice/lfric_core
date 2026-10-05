@@ -18,6 +18,7 @@ module lfric_xios_write_mod
   use field_real32_mod,     only: field_real32_type, field_real32_proxy_type
   use field_real64_mod,     only: field_real64_type, field_real64_proxy_type
   use io_value_mod,         only: io_value_type
+  use integer_io_value_mod, only: integer_io_value_type
   use key_value_mod,        only: key_value_type, abstract_key_value_type, &
                                   abstract_value_type
   use key_value_collection_mod, &
@@ -67,39 +68,75 @@ module lfric_xios_write_mod
             write_field_generic,      &
             write_empty_field,        &
             checkpoint_write_value,   &
+            checkpoint_write_r_def_value,   &
+            checkpoint_write_integer_value,   &
             write_value_generic,      &
             write_state,              &
             write_checkpoint,         &
-            create_checkpoint_list
+            create_checkpoint_list,   &
+            checkpoint_time
+
+  interface checkpoint_write_value
+    procedure :: checkpoint_write_r_def_value
+    procedure :: checkpoint_write_integer_value
+  end interface checkpoint_write_value
 
 contains
 
 !> @brief Write io_value data via XIOS
 !> @details This routine assumes there is a XIOS field defined
 !>          with a field id the same as the io_value id
-!> @param[in,out] io_value The io_value to write data from
+!> @param[in]  io_value The io_value to write data from
+!> @param[in]  value_name The id defined in the XIOS context
 !>
 subroutine write_value_generic(io_value, value_name)
-  class(io_value_type), intent(inout) :: io_value
+  class(abstract_value_type), intent(in) :: io_value
   character(*), optional, intent(in) :: value_name
 
-  integer(i_def) :: array_dims
-  character(:), allocatable :: value_id
+  integer(i_def)              :: array_dims
+  character(:),  allocatable  :: value_id
+  real(dp_xios), allocatable  :: dp_equiv(:)
 
-  if (present(value_name)) then
-    value_id = value_name
-  else
-    value_id = io_value%io_id
-  end if
+  select type(io_value)
+  type is (io_value_type)
+    if (present(value_name)) then
+      value_id = value_name
+    else
+      value_id = io_value%io_id
+    end if
 
-  array_dims = size(io_value%data)
-  if ( xios_is_valid_field(trim(value_id)) ) then
-    call xios_send_field( trim(value_id), &
-                          reshape(io_value%data, (/ 1, array_dims /)) )
-  else
-    call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
-                    LOG_LEVEL_ERROR )
-  end if
+    array_dims = size(io_value%data)
+    if ( xios_is_valid_field(trim(value_id)) ) then
+      ! Support 32-bit and 64-bit input by converting to XIOS real kind
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%data, dp_xios)
+      call xios_send_field( trim(value_id), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
+    else
+      call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
+                      LOG_LEVEL_ERROR )
+    end if
+  type is (integer_io_value_type)
+    if (present(value_name)) then
+      value_id = value_name
+    else
+      value_id = io_value%io_id
+    end if
+
+    array_dims = size(io_value%data)
+    if ( xios_is_valid_field(trim(value_id)) ) then
+      ! Integers must be converted to XIOS real kind
+      allocate(dp_equiv(array_dims))
+      dp_equiv = real(io_value%data,dp_xios)
+      call xios_send_field( trim(value_id), &
+                      reshape(dp_equiv, (/ 1, array_dims /)) )
+      deallocate(dp_equiv)
+    else
+      call log_event( 'No XIOS field with id="'//trim(io_value%io_id)//'" is defined', &
+                      LOG_LEVEL_ERROR )
+    end if
+  end select
 
 end subroutine write_value_generic
 
@@ -181,17 +218,19 @@ subroutine write_empty_field(field_name, field_proxy)
 
 end subroutine write_empty_field
 
-!> @brief Checkpoint an io_value with XIOS
+!> @brief Checkpoint an r_def io_value with XIOS
 !> @details This routine assumes there is an XIOS field
 !>          with the "checkpoint_" prefix
-!> @param[in,out] io_value The io_value to write data from
+!> @param[in]  io_value The io_value to write data from
+!> @param[in]  value_name The id defined in the XIOS context
 !>
-subroutine checkpoint_write_value(io_value, value_name)
-  class(io_value_type), intent(inout) :: io_value
+subroutine checkpoint_write_r_def_value(io_value, value_name)
+  class(io_value_type), intent(in)   :: io_value
   character(*), optional, intent(in) :: value_name
 
   character(str_def) :: checkpoint_id
   integer(i_def)     :: array_dims
+  real(dp_xios), allocatable :: dp_equiv(:)
 
   if(present(value_name)) then
     checkpoint_id = trim(value_name)
@@ -200,14 +239,50 @@ subroutine checkpoint_write_value(io_value, value_name)
   end if
   array_dims = size(io_value%data)
   if ( xios_is_valid_field(trim(checkpoint_id)) ) then
+    allocate(dp_equiv(array_dims))
+    dp_equiv = real(io_value%data, dp_xios)
     call xios_send_field( trim(checkpoint_id), &
-                          reshape(io_value%data, (/ 1, array_dims /)) )
+                    reshape(dp_equiv, (/ 1, array_dims /)) )
+    deallocate(dp_equiv)
   else
     call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
                     LOG_LEVEL_ERROR )
   end if
 
-end subroutine checkpoint_write_value
+end subroutine checkpoint_write_r_def_value
+
+!> @brief Checkpoint an integer io_value with XIOS
+!> @details This routine assumes there is an XIOS field
+!>          with the "checkpoint_" prefix
+!> @param[in] io_value The io_value to write data from
+!> @param[in]  value_name The id defined in the XIOS context
+!>
+subroutine checkpoint_write_integer_value(io_value, value_name)
+  class(integer_io_value_type), intent(in) :: io_value
+  character(*), optional, intent(in) :: value_name
+
+  character(str_def) :: checkpoint_id
+  integer(i_def)     :: array_dims
+  real(dp_xios), allocatable :: dp_equiv(:)
+
+  if(present(value_name)) then
+    checkpoint_id = trim(value_name)
+  else
+    checkpoint_id = trim(io_value%io_id)
+  end if
+  array_dims = size(io_value%data)
+  if ( xios_is_valid_field(trim(checkpoint_id)) ) then
+    allocate(dp_equiv(array_dims))
+    dp_equiv = real(io_value%data, dp_xios)
+    call xios_send_field( trim(checkpoint_id), &
+                          reshape(dp_equiv, (/ 1, array_dims /)) )
+    deallocate(dp_equiv)
+  else
+    call log_event( 'No XIOS field with id="'//trim(checkpoint_id)//'" is defined', &
+                    LOG_LEVEL_ERROR )
+  end if
+
+end subroutine checkpoint_write_integer_value
 
 !>  @brief    I/O handler for writing an XIOS netcdf checkpoint
 !>  @details  Note this routine accepts a filename but doesn't use it - this is
@@ -475,6 +550,14 @@ subroutine write_checkpoint( fields, values, clock, checkpoint_stem_name, &
           abstract_val => kv_typed%value
           select type (io_value_object => abstract_val)
             type is (io_value_type)
+              if(io_value_object%can_write_checkpoint()) then
+                call log_event( 'Writing checkpoint for ' // &
+                                trim(io_value_object%io_id), &
+                                LOG_LEVEL_INFO )
+                call io_value_object%write_checkpoint( &
+                        trim(field_prefix) // trim(io_value_object%io_id))
+              end if
+            type is (integer_io_value_type)
               if(io_value_object%can_write_checkpoint()) then
                 call log_event( 'Writing checkpoint for ' // &
                                 trim(io_value_object%io_id), &

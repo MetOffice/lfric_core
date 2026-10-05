@@ -10,7 +10,6 @@ class lfric_xios_time_axis_mod::time_axis_type {
 
   +initialise(<<in>>name: character, <<in>>file_id: character, <<in>>input_units: character<<optional>>, <<in>>yearly: logical<<optional>>, <<in>>interp_flag: logical<<optional>>, <<in>>pop_freq: integer<<optional>>)
   +setup()
-  -read_time_data(<<in>>file_path: character)
   +get_name(<<out>>output_name: character)
   -shift_forward()
   +step()

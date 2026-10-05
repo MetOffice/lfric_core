@@ -40,7 +40,8 @@ module driver_mesh_mod
                                         log_scratch_space, &
                                         log_level_debug,   &
                                         log_level_error
-  use panel_decomposition_mod,    only: panel_decomposition_type
+  use panel_decomposition_mod,    only: panel_decomposition_type, &
+                                        calc_mapping_factor
   use partition_mod,              only: partitioner_interface
 
   use runtime_partition_lfric_mod, only: get_partition_parameters
@@ -79,6 +80,8 @@ contains
 !> @param[in] total_ranks       Total number of MPI ranks in this job.
 !> @param[in] mesh_names        Mesh names to load from the mesh input file(s).
 !> @param[in] extrusion         Extrusion object to be applied to meshes.
+!> @param[in] inner_halo_tiles  Apply tiling to inner halos.
+!> @param[in] tile_size         Tile sizes to apply to inner halos if applicable.
 !> @param[in] stencil_depths_in Required stencil depth for each mesh for
 !!                              the application. If this array is of size 1 then
 !!                              the single value is applied to all meshes.
@@ -94,6 +97,8 @@ contains
 subroutine init_mesh( config,                  &
                       local_rank, total_ranks, &
                       mesh_names, extrusion,   &
+                      inner_halo_tiles,        &
+                      tile_size,               &
                       stencil_depths_in,       &
                       check_partitions,        &
                       alt_names )
@@ -107,8 +112,10 @@ subroutine init_mesh( config,                  &
   character(str_def),    intent(in) :: mesh_names(:)
   class(extrusion_type), intent(in) :: extrusion
 
-  integer(i_def),    intent(in) :: stencil_depths_in(:)
-  logical(l_def),    intent(in) :: check_partitions
+  logical(l_def), intent(in) :: inner_halo_tiles
+  integer(i_def), intent(in) :: tile_size(:,:)
+  integer(i_def), intent(in) :: stencil_depths_in(:)
+  logical(l_def), intent(in) :: check_partitions
 
   character(str_def), optional, intent(in) :: alt_names(:)
 
@@ -132,13 +139,20 @@ subroutine init_mesh( config,                  &
   character(str_def), allocatable :: tmp_mesh_names(:)
   character(str_max_filename)     :: input_mesh_file
   integer(i_def),     allocatable :: stencil_depths(:)
+  integer(i_def),     allocatable :: mapping_factors(:)
+
+  type(global_mesh_type), pointer :: global_mesh
 
   procedure(partitioner_interface), pointer :: partitioner_ptr
 
   class(panel_decomposition_type), allocatable :: decomposition
 
-  integer(i_def)     :: i, n_digit
   character(str_def) :: fmt_str, number_str
+
+  integer(i_def) :: i, n_digit
+
+  nullify(global_mesh)
+  nullify(partitioner_ptr)
 
   !============================================================================
   ! Extract configuration variables
@@ -183,7 +197,7 @@ subroutine init_mesh( config,                  &
   end do
 
   ! Currently only quad elements are fully functional
-  if (cellshape /= CELLSHAPE_QUADRILATERAL) then
+  if (cellshape /= cellshape_quadrilateral) then
     call log_event( "Reference_element must be QUAD for now...", &
                     LOG_LEVEL_ERROR )
   end if
@@ -307,6 +321,13 @@ subroutine init_mesh( config,                  &
     !===========================================================
     call check_global_mesh( config, mesh_names )
 
+    allocate(mapping_factors(size(mesh_names)))
+    do i=1, size(mesh_names)
+      global_mesh => global_mesh_collection%get_global_mesh(mesh_names(i))
+      mapping_factors(i) = calc_mapping_factor(global_mesh, &
+                                               global_mesh_collection)
+    end do
+
     ! 2.2e Partition the global meshes
     !===========================================================
     call create_local_mesh( mesh_names,              &
@@ -315,6 +336,7 @@ subroutine init_mesh( config,                  &
                             stencil_depths,          &
                             generate_inner_halos,    &
                             partitioner_ptr,         &
+                            mapping_factors,         &
                             enforce_constraints=check_partitions )
 
 
@@ -328,12 +350,13 @@ subroutine init_mesh( config,                  &
 
   end if  ! prepartitioned
 
-
   !============================================================================
   ! 3.0 Extrude the specified meshes from local mesh objects into
   !     mesh objects on the given extrusion.
   !============================================================================
-  call create_mesh( mesh_names, extrusion, alt_name=names )
+  call create_mesh( mesh_names, extrusion,       &
+                    inner_halo_tiles, tile_size, &
+                    alt_name=names )
 
 
   !============================================================================

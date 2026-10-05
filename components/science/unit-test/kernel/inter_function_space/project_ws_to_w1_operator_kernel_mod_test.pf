@@ -7,7 +7,7 @@
 !> Test the projection from a scalar space to W1
 module project_ws_to_w1_operator_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def
+  use constants_mod, only : i_def, r_def, rmdi
   use funit
   use get_unit_test_q3x3x3_quadrature_mod, only : get_gaussian_q3x3x3_quadrature_weights_xy, &
                                                   get_gaussian_q3x3x3_quadrature_weights_z
@@ -23,84 +23,55 @@ module project_ws_to_w1_operator_kernel_mod_test
                                                   get_w3_m3x3_dofmap
   use get_unit_test_3x3x3_chi_mod,         only : get_w0_3x3x3_field
 
+  use base_mesh_config_mod,      only: geometry_planar, &
+                                       topology_fully_periodic
+  use finite_element_config_mod, only: coord_system_xyz
+
   implicit none
 
   private
-  public :: test_all
-
-  @TestCase
-  type, extends(TestCase), public :: project_ws_to_w1_operator_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type project_ws_to_w1_operator_test_type
+  public :: set_up, tear_down, test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
+  @before
+  subroutine set_up()
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-    use base_mesh_config_mod,      only : geometry_planar, &
-                                          topology_fully_periodic
-    use feign_config_mod,          only : feign_base_mesh_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
-    class(project_ws_to_w1_operator_test_type), intent(inout) :: this
-
-    call feign_base_mesh_config( file_prefix='foo',                &
-                                 prime_mesh_name='unit_test',      &
-                                 geometry=geometry_planar,         &
-                                 prepartitioned=.false.,           &
-                                 topology=topology_fully_periodic, &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-    call feign_finite_element_config( cellshape=cellshape_quadrilateral, &
-                                      coord_order=0_i_def,               &
-                                      coord_order_nonprime=1_i_def,      &
-                                      coord_space=coord_space_wchi,      &
-                                      element_order_h=0_i_def,           &
-                                      element_order_v=0_i_def,           &
-                                      rehabilitate=.true.,               &
-                                      coord_system=coord_system_xyz )
-
     call init_chi_transforms(geometry_planar,topology_fully_periodic)
 
-  end subroutine setUp
+  end subroutine set_up
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
+  @after
+  subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    class(project_ws_to_w1_operator_test_type), intent(inout) :: this
-
-    call final_configuration()
     call final_chi_transforms()
 
-  end subroutine tearDown
+  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_project_ws_to_w1_operator_kernel_mod, only : project_ws_to_w1_operator_code
 
     implicit none
 
-    class(project_ws_to_w1_operator_test_type), intent(inout) :: this
-
     real(kind=r_def), parameter :: tol = 1.0e-6_r_def
+
+    integer(i_def), parameter :: geometry = geometry_planar
+    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Mesh
     integer(i_def) :: nlayers, ncells, ncell_3d, cell, icell
@@ -212,6 +183,10 @@ contains
                                           chi1, chi2, chi3,           &
                                           panel_id,                   &
                                           direction,                  &
+                                          geometry,                   &
+                                          topology,                   &
+                                          coord_system,               &
+                                          scaled_radius,              &
                                           ndf_w1,                     &
                                           basis_w1,                   &
                                           ndf_w3,                     &

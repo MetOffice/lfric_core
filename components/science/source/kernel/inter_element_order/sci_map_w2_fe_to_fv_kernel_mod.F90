@@ -169,8 +169,10 @@ contains
           if (df_f == N .and. y_idx /= 1) cycle
 
           ! Only set dofs prescribed by the face selectors
-          if (df_f == E .and. face_selector_ew(map_w3_2d(1)) /= 2) cycle
-          if (df_f == N .and. face_selector_ns(map_w3_2d(1)) /= 2) cycle
+          if (df_f == E .and. (face_selector_ew(map_w3_2d(1)) == 0             &
+                               .or. face_selector_ew(map_w3_2d(1)) == 1)) cycle
+          if (df_f == N .and. (face_selector_ns(map_w3_2d(1)) == 0             &
+                               .or. face_selector_ns(map_w3_2d(1)) == 1)) cycle
 
           do k = 0, nlayers-1
             new_fine = 0.0_r_def

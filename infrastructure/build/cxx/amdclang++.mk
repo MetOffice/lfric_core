@@ -4,11 +4,7 @@
 # under which the code may be used.
 ##############################################################################
 
-[check]
+$(info ** Chosen AMD Clang C++ compiler)
 
-file-extensions= ["f90", "F90", "X90", "x90"]          #check these file types
+CXX_RUNTIME_LIBRARY=stdc++
 
-
-select = ["C121"]
-
-output-format = "grouped"                #group results by file

@@ -63,24 +63,35 @@ subroutine get_partition_parameters( partitioning_nml, &
   panel_xproc = partitioning_nml%panel_xproc()
   panel_yproc = partitioning_nml%panel_yproc()
 
+  ! nvfortran does not properly support the polymorphic allocation, to fix it
+  ! deallocate the polymorphic class and allocate each concrete type inside
+  ! the select cases
+  if (allocated(decomposition)) deallocate(decomposition)
+
   select case (panel_decomposition)
 
   case ( panel_decomposition_auto )
+    allocate(auto_decomposition_type :: decomposition)
     decomposition = auto_decomposition_type()
 
   case ( panel_decomposition_row )
+    allocate(row_decomposition_type :: decomposition)
     decomposition = row_decomposition_type()
 
   case ( panel_decomposition_column )
+    allocate(column_decomposition_type :: decomposition)
     decomposition = column_decomposition_type()
 
   case ( panel_decomposition_custom )
+    allocate(custom_decomposition_type :: decomposition)
     decomposition = custom_decomposition_type( panel_xproc, panel_yproc )
 
   case ( panel_decomposition_auto_nonuniform )
+    allocate(auto_nonuniform_decomposition_type :: decomposition)
     decomposition = auto_nonuniform_decomposition_type()
 
   case ( panel_decomposition_guided_nonuniform )
+    allocate(guided_nonuniform_decomposition_type :: decomposition)
     decomposition = guided_nonuniform_decomposition_type( panel_xproc )
 
   case default

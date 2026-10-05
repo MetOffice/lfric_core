@@ -56,3 +56,7 @@ class Config(DefaultConfig):
         linker.add_lib_flags("shumlib", ["-lshum"])
         linker.add_lib_flags("vernier", ["-lvernier_f", "-lvernier_c",
                                          "-lvernier"])
+
+        # This likely needs adjusting, pfunit required fargparse and gftl
+        linker.add_lib_flags("pfunit", ["-lfunit", "-lpfunit",
+                                        "-lfargparse", "lgftl-shared-v2"])

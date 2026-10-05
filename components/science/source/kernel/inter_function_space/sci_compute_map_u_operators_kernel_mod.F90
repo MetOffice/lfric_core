@@ -16,7 +16,8 @@
 module sci_compute_map_u_operators_kernel_mod
 
   use argument_mod,            only : arg_type, func_type,       &
-                                      GH_FIELD, GH_REAL,         &
+                                      GH_FIELD, GH_SCALAR,       &
+                                      GH_REAL, GH_INTEGER,       &
                                       GH_OPERATOR,               &
                                       GH_INC, GH_READ, GH_WRITE, &
                                       ANY_SPACE_9,               &
@@ -27,6 +28,8 @@ module sci_compute_map_u_operators_kernel_mod
   use fs_continuity_mod,       only : W2, W3, Wtheta
   use kernel_mod,              only : kernel_type
   use log_mod,                 only : log_event, LOG_LEVEL_ERROR, LOG_LEVEL_INFO
+
+  use base_mesh_config_mod, only: geometry_spherical, geometry_planar
 
   implicit none
 
@@ -40,13 +43,17 @@ module sci_compute_map_u_operators_kernel_mod
   !>
   type, public, extends(kernel_type) :: compute_map_u_operators_kernel_type
     private
-    type(arg_type) :: meta_args(5) = (/                                    &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                 &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                 &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, WTHETA),             &
-         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),              &
-         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3) &
-         /)
+    type(arg_type) :: meta_args(9) = (/                                     &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                  & ! u_lon_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W3),                  & ! u_lat_op
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, WTHETA),              & ! u_up_op
+         arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),               & ! chi_sph_1, chi_sph_2, chi_sph_3
+         arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                         & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                          & ! scaled_radius
+  /)
     type(func_type) :: meta_funcs(4) = (/                                  &
          func_type(W2,          GH_BASIS),                                 &
          func_type(W3,          GH_BASIS),                                 &
@@ -80,6 +87,10 @@ contains
 !! @param[in] chi_sph_2 2nd coordinate in spherical Wchi
 !! @param[in] chi_sph_3 3rd coordinate in spherical Wchi
 !! @param[in] panel_id Field giving the ID for mesh panels
+!! @param[in] geometry      Mesh geometry enumeration value
+!! @param[in] topology      Mesh topology enumeration value
+!! @param[in] coord_system  Finite-Element coord-system enumeration value
+!! @param[in] scaled_radius Planet scaled radius
 !! @param[in] ndf_w2 Number of degrees of freedom per cell for w2
 !! @param[in] basis_w2 W2 basis functions evaluated at quadrature points
 !! @param[in] ndf_w3 Number of degrees of freedom per cell for w3
@@ -100,28 +111,23 @@ contains
 !! @param[in] nqp_v Number of quadrature points in the vertical
 !! @param[in] wqp_h Horizontal quadrature weights
 !! @param[in] wqp_v Vertical quadrature weights
-subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
-                        u_lon_op, ncell_3d_2, u_lat_op,            &
-                        ncell_3d_3, u_up_op,                       &
-                        chi_sph_1, chi_sph_2, chi_sph_3, panel_id, &
-                        ndf_w2, basis_w2,                          &
-                        ndf_w3, basis_w3,                          &
-                        ndf_wt, basis_wt,                          &
-                        ndf_chi_sph, undf_chi_sph, map_chi_sph,    &
-                        chi_sph_basis, chi_sph_diff_basis,         &
-                        ndf_pid, undf_pid, map_pid,                &
-                        nqp_h, nqp_v, wqp_h, wqp_v                 &
-                        )
+subroutine compute_map_u_operators_code( cell, nlayers, ncell_3d_1, &
+                         u_lon_op, ncell_3d_2, u_lat_op,            &
+                         ncell_3d_3, u_up_op,                       &
+                         chi_sph_1, chi_sph_2, chi_sph_3, panel_id, &
+                         geometry, topology,                        &
+                         coord_system, scaled_radius,               &
+                         ndf_w2, basis_w2,                          &
+                         ndf_w3, basis_w3,                          &
+                         ndf_wt, basis_wt,                          &
+                         ndf_chi_sph, undf_chi_sph, map_chi_sph,    &
+                         chi_sph_basis, chi_sph_diff_basis,         &
+                         ndf_pid, undf_pid, map_pid,                &
+                         nqp_h, nqp_v, wqp_h, wqp_v )
 
   use sci_chi_transform_mod,       only : chi2llr
   use sci_coordinate_jacobian_mod, only : coordinate_jacobian
   use coord_transform_mod,         only : sphere2cart_vector
-
-  use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry, topology, &
-                                       geometry_spherical, &
-                                       geometry_planar
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -150,6 +156,11 @@ subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
 
   real(kind=r_def), dimension(nqp_h), intent(in) ::  wqp_h
   real(kind=r_def), dimension(nqp_v), intent(in) ::  wqp_v
+
+  integer(i_def), intent(in) :: geometry
+  integer(i_def), intent(in) :: topology
+  integer(i_def), intent(in) :: coord_system
+  real(r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df2, df3, dft
@@ -208,8 +219,10 @@ subroutine compute_map_u_operators_code(cell, nlayers, ncell_3d_1, &
 
             llr(:) = 0.0_r_def
 
-            call chi2llr(coords(1), coords(2), coords(3), &
-                          ipanel, llr(1), llr(2), llr(3))
+            call chi2llr( coords(1), coords(2), coords(3), &
+                          ipanel, geometry, topology,      &
+                          coord_system, scaled_radius,     &
+                          llr(1), llr(2), llr(3) )
           end if
 
 

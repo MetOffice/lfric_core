@@ -10,9 +10,10 @@
 module sci_convert_phys_to_hdiv_kernel_mod
 
   use argument_mod,            only : arg_type, func_type,       &
-                                      GH_FIELD, GH_REAL,         &
+                                      GH_FIELD, GH_SCALAR,       &
+                                      GH_REAL, GH_INTEGER,       &
                                       GH_WRITE, GH_READ,         &
-                                      ANY_SPACE_9, GH_SCALAR,    &
+                                      ANY_SPACE_9,               &
                                       ANY_DISCONTINUOUS_SPACE_3, &
                                       GH_BASIS, GH_DIFF_BASIS,   &
                                       CELL_COLUMN, GH_EVALUATOR, &
@@ -20,6 +21,8 @@ module sci_convert_phys_to_hdiv_kernel_mod
   use constants_mod,           only : r_def, i_def
   use fs_continuity_mod,       only : W2
   use kernel_mod,              only : kernel_type
+
+  use base_mesh_config_mod, only: geometry_spherical
 
   implicit none
 
@@ -33,14 +36,17 @@ module sci_convert_phys_to_hdiv_kernel_mod
   !>
   type, public, extends(kernel_type) :: convert_phys_to_hdiv_kernel_type
     private
-    type(arg_type) :: meta_args(7) = (/                                         &
-         arg_type(GH_FIELD,   GH_REAL,    GH_WRITE, W2),                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        &
-         arg_type(GH_FIELD*3, GH_REAL,    GH_READ,  ANY_SPACE_9),               &
-         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), &
-         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ)                              &
+    type(arg_type) :: meta_args(10) = (/                                        &
+         arg_type(GH_FIELD,   GH_REAL,    GH_WRITE, W2),                        & ! u_hdiv
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        & ! u_lon
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        & ! u_lat
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  W2),                        & ! u_up
+         arg_type(GH_FIELD*3, GH_REAL,    GH_READ,  ANY_SPACE_9),               & ! chi_1, chi_2, chi_3
+         arg_type(GH_FIELD,   GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             & ! geometry
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             & ! topology
+         arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                             & ! coord_system
+         arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                              & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(2) = (/                                       &
          func_type(W2, GH_BASIS),                                               &
@@ -69,7 +75,10 @@ contains
 !> @param[in]     chi_2          2nd coordinate field
 !> @param[in]     chi_3          3rd coordinate field
 !> @param[in]     panel_id       Field giving the ID for mesh panels
-!> @param[in]     geometry       Integer indicating the domain geometry
+!> @param[in]     geometry       Mesh geometry enumeration value
+!> @param[in]     topology       Mesh topology enumeration value
+!> @param[in]     coord_system   Finite-Element coord-system enumeration value
+!> @param[in]     scaled_radius  Planet scaled radius
 !> @param[in]     ndf_w2         Number of DoFs per cell for W2
 !> @param[in]     undf_w2        Number of DoFs for W2 for this partition
 !> @param[in]     map_w2         Map of DoFs for lowest-layer cells for W2
@@ -93,6 +102,9 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
                                       chi_3,          &
                                       panel_id,       &
                                       geometry,       &
+                                      topology,       &
+                                      coord_system,   &
+                                      scaled_radius,  &
                                       ndf_w2,         &
                                       undf_w2,        &
                                       map_w2,         &
@@ -111,18 +123,12 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
                                           pointwise_coordinate_jacobian_inverse
   use coord_transform_mod,        only : sphere2cart_vector
 
-  use base_mesh_config_mod,      only: topology, &
-                                       geometry_spherical
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
-
   implicit none
 
   ! Arguments
   integer(kind=i_def), intent(in) :: nlayers
   integer(kind=i_def), intent(in) :: ndf_w2, ndf_pid, ndf_chi
   integer(kind=i_def), intent(in) :: undf_w2, undf_pid, undf_chi
-  integer(kind=i_def), intent(in) :: geometry
 
   integer(kind=i_def), intent(in) :: map_w2(ndf_w2)
   integer(kind=i_def), intent(in) :: map_chi(ndf_chi)
@@ -140,6 +146,11 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
   real(kind=r_def),    intent(in)    :: chi_1(undf_chi)
   real(kind=r_def),    intent(in)    :: chi_2(undf_chi)
   real(kind=r_def),    intent(in)    :: chi_3(undf_chi)
+
+  integer(i_def), intent(in) :: geometry
+  integer(i_def), intent(in) :: topology
+  integer(i_def), intent(in) :: coord_system
+  real(r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def) :: df_w2, df_chi, k, ipanel
@@ -195,7 +206,9 @@ subroutine convert_phys_to_hdiv_code( nlayers,        &
         ! Convert coordinates from whatever coordinate system the model uses
         ! into spherical-polar coordinates
         call chi2llr(coords(1), coords(2), coords(3), &
-                     ipanel, llr(1), llr(2), llr(3))
+                     ipanel,  geometry, topology,     &
+                     coord_system, scaled_radius,     &
+                     llr(1), llr(2), llr(3))
 
         u_spherical(1) = u_lon(map_w2(df_w2) + k)
         u_spherical(2) = u_lat(map_w2(df_w2) + k)

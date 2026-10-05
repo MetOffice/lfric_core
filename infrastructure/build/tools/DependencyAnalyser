@@ -4,6 +4,9 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 """
 Examine a file and determine any dependencies it has. Both Fortran source and
 namelist description files are supporetd.
@@ -47,8 +50,10 @@ if __name__ == '__main__':
                         help='Macro definitions to be passed to preprocessor.')
     parser.add_argument('database', metavar='database-file',
                         help='Database file to use')
-    parser.add_argument('source', metavar='source-file',
-                        help='The source file.')
+    parser.add_argument('source', metavar='source-file', nargs='+',
+                        help='The source file(s). Passing many files to a '
+                             'single invocation avoids repeated interpreter '
+                             'start-up costs.')
     args = parser.parse_args()
 
     logger = logging.getLogger('dependerator')
@@ -72,12 +77,20 @@ if __name__ == '__main__':
     logger.debug("Using macros - " + str(macroDictionary))
 
     backend = database.SQLiteDatabase(args.database)
-    fortranStore = database.FortranDependencies(backend)
-    fortranAnalyser = FortranAnalyser(args.ignore,
-                                      fortranStore,
-                                      macroDictionary,
-                                      args.include)
-    if args.source.endswith('.nld'):
-        namelistAnalyser.analyse(args.source)
-    else:
-        fortranAnalyser.analyse(Path(args.source))
+    try:
+        fortranStore = database.FortranDependencies(backend)
+        fortranAnalyser = FortranAnalyser(args.ignore,
+                                          fortranStore,
+                                          macroDictionary,
+                                          args.include)
+
+        # All the source files are handled within a single transaction.
+        # Committing once per file is a significant cost when many files are
+        # presented in one invocation.
+        #
+        with backend.transaction():
+            fortranAnalyser.analyse_all(
+                [Path(source_file) for source_file in args.source]
+            )
+    finally:
+        backend.close()

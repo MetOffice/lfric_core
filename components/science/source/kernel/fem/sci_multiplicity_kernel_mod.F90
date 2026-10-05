@@ -11,12 +11,14 @@
 !>          over cells and all dof's asscociated with that cell
 module sci_multiplicity_kernel_mod
 
+use, intrinsic :: iso_fortran_env, only: real32, real64
+
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type,            &
                                     GH_FIELD, GH_REAL,   &
                                     GH_INC, ANY_SPACE_1, &
                                     CELL_COLUMN
-use constants_mod,           only : r_single, r_double, i_def
+use constants_mod,           only : i_def
 
 implicit none
 
@@ -42,8 +44,8 @@ public :: multiplicity_code
   ! Generic interface for real32 and real64 types
   interface multiplicity_code
     module procedure  &
-      multiplicity_code_r_single, &
-      multiplicity_code_r_double
+      multiplicity_code_real32, &
+      multiplicity_code_real64
   end interface
 
 contains
@@ -55,9 +57,9 @@ contains
 !! @param[in] undf Number of unique degrees of freedom  for the function space
 !! @param[in] map Dofmap for the cell at the base of the column for the function space
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine multiplicity_code_r_single(nlayers, &
+subroutine multiplicity_code_real32(  nlayers, &
                                       field,   &
                                       ndf, undf, map)
 
@@ -68,23 +70,23 @@ subroutine multiplicity_code_r_single(nlayers, &
   integer(kind=i_def), intent(in) :: ndf
   integer(kind=i_def), intent(in) :: undf
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
-  real(kind=r_single), dimension(undf), intent(inout) :: field
+  real(kind=real32),   dimension(undf), intent(inout) :: field
 
   ! Internal variables
   integer(kind=i_def) :: k, df
 
   do k = 0, nlayers - 1
     do df = 1,ndf
-      field(map(df) + k) = field(map(df) + k) + 1.0_r_single
+      field(map(df) + k) = field(map(df) + k) + 1.0_real32
     end do
   end do
 
-end subroutine multiplicity_code_r_single
+end subroutine multiplicity_code_real32
 
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine multiplicity_code_r_double(nlayers, &
+subroutine multiplicity_code_real64(  nlayers, &
                                       field,   &
                                       ndf, undf, map)
 
@@ -95,17 +97,17 @@ subroutine multiplicity_code_r_double(nlayers, &
   integer(kind=i_def), intent(in) :: ndf
   integer(kind=i_def), intent(in) :: undf
   integer(kind=i_def), dimension(ndf),  intent(in) :: map
-  real(kind=r_double), dimension(undf), intent(inout) :: field
+  real(kind=real64),   dimension(undf), intent(inout) :: field
 
   ! Internal variables
   integer(kind=i_def) :: k, df
 
   do k = 0, nlayers - 1
     do df = 1,ndf
-      field(map(df) + k) = field(map(df) + k) + 1.0_r_double
+      field(map(df) + k) = field(map(df) + k) + 1.0_real64
     end do
   end do
 
-end subroutine multiplicity_code_r_double
+end subroutine multiplicity_code_real64
 
 end module sci_multiplicity_kernel_mod
