@@ -57,7 +57,7 @@ contains
       allocate( filename_description, source=description )
     else
       allocate( filename_description, source='Master namelist file' )
-    endif
+    end if
 
     call get_command_argument( 0, dummy, length, status )
     allocate( character(length) :: program_name )

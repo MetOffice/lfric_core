@@ -168,20 +168,25 @@ contains
     ! Set optional attributes
     if ( present(yearly) ) self%yearly = yearly
     if ( present(interp_flag) ) self%does_interpolation = interp_flag
-    if ( present(pop_freq) .and. .not. trim(pop_freq) == "always" ) then
-      ! Set the population frequency as defined by the string input
-      if (trim(pop_freq) == "daily") then
-        self%population_frequency = xios_duration(0,0,1,0,0,0)
-      else if (trim(pop_freq) == "five_days") then
-        self%population_frequency = xios_duration(0,0,5,0,0,0)
-      else if (trim(pop_freq) == "ten_days") then
-        self%population_frequency = xios_duration(0,0,10,0,0,0)
-      else if (trim(pop_freq) == "monthly") then
-        self%population_frequency = xios_duration(0,1,0,0,0,0)
+    if ( present(pop_freq)) then
+      if (.not. trim(pop_freq) == "always" ) then
+        ! Set the population frequency as defined by the string input
+        if (trim(pop_freq) == "daily") then
+          self%population_frequency = xios_duration(0,0,1,0,0,0)
+        else if (trim(pop_freq) == "five_days") then
+          self%population_frequency = xios_duration(0,0,5,0,0,0)
+        else if (trim(pop_freq) == "ten_days") then
+          self%population_frequency = xios_duration(0,0,10,0,0,0)
+        else if (trim(pop_freq) == "monthly") then
+          self%population_frequency = xios_duration(0,1,0,0,0,0)
+        else
+          write( log_scratch_space,'(A,A)' ) "Invalid update freq for "//trim(self%name)// &
+                                             " time axis: "// trim(pop_freq)
+          call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+        end if
       else
-        write( log_scratch_space,'(A,A)' ) "Invalid update freq for "//trim(self%name)// &
-                                           " time axis: "// trim(pop_freq)
-        call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+      ! Default to smallest update frequency xios can handle
+      self%population_frequency = xios_duration(0,0,0,0,0,1)
       end if
     else
       ! Default to smallest update frequency xios can handle

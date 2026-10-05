@@ -108,7 +108,7 @@ contains
   !> @param[in] file_id  XIOS id of file
   subroutine metafile_init(self, file_id)
     implicit none
-    class(metafile_type), intent(in out) :: self
+    class(metafile_type), intent(inout) :: self
 
     character(*), intent(in) :: file_id
     call log_event('Initialising metafile for file id: ' // trim(file_id), log_level_debug)
@@ -223,7 +223,7 @@ contains
       file_id = metafile(i)%get_id()
       if (mode == CHECKPOINTING ) then
         field_id = trim(file_id) // "_" // trim(dict_field_id)
-      elseif (mode == RESTARTING) then
+      else if (mode == RESTARTING) then
         field_id = "restart_" // trim(dict_field_id)
       else
         call log_event("Invalid 'mode' for adding field", log_level_error)
