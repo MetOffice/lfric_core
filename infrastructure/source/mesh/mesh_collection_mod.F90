@@ -154,7 +154,7 @@ function get_mesh_by_name( self, mesh_name ) result( mesh )
     select type(m => loop%payload)
       type is (mesh_type)
         mesh => m
-        if ( mesh_name == mesh%get_mesh_name() ) exit
+        if ( trim(mesh_name) == trim(mesh%get_mesh_name()) ) exit
     end select
 
     loop => loop%next

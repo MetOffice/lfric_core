@@ -127,7 +127,7 @@ subroutine generate_local_objects( config,                &
     source_name = mesh_names(i)
     source_global_mesh_ptr => global_mesh_bank%get_global_mesh(source_name)
 
-    mapping_factor = calc_mapping_factor(global_mesh_bank, source_global_mesh_ptr)
+    mapping_factor = calc_mapping_factor(source_global_mesh_ptr, global_mesh_bank)
 
     call log_event( 'Partitioning mesh:'//trim(source_name), log_level_debug )
 

@@ -166,15 +166,17 @@ contains
     inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
     to_rotate = get_to_rotate()
 
-    ! Throw an error if stretching factor is not 1 and not on cubed-sphere
-    if ( abs(stretch_factor - 1.0_r_def) > eps .and. .not.                     &
-         (geometry == geometry_spherical .and.                                 &
-          topology == topology_periodic) ) then
-      call log_event(                                                          &
-        'driver_coordinates: Cannot determine coordinates if Schmidt ' //      &
-        'stretching factor is not 1 and mesh is not cubed-sphere',             &
-        log_level_error                                                        &
-      )
+    if ( .not. (mesh%is_geometry_spherical() .and. &
+                mesh%is_coord_sys_ll()) ) then
+
+      ! Throw an error if stretching factor is not 1 and not on cubed-sphere
+      if ( stretch_factor /= 1.0_r_def ) then
+        call log_event(                                                        &
+            'driver_coordinates: Cannot determine coordinates if Schmidt ' //  &
+            'stretching factor is not 1 and mesh is not cubed-sphere',         &
+            log_level_error                                                    &
+        )
+      end if
     end if
 
     panel_id_proxy%data = 1.0_r_def
