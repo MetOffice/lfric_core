@@ -31,7 +31,7 @@ contains
     real(kind=r_def), parameter :: radius = 104.0_r_def
 
     integer(kind=i_def) :: nlayers, ndf_chi, undf_chi, ndf_pid, undf_pid
-    integer(kind=i_def) :: map_chi(1), map_pid(1), nverts, i
+    integer(kind=i_def) :: map_chi(1), map_pid(1), nverts
     real(kind=r_def) :: alpha(2), beta(2), panel_rho(4)
     real(kind=r_def) :: alpha_out(1), beta_out(1), height_out(1), panel_id(1)
     real(kind=r_def) :: verts_XYZ(3,8,1), verts_ref(8,3), nodal_coord(3,1)
