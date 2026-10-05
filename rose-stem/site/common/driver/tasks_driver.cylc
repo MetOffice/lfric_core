@@ -13,6 +13,14 @@
 
 {% endif %}
 
+{% if task_ns.conf_name == "integration_tests" %}
+
+    {% do task_dict.update({
+        "placeholder": true,
+    }) %}
+
+{% endif %}
+
 {# Set default values for driver tasks #}
 {% if task_dict %}
     {% do task_dict.update({"application_dir": "lfric_core/components/driver"}) %}

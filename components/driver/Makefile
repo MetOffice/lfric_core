@@ -34,9 +34,7 @@ PROFILE ?= fast-debug
 export PROJECT_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 export CORE_ROOT_DIR    ?= ../..
 
-export INTERNAL_DEPENDENCIES = $(CORE_ROOT_DIR)/infrastructure \
-                               $(CORE_ROOT_DIR)/components/inventory \
-                               $(CORE_ROOT_DIR)/components/lfric-xios
+export INTERNAL_DEPENDENCIES = $(CORE_ROOT_DIR)/infrastructure
 
 export SUITE_GROUP ?= developer
 export SUITE_GROUP_NAME ?= $(notdir $(realpath $(shell pwd)/$(CORE_ROOT_DIR)))-$(PROJECT_NAME)-.*
@@ -53,6 +51,7 @@ documentation doc docs: document-uml document-api
 	$(Q)echo > /dev/null
 
 include $(CORE_ROOT_DIR)/infrastructure/build/lfric.mk
+include $(PROJECT_DIR)/build/import.mk
 include $(INTERNAL_DEPENDENCIES:=/build/import.mk)
 
 ##############################################################################
@@ -81,8 +80,8 @@ unit-tests/%: export BIN_DIR ?= $(PROJECT_DIR)/test
 unit-tests/%: export CXX_LINK = YES
 unit-tests/%: export FFLAGS += -DUNIT_TEST
 unit-tests/%: export IMPORT_PARTS = $(CORE_ROOT_DIR)/infrastructure \
-                                    $(CORE_ROOT_DIR)/components/inventory \
                                     $(CORE_ROOT_DIR)/components/science \
+                                    $(CORE_ROOT_DIR)/components/inventory \
                                     $(CORE_ROOT_DIR)/components/lfric-xios
 unit-tests/%: export META_FILE_DIR = rose-meta/lfric-driver/HEAD
 unit-tests/%: export PROGRAMS = driver_unit_tests
@@ -91,6 +90,22 @@ unit-tests/%: export SOURCE_DIR = source
 unit-tests/%: export TEST_DIR = unit-test
 unit-tests/%: export WORKING_DIR := $(WORKING_DIR)/unit-tests
 unit-tests: unit-tests/run
+
+###############################################################################
+# Integration tests
+#
+integration-tests/%: export BIN_DIR      ?= $(PROJECT_DIR)/test
+integration-tests/%: export IMPORT_PARTS  = $(CORE_ROOT_DIR)/infrastructure \
+											$(CORE_ROOT_DIR)/components/science \
+											$(CORE_ROOT_DIR)/components/inventory \
+											$(CORE_ROOT_DIR)/components/lfric-xios \
+											$(CORE_ROOT_DIR)/components/testing
+integration-tests/%: export META_FILE_DIR = rose-meta/lfric-driver/HEAD
+integration-tests/%: export PROJECT       = driver
+integration-tests/%: export SOURCE_DIR    = source
+integration-tests/%: export TEST_DIR      = integration-test
+integration-tests/%: export WORKING_DIR  := $(WORKING_DIR)/integration-tests
+integration-tests: integration-tests/run
 
 ##############################################################################
 # Clean
