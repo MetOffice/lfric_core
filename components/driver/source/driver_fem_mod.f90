@@ -12,7 +12,7 @@
 module driver_fem_mod
 
   use constants_mod,                 only: i_def, r_def, l_def, &
-                                           str_def, imdi, cmdi
+                                           str_def, imdi, cmdi, rmdi
   use extrusion_mod,                 only: twod, prime_extrusion
   use fs_continuity_mod,             only: W0, W3, Wtheta, Wchi
   use function_space_mod,            only: function_space_type
@@ -127,7 +127,7 @@ contains
 
       call init_chi_transforms( north_pole, null_island, equatorial_latitude )
     else
-      call init_chi_transforms()
+      call init_chi_transforms( [rmdi,rmdi], [rmdi,rmdi], rmdi )
     end if
 
     call chi_inventory%initialise(name="chi", table_len=n_meshes)

@@ -7,7 +7,7 @@
 !> Test the scale by detJ kernel
 module scale_by_detj_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def
+  use constants_mod, only : i_def, r_def, rmdi
   use funit
   use get_unit_test_wthetanodal_basis_mod, only : get_w0_wthetanodal_basis, &
                                                   get_w0_wthetanodal_diff_basis
@@ -41,7 +41,7 @@ contains
              element_order_v=0_i_def,           &
              rehabilitate=.true. )
 
-    call init_chi_transforms()
+    call init_chi_transforms([rmdi,rmdi], [rmdi,rmdi], rmdi)
 
   end subroutine set_up
 

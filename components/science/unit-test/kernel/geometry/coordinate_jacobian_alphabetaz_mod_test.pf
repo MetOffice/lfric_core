@@ -8,7 +8,7 @@
 module coordinate_jacobian_alphabetaz_mod_test
 
   use funit
-  use constants_mod, only: r_def, i_def
+  use constants_mod, only: r_def, i_def, rmdi
 
   use base_mesh_config_mod,      only: geometry_spherical, &
                                        topology_fully_periodic
@@ -30,7 +30,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms()
+    call init_chi_transforms([rmdi,rmdi], [rmdi,rmdi], rmdi)
 
   end subroutine set_up
 

@@ -40,7 +40,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms()
+    call init_chi_transforms([rmdi,rmdi], [rmdi,rmdi], rmdi)
 
   end subroutine set_up
 

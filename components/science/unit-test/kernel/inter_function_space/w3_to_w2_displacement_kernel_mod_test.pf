@@ -7,7 +7,7 @@
 !> Test the kernel to compute errors in W3 to W2 averaging
 module w3_to_w2_displacement_kernel_mod_test
 
-  use constants_mod,         only: i_def, r_def, PI, l_def
+  use constants_mod,         only: i_def, r_def, PI, l_def, rmdi
   use reference_element_mod, only: S, E, N, W
 
   use base_mesh_config_mod,      only: geometry_spherical, &
@@ -32,7 +32,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms()
+    call init_chi_transforms([rmdi,rmdi], [rmdi,rmdi], rmdi)
 
   end subroutine set_up
 

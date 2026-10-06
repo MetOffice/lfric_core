@@ -8,7 +8,7 @@
 !>
 module compute_mass_matrix_kernel_w3_mod_test
 
-  use constants_mod,                       only : i_def, r_def, r_single, r_double
+  use constants_mod,                       only : i_def, r_def, r_single, r_double, rmdi
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size,  &
                                                   get_w3_m3x3_q3x3x3_size
@@ -51,7 +51,7 @@ contains
              element_order_v        = 0_i_def,                    &
              rehabilitate           = .true. )
 
-    call init_chi_transforms()
+    call init_chi_transforms([rmdi,rmdi], [rmdi,rmdi], rmdi)
 
   end subroutine set_up
 

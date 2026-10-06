@@ -65,33 +65,10 @@ public :: get_stretch_factor
 public :: get_to_rotate
 public :: get_to_stretch
 
-interface init_chi_transforms
-  module procedure init_null_chi_transforms
-  module procedure init_global_chi_transforms
-end interface init_chi_transforms
-
 contains
 !------------------------------------------------------------------------------
 ! Contained functions / subroutines
 !------------------------------------------------------------------------------
-
-!------------------------------------------------------------------------------
-!> @brief  Initialise the coordinate transform information, dummy call.
-!! @description  Initialises global variables for meshes that are not
-!!               suitable for Rotation or Schmidt stretching.
-!------------------------------------------------------------------------------
-subroutine init_null_chi_transforms()
-
-  implicit none
-
-  real(r_def), parameter :: north_pole(2)    = rmdi
-  real(r_def), parameter :: null_island(2)   = rmdi
-  real(r_def), parameter :: equator_latitude = rmdi
-
-  call init_global_chi_transforms(north_pole, null_island, equator_latitude)
-
-end subroutine init_null_chi_transforms
-
 !------------------------------------------------------------------------------
 !> @brief  Initialise the coordinate transform information.
 !! @description  This routine should only be called for meshes with spherical
@@ -103,9 +80,9 @@ end subroutine init_null_chi_transforms
 !> @param[in] mesh_null_island       Target Null island location [lon,lat]
 !> @param[in] mesh_equator_latitude  Target equator latitude [lat].
 !------------------------------------------------------------------------------
-subroutine init_global_chi_transforms( mesh_north_pole,  &
-                                       mesh_null_island, &
-                                       mesh_equator_latitude )
+subroutine init_chi_transforms( mesh_north_pole,  &
+                                mesh_null_island, &
+                                mesh_equator_latitude )
 
   implicit none
 
@@ -170,7 +147,7 @@ subroutine init_global_chi_transforms( mesh_north_pole,  &
     call log_event(log_scratch_space, log_level_debug)
   end if
 
-end subroutine init_global_chi_transforms
+end subroutine init_chi_transforms
 
 !------------------------------------------------------------------------------
 !>  @brief  Nullify the coordinate transform values

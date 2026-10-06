@@ -6,7 +6,7 @@
 
 module compute_map_u_operators_kernel_mod_test
 
-  use constants_mod, only : i_def, pi, r_def
+  use constants_mod, only : i_def, pi, r_def, rmdi
 
   use base_mesh_config_mod,      only: geometry_spherical, &
                                        topology_non_periodic
@@ -31,7 +31,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms()
+    call init_chi_transforms([rmdi,rmdi], [rmdi,rmdi], rmdi)
 
   end subroutine set_up
 
