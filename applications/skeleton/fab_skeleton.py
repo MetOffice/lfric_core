@@ -16,8 +16,9 @@ the LFRicBase class contained in the infrastructure directory.
 import logging
 from pathlib import Path
 import sys
+from typing import Optional, Union
 
-from fab.steps.grab.folder import grab_folder
+from fab.api import grab_files
 
 # We need to import the base class:
 sys.path.insert(0, str(Path(__file__).parents[2] / "lfric_build"))
@@ -35,10 +36,13 @@ class FabSkeleton(PfUnitMixin, LFRicBase):
     :param name: The name of the application.
     """
 
-    def __init__(self, name: str = "skeleton") -> None:
+    def __init__(self,
+                 name: str = "skeleton",
+                 root_symbol: Optional[Union[list[str], str]] = None) -> None:
 
         app_dir = Path(__file__).parent
-        super().__init__(name=name, app_dir=app_dir)
+        super().__init__(name=name, app_dir=app_dir,
+                         root_symbol=root_symbol)
         # Store the root of this apps for later
         this_file = Path(__file__).resolve()
         self._this_root = this_file.parent
@@ -48,12 +52,12 @@ class FabSkeleton(PfUnitMixin, LFRicBase):
         Grabs the required source files and optimisation scripts.
         """
         super().grab_files_step()
-        grab_folder(self.config, src=self.app_dir / "source",
-                    dst_label='')
+        grab_files(self.config, src=self.app_dir / "source",
+                   dst_label='')
 
         # Copy the optimisation scripts into a separate directory
-        grab_folder(self.config, src=self._this_root / "optimisation",
-                    dst_label='optimisation')
+        grab_files(self.config, src=self._this_root / "optimisation",
+                   dst_label='optimisation')
 
     def get_rose_meta(self) -> Path:
         """
@@ -65,7 +69,6 @@ class FabSkeleton(PfUnitMixin, LFRicBase):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-
     logger = logging.getLogger('fab')
     logger.setLevel(logging.DEBUG)
     fab_skeleton = FabSkeleton()
