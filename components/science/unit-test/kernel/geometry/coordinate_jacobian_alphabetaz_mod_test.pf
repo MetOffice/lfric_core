@@ -10,8 +10,7 @@ module coordinate_jacobian_alphabetaz_mod_test
   use funit
   use constants_mod, only: r_def, i_def
 
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       topology_fully_periodic
+  use mesh_mod, only: geometry_spherical, topology_periodic
   use finite_element_config_mod, only: coord_system_native
 
   implicit none
@@ -30,7 +29,7 @@ contains
 
     implicit none
 
-    call init_chi_transforms(geometry_spherical, topology_fully_periodic)
+    call init_chi_transforms(geometry_spherical, topology_periodic)
 
   end subroutine set_up
 
@@ -78,7 +77,7 @@ contains
 
     integer(i_def),  parameter :: coord_system  = coord_system_native
     integer(i_def),  parameter :: geometry      = geometry_spherical
-    integer(i_def),  parameter :: topology      = topology_fully_periodic
+    integer(i_def),  parameter :: topology      = topology_periodic
     real(r_def),     parameter :: scaled_radius = 1000.0_r_def
 
     ! We choose a box centred on alpha = 0, beta = 0

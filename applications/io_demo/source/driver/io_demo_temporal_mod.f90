@@ -88,17 +88,7 @@ contains
     class(event_actor_type), pointer :: event_actor_ptr
     procedure(event_action), pointer :: context_advance
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
-
     call log_event( 'io_demo: Setting up temporal I/O', LOG_LEVEL_DEBUG )
-
-    geometry      = modeldb%config%base_mesh%geometry()
-    topology      = modeldb%config%base_mesh%topology()
-    coord_system  = modeldb%config%finite_element%coord_system()
-    scaled_radius = modeldb%config%planet%scaled_radius()
 
     temporal_fields => modeldb%fields%get_field_collection("temporal_fields")
 
@@ -135,11 +125,10 @@ contains
     end if
 
     ! Initialise the XIOS context attached to the temporal context object
-    call temporal_context%initialise_xios_context(                   &
-                              modeldb%mpi%get_comm(), chi, panel_id, &
-                              modeldb%clock, modeldb%calendar,       &
-                              geometry, topology, coord_system,      &
-                              scaled_radius )
+    call temporal_context%initialise_xios_context(                    &
+                              modeldb%config, modeldb%mpi%get_comm(), &
+                              chi, panel_id, modeldb%clock,           &
+                              modeldb%calendar )
 
     ! Add context object to the model clock's event loop, this means that the
     ! temporal context will be advanced at each model time step, and the
