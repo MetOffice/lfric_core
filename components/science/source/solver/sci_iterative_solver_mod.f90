@@ -1558,7 +1558,7 @@ contains
             iv_final = iv
             final_error(:) = 0.0_r_def
             ! In gungho, for the semi-implicit solver the fields are organised:
-            ! (pressure, horizontal velocity, vertical velocity).
+            ! (horizontal velocity, pressure, vertical velocity).
             ! Since the vertical velocity term generally controls the convergence
             ! this is tested first and so the testing loop goes backwards through the field vector
             do n = n_fields,1,-1
@@ -1877,8 +1877,8 @@ contains
     class(abstract_vector_type), intent(inout) :: x
     class(abstract_vector_type), intent(inout) :: b
 
-    integer(i_def) :: iter
-    real(r_def) :: init_norm, final_norm
+    integer(i_def) :: iter, final_iter
+    real(r_def), allocatable, dimension(:) :: init_norm, final_norm
     real(r_def) :: a1, a2, w, a_over_b, wa_over_b
 
     class(abstract_vector_type), allocatable :: z
@@ -1886,7 +1886,18 @@ contains
     class(abstract_vector_type), allocatable :: xp
     class(abstract_vector_type), allocatable :: xo
 
-    ! Chebyshev iteration for solving M y = f with preconditioner D
+    integer(kind=i_def) :: n_fields, n
+
+    logical(kind=l_def), allocatable :: converged(:)
+
+    n_fields = x%vector_size()
+    allocate( init_norm(n_fields), final_norm(n_fields), converged(n_fields))
+
+    ! Initialise final_norm to a default number to avoid issues
+    ! when monitor_convergence = .true. but the norm isn't computed
+    final_norm(:) = 1.0_r_def
+
+    ! Chebyshev iteration for solving M x = b with preconditioner D
 
     ! Set initial guess
     call x%set_scalar(0.0_r_def)
@@ -1895,9 +1906,15 @@ contains
     call x%duplicate(xo)
     call xo%set_scalar(0.0_r_def)
     call x%duplicate(z)
+    call z%set_scalar(0.0_r_def)
     call x%duplicate(r)
 
-    if ( self%monitor_convergence ) init_norm = max(1.0_r_def, b%norm())
+
+    if ( self%monitor_convergence ) then
+      do n = 1,n_fields
+        init_norm(n) = max(1.0_r_def, b%field_norm(n))
+      end do
+    end if
 
     ! Set up scalars
     a1 = 2.0_r_def/(self%lmax - self%lmin)
@@ -1906,9 +1923,8 @@ contains
     w = 1.0_r_def
 
     do iter = 1, self%max_iter
-
       ! r = b-M*xo
-      call self%lin_op%apply(xo,z)
+      if ( iter > 1 ) call self%lin_op%apply(xo,z)
       call r%axpby(1.0_r_def, b, -1.0_r_def, z)
 
       ! z = D^{-1}.r
@@ -1918,7 +1934,33 @@ contains
       w = 1.0_r_def/(1.0_r_def - w/(4.0_r_def*a2**2))
       wa_over_b = w * a_over_b
       call x%axpby(wa_over_b, z, w, xo)
-      call x%axpy(1.0_r_def-w,xp)
+      call x%axpy(1.0_r_def-w, xp)
+
+      ! residual = norm(b - M*x)
+      if ( self%monitor_convergence ) then
+        converged(:) = .false.
+        final_iter = iter
+        call self%lin_op%apply(x,z) ! z = M.x
+        call z%axpy(-1.0_r_def, b)  ! z = M.x-b
+
+        do n = 1, n_fields
+          final_norm(n) = z%field_norm(n)
+          write(log_scratch_space, &
+               '("chebyshev[",I4,",",I2,"], residual       = ",E16.8, ", initial = ",E16.8)') &
+                 iter, n, final_norm(n)/init_norm(n), init_norm(n)
+          call log_event(log_scratch_space,LOG_LEVEL_INFO)
+          if (   final_norm(n)/init_norm(n) < self%r_tol &
+            .or. final_norm(n) < self%a_tol ) then
+            ! This field is converged
+            converged(n) = .true.
+          else
+            ! This field is not converged so don't bother checking any others
+            exit
+          end if
+        end do
+        if ( all(converged) ) exit
+
+      end if
 
       if ( iter < self%max_iter ) then
         ! xp = xo
@@ -1929,17 +1971,15 @@ contains
       end if
 
     end do
-    ! residiual = norm(b - M*x)
+
     if ( self%monitor_convergence ) then
-      call self%lin_op%apply(x,z) ! z = M.x
-      call z%axpy(-1.0_r_def, b)  ! z = M.x-b
-      final_norm = z%norm()
-      write(log_scratch_space, &
-          '("chebyshev[",I4,"], redidual = ",E16.8)') self%max_iter, final_norm/init_norm
-      if ( self%fail_on_non_converged ) then
-        call log_event(log_scratch_space,LOG_LEVEL_ERROR)
+          write(log_scratch_space, &
+              '("chebyshev[",I4,"], final residual = ",E16.8, ", initial = ",E16.8 )') &
+                final_iter, sum(final_norm/init_norm), sum(init_norm)
+      if ( .not. all(converged) .and.  self%fail_on_non_converged ) then
+          call log_event(log_scratch_space,LOG_LEVEL_ERROR)
       else
-        call log_event(log_scratch_space,LOG_LEVEL_INFO)
+          call log_event(log_scratch_space,LOG_LEVEL_INFO)
       end if
     end if
 
