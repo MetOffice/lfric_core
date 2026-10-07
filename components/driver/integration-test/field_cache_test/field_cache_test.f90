@@ -14,14 +14,16 @@
 !>   This test currently creates a simple constant-valued test field on the W3
 !>   function space and prints it to verify basic infrastructure functionality.
 
-program dummy_test
+program field_cache_test
 
-  use constants_mod,                  only : r_tran, r_second
+  use constants_mod,                  only : r_tran, r_second, i_def
+  use field_cache_alg_mod,            only : field_cache_type
+  use field_collection_mod,           only : field_collection_type
   use fs_continuity_mod,              only : W3
   use function_space_mod,             only : function_space_type
   use function_space_collection_mod,  only : function_space_collection
-  use test_helpers_mod,               only : create_test_field_flood_constant, &
-                                             print_test_field
+  use test_field_mod,                 only : test_field_64_type
+  use test_helpers_mod,               only : print_test_field
   use test_tiny_world_mod,            only : initialise_tiny_world, &
                                              finalise_tiny_world,   &
                                              mesh
@@ -54,20 +56,48 @@ contains
 
     type(function_space_type), pointer :: w3_fs
 
-    type(field_real64_type),  allocatable, target :: dummy_field
-    type(test_field_64_type), allocatable         :: dummy_test_field
+    type(field_real64_type) :: field_cache_field
+    type(field_real64_type), pointer :: field_cache_field_ptr
+    type(test_field_64_type), allocatable :: field_cache_test_field
+    real(real64), pointer :: field_values(:)
+
+    type(field_collection_type) :: depository
+
+    type(field_cache_type) :: field_cache
+
+    call depository%initialise(name = "depository", table_len = 100_i_def)
 
     ! Retrieve the W3 function space from the mesh
     w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
+    call field_cache_field%initialise(w3_fs, name = "field_cache_field")
+    call depository%add_field(field_cache_field)
+    call depository%get_field("field_cache_field", field_cache_field_ptr)
 
-    ! Create a test field filled with constant value 1.0_real64
-    call create_test_field_flood_constant( w3_fs, "dummy_field",                 &
-                                           dummy_field, dummy_test_field, &
-                                           1.0_real64 )
+    ! Create a test field wrapper for the LFRic field
+    allocate(field_cache_test_field, source=test_field_64_type( field_cache_field_ptr ))
+    field_values => field_cache_test_field%get_data()
+    field_values = 1.1_real64
+    call field_cache_test_field%copy_to_lfric()
+
+    ! Initialize the field cache
+    call field_cache%initialise(depository, (/"field_cache_field"/))
+
+    ! Print the initial field values to stdout for verification
+    call print_test_field( field_cache_test_field, "field_before_caching" )
+
+    call field_cache%cache_fields()
+
+    field_values = 2.2_real64
+    call field_cache_test_field%copy_to_lfric()
 
     ! Print the field values to stdout for verification
-    call print_test_field( dummy_test_field )
+    call print_test_field( field_cache_test_field, "field_after_caching" )
+
+    ! Reset the field cache, which should restore the field values to those cached
+    call field_cache%reset_fields()
+
+    call print_test_field( field_cache_test_field, "field_after_reset" )
 
   end subroutine run_test_64
 
-end program dummy_test
+end program field_cache_test
