@@ -53,7 +53,7 @@ contains
   !> intent(in) field_names - The list of field names to cache.
   subroutine initialise(this, source_field_collection, field_names)
     class(field_cache_type), intent(inout) :: this
-    type(field_collection_type), pointer, intent(in) :: source_field_collection
+    type(field_collection_type), target, intent(in) :: source_field_collection
     character(*), dimension(:), intent(in) :: field_names
 
     integer :: i
