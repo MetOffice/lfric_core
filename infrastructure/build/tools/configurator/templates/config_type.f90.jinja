@@ -174,7 +174,8 @@ subroutine add_namelist(self, namelist_obj)
     ! Multiple instances: ALLOWED
     if (trim(profile_name) == cmdi) then
       write(output_unit, '(A)') 'Duplicate ' // trim(name) //&
-          ' namelist: missing profile name.'
+          ' namelist: missing profile name. "instance_key_member"' //&
+	  ' variable unset.'
       flush(error_unit)
       stop 3
     else if (self%namelist_exists(trim(full_name))) then
