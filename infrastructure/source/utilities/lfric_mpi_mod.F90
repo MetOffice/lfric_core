@@ -23,7 +23,7 @@ module lfric_mpi_mod
                  mpi_character,                                         &
                  mpi_init, mpi_finalize,                                &
                  mpi_comm_dup, mpi_comm_free,                           &
-                 mpi_comm_size, mpi_comm_rank, mpi_barrier, mpi_gather
+                 mpi_comm_size, mpi_comm_rank, mpi_barrier
 #else
   use mpi_f08, only: mpi_comm, mpi_datatype, mpi_comm_world,                &
                      mpi_sum, mpi_min, mpi_max, mpi_success,                &
