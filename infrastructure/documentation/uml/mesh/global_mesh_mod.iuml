@@ -4,13 +4,15 @@
 
 class global_mesh_mod::global_mesh_type {
   -mesh_name: string
+  -origin_name: string
+  -origin_file: string
   -global_model: logical
   -geometry: integer
   -topology: integer
   -coord_sys: integer
   -coord_units_xy: string[2]
   -constructor_inputs: string
-  -domain_size: real[2]
+  -domain_extents: real[2,4]
   -north_pole: real[2]
   -null_island: real[2]
   -equatorial_latitude: real
@@ -32,6 +34,7 @@ class global_mesh_mod::global_mesh_type {
   -nedges_per_cell: integer
   -max_cells_per_vertex: integer
   -npanels: integer
+  -void_cell: integer
   -ntarget_meshes: integer
   -target_global_mesh_names: string[] <<allocatable>>
   -global_mesh_maps: global_mesh_map_collection_type <<allocatable>>
@@ -44,11 +47,14 @@ class global_mesh_mod::global_mesh_type {
   +clear()
 
   +get_mesh_name(): string
+  +get_origin_name(): string
+  +get_origin_file(): string
   +get_npanels(): integer
   +get_mesh_periodicity: logical[2]
   +get_cell_id(<<in>>cell_number: integer,<<in>>x_cells: integer,<<in>>y_cells: integer ): integer
   +get_cell_on_vert( <<in>>vertex_number: integer, <<out>>cells: integer[] )
   +get_cell_on_edge( <<in>>edge_number: integer, <<out>>cells: integer[] )
+  +get_void_cell(): integer
   +get_nverts(): integer
   +get_nedges(): integer
   +get_ncells(): integer
@@ -62,7 +68,11 @@ class global_mesh_mod::global_mesh_type {
   +get_nedges_per_cell(): integer
   +get_cell_next( <<in>>cell_gid: integer, <<out>>cell_next: integer[] )
   +get_all_cells_next(): integer[::]
-  +get_vert_coords( <<in>>vert_gid: integer, <<out>>vert_coords: real[] )
+
+  +get_a_vert_coords( <<in>>vert_gid: integer, <<out>>vert_coords: real[] )
+  +get_all_vert_coords( <<out>>vert_coords: real[::] )
+  +get_vert_coords<<generic>>: get_a_vert_coords(...), get_all_vert_coords(...)
+
   +get_cell_coords( <<in>>cell_gid: integer, <<out>>cell_coords: real[] )
   +get_vert_cell_owner( vert: integer ): integer
   +get_edge_cell_owner( <<in>>edge: integer ): integer
@@ -81,7 +91,7 @@ class global_mesh_mod::global_mesh_type {
   +is_coord_sys_ll(): logical
 
   +get_rim_depth(): integer
-  +get_domain_size(): integer
+  +get_domain_extents(): integer[2,4]
   +get_north_pole(): real[2]
   +get_null_island(): real[2]
   +get_equatorial_latitude(): real
