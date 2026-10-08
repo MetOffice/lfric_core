@@ -32,10 +32,10 @@ module lfric_mpi_mod
                      mpi_character,                                         &
                      mpi_init, mpi_finalize,                                &
                      mpi_comm_dup, mpi_comm_free,                           &
-      mpi_comm_size, mpi_comm_rank, mpi_barrier, mpi_gather
+                     mpi_comm_size, mpi_comm_rank, mpi_barrier
 #endif
-! The above use statement should include mpi_bcast, mpi_allreduce and
-! mpi_allgather, but an apparent bug in Cray mpich causes a failure if
+! The above use statement should include mpi_bcast, mpi_allreduce, mpi_gather
+! and mpi_allgather, but an apparent bug in Cray mpich causes a failure if
 ! they are included, so they have been pragmatically omitted.
 #endif
   use log_mod,       only : log_event, LOG_LEVEL_ERROR
