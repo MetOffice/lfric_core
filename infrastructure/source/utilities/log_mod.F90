@@ -381,7 +381,7 @@ contains
   !> or greater than LOG_LEVEL_ERROR), execution of the code will be aborted.
   !>
   !> @param message A description of the event.
-  !> @param level   The severity of the event. Defaults to cInfoLevel.
+  !> @param level   The severity of the event. Defaults to InfoLevel.
   !>
   subroutine log_event(message, level)
 
