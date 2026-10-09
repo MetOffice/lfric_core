@@ -8,7 +8,7 @@ module chi_transform_mod_test
 
   use, intrinsic :: iso_fortran_env, only : real64
 
-  use constants_mod, only : i_def, r_def, str_long, PI, rmdi
+  use constants_mod, only : i_def, r_def, str_long, PI
 
   use base_mesh_config_mod, only: geometry_spherical,      &
                                   geometry_planar,         &

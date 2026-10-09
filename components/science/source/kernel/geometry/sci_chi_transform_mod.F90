@@ -74,47 +74,28 @@ contains
 !! @description  This routine should only be called for meshes with spherical
 !!               geometries. All arguments given as [longitude, latitude] on an
 !!               unrotated frame of reference. Stretching to the
-!!               mesh_equator_latitude is via Schmidt transform.
-!> @param[in] mesh_north_pole        Target north pole location [lon,lat], used to
-!>                                   generate the rotation matrix.
-!> @param[in] mesh_null_island       Target Null island location [lon,lat]
-!> @param[in] mesh_equator_latitude  Target equator latitude [lat].
+!!               equator_latitude is via Schmidt transform.
+!> @param[in] north_pole        Target north pole location [lon,lat], used to
+!>                              generate the rotation matrix.
+!> @param[in] null_island       Target Null island location [lon,lat]
+!> @param[in] equator_latitude  Target equator latitude [lat].
 !------------------------------------------------------------------------------
-subroutine init_chi_transforms( mesh_north_pole,  &
-                                mesh_null_island, &
-                                mesh_equator_latitude )
+subroutine init_chi_transforms( north_pole,  &
+                                null_island, &
+                                equator_latitude )
 
   implicit none
 
-  real(r_def), intent(in) :: mesh_north_pole(2)
-  real(r_def), intent(in) :: mesh_null_island(2)
-  real(r_def), intent(in) :: mesh_equator_latitude
+  real(r_def), intent(in) :: north_pole(2)
+  real(r_def), intent(in) :: null_island(2)
+  real(r_def), intent(in) :: equator_latitude
 
-  real(r_def) :: north_pole(2)
-  real(r_def) :: null_island(2)
-  real(r_def) :: equator_latitude
-
-  ! Set North Pole
-  if ( (abs(mesh_north_pole(1) - rmdi) > EPS) .and. &
-       (abs(mesh_north_pole(2) - rmdi) > EPS) ) then
-    north_pole(:) = mesh_north_pole(:)
-  else
-    north_pole = [0.0_r_def, PI/2.0_r_def]
-  end if
-
-  ! Set Null Island
-  if ( (abs(mesh_null_island(1) - rmdi) > EPS) .and. &
-       (abs(mesh_null_island(2) - rmdi) > EPS) ) then
-    null_island(:) = mesh_null_island(:)
-  else
-    null_island = [0.0_r_def, 0.0_r_def]
-  end if
-
-  ! Set equator latitude
-  if ( abs(mesh_equator_latitude - rmdi) > EPS ) then
-    equator_latitude = mesh_equator_latitude
-  else
-    equator_latitude = 0.0_r_def
+  if ( any(abs(north_pole(:) - rmdi)    < EPS) .or. &
+       any(abs(null_island(:) - rmdi)   < EPS) .or. &
+           abs(equator_latitude - rmdi) < EPS ) then
+    write(log_scratch_space, '(A)') &
+        'Missing argument data while initialising chi transforms.'
+    call log_event(log_scratch_space, log_level_error)
   end if
 
   ! Determine degrees of stretching / rotation.

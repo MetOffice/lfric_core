@@ -11,7 +11,7 @@
 !>             inventories are also captured.
 module driver_fem_mod
 
-  use constants_mod,                 only: i_def, r_def, l_def, &
+  use constants_mod,                 only: i_def, r_def, l_def, PI, &
                                            str_def, imdi, cmdi, rmdi
   use extrusion_mod,                 only: twod, prime_extrusion
   use fs_continuity_mod,             only: W0, W3, Wtheta, Wchi
@@ -124,10 +124,16 @@ contains
       north_pole  = local_mesh%get_north_pole()
       null_island = local_mesh%get_null_island()
       equatorial_latitude = local_mesh%get_equatorial_latitude()
-
       call init_chi_transforms( north_pole, null_island, equatorial_latitude )
     else
-      call init_chi_transforms( [rmdi,rmdi], [rmdi,rmdi], rmdi )
+      ! Note: Calling 'init_chi_transforms' is only valid for meshes which have a
+      !       spherical geometry and coordinate system. While it may not be relevant
+      !       to this mesh, it is called due to an unknown interaction which changes
+      !       results. If it is not applicable to this mesh, it should be remove once
+      !       this issue is resolved.
+      call init_chi_transforms( [0.0_r_def, PI/2.0_r_def], &
+                                [0.0_r_def, 0.0_r_def], &
+                                0.0_r_def )
     end if
 
     call chi_inventory%initialise(name="chi", table_len=n_meshes)
