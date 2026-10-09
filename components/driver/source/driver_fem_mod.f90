@@ -11,8 +11,8 @@
 !>             inventories are also captured.
 module driver_fem_mod
 
-  use constants_mod,                 only: i_def, r_def, l_def, &
-                                           str_def, imdi, cmdi
+  use constants_mod,                 only: i_def, r_def, l_def, PI, &
+                                           str_def, imdi, cmdi, rmdi
   use extrusion_mod,                 only: twod, prime_extrusion
   use fs_continuity_mod,             only: W0, W3, Wtheta, Wchi
   use function_space_mod,            only: function_space_type
@@ -29,7 +29,9 @@ module driver_fem_mod
   ! Object types
   use config_mod, only: config_type
   use field_mod,  only: field_type
+
   use mesh_mod,   only: mesh_type
+  use local_mesh_mod,   only: local_mesh_type
   use inventory_by_mesh_mod, only: inventory_by_mesh_type
 
   ! Configuration modules
@@ -82,17 +84,19 @@ contains
     character(str_def) :: mesh_name, prime_mesh_name
     integer(i_def)     :: geometry, topology, coord_system
     integer(i_def)     :: coord_space, coord_order, coord_order_nonprime
+    integer(i_def)     :: n_meshes
     real(r_def)        :: scaled_radius
+
+    real(r_def) :: north_pole(2)
+    real(r_def) :: null_island(2)
+    real(r_def) :: equatorial_latitude
+
+    type(local_mesh_type), pointer :: local_mesh
 
     call log_event( 'FEM specifics: creating function spaces...', &
                     log_level_info )
 
-    nullify(mesh, twod_mesh, fs)
-
-    prime_mesh_name = cmdi
-    if (config%namelist_exists('base_mesh')) then
-      prime_mesh_name = config%base_mesh%prime_mesh_name()
-    end if
+    nullify(mesh, twod_mesh, local_mesh, fs)
 
     coord_system         = config%finite_element%coord_system()
     coord_order          = config%finite_element%coord_order()
@@ -100,23 +104,46 @@ contains
     coord_order_nonprime = config%finite_element%coord_order_nonprime()
     scaled_radius        = config%planet%scaled_radius()
 
+    n_meshes       = mesh_collection%n_meshes()
+    all_mesh_names = mesh_collection%get_mesh_names()
+
     ! ======================================================================== !
     ! Initialise coordinates
     ! ======================================================================== !
+    prime_mesh_name = cmdi
+    if (config%namelist_exists('base_mesh')) then
+      prime_mesh_name = config%base_mesh%prime_mesh_name()
+    end if
 
-    ! To loop through mesh collection, get all mesh names
-    ! Then get mesh from collection using these names
-    all_mesh_names = mesh_collection%get_mesh_names()
+    mesh => mesh_collection%get_mesh(all_mesh_names(1))
 
-    call chi_inventory%initialise(name="chi", table_len=size(all_mesh_names))
-    call panel_id_inventory%initialise(name="panel_id", &
-                                       table_len=size(all_mesh_names))
+    if ( mesh%is_geometry_spherical() .and. mesh%is_coord_sys_ll() ) then
+
+      ! Initialise any coordinate transformations
+      local_mesh => mesh%get_local_mesh()
+      north_pole  = local_mesh%get_north_pole()
+      null_island = local_mesh%get_null_island()
+      equatorial_latitude = local_mesh%get_equatorial_latitude()
+      call init_chi_transforms( north_pole, null_island, equatorial_latitude )
+    else
+      ! Note: Calling 'init_chi_transforms' is only valid for meshes which have a
+      !       spherical geometry and coordinate system. While it may not be relevant
+      !       to this mesh, it is called due to an unknown interaction which changes
+      !       results. If it is not applicable to this mesh, it should be removed once
+      !       this issue is resolved.
+      call init_chi_transforms( [0.0_r_def, PI/2.0_r_def], &
+                                [0.0_r_def, 0.0_r_def], &
+                                0.0_r_def )
+    end if
+
+    call chi_inventory%initialise(name="chi", table_len=n_meshes)
+    call panel_id_inventory%initialise(name="panel_id", table_len=n_meshes)
 
     ! ======================================================================== !
     ! Loop through all 3D meshes
     ! ======================================================================== !
 
-    do i = 1, size(all_mesh_names)
+    do i=1, n_meshes
 
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()
@@ -132,10 +159,6 @@ contains
       else
         topology = topology_non_periodic
       end if
-
-      ! Initialise coordinate transformations
-      call init_chi_transforms( geometry, topology, &
-                                mesh_collection=mesh_collection )
 
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= twod) then
