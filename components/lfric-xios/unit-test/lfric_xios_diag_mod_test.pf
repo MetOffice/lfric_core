@@ -38,7 +38,7 @@ contains
                               get_field_domain_ref, &
                               get_field_axis_ref,   &
                               get_axis_dimension,   &
-                              set_zoom_axis_attr,   &
+                              set_extract_axis_attr,   &
                               set_variable,         &
                               get_variable
 
@@ -101,7 +101,7 @@ contains
     @assertEqual(get_variable('does_not_exist', val), val)
 
     ! test zoom axis handling - verify that call succeeds
-    call set_zoom_axis_attr('zoom1', 10, 0, .true.)
+    call set_extract_axis_attr('zoom1', 10, 0, .true.)
 
   end subroutine test_lfric_xios_diag
 
