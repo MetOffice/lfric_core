@@ -3,6 +3,8 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 #
 # Include this file from your model make file in order to gain access to the
 # LFRic build system. Include it at the end of the make file as it contains
@@ -29,6 +31,7 @@
 #                     meto-ex1a"
 ##############################################################################
 
+
 .SECONDEXPANSION:
 
 # Ensure make offers the features we need...
@@ -53,6 +56,18 @@ endif
 #
 export WORKING_DIR ?= working
 export PWD ?= $(shell pwd)
+
+# Identify the make process which owns this build. The persistent PSyclone
+# server (see psyclone/psyclone_server.py) watches this process and shuts
+# itself down as soon as it exits, so a completed - or manually killed - build
+# never leaves servers running. $(shell ...) is run by a shell forked directly
+# by make, so $PPID is this make's own pid. The guard means recursive
+# sub-makes inherit the value from the environment rather than recomputing it,
+# pinning every server to the top-level make.
+#
+ifeq ($(origin PSYCLONE_OWNER_PID), undefined)
+  export PSYCLONE_OWNER_PID := $(shell echo $$PPID)
+endif
 
 TEST_SUITE_TARGETS ?= meto-azspice meto-ex1a
 

@@ -11,13 +11,15 @@
 !>
 module sample_flux_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only : arg_type, func_type,     &
                                 GH_FIELD, GH_REAL,       &
                                 GH_READ, GH_INC,         &
                                 ANY_SPACE_1,             &
                                 GH_BASIS, GH_DIFF_BASIS, &
                                 CELL_COLUMN, GH_EVALUATOR
-  use constants_mod,     only : r_def, r_single, r_double, i_def
+  use constants_mod,     only : r_def, i_def
   use fs_continuity_mod, only : W0, W2
   use kernel_mod,        only : kernel_type
 
@@ -54,8 +56,8 @@ module sample_flux_kernel_mod
   ! Generic interface for real32 and real64 types
   interface sample_flux_code
     module procedure  &
-      sample_flux_code_r_single, &
-      sample_flux_code_r_double
+      sample_flux_code_real32, &
+      sample_flux_code_real64
   end interface
 contains
 
@@ -73,9 +75,9 @@ contains
 !! @param[in] map_q Dofmap for the cell at the base of the column for the field to be advected
 !! @param[in] basis_q Basis functions evaluated at gaussian quadrature points
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine sample_flux_code_r_single(nlayers,                      &
+subroutine sample_flux_code_real32(  nlayers,                      &
                                      flux, u, rmultiplicity, q,    &
                                      ndf_f, undf_f, map_f,         &
                                      ndf_q, undf_q, map_q, basis_q &
@@ -91,35 +93,34 @@ subroutine sample_flux_code_r_single(nlayers,                      &
   integer(kind=i_def), dimension(ndf_q), intent(in) :: map_q
 
   real(kind=r_def),    dimension(1,ndf_q,ndf_f), intent(in)    :: basis_q
-  real(kind=r_single), dimension(undf_f),        intent(inout) :: flux
-  real(kind=r_single), dimension(undf_f),        intent(in)    :: u, rmultiplicity
-  real(kind=r_single), dimension(undf_q),        intent(in)    :: q
+  real(kind=real32),   dimension(undf_f),        intent(inout) :: flux
+  real(kind=real32),   dimension(undf_f),        intent(in)    :: u, rmultiplicity
+  real(kind=real32),   dimension(undf_q),        intent(in)    :: q
 
   ! Internal variables
-  integer(kind=i_def)                :: df, df_q, k, loc
-
-  real(kind=r_single), dimension(ndf_q) :: q_cell
-  real(kind=r_single)                   :: q_at_node
+  integer(kind=i_def)                   :: df, df_q, k, loc
+  real(kind=real32),   dimension(ndf_q) :: q_cell
+  real(kind=real32)                     :: q_at_node
 
   do k = 0, nlayers-1
     do df_q = 1, ndf_q
       q_cell(df_q) = q( map_q(df_q) + k )
     end do
     do df = 1, ndf_f
-      q_at_node = 0.0_r_single
+      q_at_node = 0.0_real32
       do df_q = 1,ndf_q
-        q_at_node = q_at_node + q_cell(df_q)*real(basis_q(1,df_q,df), r_single)
+        q_at_node = q_at_node + q_cell(df_q)*real(basis_q(1,df_q,df), real32)
       end do
       loc = map_f(df) + k
       flux( loc ) = flux( loc ) + u( loc )*q_at_node*rmultiplicity( loc )
     end do
   end do
 
-end subroutine sample_flux_code_r_single
+end subroutine sample_flux_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine sample_flux_code_r_double(nlayers,                      &
+subroutine sample_flux_code_real64(  nlayers,                      &
                                      flux, u, rmultiplicity, q,    &
                                      ndf_f, undf_f, map_f,         &
                                      ndf_q, undf_q, map_q, basis_q &
@@ -135,30 +136,29 @@ subroutine sample_flux_code_r_double(nlayers,                      &
   integer(kind=i_def), dimension(ndf_q), intent(in) :: map_q
 
   real(kind=r_def),    dimension(1,ndf_q,ndf_f), intent(in)    :: basis_q
-  real(kind=r_double), dimension(undf_f),        intent(inout) :: flux
-  real(kind=r_double), dimension(undf_f),        intent(in)    :: u, rmultiplicity
-  real(kind=r_double), dimension(undf_q),        intent(in)    :: q
+  real(kind=real64),   dimension(undf_f),        intent(inout) :: flux
+  real(kind=real64),   dimension(undf_f),        intent(in)    :: u, rmultiplicity
+  real(kind=real64),   dimension(undf_q),        intent(in)    :: q
 
   ! Internal variables
-  integer(kind=i_def)                :: df, df_q, k, loc
-
-  real(kind=r_double), dimension(ndf_q) :: q_cell
-  real(kind=r_double)                   :: q_at_node
+  integer(kind=i_def)                   :: df, df_q, k, loc
+  real(kind=real64),   dimension(ndf_q) :: q_cell
+  real(kind=real64)                     :: q_at_node
 
   do k = 0, nlayers-1
     do df_q = 1, ndf_q
       q_cell(df_q) = q( map_q(df_q) + k )
     end do
     do df = 1, ndf_f
-      q_at_node = 0.0_r_double
+      q_at_node = 0.0_real64
       do df_q = 1,ndf_q
-        q_at_node = q_at_node + q_cell(df_q)*real(basis_q(1,df_q,df), r_double)
+        q_at_node = q_at_node + q_cell(df_q)*real(basis_q(1,df_q,df), real64)
       end do
       loc = map_f(df) + k
       flux( loc ) = flux( loc ) + u( loc )*q_at_node*rmultiplicity( loc )
     end do
   end do
 
-end subroutine sample_flux_code_r_double
+end subroutine sample_flux_code_real64
 
 end module sample_flux_kernel_mod

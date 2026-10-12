@@ -11,12 +11,14 @@
 !>
 module sci_tri_matrix_vector_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only : arg_type,                  &
                                 GH_FIELD, GH_REAL,         &
                                 GH_WRITE, GH_READ,         &
                                 ANY_DISCONTINUOUS_SPACE_3, &
                                 CELL_COLUMN
-  use constants_mod,     only : r_single, r_double, i_def
+  use constants_mod,     only : i_def
   use fs_continuity_mod, only : Wtheta
   use kernel_mod,        only : kernel_type
 
@@ -48,8 +50,8 @@ module sci_tri_matrix_vector_kernel_mod
   ! Generic interface for real32 and real64 types
   interface tri_matrix_vector_code
     module procedure  &
-      tri_matrix_vector_code_r_single, &
-      tri_matrix_vector_code_r_double
+      tri_matrix_vector_code_real32, &
+      tri_matrix_vector_code_real64
   end interface
 
 contains
@@ -72,9 +74,9 @@ contains
 !! @param[in] undf_wt The number of unique degrees of freedom for Wtheta
 !! @param[in] map_wt Dofmap for the cell at the base of the column for Wtheta
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine tri_matrix_vector_code_r_single(                                   &
+subroutine tri_matrix_vector_code_real32(                                     &
                                             nlayers_shifted,                  &
                                             field_sh_w3,                      &
                                             tri_below,                        &
@@ -94,11 +96,11 @@ subroutine tri_matrix_vector_code_r_single(                                   &
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=r_single), dimension(undf_sh_w3), intent(inout) :: field_sh_w3
-  real(kind=r_single), dimension(undf_sh_w3), intent(in)    :: tri_below
-  real(kind=r_single), dimension(undf_sh_w3), intent(in)    :: tri_diag
-  real(kind=r_single), dimension(undf_sh_w3), intent(in)    :: tri_above
-  real(kind=r_single), dimension(undf_wt),    intent(in)    :: field_wt
+  real(kind=real32),   dimension(undf_sh_w3), intent(inout) :: field_sh_w3
+  real(kind=real32),   dimension(undf_sh_w3), intent(in)    :: tri_below
+  real(kind=real32),   dimension(undf_sh_w3), intent(in)    :: tri_diag
+  real(kind=real32),   dimension(undf_sh_w3), intent(in)    :: tri_above
+  real(kind=real32),   dimension(undf_wt),    intent(in)    :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -121,11 +123,11 @@ subroutine tri_matrix_vector_code_r_single(                                   &
     end do
   end do
 
-end subroutine tri_matrix_vector_code_r_single
+end subroutine tri_matrix_vector_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine tri_matrix_vector_code_r_double(                                   &
+subroutine tri_matrix_vector_code_real64(                                     &
                                             nlayers_shifted,                  &
                                             field_sh_w3,                      &
                                             tri_below,                        &
@@ -145,11 +147,11 @@ subroutine tri_matrix_vector_code_r_double(                                   &
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=r_double), dimension(undf_sh_w3), intent(inout) :: field_sh_w3
-  real(kind=r_double), dimension(undf_sh_w3), intent(in)    :: tri_below
-  real(kind=r_double), dimension(undf_sh_w3), intent(in)    :: tri_diag
-  real(kind=r_double), dimension(undf_sh_w3), intent(in)    :: tri_above
-  real(kind=r_double), dimension(undf_wt),    intent(in)    :: field_wt
+  real(kind=real64),   dimension(undf_sh_w3), intent(inout) :: field_sh_w3
+  real(kind=real64),   dimension(undf_sh_w3), intent(in)    :: tri_below
+  real(kind=real64),   dimension(undf_sh_w3), intent(in)    :: tri_diag
+  real(kind=real64),   dimension(undf_sh_w3), intent(in)    :: tri_above
+  real(kind=real64),   dimension(undf_wt),    intent(in)    :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -172,6 +174,6 @@ subroutine tri_matrix_vector_code_r_double(                                   &
     end do
   end do
 
-end subroutine tri_matrix_vector_code_r_double
+end subroutine tri_matrix_vector_code_real64
 
 end module sci_tri_matrix_vector_kernel_mod

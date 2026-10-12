@@ -8,10 +8,11 @@
 A set of tests which exercise the temporal reading functionality provided by
 the LFRic-XIOS component.
 """
-from testframework import TestEngine, TestFailed
-from xiostest import LFRicXiosTest
 from pathlib import Path
 import sys
+from testframework import TestEngine, TestFailed # pylint: disable=import-error
+from xiostest import LFRicXiosTest # pylint: disable=import-error
+
 
 ###############################################################################
 class LfricXiosFullCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
@@ -22,6 +23,7 @@ class LfricXiosFullCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-public-
     def __init__(self):
         super().__init__(command=[sys.argv[1], "cyclic_full.nml"], processes=1)
         self.gen_data('temporal_data.cdl', 'lfric_xios_cyclic_input.nc')
+        self.gen_data('cyclic_full_kgo.cdl', 'cyclic_full_kgo.nc')
         self.gen_config( 'cyclic_base.nml', 'cyclic_full.nml', {} )
 
     def test(self, returncode: int, out: str, err: str):
@@ -32,16 +34,14 @@ class LfricXiosFullCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-public-
         if returncode != 0:
             print(out)
             raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
-                             f"stderr:\n" +
-                             f"{err}")
+                             f"stderr:\n {err}")
 
         self.plot_output(Path(self.test_working_dir, 'lfric_xios_cyclic_input.nc'),
                          Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
                          'temporal_field')
 
-        if not self.nc_data_match(Path(self.test_working_dir, 'lfric_xios_cyclic_input.nc'),
-                                  Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
-                                  'temporal_field'):
+        if not self.nc_kgo_check(Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
+                                 Path(self.test_working_dir, 'cyclic_full_kgo.nc')):
             raise TestFailed("Output data does not match input data for same time values")
 
         return "Reading full set of cyclic data okay..."
@@ -58,7 +58,7 @@ class LfricXiosFutureCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-publi
         self.gen_config( 'cyclic_base.nml', 'cyclic_future.nml',
                          {"calendar_start":'2024-01-01 14:55:00'} )
 
-    def test(self, returncode: int, out: str, err: str):
+    def test(self, returncode: int, out: str, err: str): # pylint: disable=unused-argument
         """
         Test the output of the future cyclic test
         """
@@ -96,11 +96,10 @@ class LfricXiosPastCyclicTest(LFRicXiosTest):  # pylint: disable=too-few-public-
         if returncode != 0:
             print(out)
             raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
-                             f"stderr:\n" +
-                             f"{err}")
-        if not self.nc_data_match(Path(self.test_working_dir, 'cyclic_past_kgo.nc'),
-                                  Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
-                                  'temporal_field'):
+                             f"stderr:\n {err}")
+        if not self.nc_kgo_check(
+                Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
+                Path(self.test_working_dir, 'cyclic_past_kgo.nc')):
             raise TestFailed("Output data does not match expected values")
 
         return "Reading full set of cyclic data from the past okay..."
@@ -128,16 +127,14 @@ class LfricXiosCyclicHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-pub
         if returncode != 0:
             print(out)
             raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
-                             f"stderr:\n" +
-                             f"{err}")
+                             f"stderr:\n {err}")
 
         self.plot_output(Path(self.test_working_dir, 'lfric_xios_cyclic_input.nc'),
                          Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
                          'temporal_field')
 
-        if not self.nc_data_match(Path(self.test_working_dir, 'cyclic_high_freq_kgo.nc'),
-                                  Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
-                                  'temporal_field'):
+        if not self.nc_kgo_check(Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
+                                 Path(self.test_working_dir, 'cyclic_high_freq_kgo.nc')):
             raise TestFailed("Output data does not match expected values")
 
         return "Reading full set of cyclic data from the past okay..."
@@ -145,7 +142,8 @@ class LfricXiosCyclicHighFreqTest(LFRicXiosTest):  # pylint: disable=too-few-pub
 
 class LfricXiosCyclicNonSyncTest(LFRicXiosTest):  # pylint: disable=too-few-public-methods
     """
-    Tests the LFRic-XIOS temporal reading functionality when model timesteps do not match data timesteps
+    Tests the LFRic-XIOS temporal reading functionality when model timesteps
+    do not match data timesteps
     """
 
     def __init__(self):
@@ -165,16 +163,14 @@ class LfricXiosCyclicNonSyncTest(LFRicXiosTest):  # pylint: disable=too-few-publ
         if returncode != 0:
             print(out)
             raise TestFailed(f"Unexpected failure of test executable: {returncode}\n" +
-                             f"stderr:\n" +
-                             f"{err}")
+                             f"stderr:\n {err}")
 
         self.plot_output(Path(self.test_working_dir, 'lfric_xios_cyclic_input.nc'),
                          Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
                          'temporal_field')
 
-        if not self.nc_data_match(Path(self.test_working_dir, 'non_sync_kgo.nc'),
-                                  Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
-                                  'temporal_field'):
+        if not self.nc_kgo_check(Path(self.test_working_dir, 'lfric_xios_cyclic_output.nc'),
+                                 Path(self.test_working_dir, 'non_sync_kgo.nc')):
             raise TestFailed("Output data does not match expected values")
 
         return "Reading non-synchronised cyclic data okay..."

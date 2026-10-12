@@ -25,9 +25,10 @@ use coord_transform_mod,       only : alphabetar2xyz,          &
                                       inverse_schmidt_transform_xyz
 use log_mod,                   only : log_event,               &
                                       log_scratch_space,       &
-                                      LOG_LEVEL_ERROR,         &
-                                      LOG_LEVEL_DEBUG,         &
-                                      LOG_LEVEL_WARNING
+                                      log_level_info,          &
+                                      log_level_error,         &
+                                      log_level_debug,         &
+                                      log_level_warning
 use matrix_invert_mod,         only : matrix_invert_3x3
 
 ! Configuration modules
@@ -118,6 +119,7 @@ subroutine init_chi_transforms( geometry, topology, &
   ! -------------------------------------------------------------------------- !
   ! Extract stretching and rotation information from mesh
   ! -------------------------------------------------------------------------- !
+  nullify(mesh, local_mesh)
 
   ! Begin by assuming no stretching and no rotation
   to_stretch = .false.
@@ -127,6 +129,7 @@ subroutine init_chi_transforms( geometry, topology, &
   null_island(1) = 0.0_r_def
   null_island(2) = 0.0_r_def
   equatorial_latitude = 0.0_r_def
+  stretch_factor = 1.0_r_def
 
   if ( present(mesh_collection) .and.                                          &
        (present(equator_lat_arg) .or. present(north_pole_arg)) ) then
@@ -154,6 +157,9 @@ subroutine init_chi_transforms( geometry, topology, &
       )
     end if
 
+    if (.not. ( mesh%is_geometry_spherical() .and. &
+                mesh%is_coord_sys_ll() ) ) return
+
     ! Extract rotation and stretching information from global mesh
     local_mesh => mesh%get_local_mesh()
     north_pole = local_mesh%get_north_pole()
@@ -170,8 +176,7 @@ subroutine init_chi_transforms( geometry, topology, &
          LOG_LEVEL_WARNING                                                     &
       )
     end if
-    if ( abs(null_island(1) - rmdi) < EPS                                      &
-         .or. abs(null_island(2) - rmdi) < EPS ) then
+    if (any(null_island == rmdi)) then
       null_island(1) = 0.0_r_def
       null_island(2) = 0.0_r_def
       call log_event(                                                          &

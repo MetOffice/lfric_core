@@ -7,14 +7,16 @@
 !>        output field entirely, hence can only be used for W3 spaces
 module dg_matrix_vector_kernel_mod
 
-  use constants_mod, only : i_def, r_single, r_double
-  use kernel_mod,    only : kernel_type
-  use argument_mod,  only : arg_type,                  &
-                            GH_FIELD, GH_OPERATOR,     &
-                            GH_READ, GH_WRITE,         &
-                            GH_REAL, ANY_SPACE_1,      &
-                            ANY_DISCONTINUOUS_SPACE_1, &
-                            CELL_COLUMN
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
+  use constants_mod,           only : i_def
+  use kernel_mod,              only : kernel_type
+  use argument_mod,            only : arg_type,                  &
+                                      GH_FIELD, GH_OPERATOR,     &
+                                      GH_READ, GH_WRITE,         &
+                                      GH_REAL, ANY_SPACE_1,      &
+                                      ANY_DISCONTINUOUS_SPACE_1, &
+                                      CELL_COLUMN
 
   implicit none
 
@@ -43,8 +45,8 @@ module dg_matrix_vector_kernel_mod
   ! Generic interface for real32 and real64 types
   interface dg_matrix_vector_code
     module procedure  &
-      dg_matrix_vector_code_r_single, &
-      dg_matrix_vector_code_r_double
+      dg_matrix_vector_code_real32, &
+      dg_matrix_vector_code_real64
   end interface
 
 contains
@@ -63,9 +65,9 @@ contains
 !> @param[in]      undf2    Unique number of degrees of freedom for the input field
 !> @param[in]      map2     Dofmap for the cell at the base of the column for the input field
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine dg_matrix_vector_code_r_single(cell,              &
+subroutine dg_matrix_vector_code_real32(  cell,              &
                                           nlayers,           &
                                           lhs, x,            &
                                           ncell_3d,          &
@@ -82,9 +84,9 @@ subroutine dg_matrix_vector_code_r_single(cell,              &
   integer(kind=i_def), dimension(ndf1),  intent(in) :: map1
   integer(kind=i_def), dimension(ndf2),  intent(in) :: map2
 
-  real(kind=r_single), dimension(undf2),              intent(in)    :: x
-  real(kind=r_single), dimension(undf1),              intent(inout) :: lhs
-  real(kind=r_single), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+  real(kind=real32),   dimension(undf2),              intent(in)    :: x
+  real(kind=real32),   dimension(undf1),              intent(inout) :: lhs
+  real(kind=real32),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
   ! Internal variables
   integer(kind=i_def) :: df1, df2, ik, i1, i2, nl
@@ -93,7 +95,7 @@ subroutine dg_matrix_vector_code_r_single(cell,              &
 
   do df1 = 1, ndf1
     i1 = map1(df1)
-    lhs(i1:i1+nl) = 0.0_r_single
+    lhs(i1:i1+nl) = 0.0_real32
   end do
 
   ik = (cell-1)*nlayers + 1
@@ -106,11 +108,11 @@ subroutine dg_matrix_vector_code_r_single(cell,              &
     end do
   end do
 
-end subroutine dg_matrix_vector_code_r_single
+end subroutine dg_matrix_vector_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine dg_matrix_vector_code_r_double(cell,              &
+subroutine dg_matrix_vector_code_real64(  cell,              &
                                           nlayers,           &
                                           lhs, x,            &
                                           ncell_3d,          &
@@ -127,9 +129,9 @@ subroutine dg_matrix_vector_code_r_double(cell,              &
   integer(kind=i_def), dimension(ndf1),  intent(in) :: map1
   integer(kind=i_def), dimension(ndf2),  intent(in) :: map2
 
-  real(kind=r_double), dimension(undf2),              intent(in)    :: x
-  real(kind=r_double), dimension(undf1),              intent(inout) :: lhs
-  real(kind=r_double), dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
+  real(kind=real64),   dimension(undf2),              intent(in)    :: x
+  real(kind=real64),   dimension(undf1),              intent(inout) :: lhs
+  real(kind=real64),   dimension(ncell_3d,ndf1,ndf2), intent(in)    :: matrix
 
   ! Internal variables
   integer(kind=i_def) :: df1, df2, ik, i1, i2, nl
@@ -138,7 +140,7 @@ subroutine dg_matrix_vector_code_r_double(cell,              &
 
   do df1 = 1, ndf1
     i1 = map1(df1)
-    lhs(i1:i1+nl) = 0.0_r_double
+    lhs(i1:i1+nl) = 0.0_real64
   end do
 
   ik = (cell-1)*nlayers + 1
@@ -151,6 +153,6 @@ subroutine dg_matrix_vector_code_r_double(cell,              &
     end do
   end do
 
-end subroutine dg_matrix_vector_code_r_double
+end subroutine dg_matrix_vector_code_real64
 
 end module dg_matrix_vector_kernel_mod

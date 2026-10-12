@@ -5,10 +5,13 @@
 class local_mesh_mod::local_mesh_type {
 
   -mesh_name:           string
+  -origin_name:         string
+  -origin_file:         string
   -geometry:            integer
   -topology:            integer
   -coord_sys:           integer
   -coord_units_xy:      string[2]
+  -void_cell:           integer
   -north_pole:          real[2]
   -null_island:         real[2]
   -equatorial_latitude: real
@@ -42,16 +45,14 @@ class local_mesh_mod::local_mesh_type {
   -num_ghost:          integer
   -last_ghost_cell:    integer
   -max_stencil_depth:  integer
-  -lbc_mesh:           logical
 
   -ntarget_meshes:     integer
   -target_mesh_names:  string[:] <<allocatable>>
   -local_mesh_maps:    local_mesh_map_collection_type <<allocatable>>
 
-
   -npanels:            integer
   -ncells_global_mesh: integer
-  -domain_size:        real[2]
+  -domain_extents:     real[2,4]
   -rim_depth:          integer
   -constructor_inputs: string
 
@@ -60,7 +61,7 @@ class local_mesh_mod::local_mesh_type {
 
   +initialise_full(<<in>>global_mesh: global_mesh_type, <<in>>partition: partition_type, <<in>><<optional>>name: string)
   +initialise_lbc(\n\t<<in,pointer>>  global_lam_mesh: global_mesh_type,\n\t<<in,pointer>>  global_lbc_mesh: global_mesh_type,\n\t<<in,pointer>>  local_lam_mesh: local_mesh_type,\n\t<<in,optional>> name: string,\n\t<<out,optional,allocatable>> cell_map: integer[:],\n\t<<out,optional,allocatable>> edge_map: integer[:],\n\t<<out,optional,allocatable>> vert_map: integer[:])
-  +initialise_from_ugrid_data(<<in>>ugrid_mesh_data: ugrid_mesh_data_type)
+  +initialise_from_ugrid_data(<<in>>ugrid_mesh_data: ugrid_mesh_data_type, <<in,optional>>rename_to: string)
   +initialise_unit_test()
   +initialise() <<generic>>: initialise_full(...), initialise_lbc(...), initialise_from_ugrid_data, initialise_unit_test(...)
   +init_cell_owner()
@@ -79,6 +80,8 @@ class local_mesh_mod::local_mesh_type {
   +get_equatorial_latitude(): real
 
   +get_mesh_name(): string
+  +get_origin_name(): string
+  +get_origin_file(): string
   +get_nverts_per_cell(): integer
   +get_nverts_per_edge(): integer
   +get_nedges_per_cell(): integer

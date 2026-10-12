@@ -2320,8 +2320,8 @@ contains
 
     implicit none
 
-    class(mesh_type), intent(inout)       :: self
-    type(mesh_type),  intent(in), pointer :: target_mesh
+    class(mesh_type), intent(inout) :: self
+    type(mesh_type),  intent(in)    :: target_mesh
 
 
     type(local_mesh_type), pointer      :: source_local_mesh

@@ -9,7 +9,8 @@
 module ugrid_mesh_data_mod_test
 
   use constants_mod,       only: r_def, i_def, l_def, imdi, &
-                                 str_def, str_longlong
+                                 str_def, str_longlong,     &
+                                 str_max_filename
   use lfric_mpi_mod,       only: global_mpi, &
                                  lfric_comm_type
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
@@ -68,6 +69,9 @@ contains
     character(str_def) :: filename
     character(str_def) :: mesh_name_in
     character(str_def) :: mesh_name_out
+
+    character(str_max_filename) :: origin_file
+
     integer(i_def) :: nnode
     integer(i_def) :: nedge
     integer(i_def) :: nface
@@ -111,6 +115,7 @@ contains
 
     call ugrid_mesh_data%get_data(                     &
                              mesh_name_out,            &
+                             origin_file,              &
                              geometry,                 &
                              topology,                 &
                              coord_sys,                &
@@ -140,6 +145,7 @@ contains
                              edge_on_face_2d )
 
     @assertEqual(mesh_name_in, mesh_name_out)
+    @assertEqual(filename, origin_file)
     @assertEqual(64_i_def, nnode)
     @assertEqual(128_i_def, nedge)
     @assertEqual(64_i_def, nface)
@@ -214,6 +220,8 @@ contains
     character(str_def) :: filename
     character(str_def) :: mesh_name_in
     character(str_def) :: mesh_name_out
+
+    character(str_max_filename) :: origin_file
 
     integer(i_def) :: nnode
     integer(i_def) :: nedge
@@ -461,6 +469,7 @@ contains
 
     call ugrid_mesh_data%get_data(                     &
                              mesh_name_out,            &
+                             origin_file,              &
                              geometry,                 &
                              topology,                 &
                              coord_sys,                &
