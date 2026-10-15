@@ -15,7 +15,9 @@
 {% endif %}
 
 {# Temporarily override working dir for unit/integration tests #}
-{% set working_dir = "$CYLC_WORKFLOW_SHARE_DIR/working_dirs/"~build_segment%}
+{% set working_dir = "$CYLC_WORKFLOW_SHARE_DIR/working_dirs/"~
+                     task_ns.application~"/"~
+                     task_values["build_conf"] %}
 
 {% if task.startswith("build") %}
 {# generate the runtime section for unit/integration build tasks #}
