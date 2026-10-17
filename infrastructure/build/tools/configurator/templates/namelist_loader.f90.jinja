@@ -53,14 +53,17 @@ module {{listname}}_config_mod
 {%-   if loop.first %}{{'\n'}}{%- endif %}
 {%-   if parameter.get_configure_type() == 'enumeration' %}
   integer(i_def), public, protected :: {{parameter.name}} = {{parameter.missing_data_indicator}}
+  !$omp declare target ({{parameter.name}})
 {%-   elif parameter.get_configure_type() == 'array' %}
 {%-     if parameter.is_immediate_size() %}
   {{parameter.fortran_type.declaration()}}, public, protected :: {{parameter.name}}({{parameter.bounds[0]}}) = {{parameter.missing_data_indicator}}
+  !$omp declare target ({{parameter.name}})
 {%-     else %}
   {{parameter.fortran_type.declaration()}}, public, protected, allocatable :: {{parameter.name}}(:)
 {%-     endif %}
 {%-   else %}
   {{parameter.fortran_type.declaration()}}, public, protected :: {{parameter.name}} = {{parameter.missing_data_indicator}}
+  !$omp declare target ({{parameter.name}})
 {%-   endif %}
 {%- endfor %}
 

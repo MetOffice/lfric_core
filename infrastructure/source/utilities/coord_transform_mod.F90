@@ -70,6 +70,7 @@ integer(kind=i_def), parameter :: PANEL_ROT_MATRIX(3,3,6) = &
              [[0,  0, -1], [0,  1,  0], [1,  0,  0]], & ! panel 5
              [[0, -1,  0], [0,  0,  1], [-1, 0,  0]]  & ! panel 6
              ], shape=[3,3,6], order=[2,1,3])
+!$omp declare target(PANEL_ROT_MATRIX)
 
 ! A list of matrices, one for each panel i of cubed sphere, which rotates
 ! a point (X,Y,Z) on the i-th panel back to the respective point on panel 1
@@ -81,6 +82,7 @@ integer(kind=i_def), parameter :: INVERSE_PANEL_ROT_MATRIX(3,3,6) = &
             [[0,  0,  1], [0,  1,  0], [-1, 0,  0]], & ! panel 5
             [[0,  0, -1], [-1, 0,  0], [0,  1,  0]]  & ! panel 6
             ], shape=[3,3,6], order=[2,1,3])
+!$omp declare target(INVERSE_PANEL_ROT_MATRIX)
 
 !------------------------------------------------------------------------------
 ! Contained functions / subroutines
@@ -98,6 +100,8 @@ contains
 !!  @param[out]  z     Cartesian z coordinate.
 !------------------------------------------------------------------------------
 subroutine ll2xyz(longitude,latitude,x,y,z)
+
+  !$omp declare target
 
   implicit none
 
@@ -131,8 +135,9 @@ end subroutine ll2xyz
 !!  @param[out]  y         Cartesian y coordinate.
 !!  @param[out]  z         Cartesian z coordinate.
 !------------------------------------------------------------------------------
-subroutine llr2xyz(longitude, latitude, radius, x, y, z)
+pure subroutine llr2xyz(longitude, latitude, radius, x, y, z)
 
+  !$omp declare target
   implicit none
 
   ! Arguments
@@ -164,8 +169,9 @@ end subroutine llr2xyz
 !!  @param[out]  longitude  -PI   <=  Longitude < PI   (radians).
 !!  @param[out]  latitude   -PI/2 <= Latitude  <= PI/2 (radians).
 !------------------------------------------------------------------------------
-subroutine xyz2ll_r_single(x, y, z, longitude, latitude)
+pure subroutine xyz2ll_r_single(x, y, z, longitude, latitude)
 
+  !$omp declare target
   implicit none
 
   ! Arguments
@@ -223,8 +229,9 @@ subroutine xyz2ll_r_single(x, y, z, longitude, latitude)
   return
 end subroutine xyz2ll_r_single
 
-subroutine xyz2ll_r_double(x, y, z, longitude, latitude)
+pure subroutine xyz2ll_r_double(x, y, z, longitude, latitude)
 
+  !$omp declare target
   implicit none
 
   ! Arguments
@@ -291,9 +298,10 @@ end subroutine xyz2ll_r_double
 !!  @param[out]  latitude   -PI/2 <= Latitude  <= PI/2 (radians).
 !!  @param[out]  radius     Radius of the sphere(m).
 !------------------------------------------------------------------------------
-subroutine xyz2llr_r_single( x, y, z, &
-                             longitude, latitude, radius )
+pure subroutine xyz2llr_r_single( x, y, z, &
+                                  longitude, latitude, radius )
 
+  !$omp declare target
   implicit none
 
   real(r_single), intent(in)  :: x, y, z
@@ -356,9 +364,10 @@ subroutine xyz2llr_r_single( x, y, z, &
 
 end subroutine xyz2llr_r_single
 
-subroutine xyz2llr_r_double( x, y, z, &
-                             longitude, latitude, radius )
+pure subroutine xyz2llr_r_double( x, y, z, &
+                                  longitude, latitude, radius )
 
+  !$omp declare target
   implicit none
 
   real(r_double), intent(in)  :: x, y, z
@@ -436,6 +445,7 @@ end subroutine xyz2llr_r_double
 !-------------------------------------------------------------------------------
 function starea2(x0,x1,x2) result(area)
 
+  !$omp declare target
   implicit none
 
   ! Arguments
@@ -479,6 +489,7 @@ function spherical_distance(x1,x2) result(s)
   ! Calculate the spherical distance S between two points with Cartesian
   ! coordinates (X1,Y1,Z1), (X2,Y2,Z2)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), dimension(3), intent(in) :: x1, x2
@@ -507,6 +518,7 @@ subroutine central_angle(long1,lat1,long2,lat2,angle)
 
   ! Calculates the central angle between points 1 and 2 with latitude and longitude
 
+  !$omp declare target
   implicit none
 
   ! Arguments
@@ -534,6 +546,7 @@ end subroutine central_angle
 !-------------------------------------------------------------------------------
 pure function cartesian_distance(x,y) result( s )
 
+  !$omp declare target
   implicit none
 
   !Arguments
@@ -564,6 +577,7 @@ function sphere2cart_vector( dlambda, llr ) result ( dx )
   use constants_mod,     only: r_def
   use matrix_invert_mod, only: matrix_invert_3x3
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), intent(in)  :: dlambda(3)
@@ -601,6 +615,7 @@ end function sphere2cart_vector
 !-------------------------------------------------------------------------------
 pure function cart2sphere_vector(x_vec, cartesian_vec) result ( spherical_vec )
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), intent(in)  :: x_vec(3)
@@ -660,6 +675,7 @@ end function cart2sphere_vector
 !-------------------------------------------------------------------------------
 subroutine cart2sphere_scalar(vector_x, vector_y, vector_z, spherical_u, spherical_v, spherical_w)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), intent(in)     :: vector_x, vector_y, vector_z
@@ -803,6 +819,7 @@ end function identify_longitude_sector
 subroutine xyz2alphabetar(global_x, global_y, global_z, &
                           panel_id, alpha, beta, radius)
 
+  !$omp declare target
   implicit none
 
   integer(kind=i_def), intent(in) :: panel_id
@@ -839,6 +856,7 @@ end subroutine xyz2alphabetar
 subroutine xyz2alphabetarpanel(global_x, global_y, global_z, &
                                alpha, beta, radius, panel_id)
 
+  !$omp declare target
   implicit none
 
   integer(kind=i_def), intent(out) :: panel_id
@@ -864,9 +882,10 @@ end subroutine xyz2alphabetarpanel
 !! @param[out] global_y Geocentric Cartesian y coordinate
 !! @param[out] global_z Geocentric Cartesian z coordinate
 !-----------------------------------------------------------------------------
-subroutine alphabetar2xyz_r_single(alpha, beta, radius, panel_id, &
-                                   global_x, global_y, global_z)
+pure subroutine alphabetar2xyz_r_single(alpha, beta, radius, panel_id, &
+                                        global_x, global_y, global_z)
 
+  !$omp declare target
   implicit none
 
   integer(kind=i_def), intent(in)  :: panel_id
@@ -891,9 +910,10 @@ subroutine alphabetar2xyz_r_single(alpha, beta, radius, panel_id, &
 
 end subroutine alphabetar2xyz_r_single
 
-subroutine alphabetar2xyz_r_double(alpha, beta, radius, panel_id, &
-                                   global_x, global_y, global_z)
+pure subroutine alphabetar2xyz_r_double(alpha, beta, radius, panel_id, &
+                                        global_x, global_y, global_z)
 
+  !$omp declare target
   implicit none
 
   integer(kind=i_def), intent(in)  :: panel_id
@@ -929,6 +949,7 @@ end subroutine alphabetar2xyz_r_double
 !! @param[out]    lat      Latitude coordinate
 !-----------------------------------------------------------------------------
 subroutine alphabetar2llr(alpha, beta, radius, panel_id, long, lat)
+  !$omp declare target
 
   implicit none
 
@@ -956,6 +977,7 @@ end subroutine alphabetar2llr
 !-----------------------------------------------------------------------------
 function alphabetar2xyz_vector(sphere_vec, abr, panel_id) result (cart_vec)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def),    intent(in) :: sphere_vec(3)
@@ -1152,8 +1174,9 @@ end function mesh_rotation_matrix
 !> @param[in]  stretch       Stretching factor
 !> @returns    physical_xyz  Physical geocentric Cartesian coordinates
 !-----------------------------------------------------------------------------
-function schmidt_transform_xyz(native_xyz, stretch) result(physical_xyz)
+pure function schmidt_transform_xyz(native_xyz, stretch) result(physical_xyz)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), intent(in)  :: stretch
@@ -1196,6 +1219,7 @@ end function schmidt_transform_xyz
 !-----------------------------------------------------------------------------
 function inverse_schmidt_transform_xyz(physical_xyz, stretch) result(native_xyz)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), intent(in)  :: stretch
@@ -1233,6 +1257,7 @@ end function inverse_schmidt_transform_xyz
 !-----------------------------------------------------------------------------
 function schmidt_transform_lat_r_single(native_lat, stretch) result(physical_lat)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_single), intent(in)  :: stretch
@@ -1250,6 +1275,7 @@ end function schmidt_transform_lat_r_single
 
 function schmidt_transform_lat_r_double(native_lat, stretch) result(physical_lat)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_double), intent(in)  :: stretch

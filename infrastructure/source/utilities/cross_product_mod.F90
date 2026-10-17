@@ -23,6 +23,7 @@ contains
 !! @result z The output vector z = x cross y
 pure function cross_product(x, y) result(z)
 
+  !$omp declare target
   implicit none
 
   real(kind=r_def), intent(in) :: x(3), y(3)
