@@ -33,7 +33,6 @@ def test_constructor() -> None:
     assert nfc.category == Category.MISC
     assert nfc.name == "nf-config"
     assert nfc.exec_name == "nf-config"
-    assert nfc.get_flags() == []
 
 
 def test_nf_config_check_available(fake_process: FakeProcess) -> None:

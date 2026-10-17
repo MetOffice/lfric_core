@@ -16,7 +16,7 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Iterable, Union
 
-from fab.api import (ArtefactSet, Category, Exclude, grab_folder, Include,
+from fab.api import (ArtefactSet, Category, Exclude, grab_files, Include,
                      input_to_output_fpath, step)
 
 
@@ -94,8 +94,8 @@ class PfUnitMixin:
         unit_test = "unit-test"
         # Check if there are unit tests
         if (not self.args.no_test) and (self.app_dir / unit_test).is_dir():
-            grab_folder(self.config, src=self.app_dir / unit_test,
-                        dst_label=unit_test)
+            grab_files(self.config, src=self.app_dir / unit_test,
+                       dst_label=unit_test)
             # Some tests also need the .f90 files from
             # components/science/unit-tests, but not the .pf files. So, only
             # pick the directories that contain f90 files (picking all files,
@@ -112,9 +112,9 @@ class PfUnitMixin:
                 # this when rsync-ing `a` and `a/b` you end up with duplicated
                 # files).
                 dst = path.relative_to(core_test_dir)
-                grab_folder(self.config,
-                            src=path,
-                            dst_label=unit_test / dst)
+                grab_files(self.config,
+                           src=path,
+                           dst_label=unit_test / dst)
 
             self._has_test = True
 
