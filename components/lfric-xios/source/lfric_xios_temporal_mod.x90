@@ -290,6 +290,7 @@ contains
                                              mode="read",                   &
                                              type="one_file",               &
                                              record_offset=record_offset,   &
+                                             convention="UGRID",            &
                                              time_counter_name="time",      &
                                              enabled=.true. )
 
