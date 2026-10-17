@@ -17,6 +17,7 @@ import os
 from fab.api import BuildConfig, Category, Linker, ToolRepository
 
 from default.config import Config as DefaultConfig
+from nf_config import NfConfig
 
 
 class Config(DefaultConfig):
