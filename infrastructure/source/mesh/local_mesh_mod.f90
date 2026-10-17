@@ -2798,7 +2798,7 @@ contains
         bot = id + 1
       else ! entry has to be between bot and id
         top = id - 1
-      endif
+      end if
     end do search
 
     ! Didn't find a match - return failure code
