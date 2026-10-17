@@ -16,59 +16,17 @@ module inject_sh_w3_to_wt_kernel_mod_test
   implicit none
 
   private
-  public :: inject_sh_w3_to_wt_test_type, test_all
 
-  @TestCase
-  type, extends(TestCase) :: inject_sh_w3_to_wt_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type inject_sh_w3_to_wt_test_type
+  public :: test_all
 
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    use base_mesh_config_mod,      only : geometry_planar,    &
-                                          topology_fully_periodic
-    use feign_config_mod,          only : feign_base_mesh_config
-
-    implicit none
-
-    class(inject_sh_w3_to_wt_test_type), intent(inout) :: this
-
-    call feign_base_mesh_config( file_prefix='foo',                   &
-                                 prime_mesh_name='unit_test',         &
-                                 geometry=geometry_planar,            &
-                                 prepartitioned=.false.,              &
-                                 topology=topology_fully_periodic,    &
-                                 fplane=.false., f_lat_deg=0.0_r_def )
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    use config_loader_mod, only: final_configuration
-
-    implicit none
-
-    class(inject_sh_w3_to_wt_test_type), intent(inout) :: this
-
-  end subroutine tearDown
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_inject_sh_w3_to_wt_kernel_mod, only : inject_sh_w3_to_wt_code
 
-   implicit none
-
-    class(inject_sh_w3_to_wt_test_type), intent(inout) :: this
+    implicit none
 
     real(kind=r_def),      parameter :: tol = 1.0e-12_r_def
     real(kind=r_def),      parameter :: dx = 19.0_r_def

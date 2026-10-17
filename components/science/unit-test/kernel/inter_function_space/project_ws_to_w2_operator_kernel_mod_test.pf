@@ -7,8 +7,10 @@
 !> Test the projection from a scalar space to W2
 module project_ws_to_w2_operator_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, imdi
+  use constants_mod, only : i_def, r_def, imdi, rmdi
   use funit
+
+  use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
 
@@ -29,24 +31,11 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
     use sci_chi_transform_mod,     only : init_chi_transforms
 
     implicit none
 
     class(project_ws_to_w2_operator_test_type), intent(inout) :: this
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true.,               &
-             coord_system=coord_system_xyz )
 
     call init_chi_transforms(imdi, imdi)
 
@@ -55,14 +44,12 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine tearDown( this )
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
     class(project_ws_to_w2_operator_test_type), intent(inout) :: this
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tearDown
@@ -79,6 +66,11 @@ contains
     class(project_ws_to_w2_operator_test_type), intent(inout) :: this
 
     real(kind=r_def), parameter :: tol = 1.0e-12_r_def
+
+    integer(kind=i_def), parameter :: geometry = imdi
+    integer(kind=i_def), parameter :: topology = imdi
+    integer(kind=i_def), parameter :: coord_system = coord_system_xyz
+    real(kind=r_def),    parameter :: scaled_radius = rmdi
 
     ! Mesh
     integer(kind=i_def), parameter :: ncell   = 1
@@ -174,6 +166,9 @@ contains
                                           projection_operator,     &
                                           x, y, z,                 &
                                           panel_id,                &
+                                          geometry, topology,      &
+                                          coord_system,            &
+                                          scaled_radius,           &
                                           direction,               &
                                           ndf_w2,                  &
                                           basis_w2,                &

@@ -26,11 +26,11 @@ module sci_native_jacobian_mod
                                        get_to_stretch,           &
                                        get_to_rotate,            &
                                        get_stretch_factor
+  use mesh_mod,                  only: geometry_planar, &
+                                       topology_periodic
 
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_system_native
-  use base_mesh_config_mod,      only: geometry_planar, &
-                                       topology_fully_periodic
 
   implicit none
 
@@ -131,7 +131,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       radius = real(scaled_radius, kind=r_def)
       jac_sph2XYZ = jacobian_abr2XYZ(nlayers, chi_1_df, chi_2_df, chi_3_df+radius, panel_id)
 

@@ -36,18 +36,8 @@ program lfric_xios_temporal_interp_test
   type(xios_date) :: date
   integer(i_timestep) :: file_freq
 
-  integer(i_def) :: geometry
-  integer(i_def) :: topology
-  integer(i_def) :: coord_system
-  real(r_def)    :: scaled_radius
-
   call test_db%initialise()
   call lfric_xios_initialise( "test", test_db%comm, .false. )
-
-  geometry      = test_db%config%base_mesh%geometry()
-  topology      = test_db%config%base_mesh%topology()
-  coord_system  = test_db%config%finite_element%coord_system()
-  scaled_radius = test_db%config%planet%scaled_radius()
 
   ! =============================== Start test ================================
 
@@ -73,11 +63,9 @@ program lfric_xios_temporal_interp_test
                                                     freq=1,                               &
                                                     fields_in_file=test_db%temporal_fields ) )
 
-  call io_context%initialise_xios_context( test_db%comm,                     &
+  call io_context%initialise_xios_context( test_db%config, test_db%comm,     &
                                            test_db%chi, test_db%panel_id,    &
-                                           test_db%clock, test_db%calendar,  &
-                                           geometry, topology, coord_system, &
-                                           scaled_radius )
+                                           test_db%clock, test_db%calendar )
 
   context_advance => advance
   context_actor => io_context
