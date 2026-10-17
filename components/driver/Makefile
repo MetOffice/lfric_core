@@ -96,11 +96,9 @@ unit-tests: unit-tests/run
 #
 integration-tests/%: export BIN_DIR      ?= $(PROJECT_DIR)/test
 integration-tests/%: export IMPORT_PARTS  = $(CORE_ROOT_DIR)/infrastructure \
-											$(CORE_ROOT_DIR)/components/science \
-											$(CORE_ROOT_DIR)/components/inventory \
-											$(CORE_ROOT_DIR)/components/lfric-xios \
 											$(CORE_ROOT_DIR)/components/testing
 integration-tests/%: export META_FILE_DIR = rose-meta/lfric-driver/HEAD
+integration-tests/%: export PYTHONPATH   := $(PYTHONPATH):$(PROJECT_DIR)/build/test_support
 integration-tests/%: export PROJECT       = driver
 integration-tests/%: export SOURCE_DIR    = source
 integration-tests/%: export TEST_DIR      = integration-test

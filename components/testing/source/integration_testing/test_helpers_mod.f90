@@ -132,29 +132,54 @@ contains
   !> @details
   !>   Copies field data from LFRic field storage to test field storage,
   !>   then outputs the field values formatted as:
-  !>   rank_number (undf_count) = value1 value2 ... valueN
-  subroutine print_test_field_32( test_field )
+  !>   field_name (rank_number) = value1 value2 ... valueN
+  subroutine print_test_field_32( test_field, name )
 
     implicit none
 
     type(test_field_32_type), intent(inout) :: test_field
+    character(*), optional, intent(in)      :: name
 
     class(field_parent_type),  pointer :: lfric_field
     type(function_space_type), pointer :: fs
     character(255)                     :: format_str
     real(real32),              pointer :: test_data(:)
+    real(real32), allocatable         :: global_test_data(:)
+    integer :: i
+    character(255) :: output_name
 
     ! Get references to the field and its function space
     lfric_field => test_field%get_lfric_field_ptr()
     fs => lfric_field%get_function_space()
-    ! Construct format string: "rank (ndf) = value value value ..."
-    ! Number of values to print: fs%get_undf() (total degrees of freedom)
-    write(format_str, '("A, "", ("", I0, "") = "", ", I0, "F7.3")') fs%get_undf()
+
+    if (present(name)) then
+      output_name = trim(name)
+    else
+      output_name = trim(lfric_field%get_name())
+    end if
+
     ! Synchronize field data from LFRic field to test field
     call test_field%copy_from_lfric()
-    ! Get pointer to test field data and print with appropriate format
+    ! Get pointer to test field data and print field name, rank, and values
     test_data => test_field%get_data()
-    write(output_unit, format_str) global_mpi%get_comm_rank(), test_data(:fs%get_undf())
+
+    ! Gather all the test data from all MPI ranks to rank 0 for printing
+    call global_mpi%gather(test_data, global_test_data, fs%get_last_dof_owned())
+
+    if (global_mpi%get_comm_rank() == 0) then
+
+      ! Construct format string: "field_name (rank) = value value value ..."
+      ! Number of values to print: fs%get_last_dof_owned() (owned degrees of freedom)
+      ! Values are space-separated with 17 significant digits so real64
+      ! values round-trip exactly and adjacent values cannot run together.
+      write(format_str, '("(A, "" ("", I0, "") ="", ", I0, "(1X, ES16.8))")') &
+        fs%get_last_dof_owned()
+      do i = 0, global_mpi%get_comm_size()-1
+        write(output_unit, format_str) trim(output_name), &
+                                       i, global_test_data(i*fs%get_last_dof_owned()+1:(i+1)*fs%get_last_dof_owned())
+      end do
+
+    end if
 
   end subroutine print_test_field_32
 
@@ -165,31 +190,51 @@ contains
   !>   Copies field data from LFRic field storage to test field storage,
   !>   then outputs the field values formatted as:
   !>   field_name (rank_number) = value1 value2 ... valueN
-  subroutine print_test_field_64( test_field )
+  subroutine print_test_field_64( test_field, name )
 
     implicit none
 
     type(test_field_64_type), intent(inout) :: test_field
+    character(*), optional, intent(in)      :: name
 
     class(field_parent_type),  pointer :: lfric_field
     type(function_space_type), pointer :: fs
     character(255)                     :: format_str
     real(real64),              pointer :: test_data(:)
+    real(real64), allocatable          :: global_test_data(:)
+    integer :: i
+    character(255) :: output_name
 
     ! Get references to the field and its function space
     lfric_field => test_field%get_lfric_field_ptr()
     fs => lfric_field%get_function_space()
-    ! Construct format string: "field_name (rank) = value value value ..."
-    ! Number of values to print: fs%get_last_dof_owned() (owned degrees of freedom)
-    write(format_str, '("(A, "" ("", I0, "") = "", ", I0, "F7.3)")') &
-      fs%get_last_dof_owned()
+
+    if (present(name)) then
+      output_name = trim(name)
+    else
+      output_name = trim(lfric_field%get_name())
+    end if
+
     ! Synchronize field data from LFRic field to test field
     call test_field%copy_from_lfric()
     ! Get pointer to test field data and print field name, rank, and values
     test_data => test_field%get_data()
-    write(output_unit, format_str) trim(lfric_field%get_name()), &
-                                   global_mpi%get_comm_rank(),   &
-                                   test_data(:fs%get_last_dof_owned())
+
+    ! Gather all the test data from all MPI ranks to rank 0 for printing
+    call global_mpi%gather(test_data, global_test_data, fs%get_last_dof_owned())
+
+    if (global_mpi%get_comm_rank() == 0) then
+
+      ! Construct format string: "field_name (rank) = value value value ..."
+      ! Number of values to print: fs%get_last_dof_owned() (owned degrees of freedom)
+      write(format_str, '("(A, "" ("", I0, "") ="", ", I0, "(1X, ES24.16))")') &
+        fs%get_last_dof_owned()
+      do i = 0, global_mpi%get_comm_size()-1
+        write(output_unit, format_str) trim(output_name), &
+                                       i, global_test_data(i*fs%get_last_dof_owned()+1:(i+1)*fs%get_last_dof_owned())
+      end do
+
+    end if
 
   end subroutine print_test_field_64
 

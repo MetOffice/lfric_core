@@ -15,6 +15,7 @@ How it works
    templated_source
    build_system/index
    parallelism/lfric_mpi
+   field_cache
 
 Requirements
 ------------
