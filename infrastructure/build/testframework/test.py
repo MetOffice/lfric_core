@@ -9,9 +9,11 @@ import collections
 import errno
 import math
 import os
-import subprocess
+from pathlib import Path
+from subprocess import run
 import sys
-import tempfile
+from tempfile import NamedTemporaryFile
+from textwrap import dedent
 import time
 from typing import List
 
@@ -51,17 +53,13 @@ class AbstractTest(ABC):
         """
         Runs the executable and passes results to handler method.
         """
-        process = subprocess.Popen(
-            self._executable,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-        )
-        out, err = process.communicate()
-        self.post_execution(process.returncode)
+        result = run([str(arg) for arg in self._executable],
+                     capture_output=True, encoding="utf8")
+        self.post_execution(result.returncode)
         return self.test(
-            process.returncode, self.filterOut(out), self.filterErr(err)
+            result.returncode,
+            self.filterOut(result.stdout),
+            self.filterErr(result.stderr)
         )
 
     def post_execution(self, code):
@@ -127,21 +125,31 @@ class MpiTest(AbstractTest):
         self._startTag = "Start {name}".format(name=commandName)
         self._doneTag = "Done {name}".format(name=commandName)
 
-        filedescriptor, self._scriptname = tempfile.mkstemp(
-            prefix="run-", suffix=".sh", text=True
-        )
-        handle = os.fdopen(filedescriptor, "wt")
-        print("#!/bin/sh", file=handle)
-        print(f"echo {self._startTag}", file=handle)
-        print(f"echo {self._startTag} >&2", file=handle)
-        print(commandString, file=handle)
-        print("result=$?", file=handle)
-        print(f"echo {self._doneTag}", file=handle)
-        print(f"echo {self._doneTag} >&2", file=handle)
-        print("sync", file=handle)
-        print("exit $result", file=handle)
-        handle.close()
-        os.chmod(self._scriptname, 0o700)
+        # If environment variable doesn't exist, variable will be set to
+        # None. This will cause the argument to gain its default value,
+        # which is the correct behaviour.
+        #
+        tmp_dir = os.environ.get("SCRATCH")
+        with NamedTemporaryFile(mode="wt", delete=False, dir=tmp_dir,
+                                prefix="run-", suffix=".sh") as launch_script:
+            launch_script.write(
+                dedent(
+                    f"""
+                    #!/bin/sh
+                    echo {self._startTag}
+                    echo {self._startTag} >&2
+                    {commandString}
+                    result=$?
+                    echo {self._doneTag}
+                    echo {self._doneTag} >&2
+                    sync
+                    exit $result
+                    """
+                ).lstrip()
+            )
+
+            self._script_file = Path(launch_script.name)
+            self._script_file.chmod(0o700)
 
         if MpiTest._mpiexec_broken:
             mpi_launcher = "mpirun"
@@ -152,12 +160,12 @@ class MpiTest(AbstractTest):
             mpi_launcher,
             "-n",
             str(self._processes),
-            self._scriptname,
+            self._script_file,
         ]
         super().__init__(mpiCommand)
 
     def __del__(self):
-        os.remove(self._scriptname)
+        self._script_file.unlink()
 
     def __rejectWaffle(self, log: str) -> List[str]:
         """
@@ -179,19 +187,26 @@ class MpiTest(AbstractTest):
                         state = "done"
                 else:  # line does not start with 'Done '
                     newLog.append(line)
-        return newLog
+
+        # If no markers were found, it probably means something catastrophic
+        # so we return the log unchanged.
+        #
+        if state == "spinup":
+            return log
+        else:
+            return "\n".join(newLog)
 
     def filterOut(self, out):
         """
         Strips MPI cruft from standard out.
         """
-        return "\n".join(self.__rejectWaffle(out))
+        return self.__rejectWaffle(out)
 
     def filterErr(self, err):
         """
         Strip MPI cruft from standard out.
         """
-        return "\n".join(self.__rejectWaffle(err))
+        return self.__rejectWaffle(err)
 
 
 ##############################################################################
