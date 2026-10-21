@@ -1,8 +1,8 @@
 
 <context id="temporal_context">
 
-   <axis_definition src="$METADATA/axis_dictionary.xml"/>
-   <grid_definition src="$METADATA/grid_dictionary.xml"/>
+   <axis_definition src="metadata/axis_dictionary.xml"/>
+   <grid_definition src="metadata/grid_dictionary.xml"/>
 
   <file_definition
     type="one_file"

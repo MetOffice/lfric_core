@@ -20,16 +20,22 @@ Standards for XIOS Iodef Files
       section of every top-level iodef file.
    #. Non-global file settings are to be specified at the level of
       individual files.
+   #. ``id`` values shall be unique for a given ``XIOS`` ``XML`` element
+      type.
 
 **Rationale**
 
 .. warning::
 
-    When XIOS aggregates file definitions - possibly spread across
-    several XML files -, the last set of attributes processed "wins",
-    in the sense that all the others are silently ignored.
+    When XIOS aggregates definitions - possibly spread across
+    several XML files -, then attributes are overriden by defined elements
+    that use a ``_ref``.
 
-    This can create considerable confusion and frustration for users.
+    The overriding operates in a chain, so users may need to act cautiously
+    to understand attribute inheritance and overrides.
+
+    This is why reuse of ``id`` values for different elements is problematic,
+    not allowed, and tested by a code inspection rule for ``field`` elements.
 
 With the current layout of the LFRic top-level iodef files, the last
 set of attributes to be processed are the ones in the local file
