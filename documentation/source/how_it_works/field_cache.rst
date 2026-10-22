@@ -103,7 +103,7 @@ For field arrays:
 
 **Unsupported Types**
 
-If a field type is not recognized, an error is logged.
+If a field type is not recognised, an error is logged.
 
 Reset Phase
 -----------

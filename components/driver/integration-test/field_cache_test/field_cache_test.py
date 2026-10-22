@@ -21,7 +21,7 @@ class Field_CacheTest(MpiTest):
     """Test class for validating field_cache test field creation and output."""
 
     def __init__(self):
-        """Initialize the test case.
+        """Initialise the test case.
         Configures the test to run the Fortran executable with 6 MPI processes.
         """
         super().__init__([sys_argv[1], '64'], processes=6)

@@ -64,7 +64,7 @@ contains
     ! Store the field names to cache
     this%field_names = field_names
 
-    ! Initialize an empty field collection to store cached field copies
+    ! Initialise an empty field collection to store cached field copies
     call this%cached_fields%initialise(name = "cached_fields", table_len = 100_i_def)
 
     ! Validate that all requested fields exist in the source collection

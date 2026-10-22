@@ -79,7 +79,7 @@ contains
     field_values = 1.1_real64
     call field_cache_test_field%copy_to_lfric()
 
-    ! Initialize the field cache
+    ! Initialise the field cache
     call field_cache%initialise(depository, (/"field_cache_field"/))
 
     ! Print the initial field values to stdout for verification
