@@ -93,8 +93,8 @@ module lfric_mpi_mod
     procedure, public :: global_max_real64
     procedure, public :: global_max_real32
     generic :: global_max => global_max_int32, &
-        global_max_real64, &
-        global_max_real32
+                             global_max_real64, &
+                             global_max_real32
     procedure, public :: all_gather_int32
     generic :: all_gather => all_gather_int32
     procedure, public :: gather_real64_1d
