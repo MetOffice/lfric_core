@@ -9,7 +9,7 @@ module assign_coordinate_xyz_mod_test
 
   use constants_mod, only : r_def, i_def
 
-  use base_mesh_config_mod, only: geometry_planar, topology_fully_periodic
+  use mesh_mod, only: geometry_planar, topology_periodic
   use funit
 
   implicit none
@@ -33,7 +33,7 @@ contains
                                    one = 1.0_r_def
 
     integer(i_def), parameter :: geometry = geometry_planar
-    integer(i_def), parameter :: topology = topology_fully_periodic
+    integer(i_def), parameter :: topology = topology_periodic
     real(r_def),    parameter :: scaled_radius = 1.0_r_def
 
     integer(kind=i_def) :: nlayers, ndf, nverts, i, undf, ndf_pid, undf_pid

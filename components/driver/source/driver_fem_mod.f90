@@ -26,6 +26,10 @@ module driver_fem_mod
   use sci_chi_transform_mod,         only: init_chi_transforms, &
                                            final_chi_transforms
 
+  use mesh_mod, only: geometry_spherical, &
+                      geometry_planar,    &
+                      topology_non_periodic
+
   ! Object types
   use config_mod, only: config_type
   use field_mod,  only: field_type
@@ -35,10 +39,6 @@ module driver_fem_mod
   use inventory_by_mesh_mod, only: inventory_by_mesh_type
 
   ! Configuration modules
-  use base_mesh_config_mod,      only: geometry_spherical,    &
-                                       geometry_planar,       &
-                                       topology_non_periodic, &
-                                       topology_fully_periodic
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_space_W0,   &
                                        coord_space_Wchi, &
@@ -148,17 +148,8 @@ contains
       mesh => mesh_collection%get_mesh(all_mesh_names(i))
       mesh_name = mesh%get_mesh_name()
 
-      if (mesh%is_geometry_spherical()) then
-        geometry = geometry_spherical
-      else
-        geometry = geometry_planar
-      end if
-
-      if (mesh%is_topology_periodic()) then
-        topology = topology_fully_periodic
-      else
-        topology = topology_non_periodic
-      end if
+      geometry = mesh%geometry()
+      topology = mesh%topology()
 
       ! Only create coordinates for 3D meshes
       if (mesh%get_extrusion_id() /= twod) then
