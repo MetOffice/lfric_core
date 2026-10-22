@@ -42,8 +42,8 @@ depending on generator.
 
       ``xyz``
         Cartesian coordinates, This is only supported for a flat planar mesh
-	at z=0, as a result, features are located with only 2-coordinates,
-	``(x,y)`` in metres.
+        at z=0, as a result, features are located with only 2-coordinates,
+        ``(x,y)`` in metres.
 
   * ``file_prefix``: **'<string>'**
       File prefix used to construct output filename(s). Depending on the logical,
@@ -51,16 +51,16 @@ depending on generator.
 
       **<file_prefix>.nc**
         Single file output for non-partitioned mesh topologies. Requested meshes
-	encompass an entire model domain.
+        encompass an entire model domain.
 
       **<file_prefix>_<partition_id>_<n_partitions>.nc**
         Multiple files output for pre-partitioned mesh topologies. Each file
-	contains the cells of the requested meshes on a given partition of
-	the model domain. Pre-partitioned meshes allow a simple load operation
-	to populate an application's local mesh objects on a mpi rank.
+        contains the cells of the requested meshes on a given partition of
+        the model domain. Pre-partitioned meshes allow a simple load operation
+        to populate an application's local mesh objects on a MPI rank.
 
-	**Note:** Pre-partitioned meshes are only suitable for applications
-	running with mpi ranks equal to the number of partitions.
+      **Note:** Pre-partitioned meshes are only suitable for applications
+        running with MPI ranks equal to the number of partitions.
 
   * ``geometry``: **'<string>'**
       Geometrical shape of the surface domain. Valid options:
@@ -120,9 +120,9 @@ depending on generator.
 
       ``channel``
         (`Planar meshes only`) Of the four domain boundaries, two are linked
-	as a periodic pair, the remaining boundaries are
-	non-periodic. Crossing one of the periodic domain boundaries re-enters
-	the domain at a point on other periodic domain boundary.
+        as a periodic pair, the remaining boundaries are
+        non-periodic. Crossing one of the periodic domain boundaries re-enters
+        the domain at a point on other periodic domain boundary.
 
       ``periodic``
         Opposing domain boundaries are linked as periodic pairs.
@@ -149,7 +149,7 @@ depending on generator.
       over a panel of the cubed-sphere without increasing the overall number
       of cells in the mesh.
   * ``smooth_passes``: **<integer>**
-      Number of interations of smoothing function applied to mesh node
+      Number of iterations of smoothing function applied to mesh node
       locations.
 
 .. _planar_mesh_nml:
@@ -158,10 +158,10 @@ depending on generator.
 
   Control namelist for planar mesh generation, required for use with the
   `planar_mesh_generator`. This creates a mesh which uses the planar mesh
-  base strategy and requires ``edge_cells`` along `both` axes aswell as the
+  base strategy and requires ``edge_cells`` along `both` axes as well as the
   domain boundary periodicity in order to define the mesh connectivity. The
   remaining options are mesh transformations or logical triggers. Mesh
-  tranformations are applied to the node coordinates after the base mesh is
+  transformations are applied to the node coordinates after the base mesh is
   generated; the connectively of the mesh elements are not altered by
   transformations.
 
@@ -170,7 +170,7 @@ depending on generator.
   * ``apply_stretch_transform``: **<logical>**
       Apply the stretch transform to base planar mesh node coordinates.
   * ``create_lbc_mesh``: **<logical>**
-      Generate a rim mesh which is derived one of the priciple meshes
+      Generate a rim mesh which is derived one of the principal meshes
       (:ref:`mesh_names<mesh_names>`).
   * ``domain_centre``: **<real>,<real>**
       Location of domain centre for all principal meshes. Coordinates aligned
@@ -212,16 +212,16 @@ depending on generator.
   to file as 1 partition per file.
 
   This functionality results in multiple mesh files with the corresponding
-  portion of each principal mesh. In addition to the mesh tolopologies,
+  portion of each principal mesh. In addition to the mesh topologies,
   partition information is also written to each file. In essence, each file
   provides the information required to load and instantiate 2D-mesh objects
   which are `local` to a given process rank. This namelist is enabled if
   triggered by the :ref:`partition_mesh<partition_mesh>` logical.
 
   .. NOTE:: Care should be taken when specifying partition
-	    configurations. Partitions flag mesh cell ids as being members of
-	    that parition, there is no restriction that limits the shape or
-	    continuity of a partition.
+        configurations. Partitions flag mesh cell ids as being members of
+        that partition, there is no restriction that limits the shape or
+        continuity of a partition.
 
   * ``max_stencil_depth``: **<integer>**
       For communication across partitions, the `local` mesh domains need to be
@@ -242,7 +242,7 @@ depending on generator.
   * ``panel_decomposition``: **'<string>'**
       Specifies panel partition strategy applied to principal meshes. The
       generators use the partitioning module support from LFRic core
-      infrastruture. Valid options:
+      infrastructure. Valid options:
 
       ``auto``
         The infrastructure code will attempt to group cells into partitions
@@ -305,8 +305,8 @@ depending on generator.
   supported).
 
   .. NOTE:: When considering meshes with rotation applied, all (lon,lat)
-	    coordinates which are referenced in the configuration/output files
-	    are with respect to a real world frame of reference.
+        coordinates which are referenced in the configuration/output files
+        are with respect to a real world frame of reference.
 
 
 
@@ -368,7 +368,7 @@ depending on generator.
 
 .. rubric:: Footnotes
 
-.. [#f1] Principal meshes are those meshes explicity requested
+.. [#f1] Principal meshes are those meshes explicitly requested
    and named in the configuration file, `i.e.` |nbsp|
    :ref:`mesh_names<mesh_names>`. These meshes are generated from
    the base strategy as opposed to being derived from another mesh

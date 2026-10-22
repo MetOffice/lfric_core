@@ -25,15 +25,16 @@ use coord_transform_mod,       only : alphabetar2xyz,          &
                                       inverse_schmidt_transform_xyz
 use log_mod,                   only : log_event,               &
                                       log_scratch_space,       &
-                                      LOG_LEVEL_ERROR,         &
-                                      LOG_LEVEL_DEBUG,         &
-                                      LOG_LEVEL_WARNING
+                                      log_level_info,          &
+                                      log_level_error,         &
+                                      log_level_debug,         &
+                                      log_level_warning
 use matrix_invert_mod,         only : matrix_invert_3x3
+use mesh_mod,                  only : geometry_spherical, &
+                                      geometry_planar,    &
+                                      topology_periodic
 
 ! Configuration modules
-use base_mesh_config_mod,      only: geometry_spherical, &
-                                     geometry_planar,    &
-                                     topology_fully_periodic
 use finite_element_config_mod, only: coord_system_xyz, &
                                      coord_system_native
 
@@ -118,6 +119,7 @@ subroutine init_chi_transforms( geometry, topology, &
   ! -------------------------------------------------------------------------- !
   ! Extract stretching and rotation information from mesh
   ! -------------------------------------------------------------------------- !
+  nullify(mesh, local_mesh)
 
   ! Begin by assuming no stretching and no rotation
   to_stretch = .false.
@@ -127,6 +129,7 @@ subroutine init_chi_transforms( geometry, topology, &
   null_island(1) = 0.0_r_def
   null_island(2) = 0.0_r_def
   equatorial_latitude = 0.0_r_def
+  stretch_factor = 1.0_r_def
 
   if ( present(mesh_collection) .and.                                          &
        (present(equator_lat_arg) .or. present(north_pole_arg)) ) then
@@ -154,6 +157,9 @@ subroutine init_chi_transforms( geometry, topology, &
       )
     end if
 
+    if (.not. ( mesh%is_geometry_spherical() .and. &
+                mesh%is_coord_sys_ll() ) ) return
+
     ! Extract rotation and stretching information from global mesh
     local_mesh => mesh%get_local_mesh()
     north_pole = local_mesh%get_north_pole()
@@ -170,8 +176,7 @@ subroutine init_chi_transforms( geometry, topology, &
          LOG_LEVEL_WARNING                                                     &
       )
     end if
-    if ( abs(null_island(1) - rmdi) < EPS                                      &
-         .or. abs(null_island(2) - rmdi) < EPS ) then
+    if (any(null_island == rmdi)) then
       null_island(1) = 0.0_r_def
       null_island(2) = 0.0_r_def
       call log_event(                                                          &
@@ -180,7 +185,7 @@ subroutine init_chi_transforms( geometry, topology, &
       )
     end if
     if ( abs(equatorial_latitude - rmdi) < EPS .or.                            &
-         geometry == geometry_planar .or. topology /= topology_fully_periodic ) then
+         geometry == geometry_planar .or. topology /= topology_periodic ) then
       equatorial_latitude = 0.0_r_def
       call log_event(                                                          &
         'Equatorial latitude for mesh not set, so using 0.0 as default',       &
@@ -278,7 +283,7 @@ subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id,                   &
     y = chi_2
     z = chi_3
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, using (lon,lat,z) coordinates
     call llr2xyz(chi_1, chi_2, chi_3+scaled_radius, x, y, z)
 
@@ -369,7 +374,7 @@ subroutine chir2xyz( chi_1, chi_2, chi_3, panel_id,    &
     y = chi_2
     z = chi_3
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, using (lon,lat,z) coordinates
     call llr2xyz(chi_1, chi_2, chi_3, x, y, z)
 
@@ -457,7 +462,7 @@ subroutine chi2llr( chi_1, chi_2, chi_3, panel_id,                   &
     ! chi uses (geocentric) Cartesian coordinates
     call xyz2llr(chi_1, chi_2, chi_3, lon, lat, radius)
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, already using (lon,lat,z) coordinates
     ! may need to rotate these to the physical (lon,lat) coordinates
 
@@ -536,7 +541,7 @@ subroutine chi2abr( chi_1, chi_2, chi_3, panel_id,                   &
 
   real(kind=r_def) :: xyz(3)
 
-  if (topology /= topology_fully_periodic .or. geometry /= geometry_spherical) then
+  if (topology /= topology_periodic .or. geometry /= geometry_spherical) then
     call log_event(                                                            &
   'chi2abr can only be used on cubed-sphere meshes', LOG_LEVEL_ERROR       &
   )

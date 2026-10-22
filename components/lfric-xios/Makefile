@@ -108,25 +108,6 @@ integration-tests/%: export WORKING_DIR  := $(WORKING_DIR)/integration-tests
 integration-tests: integration-tests/run
 
 ##############################################################################
-# Test suite rules
-#
-.PHONY: launch-suite-gscan
-launch-suite-gscan: gscan_processes := $(shell ps --no-headers -o command -C cylc-gscan)
-launch-suite-gscan: ALWAYS
-	$(Q)-if [[ "$(gscan_processes)" != *"--name=$(SUITE_GROUP_NAME)"* ]]; then \
-          cylc gscan  $(DOUBLE_VERBOSE_ARG) --name=$(SUITE_GROUP_NAME) &           \
-          usleep 1                                                                ;\
-        fi
-
-.PHONY: test-suite
-test-suite: SUITE_BASE_NAME = $(notdir $(realpath $(shell pwd)/$(CORE_ROOT_DIR)))-$(PROJECT_NAME)
-test-suite: SUITE_CONFIG = rose-stem
-test-suite: launch-suite-gscan launch-test-suite
-	$(Q)echo > /dev/null
-
-print-%  : ; @echo $* = $($*)
-
-##############################################################################
 # Clean
 #
 .PHONY: clean

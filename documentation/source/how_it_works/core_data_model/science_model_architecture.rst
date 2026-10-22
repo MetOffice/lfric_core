@@ -21,7 +21,7 @@ code and technical code. The scientific codes are kernels and algorithms
 represented by the "KAl" in the name. Algorithms call kernels through the
 technical code, called the Parallel System or "PSy layer" code which is the code
 that PSyclone can generate. The PSy layer code can deal with issues relating to
-distributed and shared memory paralellism.
+distributed and shared memory parallelism.
 
 A benefit of such separation is that technical changes to code required by
 different platforms or compilers can be isolated to the PSy layer. Further, if
@@ -213,10 +213,10 @@ Dofs, dof-maps and function spaces
 The LFRic Infrastructure supports finite difference (FD), finite volume
 (FV) and finite element methods (FEM). Simply put, in FV and FEM, the
 value of a field at any point within a cell is computed as the sum of
-one or more  **basis functions** each multiplied by a different data
+one or more **basis functions** each multiplied by a different data
 point. A basis function is a spatial function whose value varies within
 the cell but is zero outside the cell. In FV and FEM terminology, each
-data point is referred to as a  **degree of freedom** or **dof**.
+data point is referred to as a **degree of freedom** or **dof**.
 
 The representation of the field as a combination of dofs and basis
 functions is referred to as a **function space**. Formally, the value of
@@ -524,7 +524,7 @@ LFRic Function spaces and element orders
 This section introduces the LFRic function space object which
 underpins fields used in LFRic. In previous sections it was noted that
 the function space is a concept in the finite element method whereby
-data and basis functions can define a field that spacially varies
+data and basis functions can define a field that spatially varies
 within an individual cell, and this was illustrated for individual
 cells in the previous section on :ref:`dof-maps and function spaces
 <dofs>`. The implementation of the function space object in
@@ -587,7 +587,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
 
 .. tab-set::
 
-    .. tab-item:: ​ :math:`\mathbb{W}_0`
+    .. tab-item::  :math:`\mathbb{W}_0`
        :name: k0_w0_dofs
 
        .. grid:: 2
@@ -608,7 +608,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
                   lowest order. The field is fully continuous so dofs are shared
                   with all neighbouring cells.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_1`
+    .. tab-item::  :math:`\mathbb{W}_1`
        :name: w1_dofs
 
        .. grid:: 2
@@ -638,7 +638,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
                   **Expanded view of** :math:`\mathbb{W}_1` at next lowest order
                   showing the details of the locations of dofs.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_2`
+    .. tab-item::  :math:`\mathbb{W}_2`
        :name: k0_w2_dofs
 
        .. grid:: 2
@@ -667,7 +667,7 @@ and at next lowest order (``element_order_h=element_order_v=1``):
                   on faces illustrating that basis functions are continuous
                   normal to the faces.
 
-    .. tab-item:: ​ :math:`\mathbb{W}_3`
+    .. tab-item::  :math:`\mathbb{W}_3`
        :name: w3_dofs
 
        .. grid:: 2
@@ -955,9 +955,9 @@ more arguments than the original ``invoke`` call, and each argument
 will be described when the :ref:`PSy layer code generation example
 <psy example>` is introduced.  All of the arguments and the
 order of the arguments derive entirely from the kernel metadata. In
-fact, the PSyclone toolset includes a :ref:`psyclone:stub-generation` 
-which will generate the following subroutine call and all the argument 
-declarations based on the above metadata. See the PSyclone documentation 
+fact, the PSyclone toolset includes a :ref:`psyclone:stub-generation`
+which will generate the following subroutine call and all the argument
+declarations based on the above metadata. See the PSyclone documentation
 for details.
 
 .. code-block:: fortran
