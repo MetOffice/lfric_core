@@ -87,6 +87,8 @@ contains
     real(r_test)   :: l_sum, l_max, l_min
     real(r_test)   :: g_sum, g_max, g_min
     real(r_test)   :: s, answer
+    real(r_test)   :: send_buffer(2)
+    real(r_test), allocatable :: recv_buffer(:)
     integer(i_def) :: i
     type(lfric_comm_type) :: lfric_comm
     type(lfric_datatype_type) :: lfric_datatype
@@ -146,6 +148,20 @@ contains
     call global_mpi%global_min( l_min, g_min )
     answer = 1.0_r_test
     @assertEqual( answer, g_min, 1.0e-2_r_test )
+
+    ! Test real 1d gather routine (gathers onto rank 0)
+    send_buffer(1) = 1.5_r_test * real(proc_num+1, r_test)
+    send_buffer(2) = 2.5_r_test * real(proc_num+1, r_test)
+    call global_mpi%gather( send_buffer, recv_buffer, size(send_buffer) )
+    @assertTrue( allocated(recv_buffer) )
+    @assertEqual( size(send_buffer)*num_processes, size(recv_buffer) )
+    if (proc_num == 0) then
+      do i = 1, num_processes
+        @assertEqual( 1.5_r_test*real(i, r_test), recv_buffer(2*i-1), 1.0e-10_r_test )
+        @assertEqual( 2.5_r_test*real(i, r_test), recv_buffer(2*i),   1.0e-10_r_test )
+      end do
+    end if
+    deallocate(recv_buffer)
 
     ! Test the routines for getting total number of ranks and local rank number
     total_ranks = global_mpi%get_comm_size()
@@ -224,6 +240,8 @@ contains
     real(r_test)   :: l_sum, l_max, l_min
     real(r_test)   :: g_sum, g_max, g_min
     real(r_test)   :: s, answer
+    real(r_test)   :: send_buffer(2)
+    real(r_test), allocatable :: recv_buffer(:)
     integer(i_def) :: i
     type(lfric_datatype_type) :: lfric_datatype
     integer(i_def) :: rank_number, total_ranks
@@ -265,6 +283,20 @@ contains
     call global_mpi%global_min( l_min, g_min )
     answer = 10.0_r_test
     @assertEqual( answer, g_min, 1.0e-2_r_test )
+
+    ! Test real 1d gather routine (gathers onto rank 0)
+    send_buffer(1) = 1.5_r_test * real(proc_num+1, r_test)
+    send_buffer(2) = 2.5_r_test * real(proc_num+1, r_test)
+    call global_mpi%gather( send_buffer, recv_buffer, size(send_buffer) )
+    @assertTrue( allocated(recv_buffer) )
+    @assertEqual( size(send_buffer)*num_processes, size(recv_buffer) )
+    if (proc_num == 0) then
+      do i = 1, num_processes
+        @assertEqual( 1.5_r_test*real(i, r_test), recv_buffer(2*i-1), 1.0e-5_r_test )
+        @assertEqual( 2.5_r_test*real(i, r_test), recv_buffer(2*i),   1.0e-5_r_test )
+      end do
+    end if
+    deallocate(recv_buffer)
 
     ! Test the mpi data type routines - double and single
     lfric_datatype = get_lfric_datatype( real_type, r_single )
