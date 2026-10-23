@@ -216,7 +216,7 @@ subroutine calculate_settings( axis_direction, total_n,    &
     'infl_target = ', inflation_factor
     call log_event(log_scratch_space, LOG_LEVEL_INFO)
 
-  elseif (axis_direction == 2 ) then
+  else if (axis_direction == 2 ) then
     write(log_scratch_space,'(A)') &
     'y-direction or Latitude'
     call log_event(log_scratch_space, LOG_LEVEL_INFO)

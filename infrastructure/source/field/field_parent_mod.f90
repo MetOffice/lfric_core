@@ -513,7 +513,7 @@ contains
       else
         do depth=1,self%field_halo_depth-1
           if (self%halo_dirty(depth+1) == 1) exit
-        enddo
+        end do
       end if
     else
       ! Halo depth is less than 1 - i.e. no halos - so return the
@@ -568,11 +568,11 @@ contains
        ') for', self%name
        call log_event( log_scratch_space, log_level_error )
        dcpl_id = imdi
-    elseif(allocated(self%cpl_id)) then
+    else if(allocated(self%cpl_id)) then
        dcpl_id = self%cpl_id(i_multidata_lev)
     else
        dcpl_id = imdi
-    endif
+    end if
 
     return
   end function get_cpl_id
@@ -599,7 +599,7 @@ contains
       function_space%get_ndata(), &
       ') for ', self%name
       call log_event( log_scratch_space, log_level_error )
-    endif
+    end if
 
     if(allocated(self%cpl_id)) then
        self%cpl_id(i_multidata_lev) = dcpl_id
@@ -607,7 +607,7 @@ contains
        allocate(self%cpl_id(function_space%get_ndata()))
        self%cpl_id(:) = imdi
        self%cpl_id(i_multidata_lev) = dcpl_id
-    endif
+    end if
 
   end subroutine set_cpl_id
 
