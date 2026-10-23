@@ -13,7 +13,9 @@
 !!          This gives a data access optimisation.
 module sci_native_jacobian_mod
 
-  use constants_mod,             only: l_def, i_def, r_def, r_single
+  use, intrinsic :: iso_fortran_env, only: real32
+
+  use constants_mod,             only: l_def, i_def, r_def
   use coord_transform_mod,       only: PANEL_ROT_MATRIX, &
                                        alphabetar2xyz,   &
                                        xyz2llr,          &
@@ -24,11 +26,11 @@ module sci_native_jacobian_mod
                                        get_to_stretch,           &
                                        get_to_rotate,            &
                                        get_stretch_factor
+  use mesh_mod,                  only: geometry_planar, &
+                                       topology_periodic
 
   use finite_element_config_mod, only: coord_system_xyz, &
                                        coord_system_native
-  use base_mesh_config_mod,      only: geometry_planar, &
-                                       topology_fully_periodic
 
   implicit none
 
@@ -129,7 +131,7 @@ contains
       ! Using (X,Y,Z) coordinates or on a plane
       jac = jac_ref2sph
 
-    else if (topology == topology_fully_periodic) then
+    else if (topology == topology_periodic) then
       radius = real(scaled_radius, kind=r_def)
       jac_sph2XYZ = jacobian_abr2XYZ(nlayers, chi_1_df, chi_2_df, chi_3_df+radius, panel_id)
 
@@ -357,7 +359,7 @@ contains
 
     jac_XYZ2llr(:,1,1) = -sin_lon / (radius(:) * safe_cos_lat)
     jac_XYZ2llr(:,1,2) = cos_lon / (radius(:) * safe_cos_lat)
-    jac_XYZ2llr(:,1,3) = 0.0_r_single
+    jac_XYZ2llr(:,1,3) = 0.0_real32
     jac_XYZ2llr(:,2,1) = - cos_lon * sin_lat / radius(:)
     jac_XYZ2llr(:,2,2) = - sin_lon * sin_lat / radius(:)
     jac_XYZ2llr(:,2,3) = cos_lat / radius(:)

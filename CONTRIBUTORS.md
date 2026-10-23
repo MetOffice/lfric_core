@@ -1,5 +1,6 @@
 | GitHub user      | Real Name              | Affiliation           | Date       |
 | ---------------- | -----------------      | --------------------- | ---------- |
+| ickc             | Kolen Cheung           | University of Exeter  | 2026-07-21 |
 | iboutle          | Ian Boutle             | Met Office            | 2026-03-06 |
 | andrewcoughtrie  | Andrew Coughtrie       | Met Office            | 2025.12.12 |
 | james-bruten-mo  | James Bruten           | Met Office            | 2025-12-09 |
@@ -34,3 +35,4 @@
 | ukmo-juan-castillo  | Juan M. Castillo    | Met Office            | 2026-03-24 |
 | mcdalvi          | Mohit Dalvi            | Met Office            | 2026-06-19 |
 | cjohnson-pi      | Christine Johnson      | Met Office            | 2026-06-29 |
+| DrTVockerodtMO   | Terence Vockerodt      | Met Office            | 2026-08-17 |

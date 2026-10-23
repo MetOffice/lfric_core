@@ -13,11 +13,13 @@
 !>
 module sci_tri_solve_sh_rho_to_mr_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only: arg_type,          &
                                GH_FIELD, GH_REAL, &
                                GH_READ, GH_WRITE, &
                                CELL_COLUMN
-  use constants_mod,     only: r_single, r_double, i_def
+  use constants_mod,     only: i_def
   use fs_continuity_mod, only: W3, Wtheta
   use kernel_mod,        only: kernel_type
 
@@ -46,8 +48,8 @@ module sci_tri_solve_sh_rho_to_mr_kernel_mod
   ! Generic interface for real32 and real64 types
   interface tri_solve_sh_rho_to_mr_code
     module procedure  &
-      tri_solve_sh_rho_to_mr_code_r_single, &
-      tri_solve_sh_rho_to_mr_code_r_double
+      tri_solve_sh_rho_to_mr_code_real32, &
+      tri_solve_sh_rho_to_mr_code_real64
   end interface
 
 contains
@@ -69,9 +71,9 @@ contains
 !> @param[in]  undf_sh_w3 Size of shifted W3 field arrays.
 !> @param[in]  map_sh_w3 Dofmap for shifted W3 space
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine tri_solve_sh_rho_to_mr_code_r_single(                                  &
+subroutine tri_solve_sh_rho_to_mr_code_real32(                                    &
                                                  nlayers,                         &
                                                  field_wt, field_sh_w3,           &
                                                  tri_below, tri_diag, tri_above,  &
@@ -89,27 +91,27 @@ subroutine tri_solve_sh_rho_to_mr_code_r_single(                                
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=r_single), dimension(undf_wt),     intent(inout) :: field_wt
-  real(kind=r_single), dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
-  real(kind=r_single), dimension(undf_sh_w3),  intent(in)    :: tri_above
-  real(kind=r_single), dimension(undf_sh_w3),  intent(in)    :: tri_diag
-  real(kind=r_single), dimension(undf_sh_w3),  intent(in)    :: tri_below
+  real(kind=real32),   dimension(undf_wt),     intent(inout) :: field_wt
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_above
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_diag
+  real(kind=real32),   dimension(undf_sh_w3),  intent(in)    :: tri_below
 
   ! Internal variables
-  integer(kind=i_def)                     :: k, ij, nlayers_shifted
-  real(kind=r_single), dimension(nlayers+1)  :: rhs_new, tri_above_new
-  real(kind=r_single)                        :: denom
+  integer(kind=i_def)                        :: k, ij, nlayers_shifted
+  real(kind=real32),   dimension(nlayers+1)  :: rhs_new, tri_above_new
+  real(kind=real32)                          :: denom
 
   nlayers_shifted = nlayers + 1
 
   k  = 0
   ij = map_sh_w3(1)
-  denom = 1.0_r_single / tri_diag(ij+k)
+  denom = 1.0_real32 / tri_diag(ij+k)
   tri_above_new(1) = tri_above(ij+k) * denom
   rhs_new(1) = field_sh_w3(ij+k) * denom
 
   do k = 1, nlayers_shifted-1
-    denom = 1.0_r_single / (tri_diag(ij+k) - tri_below(ij+k) * tri_above_new(k))
+    denom = 1.0_real32 / (tri_diag(ij+k) - tri_below(ij+k) * tri_above_new(k))
     tri_above_new(k+1) = tri_above(ij+k) * denom
     rhs_new(k+1) = (field_sh_w3(ij+k) - tri_below(ij+k) * rhs_new(k)) * denom
   end do
@@ -120,11 +122,11 @@ subroutine tri_solve_sh_rho_to_mr_code_r_single(                                
     field_wt(ij+k) = rhs_new(k+1) - tri_above_new(k+1)*field_wt(ij+k+1)
   end do
 
-end subroutine tri_solve_sh_rho_to_mr_code_r_single
+end subroutine tri_solve_sh_rho_to_mr_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine tri_solve_sh_rho_to_mr_code_r_double(                                  &
+subroutine tri_solve_sh_rho_to_mr_code_real64(                                    &
                                                  nlayers,                         &
                                                  field_wt, field_sh_w3,           &
                                                  tri_below, tri_diag, tri_above,  &
@@ -142,27 +144,27 @@ subroutine tri_solve_sh_rho_to_mr_code_r_double(                                
   integer(kind=i_def), dimension(ndf_wt),    intent(in) :: map_wt
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=r_double), dimension(undf_wt),     intent(inout) :: field_wt
-  real(kind=r_double), dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
-  real(kind=r_double), dimension(undf_sh_w3),  intent(in)    :: tri_above
-  real(kind=r_double), dimension(undf_sh_w3),  intent(in)    :: tri_diag
-  real(kind=r_double), dimension(undf_sh_w3),  intent(in)    :: tri_below
+  real(kind=real64),   dimension(undf_wt),     intent(inout) :: field_wt
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: field_sh_w3
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_above
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_diag
+  real(kind=real64),   dimension(undf_sh_w3),  intent(in)    :: tri_below
 
   ! Internal variables
-  integer(kind=i_def)                     :: k, ij, nlayers_shifted
-  real(kind=r_double), dimension(nlayers+1)  :: rhs_new, tri_above_new
-  real(kind=r_double)                        :: denom
+  integer(kind=i_def)                        :: k, ij, nlayers_shifted
+  real(kind=real64),   dimension(nlayers+1)  :: rhs_new, tri_above_new
+  real(kind=real64)                          :: denom
 
   nlayers_shifted = nlayers + 1
 
   k  = 0
   ij = map_sh_w3(1)
-  denom = 1.0_r_double / tri_diag(ij+k)
+  denom = 1.0_real64 / tri_diag(ij+k)
   tri_above_new(1) = tri_above(ij+k) * denom
   rhs_new(1) = field_sh_w3(ij+k) * denom
 
   do k = 1, nlayers_shifted-1
-    denom = 1.0_r_double / (tri_diag(ij+k) - tri_below(ij+k) * tri_above_new(k))
+    denom = 1.0_real64 / (tri_diag(ij+k) - tri_below(ij+k) * tri_above_new(k))
     tri_above_new(k+1) = tri_above(ij+k) * denom
     rhs_new(k+1) = (field_sh_w3(ij+k) - tri_below(ij+k) * rhs_new(k)) * denom
   end do
@@ -173,6 +175,6 @@ subroutine tri_solve_sh_rho_to_mr_code_r_double(                                
     field_wt(ij+k) = rhs_new(k+1) - tri_above_new(k+1)*field_wt(ij+k+1)
   end do
 
-end subroutine tri_solve_sh_rho_to_mr_code_r_double
+end subroutine tri_solve_sh_rho_to_mr_code_real64
 
 end module sci_tri_solve_sh_rho_to_mr_kernel_mod

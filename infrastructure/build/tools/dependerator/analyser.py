@@ -4,6 +4,9 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
+
 # Generate a make file snippet holding build information about a source file.
 #
 # This snippet consists of a dependency list built up from which modules a
@@ -24,11 +27,21 @@ import os.path
 import re
 import subprocess
 from abc import ABC, abstractmethod
+from concurrent.futures import Future, ThreadPoolExecutor
+from collections import deque
 from pathlib import Path
 from time import time
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Deque, Dict, Generator, Iterable, List, Optional, Tuple
 
 from dependerator.database import FortranDependencies
+
+# Suffixes which must be passed through the Fortran preprocessor.
+#
+_PREPROCESSED_SUFFIXES = (".F90", ".X90")
+
+# Suffixes which may be read directly.
+#
+_PLAIN_SUFFIXES = (".f90",)
 
 
 class Analyser(ABC):
@@ -44,6 +57,15 @@ class Analyser(ABC):
         @param source_filename: File to analyse
         """
         pass
+
+    def analyse_all(self, source_filenames: Iterable[Path]) -> None:
+        """
+        Examine a number of source files and store dependency information.
+
+        @param source_filenames: Files to analyse
+        """
+        for source_filename in source_filenames:
+            self.analyse(source_filename)
 
 
 class FortranAnalyser(Analyser):
@@ -86,6 +108,28 @@ class FortranAnalyser(Analyser):
         if fpp is None:
             raise Exception("No Fortran preprocessor provided in $FPP")
         self._fpp = fpp.split()
+
+        # The include and macro arguments never change between files so they
+        # are built once here. Previously they were appended to self._fpp on
+        # every call to analyse() which, when more than one file is handled
+        # by a single process, causes the command line to grow without bound.
+        #
+        self.__preprocess_arguments: List[str] = []
+        for path in self.__preprocess_include_paths:
+            self.__preprocess_arguments.append("-I" + str(path))
+        for name, macro in self.__preprocess_macros.items():
+            if macro:
+                self.__preprocess_arguments.append(f"-D{name}={macro}")
+            else:
+                self.__preprocess_arguments.append("-D" + name)
+
+        # Recognises anything which the preprocessor might act on. If a file
+        # holds none of these it may be read directly, saving a process
+        # launch.
+        #
+        self.__preprocessor_directive_pattern = re.compile(
+            r"^\s*#", flags=re.MULTILINE
+        )
 
         # Patterns to recognise scoping units
         #
@@ -141,24 +185,108 @@ class FortranAnalyser(Analyser):
 
         @param source_filename: Fortran source file to be scanned.
         """
+        self._scan(source_filename, self._preprocess(source_filename))
+
+    ###########################################################################
+    def analyse_all(self, source_filenames: Iterable[Path]) -> None:
+        """
+        Scans a number of Fortran source files and harvests dependency
+        information from each.
+
+        Reading and preprocessing source is I/O and subprocess bound so it is
+        performed by a pool of threads. All database access is performed from
+        the calling thread as SQLite does not take kindly to being used from
+        several threads at once.
+
+        Files are handled in the order presented so the resulting database is
+        not dependent on thread scheduling.
+
+        @param source_filenames: Fortran source files to be scanned.
+        """
         logger = logging.getLogger(__name__)
 
-        # Perform any necessary preprocessing
+        sources = list(source_filenames)
+        if not sources:
+            return
+
+        # There is no point spinning up threads for a single file and doing so
+        # would only add to the start-up cost we are trying to avoid.
         #
-        if source_filename.suffix in [".F90", ".X90"]:
-            logging.getLogger(__name__).info(
-                "  Preprocessing " + str(source_filename)
+        if len(sources) == 1:
+            self.analyse(sources[0])
+            return
+
+        workers = min(len(sources), (os.cpu_count() or 1) * 2)
+
+        # Preprocessed source is held in memory so only a limited number of
+        # files are permitted to run ahead of the scanning.
+        #
+        window = workers * 2
+
+        start_time = time()
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            pending: Deque[Tuple[Path, Future]] = deque()
+            source_iterator = iter(sources)
+
+            def submit_next() -> bool:
+                try:
+                    source = next(source_iterator)
+                except StopIteration:
+                    return False
+                pending.append(
+                    (source, executor.submit(self._preprocess, source))
+                )
+                return True
+
+            for _ in range(window):
+                if not submit_next():
+                    break
+
+            while pending:
+                source, future = pending.popleft()
+                self._scan(source, future.result())
+                submit_next()
+
+        logger.debug(
+            f"Time to analyse {len(sources)} Fortran sources: "
+            f"{time() - start_time}"
+        )
+
+    ###########################################################################
+    def _preprocess(self, source_filename: Path) -> str:
+        """
+        Obtains the source of a file, preprocessing it if necessary.
+
+        This method performs no database access so may be called from any
+        thread.
+
+        @param source_filename: Fortran source file to be read.
+        @return: The source ready for scanning.
+        """
+        logger = logging.getLogger(__name__)
+
+        if source_filename.suffix in _PREPROCESSED_SUFFIXES:
+            start_time = time()
+            with source_filename.open("rt") as source_file:
+                raw_source = source_file.read()
+            logger.debug(
+                "Time to read Fortran source: " + str(time() - start_time)
             )
-            preprocess_command = self._fpp
-            for path in self.__preprocess_include_paths:
-                preprocess_command.append("-I" + str(path))
-            for name, macro in self.__preprocess_macros.items():
-                if macro:
-                    preprocess_command.append(f"-D{name}={macro}")
-                else:
-                    preprocess_command.append("-D" + name)
+
+            # If there is nothing for the preprocessor to do we can save
+            # ourselves the cost of launching it.
+            #
+            if not self.__preprocessor_directive_pattern.search(raw_source):
+                logger.info(
+                    f"  No directives, not preprocessing {source_filename}"
+                )
+                return raw_source
+
+            logger.info("  Preprocessing " + str(source_filename))
+            preprocess_command = list(self._fpp)
+            preprocess_command.extend(self.__preprocess_arguments)
             preprocess_command.append(str(source_filename))
-            logging.getLogger(__name__).debug(preprocess_command)
+            logger.debug(preprocess_command)
 
             start_time = time()
             preprocessor = subprocess.Popen(
@@ -178,18 +306,34 @@ class FortranAnalyser(Analyser):
                 raise subprocess.CalledProcessError(
                     preprocessor.returncode, " ".join(preprocess_command)
                 )
-        elif source_filename.suffix == ".f90":
+            return processed_source
+
+        if source_filename.suffix in _PLAIN_SUFFIXES:
             start_time = time()
             with source_filename.open("rt") as sourceFile:
                 processed_source = sourceFile.read()
             logger.debug(
                 "Time to read Fortran source: " + str(time() - start_time)
             )
-        else:
-            raise Exception(
-                "File doesn't look like a Fortran file: "
-                + str(source_filename)
-            )
+            return processed_source
+
+        raise Exception(
+            "File doesn't look like a Fortran file: " + str(source_filename)
+        )
+
+    ###########################################################################
+    def _scan(self, source_filename: Path, processed_source: str) -> None:
+        """
+        Scans already preprocessed Fortran source and harvests dependency
+        information into the database.
+
+        This method accesses the database so must only be called from a single
+        thread.
+
+        @param source_filename: File from which the source came.
+        @param processed_source: Source ready for scanning.
+        """
+        logger = logging.getLogger(__name__)
 
         def add_dependency(
             program_unit: str, prerequisite_unit: str, reverse_link=False
