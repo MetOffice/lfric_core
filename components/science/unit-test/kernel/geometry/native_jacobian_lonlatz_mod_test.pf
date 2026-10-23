@@ -13,7 +13,6 @@ module native_jacobian_lonlatz_mod_test
   use mesh_mod,                  only: geometry_spherical, &
                                        topology_non_periodic
   use finite_element_config_mod, only: coord_system_native
-
   implicit none
 
   public :: set_up, tear_down, test_all

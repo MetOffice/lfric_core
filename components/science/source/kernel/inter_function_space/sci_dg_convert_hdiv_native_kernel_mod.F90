@@ -18,7 +18,8 @@ module sci_dg_convert_hdiv_native_kernel_mod
 
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,         &
-                                    GH_FIELD, GH_REAL,           &
+                                    GH_FIELD, GH_SCALAR,         &
+                                    GH_REAL, GH_INTEGER,         &
                                     GH_READWRITE,                &
                                     GH_READ, ANY_SPACE_9,        &
                                     ANY_SPACE_2,                 &
@@ -39,11 +40,17 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: dg_convert_hdiv_native_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                                          &
-      arg_type(GH_FIELD*3, GH_REAL, GH_READWRITE, W3),                         &
-      arg_type(GH_FIELD,   GH_REAL, GH_READ,      W2),                         &
-      arg_type(GH_FIELD*3, GH_REAL, GH_READ,      ANY_SPACE_9),                &
-      arg_type(GH_FIELD,   GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_3)   &
+  type(arg_type) :: meta_args(8) = (/                                          &
+      arg_type(GH_FIELD*3, GH_REAL, GH_READWRITE, W3),                         & ! physical_field_1,
+                                                                                 ! physical_field_2,
+                                                                                 ! physical_field_3
+      arg_type(GH_FIELD,   GH_REAL, GH_READ,      W2),                         & ! hdiv_field
+      arg_type(GH_FIELD*3, GH_REAL, GH_READ,      ANY_SPACE_9),                & ! chi1, chi2, chi3
+      arg_type(GH_FIELD,   GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_3),  & ! panel_id
+      arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                               & ! geometry
+      arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                               & ! topology
+      arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                               & ! coord_system
+      arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                                & ! scaled_radius
   /)
   type(func_type) :: meta_funcs(2) = (/                                        &
       func_type(W2, GH_BASIS),                                                 &
@@ -71,6 +78,10 @@ contains
 !> @param[in]     chi_2              Native coordinates in the second direction
 !> @param[in]     chi_3              Native coordinates in the third direction
 !> @param[in]     panel_id           Field storing mesh panel ID for each column
+!! @param[in]     geometry           Mesh geometry enumeration
+!! @param[in]     topology           Mesh topology enumeration
+!! @param[in]     coord_system       Finite-element coordinate system enumeration
+!! @param[in]     scaled_radius      Scaled planet radius
 !> @param[in]     ndf_w3             Num DoFs per cell for W3
 !> @param[in]     undf_w3            Num DoFs in this partition for W3
 !> @param[in]     map_w3             Map of lowest-level DoFs for W3
@@ -94,6 +105,9 @@ subroutine dg_convert_hdiv_native_code(nlayers,                                &
                                        hdiv_field,                             &
                                        chi_1, chi_2, chi_3,                    &
                                        panel_id,                               &
+                                       geometry, topology,                     &
+                                       coord_system,                           &
+                                       scaled_radius,                          &
                                        ndf_w3, undf_w3, map_w3,                &
                                        ndf_w2, undf_w2, map_w2,                &
                                        basis_w2,                               &
@@ -103,10 +117,6 @@ subroutine dg_convert_hdiv_native_code(nlayers,                                &
                                       )
 
   use sci_native_jacobian_mod, only: native_jacobian
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -134,6 +144,11 @@ subroutine dg_convert_hdiv_native_code(nlayers,                                &
   real(kind=r_def),    intent(in)    :: basis_chi(1,ndf_chi,ndf_w3)
   real(kind=r_def),    intent(in)    :: diff_basis_chi(3,ndf_chi,ndf_w3)
   real(kind=r_def),    intent(in)    :: basis_w2(3,ndf_w2,ndf_w3)
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def) :: i, j

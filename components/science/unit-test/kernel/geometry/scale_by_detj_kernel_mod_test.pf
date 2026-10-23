@@ -7,11 +7,12 @@
 !> Test the scale by detJ kernel
 module scale_by_detj_kernel_mod_test
 
-  use constants_mod, only : i_def, r_def, PI
+  use constants_mod,             only: i_def, r_def, pi, imdi, rmdi
+  use finite_element_config_mod, only: coord_system_xyz
   use funit
+
   use get_unit_test_wthetanodal_basis_mod, only : get_w0_wthetanodal_basis, &
                                                   get_w0_wthetanodal_diff_basis
-
 
   implicit none
 
@@ -24,26 +25,13 @@ contains
   @before
   subroutine set_up()
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only : init_chi_transforms
 
     implicit none
 
     real(r_def), parameter :: geostrophic_north_pole(2) = [0.0_r_def, PI/2.0_r_def]
     real(r_def), parameter :: null_island(2) = [0.0_r_def, 0.0_r_def]
     real(r_def), parameter :: equator_latitude = 0.0_r_def
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     ! Note: Calling 'init_chi_transforms' is only valid for meshes which have a
     !       spherical geometry and coordinate system. While it may not be relevant
@@ -60,12 +48,10 @@ contains
   @after
   subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tear_down
@@ -80,6 +66,11 @@ contains
     implicit none
 
     real(kind=r_def), parameter :: tol = 1.0e-9_r_def
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     ! Mesh
     integer(kind=i_def), parameter :: nlayers = 2
@@ -163,6 +154,9 @@ contains
     call scale_by_detj_code(nlayers,                 &
                             field,                   &
                             x, y, z, panel_id,       &
+                            geometry, topology,      &
+                            coord_system,            &
+                            scaled_radius,           &
                             ndf_ws, undf_ws, map_ws, &
                             ndf_wx, undf_wx, map_wx, &
                             basis_wx, diff_basis_wx, &
