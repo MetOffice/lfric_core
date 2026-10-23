@@ -7,9 +7,9 @@ class local_mesh_mod::local_mesh_type {
   -mesh_name:           string
   -origin_name:         string
   -origin_file:         string
-  -geometry:            integer
-  -topology:            integer
-  -coord_sys:           integer
+  -mesh_geometry:       integer
+  -mesh_topology:       integer
+  -mesh_coord_sys:      integer
   -coord_units_xy:      string[2]
   -void_cell:           integer
   -north_pole:          real[2]
