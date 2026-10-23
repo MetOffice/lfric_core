@@ -11,12 +11,14 @@
 
 module sci_inject_sh_w3_to_wt_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,            only : arg_type,                  &
                                       GH_FIELD, GH_REAL,         &
                                       GH_READ, GH_WRITE,         &
                                       ANY_DISCONTINUOUS_SPACE_3, &
                                       CELL_COLUMN
-  use constants_mod,           only : r_def, i_def, r_single, r_double
+  use constants_mod,           only : r_def, i_def
   use fs_continuity_mod,       only : Wtheta
 
   use kernel_mod,              only : kernel_type
@@ -48,8 +50,8 @@ module sci_inject_sh_w3_to_wt_kernel_mod
   ! Generic interface for real32 and real64 types
   interface inject_sh_w3_to_wt_code
     module procedure  &
-      inject_sh_w3_to_wt_code_r_single, &
-      inject_sh_w3_to_wt_code_r_double
+      inject_sh_w3_to_wt_code_real32, &
+      inject_sh_w3_to_wt_code_real64
   end interface
 
 contains
@@ -65,9 +67,9 @@ contains
 !> @param[in] undf_w3_sh Number of unique degrees of freedom for W3 shifted
 !> @param[in] map_w3_sh Dofmap for W3 shifted
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine inject_sh_w3_to_wt_code_r_single(                &
+subroutine inject_sh_w3_to_wt_code_real32(                  &
                                              nlayers,       &
                                              field_wt,      &
                                              field_w3_sh,   &
@@ -88,16 +90,16 @@ subroutine inject_sh_w3_to_wt_code_r_single(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_wt),        intent(in) :: map_wt
 
-  real(kind=r_single), dimension(undf_w3_sh),    intent(in) :: field_w3_sh
-  real(kind=r_single), dimension(undf_wt),    intent(inout) :: field_wt
+  real(kind=real32),   dimension(undf_w3_sh),    intent(in) :: field_w3_sh
+  real(kind=real32),   dimension(undf_wt),    intent(inout) :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: k
 
   ! Assume lowest order so only a single DoF per cell
   ! Bottom boundary value
-  field_wt(map_wt(1)) = (4.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)) &
-                        - (1.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+1)
+  field_wt(map_wt(1)) = (4.0_real32 / 3.0_real32) * field_w3_sh(map_w3_sh(1)) &
+                        - (1.0_real32 / 3.0_real32) * field_w3_sh(map_w3_sh(1)+1)
 
   ! All interior levels
   do k = 1, nlayers - 1
@@ -106,14 +108,14 @@ subroutine inject_sh_w3_to_wt_code_r_single(                &
 
   ! Top boundary value
   k = nlayers
-  field_wt(map_wt(1)+k) = - (1.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+k-1) &
-                          + (4.0_r_single / 3.0_r_single) * field_w3_sh(map_w3_sh(1)+k)
+  field_wt(map_wt(1)+k) = - (1.0_real32 / 3.0_real32) * field_w3_sh(map_w3_sh(1)+k-1) &
+                          + (4.0_real32 / 3.0_real32) * field_w3_sh(map_w3_sh(1)+k)
 
-end subroutine inject_sh_w3_to_wt_code_r_single
+end subroutine inject_sh_w3_to_wt_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine inject_sh_w3_to_wt_code_r_double(                &
+subroutine inject_sh_w3_to_wt_code_real64(                  &
                                              nlayers,       &
                                              field_wt,      &
                                              field_w3_sh,   &
@@ -134,16 +136,16 @@ subroutine inject_sh_w3_to_wt_code_r_double(                &
   integer(kind=i_def), dimension(ndf_w3_sh),     intent(in) :: map_w3_sh
   integer(kind=i_def), dimension(ndf_wt),        intent(in) :: map_wt
 
-  real(kind=r_double),    dimension(undf_w3_sh),    intent(in) :: field_w3_sh
-  real(kind=r_double),    dimension(undf_wt),    intent(inout) :: field_wt
+  real(kind=real64),      dimension(undf_w3_sh),    intent(in) :: field_w3_sh
+  real(kind=real64),      dimension(undf_wt),    intent(inout) :: field_wt
 
   ! Internal variables
   integer(kind=i_def) :: k
 
   ! Assume lowest order so only a double DoF per cell
   ! Bottom boundary value
-  field_wt(map_wt(1)) = (4.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)) &
-                        - (1.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+1)
+  field_wt(map_wt(1)) = (4.0_real64 / 3.0_real64) * field_w3_sh(map_w3_sh(1)) &
+                        - (1.0_real64 / 3.0_real64) * field_w3_sh(map_w3_sh(1)+1)
 
   ! All interior levels
   do k = 1, nlayers - 1
@@ -152,9 +154,9 @@ subroutine inject_sh_w3_to_wt_code_r_double(                &
 
   ! Top boundary value
   k = nlayers
-  field_wt(map_wt(1)+k) = - (1.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+k-1) &
-                          + (4.0_r_double / 3.0_r_double) * field_w3_sh(map_w3_sh(1)+k)
+  field_wt(map_wt(1)+k) = - (1.0_real64 / 3.0_real64) * field_w3_sh(map_w3_sh(1)+k-1) &
+                          + (4.0_real64 / 3.0_real64) * field_w3_sh(map_w3_sh(1)+k)
 
-end subroutine inject_sh_w3_to_wt_code_r_double
+end subroutine inject_sh_w3_to_wt_code_real64
 
 end module sci_inject_sh_w3_to_wt_kernel_mod

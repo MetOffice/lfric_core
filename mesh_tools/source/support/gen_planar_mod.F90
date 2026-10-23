@@ -404,8 +404,8 @@ function gen_planar_constructor( reference_element,          &
   write(rchar_y, '(F10.2)') domain_size(2)
   write(domain_size_str, '(A)') '['//trim(adjustl(rchar_x))// &
                                 ','//trim(adjustl(rchar_y))//']'
-  write(rchar_x, '(F10.2)') domain_centre(1)
-  write(rchar_y, '(F10.2)') domain_centre(2)
+  write(rchar_x, '(F10.6)') domain_centre(1)
+  write(rchar_y, '(F10.6)') domain_centre(2)
   write(domain_centre_str, '(A)') '['//trim(adjustl(rchar_x))// &
                                   ','//trim(adjustl(rchar_y))//']'
 

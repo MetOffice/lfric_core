@@ -88,9 +88,7 @@ variables:
 		time:units = "seconds since 2024-01-01 15:03:20" ;
 		time:time_origin = "2024-01-01 15:03:20" ;
 		time:bounds = "time_bounds" ;
-		time:coordinates = " forecast_reference_time forecast_period" ;
 	double time_bounds(time, axis_nbounds) ;
-		time_bounds:coordinates = " forecast_reference_time forecast_period" ;
 	double temporal_field(time, vert_axis_half_levels, nMesh2d_face) ;
 		temporal_field:mesh = "Mesh2d" ;
 		temporal_field:location = "face" ;
@@ -98,15 +96,7 @@ variables:
 		temporal_field:interval_operation = "10 s" ;
 		temporal_field:interval_write = "10 s" ;
 		temporal_field:cell_methods = "time: point" ;
-		temporal_field:coordinates = "Mesh2d_face_y Mesh2d_face_x forecast_reference_time forecast_period" ;
-	double forecast_reference_time ;
-		forecast_reference_time:units = "seconds since 2024-01-01 15:03:20" ;
-		forecast_reference_time:calendar = "gregorian" ;
-		forecast_reference_time:standard_name = "forecast_reference_time" ;
-	double forecast_period(time) ;
-		forecast_period:units = "seconds" ;
-		forecast_period:standard_name = "forecast_period" ;
-		forecast_period:coordinates = " forecast_reference_time forecast_period" ;
+		temporal_field:coordinates = "Mesh2d_face_y Mesh2d_face_x" ;
 
 // global attributes:
 		:name = "lfric_xios_temporal_output" ;
@@ -591,9 +581,4 @@ data:
     4.06349206349206, 4.06349206349206, 4.06349206349206, 4.06349206349206, 
     4.06349206349206 ;
 
- forecast_reference_time = 0 ;
-
- forecast_period = 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 
-    140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 
-    280, 290, 300 ;
 }

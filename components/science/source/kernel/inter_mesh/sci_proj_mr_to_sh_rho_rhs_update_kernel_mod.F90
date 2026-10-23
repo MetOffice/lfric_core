@@ -16,12 +16,14 @@
 !>
 module sci_proj_mr_to_sh_rho_rhs_update_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,      only : arg_type,                  &
                                 GH_FIELD, GH_REAL,         &
                                 GH_WRITE, GH_READ,         &
                                 ANY_DISCONTINUOUS_SPACE_3, &
                                 CELL_COLUMN
-  use constants_mod,     only : r_single, r_double, i_def
+  use constants_mod,     only : i_def
   use fs_continuity_mod, only : W3
   use kernel_mod,        only : kernel_type
 
@@ -53,8 +55,8 @@ module sci_proj_mr_to_sh_rho_rhs_update_kernel_mod
   ! Generic interface for real32 and real64 types
   interface proj_mr_to_sh_rho_rhs_update_code
     module procedure  &
-      proj_mr_to_sh_rho_rhs_update_code_r_single, &
-      proj_mr_to_sh_rho_rhs_update_code_r_double
+      proj_mr_to_sh_rho_rhs_update_code_real32, &
+      proj_mr_to_sh_rho_rhs_update_code_real64
   end interface
 contains
 
@@ -83,9 +85,9 @@ contains
 !! @param[in] undf_w3 The number of unique degrees of freedom for w3
 !! @param[in] map_w3 Dofmap for the cell at the base of the column for w3
 
-! R_SINGLE PRECISION
+! REAL32 PRECISION
 ! ==================
-subroutine proj_mr_to_sh_rho_rhs_update_code_r_single(                           &
+subroutine proj_mr_to_sh_rho_rhs_update_code_real32(                             &
                                               nlayers_shifted,                   &
                                               tri_below,                         &
                                               tri_diag,                          &
@@ -108,14 +110,14 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_r_single(                          
   integer(kind=i_def), dimension(ndf_w3),    intent(in) :: map_w3
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=r_single), dimension(undf_sh_w3),  intent(inout) :: tri_below
-  real(kind=r_single), dimension(undf_sh_w3),  intent(inout) :: tri_diag
-  real(kind=r_single), dimension(undf_sh_w3),  intent(inout) :: tri_above
-  real(kind=r_single), dimension(undf_w3),     intent(in)    :: rho_d
-  real(kind=r_single), dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
-  real(kind=r_single), dimension(undf_w3),     intent(in)    :: I_upper_i_i
-  real(kind=r_single), dimension(undf_w3),     intent(in)    :: I_lower_i_i
-  real(kind=r_single), dimension(undf_w3),     intent(in)    :: I_upper_i_im1
+  real(kind=real32),   dimension(undf_sh_w3),  intent(inout) :: tri_below
+  real(kind=real32),   dimension(undf_sh_w3),  intent(inout) :: tri_diag
+  real(kind=real32),   dimension(undf_sh_w3),  intent(inout) :: tri_above
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: rho_d
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_upper_i_i
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_lower_i_i
+  real(kind=real32),   dimension(undf_w3),     intent(in)    :: I_upper_i_im1
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -123,13 +125,13 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_r_single(                          
   ! Calculation for top and bottom layers (bottom is k=0)
   k = nlayers_shifted - 1
   do df = 1, ndf_sh_w3
-    tri_below(map_sh_w3(df)) = 0.0_r_single
+    tri_below(map_sh_w3(df)) = 0.0_real32
     tri_diag(map_sh_w3(df)) = rho_d(map_w3(df)) * I_lower_i_i(map_w3(df))
     tri_above(map_sh_w3(df)) = rho_d(map_w3(df)) * I_lower_i_ip1(map_w3(df))
 
     tri_below(map_sh_w3(df)+k) = rho_d(map_w3(df)+k-1) * I_upper_i_im1(map_w3(df)+k-1)
     tri_diag(map_sh_w3(df)+k) = rho_d(map_w3(df)+k-1) * I_upper_i_i(map_w3(df)+k-1)
-    tri_above(map_sh_w3(df)+k) = 0.0_r_single
+    tri_above(map_sh_w3(df)+k) = 0.0_real32
   end do
 
   ! Calculation for generic internal layers
@@ -142,11 +144,11 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_r_single(                          
     end do
   end do
 
-end subroutine proj_mr_to_sh_rho_rhs_update_code_r_single
+end subroutine proj_mr_to_sh_rho_rhs_update_code_real32
 
-! R_DOUBLE PRECISION
+! REAL64 PRECISION
 ! ==================
-subroutine proj_mr_to_sh_rho_rhs_update_code_r_double(                           &
+subroutine proj_mr_to_sh_rho_rhs_update_code_real64(                             &
                                               nlayers_shifted,                   &
                                               tri_below,                         &
                                               tri_diag,                          &
@@ -169,14 +171,14 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_r_double(                          
   integer(kind=i_def), dimension(ndf_w3),    intent(in) :: map_w3
   integer(kind=i_def), dimension(ndf_sh_w3), intent(in) :: map_sh_w3
 
-  real(kind=r_double), dimension(undf_sh_w3),  intent(inout) :: tri_below
-  real(kind=r_double), dimension(undf_sh_w3),  intent(inout) :: tri_diag
-  real(kind=r_double), dimension(undf_sh_w3),  intent(inout) :: tri_above
-  real(kind=r_double), dimension(undf_w3),     intent(in)    :: rho_d
-  real(kind=r_double), dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
-  real(kind=r_double), dimension(undf_w3),     intent(in)    :: I_upper_i_i
-  real(kind=r_double), dimension(undf_w3),     intent(in)    :: I_lower_i_i
-  real(kind=r_double), dimension(undf_w3),     intent(in)    :: I_upper_i_im1
+  real(kind=real64),   dimension(undf_sh_w3),  intent(inout) :: tri_below
+  real(kind=real64),   dimension(undf_sh_w3),  intent(inout) :: tri_diag
+  real(kind=real64),   dimension(undf_sh_w3),  intent(inout) :: tri_above
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: rho_d
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_lower_i_ip1
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_upper_i_i
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_lower_i_i
+  real(kind=real64),   dimension(undf_w3),     intent(in)    :: I_upper_i_im1
 
   ! Internal variables
   integer(kind=i_def) :: df, k
@@ -184,13 +186,13 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_r_double(                          
   ! Calculation for top and bottom layers (bottom is k=0)
   k = nlayers_shifted - 1
   do df = 1, ndf_sh_w3
-    tri_below(map_sh_w3(df)) = 0.0_r_double
+    tri_below(map_sh_w3(df)) = 0.0_real64
     tri_diag(map_sh_w3(df)) = rho_d(map_w3(df)) * I_lower_i_i(map_w3(df))
     tri_above(map_sh_w3(df)) = rho_d(map_w3(df)) * I_lower_i_ip1(map_w3(df))
 
     tri_below(map_sh_w3(df)+k) = rho_d(map_w3(df)+k-1) * I_upper_i_im1(map_w3(df)+k-1)
     tri_diag(map_sh_w3(df)+k) = rho_d(map_w3(df)+k-1) * I_upper_i_i(map_w3(df)+k-1)
-    tri_above(map_sh_w3(df)+k) = 0.0_r_double
+    tri_above(map_sh_w3(df)+k) = 0.0_real64
   end do
 
   ! Calculation for generic internal layers
@@ -203,6 +205,6 @@ subroutine proj_mr_to_sh_rho_rhs_update_code_r_double(                          
     end do
   end do
 
-end subroutine proj_mr_to_sh_rho_rhs_update_code_r_double
+end subroutine proj_mr_to_sh_rho_rhs_update_code_real64
 
 end module sci_proj_mr_to_sh_rho_rhs_update_kernel_mod

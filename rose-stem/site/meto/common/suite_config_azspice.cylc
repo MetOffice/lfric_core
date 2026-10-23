@@ -33,6 +33,7 @@
         [[[environment]]]
             USE_VERNIER=true
             USE_TIMING_WRAPPER=true
+            PSYCLONE_MODE=server
         [[[directives]]]
             --gres=tmp:1024
             --export=NONE
@@ -92,7 +93,7 @@
 
     [[AZSPICE_TECH_TESTS_GNU]]
         inherit=AZSPICE_TECH_TESTS,AZSPICE_GNU
-        {{ generate_script("pre-script", [azspice_base, azspice_compiler_gnu, azspice_scitools]) }}
+        {{ generate_script("pre-script", [azspice_base, azspice_compiler_gnu]) }}
 
     [[AZSPICE_TECH]]
         inherit=AZSPICE_TECH_BASE

@@ -2,4 +2,4 @@
 <field_group id="io_demo_fields" prec="8" operation="instant">
   <field id="diffusion_field" name="diffusion_field" long_name="diffusion_field" unit="1" grid_ref="full_level_face_grid" />
 </field_group>
-</field_definiton>
+</field_definition>

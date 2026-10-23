@@ -17,7 +17,7 @@ infrastructure/source/io/io_utility_mod.f90
 infrastructure/source/mesh/global_mesh_collection_mod.F90
 infrastructure/source/mesh/global_mesh_mod.F90
 infrastructure/source/mesh/local_mesh_collection_mod.f90
-infrastructure/source/mesh/local_mesh_mod.f90
+infrastructure/source/mesh/local_mesh_mod.F90
 infrastructure/source/mesh/mesh_collection_mod.F90
 infrastructure/source/mesh/mesh_mod.F90
 infrastructure/source/utilities/count_mod.f90
