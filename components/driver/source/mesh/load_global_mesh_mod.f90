@@ -13,6 +13,7 @@ module load_global_mesh_mod
                                  log_level_debug,&
                                  log_level_error
   use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
   use global_mesh_collection_mod, only: global_mesh_collection_type, &
                                         global_mesh_collection
@@ -40,7 +41,8 @@ contains
 !>                              the mesh_names argument.
 subroutine load_global_mesh_multiple( input_mesh_file, &
                                       mesh_names,      &
-                                      rename_to )
+                                      rename_to,       &
+                                      ugrid_2d )
 
   implicit none
 
@@ -52,6 +54,7 @@ subroutine load_global_mesh_multiple( input_mesh_file, &
   character(:), allocatable :: names(:)
 
   integer(i_def) :: i
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   allocate(names, source=mesh_names)
 
@@ -75,8 +78,10 @@ subroutine load_global_mesh_multiple( input_mesh_file, &
   end if
 
   do i=1, size(mesh_names)
-    call load_global_mesh_single( input_mesh_file, &
-                                  mesh_names(i), rename_to=names(i) )
+    call load_global_mesh_single( input_mesh_file,    &
+                                  mesh_names(i),      &
+                                  rename_to=names(i), &
+                                  ugrid_2d )
   end do
 
 end subroutine load_global_mesh_multiple
@@ -91,7 +96,9 @@ end subroutine load_global_mesh_multiple
 !> @param[in] rename_to        [Optional] Alternative name to store
 !>                              mesh in memory.
 subroutine load_global_mesh_single( input_mesh_file, &
-                                    mesh_name, rename_to )
+                                    mesh_name,       &
+                                    rename_to,       &
+                                    ugrid_2d )
 
   implicit none
 
@@ -104,6 +111,7 @@ subroutine load_global_mesh_single( input_mesh_file, &
   type(ugrid_mesh_data_type) :: ugrid_mesh_data
   type(global_mesh_type)     :: global_mesh
 
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
   character(:), allocatable :: name
 
   name = mesh_name
@@ -118,7 +126,7 @@ subroutine load_global_mesh_single( input_mesh_file, &
 
     ! Load mesh data into global_mesh
     call ugrid_mesh_data%read_from_file( trim(input_mesh_file), &
-                                         mesh_name )
+                                         mesh_name, ugrid_2d )
 
     global_mesh = global_mesh_type( ugrid_mesh_data, rename_to=name )
     call ugrid_mesh_data%clear()
