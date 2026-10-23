@@ -51,7 +51,8 @@ ALGORITHM_f_FILES := $(patsubst $(SOURCE_DIR)/%.x90, \
                                 $(shell find $(SOURCE_DIR) -name '*.x90' -print))
 
 DIRECTORIES := $(patsubst $(SOURCE_DIR)%,$(WORKING_DIR)%, \
-                          $(shell find $(SOURCE_DIR) -type d -printf '%p/\n'))
+                          $(shell find $(SOURCE_DIR) -type d -printf '%p/\n')) \
+			  $(WORKING_DIR)/kernel
 PSYCLONE_CONFIG_FILE ?= $(CORE_ROOT_DIR)/etc/psyclone.cfg
 
 .PHONY: psyclone
@@ -74,7 +75,7 @@ $$(SOURCE_DIR)/psy/$$(notdir $$*)_psy.f90 $(WORKING_DIR)/%_psy.f90
 # Where an optimisation script exists for a specific file, use it.
 #
 $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
-$(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@)
+$(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@) $(WORKING_DIR)/kernel
 	$(call MESSAGE,PSyclone - local optimisation,$(subst $(SOURCE_DIR)/,,$<))
 	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH $(PSYCLONE) -api lfric \
 	           -d $(WORKING_DIR) \
@@ -89,7 +90,7 @@ $(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@)
 # Where a global optimisation script exists, use it.
 #
 $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
-$(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@)
+$(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@) $(WORKING_DIR)/kernel
 	$(call MESSAGE,PSyclone - global optimisation,$(subst $(SOURCE_DIR)/,,$<))
 	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH $(PSYCLONE) -api lfric \
 	           -d $(WORKING_DIR) \
@@ -104,7 +105,7 @@ $(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@)
 # Where no optimisation script exists, don't use it.
 #
 $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
-$(WORKING_DIR)/%.x90 | $$(dir $$@)
+$(WORKING_DIR)/%.x90 | $$(dir $$@) $(WORKING_DIR)/kernel
 	$(call MESSAGE,PSyclone,$(subst $(SOURCE_DIR)/,,$<))
 	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH $(PSYCLONE) -api lfric \
 	           -l all -d $(WORKING_DIR) \
