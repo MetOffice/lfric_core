@@ -33,7 +33,7 @@ module lfric_xios_setup_mod
   use lfric_core_version_mod,        only: lfric_core_version_char
   use linked_list_mod,               only: linked_list_type, linked_list_item_type
   use log_mod,                       only: log_event, log_level_error, &
-                                           log_level_warning, log_level_info
+                                           log_level_warning, log_level_info, log_level_debug
   use mesh_mod,                      only: mesh_type
   use mesh_collection_mod,           only: mesh_collection
   use model_clock_mod,               only: model_clock_type
@@ -479,9 +479,12 @@ contains
       return
     end if
 
+    call log_event('Setting up XIOS files', log_level_debug)
+
     ! Configure global file definition
     call xios_get_handle("file_definition", file_definition)
 
+    call log_event('Configuring global XIOS file definition', log_level_debug)
     select case(file_convention)
     case (file_convention_ugrid)
       call xios_set_attr( file_definition, convention="UGRID" )
@@ -499,7 +502,9 @@ contains
     core_version_char = lfric_core_version_char()
     call xios_set_attr(file_definition, description="LFRic file format " // &
                                                     core_version_char)
+
     ! Start at the head of the file linked list
+    call log_event('Registering XIOS files with context', log_level_debug)
     loop => files_list%get_head()
     do while(associated(loop))
 

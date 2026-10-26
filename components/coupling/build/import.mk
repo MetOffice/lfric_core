@@ -5,7 +5,7 @@
 ##############################################################################
 export PROJECT_SOURCE = $(CORE_ROOT_DIR)/components/coupling/source
 
-export IGNORE_DEPENDENCIES += mod_oasis
+export IGNORE_DEPENDENCIES += mod_oasis xios
 # For static linking the xios library must be linked before the Oasis libaries.
 # To guarantee this, "xios" is listed here, even though it is not used by
 # coupling
