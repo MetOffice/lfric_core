@@ -29,7 +29,9 @@ module gen_planar_mod
                                             coord_sys_ll, coord_sys_xyz, &
                                             topology_non_periodic,       &
                                             geometry_spherical
-  use planar_mesh_config_mod,         only: apply_stretch_transform
+  use planar_mesh_config_mod,         only: stretch_function_uniform,   &
+                                            stretch_function_inflation, &
+                                            stretch_function_polynomial
   use reference_element_mod,          only: reference_element_type, &
                                             reference_cube_type,    &
                                             W, S, E, N,             &
@@ -41,6 +43,13 @@ module gen_planar_mod
                                             TRUE_NULL_ISLAND_LL
   use stretch_transform_mod,          only: stretch_transform,  &
                                             calculate_settings
+  use polynomial_stretching_mod,      only: associated_axis_direction, &
+                                            calculate_offset,          &
+                                            polynomial_stretch,        &
+                                            polynomial_parameters,     &
+                                            axis_ns, axis_ew,          &
+                                            boundary_n, boundary_s,    &
+                                            boundary_e, boundary_w
 
   implicit none
 
@@ -90,6 +99,7 @@ module gen_planar_mod
     integer(i_def)     :: edge_cells_y
     integer(i_def)     :: fine_mesh_edge_cells_x
     integer(i_def)     :: fine_mesh_edge_cells_y
+    integer(i_def)     :: stretch_function
     integer(i_def)     :: npanels = NPANELS
     real(r_def)        :: domain_size(2)
     real(r_def)        :: domain_centre(2) = [0.0_r_def,0.0_r_def]
@@ -212,6 +222,7 @@ function gen_planar_constructor( reference_element,          &
                                  fine_mesh_edge_cells_y,     &
                                  periodic_x, periodic_y,     &
                                  domain_size, domain_centre, &
+                                 stretch_function,           &
                                  target_mesh_names,          &
                                  target_edge_cells_x,        &
                                  target_edge_cells_y,        &
@@ -231,6 +242,7 @@ function gen_planar_constructor( reference_element,          &
   integer(i_def),     intent(in) :: edge_cells_x, edge_cells_y
   integer(i_def),     intent(in) :: fine_mesh_edge_cells_x
   integer(i_def),     intent(in) :: fine_mesh_edge_cells_y
+  integer(i_def),     intent(in) :: stretch_function
   logical(l_def),     intent(in) :: periodic_x, periodic_y
   real(r_def),        intent(in) :: domain_size(2)
   real(r_def),        intent(in) :: domain_centre(2)
@@ -312,6 +324,7 @@ function gen_planar_constructor( reference_element,          &
   self%edge_cells_y = edge_cells_y
   self%fine_mesh_edge_cells_x = fine_mesh_edge_cells_x
   self%fine_mesh_edge_cells_y = fine_mesh_edge_cells_y
+  self%stretch_function = stretch_function
 
   self%nmaps          = 0_i_def
   self%periodic_xy(1) = periodic_x
@@ -1565,10 +1578,10 @@ end subroutine assign_stretched_mesh_coords
 
 
 !-------------------------------------------------------------------------------
-!> @brief   Calculates the coordinates of vertices in the mesh.(private subroutine)
+!> @brief   Calculates the coordinates of vertices in the unit mesh. (private subroutine)
 !> @details Assigns an (x,y) coordinate in units of dx and dy to each mesh
-!>          vertex according to its Cartesian position in the mesh.
-!>
+!>          vertex according to its Cartesian position in the mesh and
+!>          assuming a unit mesh [-1,1].
 !-------------------------------------------------------------------------------
 subroutine calc_coords(self)
 
@@ -1581,13 +1594,15 @@ subroutine calc_coords(self)
   integer(i_def) :: ncells, edge_cells_x, edge_cells_y
   integer(i_def) :: cell, astat, row, column
 
-  real(r_def) :: x_coord
-  real(r_def) :: y_coord
-  real(r_def) :: offset(2)
+  real(r_def) :: x_coord, dx
+  real(r_def) :: y_coord, dy
 
   edge_cells_x = self%edge_cells_x
   edge_cells_y = self%edge_cells_y
   ncells = edge_cells_x*edge_cells_y
+
+  dx = 2.0_r_def / edge_cells_x
+  dy = 2.0_r_def / edge_cells_y
 
   allocate(vert_coords(2, self%n_nodes), stat=astat)
   if (astat /= 0) then
@@ -1611,41 +1626,38 @@ subroutine calc_coords(self)
 !
 !==========================================================
 
-  self%domain_extents(:,1) = [           0.0_r_def, -1.0_r_def*self%domain_size(2) ]
-  self%domain_extents(:,2) = [ self%domain_size(1), -1.0_r_def*self%domain_size(2) ]
-  self%domain_extents(:,3) = [ self%domain_size(1),            0.0_r_def ]
-  self%domain_extents(:,4) = [           0.0_r_def,            0.0_r_def ]
-
-  offset(1) = self%domain_centre(1) - (self%domain_size(1)*0.5_r_def)
-  offset(2) = self%domain_centre(2) + (self%domain_size(2)*0.5_r_def)
+  self%domain_extents(:,1) = [ -1.0_r_def, -1.0_r_def ]
+  self%domain_extents(:,2) = [  1.0_r_def, -1.0_r_def ]
+  self%domain_extents(:,3) = [  1.0_r_def,  1.0_r_def ]
+  self%domain_extents(:,4) = [ -1.0_r_def,  1.0_r_def ]
 
   ! The cells begin numbering in rows from NW corner of panel.
   cell=1
   do row=1, self%edge_cells_y
     do column=1, self%edge_cells_x
-      vert_coords(1, self%verts_on_cell(NW, cell)) = (column-1) * self%dx
-      vert_coords(2, self%verts_on_cell(NW, cell)) = (row-1)    * self%dy * (-1.0_r_def)
+      vert_coords(1, self%verts_on_cell(NW, cell)) = (column-1) * dx
+      vert_coords(2, self%verts_on_cell(NW, cell)) = (row-1)    * dy * (-1.0_r_def)
       cell=cell+1
     end do
   end do
 
   if (.not. self%periodic_xy(1)) then
     ! Vertices on east edge of panel.
-    x_coord = edge_cells_x*self%dx
+    x_coord = edge_cells_x*dx
     y_coord = 0.0_r_def
     do cell=1, size(self%east_cells)
       vert_coords(1, self%verts_on_cell(NE, self%east_cells(cell))) = x_coord
-      vert_coords(2, self%verts_on_cell(NE, self%east_cells(cell))) = y_coord - (self%dy*(cell-1))
+      vert_coords(2, self%verts_on_cell(NE, self%east_cells(cell))) = y_coord - (dy*(cell-1))
     end do
   end if
 
   ! Vertices on south edge of panel.
   if (.not. self%periodic_xy(2)) then
     x_coord = 0.0_r_def
-    y_coord = -1.0_r_def*edge_cells_y*self%dy
+    y_coord = -1.0_r_def*edge_cells_y*dy
 
     do cell=1, size(self%south_cells)
-      vert_coords(1, self%verts_on_cell(SW, self%south_cells(cell))) = x_coord + (self%dx*(cell-1))
+      vert_coords(1, self%verts_on_cell(SW, self%south_cells(cell))) = x_coord + (dx*(cell-1))
       vert_coords(2, self%verts_on_cell(SW, self%south_cells(cell))) = y_coord
     end do
   end if
@@ -1653,15 +1665,12 @@ subroutine calc_coords(self)
   ! Coords of SE panel vertex.
   if (.not. self%periodic_xy(1) .and. .not. self%periodic_xy(2)) then
     cell=ncells
-    vert_coords(1, self%verts_on_cell(SE, cell)) = self%dx * self%edge_cells_x
-    vert_coords(2, self%verts_on_cell(SE, cell)) = self%dy * self%edge_cells_y * (-1.0_r_def)
+    vert_coords(1, self%verts_on_cell(SE, cell)) = dx * self%edge_cells_x
+    vert_coords(2, self%verts_on_cell(SE, cell)) = dy * self%edge_cells_y * (-1.0_r_def)
   end if
 
-  vert_coords(1,:)    = vert_coords(1,:) + offset(1)
-  vert_coords(2,:)    = vert_coords(2,:) + offset(2)
-
-  self%domain_extents(1,:) = self%domain_extents(1,:) + offset(1)
-  self%domain_extents(2,:) = self%domain_extents(2,:) + offset(2)
+  vert_coords(1,:)    = vert_coords(1,:) - 1.0_r_def
+  vert_coords(2,:)    = vert_coords(2,:) + 1.0_r_def
 
   select case (self%coord_sys)
 
@@ -1685,6 +1694,209 @@ subroutine calc_coords(self)
   return
 end subroutine calc_coords
 
+!-------------------------------------------------------------------------------
+!> @brief   Apply a stretch transform to the vertices in the mesh.(private subroutine)
+!> @details Stretch transform could be uniform, or a more complicated
+!!          variable resolution type with a low resolution outer and high
+!!          resolution inner.
+!>
+!-------------------------------------------------------------------------------
+subroutine stretch_coords(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+
+  select case (self%stretch_function)
+  case (stretch_function_uniform)
+      call apply_uniform_scaling(self)
+      call apply_domain_centre(self)
+
+  case (stretch_function_polynomial)
+      call apply_polynomial_stretch(self)
+      call recentre_high_resolution_region(self)
+      call apply_domain_centre(self)
+
+  case (stretch_function_inflation)
+      write( log_scratch_space, '(A)' )                                &
+          'stretch_function_inflation is not a true transformation' // &
+          'and so the mesh has to be created directly, rather than' // &
+          'by stretching the unit-mesh.'
+      call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+
+  case default
+      call log_event( "Unrecognised value of stretch_function", &
+                      LOG_LEVEL_ERROR )
+  end select
+
+end subroutine stretch_coords
+
+!------------------------------------------------------------------------------
+!> @brief Apply a uniform scaling.
+!> @details Using the unit mesh and target cell size, calculate the scaling
+!!        factor and apply this to all coordinates to create a transformed
+!!        mesh with cell spacing given by the target cell size. This is used
+!!        as part of the stretch_function_uniform option.
+!------------------------------------------------------------------------------
+subroutine apply_uniform_scaling(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout) :: self
+
+  real(r_def) :: du, param_a
+  integer(i_def) :: axis_direction
+
+  do axis_direction=1, 2
+
+    ! Calculate the cell spacing, scaling and number of points of unit mesh
+    if ( axis_direction == axis_ns ) then
+      du = 2.0_r_def / self%edge_cells_y
+      param_a = self%dy / du
+    else
+      du = 2.0_r_def / self%edge_cells_x
+      param_a = self%dx / du
+    end if
+
+    ! Apply the scaling transformation to each coordinate
+    self%domain_extents(axis_direction,:) = param_a * self%domain_extents(axis_direction,:)
+    self%vert_coords(axis_direction,:) = param_a * self%vert_coords(axis_direction,:)
+  end do
+
+  return
+
+end subroutine apply_uniform_scaling
+
+!-------------------------------------------------------------------------------
+!> @brief Recentre the mesh from (0,0) to the domain_centre.
+!> @details For fixed resolution meshes, this centres the mesh at the domain_centre.
+!!        For variable resolution meshes this centres the centre of the high resolution
+!!        region at the domain_centre.
+!-------------------------------------------------------------------------------
+subroutine apply_domain_centre(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+  integer(i_def) :: axis_direction
+
+  do axis_direction=1, 2
+    self%domain_extents(axis_direction,:) = self%domain_extents(axis_direction,:) &
+                                          + self%domain_centre(axis_direction)
+    self%vert_coords(axis_direction,:) = self%vert_coords(axis_direction,:) &
+                                       + self%domain_centre(axis_direction)
+  end do
+
+  return
+
+end subroutine apply_domain_centre
+
+!-------------------------------------------------------------------------------
+!> @brief Calculate and apply a shift to the mesh coordinates.
+!> @details This is applied after the polynomial stretching so that the high
+!!        resolution region is centred on (0,0). This allows for a
+!!        non-symmetric variable resolution mesh e.g. with a larger outer
+!!        region in the North than the South.
+!-------------------------------------------------------------------------------
+subroutine recentre_high_resolution_region(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+
+  integer(i_def) :: axis_direction
+  real(r_def) :: offset
+
+  do axis_direction=1, 2
+
+    offset = calculate_offset( axis_direction )
+
+    self%vert_coords(axis_direction, :) = self%vert_coords(axis_direction, :) &
+                                        + offset
+    self%domain_extents(axis_direction, :) = self%domain_extents(axis_direction, :) &
+                                           + offset
+
+  enddo
+
+end subroutine recentre_high_resolution_region
+
+!-------------------------------------------------------------------------------
+!> @brief Apply the polynomial stretching to the unit mesh coordinates
+!-------------------------------------------------------------------------------
+subroutine apply_polynomial_stretch(self)
+
+  implicit none
+
+  class(gen_planar_type), intent(inout)  :: self
+
+  real(r_def) :: du, param_a, param_b, param_c, u_inner, u_outer, u_domain(4)
+  integer(i_def) :: nverts, vert, boundary, axis_direction
+
+  ! Save the domain extents for each boundary. As we only consider the positive
+  ! direction for each boundary, this should be 1 for a unit mesh for all
+  ! boundaries.
+  do boundary=1, 4 !Loop over all boundaries
+
+    axis_direction = associated_axis_direction(boundary)
+
+    if (boundary == boundary_s .or. boundary == boundary_e) then
+      ! S or E
+      u_domain(boundary) = self%domain_extents(axis_direction,3)
+    else
+      ! N or W
+      u_domain(boundary) = -1.0_r_def * self%domain_extents(axis_direction,1)
+   end if
+  end do
+
+  do boundary=1, 4 !Loop over all boundaries
+
+    axis_direction = associated_axis_direction(boundary)
+
+    ! Calculate the cell spacing and number of points of unit mesh
+    ! of the fine mesh (fine mesh needed in case this is stretching
+    ! a coarser mesh),
+    if ( axis_direction == axis_ns ) then
+      du = 2.0_r_def / self%fine_mesh_edge_cells_y
+    else
+      du = 2.0_r_def / self%fine_mesh_edge_cells_x
+    end if
+
+    nverts = size(self%vert_coords(axis_direction, :))
+
+    ! Calculate the parameters required for the stretching transform
+    call polynomial_parameters( param_a, param_b, param_c, &
+                                u_domain(boundary), u_inner, &
+                                u_outer, du, boundary )
+
+    ! Apply the stretching transformation to each coordinate
+    do vert=1, nverts
+
+      ! Apply to positive coordinates for N or E
+      ! Apply to negative coordinates for S or W
+      if ( ( ( boundary == boundary_n .or. boundary == boundary_e)  .and. &
+               self%vert_coords(axis_direction, vert) > 0.0_r_def ) .or.  &
+           ( ( boundary == boundary_s .or. boundary == boundary_w ) .and. &
+             self%vert_coords(axis_direction, vert) < 0.0_r_def ) ) then
+
+        self%vert_coords(axis_direction, vert) =                          &
+             polynomial_stretch(self%vert_coords(axis_direction, vert),   &
+             param_a, param_b, param_c, u_inner, u_outer )
+      end if
+
+    end do
+
+    ! Apply the stretching transformation to the domain extents
+    do vert=1, 4
+      self%domain_extents(axis_direction, vert) =                         &
+            polynomial_stretch(self%domain_extents(axis_direction, vert), &
+            param_a, param_b, param_c, u_inner, u_outer )
+    end do
+
+  end do
+
+  return
+
+end subroutine apply_polynomial_stretch
 
 !-------------------------------------------------------------------------------
 !> @brief    Get the global cell id at a specified corner of the planar domain.
@@ -1927,13 +2139,18 @@ subroutine generate(self)
 
   if (self%nmaps > 0) call calc_global_mesh_maps(self)
 
-  if (apply_stretch_transform) then
+  ! Use a different routine if the mesh stretching is applied
+  ! at the same time that the mesh is generated. Otherwise use
+  ! calc_coords to generate a unit mesh and then apply a stretching
+  ! transform.
+  if (self%stretch_function == stretch_function_inflation) then
     call assign_stretched_mesh_coords(self)
   else
     call calc_coords(self)
+    call stretch_coords(self)
   end if
 
-  ! NOTE that due to the way cell centres are calculated for periodic meshes
+  ! NOTE: Due to the way cell centres are calculated for periodic meshes
   ! this calculation must be done before rotation.
   call calc_cell_centres(self)
 

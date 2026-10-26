@@ -8,11 +8,13 @@
 
 module sci_w3_to_w2_average_kernel_mod
 
+  use, intrinsic :: iso_fortran_env, only: real32, real64
+
   use argument_mod,          only : arg_type,          &
                                     GH_FIELD, GH_REAL, &
                                     GH_INC, GH_READ,   &
                                     CELL_COLUMN
-  use constants_mod,         only : i_def, r_def, r_single, r_double
+  use constants_mod,         only : i_def, r_def
   use fs_continuity_mod,     only : W2, W3
   use kernel_mod,            only : kernel_type
   use reference_element_mod, only : B
@@ -45,8 +47,8 @@ module sci_w3_to_w2_average_kernel_mod
   ! Generic interface for real32 and real64 types
   interface w3_to_w2_average_kernel_code
     module procedure  &
-      w3_to_w2_average_kernel_code_r_single, &
-      w3_to_w2_average_kernel_code_r_double
+      w3_to_w2_average_kernel_code_real32, &
+      w3_to_w2_average_kernel_code_real64
   end interface
 
 
@@ -63,7 +65,7 @@ module sci_w3_to_w2_average_kernel_mod
   !> @param[in]     ndf_w3        Number of degrees of freedom per cell for W3
   !> @param[in]     undf_w3       Number of DoFs per partition for W3
   !> @param[in]     map_w3        Map of bottom-layer DoFs for W3
-  subroutine w3_to_w2_average_kernel_code_r_single( nlayers,                 &
+  subroutine w3_to_w2_average_kernel_code_real32(   nlayers,                 &
                                                     field_w2,                &
                                                     field_w3,                &
                                                     rmultiplicity,           &
@@ -80,9 +82,9 @@ module sci_w3_to_w2_average_kernel_mod
     integer(kind=i_def), intent(in)    :: map_w2(ndf_w2)
     integer(kind=i_def), intent(in)    :: map_w3(ndf_w3)
 
-    real(kind=r_single), intent(inout) :: field_w2(undf_w2)
+    real(kind=real32),   intent(inout) :: field_w2(undf_w2)
     real(kind=r_def),    intent(in)    :: rmultiplicity(undf_w2)
-    real(kind=r_single), intent(in)    :: field_w3(undf_w3)
+    real(kind=real32),   intent(in)    :: field_w3(undf_w3)
 
     ! Internal variables
     integer(kind=i_def) :: df, k
@@ -93,7 +95,7 @@ module sci_w3_to_w2_average_kernel_mod
         ! Multiplicity gives averaging factor. Can just use multplicity from
         ! the bottom layer as this should be the same for all layers
         field_w2(map_w2(df) + k) = field_w2(map_w2(df) + k) +                  &
-            field_w3(map_w3(1) + k) * real(rmultiplicity(map_w2(df)), r_single)
+            field_w3(map_w3(1) + k) * real(rmultiplicity(map_w2(df)), real32)
       end do
     end do
 
@@ -104,14 +106,14 @@ module sci_w3_to_w2_average_kernel_mod
       ! Loop through internal layers
       do k = 1, nlayers - 1
         field_w2(map_w2(B)+k) =                                                &
-              0.5_r_single*(field_w3(map_w3(1)+k) + field_w3(map_w3(1)+k-1))
+              0.5_real32*(field_w3(map_w3(1)+k) + field_w3(map_w3(1)+k-1))
       end do
       ! At bottom boundary, take the value from the top cell
       k = nlayers
       field_w2(map_w2(B)+k) = field_w3(map_w3(1)+k-1)
     end if
 
-  end subroutine w3_to_w2_average_kernel_code_r_single
+  end subroutine w3_to_w2_average_kernel_code_real32
 
   !> @brief Computes a W3 scalar field at W2 points by averaging.
   !> @param[in]     nlayers       Number of layers in the mesh
@@ -124,7 +126,7 @@ module sci_w3_to_w2_average_kernel_mod
   !> @param[in]     ndf_w3        Number of degrees of freedom per cell for W3
   !> @param[in]     undf_w3       Number of DoFs per partition for W3
   !> @param[in]     map_w3        Map of bottom-layer DoFs for W3
-  subroutine w3_to_w2_average_kernel_code_r_double( nlayers,                 &
+  subroutine w3_to_w2_average_kernel_code_real64(   nlayers,                 &
                                                     field_w2,                &
                                                     field_w3,                &
                                                     rmultiplicity,           &
@@ -141,9 +143,9 @@ module sci_w3_to_w2_average_kernel_mod
     integer(kind=i_def), intent(in)    :: map_w2(ndf_w2)
     integer(kind=i_def), intent(in)    :: map_w3(ndf_w3)
 
-    real(kind=r_double), intent(inout) :: field_w2(undf_w2)
+    real(kind=real64),   intent(inout) :: field_w2(undf_w2)
     real(kind=r_def),    intent(in)    :: rmultiplicity(undf_w2)
-    real(kind=r_double), intent(in)    :: field_w3(undf_w3)
+    real(kind=real64),   intent(in)    :: field_w3(undf_w3)
 
     ! Internal variables
     integer(kind=i_def) :: df, k
@@ -154,7 +156,7 @@ module sci_w3_to_w2_average_kernel_mod
         ! Multiplicity gives averaging factor. Can just use multplicity from
         ! the bottom layer as this should be the same for all layers
         field_w2(map_w2(df) + k) = field_w2(map_w2(df) + k) +                  &
-            field_w3(map_w3(1) + k) * real(rmultiplicity(map_w2(df)), r_double)
+            field_w3(map_w3(1) + k) * real(rmultiplicity(map_w2(df)), real64)
       end do
     end do
 
@@ -165,13 +167,13 @@ module sci_w3_to_w2_average_kernel_mod
       ! Loop through internal layers
       do k = 1, nlayers - 1
         field_w2(map_w2(B)+k) =                                                &
-              0.5_r_double*(field_w3(map_w3(1)+k) + field_w3(map_w3(1)+k-1))
+              0.5_real64*(field_w3(map_w3(1)+k) + field_w3(map_w3(1)+k-1))
       end do
       ! At bottom boundary, take the value from the top cell
       k = nlayers
       field_w2(map_w2(B)+k) = field_w3(map_w3(1)+k-1)
     end if
 
-  end subroutine w3_to_w2_average_kernel_code_r_double
+  end subroutine w3_to_w2_average_kernel_code_real64
 
 end module sci_w3_to_w2_average_kernel_mod

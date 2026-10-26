@@ -35,20 +35,22 @@ contains
   !> @details Calculates the diffusion increment for a field, and adds it to said field.
   !> @param[in]    modeldb   Application state object
   !> @param[inout] field_in  Input Wtheta field
-  subroutine io_demo_alg( modeldb, field_in )
+  !> @param[in]    visc_in   Optional setting for viscosity value
+  subroutine io_demo_alg( modeldb, field_in, visc_in )
 
     implicit none
 
     type(modeldb_type), intent(in) :: modeldb
 
     ! Prognostic fields
-    type( field_type ), intent( inout ) :: field_in
+    type( field_type ),    intent( inout ) :: field_in
+    real(r_def), optional, intent( in )    :: visc_in
 
     ! Diagnostic fields
     type( field_type )                  :: dfield_in
     type( field_type )                  :: visc
 
-    real(r_def), parameter              :: visc_val = 100000.0_r_def
+    real(r_def)                         :: visc_val
     integer(kind=i_def), parameter      :: stencil_depth = 1_i_def
 
     type(mesh_type),           pointer :: mesh
@@ -56,6 +58,12 @@ contains
     type(function_space_type), pointer :: fs
 
     integer(i_def) :: order_h, order_v
+    ! Set viscosity to default value if not present
+    if (present(visc_in)) then
+      visc_val = visc_in
+    else
+      visc_val = 100000.0_r_def
+    end if
 
     call log_event( "io_demo: Running algorithm", LOG_LEVEL_TRACE )
 

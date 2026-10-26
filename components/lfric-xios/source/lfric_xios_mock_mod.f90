@@ -177,7 +177,7 @@ real(real64), private :: var_var1
     implicit none
 
     character(len=*),       intent(in)    :: axis_id
-    logical(l_def) status
+    logical(l_def) :: status
     status = .true.
   end function xios_is_valid_axis
 

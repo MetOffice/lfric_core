@@ -36,6 +36,11 @@
         inherit={{inherit.str|upper}}
         script="rose task-run --app-key=check_style"
 
+{% elif "fortitude_linter" in task %}
+
+        inherit={{inherit.str|upper}}
+        script="rose task-run --app-key=check_fortitude_linter"
+
 {% elif "extract_checker" in task %}
 
         inherit={{inherit.str|upper}}
@@ -50,6 +55,13 @@
 
         inherit={{inherit.str|upper}}
         script="rose task-run --app-key=rose-stem_lint_check"
+
+{% elif "validate_iodef" in task %}
+
+        inherit={{inherit.str|upper}}
+        script="rose task-run --app-key=validate_iodef"
+        [[[environment]]]
+            SOURCE_PATH = $SOURCE_ROOT/lfric_core
 
 {% elif "validate_rose_meta" in task %}
 

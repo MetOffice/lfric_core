@@ -24,30 +24,26 @@ use coord_transform_mod,       only : alphabetar2xyz,          &
                                       schmidt_transform_xyz,   &
                                       inverse_schmidt_transform_xyz
 use log_mod,                   only : log_event,               &
+                                      log_level,               &
                                       log_scratch_space,       &
-                                      LOG_LEVEL_ERROR,         &
-                                      LOG_LEVEL_DEBUG,         &
-                                      LOG_LEVEL_WARNING
+                                      log_level_error,         &
+                                      log_level_debug
 use matrix_invert_mod,         only : matrix_invert_3x3
+use mesh_mod,                  only : geometry_spherical, &
+                                      geometry_planar,    &
+                                      topology_periodic
 
-use base_mesh_config_mod,      only : geometry,                &
-                                      geometry_spherical,      &
-                                      geometry_planar,         &
-                                      topology,                &
-                                      topology_fully_periodic
-use finite_element_config_mod, only : coord_system,            &
-                                      coord_system_xyz,        &
-                                      coord_system_native
-use planet_config_mod,         only : scaled_radius
+! Configuration modules
+use finite_element_config_mod, only: coord_system_xyz, &
+                                     coord_system_native
 
 implicit none
 
 private
 
 ! ---------------------------------------------------------------------------- !
-! Private matrices or values that need computing once
+! Private matrices or values
 ! ---------------------------------------------------------------------------- !
-
 real(kind=r_def)    :: chi2xyz_rot_mat(3,3)
 real(kind=r_def)    :: xyz2chi_rot_mat(3,3)
 real(kind=r_def)    :: stretch_factor
@@ -69,140 +65,48 @@ public :: get_stretch_factor
 public :: get_to_rotate
 public :: get_to_stretch
 
+contains
 !------------------------------------------------------------------------------
 ! Contained functions / subroutines
 !------------------------------------------------------------------------------
-contains
-
 !------------------------------------------------------------------------------
-!> @brief  Initialise the coordinate transform information
-!!
-!> @param[in] mesh_collection    Optional: a collection of meshes, which contain
-!!                               metadata used to determine the rotation matrix
-!!                               and stretching factors.
-!> @param[in] north_pole_arg     Optional: target north pole, used to generate
-!!                               the rotation matrix. This is incompatible with
-!!                               the mesh_collection argument, and ideally
-!!                               should only be used for unit-testing.
-!> @param[in] equator_lat_arg    Optional: Latitude of the equator of the mesh,
-!!                               allowing a stretching to be described.
-!!                               This is incompatible with the mesh_collection
-!!                               argument, and ideally should only be used for
-!!                               unit-testing.
+!> @brief  Initialise the coordinate transform information.
+!! @description  This routine should only be called for meshes with spherical
+!!               geometries. All arguments given as [longitude, latitude] on an
+!!               unrotated frame of reference. Stretching to the
+!!               equator_latitude is via Schmidt transform.
+!> @param[in] north_pole        Target north pole location [lon,lat], used to
+!>                              generate the rotation matrix.
+!> @param[in] null_island       Target Null island location [lon,lat]
+!> @param[in] equator_latitude  Target equator latitude [lat].
 !------------------------------------------------------------------------------
-subroutine init_chi_transforms( geometry, topology, &
-                                mesh_collection,    &
-                                north_pole_arg, equator_lat_arg )
-
-  use local_mesh_mod,            only : local_mesh_type
-  use mesh_collection_mod,       only : mesh_collection_type
-  use mesh_mod,                  only : mesh_type
+subroutine init_chi_transforms( north_pole,  &
+                                null_island, &
+                                equator_latitude )
 
   implicit none
 
-  integer(i_def), intent(in) :: geometry
-  integer(i_def), intent(in) :: topology
+  real(r_def), intent(in) :: north_pole(2)
+  real(r_def), intent(in) :: null_island(2)
+  real(r_def), intent(in) :: equator_latitude
 
-  type(mesh_collection_type), optional, intent(in) :: mesh_collection
-  real(kind=r_def),           optional, intent(in) :: north_pole_arg(2)
-  real(kind=r_def),           optional, intent(in) :: equator_lat_arg
-
-  type(mesh_type),         pointer :: mesh
-  type(local_mesh_type),   pointer :: local_mesh
-  character(str_def),  allocatable :: all_mesh_names(:)
-
-  real(kind=r_def) :: north_pole(2)
-  real(kind=r_def) :: null_island(2)
-  real(kind=r_def) :: equatorial_latitude
-
-  ! -------------------------------------------------------------------------- !
-  ! Extract stretching and rotation information from mesh
-  ! -------------------------------------------------------------------------- !
-
-  ! Begin by assuming no stretching and no rotation
-  to_stretch = .false.
-  to_rotate = .false.
-  north_pole(1) = PI
-  north_pole(2) = PI/2.0_r_def
-  null_island(1) = 0.0_r_def
-  null_island(2) = 0.0_r_def
-  equatorial_latitude = 0.0_r_def
-
-  if ( present(mesh_collection) .and.                                          &
-       (present(equator_lat_arg) .or. present(north_pole_arg)) ) then
-    call log_event(                                                            &
-      'init_chi_transform: mesh_compatible argument cannot be passed with ' // &
-      'another argument', LOG_LEVEL_ERROR                                      &
-    )
+  if ( any(abs(north_pole(:) - rmdi)    < EPS) .or. &
+       any(abs(null_island(:) - rmdi)   < EPS) .or. &
+           abs(equator_latitude - rmdi) < EPS ) then
+    write(log_scratch_space, '(A)') &
+        'Missing argument data while initialising chi transforms.'
+    call log_event(log_scratch_space, log_level_error)
   end if
 
-  if (present(mesh_collection)) then
-    ! NB:
-    ! At this stage, we will assume that the stretching and rotation are the same
-    ! for all meshes. If they weren't, we would need to extract a different factor
-    ! and different rotation matrix for each mesh. The chi2*** transforms would
-    ! also need to take mesh_id as an argument, which would be a major API change
-    ! since it would need passing through each kernel.
-    ! Therefore, extract first mesh from collection ...
-    all_mesh_names = mesh_collection%get_mesh_names()
-    if (SIZE(all_mesh_names) > 0) then
-      mesh => mesh_collection%get_mesh(all_mesh_names(1))
-    else
-      call log_event(                                                          &
-        'init_chi_transform: unable to determine mesh rotation and ' //        &
-        'stretching because there are no meshes!', LOG_LEVEL_ERROR             &
-      )
-    end if
-
-    ! Extract rotation and stretching information from global mesh
-    local_mesh => mesh%get_local_mesh()
-    north_pole = local_mesh%get_north_pole()
-    null_island = local_mesh%get_null_island()
-    equatorial_latitude = local_mesh%get_equatorial_latitude()
-
-    ! If any variables are unset, set them to defaults here --------------------
-    if ( abs(north_pole(1) - rmdi) < EPS                                       &
-         .or. abs(north_pole(2) - rmdi) < EPS ) then
-      north_pole(1) = 0.0_r_def
-      north_pole(2) = PI/2.0_r_def
-      call log_event(                                                          &
-        'Mesh North Pole not set, so using (lon=0, lat=pi/2) as default',      &
-         LOG_LEVEL_WARNING                                                     &
-      )
-    end if
-    if ( abs(null_island(1) - rmdi) < EPS                                      &
-         .or. abs(null_island(2) - rmdi) < EPS ) then
-      null_island(1) = 0.0_r_def
-      null_island(2) = 0.0_r_def
-      call log_event(                                                          &
-        'Mesh Null Island not set, so using (lon=0, lat=0) as default',        &
-         LOG_LEVEL_WARNING                                                     &
-      )
-    end if
-    if ( abs(equatorial_latitude - rmdi) < EPS .or.                            &
-         geometry == geometry_planar .or. topology /= topology_fully_periodic ) then
-      equatorial_latitude = 0.0_r_def
-      call log_event(                                                          &
-        'Equatorial latitude for mesh not set, so using 0.0 as default',       &
-         LOG_LEVEL_WARNING                                                     &
-      )
-    end if
-  end if
-
-  if (present(north_pole_arg)) north_pole = north_pole_arg
-  if (present(equator_lat_arg)) equatorial_latitude = equator_lat_arg
-
-
-  ! Now that parameters have been read in, determine if stretching or rotation
-  ! are actually happening
-  to_stretch = abs(equatorial_latitude) > EPS
-  ! It's probably safer to check both the null island and the north pole here
-  to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS                        &
-                .or. abs(null_island(1)) > EPS .or. abs(null_island(2)) > EPS )
+  ! Determine degrees of stretching / rotation.
+  to_stretch = abs(equator_latitude) > EPS
+  to_rotate = ( abs(north_pole(2) - PI/2.0_r_def) > EPS .or. &
+                abs(null_island(1)) > EPS .or.               &
+                abs(null_island(2)) > EPS )
 
   ! Compute Schmidt stretch factor ---------------------------------------------
-  stretch_factor = sqrt( (1.0_r_def - sin(equatorial_latitude))                &
-                         / (1.0_r_def + sin(equatorial_latitude)) )
+  stretch_factor = sqrt( (1.0_r_def - sin(equator_latitude)) &
+                         / (1.0_r_def + sin(equator_latitude)) )
 
   ! Compute rotation matrix ----------------------------------------------------
   chi2xyz_rot_mat = mesh_rotation_matrix(north_pole)
@@ -210,13 +114,19 @@ subroutine init_chi_transforms( geometry, topology, &
   ! Compute inverse rotation matrix --------------------------------------------
   xyz2chi_rot_mat = matrix_invert_3x3(chi2xyz_rot_mat)
 
-  write(log_scratch_space,'(A,L6,A,2E16.8)')                                   &
-    'Mesh rotation: ', to_rotate, ' north pole: ', north_pole(1), north_pole(2)
-  call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
-  write(log_scratch_space,'(A,L6,A,E16.8,A,E16.8)')                            &
-    'Mesh stretching: ', to_stretch, ' stretching factor: ', stretch_factor,   &
-    '   latitude of equator: ', equatorial_latitude
-  call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
+  if (log_level() <= log_level_debug) then
+    write(log_scratch_space,'(A,E12.5)') &
+        'Stretching to equator latitude = ', equator_latitude
+    call log_event(log_scratch_space, log_level_debug)
+
+    write(log_scratch_space,'(A,2E12.5)') &
+        'Rotating to north pole = ', north_pole
+    call log_event(log_scratch_space, log_level_debug)
+
+    write(log_scratch_space,'(A,2E12.5)') &
+        'Rotating to Null island = ', null_island
+    call log_event(log_scratch_space, log_level_debug)
+  end if
 
 end subroutine init_chi_transforms
 
@@ -227,9 +137,12 @@ subroutine final_chi_transforms()
 
   implicit none
 
+  ! Reset values to reflect, unrotated, unstretched [lon,lat]
+  ! spherical mesh surface
+
   to_stretch = .false.
   to_rotate = .false.
-  stretch_factor = rmdi
+  stretch_factor = 1.0_r_def
   chi2xyz_rot_mat(:,:) = 0.0_r_def
   xyz2chi_rot_mat(:,:) = 0.0_r_def
 
@@ -243,15 +156,21 @@ end subroutine final_chi_transforms
 !>        will be added to the height to give the radius before the coordinates
 !>        are transformed to (X,Y,Z) coordinates.
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[out]  x          The first coordinate field out (global Cartesian X)
-!! @param[out]  y          The second coordinate field out (global Cartesian Y)
-!! @param[out]  z          The third coordinate field out (global Cartesian Z)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!> @param[in]   scaled_radius Planet scaled radius
+!! @param[out]  x             The first coordinate field out (global Cartesian X)
+!! @param[out]  y             The second coordinate field out (global Cartesian Y)
+!! @param[out]  z             The third coordinate field out (global Cartesian Z)
 !-------------------------------------------------------------------------------
-subroutine chi2xyz(chi_1, chi_2, chi_3, panel_id, x, y, z)
+subroutine chi2xyz( chi_1, chi_2, chi_3, panel_id,                   &
+                    geometry, topology, coord_system, scaled_radius, &
+                    x, y, z )
 
   implicit none
 
@@ -261,13 +180,18 @@ subroutine chi2xyz(chi_1, chi_2, chi_3, panel_id, x, y, z)
 
   real(kind=r_def) :: xyz(3)
 
+  integer(i_def), intent(in) :: geometry
+  integer(i_def), intent(in) :: topology
+  integer(i_def), intent(in) :: coord_system
+  real(r_def),    intent(in) :: scaled_radius
+
   if (geometry == geometry_planar .or. coord_system == coord_system_xyz) then
     ! chi already uses (geocentric) Cartesian coordinates
     x = chi_1
     y = chi_2
     z = chi_3
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, using (lon,lat,z) coordinates
     call llr2xyz(chi_1, chi_2, chi_3+scaled_radius, x, y, z)
 
@@ -325,21 +249,30 @@ end subroutine chi2xyz
 !>        function from chi2xyz above). Therefore this will not add the
 !>        scaled_radius to transform.
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[out]  x          The first coordinate field out (global Cartesian X)
-!! @param[out]  y          The second coordinate field out (global Cartesian Y)
-!! @param[out]  z          The third coordinate field out (global Cartesian Z)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!! @param[out]  x             The first coordinate field out (global Cartesian X)
+!! @param[out]  y             The second coordinate field out (global Cartesian Y)
+!! @param[out]  z             The third coordinate field out (global Cartesian Z)
 !-------------------------------------------------------------------------------
-subroutine chir2xyz(chi_1, chi_2, chi_3, panel_id, x, y, z)
+subroutine chir2xyz( chi_1, chi_2, chi_3, panel_id,    &
+                     geometry, topology, coord_system, &
+                     x, y, z )
 
   implicit none
 
-  integer(kind=i_def), intent(in)  :: panel_id
-  real(kind=r_def),    intent(in)  :: chi_1, chi_2, chi_3
-  real(kind=r_def),    intent(out) :: x, y, z
+  integer(kind=i_def), intent(in) :: panel_id
+  real(kind=r_def),    intent(in) :: chi_1, chi_2, chi_3
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+
+  real(kind=r_def), intent(out) :: x, y, z
 
   real(kind=r_def) :: xyz(3)
 
@@ -349,7 +282,7 @@ subroutine chir2xyz(chi_1, chi_2, chi_3, panel_id, x, y, z)
     y = chi_2
     z = chi_3
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, using (lon,lat,z) coordinates
     call llr2xyz(chi_1, chi_2, chi_3, x, y, z)
 
@@ -404,21 +337,32 @@ end subroutine chir2xyz
 !> @brief Transforms a coordinate field chi from any system into spherical polar
 !>        (longitude, latitude, radius) coordinates
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[out]  longitude  The first coordinate field out (longitude)
-!! @param[out]  latitude   The second coordinate field out (latitude)
-!! @param[out]  radius     The third coordinate field out (radius)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!> @param[in]   scaled_radius Planet scaled radius
+!! @param[out]  longitude     The first coordinate field out (longitude)
+!! @param[out]  latitude      The second coordinate field out (latitude)
+!! @param[out]  radius        The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
-subroutine chi2llr(chi_1, chi_2, chi_3, panel_id, lon, lat, radius)
+subroutine chi2llr( chi_1, chi_2, chi_3, panel_id,                   &
+                    geometry, topology, coord_system, scaled_radius, &
+                    lon, lat, radius )
 
   implicit none
 
-  integer(kind=i_def), intent(in)  :: panel_id
-  real(kind=r_def),    intent(in)  :: chi_1, chi_2, chi_3
-  real(kind=r_def),    intent(out) :: lon, lat, radius
+  integer(kind=i_def), intent(in) :: panel_id
+  real(kind=r_def),    intent(in) :: chi_1, chi_2, chi_3
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
+
+  real(kind=r_def), intent(out) :: lon, lat, radius
 
   real(kind=r_def) :: xyz(3)
 
@@ -426,7 +370,7 @@ subroutine chi2llr(chi_1, chi_2, chi_3, panel_id, lon, lat, radius)
     ! chi uses (geocentric) Cartesian coordinates
     call xyz2llr(chi_1, chi_2, chi_3, lon, lat, radius)
 
-  else if (topology /= topology_fully_periodic) then
+  else if (topology /= topology_periodic) then
     ! domain is a spherical LAM, already using (lon,lat,z) coordinates
     ! may need to rotate these to the physical (lon,lat) coordinates
 
@@ -476,28 +420,39 @@ end subroutine chi2llr
 !> @brief Transforms a coordinate field chi from any system into *native*
 !!        equiangular cubed sphere (alpha,beta,radius) coordinates
 !!
-!! @param[in]   chi_1      The first coordinate field in
-!! @param[in]   chi_2      The second coordinate field in
-!! @param[in]   chi_3      The third coordinate field in
-!! @param[in]   panel_id   The mesh panel ID
-!! @param[out]  alpha      The first coordinate field out (alpha)
-!! @param[out]  beta       The second coordinate field out (beta)
-!! @param[out]  radius     The third coordinate field out (radius)
+!! @param[in]   chi_1         The first coordinate field in
+!! @param[in]   chi_2         The second coordinate field in
+!! @param[in]   chi_3         The third coordinate field in
+!! @param[in]   panel_id      The mesh panel ID
+!> @param[in]   geometry      Mesh geometry enumeration value
+!> @param[in]   topology      Mesh topology enumeration value
+!> @param[in]   coord_system  Finite-Element coord-system enumeration value
+!> @param[in]   scaled_radius Planet scaled radius
+!! @param[out]  alpha         The first coordinate field out (alpha)
+!! @param[out]  beta          The second coordinate field out (beta)
+!! @param[out]  radius        The third coordinate field out (radius)
 !-------------------------------------------------------------------------------
-subroutine chi2abr(chi_1, chi_2, chi_3, panel_id, alpha, beta, radius)
+subroutine chi2abr( chi_1, chi_2, chi_3, panel_id,                   &
+                    geometry, topology, coord_system, scaled_radius, &
+                    alpha, beta, radius )
 
   implicit none
 
-  integer(kind=i_def), intent(in)  :: panel_id
-  real(kind=r_def),    intent(in)  :: chi_1, chi_2, chi_3
-  real(kind=r_def),    intent(out) :: alpha, beta, radius
+  integer(kind=i_def), intent(in) :: panel_id
+  real(kind=r_def),    intent(in) :: chi_1, chi_2, chi_3
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
+
+  real(kind=r_def), intent(out) :: alpha, beta, radius
 
   real(kind=r_def) :: xyz(3)
 
-  if (topology /= topology_fully_periodic .or. geometry /= geometry_spherical) then
+  if (topology /= topology_periodic .or. geometry /= geometry_spherical) then
     call log_event(                                                            &
-      'chi2abr can only be used on cubed-sphere meshes', LOG_LEVEL_ERROR       &
-    )
+  'chi2abr can only be used on cubed-sphere meshes', LOG_LEVEL_ERROR       &
+  )
 
   else if (coord_system == coord_system_native) then
     alpha = chi_1
@@ -531,6 +486,7 @@ end subroutine chi2abr
 !!        native Cartesian coordinates to the physical Cartesian coordinates
 !-------------------------------------------------------------------------------
 function get_mesh_rotation_matrix() result(rot_mat)
+
   implicit none
   real(kind=r_def) :: rot_mat(3,3)
 
@@ -543,6 +499,7 @@ end function get_mesh_rotation_matrix
 !!        physical Cartesian coordinates to native Cartesian coordinates
 !-------------------------------------------------------------------------------
 function get_inverse_mesh_rotation_matrix() result(rot_mat)
+
   implicit none
   real(kind=r_def) :: rot_mat(3,3)
 
@@ -554,6 +511,7 @@ end function get_inverse_mesh_rotation_matrix
 !> @brief Returns the Schmidt transform stretch factor
 !-------------------------------------------------------------------------------
 function get_stretch_factor() result(stretch_factor_out)
+
   implicit none
   real(kind=r_def) :: stretch_factor_out
 
@@ -565,6 +523,7 @@ end function get_stretch_factor
 !> @brief Returns whether coordinates are rotated
 !-------------------------------------------------------------------------------
 function get_to_rotate() result(to_rotate_out)
+
   implicit none
   logical(kind=l_def) :: to_rotate_out
 
@@ -576,6 +535,7 @@ end function get_to_rotate
 !> @brief Returns whether coordinates are stretched
 !-------------------------------------------------------------------------------
 function get_to_stretch() result(to_stretch_out)
+
   implicit none
   logical(kind=l_def) :: to_stretch_out
 

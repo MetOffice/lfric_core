@@ -52,18 +52,6 @@ module io_context_mod
     end subroutine set_current_if
   end interface
 
-  abstract interface
-    !> @brief Callback interface for bespoke IO configuration
-    !> @param[in] clock     Clock to be passed in at call site
-    subroutine callback_clock_arg(clock)
-      use clock_mod, only : clock_type
-      implicit none
-      class(clock_type), intent(in) :: clock
-    end subroutine callback_clock_arg
-  end interface
-
-  public :: callback_clock_arg
-
 contains
 
   !> @brief Initialise the abstract I/O context

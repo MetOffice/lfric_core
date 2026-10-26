@@ -51,8 +51,8 @@
 !       be a factor of the other.
 
 &planar_mesh
-  edge_cells_x    = 48, 24
-  edge_cells_y    = 24, 12
+  edge_cells_x    = 48,24
+  edge_cells_y    = 24,12
   domain_size     = 48.0, 24.0
   domain_centre   = 0.0, 0.0
   periodic_x      = .false.
@@ -60,7 +60,7 @@
   create_lbc_mesh = .true.
   lbc_rim_depth   = 1
   lbc_parent_mesh = 'mesh_A'
-  apply_stretch_transform = .false.
+  stretch_function = 'uniform'
 /
 
 &partitions
@@ -81,8 +81,10 @@
 &stretch_transform
   cell_size_inner = 2.0, 2.0
   cell_size_outer = 3.0, 3.0
-  n_cells_outer   = 2, 2
-  n_cells_stretch = 5, 5
+  n_cells_outer_wsen   = 2, 2, 2, 2
+  n_cells_stretch_wsen = 5, 5, 5, 5
   stretching_on   = 'cell_centres'
+  poly_power      = 3
   transform_mesh  = 'mesh_A'
+  stretching_on   = 'cell_nodes'
 /

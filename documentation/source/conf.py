@@ -97,5 +97,6 @@ numfig = True
 
 intersphinx_mapping = {
     'psyclone': ('https://psyclone.readthedocs.io/en/stable/', None),
-    'simsys': ('https://metoffice.github.io/simulation-systems/', None)
+    'simsys': ('https://metoffice.github.io/simulation-systems/', None),
+    'lfric_apps': ('https://metoffice.github.io/lfric_apps/', None)
 }

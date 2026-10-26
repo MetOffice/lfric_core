@@ -41,7 +41,7 @@ class LogModErrorSerialTest(MpiTest):  # pylint: disable=too-few-public-methods
         elif returncode > 128:
             raise TestFailed("Execution fault such as segmentation fault")
 
-        if out != "":
+        if out.strip() != "":
             message = (
                 "Expected no output on standard out:\n"
                 + f"Standard out: {out}"

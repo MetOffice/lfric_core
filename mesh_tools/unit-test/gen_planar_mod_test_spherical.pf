@@ -30,6 +30,8 @@ module gen_planar_mod_test_spherical
                              geometry_spherical, &
                              topology_non_periodic
 
+  use planar_mesh_config_mod, only: stretch_function_uniform
+
   implicit none
 
   private
@@ -327,6 +329,7 @@ contains
                                 periodic_y=context%y_periodic,               &
                                 domain_size=context%domain_size,             &
                                 domain_centre=context%domain_centre,         &
+                                stretch_function=stretch_function_uniform,   &
                                 rotate_mesh=context%rotate_mesh,             &
                                 target_north_pole=context%target_north_pole, &
                                 target_null_island=context%target_null_island )

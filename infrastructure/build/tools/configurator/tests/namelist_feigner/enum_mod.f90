@@ -47,7 +47,7 @@ contains
 
     if (condition /= 0) then
       write( 6, '("feign_enum_config: ", I0)' ) condition
-      stop
+      stop 1
     end if
 
     write( temporary_unit, '("&enum")' )
@@ -58,7 +58,7 @@ contains
     call read_enum_namelist( temporary_unit, local_rank, scan=.false. )
     call postprocess_enum_namelist()
     close(temporary_unit, iostat=condition )
-    if (condition /= 0) stop temp_close_message
+    if (condition /= 0) error stop temp_close_message
 
   end subroutine feign_enum_config
 

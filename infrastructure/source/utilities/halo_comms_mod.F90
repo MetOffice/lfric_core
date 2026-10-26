@@ -837,23 +837,13 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
   redist = 0
 #else
   type(xt_redist) :: redist
-  type(xt_idxlist) :: src_idxlist, tgt_idxlist
   integer(i_def), allocatable :: src_offsets(:)
   integer(i_def), allocatable :: tgt_offsets(:)
   integer(i_def) :: i
-  type(lfric_comm_type) :: comm
   integer(i_def) :: datatype_mpi_val
 
   if( global_mpi%is_comm_set() )then
     ! create decomposition descriptors
-    src_idxlist = xt_idxvec_new( src_indices, size(src_indices) )
-    tgt_idxlist = xt_idxvec_new( tgt_indices, size(tgt_indices) )
-
-    ! generate exchange map
-    comm = global_mpi%get_comm()
-    xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, &
-                                 comm%get_comm_mpi_val() )
-
     allocate(src_offsets( size(src_indices) ))
     allocate(tgt_offsets( size(tgt_indices) ))
 
@@ -866,7 +856,7 @@ function generate_redistribution_map(src_indices, tgt_indices, datatype, xmap) &
     end do
 
     datatype_mpi_val = datatype%get_datatype_mpi_val()
-    redist = xt_redist_p2p_off_new(xmap, src_offsets,tgt_offsets, datatype_mpi_val)
+    redist = xt_redist_p2p_off_new(xmap, src_offsets, tgt_offsets, datatype_mpi_val)
 
     deallocate(src_offsets)
     deallocate(tgt_offsets)
@@ -909,7 +899,7 @@ function generate_exchange_map(src_indices, tgt_indices) result(xmap)
     ! generate exchange map
     comm = global_mpi%get_comm()
     xmap = xt_xmap_dist_dir_new( src_idxlist, tgt_idxlist, &
-                                    comm%get_comm_mpi_val() )
+                                 comm%get_comm_mpi_val() )
     call xt_idxlist_delete(tgt_idxlist)
     call xt_idxlist_delete(src_idxlist)
   else

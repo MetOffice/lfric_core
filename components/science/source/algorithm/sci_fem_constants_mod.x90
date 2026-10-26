@@ -25,7 +25,7 @@ module sci_fem_constants_mod
   use inventory_by_mesh_mod,              only: inventory_by_mesh_type
   use log_mod,                            only: log_event, LOG_LEVEL_ERROR
   use mesh_collection_mod,                only: mesh_collection
-  use mesh_mod,                           only: mesh_type
+  use mesh_mod,                           only: mesh_type, topology_periodic
   use operator_mod,                       only: operator_type
   use quadrature_xyoz_mod,                only: quadrature_xyoz_type
   use quadrature_rule_gaussian_mod,       only: quadrature_rule_gaussian_type
@@ -210,7 +210,6 @@ contains
                                   only: compute_mass_matrix_kernel_w1_type
     use sci_edge_lump_w2_mass_matrix_kernel_mod,     &
                                   only: edge_lump_w2_mass_matrix_kernel_type
-    use base_mesh_config_mod,     only: topology, topology_fully_periodic
 
     implicit none
 
@@ -229,6 +228,11 @@ contains
     type(field_type)                      :: dummy_field
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
+
+    integer(i_def) :: topology
+
+    mesh => mesh_collection%get_mesh(mesh_id)
+    topology = mesh%topology()
 
     ! If running at lowest order, use finite volume
     if (element_order_h == 0 .and. element_order_v == 0) then
@@ -259,7 +263,6 @@ contains
       case default
         mm_op => null()
         call log_event("Mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -267,13 +270,12 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
     constant_exists = inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fe()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
@@ -300,7 +302,7 @@ contains
       end select
       ! Lump W2 mass matrix along the edge of the domain to avoid boundary
       ! errors propagating into the domain with each iteration
-      if ( (space == W2 .or. space == W2h) .and. topology /= topology_fully_periodic ) then
+      if ( (space == W2 .or. space == W2h) .and. topology /= topology_periodic ) then
         call dummy_field%initialise( fs, halo_depth=2 )
         call invoke( edge_lump_w2_mass_matrix_kernel_type(mm_op,        &
                                                           dummy_field,  &
@@ -329,7 +331,6 @@ contains
                                   only: compute_mass_matrix_kernel_w1_type
     use sci_edge_lump_w2_mass_matrix_kernel_mod,     &
                                   only: edge_lump_w2_mass_matrix_kernel_type
-    use base_mesh_config_mod,     only: topology, topology_fully_periodic
 
     implicit none
 
@@ -348,6 +349,11 @@ contains
     type(field_type)                      :: dummy_field
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
+
+    integer(i_def) :: topology
+
+    mesh => mesh_collection%get_mesh(mesh_id)
+    topology = mesh%topology()
 
     ! Point to appropriate inventory for this space
     select case (space)
@@ -372,7 +378,6 @@ contains
       case default
         mm_op => null()
         call log_event("Mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -380,13 +385,12 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
     constant_exists = inventory%paired_object_exists(mesh_id)
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fv()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
@@ -412,7 +416,7 @@ contains
       end select
       ! Lump W2 mass matrix along the edge of the domain to avoid boundary
       ! errors propagating into the domain with each iteration
-      if ( (space == W2 .or. space == W2h) .and. topology /= topology_fully_periodic ) then
+      if ( (space == W2 .or. space == W2h) .and. topology /= topology_periodic ) then
         call dummy_field%initialise( fs, halo_depth=2 )
         call invoke( edge_lump_w2_mass_matrix_kernel_type(mm_op,        &
                                                           dummy_field,  &
@@ -477,7 +481,6 @@ contains
       case default
         diagonal_mm => null()
         call log_event("Diagonal mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -514,7 +517,7 @@ contains
   !> @return The mass matrix diagonal field
   function get_mass_matrix_diagonal_fv(space, mesh_id) result(diagonal_mm)
 
-    use sci_mm_diagonal_kernel_mod,             only: mm_diagonal_kernel_type
+    use sci_mm_diagonal_kernel_mod, only: mm_diagonal_kernel_type
 
     implicit none
 
@@ -552,7 +555,6 @@ contains
       case default
         diagonal_mm => null()
         call log_event("Diagonal mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -623,7 +625,6 @@ contains
       case default
         mm_linv => null()
         call log_event("Lumped inverse mass matrix does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -702,7 +703,6 @@ contains
       case default
         mm_linv => null()
         call log_event("Lumped inverse mass matrix does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -783,7 +783,6 @@ contains
       case default
         mm_inv => null()
         call log_event("Inverse mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -847,7 +846,6 @@ contains
       case default
         mm_inv => null()
         call log_event("Inverse mass matrix operator does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -914,8 +912,8 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fe()
 
       w2_fs => function_space_collection%get_fs( mesh, element_order_h, &
@@ -965,8 +963,8 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fv()
 
       w2_fs => function_space_collection%get_fs( mesh, 0, 0, W2 )
@@ -1012,8 +1010,8 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fe()
 
       w2_fs => function_space_collection%get_fs( mesh, element_order_h, &
@@ -1061,8 +1059,8 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fe()
 
       w2h_fs => function_space_collection%get_fs( mesh, element_order_h, &
@@ -1120,8 +1118,8 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fe()
       mm_w3_inv => get_inverse_mass_matrix_fe(W3, mesh_id)
 
@@ -1175,8 +1173,8 @@ contains
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
-      chi => get_coordinates(mesh_id)
-      panel_id => get_panel_id(mesh_id)
+      chi => get_coordinates(mesh)
+      panel_id => get_panel_id(mesh)
       qr_ptr => get_qr_fv()
       mm_w3_inv => get_inverse_mass_matrix_fv(W3, mesh_id)
 
@@ -1240,7 +1238,6 @@ contains
       case default
         rmultiplicity => null()
         call log_event( "Reciprocal multiplicity field does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant
@@ -1314,7 +1311,6 @@ contains
       case default
         rmultiplicity => null()
         call log_event( "Reciprocal multiplicity field does not exist", LOG_LEVEL_ERROR)
-        stop
     end select
 
     ! Initialise inventory if this is the first time getting this constant

@@ -16,12 +16,13 @@ use argument_mod,            only : arg_type, func_type,       &
                                     GH_FIELD, GH_SCALAR,       &
                                     GH_REAL, GH_INTEGER,       &
                                     GH_READ, GH_WRITE,         &
+                                    ANY_SPACE_9,               &
                                     ANY_DISCONTINUOUS_SPACE_1, &
                                     ANY_DISCONTINUOUS_SPACE_3, &
                                     GH_BASIS, GH_DIFF_BASIS,   &
                                     CELL_COLUMN, GH_QUADRATURE_XYoZ
 use constants_mod,           only : r_def, i_def
-use fs_continuity_mod,       only : W2, Wchi
+use fs_continuity_mod,       only : W2
 
 implicit none
 
@@ -34,14 +35,14 @@ type, public, extends(kernel_type) :: project_ws_to_w2_operator_kernel_type
   private
   type(arg_type) :: meta_args(4) = (/                                               &
        arg_type(GH_OPERATOR, GH_REAL,    GH_WRITE,  W2, ANY_DISCONTINUOUS_SPACE_1), &
-       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   Wchi),                          &
+       arg_type(GH_FIELD*3,  GH_REAL,    GH_READ,   ANY_SPACE_9),                   &
        arg_type(GH_FIELD,    GH_REAL,    GH_READ,   ANY_DISCONTINUOUS_SPACE_3),     &
        arg_type(GH_SCALAR,   GH_INTEGER, GH_READ)                                   &
        /)
   type(func_type) :: meta_funcs(3) = (/                              &
        func_type(W2,                        GH_BASIS),               &
        func_type(ANY_DISCONTINUOUS_SPACE_1, GH_BASIS),               &
-       func_type(Wchi,                      GH_BASIS, GH_DIFF_BASIS) &
+       func_type(ANY_SPACE_9,               GH_BASIS, GH_DIFF_BASIS) &
        /)
   integer :: operates_on = CELL_COLUMN
   integer :: gh_shape = GH_QUADRATURE_XYoZ

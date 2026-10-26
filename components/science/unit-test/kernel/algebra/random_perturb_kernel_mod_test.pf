@@ -93,6 +93,9 @@ contains
     call random_perturb_code(nlayers,                 &
                              this%theta,              &
                              this%height_wt,          &
+                             theta_pert_size,         &
+                             theta_pert_start,        &
+                             theta_pert_end,          &
                              ndf_wtheta, undf_wtheta, &
                              this%map_wtheta )
 

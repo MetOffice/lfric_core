@@ -47,7 +47,13 @@ module global_mesh_mod
   ! Mesh metadata information.
   !======================================================
   ! Tag name of mesh.
-    character(str_def) :: mesh_name
+    character(str_def) :: mesh_name = cmdi
+
+  ! Source file containing original data
+    character(str_max_filename) :: origin_file = cmdi
+
+  ! Mesh name as it was referenced in source file
+  character(str_def) :: origin_name = cmdi
 
   ! Flag to indicate if this a mesh represents coverage
   ! of a global model.
@@ -73,11 +79,11 @@ module global_mesh_mod
     real(r_def) :: domain_extents(2,4) = rmdi
 
   ! Real-world location of mesh North Pole,
-  ! only valid for spherical geometry on lon-lat cordinate-system.
+  ! only valid for spherical geometry on lon-lat coordinate-system.
     real(r_def) :: north_pole(2) = rmdi
 
   ! Real-world location of mesh null island,
-  ! only valid for spherical geometry on lon-lat cordinate-system.
+  ! only valid for spherical geometry on lon-lat coordinate-system.
     real(r_def) :: null_island(2) = rmdi
 
   ! Latitude of equator of mesh following stretching
@@ -172,6 +178,8 @@ module global_mesh_mod
 
   contains
     procedure, public :: get_mesh_name
+    procedure, public :: get_origin_name
+    procedure, public :: get_origin_file
     procedure, public :: get_npanels
     procedure, public :: get_mesh_periodicity
     procedure, public :: get_cell_id
@@ -246,25 +254,28 @@ module global_mesh_mod
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> @brief Constructs a global mesh object from mesh file and reference
-  !>        element.
+  !> @brief Constructs a global mesh object.
   !>
-  !> This global mesh object holds the connectivities which fully describe
-  !> the 2D topology of the mesh.
+  !> @details This global mesh object holds the connectivities
+  !>          which fully describe the 2D topology of the mesh.
   !>
-  !> @param[in] filename         Filename for global 2D mesh(es) ugrid file.
-  !> @param[in] global_mesh_name Name of ugrid mesh topology to create
-  !>                             global mesh object from.
+  !> @param[in] ugrid_mesh_data Ugrid data object to construct global
+  !>                            mesh object from.
+  !> @param[in] rename_to       [optional] Name used to identify
+  !>                            the instance of the global_mesh_object.
+  !>                            If omitted, the name is inherited from
+  !>                            the ugrid_mesh_data object.
   !>
-  !> @return Freshly minted global_mesh_type object.
+  !> @return global_mesh_type object
   !>
-  function global_mesh_constructor( ugrid_mesh_data ) result(self)
+  function global_mesh_constructor( ugrid_mesh_data, rename_to ) result(self)
 
     use ugrid_mesh_data_mod, only: ugrid_mesh_data_type
 
     implicit none
 
-    type(ugrid_mesh_data_type), intent(in) :: ugrid_mesh_data
+    type(ugrid_mesh_data_type),   intent(in) :: ugrid_mesh_data
+    character(*),       optional, intent(in) :: rename_to
 
     type(global_mesh_type) :: self
 
@@ -272,10 +283,17 @@ contains
     character(str_def) :: topology
     character(str_def) :: coord_sys
 
+    real(r_def) :: null_island(2)
+
     ! loop counter over entities (vertices or edges).
     integer(i_def) :: ientity
 
+    global_mesh_id_counter = global_mesh_id_counter + 1
+
+    call self%set_id(global_mesh_id_counter)
+
     call ugrid_mesh_data%get_data( self%mesh_name, &
+                                   self%origin_file, &
                                    geometry, &
                                    topology, &
                                    coord_sys, &
@@ -294,7 +312,7 @@ contains
                                    self%cell_coords, &
                                    self%coord_units_xy, &
                                    self%north_pole, &
-                                   self%null_island, &
+                                   null_island, &
                                    self%equatorial_latitude, &
                                    self%constructor_inputs, &
                                    self%rim_depth, &
@@ -305,9 +323,10 @@ contains
                                    self%edge_on_cell_2d, &
                                    self%vert_on_edge_2d )
 
-    global_mesh_id_counter = global_mesh_id_counter + 1
-
-    call self%set_id(global_mesh_id_counter)
+    self%origin_name = self%mesh_name
+    if (present(rename_to)) then
+      self%mesh_name = trim(rename_to)
+    end if
 
     select case (trim(geometry))
 
@@ -344,6 +363,10 @@ contains
 
     end select
 
+    ! null island will exist only on a spherical lat-lon mesh
+    if ( self%is_geometry_spherical() .and. self%is_coord_sys_ll() ) then
+      self%null_island = null_island
+    end if
 
     ! CF Standard for longitude/latitude is in degrees
     ! though many functions assume radians. Convert
@@ -891,7 +914,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> @brief  Returns mesh tag name.
   !> @return mesh_name  Tag name of mesh that identifies it in the
-  !>                    UGRID file that it was read in from.
+  !>                    application.
   !>
   function get_mesh_name( self ) result ( mesh_name )
 
@@ -904,6 +927,41 @@ contains
     mesh_name = self%mesh_name
 
   end function get_mesh_name
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Returns mesh name as referenced in the file it was loaded from.
+  !> @return origin_name  Tag name of mesh that identifies it in the
+  !>                      UGRID file that it was read in from.
+  !>
+  function get_origin_name( self ) result ( origin_name )
+
+    implicit none
+
+    class(global_mesh_type), intent(in) :: self
+
+    character(str_def) :: origin_name
+
+    origin_name = self%origin_name
+
+  end function get_origin_name
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !> @brief  Returns name of source file from which the mesh data was read.
+  !> @return origin_file  Filename of UGRID file that mesh data was read from.
+  !>
+  function get_origin_file( self ) result ( origin_file )
+
+    implicit none
+
+    class(global_mesh_type), intent(in) :: self
+
+    character(str_max_filename) :: origin_file
+
+    origin_file = self%origin_file
+
+  end function get_origin_file
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -920,6 +978,7 @@ contains
   !> @return periodic_xy  Mesh domain periodicity in x/y-axes.
   !>
   function get_mesh_periodicity( self ) result ( periodic_xy )
+
     implicit none
 
     class(global_mesh_type), intent(in) :: self
@@ -1097,6 +1156,7 @@ contains
   ! y_dist cells in the y-direction
   ! Since the direction may have changed we need to recompute
   y_index = rotate(x_index)
+  if ( x_cells < 0 ) y_index = opposite(y_index)
   if ( y_cells < 0 ) y_index = opposite(y_index)
 
   ! y_index and y_dist

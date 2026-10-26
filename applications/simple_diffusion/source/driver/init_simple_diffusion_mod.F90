@@ -21,8 +21,7 @@ module init_simple_diffusion_mod
   use function_space_collection_mod,  only : function_space_collection
   use function_space_mod,             only : function_space_type
   use fs_continuity_mod,              only : Wtheta
-  use log_mod,                        only : log_event,      &
-                                             LOG_LEVEL_TRACE
+  use log_mod,                        only : log_event, log_level_trace
   use mesh_mod,                       only : mesh_type
   use lfric_xios_write_mod,           only : write_field_generic
   use simple_diffusion_constants_mod, only : create_simple_diffusion_constants
@@ -64,7 +63,8 @@ module init_simple_diffusion_mod
 
     fs => function_space_collection%get_fs(mesh, order_h, order_v, Wtheta)
 
-    call log_event( 'simple_diffusion: Initialising miniapp ...', LOG_LEVEL_TRACE )
+    call log_event( 'simple_diffusion: Initialising miniapp ...', &
+                    log_level_trace )
 
     ! Create prognostic fields
     ! Creates a field in the Wtheta function space
@@ -87,9 +87,9 @@ module init_simple_diffusion_mod
     ! Create simple_diffusion runtime constants. This creates various things
     ! needed by the fem algorithms such as mass matrix operators, mass
     ! matrix diagonal fields and the geopotential field
-    call create_simple_diffusion_constants(modeldb, mesh, chi, panel_id)
+    call create_simple_diffusion_constants(mesh, chi, panel_id)
 
-    call log_event( 'simple_diffusion: Miniapp initialised', LOG_LEVEL_TRACE )
+    call log_event( 'simple_diffusion: Miniapp initialised', log_level_trace )
 
   end subroutine init_simple_diffusion
 

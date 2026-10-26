@@ -41,6 +41,7 @@
         task_ns.conf_name == "nzlam4" or
         task_ns.conf_name == "falklands" or
         task_ns.conf_name == "var-seuk" or
+        task_ns.conf_name == "var-poly-seuk" or
         task_ns.conf_name == "planar-lbc" or
         task_ns.conf_name == "planar-maps" or
         task_ns.conf_name == "planar-stretch-centres" or

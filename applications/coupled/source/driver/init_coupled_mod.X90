@@ -76,6 +76,11 @@ module init_coupled_mod
     procedure(write_interface), pointer :: tmp_ptr
 
     integer(i_def) :: order_h, order_v
+    integer(i_def) :: coord_system
+    integer(i_def) :: geometry
+    integer(i_def) :: topology
+    real(r_def)    :: scaled_radius
+
     type(function_space_type), pointer :: fs
 
     call log_event( 'coupled: Initialising app ...', LOG_LEVEL_INFO )
@@ -83,8 +88,12 @@ module init_coupled_mod
     ! Get the name of the coupling component
     call modeldb%values%get_value("cpl_name", cpl_component_name)
 
-    order_h = modeldb%config%finite_element%element_order_h()
-    order_v = modeldb%config%finite_element%element_order_v()
+    order_h       = modeldb%config%finite_element%element_order_h()
+    order_v       = modeldb%config%finite_element%element_order_v()
+    coord_system  = modeldb%config%finite_element%coord_system()
+    geometry      = modeldb%config%base_mesh%geometry()
+    topology      = modeldb%config%base_mesh%topology()
+    scaled_radius = modeldb%config%planet%scaled_radius()
 
     fs => function_space_collection%get_fs(mesh, order_h, order_v, W3)
 
@@ -122,8 +131,10 @@ module init_coupled_mod
         call depository%get_field( trim(name),  field_1_ptr)
         ! Initialise the values in the field that will be sent to the coupler.
         ! Set them to the longitude of the cell-centre (converted to degrees)
-        call invoke(compute_latlon_kernel_type(field_2, field_1_ptr, &
-                                               chi, panel_id),       &
+        call invoke(compute_latlon_kernel_type(field_2, field_1_ptr,    &
+                                               chi, panel_id, geometry, &
+                                               topology, coord_system,  &
+                                               scaled_radius),          &
                     inc_a_times_X(radians_to_degrees, field_1_ptr))
         ! Add that field to the coupling 2d "send" field collection
         abs_field_ptr => field_1_ptr

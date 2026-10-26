@@ -737,4 +737,60 @@ contains
      !
   end subroutine invoke_copy_field_64_64
 
+  !---------------------------------------------------------------------
+  ! This is a PSyKAl-lite implementation of a built-in that will be
+  ! implemented under PSyclone issue #3398. See that issue for further
+  ! details.
+  subroutine invoke_copy_field_halo(field_out, field_in)
+
+     use omp_lib,            only: omp_get_thread_num
+     use omp_lib,            only: omp_get_max_threads
+     use mesh_mod,           only: mesh_type
+
+     implicit none
+
+     type(field_type), intent(in)    :: field_in
+     type(field_type), intent(inout) :: field_out
+
+     integer(kind=i_def)             :: df
+     integer(kind=i_def)             :: loop0_start, loop0_stop
+     integer(kind=i_def)             :: clean_halo_depth
+     type(field_proxy_type)          :: field_in_proxy
+     type(field_proxy_type)          :: field_out_proxy
+     !
+     ! Initialise field and/or operator proxies
+     !
+     field_in_proxy = field_in%get_proxy()
+     field_out_proxy = field_out%get_proxy()
+     !
+     ! Set-up all of the loop bounds
+     !
+     clean_halo_depth = field_in_proxy%get_clean_depth()
+     loop0_start = 1
+     if (clean_halo_depth > 0) then
+       ! only copy the clean halos
+       loop0_stop = field_out_proxy%vspace%get_last_dof_halo(clean_halo_depth)
+     else
+       ! if there are no clean halos copy only owned DoFs
+       loop0_stop = field_out_proxy%vspace%get_last_dof_owned()
+     end if
+     !
+     ! Call kernels and communication routines
+     !
+     !$omp parallel default(shared), private(df)
+     !$omp do schedule(static)
+     do df=loop0_start,loop0_stop
+       field_out_proxy%data(df) = field_in_proxy%data(df)
+     end do
+     !$omp end do
+     !$omp end parallel
+     !
+     ! Set halos dirty for fields modified in the above loop
+     !
+     call field_out_proxy%set_dirty()
+     if (clean_halo_depth > 0) then
+       call field_out_proxy%set_clean(clean_halo_depth)
+     end if
+  end subroutine invoke_copy_field_halo
+
 end module sci_psykal_builtin_light_mod

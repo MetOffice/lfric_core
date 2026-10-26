@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation>
+
+  <context id = "io_demo">
+
+   <axis_definition src="metadata/axis_dictionary.xml"/>
+   <grid_definition src="metadata/grid_dictionary.xml"/>
+   <field_definition src="metadata/field_dictionary.xml"/>
+
+   <file_definition
+      type="one_file"
+      time_counter="none">
+
+     <file id="lfric_diag" name="io_demo_diag" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+       <field field_ref="diffusion_field"/>
+     </file>
+
+    </file_definition>
+
+  </context>
+
+  <!-- Pull in partial context definition for temporal I/O from XML fragment -->
+  <context id="temporal_context" src="./temporal_context.xml"/>
+
+  <context src="etc/xios.xml"/>
+
+</simulation>

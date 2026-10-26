@@ -17,7 +17,7 @@
 !>
 module extrusion_mod
 
-  use constants_mod,         only : i_def, r_def
+  use constants_mod,         only : i_def, r_def, imdi, rmdi
   use global_mesh_mod,       only : global_mesh_type
   use log_mod,               only : log_scratch_space, log_event, &
                                     log_level_error
@@ -40,10 +40,10 @@ module extrusion_mod
 
     private
 
-    real(r_def)    :: atmosphere_bottom
-    real(r_def)    :: atmosphere_top
-    integer(i_def) :: number_of_layers
-    integer(i_def) :: extrusion_id
+    real(r_def)    :: atmosphere_bottom = rmdi
+    real(r_def)    :: atmosphere_top    = rmdi
+    integer(i_def) :: number_of_layers  = imdi
+    integer(i_def) :: extrusion_id      = imdi
 
   contains
 

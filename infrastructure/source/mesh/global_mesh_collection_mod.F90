@@ -170,7 +170,7 @@ contains
   !> @detail This function returns the number of unique mesh
   !>         tag names in this collection.
   !>
-  !> @return Number of mesh tag names avaible to query.
+  !> @return Number of mesh tag names available to query.
   !>
   function n_meshes(self) result(number_of_meshes)
 
@@ -246,7 +246,7 @@ contains
     implicit none
 
     class(global_mesh_collection_type), intent(in) :: self
-    character(str_def),                 intent(in) :: global_mesh_name
+    character(*),                       intent(in) :: global_mesh_name
 
     type(global_mesh_type), pointer :: global_mesh
 
@@ -273,7 +273,7 @@ contains
       select type(m => loop%payload)
         type is (global_mesh_type)
           global_mesh => m
-          if ( global_mesh_name == global_mesh%get_mesh_name() ) exit
+          if ( trim(global_mesh_name) == trim(global_mesh%get_mesh_name()) ) exit
       end select
 
       loop => loop%next

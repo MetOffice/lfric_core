@@ -130,7 +130,8 @@ subroutine test_compute_colours_cubedsphere(this)
   integer(i_def)   :: err
   character( 200 ) :: message
 
-  logical(l_def), parameter   :: generate_inner_halos = .true.
+  logical(l_def), parameter :: generate_inner_halos = .true.
+  logical(l_def), parameter :: enforce_constraints  = .false.
 
   filename = "data/mesh_C4.nc"
   call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
@@ -140,13 +141,14 @@ subroutine test_compute_colours_cubedsphere(this)
   decomposition = custom_decomposition_type(this%xproc, this%yproc)
 
   partitioner_ptr => partitioner_cubedsphere_serial
-  partition = partition_type( global_mesh_ptr,     &
-                            partitioner_ptr,       &
-                            decomposition,         &
-                            halo_depth,            &
-                            generate_inner_halos,  &
-                            this%local_rank,       &
-                            this%total_ranks)
+  partition = partition_type( global_mesh_ptr,      &
+                              partitioner_ptr,      &
+                              decomposition,        &
+                              halo_depth,           &
+                              generate_inner_halos, &
+                              enforce_constraints,  &
+                              this%local_rank,      &
+                              this%total_ranks )
 
   call local_mesh%initialise( global_mesh_ptr, partition )
   call local_mesh%init_cell_owner()
@@ -254,7 +256,9 @@ subroutine test_compute_colours_biperiodic(this)
   type(mesh_type) :: mesh
   integer(i_def)  :: err
 
-  logical(l_def), parameter   :: generate_inner_halos = .true.
+  logical(l_def), parameter :: generate_inner_halos = .true.
+  logical(l_def), parameter :: enforce_constraints  = .false.
+  integer(i_def), parameter :: max_stencil_depth    = 1
 
   filename = "data/mesh_BiP8x8-750x250.nc"
   call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
@@ -264,13 +268,14 @@ subroutine test_compute_colours_biperiodic(this)
   decomposition = custom_decomposition_type(this%xproc, this%yproc)
 
   partitioner_ptr => partitioner_planar
-  partition = partition_type(global_mesh_ptr,      &
-                            partitioner_ptr,       &
-                            decomposition,         &
-                            1,                     &
-                            generate_inner_halos,  &
-                            this%local_rank,       &
-                            this%total_ranks)
+  partition = partition_type( global_mesh_ptr,      &
+                              partitioner_ptr,      &
+                              decomposition,        &
+                              max_stencil_depth,    &
+                              generate_inner_halos, &
+                              enforce_constraints,  &
+                              this%local_rank,      &
+                              this%total_ranks )
 
   call local_mesh%initialise( global_mesh_ptr, partition )
   call local_mesh%init_cell_owner()
@@ -354,7 +359,9 @@ subroutine test_compute_colours_generic(this)
   type(mesh_type) :: mesh
   integer(i_def)  :: err
 
-  logical(l_def), parameter   :: generate_inner_halos = .true.
+  logical(l_def), parameter :: generate_inner_halos = .true.
+  logical(l_def), parameter :: enforce_constraints  = .false.
+  integer(i_def), parameter :: max_stencil_depth    = 1
 
   ! Force colour generator to use generic colour routine by not saying
   ! it's a cubed sphere
@@ -366,13 +373,14 @@ subroutine test_compute_colours_generic(this)
 
   partitioner_ptr => partitioner_cubedsphere_serial
   decomposition = custom_decomposition_type(this%xproc, this%yproc)
-  partition = partition_type( global_mesh_ptr,     &
-                            partitioner_ptr,       &
-                            decomposition,         &
-                            1,                     &
-                            generate_inner_halos,  &
-                            this%local_rank,       &
-                            this%total_ranks)
+  partition = partition_type( global_mesh_ptr,      &
+                              partitioner_ptr,      &
+                              decomposition,        &
+                              max_stencil_depth,    &
+                              generate_inner_halos, &
+                              enforce_constraints,  &
+                              this%local_rank,      &
+                              this%total_ranks)
 
   call local_mesh%initialise( global_mesh_ptr, partition )
   call local_mesh%init_cell_owner()

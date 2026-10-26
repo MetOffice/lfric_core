@@ -113,6 +113,7 @@ contains
     integer(tik) :: id
 
     if ( LPROF ) call start_timing( id, 'skeleton_constants_alg' )
+
     call log_event( "Skeleton: creating runtime constants", LOG_LEVEL_INFO )
 
     order_h     = modeldb%config%finite_element%element_order_h()

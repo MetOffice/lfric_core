@@ -14,6 +14,8 @@
 !>
 module namelist_collection_mod
 
+  use, intrinsic :: iso_fortran_env, only : error_unit
+
   use constants_mod,   only: i_def, l_def, str_def, cmdi
   use namelist_mod,         only: namelist_type
   use log_mod,         only: log_event, log_scratch_space, &
@@ -145,9 +147,10 @@ subroutine add_namelist( self, namelist_obj )
   profile_name = namelist_obj%get_profile_name()
 
   if ( trim(name) == 'none' .or. trim(name) == 'unset' ) then
-    write(log_scratch_space, '(A)') &
+    write(error_unit, '(A)') &
         'Namelist [' // trim(name) // '] has not been set.'
-    call log_event( log_scratch_space, LOG_LEVEL_ERROR )
+    flush(error_unit)
+    stop
   end if
 
   full_name = namelist_obj%get_listname()

@@ -8,15 +8,14 @@
 !!          faces when iterating over columns
 module sci_face_selector_kernel_mod
 
-  use argument_mod,          only: arg_type,            &
-                                   GH_FIELD, GH_SCALAR, &
-                                   GH_REAL, GH_INTEGER, &
-                                   GH_WRITE, GH_READ,   &
-                                   CELL_COLUMN
-  use constants_mod,         only: i_def
-  use fs_continuity_mod,     only: W3, W2H
-  use kernel_mod,            only: kernel_type
-  use reference_element_mod, only: E, N
+  use argument_mod,                  only: arg_type,                           &
+                                           GH_FIELD, GH_WRITE,                 &
+                                           GH_REAL, GH_INTEGER,                &
+                                           CELL_COLUMN
+  use constants_mod,                 only: i_def
+  use fs_continuity_mod,             only: W3, W2H
+  use kernel_mod,                    only: kernel_type
+  use sci_face_selector_support_mod, only: compute_face_selector
 
   implicit none
 
@@ -30,11 +29,11 @@ module sci_face_selector_kernel_mod
   !>
   type, public, extends(kernel_type) :: face_selector_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                          &
-         arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W3),           &
-         arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W3),           &
-         arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W2H)           &
-         /)
+    type(arg_type) :: meta_args(3) = (/                                        &
+        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W3),                          &
+        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W3),                          &
+        arg_type(GH_FIELD, GH_INTEGER, GH_WRITE, W2H)                          &
+    /)
     integer :: operates_on = CELL_COLUMN
   contains
     procedure, nopass :: face_selector_code
@@ -88,19 +87,13 @@ subroutine face_selector_code( nlayers,                   &
   integer(kind=i_def), intent(inout) :: face_selector_ns(undf_w3)
   integer(kind=i_def), intent(inout) :: face_counter(undf_w2h)
 
-  ! If the East face hasn't been visited yet, this cell will compute the
-  ! calculation for that face.
-  if (face_counter(map_w2h(E)) == 0) then
-    face_selector_ew(map_w3(1)) = 2
-    face_counter(map_w2h(E)) = 1
-  end if
-
-  ! If the North face hasn't been visited yet, this cell will compute the
-  ! calculation for that face.
-  if (face_counter(map_w2h(N)) == 0) then
-    face_selector_ns(map_w3(1)) = 2
-    face_counter(map_w2h(N)) = 1
-  end if
+  call compute_face_selector(                                                  &
+      face_selector_ew,                                                        &
+      face_selector_ns,                                                        &
+      face_counter,                                                            &
+      ndf_w3, undf_w3, map_w3,                                                 &
+      ndf_w2h, undf_w2h, map_w2h                                               &
+  )
 
 end subroutine face_selector_code
 

@@ -39,7 +39,6 @@ class vn22_t4231(MacroUpgrade):
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
-"""
 
 
 class vn22_t34(MacroUpgrade):

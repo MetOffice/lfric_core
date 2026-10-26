@@ -109,6 +109,8 @@ subroutine generate_local_objects( local_mesh_bank,       &
   type(local_mesh_type)       :: local_lbc_mesh
   integer(i_def), allocatable :: cell_lbc_lam_map(:)
 
+  logical(l_def), parameter :: enforce_constraints = .false.
+
   n_meshes = size(mesh_names)
 
   !====================================================================
@@ -120,7 +122,7 @@ subroutine generate_local_objects( local_mesh_bank,       &
     source_name = mesh_names(i)
     source_global_mesh_ptr => global_mesh_bank%get_global_mesh(source_name)
 
-    mapping_factor = calc_mapping_factor(global_mesh_bank, source_global_mesh_ptr)
+    mapping_factor = calc_mapping_factor(source_global_mesh_ptr, global_mesh_bank)
 
     call log_event( 'Partitioning mesh:'//trim(source_name), log_level_debug )
 
@@ -133,6 +135,7 @@ subroutine generate_local_objects( local_mesh_bank,       &
                                 decomposition,          &
                                 max_stencil_depth,      &
                                 generate_inner_halos,   &
+                                enforce_constraints,    &
                                 partition_id,           &
                                 n_partitions,           &
                                 mapping_factor )

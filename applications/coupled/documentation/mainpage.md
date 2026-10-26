@@ -26,6 +26,6 @@ operations which can be specified within an invoke call in the algorithm layer b
 directly by the infrastructure.
 
 For more up-to-date information about the <b>LFRic-specific Built-ins</b> functionality (e.g. names, argument order) please refer to the 
-<a href="https://github.com/stfc/PSyclone/blob/master/doc/dynamo0p3.rst#built-ins">dynamo 0.3 API Built-ins documentation</a>.
+<a href="https://github.com/stfc/PSyclone/blob/master/doc/user_guide/lfric.rst#built-ins">dynamo 0.3 API Built-ins documentation</a>.
 
 

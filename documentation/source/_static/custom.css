@@ -7,12 +7,20 @@ html[data-theme="light"] {
     --pst-color-primary: #0f79be;
     --pst-color-secondary: #e2a022;
     --pst-color-accent: #e2a022;
+
+    .highlight .hll {
+        background-color: #359bc0;
+    }
 }
 
 html[data-theme="dark"] {
     --pst-color-primary: #359bc0;
     --pst-color-secondary: #eac45f;
     --pst-color-accent: #eac45f;
+
+    .highlight .hll {
+        background-color: #0f79be;
+    }
 
     /* Overwrite visited colour to be AAA contrast compliant */
     a:visited {

@@ -12,7 +12,6 @@ module driver_time_mod
   use driver_modeldb_mod, only: modeldb_type
   use log_mod,            only: log_event, LOG_LEVEL_ERROR
   use model_clock_mod,    only: model_clock_type
-  use namelist_mod,       only: namelist_type
   use step_calendar_mod,  only: step_calendar_type
 
   implicit none
@@ -40,9 +39,6 @@ contains
     integer(i_timestep) :: first
     integer(i_timestep) :: last
 
-    type(namelist_type), pointer :: time_nml
-    type(namelist_type), pointer :: timestepping_nml
-
     character(str_def) :: timestep_start
     character(str_def) :: timestep_end
     character(str_def) :: calendar_origin
@@ -54,18 +50,13 @@ contains
     ! -------------------------------
     ! Extract namelist variables
     ! -------------------------------
-    time_nml         => modeldb%configuration%get_namelist('time')
-    timestepping_nml => modeldb%configuration%get_namelist('timestepping')
+    timestep_start  = modeldb%config%time%timestep_start()
+    timestep_end    = modeldb%config%time%timestep_end()
+    calendar_origin = modeldb%config%time%calendar_origin()
+    calendar_start  = modeldb%config%time%calendar_start()
 
-    call time_nml%get_value( 'timestep_start',  timestep_start )
-    call time_nml%get_value( 'timestep_end',    timestep_end )
-    call time_nml%get_value( 'calendar_origin', calendar_origin )
-    call time_nml%get_value( 'calendar_start',  calendar_start )
-
-    call timestepping_nml%get_value( 'dt', timestep_length )
-    call timestepping_nml%get_value( 'spinup_period', spinup_period )
-
-    nullify( time_nml, timestepping_nml )
+    timestep_length = modeldb%config%timestepping%dt()
+    spinup_period   = modeldb%config%timestepping%spinup_period()
 
     ! Instantiate the calendar
     !---------------------------------

@@ -1,0 +1,248 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+!> Tests parallel logging of field data for debugging purposes.
+!>
+module log_field_mod_test
+
+  use constants_mod,                  only : i_def, r_def, str_def, imdi
+  use halo_comms_mod,                 only : initialise_halo_comms, &
+                                             finalise_halo_comms
+  use halo_routing_collection_mod,    only : halo_routing_collection_type, &
+                                             halo_routing_collection
+  use halo_comms_mod,                 only : halo_routing_type
+  use field_mod,                      only : field_type, field_proxy_type
+  use function_space_collection_mod,  only : function_space_collection_type, &
+                                             function_space_collection
+  use lfric_mpi_mod,                  only : global_mpi, &
+                                             lfric_comm_type
+  use local_mesh_mod,                 only : local_mesh_type
+  use log_field_mod,                  only : log_field
+  use log_mod,                        only : initialise_logging, finalise_logging, &
+                                             log_set_level, log_level_info
+  use mesh_collection_mod,            only : mesh_collection_type, &
+                                             mesh_collection
+  use mesh_mod,                       only : mesh_type, PLANE_BI_PERIODIC
+  use fs_continuity_mod,              only : W3
+  use pfunit
+
+  implicit none
+
+  private
+  public :: test_log_field, test_log_field_section
+  ! pFUnit requires symbol spillage
+  public MPITestCase, MPITestParameter
+
+  @TestCase
+  type, extends(MPITestCase), public :: log_field_test_type
+    private
+    type(field_type) :: field
+    character(:), allocatable :: pet_file
+  contains
+    procedure setUp
+    procedure tearDown
+  end type log_field_test_type
+
+  integer(i_def), parameter :: element_order_h = 0
+  integer(i_def), parameter :: element_order_v = 0
+
+  character(*), parameter :: name = 'log_field_mod_unit_test'
+  integer(i_def), parameter :: log_unit   = 11
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine setUp( this )
+
+    implicit none
+
+    class(log_field_test_type), intent(inout) :: this
+
+    type(local_mesh_type), pointer :: unit_test_local_mesh_ptr
+    type(mesh_type) :: unit_test_mesh
+    integer(i_def)  :: mesh_id
+    type(lfric_comm_type) :: lfric_comm
+    type(mesh_type), pointer :: mesh
+    type(local_mesh_type), target :: unit_test_local_mesh
+    type(field_proxy_type) :: fieldp
+
+    character(str_def) :: filename
+    integer(i_def)      :: status
+
+    call lfric_comm%set_comm_mpi_val(this%getMpiCommunicator())
+
+    !Store the MPI communicator for later use
+    call global_mpi%initialise(lfric_comm)
+
+    ! Initialise halo functionality
+    call initialise_halo_comms(lfric_comm)
+
+    ! Create top level mesh collection
+    mesh_collection = mesh_collection_type()
+    ! Create top level function space collection
+    function_space_collection = function_space_collection_type()
+    ! Create top level halo_routing collection
+    halo_routing_collection = halo_routing_collection_type()
+
+    call unit_test_local_mesh%initialise()
+    unit_test_local_mesh_ptr => unit_test_local_mesh
+
+    ! Dummy mesh mod has 9 cells, 3 layers and is uniform in vertical
+    unit_test_mesh = mesh_type( PLANE_BI_PERIODIC, unit_test_local_mesh_ptr )
+    mesh_id = mesh_collection%add_new_mesh( unit_test_mesh )
+    mesh => mesh_collection%get_mesh( mesh_id )
+
+    call this%field%initialise( &
+       vector_space = function_space_collection%get_fs( mesh, &
+                                                        element_order_h, &
+                                                        element_order_v, W3 ), &
+       name = 'test_field' )
+
+    fieldp = this%field%get_proxy()
+    fieldp%data(:) = [ &
+                1.0_r_def,  2.0_r_def,  3.0_r_def,  4.0_r_def,  5.0_r_def, &
+                6.0_r_def,  7.0_r_def,  8.0_r_def,  9.0_r_def, 10.0_r_def, &
+               11.0_r_def, 12.0_r_def, 13.0_r_def, 14.0_r_def, 15.0_r_def, &
+               16.0_r_def, 17.0_r_def, 18.0_r_def, 19.0_r_def, 20.0_r_def, &
+               21.0_r_def, 22.0_r_def, 23.0_r_def, 24.0_r_def, 25.0_r_def, &
+               26.0_r_def, 27.0_r_def]
+
+    ! Ensure there's no log file from a previous run.
+    !
+    ! This is done before and after in case there was a crash.
+    !
+    if (this%getNumProcesses() > 1) then
+      write( filename, &
+             '("PET", I1, ".", A, ".Log")') this%getProcessRank(), name
+      allocate(this%pet_file, source=filename)
+
+      open( log_unit, file=this%pet_file, action='write', iostat=status )
+      if (status == 0) close( log_unit, status='delete' )
+    end if
+
+  end subroutine setUp
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine tearDown( this )
+
+    implicit none
+
+    class(log_field_test_type), intent(inout) :: this
+
+    integer(i_def) :: status
+
+    call function_space_collection%clear()
+    call mesh_collection%clear()
+    call halo_routing_collection%clear()
+
+    ! Finalise halo functionality
+    call finalise_halo_comms()
+    ! Clear the stored MPI communicator
+    call global_mpi%finalise()
+
+    ! Ensure there's no log file to interfere with a subsequent run.
+    !
+    ! This is done before and after in case there was a crash.
+    !
+    if (allocated(this%pet_file)) then
+      open( log_unit, file=this%pet_file, action='write', iostat=status )
+      if (status == 0) close( log_unit, status='delete' )
+    end if
+
+  end subroutine tearDown
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  @Test( npes=[2] )
+  subroutine test_log_field( this )
+
+    implicit none
+
+    class(log_field_test_type), intent(inout) :: this
+    character(80) :: filename
+    integer(i_def) :: status
+    integer(i_def) :: i
+
+    ! Must hold 14 digits:
+    integer(i_def), parameter :: i_time = selected_int_kind( 14 )
+
+    integer(i_time)   :: found_stamp
+    character         :: found_point
+    integer(i_def)    :: found_subseconds
+    integer(i_def)    :: found_zone
+    character(3)      :: found_proc
+    character(8)      :: found_tag
+    character(80)     :: found_message
+    integer(i_def)    :: found_dofno
+    real(r_def)       :: found_value
+    real(r_def)       :: expected_value
+
+    call initialise_logging( this%getMpiCommunicator(), name )
+    call log_set_level(log_level_info)
+    call log_field(this%field, log_level=log_level_info)
+    call finalise_logging()
+
+    write( filename, '("PET",i1,".", A, ".Log")') this%getProcessRank(), name
+    open( log_unit, file=filename, action='read', iostat=status )
+    @assertEqual( 0, status )
+    do i=1,27
+      read( log_unit, '(I14,A1,I3,I5,A3,A8,A)', iostat = status ) &
+          found_stamp, found_point, found_subseconds, found_zone, &
+          found_proc, found_tag, found_message
+      @assertEqual( 0, status )
+      read(found_message,'(i6,e16.8)')found_dofno, found_value
+      expected_value = real(found_dofno, r_def)
+      @assertEqual(expected_value, found_value)
+    end do
+    close(log_unit)
+
+  end subroutine test_log_field
+
+  @Test( npes=[2] )
+  subroutine test_log_field_section( this )
+
+    implicit none
+
+    class(log_field_test_type), intent(inout) :: this
+    character(80) :: filename
+    integer(i_def) :: status
+    integer(i_def) :: i
+
+    ! Must hold 14 digits:
+    integer(i_def), parameter :: i_time = selected_int_kind( 14 )
+
+    integer(i_time)   :: found_stamp
+    character         :: found_point
+    integer(i_def)    :: found_subseconds
+    integer(i_def)    :: found_zone
+    character(3)      :: found_proc
+    character(8)      :: found_tag
+    character(80)     :: found_message
+    integer(i_def)    :: found_dofno
+    real(r_def)       :: found_value
+    real(r_def)       :: expected_value
+
+    call initialise_logging( this%getMpiCommunicator(), name )
+    call log_set_level(log_level_info)
+    call log_field(this%field, log_level=log_level_info, start_dof=10, end_dof=20)
+    call finalise_logging()
+
+    write( filename, '("PET",i1,".", A, ".Log")') this%getProcessRank(), name
+    open( log_unit, file=filename, action='read', iostat=status )
+    @assertEqual( 0, status )
+    do i=10,20
+      read( log_unit, '(I14,A1,I3,I5,A3,A8,A)', iostat = status ) &
+          found_stamp, found_point, found_subseconds, found_zone, &
+          found_proc, found_tag, found_message
+      @assertEqual( 0, status )
+      read(found_message,'(i6,e16.8)')found_dofno, found_value
+      expected_value = real(found_dofno, r_def)
+      @assertEqual(expected_value, found_value)
+    end do
+    close(log_unit)
+
+  end subroutine test_log_field_section
+
+end module log_field_mod_test

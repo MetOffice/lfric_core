@@ -38,8 +38,8 @@
         "infrastructure_unit_tests_ex1a_gnu_64bit"
     ],
     "infrastructure_ex1a_integration_tests": [
-        "infrastructure_integration_tests_ex1a_cce_32bit",
-        "infrastructure_integration_tests_ex1a_cce_64bit"
+        "infrastructure_integration_tests_ex1a_gnu_32bit",
+        "infrastructure_integration_tests_ex1a_gnu_64bit"
     ]
     }) %}
 

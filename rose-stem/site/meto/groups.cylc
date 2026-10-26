@@ -9,10 +9,12 @@
     "scripts": [
         "config_dump_checker",
         "style_checker",
+        "fortitude_linter",
         "site_validator",
         "validate_rose_meta",
         "rose-stem_lint_checker",
         "global_variables_checker",
+        "validate_iodef",
         "python_unit_tests"
     ],
     "azspice_developer": [],

@@ -31,8 +31,6 @@ abstract class field_parent_mod::field_parent_type {
 abstract class field_parent_mod::field_parent_proxy_type {
   +vspace: function_space_type <<pointer>>
   +halo_dirty: integer[] <<pointer>>
-  +ndata_first : logical <<pointer>>
-  +cpl_id : integer[]
   -field_halo_depth : integer <<pointer>>
   -fortran_type : integer
   -fortran_kind : integer
@@ -42,6 +40,7 @@ abstract class field_parent_mod::field_parent_proxy_type {
   +is_dirty( <<in>>depth: integer ) : logical
   +set_dirty()
   +set_clean( <<in>>depth: integer )
+  +get_clean_depth()
   +get_mpi() : lfric_mpi_type
 }
 

@@ -248,6 +248,7 @@ contains
   subroutine test_field_proxy( this )
 
     use field_mod,             only: field_type, field_proxy_type
+    use field_parent_mod,      only: all_halos_dirty
 
     implicit none
 
@@ -256,15 +257,18 @@ contains
     type(field_type)       :: f1
     type(field_type)       :: f2
     type(field_type)       :: f3
+    type(field_type)       :: f4
     type(field_proxy_type) :: f1_p
     type(field_proxy_type) :: f2_p
     type(field_proxy_type) :: f3_p
+    type(field_proxy_type) :: f4_p
     integer(i_def)         :: i
     integer(i_def)         :: halo_depth
     type(halo_routing_type), pointer :: halo_routing
     integer(i_def)         :: order_h, order_v
     real(r_def)            :: test_sum, test_min, test_max
     logical                :: dirty
+    integer(i_def)         :: clean_depth
     type(lfric_mpi_type)   :: f1_mpi
 
     ! Make a field with a function space
@@ -326,6 +330,36 @@ contains
     call f1_p%set_clean(1)
     dirty=f1_p%is_dirty(1)
     @assertFalse ( dirty )
+
+    ! Check the clean depth when all halos are dirty
+    call f1_p%set_dirty()
+    clean_depth = f1_p%get_clean_depth()
+    @assertEqual( all_halos_dirty, clean_depth )
+
+    ! Check the clean depth when 2 halos are clean
+    call f1_p%set_dirty()
+    call f1_p%set_clean(2)
+    clean_depth = f1_p%get_clean_depth()
+    @assertEqual( 2, clean_depth )
+
+    ! Check the clean depth when all halos are clean
+    call f1_p%set_clean(3)
+    clean_depth = f1_p%get_clean_depth()
+    @assertEqual( 3, clean_depth )
+
+    ! Check the clean depth when there is a halo depth of only 1
+    ! and it is clean
+    call f3%initialise( vector_space = this%w2_fs, halo_depth=1 )
+    f3_p = f3%get_proxy()
+    call f3_p%set_clean(1)
+    clean_depth = f3_p%get_clean_depth()
+    @assertEqual( 1, clean_depth )
+
+    ! Check the clean depth when there are no halos
+    call f4%initialise( vector_space = this%w2_fs, halo_depth=0 )
+    f4_p = f4%get_proxy()
+    clean_depth = f4_p%get_clean_depth()
+    @assertEqual( all_halos_dirty, clean_depth )
 
     ! check that the mpi object associated with f1 is valid
     f1_mpi = f1_p%get_mpi()

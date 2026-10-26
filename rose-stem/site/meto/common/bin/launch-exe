@@ -24,15 +24,19 @@ else
   LAUNCHER=${RUN_METHOD}
 fi
 
-
 # Construct launcher options
 #===========================================
+SET_CORES_PER_NODE=$((TOTAL_RANKS<CORES_PER_NODE ? TOTAL_RANKS : CORES_PER_NODE))
 LAUNCHER_OPTS=""
 if [ "${RUN_METHOD}" = "mpiexec" ] ; then
   if [ "${SITE_MPI_LAUNCHER_OPTS}" != "" ] ; then
     LAUNCHER_OPTS=${SITE_MPI_LAUNCHER_OPTS}
   else
-    LAUNCHER_OPTS="-n ${TOTAL_RANKS}"
+    if [ "${TARGET_PLATFORM}" = "meto-ex1a" ] ; then
+      LAUNCHER_OPTS="-n ${TOTAL_RANKS} --ppn ${SET_CORES_PER_NODE}"
+    else
+      LAUNCHER_OPTS="-n ${TOTAL_RANKS}"
+    fi
   fi
 elif [ "${RUN_METHOD}" = "srun" ] ; then
   LAUNCHER_OPTS="--ntasks ${TOTAL_RANKS}"
@@ -45,10 +49,14 @@ fi
 if [ "${RUN_METHOD}" = "mpiexec" ] ; then
   if [[ ! -z "${XIOS_SERVER_MODE}" && "${XIOS_SERVER_MODE}" = "True" ]] ; then
     if [ "${xios_nodes}" = "0" ] ; then
-      XIOS_OPTS=" : --np ${XIOS_SERVER_RANKS} "
+      XIOS_OPTS=" : -n ${XIOS_SERVER_RANKS} "
     else
-      XIOS_CORES_PER_NODE="$(( mpi_parts_xios / xios_nodes ))"
-      XIOS_OPTS=" : --np ${XIOS_SERVER_RANKS} --ppn ${XIOS_CORES_PER_NODE} "
+      if [ "${TARGET_PLATFORM}" = "meto-ex1a" ] ; then
+        XIOS_CORES_PER_NODE="$(( mpi_parts_xios / xios_nodes ))"
+        XIOS_OPTS=" : -n ${XIOS_SERVER_RANKS} --ppn ${XIOS_CORES_PER_NODE}"
+      else
+        XIOS_OPTS=" : -n ${XIOS_SERVER_RANKS}"
+      fi
     fi
   fi
 fi

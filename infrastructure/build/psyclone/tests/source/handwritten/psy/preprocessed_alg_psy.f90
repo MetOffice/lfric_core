@@ -6,8 +6,8 @@
     SUBROUTINE invoke_0(one)
       implicit none
       TYPE(field_type), intent(in) :: one
-      INTEGER df
-      TYPE(field_proxy_type) one_proxy
+      INTEGER :: df
+      TYPE(field_proxy_type) :: one_proxy
       !
       ! Initialise field and/or operator proxies
       !
