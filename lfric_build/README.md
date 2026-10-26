@@ -1,6 +1,6 @@
 # LFRic Core Fab Build Scripts
 
-Make sure you have Fab version 2.0.1 or later installed (in addition to all
+Make sure you have Fab version 2.3.0 or later installed (in addition to all
 LFRic core requirements of course).
 
 ## Setting up Site- and Platform-specific Settings

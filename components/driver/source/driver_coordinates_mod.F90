@@ -18,11 +18,11 @@ module driver_coordinates_mod
                                  schmidt_transform_xyz,            &
                                  inverse_schmidt_transform_xyz
 
-  ! Configuration modules
-  use base_mesh_config_mod, only: geometry_planar,         &
-                                  geometry_spherical,      &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
+  use mesh_mod,  only: geometry_planar,    &
+                       geometry_spherical, &
+                       topology_periodic,  &
+                       topology_non_periodic
+
   use finite_element_config_mod, only: coord_system_xyz
 
   implicit none
@@ -64,7 +64,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type),   intent(in), pointer :: mesh
+    type(mesh_type),   intent(in) :: mesh
     type(field_type),  intent(inout) :: chi(3)
     type(field_type),  intent(inout) :: panel_id
 
@@ -108,18 +108,8 @@ contains
 
     nullify( map, map_pid, dof_coords, reference_element )
 
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
-
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else
-      topology = topology_non_periodic
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
@@ -170,25 +160,6 @@ contains
     local_mesh => mesh%get_local_mesh()
     panel_ncells = local_mesh%get_ncells_global_mesh()/local_mesh%get_num_panels_global_mesh()
 
-
-    ! Get *inverse* rotation matrix and stretching factor here
-    stretch_factor = get_stretch_factor()
-    inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
-    to_rotate = get_to_rotate()
-
-    if ( .not. (mesh%is_geometry_spherical() .and. &
-                mesh%is_coord_sys_ll()) ) then
-
-      ! Throw an error if stretching factor is not 1 and not on cubed-sphere
-      if ( stretch_factor /= 1.0_r_def ) then
-        call log_event(                                                        &
-            'driver_coordinates: Cannot determine coordinates if Schmidt ' //  &
-            'stretching factor is not 1 and mesh is not cubed-sphere',         &
-            log_level_error                                                    &
-        )
-      end if
-    end if
-
     panel_id_proxy%data = 1.0_r_def
 
     if ( coord_system == coord_system_xyz .or. &
@@ -231,7 +202,12 @@ contains
       end do
 
     else if ( geometry == geometry_spherical .and. &
-              topology /= topology_fully_periodic ) then
+              topology /= topology_periodic ) then
+
+      ! Allow for Rotated/Schmidt stretched meshes
+      to_rotate = get_to_rotate()
+      stretch_factor = get_stretch_factor()
+      inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -266,7 +242,12 @@ contains
       end do
 
     else if ( geometry == geometry_spherical .and. &
-              topology == topology_fully_periodic ) then
+              topology == topology_periodic ) then
+
+      ! Allow for Rotated/Schmidt stretched meshes
+      to_rotate = get_to_rotate()
+      stretch_factor = get_stretch_factor()
+      inverse_rot_matrix = get_inverse_mesh_rotation_matrix()
 
       do cell = 1,chi_proxy(1)%vspace%get_ncell()
 
@@ -355,7 +336,7 @@ contains
     integer(kind=i_def) :: vert, k
 
     if ( geometry == geometry_spherical .and. &
-         topology == topology_fully_periodic ) then
+         topology == topology_periodic ) then
 
       ! The following code assumes that the mesh generator has ordered the
       ! global cell ids panel-by-panel. If this is ever not the case, the
@@ -454,7 +435,7 @@ contains
         end if
         ! Domain does not have N-S boundaries only if topology completely periodic
         if ( column_coords(2,SWB,k+1) > column_coords(2,NWB,k+1) .and. &
-             topology == topology_fully_periodic ) then
+             topology == topology_periodic ) then
         ! On y boundary
           vertex_local_coords(2,SWB) = domain_y
           vertex_local_coords(2,SEB) = domain_y
