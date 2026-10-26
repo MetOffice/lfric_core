@@ -58,10 +58,11 @@ contains
 
     type(field_real64_type) :: field_cache_field
     type(field_real64_type), pointer :: field_cache_field_ptr
-    type(test_field_64_type), allocatable :: field_cache_test_field
+    type(test_field_64_type), allocatable, target :: field_cache_test_field
     real(real64), pointer :: field_values(:)
 
-    type(field_collection_type) :: depository
+    ! Must be a target as field_cache retains a pointer to it
+    type(field_collection_type), target :: depository
 
     type(field_cache_type) :: field_cache
 

@@ -63,7 +63,8 @@ contains
     character(*),               intent(in)               :: name
     class(field_real32_type),   intent(out), &
                                      allocatable, target :: lfric_field
-    class(test_field_32_type),  intent(out), allocatable :: test_field
+    class(test_field_32_type),  intent(out), &
+                                     allocatable, target :: test_field
     real(real32),               intent(in)               :: value
 
     class(field_real32_type), pointer :: lfric_field_ptr
@@ -105,7 +106,8 @@ contains
     character(*),              intent(in)               :: name
     type(field_real64_type),   intent(out), &
                                     allocatable, target :: lfric_field
-    type(test_field_64_type),  intent(out), allocatable :: test_field
+    type(test_field_64_type),  intent(out), &
+                                    allocatable, target :: test_field
     real(real64),              intent(in)               :: value
 
     type(field_real64_type), pointer :: lfric_field_ptr
@@ -137,7 +139,7 @@ contains
 
     implicit none
 
-    type(test_field_32_type), intent(inout) :: test_field
+    type(test_field_32_type), target, intent(inout) :: test_field
     character(*), optional, intent(in)      :: name
 
     class(field_parent_type),  pointer :: lfric_field
@@ -194,7 +196,7 @@ contains
 
     implicit none
 
-    type(test_field_64_type), intent(inout) :: test_field
+    type(test_field_64_type), target, intent(inout) :: test_field
     character(*), optional, intent(in)      :: name
 
     class(field_parent_type),  pointer :: lfric_field
