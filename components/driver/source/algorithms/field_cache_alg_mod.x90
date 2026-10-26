@@ -58,7 +58,11 @@ contains
 
     integer :: i
 
-    ! Store pointer to the source field collection
+    ! Check and store pointer to the source field collection
+    if (.not. associated(source_field_collection)) then
+      call log_event("field_cache: source field collection is not associated", &
+                     log_level_error)
+    end if
     this%source_field_collection => source_field_collection
 
     ! Store the field names to cache
