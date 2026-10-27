@@ -1982,6 +1982,9 @@ contains
           call log_event(log_scratch_space,LOG_LEVEL_INFO)
       end if
     end if
+    if ( allocated(init_norm) ) deallocate(init_norm)
+    if ( allocated(final_norm) ) deallocate(final_norm)
+    if ( allocated(converged) ) deallocate(converged)
 
   end subroutine chebyshev_solve
 
