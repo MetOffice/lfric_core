@@ -36,14 +36,16 @@ module test_field_mod
   !>   encapsulation of the underlying LFRic field object.
   type, public, extends(abstract_external_field_type) :: test_field_32_type
     private
-    !> Mirror copy of the field data for test access
-    real(real32), pointer :: test_data(:) => null()
+    !> Mirror copy of the field data for test access. This is allocatable
+    !> (not a pointer) so that copies of the object (e.g. from the
+    !> structure constructor) are deep copies and are deallocated
+    !> automatically, avoiding double-frees when temporaries are finalised.
+    real(real32), allocatable :: test_data(:)
   contains
     private
     procedure, public :: copy_from_lfric => copy_32_from_lfric
     procedure, public :: copy_to_lfric => copy_32_to_lfric
     procedure, public :: get_data => get_data_32
-    final :: destroy_32
   end type test_field_32_type
 
   interface test_field_32_type
@@ -58,14 +60,16 @@ module test_field_mod
   !>   encapsulation of the underlying LFRic field object.
   type, public, extends(abstract_external_field_type) :: test_field_64_type
     private
-    !> Mirror copy of the field data for test access
-    real(real64), pointer :: test_data(:) => null()
+    !> Mirror copy of the field data for test access. This is allocatable
+    !> (not a pointer) so that copies of the object (e.g. from the
+    !> structure constructor) are deep copies and are deallocated
+    !> automatically, avoiding double-frees when temporaries are finalised.
+    real(real64), allocatable :: test_data(:)
   contains
     private
     procedure, public :: copy_from_lfric => copy_64_from_lfric
     procedure, public :: copy_to_lfric => copy_64_to_lfric
     procedure, public :: get_data => get_data_64
-    final :: destroy_64
   end type test_field_64_type
 
   interface test_field_64_type
@@ -132,46 +136,6 @@ contains
   end function test_field_64_constructor
 
 
-  !> @brief Destructor for 32-bit test field
-  !> @param [in,out] this  The test field to destroy
-  !> @details
-  !>   Deallocates the internal data array and cleans up resources.
-  !>   Called automatically when the test field object goes out of scope.
-  subroutine destroy_32( this )
-
-    implicit none
-
-    type(test_field_32_type), intent(inout) :: this
-
-    ! Only deallocate if the pointer was actually allocated
-    ! Prevents error if destructor called on uninitialized object
-    if (associated(this%test_data)) then
-      deallocate( this%test_data )
-    end if
-
-  end subroutine destroy_32
-
-
-  !> @brief Destructor for 64-bit test field
-  !> @param [in,out] this  The test field to destroy
-  !> @details
-  !>   Deallocates the internal data array and cleans up resources.
-  !>   Called automatically when the test field object goes out of scope.
-  subroutine destroy_64( this )
-
-    implicit none
-
-    type(test_field_64_type), intent(inout) :: this
-
-    ! Only deallocate if the pointer was actually allocated
-    ! Prevents error if destructor called on uninitialized object
-    if (associated(this%test_data)) then
-      deallocate( this%test_data )
-    end if
-
-  end subroutine destroy_64
-
-
   !> @brief Get pointer to 32-bit test field data array
   !> @param [in] this  The test field object
   !> @return           Pointer to the internal data array
@@ -182,7 +146,7 @@ contains
 
     implicit none
 
-    class(test_field_32_type), intent(in) :: this
+    class(test_field_32_type), target, intent(in) :: this
     real(real32), pointer :: get_data_32(:)
 
     get_data_32 => this%test_data
@@ -200,7 +164,7 @@ contains
 
     implicit none
 
-    class(test_field_64_type), intent(in) :: this
+    class(test_field_64_type), target, intent(in) :: this
     real(real64), pointer :: get_data_64(:)
 
     get_data_64 => this%test_data

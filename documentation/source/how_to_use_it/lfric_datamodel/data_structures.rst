@@ -23,3 +23,4 @@ documentation.
    scalar
    field_collection
    external_field
+   field_cache
