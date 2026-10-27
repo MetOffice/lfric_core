@@ -3,6 +3,8 @@
 # For further details please refer to the file LICENCE which you
 # should have received as part of this distribution.
 ##############################################################################
+# Some of the content of this file has been produced with the assistance of
+# Met Office Github Copilot Enterprise."
 #
 # Run this make file to generate PSyKAl source in WORKING_DIR from algorithms
 # and kernels in SOURCE_DIR. Transformation scripts are sought in
@@ -15,6 +17,30 @@ DSL = psykal
 # Set default psyclone command additional options
 PSYCLONE_PSYKAL_EXTRAS ?= -l all
 #
+# The command used to invoke PSyclone. By default this is the persistent
+# server client (psyclone_client.py) which keeps a single PSyclone instance
+# resident and dispatches jobs to a pool of pre-forked workers, avoiding the
+# repeated cost of loading the Python libraries from disk. It is a drop-in
+# replacement for the "psyclone" binary and falls back to it automatically if
+# the server is unavailable. Override PSYCLONE=psyclone to bypass the server.
+#
+# The server's lifetime is pinned to the owning make process: lfric.mk exports
+# PSYCLONE_OWNER_PID (the pid of the top-level make) and the server exits as
+# soon as that process does, so no server survives the build that started it.
+# Should that variable be unset the client determines the owner itself, by
+# finding the outermost make process in its own ancestry.
+PSYCLONE_MODE ?= standard
+ifeq ($(PSYCLONE_MODE),server)
+    PSYCLONE = $(LFRIC_BUILD)/psyclone/psyclone_client.py
+else
+	PSYCLONE = psyclone
+endif
+#
+# Number of pre-forked PSyclone worker processes. Sized to the build
+# parallelism where known (MAKE_THREADS), otherwise to the number of
+# available processors.
+export PSYCLONE_WORKERS ?= $(if $(MAKE_THREADS),$(MAKE_THREADS),$(shell nproc))
+#
 
 ALGORITHM_F_FILES := $(patsubst $(SOURCE_DIR)/%.X90, \
                                 $(WORKING_DIR)/%.f90, \
@@ -25,7 +51,8 @@ ALGORITHM_f_FILES := $(patsubst $(SOURCE_DIR)/%.x90, \
                                 $(shell find $(SOURCE_DIR) -name '*.x90' -print))
 
 DIRECTORIES := $(patsubst $(SOURCE_DIR)%,$(WORKING_DIR)%, \
-                          $(shell find $(SOURCE_DIR) -type d -printf '%p/\n'))
+                          $(shell find $(SOURCE_DIR) -type d -printf '%p/\n')) \
+			  $(WORKING_DIR)/kernel
 PSYCLONE_CONFIG_FILE ?= $(CORE_ROOT_DIR)/etc/psyclone.cfg
 
 .PHONY: psyclone
@@ -48,9 +75,9 @@ $$(SOURCE_DIR)/psy/$$(notdir $$*)_psy.f90 $(WORKING_DIR)/%_psy.f90
 # Where an optimisation script exists for a specific file, use it.
 #
 $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
-$(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@)
+$(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@) $(WORKING_DIR)/kernel
 	$(call MESSAGE,PSyclone - local optimisation,$(subst $(SOURCE_DIR)/,,$<))
-	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH psyclone -api lfric \
+	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH $(PSYCLONE) -api lfric \
 	           -d $(WORKING_DIR) \
 	           --config $(PSYCLONE_CONFIG_FILE) \
 	           -s $(OPTIMISATION_PATH)/$(DSL)/$*.py \
@@ -63,9 +90,9 @@ $(WORKING_DIR)/%.x90 $$(OPTIMISATION_PATH)/$(DSL)/$$*.py | $$(dir $$@)
 # Where a global optimisation script exists, use it.
 #
 $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
-$(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@)
+$(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@) $(WORKING_DIR)/kernel
 	$(call MESSAGE,PSyclone - global optimisation,$(subst $(SOURCE_DIR)/,,$<))
-	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH psyclone -api lfric \
+	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH $(PSYCLONE) -api lfric \
 	           -d $(WORKING_DIR) \
 	           --config $(PSYCLONE_CONFIG_FILE) \
 	           -s $(OPTIMISATION_PATH)/$(DSL)/global.py \
@@ -78,9 +105,9 @@ $(WORKING_DIR)/%.x90 $(OPTIMISATION_PATH)/$(DSL)/global.py | $$(dir $$@)
 # Where no optimisation script exists, don't use it.
 #
 $(WORKING_DIR)/%.f90 $(WORKING_DIR)/%_psy.f90: \
-$(WORKING_DIR)/%.x90 | $$(dir $$@)
+$(WORKING_DIR)/%.x90 | $$(dir $$@) $(WORKING_DIR)/kernel
 	$(call MESSAGE,PSyclone,$(subst $(SOURCE_DIR)/,,$<))
-	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH psyclone -api lfric \
+	$QPYTHONPATH=$(LFRIC_BUILD)/psyclone:$$PYTHONPATH $(PSYCLONE) -api lfric \
 	           -l all -d $(WORKING_DIR) \
 	           --config $(PSYCLONE_CONFIG_FILE) \
 	           -okern $(WORKING_DIR)/kernel \

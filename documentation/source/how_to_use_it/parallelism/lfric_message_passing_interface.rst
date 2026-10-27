@@ -3,6 +3,9 @@
      The file LICENCE, distributed with this code, contains details of the terms
      under which the code may be used.
    -----------------------------------------------------------------------------
+     Some of the content of this file has been produced with the assistance of
+     Met Office Github Copilot Enterprise.
+   -----------------------------------------------------------------------------
 
 .. _lfric_message_passing_interface:
 
@@ -23,7 +26,7 @@ MPI library to perform the halo exchanges.
 
 That leaves a small selection of global communication functionality that needs
 to be supported, such as global reductions (min/max/sum) and broadcast of
-information from one process to all the others. 
+information from one process to all the others.
 
 This functionality is provided by calls to the system MPI library. These are
 encapsulated in a wrapper object. This insulates the rest of the model code from
@@ -94,6 +97,16 @@ passing functionality.
   data from all MPI tasks into a single array on all MPI tasks. The data in
   ``send_buffer`` from the jth process is received by every process and placed
   in the jth element of the ``recv_buffer``.
+* ``subroutine gather(send_buffer, recv_buffer, count)`` : Gather 1d real data
+  from all MPI tasks into a single array on the root MPI task (rank 0). Each
+  task provides ``count`` items in ``send_buffer``; the data from the jth
+  process is placed in the jth block of ``count`` elements in ``recv_buffer``.
+  The ``recv_buffer`` must be an unallocated allocatable array; it is allocated
+  by the routine to a size of ``count`` multiplied by the number of parallel
+  tasks (or ``count`` in a non-MPI build). It is allocated on all tasks, but
+  only contains valid data on rank 0, and should be deallocated by the caller
+  when no longer required. The value of ``count`` must be the same on all
+  tasks. This subroutine can be used with 32-bit or 64-bit reals.
 * ``subroutine broadcast(buffer, count, root)`` : Broadcasts the information
   held in buffer on processor root to all other parallel tasks. The variable
   count gives the size of buffer (this should be omitted if buffer is a scalar).

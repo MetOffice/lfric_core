@@ -23,7 +23,7 @@ module lfric_mpi_mod
                  mpi_character,                                         &
                  mpi_init, mpi_finalize,                                &
                  mpi_comm_dup, mpi_comm_free,                           &
-                 mpi_comm_size, mpi_comm_rank
+                 mpi_comm_size, mpi_comm_rank, mpi_barrier
 #else
   use mpi_f08, only: mpi_comm, mpi_datatype, mpi_comm_world,                &
                      mpi_sum, mpi_min, mpi_max, mpi_success,                &
@@ -32,10 +32,10 @@ module lfric_mpi_mod
                      mpi_character,                                         &
                      mpi_init, mpi_finalize,                                &
                      mpi_comm_dup, mpi_comm_free,                           &
-                     mpi_comm_size, mpi_comm_rank
+                     mpi_comm_size, mpi_comm_rank, mpi_barrier
 #endif
-! The above use statement should include mpi_bcast, mpi_allreduce and
-! mpi_allgather, but an apparent bug in Cray mpich causes a failure if
+! The above use statement should include mpi_bcast, mpi_allreduce, mpi_gather
+! and mpi_allgather, but an apparent bug in Cray mpich causes a failure if
 ! they are included, so they have been pragmatically omitted.
 #endif
   use log_mod,       only : log_event, LOG_LEVEL_ERROR
@@ -92,10 +92,15 @@ module lfric_mpi_mod
     procedure, public :: global_max_int32
     procedure, public :: global_max_real64
     procedure, public :: global_max_real32
-    generic :: global_max => global_max_int32,  &
+    generic :: global_max => global_max_int32, &
                              global_max_real64, &
                              global_max_real32
-    procedure, public :: all_gather
+    procedure, public :: all_gather_int32
+    generic :: all_gather => all_gather_int32
+    procedure, public :: gather_real64_1d
+    procedure, public :: gather_real32_1d
+    generic :: gather => gather_real64_1d, &
+                         gather_real32_1d
     procedure, public :: broadcast_logical_scalar
     procedure, public :: broadcast_int32_scalar
     procedure, public :: broadcast_real64_scalar
@@ -150,6 +155,7 @@ module lfric_mpi_mod
   contains
     procedure, public :: get_comm_mpi_val
     procedure, public :: set_comm_mpi_val
+    procedure, public :: barrier_mpi
   end type
 
 #ifdef NO_MPI
@@ -720,7 +726,7 @@ contains
   !> @param send_buffer The buffer of data to be sent to all MPI tasks
   !> @param recv_buffer The buffer into which the gathered data will be placed
   !> @param count The number of items in send_buffer
-  subroutine all_gather(self, send_buffer, recv_buffer, count)
+  subroutine all_gather_int32(self, send_buffer, recv_buffer, count)
     implicit none
     class(lfric_mpi_type), intent(inout) :: self
     integer(int32),        intent(in)    :: send_buffer(:)
@@ -751,7 +757,94 @@ contains
       LOG_LEVEL_ERROR )
     end if
 #endif
-  end subroutine all_gather
+  end subroutine all_gather_int32
+
+  !> Gather 64-bit real 1d array data from all MPI tasks into a single array.
+  !> The data on every rank must be the same size.
+  !>
+  !> @param send_buffer The buffer of data to be sent to all MPI tasks
+  !> @param recv_buffer The buffer into which the gathered data will be placed
+  !> @param count The number of items to send from this rank
+  subroutine gather_real64_1d(self, send_buffer, recv_buffer, count)
+    implicit none
+    class(lfric_mpi_type), intent(inout) :: self
+    real(real64), intent(in) :: send_buffer(:)
+    real(real64), allocatable, intent(inout) :: recv_buffer(:)
+    integer(int32), intent(in) :: count
+
+    type(lfric_datatype_type) :: lfric_datatype
+    integer :: err, recv_size
+
+#ifdef NO_MPI
+    ! Send and recv buffers in a gather are the same thing in a non-mpi build
+    recv_size = count
+    allocate(recv_buffer(recv_size))
+    recv_buffer = send_buffer
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
+#else
+    if(self%comm_set)then
+      recv_size = self%comm_size * count
+      allocate(recv_buffer(recv_size))
+      lfric_datatype = get_lfric_datatype(real_type, real64)
+      call mpi_gather(send_buffer, count, lfric_datatype%get_mpi_datatype(), &
+                      recv_buffer, count, lfric_datatype%get_mpi_datatype(), &
+                      0, self%comm, err)
+      if (err /= mpi_success) &
+          call log_event('Call to gather failed with an MPI error.', &
+                         LOG_LEVEL_ERROR)
+    else
+      call log_event(&
+          'Call to gather failed. Must initialise the mpi object first', &
+          LOG_LEVEL_ERROR)
+    end if
+#endif
+  end subroutine gather_real64_1d
+
+  !> Gather 32-bit real 1d array data from all MPI tasks into a single array.
+  !> The data on every rank must be the same size.
+  !>
+  !> @param send_buffer The buffer of data to be sent to all MPI tasks
+  !> @param recv_buffer The buffer into which the gathered data will be placed
+  !> @param count The number of items to send from this rank
+  subroutine gather_real32_1d(self, send_buffer, recv_buffer, count)
+    implicit none
+    class(lfric_mpi_type), intent(inout) :: self
+    real(real32), intent(in) :: send_buffer(:)
+    real(real32), allocatable, intent(out) :: recv_buffer(:)
+    integer(int32), intent(in) :: count
+
+    type(lfric_datatype_type) :: lfric_datatype
+    integer :: err, recv_size
+
+#ifdef NO_MPI
+    ! Send and recv buffers in a gather are the same thing in a non-mpi build
+    recv_size = count
+    allocate(recv_buffer(recv_size))
+    recv_buffer = send_buffer
+    ! Set local variables to avoid unused variable errors
+    lfric_datatype%datatype%mpi_val = 0
+    err=0
+#else
+    if(self%comm_set)then
+      recv_size = self%comm_size * count
+      allocate(recv_buffer(recv_size))
+      lfric_datatype = get_lfric_datatype(real_type, real32)
+      call mpi_gather(send_buffer, count, lfric_datatype%get_mpi_datatype(), &
+                      recv_buffer, count, lfric_datatype%get_mpi_datatype(), &
+                      0, self%comm, err)
+      if (err /= mpi_success) &
+          call log_event('Call to gather failed with an MPI error.', &
+                         LOG_LEVEL_ERROR)
+    else
+      call log_event(&
+           'Call to gather failed. Must initialise the mpi object first', &
+           LOG_LEVEL_ERROR)
+    end if
+#endif
+  end subroutine gather_real32_1d
+
 
   !> Broadcasts a logical scalar from the root MPI task to all other
   !> MPI tasks
@@ -1525,6 +1618,23 @@ contains
 #endif
 #endif
   end subroutine set_comm_mpi_val
+
+  !> Call an MPI Barrier, synchronising ranks in the communicator.
+  subroutine barrier_mpi(self)
+    implicit none
+    class(lfric_comm_type), intent(in)  :: self
+    integer :: ierr
+
+#ifdef NO_MPI
+    ! null operation, barrier is non-existant
+    ierr = 0
+#else
+    call mpi_barrier(self%comm, ierr)
+    if (ierr /= mpi_success) then
+      call log_event('Unable to progress through MPI barrier', LOG_LEVEL_ERROR )
+    end if
+#endif
+  end subroutine barrier_mpi
 
   !> Returns the integer datatype
   !>

@@ -40,7 +40,8 @@ module driver_mesh_mod
                                         log_scratch_space, &
                                         log_level_debug,   &
                                         log_level_error
-  use panel_decomposition_mod,    only: panel_decomposition_type
+  use panel_decomposition_mod,    only: panel_decomposition_type, &
+                                        calc_mapping_factor
   use partition_mod,              only: partitioner_interface
 
   use runtime_partition_lfric_mod, only: get_partition_parameters
@@ -51,11 +52,11 @@ module driver_mesh_mod
 
   use global_mesh_collection_mod, only: global_mesh_collection
   use local_mesh_collection_mod,  only: local_mesh_collection
+  use mesh_mod,                   only: geometry_spherical, &
+                                        topology_periodic
 
   ! Configuration modules
   use finite_element_config_mod, only: cellshape_quadrilateral
-  use base_mesh_config_mod,      only: geometry_spherical, &
-                                       topology_fully_periodic
 
   implicit none
 
@@ -138,6 +139,9 @@ subroutine init_mesh( config,                  &
   character(str_def), allocatable :: tmp_mesh_names(:)
   character(str_max_filename)     :: input_mesh_file
   integer(i_def),     allocatable :: stencil_depths(:)
+  integer(i_def),     allocatable :: mapping_factors(:)
+
+  type(global_mesh_type), pointer :: global_mesh
 
   procedure(partitioner_interface), pointer :: partitioner_ptr
 
@@ -146,6 +150,9 @@ subroutine init_mesh( config,                  &
   character(str_def) :: fmt_str, number_str
 
   integer(i_def) :: i, n_digit
+
+  nullify(global_mesh)
+  nullify(partitioner_ptr)
 
   !============================================================================
   ! Extract configuration variables
@@ -287,7 +294,7 @@ subroutine init_mesh( config,                  &
     generate_inner_halos = config%partitioning%generate_inner_halos()
 
     if ( geometry == geometry_spherical .and. &
-         topology == topology_fully_periodic ) then
+         topology == topology_periodic ) then
       mesh_selection = mesh_cubedsphere
       call log_event( "Setting up cubed-sphere partition mesh(es)", &
                       log_level_debug )
@@ -314,6 +321,13 @@ subroutine init_mesh( config,                  &
     !===========================================================
     call check_global_mesh( config, mesh_names )
 
+    allocate(mapping_factors(size(mesh_names)))
+    do i=1, size(mesh_names)
+      global_mesh => global_mesh_collection%get_global_mesh(mesh_names(i))
+      mapping_factors(i) = calc_mapping_factor(global_mesh, &
+                                               global_mesh_collection)
+    end do
+
     ! 2.2e Partition the global meshes
     !===========================================================
     call create_local_mesh( mesh_names,              &
@@ -322,6 +336,7 @@ subroutine init_mesh( config,                  &
                             stencil_depths,          &
                             generate_inner_halos,    &
                             partitioner_ptr,         &
+                            mapping_factors,         &
                             enforce_constraints=check_partitions )
 
 
