@@ -28,6 +28,8 @@ module runtime_partition_mod
   use local_mesh_collection_mod,  only: local_mesh_collection
   use global_mesh_collection_mod, only: global_mesh_collection
   use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod,            only: ugrid_file_type
+  use ncdf_quad_mod,             only: ncdf_quad_type
 
   implicit none
 
@@ -305,7 +307,8 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
 
   type(local_mesh_type), intent(inout) :: source_local_mesh
 
-  type(ncdf_quad_type) :: file_handler
+  type(ugrid_2d_type) :: ugrid_2d
+  class(ugrid_file_type), allocatable :: file_handler
 
   integer(i_def) :: i, j
   integer(i_def) :: n_meshes
@@ -339,7 +342,9 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
 
   if (allocated(target_names)) then
 
-    call file_handler%file_open(trim(origin_file))
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(origin_file))
 
     ! Loop over each mesh in collection to check if the specific
     ! origin_file & origin_name of the target mesh has been loaded.
@@ -359,7 +364,7 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
           if ( (trim(origin_file) == trim(target_origin_file)) .and. &
                (trim(target_names(j)) == trim(target_origin_name)) ) then
 
-            call load_map( source_local_mesh, target_local_mesh, file_handler )
+            call load_map( source_local_mesh, target_local_mesh, ugrid_2d )
 
           end if ! Checking if this is the correct target mesh
         end if ! The pointer is associated
@@ -368,7 +373,7 @@ subroutine create_local_mesh_maps_from_object( source_local_mesh )
 
     end do ! Loop over the numner of targets listed by the source mesh
 
-    call file_handler%file_close()
+    call ugrid_2d%file_handler_close()
 
   end if ! test if the source has any targets listed
 
