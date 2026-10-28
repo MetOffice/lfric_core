@@ -35,7 +35,6 @@ contains
     use mesh_mod,                  only : geometry_planar, &
                                           topology_periodic
     use feign_config_mod,          only : feign_base_mesh_config
-
     implicit none
 
     class(sample_wtheta_to_w3_test_type), intent(inout) :: this
