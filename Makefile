@@ -19,12 +19,12 @@ OPERATE_ON ?= infrastructure                \
               components/lfric-xios         \
               components/inventory          \
               components/coupling           \
-              mesh_tools                    \
-              applications/skeleton         \
-              applications/simple_diffusion \
               applications/coupled          \
+              applications/io_demo          \
               applications/lbc_demo         \
-              applications/io_demo
+              applications/mesh_tools       \
+              applications/skeleton         \
+              applications/simple_diffusion
 
 export SUITE_GROUP ?= developer
 export SUITE_GROUP_NAME ?= $(notdir $(realpath $(shell pwd)))-.*

@@ -21,9 +21,10 @@ The repository contains the following directories:
   applications to use the XIOS IO library, and the **driver**
   component contains code that can support the construction of the
   top-level calling tree and data structures of a typical LFRic application.
-- The ``mesh_tools`` directory contains application code to generate
-  meshes used by LFRic applications.
-- The ``apps`` directory contains application code.
+- The ``applications`` directory contains application code, including:
+
+  - The ``mesh_tools`` directory contains application code to generate
+    meshes used by LFRic applications.
 
 Many of the directories contain directories of unit and integration
 tests, directories of Rose metadata and Rose Stem tasks for supporting

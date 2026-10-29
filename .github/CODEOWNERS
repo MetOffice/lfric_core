@@ -8,10 +8,10 @@
 * @MetOffice/core-capability-development
 
 # Applications
-/applications/           @MetOffice/core-capability-development
-/applications/coupled/   @mike-hobson # @MetOffice/core-capability-development
-/applications/lbc_demo/  @mo-rickywong # @MetOffice/core-capability-development
-/mesh_tools/             @mo-rickywong # @MetOffice/core-capability-development
+/applications/            @MetOffice/core-capability-development
+/applications/coupled/    @mike-hobson # @MetOffice/core-capability-development
+/applications/lbc_demo/   @mo-rickywong # @MetOffice/core-capability-development
+/applications/mesh_tools/ @mo-rickywong # @MetOffice/core-capability-development
 
 # Components
 /components/            @MetOffice/core-capability-development

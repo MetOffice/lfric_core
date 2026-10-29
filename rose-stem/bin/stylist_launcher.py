@@ -49,16 +49,16 @@ if __name__ == "__main__":
     #
     candidates = [
         "infrastructure",
-        "mesh_tools",
         "components/coupling",
         "components/driver",
         "components/science",
         "components/inventory",
         "components/lfric-xios",
-        "applications/skeleton",
-        "applications/simple_diffusion",
         "applications/io_demo",
         "applications/lbc_demo",
+        "applications/mesh_tools",
+        "applications/skeleton",
+        "applications/simple_diffusion",
     ]
     for app in candidates:
         print(f"Running on {app}\n")

@@ -17,9 +17,9 @@ from os import path
 APPLICATIONS = [
     "applications/io_demo",
     "applications/lbc_demo",
+    "applications/mesh_tools",
     "applications/simple_diffusion",
     "applications/skeleton",
-    "mesh_tools",
     "rose-stem",
 ]
 

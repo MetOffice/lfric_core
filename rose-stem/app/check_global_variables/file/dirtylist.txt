@@ -25,12 +25,12 @@ infrastructure/source/utilities/log_mod.F90
 infrastructure/source/utilities/lfric_mpi_mod.F90
 infrastructure/source/utilities/timer_mod.F90
 infrastructure/source/utilities/timing_mod.F90
-mesh_tools/source/support/calc_global_cell_map_mod.F90
-mesh_tools/source/support/gen_lbc_mod.F90
-mesh_tools/source/support/gen_planar_mod.F90
-mesh_tools/source/support/gencube_ps_mod.F90
 applications/io_demo/source/algorithm/io_demo_constants_mod.x90
 applications/io_demo/source/driver/io_demo_driver_mod.f90
 applications/lbc_demo/source/driver/lbc_demo_driver_mod.f90
+applications/mesh_tools/source/support/calc_global_cell_map_mod.F90
+applications/mesh_tools/source/support/gen_lbc_mod.F90
+applications/mesh_tools/source/support/gen_planar_mod.F90
+applications/mesh_tools/source/support/gencube_ps_mod.F90
 applications/simple_diffusion/source/algorithm/simple_diffusion_constants_mod.x90
 applications/skeleton/source/algorithm/skeleton_constants_mod.x90

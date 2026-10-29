@@ -62,9 +62,6 @@ applications/**/test
 applications/**/documents
 applications/**/example*/
 applications/**/fab-workspace/
-mesh_tools/**/bin
-mesh_tools/**/working
-mesh_tools/**/test
 components/**/bin
 components/**/working
 components/**/test

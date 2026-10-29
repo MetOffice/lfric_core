@@ -20,9 +20,9 @@ VALID_CORE = [
     "components/lfric-xios",
     "components/science",
     "infrastructure",
-    "mesh_tools",
     "applications/io_demo",
     "applications/lbc_demo",
+    "applications/mesh_tools",
     "applications/simple_diffusion",
     "applications/skeleton",
 ]

@@ -87,7 +87,7 @@ output-format = "grouped"              #group results by file
 "get_unit_test_qfaces_mod.f90" = ["C081"]
 "sci_psykal_light_mod.f90" = ["C132"]
 
-# mesh_tools/source:
+# applications/mesh_tools/source:
 "calc_global_cell_map_mod.F90" = ["C081"]
 "gen_lbc_mod.F90" = ["C081"]
 "gen_planar_mod.F90" = ["C081"]
