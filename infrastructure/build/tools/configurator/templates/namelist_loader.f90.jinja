@@ -123,7 +123,7 @@ contains
     enum_value = emdi
 
     if (key == unset_key) then
-      if (log_level() >= LOG_LEVEL_DEBUG ) then
+      if (log_level() <= LOG_LEVEL_DEBUG ) then
         write(output_unit, '(A)') &
             'Missing key for {{name}} enumeration ' // &
             'in {{listname}} namelist.'
@@ -270,7 +270,7 @@ contains
       write(error_unit, '(A)') &
           'Unable to allocate temporary array for "{{name}}"'
       flush(error_unit)
-      stop 1
+      stop 2
     end if
 {%-     endif %}
 {%-   endfor %}
@@ -301,7 +301,7 @@ contains
       if (condition /= 0) then
         write(error_unit, '(A)') trim(log_scratch_space)
         flush(error_unit)
-        stop 1
+        stop 3
       end if
 
 {%- for name in enumerations | sort %}
