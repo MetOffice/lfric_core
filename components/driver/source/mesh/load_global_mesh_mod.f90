@@ -16,6 +16,7 @@ module load_global_mesh_mod
 
   use global_mesh_collection_mod, only: global_mesh_collection_type, &
                                         global_mesh_collection
+  use ugrid_2d_mod,   only: ugrid_2d_type
 
   implicit none
 
@@ -35,17 +36,20 @@ contains
 !>                             populate <global_mesh_type> object.
 !> @param[in] mesh_names       The names of the global meshes to load
 !>                             from the <input_mesh_file>.
+!> @param[inout]  ugrid_2d ugrid_2d_type to interact with an open file.
 !> @param[in] rename_to        [Optional] Alternative names to store
 !>                              meshes in memory, array length should match
 !>                              the mesh_names argument.
 subroutine load_global_mesh_multiple( input_mesh_file, &
                                       mesh_names,      &
+                                      ugrid_2d,        &
                                       rename_to )
 
   implicit none
 
   character(*), intent(in) :: input_mesh_file
   character(*), intent(in) :: mesh_names(:)
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   character(*), intent(in), optional :: rename_to(:)
 
@@ -75,8 +79,10 @@ subroutine load_global_mesh_multiple( input_mesh_file, &
   end if
 
   do i=1, size(mesh_names)
-    call load_global_mesh_single( input_mesh_file, &
-                                  mesh_names(i), rename_to=names(i) )
+    call load_global_mesh_single( input_mesh_file,    &
+                                  mesh_names(i),      &
+                                  ugrid_2d, &
+                                  rename_to=names(i) )
   end do
 
 end subroutine load_global_mesh_multiple
@@ -88,10 +94,13 @@ end subroutine load_global_mesh_multiple
 !>                             populate <global_mesh_type> object.
 !> @param[in] mesh_name        The name of the global mesh to load
 !>                             from the <input_mesh_file>.
+!> @param[inout]  ugrid_2d ugrid_2d_type to interact with an open file.
 !> @param[in] rename_to        [Optional] Alternative name to store
 !>                              mesh in memory.
 subroutine load_global_mesh_single( input_mesh_file, &
-                                    mesh_name, rename_to )
+                                    mesh_name,       &
+                                    ugrid_2d,        &
+                                    rename_to )
 
   implicit none
 
@@ -105,6 +114,7 @@ subroutine load_global_mesh_single( input_mesh_file, &
   type(global_mesh_type)     :: global_mesh
 
   character(:), allocatable :: name
+  type(ugrid_2d_type), intent(inout) :: ugrid_2d
 
   name = mesh_name
   if ( present(rename_to) ) name = rename_to
@@ -118,7 +128,7 @@ subroutine load_global_mesh_single( input_mesh_file, &
 
     ! Load mesh data into global_mesh
     call ugrid_mesh_data%read_from_file( trim(input_mesh_file), &
-                                         mesh_name )
+                                         mesh_name, ugrid_2d )
 
     global_mesh = global_mesh_type( ugrid_mesh_data, rename_to=name )
     call ugrid_mesh_data%clear()
