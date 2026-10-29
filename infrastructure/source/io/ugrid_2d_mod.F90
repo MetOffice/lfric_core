@@ -558,8 +558,8 @@ subroutine file_handler_read_map( self,             &
   implicit none
 
   class(ugrid_2d_type), intent(inout) :: self
-  character(str_def), intent(inout)  :: source_mesh_name
-  character(str_def), intent(inout)  :: target_mesh_name
+  character(str_def), intent(in)  :: source_mesh_name
+  character(str_def), intent(in)  :: target_mesh_name
   integer(i_def),     intent(out), allocatable :: mesh_map(:,:,:)
 
   if ( .not. allocated (self%file_handler) ) then
