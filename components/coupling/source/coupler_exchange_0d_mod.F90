@@ -77,17 +77,17 @@ module coupler_exchange_0d_mod
                            trim(name), &
                            " sent with value = ", scalar
         call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
-      endif
+      end if
     else
       write(log_scratch_space, '(3A)' ) "coupler_send_0d: field ", &
                      trim(name), " NOT exchanged on this timestep"
       call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
-    endif
+    end if
   else
     write(log_scratch_space, '(3A)' ) "PROBLEM coupler_send_0d: field ", &
                                       trim(name), " cpl_id NOT set"
     call log_event( log_scratch_space, LOG_LEVEL_ERROR )
-  endif
+  end if
 
 #else
   write(log_scratch_space, '(A)' ) &

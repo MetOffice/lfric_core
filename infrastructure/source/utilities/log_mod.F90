@@ -164,8 +164,8 @@ contains
             ! Sole rank identified for logging, do not log this rank.
             emit_log_message = .false.
           end if
-        endif
-      endif
+        end if
+      end if
       ! Only initialise log file if emit_log_message.
       if (emit_log_message) then
         ilen = int( log10( real( total_ranks - 1 ) ) ) + 1
@@ -182,7 +182,7 @@ contains
                  '("Cannot open logging file. iostat = ", i0)' ) status
           call abort_model()
         end if
-      endif
+      end if
     end if
 #endif
 
@@ -230,7 +230,7 @@ contains
         end if
         call log_forget_timestep()
         deallocate( petno )
-      endif
+      end if
 
 #ifdef NO_MPI
       ! No barriers required in non-mpi build
@@ -460,7 +460,7 @@ contains
         ! it before the model fails
         flush(unit)
 
-      endif
+      end if
 
       if (trace) then
         call traceback()
