@@ -1989,8 +1989,8 @@ contains
       if ( self%monitor_convergence ) then
         converged(:) = .false.
         final_iter = iter
-        call self%lin_op%apply(x,z) ! z = M.x
-        call z%axpy(-1.0_r_def, b)  ! z = M.x-b
+        call self%lin_op%apply(config, x,z) ! z = M.x
+        call z%axpy(-1.0_r_def, b)          ! z = M.x-b
 
         do n = 1, n_fields
           final_norm(n) = z%field_norm(n)
