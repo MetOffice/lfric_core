@@ -19,7 +19,7 @@ module get_dz_w3_kernel_mod_test
   implicit none
 
   private
-  public :: test_all
+  public :: setUp, tearDown, test_all
 
   @TestCase
   type, extends(TestCase), public :: get_dz_w3_kernel_test_type
