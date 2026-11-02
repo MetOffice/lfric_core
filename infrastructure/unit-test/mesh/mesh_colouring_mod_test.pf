@@ -20,6 +20,9 @@ module mesh_colouring_mod_test
   use local_mesh_mod,             only : local_mesh_type
   use ugrid_mesh_data_mod,        only : ugrid_mesh_data_type
   use panel_decomposition_mod, only: custom_decomposition_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   implicit none
 
@@ -132,11 +135,22 @@ subroutine test_compute_colours_cubedsphere(this)
 
   logical(l_def), parameter :: generate_inner_halos = .true.
   logical(l_def), parameter :: enforce_constraints  = .false.
+  type(ugrid_2d_type) :: ugrid_2d
+
+  class(ugrid_file_type), allocatable :: file_handler
 
   filename = "data/mesh_C4.nc"
-  call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+  allocate( ncdf_quad_type :: file_handler )
+  call ugrid_2d%set_file_handler( file_handler )
+  call ugrid_2d%file_handler_open(trim(filename))
+  ! Run through mesh construction process to initialise tiling via
+  ! the mesh_type API
+  call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
   global_mesh = global_mesh_type( ugrid_mesh_data )
   call ugrid_mesh_data%clear()
+  call ugrid_2d%file_handler_close()
+  if (allocated(file_handler)) deallocate( file_handler )
+
   global_mesh_ptr => global_mesh
   decomposition = custom_decomposition_type(this%xproc, this%yproc)
 
@@ -259,11 +273,22 @@ subroutine test_compute_colours_biperiodic(this)
   logical(l_def), parameter :: generate_inner_halos = .true.
   logical(l_def), parameter :: enforce_constraints  = .false.
   integer(i_def), parameter :: max_stencil_depth    = 1
+  type(ugrid_2d_type) :: ugrid_2d
+
+  class(ugrid_file_type), allocatable :: file_handler
 
   filename = "data/mesh_BiP8x8-750x250.nc"
-  call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+  allocate( ncdf_quad_type :: file_handler )
+  call ugrid_2d%set_file_handler( file_handler )
+  call ugrid_2d%file_handler_open(trim(filename))
+  ! Run through mesh construction process to initialise tiling via
+  ! the mesh_type API
+  call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
   global_mesh = global_mesh_type( ugrid_mesh_data )
   call ugrid_mesh_data%clear()
+  call ugrid_2d%file_handler_close()
+  if (allocated(file_handler)) deallocate( file_handler )
+
   global_mesh_ptr => global_mesh
   decomposition = custom_decomposition_type(this%xproc, this%yproc)
 
@@ -362,13 +387,22 @@ subroutine test_compute_colours_generic(this)
   logical(l_def), parameter :: generate_inner_halos = .true.
   logical(l_def), parameter :: enforce_constraints  = .false.
   integer(i_def), parameter :: max_stencil_depth    = 1
+  type(ugrid_2d_type) :: ugrid_2d
 
+  class(ugrid_file_type), allocatable :: file_handler
+
+  filename = "data/mesh_C4.nc"
+  allocate( ncdf_quad_type :: file_handler )
+  call ugrid_2d%set_file_handler( file_handler )
+  call ugrid_2d%file_handler_open(trim(filename))
   ! Force colour generator to use generic colour routine by not saying
   ! it's a cubed sphere
-  filename = "data/mesh_C4.nc"
-  call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+  call ugrid_mesh_data%read_from_file( trim(filename), mesh_name, ugrid_2d )
   global_mesh = global_mesh_type( ugrid_mesh_data )
   call ugrid_mesh_data%clear()
+  call ugrid_2d%file_handler_close()
+  if (allocated(file_handler)) deallocate( file_handler )
+
   global_mesh_ptr => global_mesh
 
   partitioner_ptr => partitioner_cubedsphere_serial

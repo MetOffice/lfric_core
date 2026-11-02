@@ -26,6 +26,9 @@ module create_mesh_mod_test
   use extrusion_config_mod,    only: method_uniform
   use partitioning_config_mod, only: panel_decomposition_auto, &
                                      partitioner_planar
+  use ugrid_2d_mod,            only: ugrid_2d_type
+  use ugrid_file_mod,          only: ugrid_file_type
+  use ncdf_quad_mod,           only: ncdf_quad_type
 
   use pfunit
 
@@ -94,6 +97,13 @@ contains
     integer(i_def)                                :: local_mesh_id
 
     logical(l_def), parameter :: enforce_constraints = .true.
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
+
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     ! Reset in case of repeated initialisation
     call mesh_collection%clear()
@@ -104,7 +114,7 @@ contains
     nullify( partitioner_ptr )
 
     ! Read mesh from file and initialise mesh collections
-    call ugrid_mesh_data%read_from_file( trim( filename ), mesh_name )
+    call ugrid_mesh_data%read_from_file( trim( filename ), mesh_name, ugrid_2d )
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
     call global_mesh_collection%add_new_global_mesh( global_mesh )

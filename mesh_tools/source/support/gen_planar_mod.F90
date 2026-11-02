@@ -1816,7 +1816,7 @@ subroutine recentre_high_resolution_region(self)
     self%domain_extents(axis_direction, :) = self%domain_extents(axis_direction, :) &
                                            + offset
 
-  enddo
+  end do
 
 end subroutine recentre_high_resolution_region
 

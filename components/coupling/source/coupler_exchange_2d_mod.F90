@@ -145,7 +145,7 @@ end type  coupler_exchange_2d_type
       do i = 1, self%coupling_size
         sorted_data(i) = &
             field_proxy%data((self%sorting_index(i)-1)*ndata+nmulti)
-      enddo
+      end do
 
       ! Send the data to the coupler
       call oasis_put(var_id, self%coupling_time, sorted_data(:), kinfo)
@@ -159,9 +159,9 @@ end type  coupler_exchange_2d_type
       write(log_scratch_space, '(3A)' ) "Error: coupler_send_2d: Field: ", &
                                         trim(name), " - cpl_id NOT set"
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )
-    endif
+    end if
 
-  enddo
+  end do
 
   if( present(return_code) ) return_code = ierror
 
@@ -230,7 +230,7 @@ end type  coupler_exchange_2d_type
         do i = 1, self%coupling_size
           field_proxy%data((self%sorting_index(i)-1)*ndata+nmulti) = &
                                                                  sorted_data(i)
-        enddo
+        end do
         write(log_scratch_space, '(3A)' ) "cpl_field_receive: field ", &
                            trim(name), " received"
         call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
@@ -239,13 +239,13 @@ end type  coupler_exchange_2d_type
         write(log_scratch_space, '(3A)' ) "cpl_field_receive: field ", &
                            trim(name), " NOT exchanged on this timestep"
         call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
-      endif
+      end if
     else
       write(log_scratch_space, '(3A)' ) "PROBLEM cpl_field_receive: field ", &
                                          trim(name), " cpl_id NOT set"
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )
-    endif
-  enddo
+    end if
+  end do
 
   call field_proxy%set_dirty()
 
