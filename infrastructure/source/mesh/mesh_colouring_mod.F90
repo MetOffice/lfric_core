@@ -858,7 +858,7 @@ contains
       if(used_colours(idx) == 0) then
         colour = idx
         exit
-      endif
+      end if
     end do
 
   end function choose_colour_greedy

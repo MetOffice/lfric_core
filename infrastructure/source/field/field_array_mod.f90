@@ -86,7 +86,7 @@ contains
         call self%bundle(i)%field_final()
       end do
       deallocate(self%bundle)
-    endif
+    end if
 
   end subroutine clear
 
