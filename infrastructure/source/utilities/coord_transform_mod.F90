@@ -740,7 +740,7 @@ function identify_panel(x,y,z) result(panel_id)
 
   if (z<-abs(x) .and. z<-abs(y))then
     panel_id = 6
-  elseif (z>abs(x) .and. z>abs(y))then
+  else if (z>abs(x) .and. z>abs(y))then
     panel_id = 5
   else
     call xyz2llr(x, y, z, lon, lat, radius)

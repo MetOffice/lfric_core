@@ -628,7 +628,7 @@ subroutine create_checkpoint_list(clock, &
     end if
   else
     allocate(checkpoint_times_output, source=checkpoint_times_input)
-  endif
+  end if
 
 end subroutine create_checkpoint_list
 
