@@ -21,6 +21,6 @@
 
   </context>
 
-  <context src="etc/xios.xml"/>
+  <context id="xios" src="./etc/xios.xml"/>
 
 </simulation>

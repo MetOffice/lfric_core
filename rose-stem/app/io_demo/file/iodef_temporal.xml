@@ -3,9 +3,9 @@
 
   <context id = "io_demo">
 
-   <axis_definition src="metadata/axis_dictionary.xml"/>
-   <grid_definition src="metadata/grid_dictionary.xml"/>
-   <field_definition src="metadata/field_dictionary.xml"/>
+   <axis_definition src="./metadata/axis_dictionary.xml"/>
+   <grid_definition src="./metadata/grid_dictionary.xml"/>
+   <field_definition src="./metadata/field_dictionary.xml"/>
 
    <file_definition
       type="one_file"
@@ -22,6 +22,6 @@
   <!-- Pull in partial context definition for temporal I/O from XML fragment -->
   <context id="temporal_context" src="./temporal_context.xml"/>
 
-  <context src="etc/xios.xml"/>
+  <context id="xios" src="./etc/xios.xml"/>
 
 </simulation>

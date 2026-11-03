@@ -23,7 +23,7 @@ module driver_io_mod
   use io_context_mod,          only: io_context_type
   use log_mod,                 only: log_event, log_level_error, &
                                      log_level_trace, log_level_info, &
-                                     log_scratch_space
+                                     log_scratch_space, log_level_debug
 #ifdef USE_XIOS
   use lfric_xios_context_mod,  only: lfric_xios_context_type
 #endif
@@ -129,7 +129,12 @@ contains
         call before_close(modeldb%config, modeldb%clock)
       end if
 
+      call log_event('XIOS context setup complete', log_level_debug)
+
       call context%close_context_definition()
+
+      call log_event('XIOS context definition closed', log_level_debug)
+
 
 #else
       call log_event( "Cannot use XIOS I/O: model has not been built with " // &
