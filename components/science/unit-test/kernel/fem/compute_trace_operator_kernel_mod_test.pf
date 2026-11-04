@@ -14,7 +14,7 @@ module compute_trace_operator_kernel_mod_test
   implicit none
 
   private
-  public :: test_all
+  public :: setUp, tearDown, test_all
 
   @TestCase
   type, extends(TestCase), public :: compute_trace_operator_test_type

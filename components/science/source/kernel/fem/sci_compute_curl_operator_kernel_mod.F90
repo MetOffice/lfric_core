@@ -6,20 +6,19 @@
 module sci_compute_curl_operator_kernel_mod
 
   use argument_mod,            only: arg_type, func_type,       &
-                                     GH_OPERATOR, GH_FIELD,     &
+                                     GH_OPERATOR,               &
+                                     GH_FIELD, GH_SCALAR,       &
                                      GH_READ, GH_WRITE,         &
-                                     GH_REAL, ANY_SPACE_1,      &
+                                     GH_REAL,  GH_INTEGER,      &
+                                     ANY_SPACE_1,               &
                                      ANY_DISCONTINUOUS_SPACE_3, &
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
+
   use constants_mod,           only: r_def, i_def
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
   use fs_continuity_mod,       only: W1, W2
   use kernel_mod,              only: kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -31,10 +30,14 @@ module sci_compute_curl_operator_kernel_mod
 
   type, public, extends(kernel_type) :: compute_curl_operator_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                      &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W1),                   &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_1),              &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3) &
+    type(arg_type) :: meta_args(7) = (/                                       &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W2, W1),                    & ! curl
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_1),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                           & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(3) = (/                                    &
          func_type(W2,          GH_BASIS),                                   &
@@ -63,6 +66,10 @@ contains
 !! @param[in] chi2 2nd component of coordinate field
 !! @param[in] chi3 3rd component of coordinate field
 !! @param[in] panel_id A field giving the ID for mesh panels.
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] ndf_w2 Number of degrees of freedom per cell for W2.
 !! @param[in] basis_w2 W2 vector basis functions evaluated at quadrature points.
 !! @param[in] ndf_w1 Number of degrees of freedom per cell for W1.
@@ -83,6 +90,8 @@ contains
 subroutine compute_curl_operator_code(cell, nlayers, ncell_3d,          &
                                       curl,                             &
                                       chi1, chi2, chi3, panel_id,       &
+                                      geometry, topology,               &
+                                      coord_system, scaled_radius,      &
                                       ndf_w2, basis_w2,                 &
                                       ndf_w1, diff_basis_w1,            &
                                       ndf_chi, undf_chi, map_chi,       &
@@ -114,6 +123,11 @@ subroutine compute_curl_operator_code(cell, nlayers, ncell_3d,          &
   real(kind=r_def), dimension(undf_pid),               intent(in)    :: panel_id
   real(kind=r_def), dimension(nqp_h),                  intent(in)    :: wqp_h
   real(kind=r_def), dimension(nqp_v),                  intent(in)    :: wqp_v
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df1, df2, k, ik, ipanel

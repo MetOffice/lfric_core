@@ -6,7 +6,9 @@
 
 module convert_hdiv_native_kernel_mod_test
 
-  use constants_mod,                       only : i_def, r_def, PI
+  use constants_mod,             only: i_def, r_def, pi, imdi, rmdi
+  use finite_element_config_mod, only: coord_system_xyz
+
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size, &
                                                   get_w2_m3x3_q3x3x3_size, &
                                                   get_w3_m3x3_q3x3x3_size
@@ -30,26 +32,13 @@ contains
   @before
   subroutine set_up()
 
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-    use sci_chi_transform_mod,     only : init_chi_transforms
+    use sci_chi_transform_mod, only: init_chi_transforms
 
     implicit none
 
     real(r_def), parameter :: geostrophic_north_pole(2) = [0.0_r_def, PI/2.0_r_def]
     real(r_def), parameter :: null_island(2) = [0.0_r_def, 0.0_r_def]
     real(r_def), parameter :: equator_latitude = 0.0_r_def
-
-    call feign_finite_element_config(           &
-             cellshape=cellshape_quadrilateral, &
-             coord_order=0_i_def,               &
-             coord_order_nonprime=1_i_def,      &
-             coord_space=coord_space_wchi,      &
-             coord_system=coord_system_xyz,     &
-             element_order_h=0_i_def,           &
-             element_order_v=0_i_def,           &
-             rehabilitate=.true. )
 
     ! Note: Calling 'init_chi_transforms' is only valid for meshes which have a
     !       spherical geometry and coordinate system. While it may not be relevant
@@ -66,12 +55,10 @@ contains
   @after
   subroutine tear_down()
 
-    use config_loader_mod,     only: final_configuration
     use sci_chi_transform_mod, only: final_chi_transforms
 
     implicit none
 
-    call final_configuration()
     call final_chi_transforms()
 
   end subroutine tear_down
@@ -89,6 +76,11 @@ contains
     real(r_def), parameter :: dx = 6000.0_r_def, &
                               dy = 1000.0_r_def, &
                               dz = 2000.0_r_def
+
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
     real(kind=r_def) :: answer, use_tol
 
@@ -164,6 +156,8 @@ contains
                                   chi2,                            &
                                   chi3,                            &
                                   panel_id,                        &
+                                  geometry, topology,              &
+                                  coord_system, scaled_radius,     &
                                   ndf_w2, undf_w2, map_w2(:,cell), &
                                   basis_w2,                        &
                                   ndf_w0, undf_w0, map_w0(:,cell), &

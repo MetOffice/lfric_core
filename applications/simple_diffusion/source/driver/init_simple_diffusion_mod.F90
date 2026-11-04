@@ -87,7 +87,7 @@ module init_simple_diffusion_mod
     ! Create simple_diffusion runtime constants. This creates various things
     ! needed by the fem algorithms such as mass matrix operators, mass
     ! matrix diagonal fields and the geopotential field
-    call create_simple_diffusion_constants(mesh, chi, panel_id)
+    call create_simple_diffusion_constants(modeldb%config, mesh, chi, panel_id)
 
     call log_event( 'simple_diffusion: Miniapp initialised', log_level_trace )
 

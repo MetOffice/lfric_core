@@ -14,7 +14,8 @@ module sci_convert_hcurl_field_kernel_mod
 
 use kernel_mod,              only : kernel_type
 use argument_mod,            only : arg_type, func_type,       &
-                                    GH_FIELD, GH_REAL,         &
+                                    GH_FIELD, GH_SCALAR,       &
+                                    GH_REAL, GH_INTEGER,       &
                                     GH_READ, GH_INC,           &
                                     ANY_SPACE_9, ANY_SPACE_1,  &
                                     ANY_DISCONTINUOUS_SPACE_3, &
@@ -32,11 +33,15 @@ private
 !> The type declaration for the kernel. Contains the metadata needed by the Psy layer
 type, public, extends(kernel_type) :: convert_hcurl_field_kernel_type
   private
-  type(arg_type) :: meta_args(4) = (/                                    &
-       arg_type(GH_FIELD*3, GH_REAL, GH_INC,  ANY_SPACE_1),              &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_SPACE_1),              &
-       arg_type(GH_FIELD*3, GH_REAL, GH_READ, ANY_SPACE_9),              &
-       arg_type(GH_FIELD,   GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_3) &
+  type(arg_type) :: meta_args(8) = (/                                        &
+       arg_type(GH_FIELD*3, GH_REAL,    GH_INC,  ANY_SPACE_1),               & ! physical_field1, physical_field2, physical_field3
+       arg_type(GH_FIELD,   GH_REAL,    GH_READ, ANY_SPACE_1),               & ! computational_field
+       arg_type(GH_FIELD*3, GH_REAL,    GH_READ, ANY_SPACE_9),               & ! chi1, chi2, chi3
+       arg_type(GH_FIELD,   GH_REAL,    GH_READ, ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                            & ! geometry
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                            & ! topology
+       arg_type(GH_SCALAR,  GH_INTEGER, GH_READ),                            & ! coord_system
+       arg_type(GH_SCALAR,  GH_REAL,    GH_READ)                             & ! scaled_radius
        /)
   type(func_type) :: meta_funcs(2) = (/                                  &
        func_type(ANY_SPACE_1, GH_BASIS),                                 &
@@ -63,6 +68,10 @@ contains
 !> @param[in] chi_2 2nd coordinate field in Wchi
 !> @param[in] chi_3 3rd coordinate field in Wchi
 !> @param[in] panel_id  Field giving the ID for mesh panels
+!! @param[in] geometry            Mesh geometry enumeration
+!! @param[in] topology            Mesh topology enumeration
+!! @param[in] coord_system        Finite-element coordinate system enumeration
+!! @param[in] scaled_radius       Scaled planet radius
 !> @param[in] ndf Number of degrees of freedom per cell for the output field
 !> @param[in] undf Number of unique degrees of freedom for the output field
 !> @param[in] map Dofmap for the cell at the base of the column for the output field
@@ -82,6 +91,8 @@ subroutine convert_hcurl_field_code(nlayers,                                  &
                                     physical_field3,                          &
                                     computational_field,                      &
                                     chi1, chi2, chi3, panel_id,               &
+                                    geometry, topology,                       &
+                                    coord_system, scaled_radius,              &
                                     ndf, undf, map,                           &
                                     basis,                                    &
                                     ndf_chi, undf_chi, map_chi,               &
@@ -91,10 +102,6 @@ subroutine convert_hcurl_field_code(nlayers,                                  &
 
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian, &
                                          coordinate_jacobian_inverse
-
-  use finite_element_config_mod, only: coord_system
-  use base_mesh_config_mod,      only: geometry, topology
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -115,6 +122,11 @@ subroutine convert_hcurl_field_code(nlayers,                                  &
   real(kind=r_def), dimension(1,ndf_chi,ndf), intent(in) :: basis_chi
   real(kind=r_def), dimension(3,ndf_chi,ndf), intent(in) :: diff_basis_chi
   real(kind=r_def), dimension(3,ndf,ndf),     intent(in) :: basis
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def) :: df, df2, k, ipanel
