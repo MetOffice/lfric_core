@@ -126,11 +126,11 @@ type, public :: ugrid_2d_type
   type(local_mesh_map_collection_type),  pointer :: target_local_mesh_maps => null()
 
   ! Information about the domain orientation
-  real(r_def) :: north_pole(2)        !< [Longitude, Latitude] of north pole used
-                                      !< for the domain orientation (degrees)
-  real(r_def) :: null_island(2) = rmdi !< [Longitude, Latitude] of null island
-                                      !< used for the domain orientation (degrees)
-  real(r_def) :: equatorial_latitude  !< Latitude of equator of mesh (degrees)
+  real(r_def) :: north_pole(2)  = rmdi       !< [Longitude, Latitude] of north pole used
+                                             !< for the domain orientation (degrees)
+  real(r_def) :: null_island(2) = rmdi       !< [Longitude, Latitude] of null island
+                                             !< used for the domain orientation (degrees)
+  real(r_def) :: equatorial_latitude = rmdi  !< Latitude of equator of mesh (degrees)
 
   ! File handler
   class(ugrid_file_type), allocatable :: file_handler
