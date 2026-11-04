@@ -18,7 +18,7 @@ module gp_rhs_kernel_mod_test
   implicit none
 
   private
-  public :: test_all
+  public :: setUp, tearDown, test_all
 
   @TestCase
   type, extends(TestCase), public :: gp_rhs_test_type
@@ -42,7 +42,6 @@ module gp_rhs_kernel_mod_test
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @before
   subroutine setUp( this )
 
     use sci_chi_transform_mod, only: init_chi_transforms
@@ -83,7 +82,6 @@ contains
   end subroutine setUp
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @after
   subroutine tearDown( this )
 
     use sci_chi_transform_mod, only: final_chi_transforms
