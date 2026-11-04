@@ -53,7 +53,7 @@ contains
 subroutine format_field(xios_data, field_name, fpxy, m, n, legacy)
   implicit none
 
-  real(dp_xios),                  intent(in out):: xios_data(:)
+  real(dp_xios),                  intent(inout):: xios_data(:)
   character(len=*),               intent(in)    :: field_name
   class(field_parent_proxy_type), intent(in)    :: fpxy
   integer(i_def),                 intent(in)    :: m
@@ -124,9 +124,9 @@ end subroutine format_field
 subroutine inverse_format_field(xios_data, field_name, fpxy, m, n, legacy)
   implicit none
 
-  real(dp_xios),                  intent(in out) :: xios_data(:)
+  real(dp_xios),                  intent(inout) :: xios_data(:)
   character(len=*),               intent(in)     :: field_name
-  class(field_parent_proxy_type), intent(in out) :: fpxy
+  class(field_parent_proxy_type), intent(inout) :: fpxy
   integer(i_def),                 intent(in)     :: m
   integer(i_def),                 intent(in)     :: n
   logical(l_def),                 intent(in)     :: legacy

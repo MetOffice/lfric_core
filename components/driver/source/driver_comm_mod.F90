@@ -85,8 +85,8 @@ contains
       if(.not. comm_created)then
         call create_comm( start_communicator )
         comm_created = .true.
-      endif
-    endif
+      end if
+    end if
 
     ! Call the initialisations for Oasis and XIOS as required. These will
     ! spilt the communicator and return a communicator for the model to run in.

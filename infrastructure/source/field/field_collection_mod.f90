@@ -65,6 +65,7 @@ module field_collection_mod
     procedure, public :: get_real64_field
     procedure, public :: get_integer_field
     procedure, public :: get_field_array
+    procedure, public :: get_abstract_field
     generic           :: get_field => get_real32_field,  &
                                       get_real64_field,  &
                                       get_integer_field, &
@@ -332,6 +333,56 @@ function get_next_item(self, start) result(item)
   item => new_item
 
 end function get_next_item
+
+!> Access a field from the collection
+!> @param [in] field_name The name of the field to be accessed
+!> @param [out] field Pointer to the field that is extracted
+subroutine get_abstract_field(self, field_name, field)
+
+  implicit none
+
+  class(field_collection_type), intent(in) :: self
+  class(pure_abstract_field_type), pointer, intent(out) :: field
+
+  character(*), intent(in) :: field_name
+
+  character(len=str_def) :: name
+
+  ! Pointer to linked list - used for looping through the list
+  type(linked_list_item_type), pointer :: loop => null()
+
+  integer(i_def) :: hash
+
+  ! Calculate the hash of the field being searched for
+  hash = mod(sum_string(trim(field_name)),self%get_table_len())
+
+  ! start at the head of the mesh collection linked list
+  loop => self%field_list(hash)%get_head()
+
+  do
+    ! If list is empty or we're at the end of list and we didn't find the
+    ! field, fail with an error
+    if ( .not. associated(loop) ) then
+      write(log_scratch_space, '(4A)') 'get_field: No 32-bit field [', &
+         trim(field_name), '] in field collection: ', trim(self%name)
+      call log_event( log_scratch_space, LOG_LEVEL_ERROR)
+    end if
+    ! otherwise search list for the name of field we want
+
+    name = get_field_name(loop%payload)
+
+    if ( trim(field_name) == trim(name) ) then
+      select type (listfield => loop%payload)
+        class is (pure_abstract_field_type)
+        field => listfield
+      end select
+      exit
+    end if
+
+    loop => loop%next
+  end do
+
+end subroutine get_abstract_field
 
 !> Access a 32-bit real field from the collection
 !> @param [in] field_name The name of the 32-bit real field to be accessed
