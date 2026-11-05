@@ -338,8 +338,9 @@ subroutine register_with_context(self)
   type(xios_duration)    :: timestep_duration
   type(xios_date)        :: start_date
 
-  integer(i_def) :: i, record_offset
-  logical :: output_freq_defined
+  integer(i_def) :: i, record_offset, convention_def_enum
+  logical :: convention_defined_xml, output_freq_defined
+  character(str_def) :: iodef_file_convention
 
   call log_event( "Registering XIOS file ["//trim(self%xios_id)//"]", &
                   log_level_trace )
@@ -366,20 +367,39 @@ subroutine register_with_context(self)
 
   ! Set I/O mode (no need for case defalt as we will fall back to XIOS's
   ! default behaviour)
-  call xios_set_attr( self%handle, type="one_file" )
+  call xios_set_attr(self%handle, type="one_file")
   select case(self%io_mode)
   case (FILE_MODE_READ)
-    call xios_set_attr( self%handle, mode="read" )
+    call xios_set_attr(self%handle, mode="read")
   case (FILE_MODE_WRITE)
-    call xios_set_attr( self%handle, mode="write" )
+    call xios_set_attr(self%handle, mode="write")
   end select
 
-  ! Set XIOS file convention
-  select case(self%file_convention)
+  ! Set XIOS file convention definition
+
+  ! Check if file convention has been defined in iodef.xml config
+  call xios_is_defined_file_attr(self%xios_id, convention=convention_defined_xml)
+
+  if (convention_defined_xml) then
+    call xios_get_file_attr(self%xios_id, convention=iodef_file_convention)
+    if (trim(iodef_file_convention) == "CF") then
+      convention_def_enum = CONVENTION_CF
+    else if (trim(iodef_file_convention) == "UGRID") then
+      convention_def_enum = CONVENTION_UGRID
+    end if
+  else if (self%file_convention /= undef_file_convention) then
+    convention_def_enum = self%file_convention
+  else ! Default to UGRID if no convention provided
+    convention_def_enum = CONVENTION_UGRID
+  end if
+
+  select case(convention_def_enum)
     case (CONVENTION_CF)
-      call xios_set_attr( self%handle, convention="CF" )
+      call xios_set_attr(self%handle, convention="CF")
+      call xios_set_attr(self%handle, convention_str="CF-1.12")
     case (CONVENTION_UGRID)
-      call xios_set_attr( self%handle, convention="UGRID" )
+      call xios_set_attr(self%handle, convention="UGRID")
+      call xios_set_attr(self%handle, convention_str="CF-1.12 UGRID-1.0")
   end select
 
   ! Create CF-compliant time description
@@ -431,7 +451,7 @@ subroutine register_with_context(self)
   if (self%mode_is_read()) then
     call xios_set_attr(self%handle, read_metadata_par=.true.)
     call xios_set_attr(file_fields, read_access=.true.)
- end if
+  end if
 
   ! Set up fields in file
   if (allocated(self%fields)) then
@@ -446,7 +466,7 @@ subroutine register_with_context(self)
 
     ! Iterate over field collection and register fields
     do i = 1, size(self%fields)
-      call self%fields(i)%register()
+      call self%fields(i)%register(ugrid=(self%file_convention == CONVENTION_UGRID))
     end do
 
     ! Set up time axis if needed
