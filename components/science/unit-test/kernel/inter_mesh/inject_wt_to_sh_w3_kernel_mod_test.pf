@@ -32,7 +32,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine setUp( this )
 
-    use mesh_mod,                  only : geometry_planar,    &
+    use mesh_mod,                  only : geometry_planar, &
                                           topology_periodic
     use feign_config_mod,          only : feign_base_mesh_config
 

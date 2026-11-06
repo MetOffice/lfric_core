@@ -16,9 +16,9 @@ module sci_query_mod
   implicit none
 
   private
-  public  :: valid_for_global_model, &
-             check_lbc,              &
-             is_lbc
+  public :: valid_for_global_model
+  public :: check_lbc
+  public :: is_lbc
 
   interface is_lbc
     module procedure is_global_lbc
@@ -109,7 +109,6 @@ function check_lbc( mesh_name ) result ( answer )
   character(4), parameter  :: lbc_tag = '-lbc'
 
   integer(i_def) :: mesh_name_length
-! character(4)   :: tmp_str
 
   ! Check to see if the loaded mesh is an LBC mesh
   ! where the lbc_suffix would be appended.

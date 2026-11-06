@@ -8,7 +8,7 @@
 !>
 module compute_mass_matrix_kernel_w0_mod_test
 
-  use constants_mod,                       only : i_def, r_def, r_single, r_double, l_def
+  use constants_mod, only: i_def, r_def, imdi, rmdi, r_single, r_double, l_def
 
   use get_unit_test_m3x3_q3x3x3_sizes_mod, only : get_w0_m3x3_q3x3x3_size,  &
                                                   get_w3_m3x3_q3x3x3_size
@@ -22,71 +22,24 @@ module compute_mass_matrix_kernel_w0_mod_test
   use get_unit_test_3x3x3_chi_mod,         only : get_w0_3x3x3_field
   use funit
 
+  use finite_element_config_mod, only: coord_system_xyz
+
   implicit none
 
   private
   public :: test_r_single, test_mixed_precision, test_r_double
 
-  @TestCase
-  type, extends(TestCase), public :: compute_mass_matrix_w0_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_r_single
-    procedure test_mixed_precision
-    procedure test_r_double
-  end type compute_mass_matrix_w0_test_type
-
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    use finite_element_config_mod, only : cellshape_quadrilateral, &
-                                          coord_system_xyz, coord_space_wchi
-    use feign_config_mod,          only : feign_finite_element_config
-
-    implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
-
-    call feign_finite_element_config( &
-             cellshape              = cellshape_quadrilateral,    &
-             coord_order            = 0_i_def,                    &
-             coord_order_nonprime   = 1_i_def,                    &
-             coord_space            = coord_space_wchi,           &
-             coord_system           = coord_system_xyz,           &
-             element_order_h        =0_i_def,                     &
-             element_order_v        =0_i_def,                     &
-             rehabilitate           = .true. )
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    use config_loader_mod, only: final_configuration
-
-    implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
-
-    call final_configuration()
-
-  end subroutine tearDown
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST R_SINGLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   @Test
-  subroutine test_r_single( this )
+  subroutine test_r_single()
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, only : &
                                  compute_mass_matrix_w_scalar_code
 
     implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -120,6 +73,10 @@ contains
     real(r_single), allocatable :: diff_basis_w0_r32(:,:,:,:)
     real(r_single), allocatable :: wh_r32(:), wv_r32(:)
 
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
    ! Get pre-set test data (in i_def and r_def)
     call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
@@ -187,6 +144,9 @@ contains
                                       chi3_r32,                  &
                                       panel_id_r32,              &
                                       extended_mesh,             &
+                                      geometry, topology,        &
+                                      coord_system,              &
+                                      scaled_radius,             &
                                       ndf_w0,                    &
                                       basis_w0_r32,              &
                                       ndf_w0,                    &
@@ -227,14 +187,12 @@ contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!! TEST MIXED PRECISION !!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_mixed_precision( this )
+  subroutine test_mixed_precision()
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, only : &
                                  compute_mass_matrix_w_scalar_code
 
     implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -268,6 +226,10 @@ contains
     real(r_double), allocatable :: diff_basis_w0_r64(:,:,:,:)
     real(r_double), allocatable :: wh_r64(:), wv_r64(:)
 
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
    ! Get pre-set test data (in i_def and r_def)
     call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
@@ -335,6 +297,9 @@ contains
                                       chi3_r64,                  &
                                       panel_id_r64,              &
                                       extended_mesh,             &
+                                      geometry, topology,        &
+                                      coord_system,              &
+                                      scaled_radius,             &
                                       ndf_w0,                    &
                                       basis_w0_r64,              &
                                       ndf_w0,                    &
@@ -375,14 +340,12 @@ contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST R_DOUBLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_r_double( this )
+  subroutine test_r_double()
 
     use sci_compute_mass_matrix_kernel_w_scalar_mod, only : &
                                  compute_mass_matrix_w_scalar_code
 
     implicit none
-
-    class(compute_mass_matrix_w0_test_type), intent(inout) :: this
 
     real(r_def),    parameter :: dx = 6000.0_r_def, &
                                  dy = 1000.0_r_def, &
@@ -416,6 +379,10 @@ contains
     real(r_double), allocatable :: diff_basis_w0_r64(:,:,:,:)
     real(r_double), allocatable :: wh_r64(:), wv_r64(:)
 
+    integer(i_def), parameter :: geometry = imdi
+    integer(i_def), parameter :: topology = imdi
+    integer(i_def), parameter :: coord_system = coord_system_xyz
+    real(r_def),    parameter :: scaled_radius = rmdi
 
    ! Get pre-set test data (in i_def and r_def)
     call get_w0_m3x3_q3x3x3_size( ndf_w0, undf_w0, ncells, &
@@ -483,6 +450,9 @@ contains
                                       chi3_r64,                  &
                                       panel_id_r64,              &
                                       extended_mesh,             &
+                                      geometry, topology,        &
+                                      coord_system,              &
+                                      scaled_radius,             &
                                       ndf_w0,                    &
                                       basis_w0_r64,              &
                                       ndf_w0,                    &

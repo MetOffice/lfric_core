@@ -13,9 +13,7 @@ module w3_to_w2_displacement_kernel_mod_test
   use mesh_mod,                  only: geometry_spherical, &
                                        topology_periodic
   use finite_element_config_mod, only: coord_system_native
-
   use funit
-
 
   implicit none
 
