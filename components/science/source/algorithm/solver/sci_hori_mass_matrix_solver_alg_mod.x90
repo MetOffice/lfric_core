@@ -12,7 +12,7 @@
 module sci_hori_mass_matrix_solver_alg_mod
 
   ! Constants and types
-  use constants_mod,                  only: i_def
+  use constants_mod,                  only: i_def, r_def
   use integer_field_mod,              only: integer_field_type
   use field_mod,                      only: field_type
   use fs_continuity_mod,              only: W2, W2h, W2v
