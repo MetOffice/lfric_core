@@ -126,10 +126,16 @@ build: ALWAYS
 	          SOURCE_DIR=source \
 	          META_FILE_DIR=$(META_FILE_DIR)
 	$(call MESSAGE,========================================)
+	$(call MESSAGE,Preprocessing $(PROJECT_NAME))
+	$(call MESSAGE,========================================)
+	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/pre_process.mk \
+	         SOURCE_DIR=source
+	$(call MESSAGE,========================================)
 	$(call MESSAGE,PSycloning $(PROJECT_NAME))
 	$(call MESSAGE,========================================)
 	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
 	         SOURCE_DIR=source \
+	         WORKING_DIR=$(WORKING_DIR) \
 	         OPTIMISATION_PATH=$(OPTIMISATION_PATH)
 	$(call MESSAGE,=========================================================)
 	$(call MESSAGE,Analysing $(PROJECT) build dependencies)

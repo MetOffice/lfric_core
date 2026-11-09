@@ -33,9 +33,6 @@ import-infrastructure: $(WORKING_DIR)/field/field_real32_mod.f90 \
                        $(WORKING_DIR)/scalar/scalar_int32_mod.f90
 	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/extract.mk \
 	          SOURCE_DIR=$(LFRIC_INFRASTRUCTURE)/source
-	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
-	          SOURCE_DIR=$(LFRIC_INFRASTRUCTURE)/source \
-	          OPTIMISATION_PATH=$(OPTIMISATION_PATH)
 
 $(WORKING_DIR)/field/field_%_mod.f90: $(LFRIC_INFRASTRUCTURE)/source/field/field_mod.t90 \
                                       | $(WORKING_DIR)/field
