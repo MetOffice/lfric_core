@@ -12,6 +12,7 @@
 module sci_hori_mass_matrix_solver_alg_mod
 
   ! Constants and types
+  use config_mod,                     only: config_type
   use constants_mod,                  only: i_def
   use integer_field_mod,              only: integer_field_type
   use field_mod,                      only: field_type
@@ -35,6 +36,7 @@ contains
 
   ! =======================================================
   !> @brief Mass matrix solver for only the horizontal component of a W2 field
+  !> @param[in]     config           Application configuration object
   !> @param[in,out] field_solve      The W2 solved field
   !> @param[in]     field            The W2 field to apply the horizontal mass
   !!                                 matrix solve
@@ -42,9 +44,11 @@ contains
   !!                                 not inputted then the vertical solved
   !!                                 component is set to zero
 
-  subroutine hori_mass_matrix_solver_alg( field_solve, field, vert_field_solve )
+  subroutine hori_mass_matrix_solver_alg( config, field_solve, field, vert_field_solve )
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     ! Arguments
     type(field_type), intent(inout)        :: field_solve
@@ -76,7 +80,7 @@ contains
     ! Take horizontal part of field
     call split_w2_field_alg( hori_field, vert_field, field )
     ! Mass matrix solve of horizontal part
-    call mass_matrix_solver_alg(hori_field_solve, hori_field)
+    call mass_matrix_solver_alg(config, hori_field_solve, hori_field)
 
     ! Convert to W2 field
     if (present(vert_field_solve)) then

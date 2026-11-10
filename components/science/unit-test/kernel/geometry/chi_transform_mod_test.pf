@@ -21,7 +21,9 @@ module chi_transform_mod_test
 
   implicit none
 
-  public :: chi_transform_mod_test_type, test_all, get_chi_parameters, &
+  public :: setUp, tearDown,              &
+            chi_transform_mod_test_type,  &
+            test_all, get_chi_parameters, &
             test_chi_constructor
 
   @testParameter
