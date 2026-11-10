@@ -243,8 +243,8 @@ subroutine read_field_generic(xios_field_name, field_proxy)
   call log_event( "Reading from XIOS field [" // trim(xios_field_name // "]"), &
                   LOG_LEVEL_TRACE )
 
-  ! detect field with legacy checkpointing domain
-  legacy = (index(get_field_domain_ref(xios_field_name), 'checkpoint_') == 1)
+  ! detect field with legacy domain
+  legacy = (index(get_field_domain_ref(xios_field_name), 'legacy_') == 1)
 
   ! sanity check
   if (.not. legacy .and. .not. (hdim*vdim == undf)) then

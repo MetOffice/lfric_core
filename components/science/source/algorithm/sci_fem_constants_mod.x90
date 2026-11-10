@@ -16,7 +16,7 @@ module sci_fem_constants_mod
 
   ! Infrastructure
   use config_mod,                         only: config_type
-  use constants_mod,                      only: i_def, r_def, r_second, &
+  use constants_mod,                      only: i_def, r_def, r_second,        &
                                                 str_def, l_def
   use field_mod,                          only: field_type
   use fs_continuity_mod,                  only: W0, W1, W2, W2broken, &
@@ -42,6 +42,12 @@ module sci_fem_constants_mod
   use matrix_vector_kernel_mod,           only: matrix_vector_kernel_type
   use dg_inc_matrix_vector_kernel_mod,    only: dg_inc_matrix_vector_kernel_type
   use sci_multiplicity_kernel_mod,        only: multiplicity_kernel_type
+
+  ! Configuration modules
+  use finite_element_config_mod, only: element_order_h, &
+                                       element_order_v, &
+                                       nqp_h_exact,     &
+                                       nqp_v_exact
 
   implicit none
 
@@ -302,22 +308,32 @@ contains
       select case (space)
         case (W1)
           call invoke( name="compute_w1_mass_matrix_fe",                       &
-                       compute_mass_matrix_kernel_w1_type(                     &
-                                          mm_op, chi, panel_id,                &
-                                          mesh%geometry(), mesh%topology(),    &
-                                          coord_system, scaled_radius, qr_ptr) )
+                       compute_mass_matrix_kernel_w1_type(mm_op, chi,          &
+                                                          panel_id,            &
+                                                          mesh%geometry(),     &
+                                                          mesh%topology(),     &
+                                                          coord_system,        &
+                                                          scaled_radius,       &
+                                                          qr_ptr) )
         case (W2, W2broken, W2H, W2V)
           call invoke( name="compute_w2_mass_matrix_fe",                       &
-                       compute_mass_matrix_kernel_w2_type(                     &
-                                          mm_op, chi, panel_id,                &
-                                          mesh%geometry(), mesh%topology(),    &
-                                          coord_system, scaled_radius, qr_ptr) )
+                       compute_mass_matrix_kernel_w2_type(mm_op, chi,          &
+                                                          panel_id,            &
+                                                          mesh%geometry(),     &
+                                                          mesh%topology(),     &
+                                                          coord_system,        &
+                                                          scaled_radius,       &
+                                                          qr_ptr) )
         case (W3, Wtheta)
-          call invoke( name= "compute_scalar_mass_matrix_fe",                  &
-                       compute_mass_matrix_kernel_w_scalar_type(&
-                                          mm_op, chi, panel_id, extend_mesh,   &
-                                          mesh%geometry(), mesh%topology(),    &
-                                          coord_system, scaled_radius, qr_ptr) )
+          call invoke( name= "compute_scalar_mass_matrix_fe",                    &
+                       compute_mass_matrix_kernel_w_scalar_type(mm_op, chi,      &
+                                                                panel_id,        &
+                                                                extend_mesh,     &
+                                                                mesh%geometry(), &
+                                                                mesh%topology(), &
+                                                                coord_system,    &
+                                                                scaled_radius,   &
+                                                                qr_ptr) )
       end select
       ! Lump W2 mass matrix along the edge of the domain to avoid boundary
       ! errors propagating into the domain with each iteration

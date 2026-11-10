@@ -16,7 +16,8 @@ program lfric_xios_cyclic_temporal_test
   use lfric_xios_action_mod,  only: advance
   use lfric_xios_context_mod, only: lfric_xios_context_type
   use lfric_xios_driver_mod,  only: lfric_xios_initialise, lfric_xios_finalise
-  use lfric_xios_file_mod,    only: lfric_xios_file_type, OPERATION_TIMESERIES
+  use lfric_xios_file_mod,    only: lfric_xios_file_type, OPERATION_TIMESERIES, &
+                                    CONVENTION_UGRID
   use linked_list_mod,        only: linked_list_type
   use log_mod,                only: log_event, log_level_info
   use test_db_mod,            only: test_db_type
@@ -53,12 +54,14 @@ program lfric_xios_cyclic_temporal_test
                                                     operation=OPERATION_TIMESERIES,      &
                                                     freq=file_freq,                      &
                                                     cyclic=.true.,                       &
+                                                    file_convention=CONVENTION_UGRID,    &
                                                     fields_in_file=test_db%temporal_fields ) )
   call file_list%insert_item( lfric_xios_file_type( "lfric_xios_cyclic_output",           &
                                                     xios_id="lfric_xios_cyclic_output",   &
                                                     io_mode=FILE_MODE_WRITE,              &
                                                     operation=OPERATION_TIMESERIES,       &
                                                     freq=1,                               &
+                                                    file_convention=CONVENTION_UGRID,     &
                                                     fields_in_file=test_db%temporal_fields ) )
 
   call io_context%initialise_xios_context( test_db%config, test_db%comm,  &
