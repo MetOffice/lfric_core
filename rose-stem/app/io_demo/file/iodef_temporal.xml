@@ -11,7 +11,7 @@
       type="one_file"
       time_counter="none">
 
-     <file id="lfric_diag" name="io_demo_diag" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
+     <file id="io_demo_diag" name="io_demo_diag" output_freq="1ts" convention="UGRID" enabled=".TRUE.">
        <field field_ref="diffusion_field"/>
      </file>
 
