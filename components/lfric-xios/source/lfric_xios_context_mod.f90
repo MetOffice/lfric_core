@@ -163,7 +163,7 @@ contains
     end if
 
     if (this%filelist%get_length() > 0) then
-      call setup_xios_files(this%filelist, file_convention)
+      call setup_xios_files(this%filelist)
     end if
 
     if ( LPROF ) call stop_timing(timing_id, 'lfric_xios.init_context')
