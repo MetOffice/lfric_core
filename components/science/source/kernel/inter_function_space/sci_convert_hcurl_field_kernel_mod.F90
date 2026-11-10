@@ -68,10 +68,10 @@ contains
 !> @param[in] chi_2 2nd coordinate field in Wchi
 !> @param[in] chi_3 3rd coordinate field in Wchi
 !> @param[in] panel_id  Field giving the ID for mesh panels
-!! @param[in] geometry            Mesh geometry enumeration
-!! @param[in] topology            Mesh topology enumeration
-!! @param[in] coord_system        Finite-element coordinate system enumeration
-!! @param[in] scaled_radius       Scaled planet radius
+!! @param[in] geometry       Mesh geometry enumeration
+!! @param[in] topology       Mesh topology enumeration
+!! @param[in] coord_system   Finite-element coordinate system enumeration
+!! @param[in] scaled_radius  Scaled planet radius
 !> @param[in] ndf Number of degrees of freedom per cell for the output field
 !> @param[in] undf Number of unique degrees of freedom for the output field
 !> @param[in] map Dofmap for the cell at the base of the column for the output field

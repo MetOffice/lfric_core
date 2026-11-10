@@ -169,7 +169,6 @@ contains
 
     integer(i_def) :: order_h
     integer(i_def) :: order_v
-
     integer(i_def) :: nqp_h_exact
     integer(i_def) :: nqp_v_exact
 

@@ -87,10 +87,10 @@ contains
 !! @param[in] chi_dl_2 The 2nd coordinate field in Wchi for double level mesh.
 !! @param[in] chi_dl_3 The 3rd coordinate field in Wchi for double level mesh.
 !! @param[in] panel_id A field giving the ID for the mesh panels.
-!! @param[in] geometry      Mesh geometry enumeration
-!! @param[in] topology      Mesh topology enumeration
-!! @param[in] coord_system  Finite-element coordinate system enumeration
-!! @param[in] scaled_radius Scaled planet radius
+!! @param[in] geometry       Mesh geometry enumeration
+!! @param[in] topology       Mesh topology enumeration
+!! @param[in] coord_system   Finite-element coordinate system enumeration
+!! @param[in] scaled_radius  Scaled planet radius
 !! @param[in] dummy_theta An unused dummy variable in Wtheta.
 !! @param[in] ndf_w3 The number of degrees of freedom per cell for w3
 !! @param[in] undf_w3 The number of unique degrees of freedom for w3

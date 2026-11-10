@@ -583,7 +583,7 @@ contains
     geometry = mesh%geometry()
     topology = mesh%topology()
 
-    coord_system = config%finite_element%coord_system()
+    coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
 
     ! Check inventory is initialised
@@ -889,7 +889,7 @@ contains
     implicit none
 
     type(config_type), intent(in) :: config
-    type(mesh_type), intent(in) :: mesh
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists

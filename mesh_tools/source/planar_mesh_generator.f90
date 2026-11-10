@@ -154,8 +154,6 @@ program planar_mesh_generator
   integer(i_def) :: topology
   integer(i_def) :: geometry
 
-!  logical(l_def) :: generate_inner_halos
-!  integer(i_def) :: max_stencil_depth
   integer(i_def) :: n_partitions
   integer(i_def), allocatable :: partition_range(:)
   real(r_def),    allocatable :: domain_size(:)

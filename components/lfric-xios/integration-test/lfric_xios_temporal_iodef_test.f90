@@ -58,7 +58,7 @@ program lfric_xios_temporal_iodef_test
                                                     file_convention=CONVENTION_UGRID,     &
                                                     fields_in_file=test_db%temporal_fields ) )
 
-  call io_context%initialise_xios_context( test_db%config, test_db%comm, &
+  call io_context%initialise_xios_context( test_db%config, test_db%comm,  &
                                            test_db%chi, test_db%panel_id, &
                                            test_db%clock, test_db%calendar )
 

@@ -297,8 +297,8 @@ contains
     mesh => chi(1)%get_mesh()
     twod_mesh => mesh_collection%get_mesh_variant( mesh, extrusion_id=TWOD )
 
-    coord_system    = config%finite_element%coord_system()
-    scaled_radius   = config%planet%scaled_radius()
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     if ( mesh%is_geometry_spherical() ) then
      r2d = radians_to_degrees
@@ -475,12 +475,11 @@ contains
   !> @brief  Sets up XIOS context file information from list of file objects
   !>
   !> @param[in]  files_list  List of file objects
-  subroutine setup_xios_files(files_list, file_convention)
+  subroutine setup_xios_files(files_list)
 
     implicit none
 
     type(linked_list_type), intent(inout) :: files_list
-    integer(i_def),         intent(in)    :: file_convention
 
     type(xios_filegroup) :: file_definition
 

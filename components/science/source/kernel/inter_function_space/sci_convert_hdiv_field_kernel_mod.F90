@@ -73,10 +73,10 @@ contains
 !> @param[in] chi2 Coordinates in the second direction
 !> @param[in] chi3 Coordinates in the third direction
 !> @param[in] panel_id A field giving the ID for mesh panels
-!! @param[in] geometry            Mesh geometry enumeration
-!! @param[in] topology            Mesh topology enumeration
-!! @param[in] coord_system        Finite-element coordinate system enumeration
-!! @param[in] scaled_radius       Scaled planet radius
+!! @param[in] geometry       Mesh geometry enumeration
+!! @param[in] topology       Mesh topology enumeration
+!! @param[in] coord_system   Finite-element coordinate system enumeration
+!! @param[in] scaled_radius  Scaled planet radius
 !> @param[in] ndf1 Number of degrees of freedom per cell for the physical field
 !> @param[in] undf1 Number of unique degrees of freedom for the physical field
 !> @param[in] map1 Dofmap for the cell at the base of the column for the physical field
