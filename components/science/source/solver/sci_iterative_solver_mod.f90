@@ -1973,8 +1973,14 @@ contains
 
     do iter = 1, self%max_iter
       ! r = b-M*xo
-      if ( iter > 1 ) call self%lin_op%apply(config, xo, z)
-      call r%axpby(1.0_r_def, b, -1.0_r_def, z)
+      if (.not. self%monitor_convergence) then
+        if ( iter > 1 ) call self%lin_op%apply(config, xo, z)
+        call r%axpby(1.0_r_def, b, -1.0_r_def, z)
+      else
+        ! reusing the lin_op%apply from the 
+        ! convergence check in previous iteration
+        call r%axpby(-1.0_r_def, z, 0.0_r_def, z)
+      endif
 
       ! z = D^{-1}.r
       call self%prec%apply(config, r, z)
