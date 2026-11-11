@@ -46,7 +46,7 @@ $(scratch_dir)/%.F90: $(SOURCE_DIR)/%.pf
 	$(Q)mkdir -p $(dir $@)
 	$(Q)$(PFUNIT)/bin/funitproc $(QUIET_ARG_SINGLE) $< $@
 
-$(scratch_dir)/%.F90: $(WORKING_DIR)/%.pf
+$(scratch_dir)/%.F90: $(scratch_dir)/%.pf
 	$(call MESSAGE,Generating unit test, $@)
 	$Qmkdir -p $(dir $@)
 	$Q$(PFUNIT)/bin/funitproc $(QUIET_ARG_SINGLE) $< $@
