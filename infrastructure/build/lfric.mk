@@ -282,20 +282,6 @@ configuration:
 %/import: $$**/source  # In the absense of special instructions.
 	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/extract.mk \
 	          SOURCE_DIR=$<
-	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
-	          SOURCE_DIR=$<
-
-##############################################################################
-# Invoke PSyclone to generate PSy layer.
-#
-# Psyclone is called on the original source but that source may use other
-# modules so extraction must be complete first.
-#
-.PHONY: %/psyclone
-%/psyclone: $$(addsuffix /extract, $$*)
-	$(Q)$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
-	            SOURCE_DIR=$* \
-	            WORKING_DIR=$(WORKING_DIR)
 
 
 ##############################################################################

@@ -7,7 +7,7 @@
 # Run this make file to copy a source tree from SOURCE_DIR to WORKING_DIR
 #
 .PHONY: files-to-extract
-files-to-extract: $(addprefix $(WORKING_DIR)/,$(shell find $(SOURCE_DIR) \( -name '*.[Ff]90' -o -name '*.h' \) -print | sed "s|$(SOURCE_DIR)/||")) \
+files-to-extract: $(addprefix $(WORKING_DIR)/,$(shell find $(SOURCE_DIR) \( -name '*.[XxFf]90' -o -name '*.h' \) -print | sed "s|$(SOURCE_DIR)/||")) \
                   | $(WORKING_DIR)
 
 .PRECIOUS: $(WORKING_DIR)/%.F90
@@ -18,6 +18,18 @@ $(WORKING_DIR)/%.F90: $(SOURCE_DIR)/%.F90 | $(WORKING_DIR)
 
 .PRECIOUS: $(WORKING_DIR)/%.f90
 $(WORKING_DIR)/%.f90: $(SOURCE_DIR)/%.f90 | $(WORKING_DIR)
+	$(call MESSAGE,Copying source,$<)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)cp $< $@
+
+.PRECIOUS: $(WORKING_DIR)/%.X90
+$(WORKING_DIR)/%.X90: $(SOURCE_DIR)/%.X90 | $(WORKING_DIR)
+	$(call MESSAGE,Copying source,$<)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)cp $< $@
+
+.PRECIOUS: $(WORKING_DIR)/%.x90
+$(WORKING_DIR)/%.x90: $(SOURCE_DIR)/%.x90 | $(WORKING_DIR)
 	$(call MESSAGE,Copying source,$<)
 	$(Q)mkdir -p $(dir $@)
 	$(Q)cp $< $@

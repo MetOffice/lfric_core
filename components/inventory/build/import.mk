@@ -8,6 +8,3 @@ export PROJECT_SOURCE = $(CORE_ROOT_DIR)/components/inventory/source
 .PHONY: import-inventory
 import-inventory:
 	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/extract.mk SOURCE_DIR=$(PROJECT_SOURCE)
-	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
-            SOURCE_DIR=$(PROJECT_SOURCE) \
-            OPTIMISATION_PATH=$(OPTIMISATION_PATH)
