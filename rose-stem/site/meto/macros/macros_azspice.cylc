@@ -26,4 +26,12 @@
             --mem-per-cpu={{value}}{{unit[:1]}}
 {% endmacro %}
 
+{% macro set_psyclone_transformation(task_values_psyclone_transformation) %}
+{% if task_values_psyclone_transformation == "default" %}
+            PSYCLONE_TRANSFORMATION = cpu
+{% else %}
+            PSYCLONE_TRANSFORMATION = {{task_values_psyclone_transformation}}
+{% endif %}
+{% endmacro %}
+
 {% do LOG.debug("Finished in site/meto/macros/macros_azspice.cylc") %}
