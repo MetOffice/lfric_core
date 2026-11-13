@@ -49,4 +49,4 @@ class Config(DefaultConfig):
 
         # This likely needs adjusting, pfunit required fargparse and gftl
         linker.add_lib_flags("pfunit", ["-lfunit", "-lpfunit",
-                                        "-lfargparse", "lgftl-shared-v2"])
+                                        "-lfargparse", "-lgftl-shared-v2"])
