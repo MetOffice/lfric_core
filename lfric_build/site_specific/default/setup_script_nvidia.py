@@ -109,7 +109,7 @@ def setup_script_nvidia(build_config: BuildConfig,
 
     # This likely needs adjusting, pfunit required fargparse and gftl
     linker.add_lib_flags("pfunit", ["-lfunit", "-lpfunit",
-                                    "-lfargparse", "lgftl-shared-v2"])
+                                    "-lfargparse", "-lgftl-shared-v2"])
 
     # Always link with C++ libs
     linker.add_post_lib_flags(lib_flags)
