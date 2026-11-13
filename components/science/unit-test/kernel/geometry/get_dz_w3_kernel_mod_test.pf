@@ -19,46 +19,17 @@ module get_dz_w3_kernel_mod_test
   implicit none
 
   private
-  public :: setUp, tearDown, test_all
-
-  @TestCase
-  type, extends(TestCase), public :: get_dz_w3_kernel_test_type
-    private
-  contains
-    procedure setUp
-    procedure tearDown
-    procedure test_all
-  end type get_dz_w3_kernel_test_type
+  public :: test_all
 
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine setUp( this )
-
-    implicit none
-
-    class(get_dz_w3_kernel_test_type), intent(inout) :: this
-
-  end subroutine setUp
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine tearDown( this )
-
-    implicit none
-
-    class(get_dz_w3_kernel_test_type), intent(inout) :: this
-
-  end subroutine tearDown
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @Test
-  subroutine test_all( this )
+  subroutine test_all()
 
     use sci_get_dz_w3_kernel_mod, only : get_dz_w3_code
 
     implicit none
-
-    class(get_dz_w3_kernel_test_type), intent(inout) :: this
 
     real(kind=r_def), parameter :: tol = 1.0e-6_r_def
 

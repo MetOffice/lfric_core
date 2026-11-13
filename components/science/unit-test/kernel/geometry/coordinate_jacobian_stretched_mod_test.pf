@@ -13,25 +13,9 @@ module coordinate_jacobian_stretched_mod_test
 
   implicit none
 
-  public :: set_up, tear_down, test_all
+  public :: test_all
 
 contains
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @before
-  subroutine set_up()
-
-    implicit none
-
-  end subroutine set_up
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  @after
-  subroutine tear_down()
-
-    implicit none
-
-  end subroutine tear_down
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   @test
