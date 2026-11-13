@@ -284,25 +284,21 @@ contains
         call alt_panel_id_ptr%copy_field_serial(alt_panel_ids(i))
       end do
 
-      call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
+      call io_context%initialise_xios_context( modeldb%config,         &
+                                               modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
                                                modeldb%calendar,       &
-                                               geometry, topology,     &
-                                               coord_system,           &
-                                               scaled_radius,          &
                                                alt_coords,             &
                                                alt_panel_ids )
       deallocate(alt_coords)
       deallocate(alt_panel_ids)
     else
-      call io_context%initialise_xios_context( modeldb%mpi%get_comm(), &
+      call io_context%initialise_xios_context( modeldb%config,         &
+                                               modeldb%mpi%get_comm(), &
                                                chi, panel_id,          &
                                                modeldb%clock,          &
-                                               modeldb%calendar,       &
-                                               geometry, topology,     &
-                                               coord_system,           &
-                                               scaled_radius )
+                                               modeldb%calendar )
     end if
 
     ! Attach context advancement to the model's clock

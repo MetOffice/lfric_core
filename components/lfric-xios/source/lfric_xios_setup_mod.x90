@@ -9,6 +9,7 @@
 module lfric_xios_setup_mod
 
   use calendar_mod,                  only: calendar_type
+  use config_mod,                    only: config_type
   use clock_mod,                     only: clock_type
   use constants_mod,                 only: i_def, i_halo_index, i_timestep, &
                                            r_def, l_def, str_def,           &
@@ -76,8 +77,7 @@ module lfric_xios_setup_mod
                                            operator(+), operator(<), operator(-)
 
   !>@todo This information should be obtained from the calendar in the future
-  use time_config_mod, only: type_of_calendar => calendar_type, &
-                             key_from_calendar_type, calendar_type_d360
+  use time_config_mod, only: key_from_calendar_type, calendar_type_d360
 
   implicit none
 
@@ -88,12 +88,15 @@ contains
 
   !> @brief Sets up the XIOS calendar
   !>
+  !> @param [in] config       Application configuration object
   !> @param [in] model_clock  The model clock
   !> @param [in] calendar     The model calendar
-  subroutine  init_xios_calendar( model_clock, calendar, start_at_zero, context_clock_step )
+  subroutine  init_xios_calendar( config, model_clock, calendar, &
+                                  start_at_zero, context_clock_step )
 
     implicit none
 
+    type(config_type),      intent(in) :: config
     type(model_clock_type), intent(in) :: model_clock
     class(calendar_type),   intent(in) :: calendar
     logical,                intent(in) :: start_at_zero
@@ -104,17 +107,21 @@ contains
     type(xios_date)     :: xios_start_date, xios_origin_date
     integer(i_timestep) :: step_offset
 
+    integer(i_def) :: calendar_enum
+
     ! Set the XIOS time-step from the model clock
     timestep_length_for_xios%second = model_clock%get_seconds_per_step()
     call xios_set_timestep(timestep_length_for_xios)
 
     ! Calendar start is adjusted when clock is initialised
     xios_origin_date = parse_date_as_xios(trim(adjustl(calendar%get_origin())))
-    xios_start_date = parse_date_as_xios(trim(adjustl(calendar%get_start())))
+    xios_start_date  = parse_date_as_xios(trim(adjustl(calendar%get_start())))
+
+    calendar_enum = config%time%calendar_type()
 
     ! Set up initial calendar with no progress
-    call xios_define_calendar( type=key_from_calendar_type(type_of_calendar), &
-                               time_origin=xios_origin_date,                  &
+    call xios_define_calendar( type=key_from_calendar_type(calendar_enum), &
+                               time_origin=xios_origin_date,               &
                                start_date=xios_start_date )
 
     ! Use model calendar to initialise XIOS calendar
@@ -143,8 +150,7 @@ contains
     call xios_set_start_date( xios_start_date )
 
     if ( xios_start_date < xios_origin_date .and. &
-         type_of_calendar /= calendar_type_d360 ) &
-      then
+         calendar_enum /= calendar_type_d360 ) then
       call log_event("Having start_date < origin_date may lead to unexpected " // &
                      "behaviour due to a bug in the xios intrinsic function " //  &
                      "date_convert_to_seconds", log_level_warning)
@@ -157,27 +163,18 @@ contains
   !!           of XIOS dimensionality (domains, axes, etc) and initialised the
   !!           corresponding XIOS objects.
   !>
+  !> @param [in] config        Application configuration object
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
-  !> @param[in]  geometry      Mesh geometry enumeration value
-  !> @param[in]  topology      Mesh topology enumeration value
-  !> @param[in]  coord_system  Finite-element coord-system enumeration value
-  !> @param[in]  scaled_radius Planet scaled radius
-  subroutine init_xios_dimensions( chi, panel_id,               &
-                                   geometry, topology,          &
-                                   coord_system, scaled_radius, &
+  subroutine init_xios_dimensions( config, chi, panel_id, &
                                    alt_coords, alt_panel_ids )
 
     implicit none
 
     ! Arguments
-    type(field_type), intent(in) :: chi(:)
-    type(field_type), intent(in) :: panel_id
-
-    integer(i_def),intent(in) :: geometry
-    integer(i_def),intent(in) :: topology
-    integer(i_def),intent(in) :: coord_system
-    real(r_def),   intent(in) :: scaled_radius
+    type(config_type), intent(in) :: config
+    type(field_type),  intent(in) :: chi(:)
+    type(field_type),  intent(in) :: panel_id
 
     type(field_type), optional, intent(in) :: alt_coords(:,:)
     type(field_type), optional, intent(in) :: alt_panel_ids(:)
@@ -186,16 +183,13 @@ contains
     type(mesh_type), pointer :: mesh
 
     ! Initialise XIOS prime mesh
-    call init_xios_mesh( chi, panel_id, geometry, topology, &
-                         coord_system, scaled_radius, &
-                         prime_mesh=.true. )
+    call init_xios_mesh( config, chi, panel_id, prime_mesh=.true. )
 
     ! Initialise additional meshes
     if (present(alt_coords) .and. present(alt_panel_ids)) then
       do i = 1, size(alt_panel_ids)
-        call init_xios_mesh( alt_coords(i,:), alt_panel_ids(i), &
-                             geometry, topology, coord_system,  &
-                             scaled_radius, prime_mesh=.false. )
+        call init_xios_mesh( config, alt_coords(i,:), alt_panel_ids(i), &
+                             prime_mesh=.false. )
       end do
     end if
 
@@ -213,35 +207,28 @@ contains
   !!           of XIOS dimensionality (domains, axes, etc) and initialised the
   !!           corresponding XIOS objects.
   !>
+  !> @param [in] config        Application configuration object
   !> @param[in]  chi           Coordinate field
   !> @param[in]  panel_id      Field with IDs of mesh panels
-  !> @param[in]  geometry      Mesh geometry enumeration value
-  !> @param[in]  topology      Mesh topology enumeration value
-  !> @param[in]  coord_system  Finite-element coord-system enumeration value
-  !> @param[in]  scaled_radius Planet scaled radius
   !> @param[in]  prime_mesh    Logical flag denoting if the mesh is the primary
   !!                           I/O mesh
   !>
-  subroutine init_xios_mesh( chi, panel_id,               &
-                             geometry, topology,          &
-                             coord_system, scaled_radius, &
-                             prime_mesh )
+  subroutine init_xios_mesh( config, chi, panel_id, prime_mesh )
 
     implicit none
 
     ! Arguments
+    type(config_type), intent(in) :: config
     type(field_type),  intent(in) :: chi(:)
     type(field_type),  intent(in) :: panel_id
-
-    integer(i_def),intent(in) :: geometry
-    integer(i_def),intent(in) :: topology
-    integer(i_def),intent(in) :: coord_system
-    real(r_def),   intent(in) :: scaled_radius
 
     logical, optional, intent(in) :: prime_mesh
 
     ! Local variables
     integer(kind=i_def) :: i
+
+    integer(i_def) :: coord_system
+    real(r_def)    :: scaled_radius
 
     ! Node domain (W0)
     integer(kind=i_def)           :: coord_dim_annexed
@@ -310,6 +297,9 @@ contains
     mesh => chi(1)%get_mesh()
     twod_mesh => mesh_collection%get_mesh_variant( mesh, extrusion_id=TWOD )
 
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     if ( mesh%is_geometry_spherical() ) then
      r2d = radians_to_degrees
     else
@@ -355,7 +345,7 @@ contains
       end do
       ! Convert to (X,Y,Z) coordinates
       call invoke(nodal_xyz_coordinates_kernel_type(sample_chi, chi, panel_id, &
-                                                    geometry, topology,        &
+                                                    mesh%geometry(), mesh%topology(), &
                                                     coord_system, scaled_radius))
     else
       ! For planar geometries just re-use existing chi which are already (X,Y,Z)
@@ -489,7 +479,7 @@ contains
 
     implicit none
 
-    type(linked_list_type),       intent(inout) :: files_list
+    type(linked_list_type), intent(inout) :: files_list
 
     type(xios_filegroup) :: file_definition
 
@@ -905,14 +895,14 @@ contains
   !>          local portion of the domain index and passes information to XIOS
   !>          domain object
   !>
-  !> @param[in]  domain_id_       The name of the XIOS domain
+  !> @param[in]  domain_id        The name of the XIOS domain
   !> @param[in]  mesh             The partitioned mesh
   !> @param[in]  fs_id            The id of the function space corresponding
   !!                              to the domain
   !> @param[in]  chi              Input coordinate field
   !> @param[in]  lon_bounds       Longitude coords of the domain bounds
   !> @param[in]  lat_bounds       Latitude coords of the domain bounds
-  !> @param[in]  mesh_name        Name of the consolidated mesh
+  !> @param[in]  domain_name      Name of the consolidated mesh
   !> @param[in]  nverts           Number of vertices bounding each domain
   !!                              element
   !>
@@ -923,7 +913,7 @@ contains
     implicit none
 
     character(len=*),           intent(in)    :: domain_id
-    type(mesh_type), pointer,   intent(in)    :: mesh
+    type(mesh_type),            intent(in)    :: mesh
     integer(kind=i_def),        intent(in)    :: fs_id
     type(field_type),           intent(in)    :: chi(:)
     real(dp_xios), allocatable, intent(inout) :: lat_bounds(:,:)
@@ -941,7 +931,8 @@ contains
 
     ! Variables for the gather to determine global domain sizes
     ! from the local partitioned ones
-    integer(kind=i_def)              :: global_undf, n_levels, i, j, ibegin, local_domain_size
+    integer(kind=i_def)              :: global_undf, n_levels, i, j, &
+                                        ibegin, local_domain_size
     integer(kind=i_def), allocatable :: local_undf(:), all_undfs(:)
     real(dp_xios),       allocatable :: dp_levels(:)
     real(dp_xios),       allocatable :: lat_data(:)

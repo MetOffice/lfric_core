@@ -157,15 +157,28 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the finite element quadrature object
+  !> @param[in] config  Application configuration object
   !> @return The quadrature object
-  function get_qr_fe() result(qr_obj)
+  function get_qr_fe(config) result(qr_obj)
 
     implicit none
 
+    type(config_type) :: config
+
     type(quadrature_xyoz_type), pointer :: qr_obj
 
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+    integer(i_def) :: nqp_h_exact
+    integer(i_def) :: nqp_v_exact
+
+    order_h     = config%finite_element%element_order_h()
+    order_v     = config%finite_element%element_order_v()
+    nqp_h_exact = config%finite_element%nqp_h_exact()
+    nqp_v_exact = config%finite_element%nqp_v_exact()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       qr_obj => get_qr_fv()
       return
     end if
@@ -232,19 +245,18 @@ contains
     integer(kind=i_def),        parameter :: stencil_depth = 1_i_def
     integer(tik)                          :: id
 
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
     integer(i_def) :: coord_system
     real(r_def)    :: scaled_radius
 
-    geometry = mesh%geometry()
-    topology = mesh%topology()
-
     coord_system  = config%finite_element%coord_system()
     scaled_radius = config%planet%scaled_radius()
+    order_h       = config%finite_element%element_order_h()
+    order_v       = config%finite_element%element_order_v()
 
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       mm_op => get_mass_matrix_fv(config, mesh, space)
       return
     end if
@@ -285,11 +297,10 @@ contains
       ! Create constant if it doesn't already exist
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
-      qr_ptr => get_qr_fe()
+      qr_ptr => get_qr_fe(config)
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
-      fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                             element_order_v, space)
+      fs => function_space_collection%get_fs(mesh, order_h, order_v, space)
       call inventory%add_operator(mm_op, fs, fs, mesh)
 
       ! The situation depends on the function space
@@ -298,7 +309,8 @@ contains
           call invoke( name="compute_w1_mass_matrix_fe",                       &
                        compute_mass_matrix_kernel_w1_type(mm_op, chi,          &
                                                           panel_id,            &
-                                                          geometry, topology,  &
+                                                          mesh%geometry(),     &
+                                                          mesh%topology(),     &
                                                           coord_system,        &
                                                           scaled_radius,       &
                                                           qr_ptr) )
@@ -306,24 +318,26 @@ contains
           call invoke( name="compute_w2_mass_matrix_fe",                       &
                        compute_mass_matrix_kernel_w2_type(mm_op, chi,          &
                                                           panel_id,            &
-                                                          geometry, topology,  &
+                                                          mesh%geometry(),     &
+                                                          mesh%topology(),     &
                                                           coord_system,        &
                                                           scaled_radius,       &
                                                           qr_ptr) )
         case (W3, Wtheta)
-          call invoke( name= "compute_scalar_mass_matrix_fe",                  &
-                       compute_mass_matrix_kernel_w_scalar_type(mm_op, chi,    &
-                                                                panel_id,      &
-                                                                extend_mesh,   &
-                                                                geometry,      &
-                                                                topology,      &
-                                                                coord_system,  &
-                                                                scaled_radius, &
+          call invoke( name= "compute_scalar_mass_matrix_fe",                    &
+                       compute_mass_matrix_kernel_w_scalar_type(mm_op, chi,      &
+                                                                panel_id,        &
+                                                                extend_mesh,     &
+                                                                mesh%geometry(), &
+                                                                mesh%topology(), &
+                                                                coord_system,    &
+                                                                scaled_radius,   &
                                                                 qr_ptr) )
       end select
       ! Lump W2 mass matrix along the edge of the domain to avoid boundary
       ! errors propagating into the domain with each iteration
-      if ( (space == W2 .or. space == W2h) .and. topology /= topology_periodic ) then
+      if ( (space == W2 .or. space == W2h) .and. &
+           mesh%topology() /= topology_periodic ) then
         call dummy_field%initialise( fs, halo_depth=2 )
         call invoke( edge_lump_w2_mass_matrix_kernel_type(mm_op,        &
                                                           dummy_field,  &
@@ -496,8 +510,14 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       diagonal_mm => get_mass_matrix_diagonal_fv(config, mesh, space)
       return
     end if
@@ -540,8 +560,7 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
-      fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                             element_order_v, space)
+      fs => function_space_collection%get_fs(mesh, order_h, order_v, space)
       call inventory%add_field(diagonal_mm, fs, mesh)
       call invoke ( setval_c(diagonal_mm, 0.0_r_def), &
                     mm_diagonal_kernel_type(diagonal_mm, mass_matrix)  )
@@ -654,8 +673,14 @@ contains
     integer(kind=i_def),        parameter :: i_minus_one = -1_i_def
     integer(tik)                          :: id
 
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       mm_linv => get_inverse_lumped_mass_matrix_fv(config, mesh, space)
       return
     end if
@@ -686,8 +711,7 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
-      fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                             element_order_v, space)
+      fs => function_space_collection%get_fs(mesh, order_h, order_v, space)
       call ones%initialise( fs )
       call inventory%add_field(mm_linv, fs, mesh)
 
@@ -815,8 +839,14 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
+    if (order_h == 0 .and. order_v == 0) then
       mm_inv => get_inverse_mass_matrix_fv(config, mesh, space)
       return
     end if
@@ -847,8 +877,7 @@ contains
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
-      fs => function_space_collection%get_fs(mesh, element_order_h,            &
-                                             element_order_v, space)
+      fs => function_space_collection%get_fs(mesh, order_h, order_v, space)
       call inventory%add_operator(mm_inv, fs, fs, mesh)
 
       call invoke( name = "create_inv_mass_matrix_fe",                         &
@@ -980,7 +1009,7 @@ contains
     if (.not. constant_exists) then
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
-      qr_ptr => get_qr_fe()
+      qr_ptr => get_qr_fe(config)
 
       w2_fs => function_space_collection%get_fs( mesh, order_h, order_v, W2 )
       w1_fs => function_space_collection%get_fs( mesh, order_h, order_v, W1 )
@@ -1110,7 +1139,7 @@ contains
     if (.not. constant_exists) then
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
-      qr_ptr => get_qr_fe()
+      qr_ptr => get_qr_fe(config)
 
       w2_fs => function_space_collection%get_fs( mesh, order_h, order_v, W2 )
       w3_fs => function_space_collection%get_fs( mesh, order_h, order_v, W3 )
@@ -1180,7 +1209,7 @@ contains
     if (.not. constant_exists) then
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
-      qr_ptr => get_qr_fe()
+      qr_ptr => get_qr_fe(config)
 
       w2h_fs => function_space_collection%get_fs( mesh, order_h, order_v, W2H )
       w3_fs => function_space_collection%get_fs( mesh, order_h, order_v, W3 )
@@ -1260,7 +1289,7 @@ contains
     if (.not. constant_exists) then
       chi => get_coordinates(mesh)
       panel_id => get_panel_id(mesh)
-      qr_ptr => get_qr_fe()
+      qr_ptr => get_qr_fe(config)
       mm_w3_inv => get_inverse_mass_matrix_fe(config, mesh, W3)
 
       w2_fs => function_space_collection%get_fs( mesh, order_h, order_v, W2 )
@@ -1358,16 +1387,18 @@ contains
 
   !> @brief Returns a pointer to the reciprocal of the finite element
   !!        multiplicity field
+  !> @param[in] config  Application configuration object
+  !> @param[in] mesh    Mesh to get the object for
   !> @param[in] space   The space of the desired r-multiplicity field
-  !> @param[in] mesh_id The ID of the mesh to get the object for
   !> @return The nodal reciprocal multiplicity field
-  function get_rmultiplicity_fe(space, mesh_id) result(rmultiplicity)
+  function get_rmultiplicity_fe(config, mesh, space) result(rmultiplicity)
 
     implicit none
 
-    integer(kind=i_def),       intent(in) :: space
-    integer(kind=i_def),       intent(in) :: mesh_id
-    type(mesh_type),              pointer :: mesh
+    type(config_type),   intent(in) :: config
+    type(mesh_type),     intent(in) :: mesh
+    integer(kind=i_def), intent(in) :: space
+
     type(field_type),             pointer :: rmultiplicity
     type(field_type)                      :: nodal_multiplicity
     type(field_type)                      :: ones
@@ -1377,9 +1408,15 @@ contains
     character(len=str_def)                :: inventory_name
     integer(tik)                          :: id
 
+    integer(i_def) :: order_h
+    integer(i_def) :: order_v
+
+    order_h = config%finite_element%element_order_h()
+    order_v = config%finite_element%element_order_v()
+
     ! If running at lowest order, use finite volume
-    if (element_order_h == 0 .and. element_order_v == 0) then
-      rmultiplicity => get_rmultiplicity_fv(space, mesh_id)
+    if (order_h == 0 .and. order_v == 0) then
+      rmultiplicity => get_rmultiplicity_fv(space, mesh%get_id())
       return
     end if
 
@@ -1407,15 +1444,13 @@ contains
       call inventory%initialise(name=inventory_name)
     end if
 
-    mesh => mesh_collection%get_mesh(mesh_id)
-    constant_exists = inventory%paired_object_exists(mesh_id)
+    constant_exists = inventory%paired_object_exists(mesh%get_id())
 
     if (.not. constant_exists) then
       ! Create constant if it doesn't already exist
       if ( LPROF ) call start_timing( id, 'runtime_constants.fem' )
 
-      fs => function_space_collection%get_fs(mesh, element_order_h, &
-                                             element_order_v, space)
+      fs => function_space_collection%get_fs(mesh, order_h, order_v, space)
 
       call inventory%add_field(rmultiplicity, fs, mesh)
 

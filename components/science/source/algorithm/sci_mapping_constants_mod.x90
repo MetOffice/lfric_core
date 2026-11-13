@@ -136,15 +136,17 @@ contains
 
   !> @brief Creates the operators for projecting a vector of components in W3
   !!        to a field in W2
-  !> @param[in] mesh  The mesh to compute the operators for
-  subroutine create_cartesian_components_to_w2_matrices(mesh)
+  !> @param[in] config  Application configuration object
+  !> @param[in] mesh    The mesh to compute the operators for
+  subroutine create_cartesian_components_to_w2_matrices(config, mesh)
 
     use sci_project_ws_to_w2_operator_kernel_mod, &
                                     only: project_ws_to_w2_operator_kernel_type
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),         pointer :: project_xdot_to_w2
     type(operator_type),         pointer :: project_ydot_to_w2
@@ -158,6 +160,11 @@ contains
     integer(kind=i_def),       parameter :: ydirection = 2_i_def
     integer(kind=i_def),       parameter :: zdirection = 3_i_def
 
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def)    :: scaled_radius
+
     if (.not. project_xdot_to_w2_inventory%is_initialised()) then
       call project_xdot_to_w2_inventory%initialise(name='project_xdot_to_w2')
     end if
@@ -168,6 +175,11 @@ contains
       call project_zdot_to_w2_inventory%initialise(name='project_zdot_to_w2')
     end if
 
+    geometry = mesh%geometry()
+    topology = mesh%topology()
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
 
     chi => get_coordinates(mesh)
     panel_id => get_panel_id(mesh)
@@ -182,12 +194,21 @@ contains
 
     call invoke( project_ws_to_w2_operator_kernel_type(project_xdot_to_w2,     &
                                                        chi, panel_id,          &
+                                                       geometry, topology,     &
+                                                       coord_system,           &
+                                                       scaled_radius,          &
                                                        xdirection, qr),        &
                  project_ws_to_w2_operator_kernel_type(project_ydot_to_w2,     &
                                                        chi, panel_id,          &
+                                                       geometry, topology,     &
+                                                       coord_system,           &
+                                                       scaled_radius,          &
                                                        ydirection, qr),        &
                  project_ws_to_w2_operator_kernel_type(project_zdot_to_w2,     &
                                                        chi, panel_id,          &
+                                                       geometry, topology,     &
+                                                       coord_system,           &
+                                                       scaled_radius,          &
                                                        zdirection, qr) )
 
   end subroutine
@@ -528,19 +549,21 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the Wtheta to shifted W3 integrals
-  !> @param[in] prime_extrusion_mesh  The prime extrusion mesh for the transform
+  !> @param[in] config  Application configuration object
+  !> @param[in] mesh    Mesh for the transform
   !> @return The integrals for transforming a mixing ratio in Wtheta
   !> to a density in shifted W3
-  function get_proj_mr_to_sh_rho_rhs_op(prime_extrusion_mesh) result(integrals)
+  function get_proj_mr_to_sh_rho_rhs_op(config, mesh) result(integrals)
 
     use sci_proj_mr_to_sh_rho_rhs_op_kernel_mod, &
                                       only: proj_mr_to_sh_rho_rhs_op_kernel_type
 
     implicit none
 
-    type(mesh_type), pointer, intent(in) :: prime_extrusion_mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
+
     type(mesh_type),             pointer :: double_level_mesh
-    integer(kind=i_def)                  :: prime_mesh_id
     type(field_type),            pointer :: integrals(:)
     type(field_type),            pointer :: double_level_chi(:)
     type(field_type),            pointer :: panel_id
@@ -552,6 +575,17 @@ contains
     logical(kind=l_def)                  :: constant_exists
     integer(tik)                         :: id
 
+    integer(kind=i_def) :: geometry
+    integer(kind=i_def) :: topology
+    integer(kind=i_def) :: coord_system
+    real(kind=r_def) :: scaled_radius
+
+    geometry = mesh%geometry()
+    topology = mesh%topology()
+
+    coord_system  = config%finite_element%coord_system()
+    scaled_radius = config%planet%scaled_radius()
+
     ! Check inventory is initialised
     if (.not. proj_mr_to_sh_rho_inventory%is_initialised()) then
       call proj_mr_to_sh_rho_inventory%initialise(                             &
@@ -559,28 +593,27 @@ contains
       )
     end if
 
-    prime_mesh_id = prime_extrusion_mesh%get_id()
     constant_exists = proj_mr_to_sh_rho_inventory%paired_object_exists(        &
-            prime_mesh_id                                                      &
+            mesh%get_id()                                                      &
     )
 
     ! Create constant if it doesn't already exist
     if (.not. constant_exists) then
 
-      panel_id => get_panel_id(prime_extrusion_mesh)
+      panel_id => get_panel_id(mesh)
       double_level_mesh => mesh_collection%get_mesh(                           &
-              prime_extrusion_mesh, DOUBLE_LEVEL                               &
+              mesh, DOUBLE_LEVEL                                               &
       )
       double_level_chi => get_coordinates(double_level_mesh)
       qr => get_qr_fv()
 
       if ( LPROF ) call start_timing( id, 'runtime_constants.mapping' )
 
-      w3_fs => function_space_collection%get_fs(prime_extrusion_mesh, 0, 0, W3)
-      wtheta_fs => function_space_collection%get_fs(prime_extrusion_mesh, 0, 0, Wtheta)
+      w3_fs => function_space_collection%get_fs(mesh, 0, 0, W3)
+      wtheta_fs => function_space_collection%get_fs(mesh, 0, 0, Wtheta)
 
       call proj_mr_to_sh_rho_inventory%add_field_array(                        &
-              integrals, w3_fs, 4, prime_extrusion_mesh                        &
+              integrals, w3_fs, 4, mesh                                        &
       )
 
       do k = 1, 4
@@ -591,6 +624,9 @@ contains
       call invoke( proj_mr_to_sh_rho_rhs_op_kernel_type(integrals,             &
                                                         double_level_chi,      &
                                                         panel_id,              &
+                                                        geometry, topology,    &
+                                                        coord_system,          &
+                                                        scaled_radius,         &
                                                         dummy_theta,           &
                                                         qr) )
 
@@ -598,7 +634,7 @@ contains
     end if
 
     ! Get existing constant
-    call proj_mr_to_sh_rho_inventory%get_field_array(prime_extrusion_mesh, integrals)
+    call proj_mr_to_sh_rho_inventory%get_field_array(mesh, integrals)
 
   end function get_proj_mr_to_sh_rho_rhs_op
 
@@ -816,13 +852,15 @@ contains
   ! ========================================================================== !
 
   !> @brief Returns a pointer to the operator projection from xdot to W2
-  !> @param[in]  mesh  Mesh to get the object for
+  !> @param[in]  config  Application configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
-  function get_project_xdot_to_w2(mesh) result(proj_op)
+  function get_project_xdot_to_w2(config, mesh) result(proj_op)
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -834,20 +872,24 @@ contains
 
     constant_exists = project_xdot_to_w2_inventory%paired_object_exists(mesh%get_id())
 
-    if (.not. constant_exists) call create_cartesian_components_to_w2_matrices(mesh)
+    if (.not. constant_exists) then
+      call create_cartesian_components_to_w2_matrices(config, mesh)
+    end if
 
     call project_xdot_to_w2_inventory%get_operator(mesh, proj_op)
 
   end function get_project_xdot_to_w2
 
   !> @brief Returns a pointer to the operator projection from ydot to W2
-  !> @param[in] mesh_id The ID of the mesh to get the object for
+  !> @param[in]  config  Application configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
-  function get_project_ydot_to_w2(mesh) result(proj_op)
+  function get_project_ydot_to_w2(config, mesh) result(proj_op)
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),      pointer :: proj_op
     logical(kind=l_def)               :: constant_exists
@@ -859,20 +901,24 @@ contains
 
     constant_exists = project_ydot_to_w2_inventory%paired_object_exists(mesh%get_id())
 
-    if (.not. constant_exists) call create_cartesian_components_to_w2_matrices(mesh)
+    if (.not. constant_exists) then
+      call create_cartesian_components_to_w2_matrices(config, mesh)
+    end if
 
     call project_ydot_to_w2_inventory%get_operator(mesh, proj_op)
 
   end function get_project_ydot_to_w2
 
   !> @brief Returns a pointer to the operator projection from zdot to W2
-  !> @param[in]  mesh  Mesh to get the object for
+  !> @param[in]  config  Application configuration object
+  !> @param[in]  mesh    Mesh to get the object for
   !> @return The projection operator
-  function get_project_zdot_to_w2(mesh) result(proj_op)
+  function get_project_zdot_to_w2(config, mesh) result(proj_op)
 
     implicit none
 
-    type(mesh_type), intent(in) :: mesh
+    type(config_type), intent(in) :: config
+    type(mesh_type),   intent(in) :: mesh
 
     type(operator_type),        pointer :: proj_op
     logical(kind=l_def)                 :: constant_exists
@@ -884,7 +930,9 @@ contains
 
     constant_exists = project_zdot_to_w2_inventory%paired_object_exists(mesh%get_id())
 
-    if (.not. constant_exists) call create_cartesian_components_to_w2_matrices(mesh)
+    if (.not. constant_exists) then
+      call create_cartesian_components_to_w2_matrices(config, mesh)
+    end if
 
     call project_zdot_to_w2_inventory%get_operator(mesh, proj_op)
 

@@ -63,11 +63,7 @@ contains
   !>               boundary conditions
   subroutine mass_matrix_solver_alg(config, y, x, bc_flag)
 
-    use solver_config_mod,             only: maximum_iterations,               &
-                                             tolerance,                        &
-                                             method,                           &
-                                             gcrk,                             &
-                                             method_cg,                        &
+    use solver_config_mod,             only: method_cg,                        &
                                              method_bicgstab,                  &
                                              method_gmres,                     &
                                              method_fgmres,                    &
@@ -75,12 +71,9 @@ contains
                                              method_prec_only,                 &
                                              method_jacobi,                    &
                                              method_chebyshev,                 &
-                                             preconditioner,                   &
                                              preconditioner_diagonal,          &
-                                             preconditioner_none,              &
-                                             monitor_convergence,              &
-                                             fail_on_non_converged,            &
-                                             jacobi_relaxation
+                                             preconditioner_none
+
     use sci_fem_constants_mod,         only: get_mass_matrix_fe,               &
                                              get_mass_matrix_fv,               &
                                              get_mass_matrix_diagonal_fe,      &
@@ -128,7 +121,25 @@ contains
     real(kind=r_def)                :: lmin, lmax
     integer(tik)                    :: id
 
+    integer(i_def) :: maximum_iterations
+    real(r_def)    :: tolerance
+    integer(i_def) :: method
+    integer(i_def) :: gcrk
+    integer(i_def) :: preconditioner
+    logical(l_def) :: monitor_convergence
+    logical(l_def) :: fail_on_non_converged
+    real(r_def)    :: jacobi_relaxation
+
     if ( LPROF ) call start_timing( id, 'mass_matrix_solver_alg' )
+
+    maximum_iterations    = config%solver%maximum_iterations()
+    tolerance             = config%solver%tolerance()
+    method                = config%solver%method()
+    gcrk                  = config%solver%gcrk()
+    preconditioner        = config%solver%preconditioner()
+    monitor_convergence   = config%solver%monitor_convergence()
+    fail_on_non_converged = config%solver%fail_on_non_converged()
+    jacobi_relaxation     = config%solver%jacobi_relaxation()
 
     mesh => y%get_mesh()
 
