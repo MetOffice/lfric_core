@@ -79,10 +79,10 @@ document-api: api-documentation
 #
 unit-tests/%: export BIN_DIR ?= $(PROJECT_DIR)/test
 unit-tests/%: export CXX_LINK = TRUE
-unit-tests/%: export FFLAGS += -DUNIT_TEST
 unit-tests/%: export IMPORT_PARTS = $(CORE_ROOT_DIR)/infrastructure \
                                     $(CORE_ROOT_DIR)/components/science
 unit-tests/%: export META_FILE_DIR = rose-meta/lfric-xios/HEAD
+unit-tests/%: export PRE_PROCESS_MACROS += UNIT_TEST
 unit-tests/%: export PROGRAMS = lfric_xios_unit_tests
 unit-tests/%: export PROJECT = lfric_xios
 unit-tests/%: export SOURCE_DIR = source

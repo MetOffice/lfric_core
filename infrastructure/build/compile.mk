@@ -28,10 +28,6 @@
 #            Default: dynamic, except on Crays where it's static
 # PROGRAMS: Names of programs to compile.
 #           Default: Everything listed in programs.mk
-# PRE_PROCESS_INCLUDE_DIRS: Space separated list of directories to search for
-#                           inclusions.
-# PRE_PROCESS_MACROS: Space separated list of macro definitions in the form
-#                     NAME[=MACRO] to be passed to the compiler.
 # PROJECT_MAKE_DIR: Used to locate project specific targets modifiers and
 #                   such.
 # COMPILE_OPTIONS: Name of an optional file that can be included to list
@@ -40,14 +36,6 @@
 ##############################################################################
 
 .SECONDEXPANSION:
-
-# Build a set of "-I" arguments to seach the whole object tree:
-INCLUDE_ARGS := $(subst ./,-I,$(shell find . -mindepth 1 -type d -print)) \
-                $(addprefix -I, $(PRE_PROCESS_INCLUDE_DIRS))
-
-# Build a set of "-D" argument for any pre-processor macros
-#
-MACRO_ARGS := $(addprefix -D,$(PRE_PROCESS_MACROS))
 
 include programs.mk
 
@@ -86,10 +74,8 @@ MOD_DIR ?= mod
 # result from "uname" but it should be good enough for the moment.
 #
 ifeq ($(shell uname),Linux)
-  $(warning linux)
   TIME_TOOL = /usr/bin/time -f "Compiled $<: Wallclock=%E, Highwater=%MKiB"
 else
-  $(warning not linux)
   TIME_TOOL = time
 endif
 
@@ -151,17 +137,8 @@ $(LIB_DIR)/lib%.a: $$($$(shell basename $$* | tr a-z A-Z)_OBJS) | $(LIB_DIR)
 	$(Q)$(TIME_TOOL) $(FC) $(FFLAGS_BASE) $(FFLAGS_EXTRA)\
 	          $(MODULE_DESTINATION_ARGUMENT) \
 	          $(MODULE_SOURCE_ARGUMENT) \
-	          $(INCLUDE_ARGS) -c -o $(basename $@).o $<
+	          -c -o $(basename $@).o $<
 	$(call MESSAGE,Compiled,$<)
-
-%.o: %.F90 | $(MOD_DIR)
-	$(call MESSAGE,Pre-process and compile,$<)
-	$(Q)$(TIME_TOOL) $(FC) $(FFLAGS_BASE) $(FFLAGS_EXTRA) \
-	          $(MODULE_DESTINATION_ARGUMENT) \
-	          $(MODULE_SOURCE_ARGUMENT) \
-	          $(INCLUDE_ARGS) $(MACRO_ARGS) -c -o $(basename $@).o $<
-	$(call MESSAGE,Compiled,$<)
-
 
 #############################################################################
 # Directories
