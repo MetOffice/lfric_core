@@ -100,14 +100,14 @@ contains
       uvw(map_w1(edge)) = 100.0_r_def*real(edge,r_def)
     end do
 
-    call split_w1_field_code(nlayers,                            &
+    call split_w1_field_code(nlayers,                             &
                               uv, w, uvw,                         &
                               face_selector_ew, face_selector_ns, &
                               vert_edge_selector,                 &
-                              ndf_w1h,   undf_w1h,   map_w1h,      &
-                              ndf_w1v,   undf_w1v,   map_w1v,      &
-                              ndf_w1,    undf_w1,    map_w1,       &
-                              ndf_w3_2d, undf_w3_2d, map_w3_2d     )
+                              ndf_w1h,   undf_w1h,   map_w1h,     &
+                              ndf_w1v,   undf_w1v,   map_w1v,     &
+                              ndf_w1,    undf_w1,    map_w1,      &
+                              ndf_w3_2d, undf_w3_2d, map_w3_2d    )
 
     ! Horizontal-edge component: each direction's bottom and top value
     do i = 1, 4

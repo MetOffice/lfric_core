@@ -75,11 +75,11 @@ contains
 
     call compute_vert_edge_selector( vert_edge_selector, &
                                      vert_edge_counter,  &
-                                     ndf_w3,              &
-                                     undf_w3,             &
-                                     map_w3,               &
-                                     ndf_w1v,              &
-                                     undf_w1v,             &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
                                      map_w1v )
 
     ! Check values!
@@ -95,11 +95,11 @@ contains
 
     call compute_vert_edge_selector( vert_edge_selector, &
                                      vert_edge_counter,  &
-                                     ndf_w3,              &
-                                     undf_w3,             &
-                                     map_w3,               &
-                                     ndf_w1v,              &
-                                     undf_w1v,             &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
                                      map_w1v )
 
     ! Check values!
@@ -115,11 +115,11 @@ contains
 
     call compute_vert_edge_selector( vert_edge_selector, &
                                      vert_edge_counter,  &
-                                     ndf_w3,              &
-                                     undf_w3,             &
-                                     map_w3,               &
-                                     ndf_w1v,              &
-                                     undf_w1v,             &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
                                      map_w1v )
 
     ! Check values!
@@ -135,11 +135,11 @@ contains
 
     call compute_vert_edge_selector( vert_edge_selector, &
                                      vert_edge_counter,  &
-                                     ndf_w3,              &
-                                     undf_w3,             &
-                                     map_w3,               &
-                                     ndf_w1v,              &
-                                     undf_w1v,             &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
                                      map_w1v )
 
     ! Check values!

@@ -52,8 +52,8 @@ module fs_continuity_mod
 !                           continuous      continuous
               W0,           1,              1, &
               W1,           1,              1, &
-              W1V,          0,              1, &
-              W1H,          1,              0, &
+              W1V,          1,              0, &
+              W1H,          1,              1, &
               W2,           1,              1, &
               W2V,          0,              1, &
               W2H,          1,              0, &

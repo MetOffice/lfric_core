@@ -42,27 +42,27 @@ contains
     integer(kind=i_def), parameter :: nlayers = 1
 
     ! W1 space (base)
-    integer(kind=i_def), parameter       :: ndf_w1  = 12_i_def
-    integer(kind=i_def), parameter       :: undf_w1 = 24_i_def
-    integer(kind=i_def), dimension(ndf_w1) :: map_w1
+    integer(kind=i_def), parameter          :: ndf_w1  = 12_i_def
+    integer(kind=i_def), parameter          :: undf_w1 = 24_i_def
+    integer(kind=i_def), dimension(ndf_w1)  :: map_w1
     real(kind=r_def),    dimension(undf_w1) :: uvw
 
     ! W1h space
-    integer(kind=i_def), parameter        :: ndf_w1h  = 8_i_def
-    integer(kind=i_def), parameter        :: undf_w1h = 16_i_def
-    integer(kind=i_def), dimension(ndf_w1h) :: map_w1h
+    integer(kind=i_def), parameter           :: ndf_w1h  = 8_i_def
+    integer(kind=i_def), parameter           :: undf_w1h = 16_i_def
+    integer(kind=i_def), dimension(ndf_w1h)  :: map_w1h
     real(kind=r_def),    dimension(undf_w1h) :: uv
 
     ! W1v space
-    integer(kind=i_def), parameter        :: ndf_w1v  = 4_i_def
-    integer(kind=i_def), parameter        :: undf_w1v = 8_i_def
-    integer(kind=i_def), dimension(ndf_w1v) :: map_w1v
+    integer(kind=i_def), parameter           :: ndf_w1v  = 4_i_def
+    integer(kind=i_def), parameter           :: undf_w1v = 8_i_def
+    integer(kind=i_def), dimension(ndf_w1v)  :: map_w1v
     real(kind=r_def),    dimension(undf_w1v) :: w
 
     ! 2D W3 space (selectors)
-    integer(kind=i_def), parameter        :: ndf_w3_2d  = 1_i_def
-    integer(kind=i_def), parameter        :: undf_w3_2d = 1_i_def
-    integer(kind=i_def), dimension(ndf_w3_2d) :: map_w3_2d
+    integer(kind=i_def), parameter             :: ndf_w3_2d  = 1_i_def
+    integer(kind=i_def), parameter             :: undf_w3_2d = 1_i_def
+    integer(kind=i_def), dimension(ndf_w3_2d)  :: map_w3_2d
     integer(kind=i_def), dimension(undf_w3_2d) :: face_selector_ew
     integer(kind=i_def), dimension(undf_w3_2d) :: face_selector_ns
     integer(kind=i_def), dimension(undf_w3_2d) :: vert_edge_selector
@@ -101,14 +101,14 @@ contains
       w(map_w1v(i)) = 100.0_r_def*real(i+4,r_def)
     end do
 
-    call combine_w1_field_code(nlayers,                            &
+    call combine_w1_field_code(nlayers,                             &
                                 uvw, uv, w,                         &
                                 face_selector_ew, face_selector_ns, &
                                 vert_edge_selector,                 &
-                                ndf_w1h,   undf_w1h,   map_w1h,      &
-                                ndf_w1v,   undf_w1v,   map_w1v,      &
-                                ndf_w1,    undf_w1,    map_w1,       &
-                                ndf_w3_2d, undf_w3_2d, map_w3_2d     )
+                                ndf_w1h,   undf_w1h,   map_w1h,     &
+                                ndf_w1v,   undf_w1v,   map_w1v,     &
+                                ndf_w1,    undf_w1,    map_w1,      &
+                                ndf_w3_2d, undf_w3_2d, map_w3_2d    )
 
     ! Horizontal-edge base entries: each direction's bottom and top value
     do i = 1, 4
