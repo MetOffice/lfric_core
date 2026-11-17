@@ -18,11 +18,13 @@
 module io_value_mod
 
   use, intrinsic :: iso_fortran_env,     only: int32, int64, real32, real64
+  use, intrinsic :: ieee_arithmetic,     only: ieee_is_finite
 
   use constants_mod,                     only : str_def, r_def, r_double, l_def
   use key_value_mod,                     only : key_value_type
   use log_mod,                           only : log_event, log_scratch_space, &
-                                                LOG_LEVEL_INFO, LOG_LEVEL_ERROR
+                                                LOG_LEVEL_INFO, LOG_LEVEL_ERROR, &
+                                                LOG_LEVEL_WARNING
 
   implicit none
 
@@ -34,6 +36,36 @@ module io_value_mod
   public :: real32_io_value_type,     real64_io_value_type
   public :: real32_arr_io_value_type, real64_arr_io_value_type
   public :: io_read_interface, io_write_interface
+  public :: to_real32, to_real64, to_int32, to_int64
+
+  !> Numeric copies for direct access to concrete public value components.
+  !> Scalars and rank-one arrays are supported within each numeric family.
+  !> Array results preserve size; allocatable assignment can resize the target.
+  !> Narrowing outside the finite destination range warns once per call, then
+  !> converts normally: overflow results are compiler-dependent and may trap.
+  !> Ordinary rounding is allowed. Existing NaN/infinity values are propagated
+  !> without an overflow warning. Initialise logging before using these helpers.
+  !> @{
+  interface to_real32
+    module procedure real32_from_real32, real32_from_real64
+    module procedure real32_arr_from_real32, real32_arr_from_real64
+  end interface to_real32
+
+  interface to_real64
+    module procedure real64_from_real32, real64_from_real64
+    module procedure real64_arr_from_real32, real64_arr_from_real64
+  end interface to_real64
+
+  interface to_int32
+    module procedure int32_from_int32, int32_from_int64
+    module procedure int32_arr_from_int32, int32_arr_from_int64
+  end interface to_int32
+
+  interface to_int64
+    module procedure int64_from_int32, int64_from_int64
+    module procedure int64_arr_from_int32, int64_arr_from_int64
+  end interface to_int64
+  !> @}
 
   !> @brief Value with associated I/O methods
   !>        that can be stored in a key-value pair
@@ -139,6 +171,153 @@ module io_value_mod
   end interface
 
 contains
+
+!===============================================
+! numeric conversion functions
+!===============================================
+
+pure function real32_from_real32(value) result(converted)
+  real(real32), intent(in) :: value
+  real(real32) :: converted
+
+  converted = value
+end function real32_from_real32
+
+function real32_from_real64(value) result(converted)
+  real(real64), intent(in) :: value
+  real(real32) :: converted
+
+  if (overflows_real32(value)) then
+    call log_event("real64 to real32 conversion overflow", LOG_LEVEL_WARNING)
+  end if
+  converted = real(value, real32)
+end function real32_from_real64
+
+pure function real64_from_real32(value) result(converted)
+  real(real32), intent(in) :: value
+  real(real64) :: converted
+
+  converted = real(value, real64)
+end function real64_from_real32
+
+pure function real64_from_real64(value) result(converted)
+  real(real64), intent(in) :: value
+  real(real64) :: converted
+
+  converted = value
+end function real64_from_real64
+
+pure function real32_arr_from_real32(value) result(converted)
+  real(real32), intent(in) :: value(:)
+  real(real32) :: converted(size(value))
+
+  converted = value
+end function real32_arr_from_real32
+
+function real32_arr_from_real64(value) result(converted)
+  real(real64), intent(in) :: value(:)
+  real(real32) :: converted(size(value))
+
+  if (any(overflows_real32(value))) then
+    call log_event("real64 to real32 array conversion overflow", LOG_LEVEL_WARNING)
+  end if
+  converted = real(value, real32)
+end function real32_arr_from_real64
+
+pure function real64_arr_from_real32(value) result(converted)
+  real(real32), intent(in) :: value(:)
+  real(real64) :: converted(size(value))
+
+  converted = real(value, real64)
+end function real64_arr_from_real32
+
+pure function real64_arr_from_real64(value) result(converted)
+  real(real64), intent(in) :: value(:)
+  real(real64) :: converted(size(value))
+
+  converted = value
+end function real64_arr_from_real64
+
+pure function int32_from_int32(value) result(converted)
+  integer(int32), intent(in) :: value
+  integer(int32) :: converted
+
+  converted = value
+end function int32_from_int32
+
+function int32_from_int64(value) result(converted)
+  integer(int64), intent(in) :: value
+  integer(int32) :: converted
+
+  if (overflows_int32(value)) then
+    call log_event("int64 to int32 conversion overflow", LOG_LEVEL_WARNING)
+  end if
+  converted = int(value, int32)
+end function int32_from_int64
+
+pure function int64_from_int32(value) result(converted)
+  integer(int32), intent(in) :: value
+  integer(int64) :: converted
+
+  converted = int(value, int64)
+end function int64_from_int32
+
+pure function int64_from_int64(value) result(converted)
+  integer(int64), intent(in) :: value
+  integer(int64) :: converted
+
+  converted = value
+end function int64_from_int64
+
+pure function int32_arr_from_int32(value) result(converted)
+  integer(int32), intent(in) :: value(:)
+  integer(int32) :: converted(size(value))
+
+  converted = value
+end function int32_arr_from_int32
+
+function int32_arr_from_int64(value) result(converted)
+  integer(int64), intent(in) :: value(:)
+  integer(int32) :: converted(size(value))
+
+  if (any(overflows_int32(value))) then
+    call log_event("int64 to int32 array conversion overflow", LOG_LEVEL_WARNING)
+  end if
+  converted = int(value, int32)
+end function int32_arr_from_int64
+
+pure function int64_arr_from_int32(value) result(converted)
+  integer(int32), intent(in) :: value(:)
+  integer(int64) :: converted(size(value))
+
+  converted = int(value, int64)
+end function int64_arr_from_int32
+
+pure function int64_arr_from_int64(value) result(converted)
+  integer(int64), intent(in) :: value(:)
+  integer(int64) :: converted(size(value))
+
+  converted = value
+end function int64_arr_from_int64
+
+elemental function overflows_real32(value) result(overflows)
+  real(real64), intent(in) :: value
+  logical :: overflows
+
+  overflows = .false.
+  if (ieee_is_finite(value)) then
+    overflows = abs(value) > real(huge(0.0_real32), real64)
+  end if
+end function overflows_real32
+
+elemental function overflows_int32(value) result(overflows)
+  integer(int64), intent(in) :: value
+  logical :: overflows
+  integer(int64), parameter :: maximum = int(huge(0_int32), int64)
+  integer(int64), parameter :: minimum = -maximum - 1_int64
+
+  overflows = value > maximum .or. value < minimum
+end function overflows_int32
 
 !===============================================
 ! constructors
