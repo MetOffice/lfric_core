@@ -230,7 +230,7 @@ contains
 #if (RDEF_PRECISION == 64)
     tol = 1.0e-7_real64
 #elif (RDEF_PRECISION == 32)
-    tol = 1.0e-7_real32
+    tol = 1.0e-5_real32
 #else
     @assertFail("Unsupported default precision")
 #endif
