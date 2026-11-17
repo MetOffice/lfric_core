@@ -981,7 +981,7 @@ function alphabetar2xyz_vector(sphere_vec, abr, panel_id) result (cart_vec)
 
   ! f_Z = f_alpha dot(e_alpha, e_Z) + f_beta dot(e_beta, e_Z) + f_r dot(e_r, e_Z)
   transform_matrix(3,:) = 1 / panel_rho * &
-  (/ -cos(abr(2))*tan(abr(1))*tan(abr(2)), 1.0_r_def/cos(abr(1)), tan(abr(1)) /)
+  (/ -cos(abr(2))*tan(abr(1))*tan(abr(2)), 1.0_r_def/cos(abr(1)), tan(abr(2)) /)
 
   ! Obtain the XYZ vector components if point was on panel 1
   panel_1_vec(:) = matmul(transform_matrix(:,:), sphere_vec(:))
