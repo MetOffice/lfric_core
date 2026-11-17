@@ -1815,6 +1815,9 @@ contains
     call dx_at_w2_inventory%clear()
     call dz_at_wtheta_inventory%clear()
     call dA_msl_proj_inventory%clear()
+    call face_selector_ew_inventory%clear()
+    call face_selector_ns_inventory%clear()
+    call vert_edge_selector_inventory%clear()
 
   end subroutine final_geometric_constants
 
