@@ -34,4 +34,11 @@ FFLAGS_FORTRAN_STANDARD   =
 
 LDFLAGS_COMPILER = -g
 
+# Because Fortran source is preprocessed on import, it is done by a Fortran
+# preprocessor, not the compiler. As such we have to set up the compiler
+# identification macros as though the compiler had done so.
+#
+# As of 17/11/2026, I was unable to find any PGFortran documentation which
+# listed its special macros.
+#
 FPPFLAGS = -P
