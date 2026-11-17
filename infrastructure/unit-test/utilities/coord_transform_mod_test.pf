@@ -240,7 +240,7 @@ contains
     abr(:) = (/ PI/4.0_r_def, 0.0_r_def, 0.1_r_def /)
     abr_vec(:) = (/ 2.0_r_def, 3.0_r_def, 5.0_r_def /)
 
-    XYZ_vec_answer(:) = (/ 5.0_r_def/sqrt(2.0_r_def),                          &
+    XYZ_vec_answer(:) = (/ 3.0_r_def/sqrt(2.0_r_def),                          &
                            7.0_r_def/sqrt(2.0_r_def),                          &
                            3.0_r_def /)
 
@@ -256,7 +256,7 @@ contains
     abr_vec(:) = (/ 2.0_r_def, 3.0_r_def, 5.0_r_def /)
 
     XYZ_vec_answer(:) = (/ -2.0_r_def,                                         &
-                            sqrt(2.0_r_def) - 1.0_r_def,                       &
+                            sqrt(2.0_r_def),                                   &
                             4.0_r_def*sqrt(2.0_r_def) /)
 
     xyz_vec(:) = alphabetar2xyz_vector(abr_vec, abr, panel_id)
