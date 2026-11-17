@@ -23,7 +23,14 @@ module mesh_mod
                                     linked_list_item_type
   use linked_list_data_mod,  only : linked_list_data_type
   use local_mesh_map_mod,    only : local_mesh_map_type
-  use local_mesh_mod,        only : local_mesh_type
+  use local_mesh_mod,        only : local_mesh_type, &
+                                    geometry_spherical, &
+                                    geometry_planar, &
+                                    topology_non_periodic, &
+                                    topology_channel, &
+                                    topology_periodic, &
+                                    coord_sys_ll, &
+                                    coord_sys_xyz
   use log_mod,               only : log_event, log_scratch_space, &
                                     LOG_LEVEL_ERROR, LOG_LEVEL_TRACE, &
                                     LOG_LEVEL_INFO, LOG_LEVEL_DEBUG
@@ -43,6 +50,10 @@ module mesh_mod
   implicit none
 
   private
+
+  public :: geometry_spherical, geometry_planar
+  public :: topology_non_periodic, topology_channel, topology_periodic
+  public :: coord_sys_ll, coord_sys_xyz
 
   !============================================================================
   ! Declare type definitions in this module
@@ -174,9 +185,9 @@ module mesh_mod
     integer(i_def), allocatable, private :: cells_in_colour(:,:)
     !> integer 2-d array, how many of the first so many cells belong to each colour
     integer(i_def), allocatable, private :: ncells_per_colour_subset(:,:)
-    integer(i_def),allocatable           :: last_inner_cell_per_colour(:,:)
-    integer(i_def),allocatable           :: last_halo_cell_per_colour(:,:)
-    integer(i_def),allocatable           :: last_edge_cell_per_colour(:)
+    integer(i_def), allocatable          :: last_inner_cell_per_colour(:,:)
+    integer(i_def), allocatable          :: last_halo_cell_per_colour(:,:)
+    integer(i_def), allocatable          :: last_edge_cell_per_colour(:)
     !==========================================================================
     ! Maps that this mesh connects to
     !
@@ -233,6 +244,9 @@ module mesh_mod
     procedure, public :: get_domain
     procedure, public :: get_domain_top
     procedure, public :: get_extrusion_id
+    procedure, public :: geometry
+    procedure, public :: topology
+    procedure, public :: coord_sys
     procedure, public :: get_dz
     procedure, public :: get_eta
     procedure, public :: get_vertex_cell_owner
@@ -1214,6 +1228,57 @@ contains
     extrusion_id = self%extrusion_id
 
   end function get_extrusion_id
+
+
+  !==============================================================================
+  !> @brief   Returns mesh geometry enumeration
+  !> @return  geometry_enumeration  Integer enumeration identifying the mesh
+  !>                                surface geometry type
+  !>
+  function geometry( self ) result( geometry_enumeration )
+
+    implicit none
+
+    class(mesh_type), intent(in) :: self
+    integer(i_def) :: geometry_enumeration
+
+    geometry_enumeration = self%local_mesh%geometry()
+
+  end function geometry
+
+
+  !==============================================================================
+  !> @brief     Returns mesh topology enumeration
+  !> @return    topology_enumeration  Integer enumeration identifying the mesh
+  !>                                  domain boundary connectivity type
+  !>
+  function topology( self ) result( topology_enumeration )
+
+    implicit none
+
+    class(mesh_type), intent(in) :: self
+    integer(i_def) :: topology_enumeration
+
+    topology_enumeration = self%local_mesh%topology()
+
+  end function topology
+
+
+  !> @brief     Returns mesh topology enumeration
+  !> @return    coord_sys_enumeration  Integer enumeration identifying the mesh
+  !>                                   coordinate system.
+  !>
+  function coord_sys( self ) result( coord_sys_enumeration )
+
+    implicit none
+
+    class(mesh_type), intent(in) :: self
+    integer(i_def) :: coord_sys_enumeration
+
+    coord_sys_enumeration = self%local_mesh%coord_sys()
+
+  end function coord_sys
+
 
   !> @details This functions returns an array of 3d-layer thicknesses in
   !>          metres

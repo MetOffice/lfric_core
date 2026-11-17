@@ -28,6 +28,9 @@ module local_mesh_mod_test
                                         partitioner_interface
   use ugrid_mesh_data_mod,        only: ugrid_mesh_data_type
   use panel_decomposition_mod,    only: custom_decomposition_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   implicit none
 
@@ -144,17 +147,26 @@ contains
     logical(l_def), parameter :: enforce_constraints = .false.
 
     logical(l_def) :: answer
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     ! Create a local mesh from partitioning a global mesh on 1 and 4 processors
 
     num_processes = this%context%getNumProcesses()
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
     mesh_name = 'unit_test'
     npanels  = 1
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
     global_mesh_ptr => global_mesh_collection%get_global_mesh( global_mesh_id )
@@ -484,9 +496,15 @@ contains
     type(local_mesh_type), target :: local_mesh(2)
     type(local_mesh_map_type), pointer :: local_mesh_map
     integer(i_def), allocatable :: mesh_map(:,:,:)
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler_
 
     npanels  = 6
     filename='data/mesh_C32_MG.nc'
+    allocate( ncdf_quad_type :: file_handler_ )
+    call ugrid_2d%set_file_handler( file_handler_ )
+    call ugrid_2d%file_handler_open(trim(filename))
 
     xproc = 1
     yproc = 1
@@ -499,7 +517,7 @@ contains
     partitioner_ptr => partitioner_cubedsphere_serial
     decomposition = custom_decomposition_type(xproc, yproc)
     do i=1, size(mesh_names)
-      call ugrid_mesh_data%read_from_file(trim(filename), mesh_names(i))
+      call ugrid_mesh_data%read_from_file(trim(filename), mesh_names(i), ugrid_2d)
       global_mesh = global_mesh_type( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
       global_mesh_ptr => global_mesh
@@ -511,6 +529,8 @@ contains
       call local_mesh(i)%initialise( global_mesh_ptr, partition )
       nullify(global_mesh_ptr)
     end do
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler_)) deallocate( file_handler_ )
 
     nullify(partitioner_ptr)
 
@@ -768,16 +788,26 @@ contains
                41,void,42,void,  43,44,void,void,              &
                45,46,void,void,  47,48,void,void,              &
                49,void,void,void ], (/ 2, 2, 16/) )
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler_
+
+    allocate( ncdf_quad_type :: file_handler_ )
+    call ugrid_2d%set_file_handler( file_handler_ )
+    call ugrid_2d%file_handler_open(trim(filename))
+
 
     !===========================================================================
     ! Setup
     !===========================================================================
     ! 1.0 Read in local meshes
     do i=1, size(mesh_names)
-      call ugrid_mesh_data%read_from_file( filename, mesh_names(i) )
+      call ugrid_mesh_data%read_from_file( filename, mesh_names(i), ugrid_2d )
       call local_meshes(i)%initialise( ugrid_mesh_data )
       call ugrid_mesh_data%clear()
     end do
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler_)) deallocate( file_handler_ )
 
     ! 2.0 Read in local mesh_maps
     call file_handler%file_open(filename)

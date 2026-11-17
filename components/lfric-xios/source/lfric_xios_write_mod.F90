@@ -171,8 +171,8 @@ subroutine write_field_generic(field_name, field_proxy)
 
   hdim = undf/vdim
 
-  ! detect field with legacy checkpointing domain
-  legacy = (index(get_field_domain_ref(field_name), 'checkpoint_') == 1)
+  ! detect field with legacy domain
+  legacy = (index(get_field_domain_ref(field_name), 'legacy_') == 1)
 
   ! sanity check
   if (.not. legacy .and. .not. (hdim*vdim == undf)) then
@@ -628,7 +628,7 @@ subroutine create_checkpoint_list(clock, &
     end if
   else
     allocate(checkpoint_times_output, source=checkpoint_times_input)
-  endif
+  end if
 
 end subroutine create_checkpoint_list
 

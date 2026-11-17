@@ -1045,11 +1045,7 @@ subroutine assign_attributes(self)
     ierr = nf90_put_att( self%ncid, id, trim(attname), &
                          self%null_island )
     call check_err(ierr, routine, cmess)
-  end if
 
-  ! Only present for periodic, spherical domains
-  if ( trim(self%geometry)  == 'spherical' .and. &
-       trim(self%topology)  == 'periodic' ) then
     attname = 'equatorial_latitude'
     cmess   = 'Adding global attribute "'//trim(attname)//'"'
     ierr = nf90_put_att( self%ncid, id, trim(attname), &

@@ -106,8 +106,8 @@ contains
       else
         self%start_stop(k) = .true.
         self%start_count(k) = self%overall_counter
-      endif
-    endif
+      end if
+    end if
 
   end subroutine counter
 

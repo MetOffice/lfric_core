@@ -239,7 +239,7 @@ contains
       if ( abs(fmin) > tolerance .or. abs(fmax) > tolerance ) then
         is_zero = .false.
         return
-      endif
+      end if
     end do
   end function bundle_is_zero
 

@@ -286,3 +286,12 @@ to other model requirements including models that do not use XIOS.
    checkpoint flag setting, to the ``checkpoint_fields`` field collection.
    Additionally, like all other prognostic fields, it is added to the
    ``depository`` field collection.
+
+   ``iodef.xml`` files may reference further ``.xml`` files using the
+   ``src=""`` attribute.  File paths in the source tree are maintained
+   using symbolic links, which are dereferenced by ``rose-app.conf``
+   to enable running tests.  All links must resolve within the source,
+   and validation is implemented in a test called ``validate_iodef``.
+   Only the shared XIOS runtime configuration files within ``/etc``
+   are updated to use environment variables, these should not be used
+   within other ``.xml`` fragments within the ``lfric_core`` code base.

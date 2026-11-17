@@ -38,7 +38,7 @@
         },
         "tech-tests": {
             "tech-tests_wallclock": 15,
-            "tech-tests_memory": [6, "GB"],
+            "tech-tests_memory": [12, "GB"],
             "tech-tests_cpus": 6,
         },
     },

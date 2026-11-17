@@ -1,0 +1,62 @@
+' (c) Crown copyright Met Office. All rights reserved.
+' The file LICENCE, distributed with this code, contains details of the terms
+' under which the code may be used.
+' Some of the content of this file has been produced with the assistance of
+' Met Office GitHub Copilot Enterprise.
+
+class inventory_by_integer_mod::inventory_by_integer_type {
+  -paired_object_list: linked_list_type
+  -name: string
+  -table_len: integer
+
+  +initialise(<<in optional>> name : string, <<in optional>> table_len : integer ) :
+  +add_paired_object( <<in>> paired_object: id_abstract_pair_type ) :
+  +get_length() : integer
+  +get_name() : string
+  +get_name() : string
+  +clear() :
+  +get_paired_object( <<in>> id: integer ) : id_abstract_pair_type
+  +paired_object_exists( <<in>> id: integer ) : logical
+  +remove_paired_object( <<in>> id: integer ) :
+  +add_field( <<out>> field: field_real32_type, <<in>> fs: function_space_type, <<in>> key: integer, <<in, optional>> name: character, <<in, optional>> halo_depth: integer ) :
+  +add_field( <<out>> field: field_real64_type, <<in>> fs: function_space_type, <<in>> key: integer, <<in, optional>> name: character, <<in, optional>> halo_depth: integer ) :
+  +add_field( <<out>> field: integer_field_type, <<in>> fs: function_space_type, <<in>> key: integer, <<in, optional>> name: character, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: field_real32_type, <<in>> fs: function_space_type, <<in>> array_size: integer, <<in>> key: integer, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: field_real64_type, <<in>> fs: function_space_type, <<in>> array_size: integer, <<in>> key: integer, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: integer_field_type, <<in>> fs: function_space_type, <<in>> array_size: integer, <<in>> key: integer, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: field_real32_type(:,:), <<in>> fs: function_space_type, <<in>> dim1: integer, <<in>> dim2: integer, <<in>> key: integer, <<in, optional>> halo_depth: integer ) :
+  +add_field_array( <<out>> field_array: field_real64_type(:,:), <<in>> fs: function_space_type, <<in>> dim1: integer, <<in>> dim2: integer, <<in>> key: integer, <<in, optional>> halo_depth: integer ) :
+  +add_integer( <<in>> number: integer, <<in>> key: integer ) :
+  +add_integer_array( <<in>> numbers: integer, <<in>> key: integer ) :
+  +add_logical( <<in>> bool_flag: logical, <<in>> key: integer ) :
+  +add_real32( <<in>> number: real, <<in>> key: integer ) :
+  +add_real64( <<in>> number: real, <<in>> key: integer ) :
+  +add_operator( <<out>> operator_in: operator_real32_type, <<in>> fs_target: function_space_type, <<in>> fs_source: function_space_type, <<in>> key: integer ) :
+  +add_operator( <<out>> operator_in: operator_real64_type, <<in>> fs_target: function_space_type, <<in>> fs_source: function_space_type, <<in>> key: integer ) :
+  +copy_field( <<in>> field: field_real32_type, <<in>> key: integer ) :
+  +copy_field( <<in>> field: field_real64_type, <<in>> key: integer ) :
+  +copy_field( <<in>> field: integer_field_type, <<in>> key: integer ) :
+  +copy_field_array( <<in>> field_array: field_real32_type, <<in>> key: integer ) :
+  +copy_field_array( <<in>> field_array: field_real64_type, <<in>> key: integer ) :
+  +copy_field_array( <<in>> field_array: integer_field_type, <<in>> key: integer ) :
+  +copy_field_array( <<in>> field_array: field_real32_type(:,:), <<in>> key: integer ) :
+  +copy_field_array( <<in>> field_array: field_real64_type(:,:), <<in>> key: integer ) :
+  +copy_operator( <<in>> operator_in: operator_real32_type, <<in>> key: integer ) :
+  +copy_operator( <<in>> operator_in: operator_real64_type, <<in>> key: integer ) :
+  +get_field( <<in>> key: integer, <<out>> field: field_real32_type ) :
+  +get_field( <<in>> key: integer, <<out>> field: field_real64_type ) :
+  +get_field( <<in>> key: integer, <<out>> field: integer_field_type ) :
+  +get_field_array( <<in>> key: integer, <<out>> field_array: field_real32_type ) :
+  +get_field_array( <<in>> key: integer, <<out>> field_array: field_real64_type ) :
+  +get_field_array( <<in>> key: integer, <<out>> field_array: integer_field_type ) :
+  +get_field_array( <<in>> key: integer, <<out>> field_array: field_real32_type(:,:) ) :
+  +get_field_array( <<in>> key: integer, <<out>> field_array: field_real64_type(:,:) ) :
+  +get_integer( <<in>> key: integer, <<out>> number: integer ) :
+  +get_integer_array( <<in>> key: integer, <<out>> numbers: integer ) :
+  +get_logical( <<in>> key: integer, <<out>> bool_flag: logical ) :
+  +get_real32( <<in>> key: integer, <<out>> number: real ) :
+  +get_real64( <<in>> key: integer, <<out>> number: real ) :
+  +get_operator( <<in>> key: integer, <<out>> operator_out: operator_real32_type ) :
+  +get_operator( <<in>> key: integer, <<out>> operator_out: operator_real64_type ) :
+  <<destroy>>+inventory_by_integer_destructor()
+}

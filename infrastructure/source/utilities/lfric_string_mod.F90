@@ -56,7 +56,7 @@ contains
     else
       allocate(character(len(input)) :: parts(1))
       parts = input
-    endif
+    end if
 
   end function split_string
 

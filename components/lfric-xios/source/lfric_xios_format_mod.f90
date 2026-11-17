@@ -48,12 +48,12 @@ contains
 !> @param[in]  fpxy              Field proxy of LFRic field to be formatted
 !> @param[in]  m                 Number of rows in input matrix
 !> @param[in]  n                 Number of columns in input matrix
-!> @param[in]  legacy            Use legacy checkpoint domains?
+!> @param[in]  legacy            Use legacy domains?
 !>
 subroutine format_field(xios_data, field_name, fpxy, m, n, legacy)
   implicit none
 
-  real(dp_xios),                  intent(in out):: xios_data(:)
+  real(dp_xios),                  intent(inout):: xios_data(:)
   character(len=*),               intent(in)    :: field_name
   class(field_parent_proxy_type), intent(in)    :: fpxy
   integer(i_def),                 intent(in)    :: m
@@ -119,14 +119,14 @@ end subroutine format_field
 !> @param[in]  fpxy              Field proxy of LFRic field to be read
 !> @param[in]  m                 Number of rows in field data matrix
 !> @param[in]  n                 Number of columns in field data matrix
-!> @param[in]  legacy            Use legacy checkpoint domains?
+!> @param[in]  legacy            Use legacy domains?
 !>
 subroutine inverse_format_field(xios_data, field_name, fpxy, m, n, legacy)
   implicit none
 
-  real(dp_xios),                  intent(in out) :: xios_data(:)
+  real(dp_xios),                  intent(inout) :: xios_data(:)
   character(len=*),               intent(in)     :: field_name
-  class(field_parent_proxy_type), intent(in out) :: fpxy
+  class(field_parent_proxy_type), intent(inout) :: fpxy
   integer(i_def),                 intent(in)     :: m
   integer(i_def),                 intent(in)     :: n
   logical(l_def),                 intent(in)     :: legacy
