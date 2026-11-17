@@ -98,6 +98,7 @@ contains
     allocate( entity_w1v%edges(number_of_edges) )
     allocate( entity_w1v%verts(number_of_vertices) )
 
+    ! Higher-order W1 elements have DoFs on faces, so these are not all IMDI
     entity_w1v%faces = (/ W, S, E, N, IMDI, IMDI /)
     entity_w1v%edges = (/ IMDI, IMDI, IMDI, IMDI, SW, SE, NE, NW,              &
                           IMDI, IMDI, IMDI, IMDI /)
@@ -107,6 +108,7 @@ contains
     allocate( entity_w1h%edges(number_of_edges) )
     allocate( entity_w1h%verts(number_of_vertices) )
 
+    ! Higher-order W1 elements have DoFs on faces, so these are not all IMDI
     entity_w1h%faces = (/ W, S, E, N, B, T /)
     entity_w1h%edges = (/ WB, SB, EB, NB, IMDI, IMDI, IMDI, IMDI,              &
                           WT, ST, ET, NT /)
