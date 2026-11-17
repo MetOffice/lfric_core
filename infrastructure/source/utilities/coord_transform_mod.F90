@@ -973,7 +973,7 @@ function alphabetar2xyz_vector(sphere_vec, abr, panel_id) result (cart_vec)
   ! in terms of XYZ Cartesian unit basis vectors
   ! f_X = f_alpha dot(e_alpha, e_X) + f_beta dot(e_beta, e_X) + f_r dot(e_r, e_X)
   transform_matrix(1,:) = 1 / panel_rho * &
-  (/ -cos(abr(2))*tan(abr(1)), -cos(abr(1))*tan(abr(2)), 1.0_r_def /)
+  (/ -cos(abr(2))*tan(abr(2)), -cos(abr(1))*tan(abr(2)), 1.0_r_def /)
 
   ! f_Y = f_alpha dot(e_alpha, e_Y) + f_beta dot(e_beta, e_Y) + f_r dot(e_r, e_Y)
   transform_matrix(2,:) = 1 / panel_rho * &
