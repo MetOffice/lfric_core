@@ -26,7 +26,7 @@ module key_value_mod_test
   private
 
   public :: test_integer, test_real, test_logical, test_string, test_abstract, &
-            test_create_key_value
+            test_create_key_value, test_has_key
 
   type, extends(abstract_value_type) :: test_type
     integer, public :: int_number
@@ -340,6 +340,37 @@ contains
     deallocate(instance)
 
   end subroutine test_create_key_value
+
+  @test
+  subroutine test_has_key()
+
+    implicit none
+
+    type(int32_key_value_type)     :: uninitialised
+    type(int32_key_value_type)     :: test_unit_int32
+    class(key_value_type), pointer :: instance
+
+    character(*), parameter :: key = 'fish'
+
+    ! An uninitialised pair has no key to match
+    @assertFalse( uninitialised%has_key( key ) )
+
+    call test_unit_int32%initialise( key, 15_int32 )
+
+    @assertTrue( test_unit_int32%has_key( key ) )
+    @assertTrue( test_unit_int32%has_key( key//'   ' ) )
+    @assertFalse( test_unit_int32%has_key( 'big_fish' ) )
+    @assertFalse( test_unit_int32%has_key( 'fis' ) )
+    @assertFalse( test_unit_int32%has_key( 'FISH' ) )
+    @assertFalse( test_unit_int32%has_key( '' ) )
+
+    ! Polymorphic dispatch via the abstract type
+    instance => create_key_value( 'str_val', 'Bob' )
+    @assertTrue( instance%has_key( 'str_val' ) )
+    @assertFalse( instance%has_key( 'int32_val' ) )
+    deallocate(instance)
+
+  end subroutine test_has_key
 
 end module key_value_mod_test
 
