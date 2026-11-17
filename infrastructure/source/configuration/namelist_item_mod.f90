@@ -3,6 +3,8 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+! Some content in this file was generated or refactored with assistance from
+! - Met Office Github Copilot Enterprise (Claude Opus 5.5)
 !
 !> @brief   Defines a container object (namelist_item_type) to hold a concrete
 !>          key-value pair object via their allocatable abstract type
@@ -94,6 +96,7 @@ module namelist_item_mod
     procedure, private :: value_str_arr
 
     procedure :: get_key
+    procedure :: has_key
 
     generic   :: get_value  => value_int32,      value_int64,       &
                                value_int32_arr,  value_int64_arr,   &
@@ -452,6 +455,27 @@ function get_key( self ) result( key )
 
   return
 end function get_key
+
+
+!===========================================================
+!> @brief Tests whether the object's key matches a given string.
+!> @param[in] name  String to compare against the key.
+!> @return    match True if the key matches name.
+function has_key( self, name ) result( match )
+
+  implicit none
+
+  class(namelist_item_type), intent(in) :: self
+  character(*),              intent(in) :: name
+
+  logical :: match
+
+  match = .false.
+  if (allocated(self%key_value_pair)) then
+    match = self%key_value_pair%has_key( name )
+  end if
+
+end function has_key
 
 
 !===========================================================
