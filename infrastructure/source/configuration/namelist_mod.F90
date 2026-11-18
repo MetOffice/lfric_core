@@ -473,7 +473,7 @@ contains
         ! This used to use members%get_key() to test against the name but
         ! gfortran's deferred-length string return is not safe in OpenMP,
         ! Perform the test in an OpenMP safe way.
-        if ( self%members(i)%has_key( name ) ) then
+        if ( self%members(i)%is_key( name ) ) then
           member_index = i
           return
         end if

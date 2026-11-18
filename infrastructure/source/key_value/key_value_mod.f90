@@ -60,7 +60,7 @@ module key_value_mod
   contains
     procedure :: key_value_initialise
     procedure :: get_key => get_key_value_key
-    procedure :: has_key => key_value_has_key
+    procedure :: is_key => key_value_is_key
   end type key_value_type
 
   !=======================================================================
@@ -369,7 +369,7 @@ end function get_key_value_key
 
 
 !> @brief Tests whether the pair's key matches a given string.
-function key_value_has_key( self, name ) result( match )
+function key_value_is_key( self, name ) result( match )
 
   implicit none
 
@@ -381,7 +381,7 @@ function key_value_has_key( self, name ) result( match )
   match = .false.
   if ( allocated(self%key) ) match = ( trim(self%key) == trim(name) )
 
-end function key_value_has_key
+end function key_value_is_key
 
 !=================================================
 ! Concrete initialisers

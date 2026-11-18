@@ -96,7 +96,7 @@ module namelist_item_mod
     procedure, private :: value_str_arr
 
     procedure :: get_key
-    procedure :: has_key
+    procedure :: is_key
 
     generic   :: get_value  => value_int32,      value_int64,       &
                                value_int32_arr,  value_int64_arr,   &
@@ -460,8 +460,8 @@ end function get_key
 !===========================================================
 !> @brief Tests whether the object's key matches a given string.
 !> @param[in] name  String to compare against the key.
-!> @return    match True if the key matches name.
-function has_key( self, name ) result( match )
+!> @return  True if the key matches name.
+function is_key( self, name ) result( match )
 
   implicit none
 
@@ -472,10 +472,10 @@ function has_key( self, name ) result( match )
 
   match = .false.
   if (allocated(self%key_value_pair)) then
-    match = self%key_value_pair%has_key( name )
+    match = self%key_value_pair%is_key( name )
   end if
 
-end function has_key
+end function is_key
 
 
 !===========================================================

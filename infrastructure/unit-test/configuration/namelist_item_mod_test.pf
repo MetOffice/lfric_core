@@ -21,7 +21,7 @@ module namelist_item_mod_test
 
   private
 
-  public :: test_array, test_has_key
+  public :: test_array, test_is_key
 
 
 contains
@@ -152,7 +152,7 @@ contains
   end subroutine test_array
 
   @test
-  subroutine test_has_key()
+  subroutine test_is_key()
 
     implicit none
 
@@ -164,21 +164,21 @@ contains
     character(*), parameter :: arr_key    = 'mesh_names'
 
     ! An item with no key-value pair has no key to match
-    @assertFalse( uninitialised%has_key( scalar_key ) )
+    @assertFalse( uninitialised%is_key( scalar_key ) )
 
     call test_scalar%initialise( scalar_key, 6_int32 )
     call test_arr%initialise( arr_key, ['dynamics', 'physics '] )
 
-    @assertTrue( test_scalar%has_key( scalar_key ) )
-    @assertTrue( test_scalar%has_key( scalar_key//'   ' ) )
-    @assertFalse( test_scalar%has_key( 'n_partition' ) )
-    @assertFalse( test_scalar%has_key( 'N_PARTITIONS' ) )
-    @assertFalse( test_scalar%has_key( arr_key ) )
-    @assertFalse( test_scalar%has_key( '' ) )
+    @assertTrue( test_scalar%is_key( scalar_key ) )
+    @assertTrue( test_scalar%is_key( scalar_key//'   ' ) )
+    @assertFalse( test_scalar%is_key( 'n_partition' ) )
+    @assertFalse( test_scalar%is_key( 'N_PARTITIONS' ) )
+    @assertFalse( test_scalar%is_key( arr_key ) )
+    @assertFalse( test_scalar%is_key( '' ) )
 
-    @assertTrue( test_arr%has_key( arr_key ) )
-    @assertFalse( test_arr%has_key( scalar_key ) )
+    @assertTrue( test_arr%is_key( arr_key ) )
+    @assertFalse( test_arr%is_key( scalar_key ) )
 
-  end subroutine test_has_key
+  end subroutine test_is_key
 
 end module namelist_item_mod_test
