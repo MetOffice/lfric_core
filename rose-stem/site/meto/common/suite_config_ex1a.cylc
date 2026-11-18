@@ -105,7 +105,7 @@
     [[EX1A_MESH]]
         inherit=EX1A_BASE
         [[[directives]]]
-            -l tmpsize=6GB
+            -l tmpsize=12GB
 
     [[EX1A_MESH_GNU]]
         inherit=EX1A_GNU,EX1A_MESH

@@ -25,11 +25,6 @@ module io_demo_checkpoint_mod
                                     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR
   use mesh_mod,               only: mesh_type
 
-  use base_mesh_config_mod, only: geometry_spherical,      &
-                                  geometry_planar,         &
-                                  topology_fully_periodic, &
-                                  topology_non_periodic
-
   implicit none
 
   private
@@ -71,21 +66,9 @@ contains
     call log_event( 'io_demo: Setting up checkpoint I/O', LOG_LEVEL_DEBUG )
 
     mesh => chi(1)%get_mesh()
-    if (mesh%is_geometry_spherical()) then
-      geometry = geometry_spherical
-    else
-      geometry = geometry_planar
-    end if
 
-    if (mesh%is_topology_periodic()) then
-      topology = topology_fully_periodic
-    else if (mesh%is_topology_non_periodic()) then
-      topology = topology_non_periodic
-    else
-      call log_event( 'Unsupported mesh topology', &
-                      log_level_error )
-    end if
-
+    geometry = mesh%geometry()
+    topology = mesh%topology()
     coord_system  = modeldb%config%finite_element%coord_system()
     scaled_radius = modeldb%config%planet%scaled_radius()
 

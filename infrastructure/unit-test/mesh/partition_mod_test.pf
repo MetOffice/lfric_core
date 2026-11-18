@@ -24,6 +24,9 @@ module partition_mod_test
   use reference_element_mod,      only: reference_cube_type
   use ugrid_mesh_data_mod,        only: ugrid_mesh_data_type
   use panel_decomposition_mod,    only: custom_decomposition_type
+  use ugrid_2d_mod,   only: ugrid_2d_type
+  use ugrid_file_mod, only: ugrid_file_type
+  use ncdf_quad_mod,  only: ncdf_quad_type
 
   implicit none
 
@@ -125,6 +128,9 @@ contains
     logical(l_def), parameter :: enforce_constraints = .false.
 
     character(len = str_max_filename) :: filename
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
@@ -146,9 +152,15 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_BiP8x8-750x250.nc'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
     global_mesh_ptr => global_mesh_collection%get_global_mesh( global_mesh_id )
@@ -342,6 +354,9 @@ contains
     logical(l_def), parameter :: enforce_constraints = .false.
 
     character(len = str_max_filename) :: filename
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
@@ -363,10 +378,15 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_planar.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
 
@@ -589,6 +609,9 @@ contains
     logical(l_def), parameter :: enforce_constraints = .false.
 
     character(len = str_max_filename) :: filename
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
@@ -610,10 +633,15 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_trench_x.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
 
@@ -807,6 +835,9 @@ contains
     logical(l_def), parameter :: enforce_constraints =.false.
 
     character(len = str_max_filename) :: filename
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     num_processes = this%context%getNumProcesses()
     select case (num_processes)
@@ -828,10 +859,15 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_trench_y.nc'
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
 
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
 
@@ -1057,6 +1093,9 @@ contains
     logical(l_def), parameter :: enforce_constraints = .false.
 
     character(len = str_max_filename) :: filename
+    type(ugrid_2d_type) :: ugrid_2d
+
+    class(ugrid_file_type), allocatable :: file_handler
 
     xproc = 1
     yproc = 1
@@ -1068,9 +1107,14 @@ contains
     generate_inner_halos = .true.
 
     filename = 'data/mesh_C4.nc'
-    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name)
+    allocate( ncdf_quad_type :: file_handler )
+    call ugrid_2d%set_file_handler( file_handler )
+    call ugrid_2d%file_handler_open(trim(filename))
+    call ugrid_mesh_data%read_from_file(trim(filename), mesh_name, ugrid_2d)
     global_mesh = global_mesh_type( ugrid_mesh_data )
     call ugrid_mesh_data%clear()
+    call ugrid_2d%file_handler_close()
+    if (allocated(file_handler)) deallocate( file_handler )
     global_mesh_id = global_mesh%get_id()
     call global_mesh_collection%add_new_global_mesh( global_mesh )
     global_mesh_ptr => global_mesh_collection%get_global_mesh( global_mesh_id )

@@ -369,10 +369,10 @@ contains
     ! entries
     if (any(dofmap_to(2:)<dofmap_to(1))) then
        call log_event("First entry in dofmap is not smallest entry for to-space", LOG_LEVEL_ERROR)
-    endif
+    end if
     if (any(dofmap_from(2:)<dofmap_from(1))) then
        call log_event("First entry in dofmap is not smallest entry for from-space",LOG_LEVEL_ERROR)
-    endif
+    end if
 
     nlayers = fs_to%get_nlayers()
     do k=1, nlayers
@@ -448,12 +448,12 @@ contains
        call log_event("Operator_mod:extract_mesh_fs_info():Function space " // &
           "mapped to in columnwise operator is not horizontally discontinuous",&
           LOG_LEVEL_ERROR)
-    endif
+    end if
     if (self%ndof_cell_from /= fs_from%get_ndf()) then
        call log_event("Operator_mod:extract_mesh_fs_info():Function space " //   &
           "mapped from in columnwise operator is not horizontally discontinuous",&
           LOG_LEVEL_ERROR)
-    endif
+    end if
 
     ! Number of vertical layers
     nlayers = fs_to%get_nlayers()
@@ -596,7 +596,7 @@ contains
     ! DoF-maps
     if (allocated(self%column_dofmap_to)) then
        deallocate(self%column_dofmap_to)
-    endif
+    end if
     if (allocated(self%column_dofmap_from)) then
        deallocate(self%column_dofmap_from)
     end if

@@ -25,7 +25,6 @@ module partition_mod
   use sort_mod,        only : bubble_sort
   use log_mod,         only : log_event,         &
                               log_scratch_space, &
-                              LOG_LEVEL_INFO,    &
                               LOG_LEVEL_ERROR,   &
                               LOG_LEVEL_DEBUG
   use constants_mod,   only: i_def, r_def, l_def
@@ -640,7 +639,7 @@ contains
     if( total_ranks /= 1 .or. local_rank /= 0 )then
     call log_event( 'Can only use the serial partitioner with a single process',&
       LOG_LEVEL_ERROR )
-    endif
+    end if
 
     num_inner(:) = 0
     num_inner(size(num_inner)) =  global_mesh%get_ncells()
@@ -849,7 +848,7 @@ contains
         ! In terms of the panel numbers used here is then
         ! (3, 2, 6), (5, 4, 1)
         face_of_combined_panels(:) = (/ 3, 5 /)
-      elseif( num_panels == 6 .and.              &
+      else if( num_panels == 6 .and.              &
               xproc*yproc*3 == total_ranks .and. &
               modulo(total_ranks,3) == 0 ) then
         ncell = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
@@ -864,7 +863,7 @@ contains
         ! In terms of the panel numbers used here is then
         ! (3, 2), (4, 1), (5, 6)
         face_of_combined_panels(:) = (/ 3, 4, 5 /)
-      elseif( modulo(total_ranks,num_panels) == 0 ) then
+      else if( modulo(total_ranks,num_panels) == 0 ) then
         ! For multi-panel meshes, the panels must be square
         num_cells_x = nint(sqrt( real(global_mesh%get_ncells(), kind=r_def)/ &
                                  real(num_panels, kind=r_def) ))
@@ -907,7 +906,7 @@ contains
         end if
       end do
 
-    endif
+    end if
 
     if ( cross_panels ) then
       face = ((n_cross_panels * local_rank) / total_ranks) + 1
@@ -976,7 +975,7 @@ contains
                                                     " num_y ",   num_y
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
     write(log_scratch_space,"(a,i0,a,i0)") "Number of cells in partition ", num_x, " X ", num_y
-    call log_event( log_scratch_space, lOG_LEVEL_INFO )
+    call log_event( log_scratch_space, lOG_LEVEL_DEBUG )
 
     ! Create a linked list of all cells in the partition and at the same time
     ! create a linked-list of all edge cells known to the partition, excluding halos.

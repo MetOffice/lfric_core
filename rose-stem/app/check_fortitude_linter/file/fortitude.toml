@@ -13,25 +13,51 @@ extend-exclude = ["lfric_mpi_mod.F90", "one_each_mod.f90"]
 select = [
 "E000", # io-error
 "E001", # syntax-error
+"E011", # invalid-character
 "C001", # missing implicit none
 "C021", # real literal missing kind suffix
 "C022", # implicit-real-kind
+"C032", # literal integers as units in IO statements
+"C051", # trailing-backslash
 "C071", # assumed-size
 "C072", # character has assumed size but does not have intent(in)
 "C081", # initialisation-in-declaration and no explicit save/parameter
 "C091", # external-procedure
 "C092", # procedure not contained within module
 "C121", # use-all - use missing "only" clause
+"C122", # 'use' for intrinsic module missing 'intrinsic' modifier
 "C132", # default-public-accessibility
 "C141", # missing-exit-or-cycle-label
+"C143", # missing-end-label
+"C151", # misleading-inline-if-semicolon
+"C161", # nonportable-shortcircuit-inquiry
+"C171", # escaped quotes in string literals split over two lines
+"C182", # multiple-allocations-with-stat
+"C191", # unreachable-statement
 "OB011", # common-block, obsolescent
 "OB021", # entry-statement, obsolescent
+"OB031", # deprecated specific names of intrinsic functions
+"OB041", # computed go to statements are obsolescent
 "OB051", # pause-statement, deleted feature
 "OB061", # deprecated-character-syntax
+"OB201", # deprecated-mpi-include
+"OB211", # deprecated-omp-include
 "MOD001", # don't use double-precision
+"MOD002", # double-precision-literal
+"MOD031", # Include statement is deprecated
 "MOD021", # deprecated-relational-operator
+"MOD041", # attribute specified separately to variable declaration
 "S101", # trailing-whitespace
 "S071", # missing-double-colon
+"S081", # unnecessary semicolon
+"S082", # multiple statements per line
+"S211", # multiple modules in one file
+"S212", # Program and module in one file
+"S231", # keywords-missing-space
+"S232", # keyword-has-whitespace
+"S263", # bad-array-declaration
+"PORT001", # non-portable-io-unit
+"PORT031", # invalid-tab
 "PORT011", # literal-kind
 "PORT012", # literal-kind-suffix
 "PORT021", # star-kind, non-standard syntax
@@ -59,11 +85,12 @@ output-format = "grouped"              #group results by file
 "namelist_mod.F90" = ["C072"]
 "io_utility_mod.f90" = ["C072"]
 "ncdf_quad_mod.F90" = ["C072"]
-"ugrid_2d_mod.F90" = ["C072"]
+"ugrid_2d_mod.F90" = ["C072", "C032"]
 "ugrid_file_mod.F90" = ["C072"]
 "key_value_collection_mod.f90" = ["C072"]
 "local_mesh_mod.f90" = ["C081"]
 "log_mod.F90" = ["C081"]
+"reference_element_mod.F90" = ["C051"]
 
 # infrastructure/build:
 "content_mod.f90" = ["C081"]
@@ -73,6 +100,12 @@ output-format = "grouped"              #group results by file
 "epsilon_one_submod.f90" = ["C022"]
 "eta_mod.F90" = ["C022"]
 "one.f90" = ["C022"]
+"computed_mod.f90" = ["PORT001", "C032"]
+"enum_mod.f90" = ["PORT001", "C032"]
+"everything_mod.f90" = ["PORT001", "C032"]
+"multifile_mod.f90" = ["PORT001", "C032"]
+"simple_mod.f90" = ["PORT001", "C032"]
+"gamma_mod.f90" = ["S211"]
 
 # components/science:
 "sci_psykal_builtin_light_mod.f90" = ["C132"]

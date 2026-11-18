@@ -134,8 +134,8 @@ contains
          start_stop(k) = .true.
          call system_clock(iprev_time(k))
          num_calls(k)  = num_calls(k) + 1_i_long
-       endif
-     endif
+       end if
+     end if
 
    end subroutine timer
 

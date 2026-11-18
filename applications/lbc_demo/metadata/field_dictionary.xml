@@ -19,4 +19,4 @@
   <field id="w3_2d_field:lbc"      name="w3_2d_field"      long_name="w3_2d_field"      unit="1" domain_ref="face" />
   <field id="multi_data_field:lbc" name="multi_data_field" long_name="multi_data_field" unit="1" domain_ref="face" axis_ref="multi_data_axis" />
 </field_group>
-</field_definiton>
+</field_definition>

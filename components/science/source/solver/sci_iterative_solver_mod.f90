@@ -14,6 +14,7 @@
 
 module sci_iterative_solver_mod
 
+  use config_mod,           only : config_type
   use constants_mod,        only : r_def, i_def, EPS, l_def
   use vector_mod,           only : abstract_vector_type
   use sci_linear_operator_mod, &
@@ -63,15 +64,22 @@ module sci_iterative_solver_mod
     !> @details Apply the iterative solver for a given right hand side
     !> \f$b\f$.
     !>
-    !> @param[inout] x  Resulting solution \f$x\f$
-    !> @param[in] b  Right hand side vector \f$b\f$
+    !> @param[in]    config Application configuration object
+    !> @param[inout] x      Resulting solution \f$x\f$
+    !> @param[in]    b      Right hand side vector \f$b\f$
     !>
-    subroutine apply_interface(self, x, b)
+    subroutine apply_interface(self, config, x, b)
+
       import :: abstract_vector_type
       import :: abstract_iterative_solver_type
+      import :: config_type
+
       class(abstract_iterative_solver_type), intent(inout) :: self
+
+      type(config_type),                     intent(in)    :: config
       class(abstract_vector_type),           intent(inout) :: x
       class(abstract_vector_type),           intent(inout) :: b
+
     end subroutine apply_interface
   end interface
 
@@ -113,8 +121,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine cg_solve(self, x, b)
+     module subroutine cg_solve(self, config, x, b)
        class(conjugate_gradient_type), intent(inout) :: self
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine
@@ -149,8 +158,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine bicgstab_solve(self, x, b)
+     module subroutine bicgstab_solve(self, config, x, b)
        class(bicgstab_type),           intent(inout) :: self
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine
@@ -188,8 +198,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine gmres_solve(self, x, b)
+     module subroutine gmres_solve(self, config, x, b)
        class(gmres_type),              intent(inout) :: self
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine gmres_solve
@@ -226,8 +237,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine fgmres_solve(self, x, b)
-       class(fgmres_type),              intent(inout) :: self
+     module subroutine fgmres_solve(self, config, x, b)
+       class(fgmres_type),             intent(inout) :: self
+       type(config_type),              intent(in)    :: config
        class(abstract_vector_type),    intent(inout) :: x
        class(abstract_vector_type),    intent(inout) :: b
      end subroutine fgmres_solve
@@ -264,8 +276,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine gcr_solve(self, x, b)
+     module subroutine gcr_solve(self, config, x, b)
        class(gcr_type),              intent(inout) :: self
+       type(config_type),            intent(in)    :: config
        class(abstract_vector_type),  intent(inout) :: x
        class(abstract_vector_type),  intent(inout) :: b
      end subroutine gcr_solve
@@ -304,8 +317,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine block_gcr_solve(self, x, b)
+     module subroutine block_gcr_solve(self, config, x, b)
        class(block_gcr_type),        intent(inout) :: self
+       type(config_type),            intent(in)    :: config
        class(abstract_vector_type),  intent(inout) :: x
        class(abstract_vector_type),  intent(inout) :: b
      end subroutine block_gcr_solve
@@ -339,8 +353,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine precondition_only_solve(self, x, b)
+     module subroutine precondition_only_solve(self, config, x, b)
        class(precondition_only_type), intent(inout) :: self
+       type(config_type),             intent(in)    :: config
        class(abstract_vector_type),   intent(inout) :: x
        class(abstract_vector_type),   intent(inout) :: b
      end subroutine
@@ -380,10 +395,11 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine jacobi_solve(self, x, b)
-       class(jacobi_type), intent(inout) :: self
-       class(abstract_vector_type),    intent(inout) :: x
-       class(abstract_vector_type),    intent(inout) :: b
+     module subroutine jacobi_solve(self, config, x, b)
+       class(jacobi_type),          intent(inout) :: self
+       type(config_type),           intent(in)    :: config
+       class(abstract_vector_type), intent(inout) :: x
+       class(abstract_vector_type), intent(inout) :: b
      end subroutine
   end interface
 
@@ -421,8 +437,9 @@ module sci_iterative_solver_mod
   end interface
 
   interface
-     module subroutine chebyshev_solve(self, x, b)
+     module subroutine chebyshev_solve(self, config, x, b)
        class(chebyshev_type),       intent(inout) :: self
+       type(config_type),           intent(in)    :: config
        class(abstract_vector_type), intent(inout) :: x
        class(abstract_vector_type), intent(inout) :: b
      end subroutine
@@ -490,12 +507,16 @@ contains
   !>
   !> Over-rides the abstract interface to do the actual solve.
   !>
-  !> @param[inout] b  "RHS" or boundary conditions.
-  !> @param[inout] x  Solution.
+  !> @param[in]    config Application configuration object
+  !> @param[inout] b      "RHS" or boundary conditions.
+  !> @param[inout] x      Solution.
   !>
-  module subroutine cg_solve(self, x, b)
+  module subroutine cg_solve(self, config, x, b)
+
     implicit none
+
     class(conjugate_gradient_type), intent(inout) :: self
+    type(config_type),              intent(in)    :: config
     class(abstract_vector_type),    intent(inout) :: x
     class(abstract_vector_type),    intent(inout) :: b
 
@@ -519,7 +540,7 @@ contains
     converged=.false.
 
     !set up the algorithm
-    call self%lin_op%apply(x,r) ! r = A.x
+    call self%lin_op%apply(config, x, r) ! r = A.x
     call r%scale(-1.0_r_def)    ! r = -A.x
     call r%axpy(1.0_r_def, b)   ! r = b - A.x
     r_nrm_0 = r%norm()          ! r_0 = ||r||_2
@@ -539,8 +560,8 @@ contains
     end if
 
     call z%set_scalar(0.0_r_def)
-    call self%prec%apply(r,z)         ! z = P^{-1}.r
-    rz = r%dot(z)                        ! rz = <r,z>
+    call self%prec%apply(config, r, z)  ! z = P^{-1}.r
+    rz = r%dot(z)                       ! rz = <r,z>
     r_nrm_old = r_nrm_0
     call p%copy(z)
 
@@ -550,10 +571,10 @@ contains
     end if
     ! iterate until maximal number of iterations is reached
     do iter=1, self%max_iter
-       call self%lin_op%apply(p,z)       ! z = A.p
-       alpha = rz / p%dot(z)             ! alpha = <r,z> / <p,A.p>
-       call x%axpy(alpha,p)              ! x -> x + alpha*p
-       call r%axpy(-alpha,z)             ! r -> r - alpha*A.p
+       call self%lin_op%apply(config, p, z) ! z = A.p
+       alpha = rz / p%dot(z)                ! alpha = <r,z> / <p,A.p>
+       call x%axpy(alpha,p)                 ! x -> x + alpha*p
+       call r%axpy(-alpha,z)                ! r -> r - alpha*A.p
 
        if ( self%monitor_convergence ) then
          r_nrm = r%norm()                  ! r = ||r||_2
@@ -567,10 +588,10 @@ contains
             exit
          end if
        end if
-       call self%prec%apply(r,z)         ! z = P^{-1}.r
-       rz_new = r%dot(z)                 ! rz_new = <r,z>
-       beta = rz_new/rz                  ! beta = <r_{new},z_{new}> / <r,z>
-       call p%aypx(beta,z)               ! p -> z + beta*p
+       call self%prec%apply(config, r, z) ! z = P^{-1}.r
+       rz_new = r%dot(z)                  ! rz_new = <r,z>
+       beta = rz_new/rz                   ! beta = <r_{new},z_{new}> / <r,z>
+       call p%aypx(beta,z)                ! p -> z + beta*p
        rz = rz_new
        r_nrm_old = r_nrm
     end do
@@ -640,15 +661,19 @@ contains
   end function bicgstab_constructor
 
   !> bicgstab solve. Over-rides the abstract interface to do the actual solve.
-  !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
-  !> This the "RHS" or boundary conditions,
-  !> @param[inout] x an abstract vector which is the solution
+  !> @param[in]    config Application configuration object
+  !> @param[inout] b      An abstract vector which will be an actual vector of
+  !>                      unkown extended type. This the "RHS" or boundary conditions,
+  !> @param[inout] x      An abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine bicgstab_solve(self, x, b)
+  module subroutine bicgstab_solve(self, config, x, b)
+
     implicit none
-    class(bicgstab_type),           intent(inout) :: self
-    class(abstract_vector_type),    intent(inout) :: x
-    class(abstract_vector_type),    intent(inout) :: b
+
+    class(bicgstab_type),        intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! tempory vectors
     class(abstract_vector_type), allocatable :: r
@@ -674,7 +699,7 @@ contains
     ! v = Ax
     call x%duplicate(v)
     call v%set_scalar(0.0_r_def)
-    call self%lin_op%apply(x,v)
+    call self%lin_op%apply(config, x, v)
     ! r = b - Ax
     call r%axpy(-1.0_r_def,v)
     ! store initial residual
@@ -721,20 +746,20 @@ contains
        call t%copy(r)
        call t%axpy(-beta*omega, v)
        ! stage 2 post-condition
-       call self%prec%apply(t,y)
+       call self%prec%apply(config, t, y)
        ! now add on beta P
        call p%aypx(beta, y)
        ! apply the matrix
-       call self%lin_op%apply(p,v)
+       call self%lin_op%apply(config, p, v)
 
        alpha = rho/r0%dot(v)
        ! s = r - alpha * v
        call s%copy(r)
        call s%axpy(-alpha,v)
        ! apply the preconditioner
-       call self%prec%apply(s,z)
+       call self%prec%apply(config, s, z)
        ! apply the operator
-       call self%lin_op%apply(z,t)
+       call self%lin_op%apply(config, z, t)
 
        ! final scalars
        tt = t%dot(t)
@@ -826,15 +851,19 @@ contains
 
   !> gmres_solve. Over-rides the abstract interface to do the actual solve.
   !> @detail The solver implements left-preconditioning, i.e. is solving M{-1}.A.x = M{-1}.b
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine gmres_solve(self, x, b)
+  module subroutine gmres_solve(self, config, x, b)
+
     implicit none
-    class(gmres_type),              intent(inout) :: self
-    class(abstract_vector_type),    intent(inout) :: x
-    class(abstract_vector_type),    intent(inout) :: b
+
+    class(gmres_type),           intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: s
@@ -859,7 +888,7 @@ contains
 
     call b%duplicate(res)
     ! compute res = b -Ax ... in stages
-    call self%lin_op%apply(x,Ax)
+    call self%lin_op%apply(config, x, Ax)
     call res%copy(b)
     call res%axpy(-1.0_r_def,Ax)
 
@@ -899,7 +928,7 @@ contains
     ! initialisation complete, lets go to work.
     do iter = 1, self%max_iter
        call s%set_scalar(0.0_r_def)
-       call self%prec%apply(res,s)
+       call self%prec%apply(config, res, s)
        beta = s%norm()
        call v(1)%vt%copy(s)
        call v(1)%vt%scale(1.0_r_def/beta)
@@ -911,9 +940,9 @@ contains
 
           call w%copy(v(iv)%vt)
           ! apply the operator
-          call self%lin_op%apply( w, s )
+          call self%lin_op%apply(config, w, s)
           ! apply the preconditioner
-          call self%prec%apply( s, w )
+          call self%prec%apply(config, s, w)
 
           ! compute the h values
           do ivj = 1, iv
@@ -963,7 +992,7 @@ contains
        end do
 
        call Ax%set_scalar(0.0_r_def)
-       call self%lin_op%apply(x, Ax)
+       call self%lin_op%apply(config, x, Ax)
        call res%copy(Ax)
        call res%aypx(-1.0_r_def, b)
 
@@ -1052,15 +1081,17 @@ contains
   !> @detail The solver implements flexible right-preconditioning, i.e. is solving A.M{-1}.M.x = b
   !>         as 1)  A.M{-1}.y = b
   !>            2)  M{-1}y = x
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine fgmres_solve(self, x, b)
+  module subroutine fgmres_solve(self, config, x, b)
     implicit none
-    class(fgmres_type),              intent(inout) :: self
-    class(abstract_vector_type),    intent(inout) :: x
-    class(abstract_vector_type),    intent(inout) :: b
+    class(fgmres_type),          intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: s
@@ -1138,9 +1169,9 @@ contains
     do iter = 1, self%max_iter
        do iv = 1, self%gcrk
 
-          call self%prec%apply(v(iv)%vt, Pv(iv)%vt)
+          call self%prec%apply(config, v(iv)%vt, Pv(iv)%vt)
           ! apply the operator
-          call self%lin_op%apply( Pv(iv)%vt, s )
+          call self%lin_op%apply(config, Pv(iv)%vt, s)
           call w%copy(s)
           ! compute the h values
           do ivj = 1, iv
@@ -1189,7 +1220,7 @@ contains
        end do
 
        ! check for convergence
-       call self%lin_op%apply(dx, Ax)
+       call self%lin_op%apply(config, dx, Ax)
        call res%copy(Ax)
        call res%aypx(-1.0_r_def, b)
 
@@ -1286,15 +1317,19 @@ contains
   !> @detail The solver implements right-preconditioning, i.e. is solving A.M{-1}.M.x = b
   !>         as 1)  A.M{-1}.y = b
   !>            2)  M{-1}y = x
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine gcr_solve(self, x, b)
+  module subroutine gcr_solve(self, config, x, b)
+
     implicit none
-    class(gcr_type),              intent(inout) :: self
-    class(abstract_vector_type),  intent(inout) :: x
-    class(abstract_vector_type),  intent(inout) :: b
+
+    class(gcr_type),             intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: dx
@@ -1317,8 +1352,8 @@ contains
 
     ! initial guess
     call dx%set_scalar(0.0_r_def)
-    call self%prec%apply( b, dx )
-    call self%lin_op%apply( dx, Ax )
+    call self%prec%apply(config, b, dx)
+    call self%lin_op%apply(config, dx, Ax)
     !res = b - Ax
     call res%copy(b)
     call res%axpy(-1.0_r_def, Ax)
@@ -1356,9 +1391,9 @@ contains
        do iv = 1, self%gcrk
 
           ! apply the preconditioner
-          call self%prec%apply( res, Pv(iv)%vt )
+          call self%prec%apply(config, res, Pv(iv)%vt)
           ! apply the operator
-          call self%lin_op%apply( Pv(iv)%vt, v(iv)%vt )
+          call self%lin_op%apply(config, Pv(iv)%vt, v(iv)%vt)
 
           do ivj = 1, iv-1
             alpha = v(iv)%vt%dot(v(ivj)%vt)
@@ -1460,15 +1495,17 @@ contains
   !> @detail The solver implements right-preconditioning, i.e. is solving A.M{-1}.M.x = b
   !>         as 1)  A.M{-1}.y = b
   !>            2)  M{-1}y = x
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine block_gcr_solve(self, x, b)
+  module subroutine block_gcr_solve(self, config, x, b)
     implicit none
-    class(block_gcr_type),              intent(inout) :: self
-    class(abstract_vector_type),  intent(inout) :: x
-    class(abstract_vector_type),  intent(inout) :: b
+    class(block_gcr_type),       intent(inout) :: self
+    type(config_type),           intent(in)    :: config
+    class(abstract_vector_type), intent(inout) :: x
+    class(abstract_vector_type), intent(inout) :: b
 
     ! temporary vectors
     class(abstract_vector_type), allocatable :: Ax
@@ -1501,8 +1538,8 @@ contains
 
     ! initial guess
     call x%set_scalar(0.0_r_def)
-    call self%prec%apply( b, x )
-    call self%lin_op%apply( x, Ax )
+    call self%prec%apply(config, b, x)
+    call self%lin_op%apply(config, x, Ax)
 
     call res%copy(b)
     call res%axpy(-1.0_r_def, Ax)
@@ -1536,9 +1573,9 @@ contains
        do iv = 1, self%gcrk
 
           ! apply the preconditioner
-          call self%prec%apply( res, Pv(iv)%vt )
+          call self%prec%apply(config, res, Pv(iv)%vt)
           ! apply the operator
-          call self%lin_op%apply( Pv(iv)%vt, v(iv)%vt )
+          call self%lin_op%apply(config, Pv(iv)%vt, v(iv)%vt)
 
           do ivj = 1, iv-1
             alpha = v(iv)%vt%dot(v(ivj)%vt)
@@ -1558,7 +1595,7 @@ contains
             iv_final = iv
             final_error(:) = 0.0_r_def
             ! In gungho, for the semi-implicit solver the fields are organised:
-            ! (pressure, horizontal velocity, vertical velocity).
+            ! (horizontal velocity, pressure, vertical velocity).
             ! Since the vertical velocity term generally controls the convergence
             ! this is tested first and so the testing loop goes backwards through the field vector
             do n = n_fields,1,-1
@@ -1661,13 +1698,17 @@ contains
   end function
 
   !> Precondition only solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine precondition_only_solve(self, x, b)
+  module subroutine precondition_only_solve(self, config, x, b)
+
     implicit none
+
     class(precondition_only_type), intent(inout) :: self
+    type(config_type),             intent(in)    :: config
     class(abstract_vector_type),   intent(inout) :: x
     class(abstract_vector_type),   intent(inout) :: b
 
@@ -1677,7 +1718,7 @@ contains
 
 
     call log_event("Precondition only starting", LOG_LEVEL_DEBUG)
-    call self%prec%apply(b,x)         ! x = P^{-1}.b
+    call self%prec%apply(config, b, x)         ! x = P^{-1}.b
 
     if( self%monitor_convergence ) then
        ! Compute initial and final error
@@ -1685,7 +1726,7 @@ contains
        call res%copy(b)
        e0 = res%norm()
        call x%duplicate(Ax)
-       call self%lin_op%apply(x, Ax)
+       call self%lin_op%apply(config, x, Ax)
        call res%axpy(-1.0_r_def, Ax)
        e = res%norm()
        write(log_scratch_space,'(A,3E15.8)')  &
@@ -1743,13 +1784,17 @@ contains
   end function
 
   !> Jacobi solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine jacobi_solve(self, x, b)
+  module subroutine jacobi_solve(self, config, x, b)
+
     implicit none
+
     class(jacobi_type),          intent(inout) :: self
+    type(config_type),           intent(in)    :: config
     class(abstract_vector_type), intent(inout) :: x
     class(abstract_vector_type), intent(inout) :: b
 
@@ -1774,7 +1819,7 @@ contains
 
     ! Solve Ax = b
     do iter=1, self%max_iter
-      call self%lin_op%apply(x, r) ! r = Ax
+      call self%lin_op%apply(config, x, r) ! r = Ax
       call r%axpy(-1.0_r_def, b) ! r = r - b = Ax - b
 
       ! Check for convergence
@@ -1792,7 +1837,7 @@ contains
         end if
       end if
 
-      call self%prec%apply(r, z) ! z = P^{-1}.r = P^{-1}.(Ax - b)
+      call self%prec%apply(config, r, z) ! z = P^{-1}.r = P^{-1}.(Ax - b)
       call x%axpy(const, z) ! x = x + const*z = x + const*P^{-1}(Ax - b)
 
     end do
@@ -1867,18 +1912,22 @@ contains
   end function
 
   !> chebyshev solve. Over-rides the abstract interface to do the actual solve.
+  !> @param[in] config Application configuration object
   !> @param[inout] b an abstract vector which will be an actual vector of unkown extended type
   !> This the "RHS" or boundary conditions,
   !> @param[inout] x an abstract vector which is the solution
   !> @param[self] The solver which has pointers to the lin_op and preconditioner
-  module subroutine chebyshev_solve(self, x, b)
+  module subroutine chebyshev_solve(self, config, x, b)
+
     implicit none
+
     class(chebyshev_type),       intent(inout) :: self
+    type(config_type),           intent(in)    :: config
     class(abstract_vector_type), intent(inout) :: x
     class(abstract_vector_type), intent(inout) :: b
 
-    integer(i_def) :: iter
-    real(r_def) :: init_norm, final_norm
+    integer(i_def) :: iter, final_iter
+    real(r_def), allocatable, dimension(:) :: init_norm, final_norm
     real(r_def) :: a1, a2, w, a_over_b, wa_over_b
 
     class(abstract_vector_type), allocatable :: z
@@ -1886,7 +1935,18 @@ contains
     class(abstract_vector_type), allocatable :: xp
     class(abstract_vector_type), allocatable :: xo
 
-    ! Chebyshev iteration for solving M y = f with preconditioner D
+    integer(kind=i_def) :: n_fields, n
+
+    logical(kind=l_def), allocatable :: converged(:)
+
+    n_fields = x%vector_size()
+    allocate( init_norm(n_fields), final_norm(n_fields), converged(n_fields))
+
+    ! Initialise final_norm to a default number to avoid issues
+    ! when monitor_convergence = .true. but the norm isn't computed
+    final_norm(:) = 1.0_r_def
+
+    ! Chebyshev iteration for solving M x = b with preconditioner D
 
     ! Set initial guess
     call x%set_scalar(0.0_r_def)
@@ -1895,9 +1955,15 @@ contains
     call x%duplicate(xo)
     call xo%set_scalar(0.0_r_def)
     call x%duplicate(z)
+    call z%set_scalar(0.0_r_def)
     call x%duplicate(r)
 
-    if ( self%monitor_convergence ) init_norm = max(1.0_r_def, b%norm())
+
+    if ( self%monitor_convergence ) then
+      do n = 1,n_fields
+        init_norm(n) = max(1.0_r_def, b%field_norm(n))
+      end do
+    end if
 
     ! Set up scalars
     a1 = 2.0_r_def/(self%lmax - self%lmin)
@@ -1906,19 +1972,44 @@ contains
     w = 1.0_r_def
 
     do iter = 1, self%max_iter
-
       ! r = b-M*xo
-      call self%lin_op%apply(xo,z)
+      if ( iter > 1 ) call self%lin_op%apply(config, xo, z)
       call r%axpby(1.0_r_def, b, -1.0_r_def, z)
 
       ! z = D^{-1}.r
-      call self%prec%apply(r,z)
+      call self%prec%apply(config, r, z)
 
       ! x = w*(a/b*z+xo) + (1-w)*xp
       w = 1.0_r_def/(1.0_r_def - w/(4.0_r_def*a2**2))
       wa_over_b = w * a_over_b
       call x%axpby(wa_over_b, z, w, xo)
-      call x%axpy(1.0_r_def-w,xp)
+      call x%axpy(1.0_r_def-w, xp)
+
+      ! residual = norm(b - M*x)
+      if ( self%monitor_convergence ) then
+        converged(:) = .false.
+        final_iter = iter
+        call self%lin_op%apply(config, x, z) ! z = M.x
+        call z%axpy(-1.0_r_def, b)           ! z = M.x-b
+
+        do n = 1, n_fields
+          final_norm(n) = z%field_norm(n)
+          write(log_scratch_space, &
+               '("chebyshev[",I4,",",I2,"], residual       = ",E16.8, ", initial = ",E16.8)') &
+                 iter, n, final_norm(n)/init_norm(n), init_norm(n)
+          call log_event(log_scratch_space,LOG_LEVEL_INFO)
+          if (   final_norm(n)/init_norm(n) < self%r_tol &
+            .or. final_norm(n) < self%a_tol ) then
+            ! This field is converged
+            converged(n) = .true.
+          else
+            ! This field is not converged so don't bother checking any others
+            exit
+          end if
+        end do
+        if ( all(converged) ) exit
+
+      end if
 
       if ( iter < self%max_iter ) then
         ! xp = xo
@@ -1929,19 +2020,20 @@ contains
       end if
 
     end do
-    ! residiual = norm(b - M*x)
+
     if ( self%monitor_convergence ) then
-      call self%lin_op%apply(x,z) ! z = M.x
-      call z%axpy(-1.0_r_def, b)  ! z = M.x-b
-      final_norm = z%norm()
-      write(log_scratch_space, &
-          '("chebyshev[",I4,"], redidual = ",E16.8)') self%max_iter, final_norm/init_norm
-      if ( self%fail_on_non_converged ) then
-        call log_event(log_scratch_space,LOG_LEVEL_ERROR)
+          write(log_scratch_space, &
+              '("chebyshev[",I4,"], final residual = ",E16.8, ", initial = ",E16.8 )') &
+                final_iter, sum(final_norm/init_norm), sum(init_norm)
+      if ( .not. all(converged) .and.  self%fail_on_non_converged ) then
+          call log_event(log_scratch_space,LOG_LEVEL_ERROR)
       else
-        call log_event(log_scratch_space,LOG_LEVEL_INFO)
+          call log_event(log_scratch_space,LOG_LEVEL_INFO)
       end if
     end if
+    if ( allocated(init_norm) ) deallocate(init_norm)
+    if ( allocated(final_norm) ) deallocate(final_norm)
+    if ( allocated(converged) ) deallocate(converged)
 
   end subroutine chebyshev_solve
 

@@ -6,9 +6,11 @@
 module sci_compute_grad_operator_kernel_mod
 
   use argument_mod,            only: arg_type, func_type,       &
-                                     GH_OPERATOR, GH_FIELD,     &
+                                     GH_OPERATOR,               &
+                                     GH_FIELD, GH_SCALAR,       &
                                      GH_READ, GH_WRITE,         &
-                                     GH_REAL, ANY_SPACE_1,      &
+                                     GH_REAL, GH_INTEGER,       &
+                                     ANY_SPACE_1,               &
                                      ANY_DISCONTINUOUS_SPACE_3, &
                                      GH_BASIS, GH_DIFF_BASIS,   &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
@@ -18,10 +20,6 @@ module sci_compute_grad_operator_kernel_mod
                                          coordinate_jacobian_inverse
   use fs_continuity_mod,       only: W0, W1
   use kernel_mod,              only: kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -33,10 +31,14 @@ module sci_compute_grad_operator_kernel_mod
 
   type, public, extends(kernel_type) :: compute_grad_operator_kernel_type
     private
-    type(arg_type) :: meta_args(3) = (/                                      &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W1, W0),                   &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_1),              &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3) &
+    type(arg_type) :: meta_args(7) = (/                                       &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, W1, W0),                    & ! grad
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_1),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                           & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(3) = (/                                    &
          func_type(W1,          GH_BASIS),                                   &
@@ -65,6 +67,10 @@ contains
 !! @param[in] chi2     2nd coordinate field in Wchi
 !! @param[in] chi3     3rd coordinate field in Wchi
 !! @param[in] panel_id Field giving the ID for mesh panels
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] ndf_w1   Number of degrees of freedom per cell
 !! @param[in] basis_w1 Vector basis functions
 !!                     evaluated at quadrature points
@@ -85,14 +91,16 @@ contains
 !! @param[in] nqp_v    Number of vertical quadrature points
 !! @param[in] wqp_h    Horizontal quadrature weights
 !! @param[in] wqp_v    Vertical quadrature weights
-subroutine compute_grad_operator_code(cell, nlayers, ncell_3d,    &
-                                      grad,                       &
-                                      chi1, chi2, chi3, panel_id, &
-                                      ndf_w1, basis_w1,           &
-                                      ndf_w0, diff_basis_w0,      &
-                                      ndf_chi, undf_chi, map_chi, &
-                                      basis_chi, diff_basis_chi,  &
-                                      ndf_pid, undf_pid, map_pid, &
+subroutine compute_grad_operator_code(cell, nlayers, ncell_3d,     &
+                                      grad,                        &
+                                      chi1, chi2, chi3, panel_id,  &
+                                      geometry, topology,          &
+                                      coord_system, scaled_radius, &
+                                      ndf_w1, basis_w1,            &
+                                      ndf_w0, diff_basis_w0,       &
+                                      ndf_chi, undf_chi, map_chi,  &
+                                      basis_chi, diff_basis_chi,   &
+                                      ndf_pid, undf_pid, map_pid,  &
                                       nqp_h, nqp_v, wqp_h, wqp_v  )
 
   implicit none
@@ -119,6 +127,11 @@ subroutine compute_grad_operator_code(cell, nlayers, ncell_3d,    &
   real(kind=r_def), dimension(undf_pid),               intent(in)    :: panel_id
   real(kind=r_def), dimension(nqp_h),                  intent(in)    :: wqp_h
   real(kind=r_def), dimension(nqp_v),                  intent(in)    :: wqp_v
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df0, df1, k, ik

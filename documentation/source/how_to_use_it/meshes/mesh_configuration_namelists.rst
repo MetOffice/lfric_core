@@ -143,7 +143,7 @@ depending on generator.
       will map to entries given by :ref:`mesh_names<mesh_names>`.
   * ``equatorial_latitude``: **<real>**
       Real world latitude (°N) of cubed-sphere mesh equator after
-      applying Schmit transform. The `top` (or `bottom`) panels of the
+      applying Schmidt transform. The `top` (or `bottom`) panels of the
       cubed-sphere are reduced in size while maintaining the same
       connectivity. This has the effect of a localised increase in resolution
       over a panel of the cubed-sphere without increasing the overall number
