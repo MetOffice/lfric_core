@@ -20,8 +20,8 @@ F_MOD_DESTINATION_ARG = -module$(SPACE)
 FFLAGS_COMPILER           =
 FFLAGS_COMPILER          += -Mfree -Mpreprocess
 FFLAGS_NO_OPTIMISATION    = -O0
-FFLAGS_SAFE_OPTIMISATION  = -O2
-FFLAGS_RISKY_OPTIMISATION = -O4
+FFLAGS_SAFE_OPTIMISATION  = -O2 -Mnofma -Mnovect
+FFLAGS_RISKY_OPTIMISATION = -Ofast
 FFLAGS_DEBUG              = -g -traceback
 FFLAGS_RUNTIME            =
 # Option for checking code meets Fortran standard (not available for PGI)
@@ -38,10 +38,28 @@ ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "omp")
 else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "acc")
 	FFLAGS_OPENMP  = -acc=gpu -gpu=mem:managed -mp=multicore
 	LDFLAGS_OPENMP = -acc=gpu -gpu=mem:managed -mp=multicore -cuda
+# Flags for the same targets but numerically matching the cpu results
+else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "omp_uniform")
+	FFLAGS_OPENMP  = -mp=gpu -gpu=mem:managed,math_uniform
+	LDFLAGS_OPENMP = -mp=gpu -gpu=mem:managed,math_uniform -cuda
+else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "acc_uniform")
+	FFLAGS_OPENMP  = -acc=gpu -gpu=mem:managed,math_uniform -mp=multicore
+	LDFLAGS_OPENMP = -acc=gpu -gpu=mem:managed,math_uniform -mp=multicore -cuda
 else
 	FFLAGS_OPENMP  = -mp
 	LDFLAGS_OPENMP = -mp
 endif
 
-FPP = nvfortran -E
-FPPFLAGS = -P -D__NVCOMPILER
+PREPROCESSOR = $(firstword $(subst -, ,$(notdir $(FPP))))
+ifeq ("$(PREPROCESSOR)", "nvfortran")
+	# Using -P with nvfortran as preprocessor results
+	# that the output file is written in the current directory, NOT to the
+	# output directory specified with -o (and not even to stdout even if no
+	# -o is specified). In this case, the preprocessing step will pipe the
+	# output through grep to remove preprocessor lines. Therefore, no -P in
+	# this case:
+	FPPFLAGS =
+else
+	# E.g. using cpp as preprocessor, which needs -P
+	FPPFLAGS = -P
+endif

@@ -11,7 +11,7 @@
 !> empty.
 module traceback_mod
 
-#if defined(__INTEL_COMPILER)
+#if defined(INTEL_COMPILER)
   use :: ifcore, only : tracebackqq
 #endif
 
@@ -28,9 +28,9 @@ contains
 
     implicit none
 
-#if defined(__GFORTRAN__)
+#if defined(GFORTRAN_COMPILER)
     call backtrace()
-#elif defined(__INTEL_COMPILER)
+#elif defined(INTEL_COMPILER)
     call tracebackqq("Traceback for above", user_exit_code=-1)
 #endif
 

@@ -11,6 +11,3 @@ export PRE_PROCESS_MACROS += USE_XIOS
 .PHONY: import-lfric-xios
 import-lfric-xios:
 	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/extract.mk SOURCE_DIR=$(PROJECT_SOURCE)
-	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
-            SOURCE_DIR=$(PROJECT_SOURCE) \
-            OPTIMISATION_PATH=$(OPTIMISATION_PATH)

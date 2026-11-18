@@ -9,6 +9,3 @@ export PROJECT_SOURCE = $(CORE_ROOT_DIR)/components/science/source
 import-science:
 	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/extract.mk \
 	          SOURCE_DIR=$(PROJECT_SOURCE)
-	$Q$(MAKE) $(QUIET_ARG) -f $(LFRIC_BUILD)/psyclone/psyclone_psykal.mk \
-	    SOURCE_DIR=$(PROJECT_SOURCE) \
-	    OPTIMISATION_PATH=$(OPTIMISATION_PATH)
