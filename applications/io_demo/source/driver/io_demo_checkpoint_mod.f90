@@ -23,7 +23,6 @@ module io_demo_checkpoint_mod
   use lfric_xios_file_mod,    only: lfric_xios_file_type, OPERATION_ONCE
   use log_mod,                only: log_event, log_scratch_space, &
                                     LOG_LEVEL_DEBUG, LOG_LEVEL_ERROR
-  use mesh_mod,               only: mesh_type
 
   implicit none
 
@@ -56,21 +55,7 @@ contains
     character(len=str_def)          :: checkpoint_id
     integer(i_def) :: ts_start, ts_end, t_cp, freq_ts
 
-    type(mesh_type), pointer :: mesh
-
-    integer(i_def) :: geometry
-    integer(i_def) :: topology
-    integer(i_def) :: coord_system
-    real(r_def)    :: scaled_radius
-
     call log_event( 'io_demo: Setting up checkpoint I/O', LOG_LEVEL_DEBUG )
-
-    mesh => chi(1)%get_mesh()
-
-    geometry = mesh%geometry()
-    topology = mesh%topology()
-    coord_system  = modeldb%config%finite_element%coord_system()
-    scaled_radius = modeldb%config%planet%scaled_radius()
 
     ts_start = modeldb%calendar%parse_instance(modeldb%config%time%timestep_start())
     ts_end   = modeldb%calendar%parse_instance(modeldb%config%time%timestep_end())
@@ -141,10 +126,9 @@ contains
     ! Add checkpoint context to clock events so that it is advanced at each timestep
     event_actor_ptr => cp_context
     context_advance => advance
-    call cp_context%initialise_xios_context(                   &
+    call cp_context%initialise_xios_context(modeldb%config,    &
                         modeldb%mpi%get_comm(), chi, panel_id, &
-                        modeldb%clock, modeldb%calendar,       &
-                        geometry, topology, coord_system, scaled_radius )
+                        modeldb%clock, modeldb%calendar )
 
     call modeldb%clock%add_event(context_advance, event_actor_ptr)
     call cp_context%set_active(.true.)
