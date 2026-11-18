@@ -57,8 +57,6 @@ dependencies.mk: $(ANALYSED_STAMP)
 	                                         $(DEPRULE_FLAGS) $@
 
 IGNORE_ARGUMENTS = $(addprefix -ignore ,$(IGNORE_DEPENDENCIES))
-INCLUDE_ARGUMENTS = $(addprefix -include , $(PRE_PROCESS_INCLUDE_DIRS))
-MACRO_ARGUMENTS = $(addprefix -macro , $(PRE_PROCESS_MACROS))
 
 # All out of date sources are passed to a single invocation of the analyser.
 # Launching one Python interpreter per source file dominated the cost of this
