@@ -39,4 +39,4 @@ LDFLAGS_COMPILER =
 # As of 17/11/2026, AOCC Flang does not set any macros so it is impossible to
 # identify.
 #
-FPPFLAGS = -P -D
+FPPFLAGS = -P
