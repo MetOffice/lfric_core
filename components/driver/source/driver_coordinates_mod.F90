@@ -12,7 +12,7 @@ module driver_coordinates_mod
                                  radians_to_degrees,  &
                                  i_halo_index, eps, pi
   use log_mod,             only: log_event, log_scratch_space, &
-                                 log_level_error
+                                 log_level_error, LOG_LEVEL_DEBUG
   use coord_transform_mod, only: xyz2llr, llr2xyz, identify_panel, &
                                  xyz2alphabetar, alphabetar2xyz,   &
                                  schmidt_transform_xyz,            &
@@ -719,6 +719,13 @@ contains
           if ( chi_1(map(df)+k) < 0.0_r_def ) then
             chi_1(map(df)+k) = chi_1(map(df)+k) + 2.0_r_def*PI
           end if
+        end do
+      end if
+      if (k == 0) then
+        do df = 1, ndf
+          write(log_scratch_space,*) 'COORDS', map_pid(1), df, map(df),        &
+              chi_1(map(df)), chi_2(map(df))
+          call log_event(log_scratch_space, LOG_LEVEL_DEBUG)
         end do
       end if
     end do
