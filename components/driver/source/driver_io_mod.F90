@@ -10,6 +10,7 @@
 !>
 module driver_io_mod
 
+  use config_mod,              only: config_type
   use constants_mod,           only: str_def, i_def, l_def, r_def
   use driver_modeldb_mod,      only: modeldb_type
   use driver_model_data_mod,   only: model_data_type
@@ -40,8 +41,9 @@ module driver_io_mod
             filelist_populator
 
   abstract interface
-    subroutine filelist_populator(files_list, modeldb)
-      import linked_list_type, modeldb_type
+    subroutine filelist_populator(config, files_list, modeldb)
+      import linked_list_type, modeldb_type, config_type
+      type(config_type),      intent(in)  :: config
       type(linked_list_type), intent(out) :: files_list
       type(modeldb_type), optional, intent(inout) :: modeldb
     end subroutine filelist_populator
@@ -249,7 +251,7 @@ contains
       ! Get the filelist in the io_context and pass it to the populating
       ! procedure which was passed to this routine.
       file_list => io_context%get_filelist()
-      call populate_filelist(file_list, modeldb)
+      call populate_filelist(modeldb%config, file_list, modeldb)
     end if
 
     ! ===============================
