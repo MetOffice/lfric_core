@@ -33,7 +33,7 @@ module constants_mod
             LARGE_REAL_NEGATIVE, LARGE_DP_NEGATIVE, LARGE_REAL_POSITIVE, &
             PI, degrees_to_radians, radians_to_degrees,                  &
             cache_block, PRECISION_REAL, PRECISION_R_SOLVER,             &
-            PRECISION_R_TRAN, EPS_R_TRAN, default_halo_depth
+            PRECISION_R_TRAN, EPS_R_TRAN, default_halo_depth, BLOCK_SIZE
 
   ! Define default application-defined kinds for all intrinsic data types
 
@@ -195,6 +195,11 @@ module constants_mod
   !> @name Halo defaults
   !> @{
   integer(i_def), parameter :: default_halo_depth = 1 !< Default halo depth for fields and operators
+  !> @}
+
+  !> @name Vertical loop block size
+  !> @{
+  integer(i_def), parameter :: BLOCK_SIZE = 1024 !< Vertical OpenMP loop block size
   !> @}
 
 end module constants_mod
