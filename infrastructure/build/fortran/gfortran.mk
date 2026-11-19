@@ -59,4 +59,4 @@ endif
 # preprocessor, not the compiler. As such we have to set up the compiler
 # identification macros as though the compiler had done so.
 #
-FPPFLAGS = -P -D_GFORTRAN
+FPPFLAGS = -P -D__GFORTRAN__
