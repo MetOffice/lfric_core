@@ -14,7 +14,8 @@ module log_mod_parallel_rank_limit_test
                            log_level_info, log_level_trace,                 &
                            log_level_warning, log_set_alert_stream,         &
                            log_set_level, log_set_info_stream,              &
-                           log_forget_timestep
+                           log_forget_timestep,                             &
+                           log_get_info_stream, log_get_alert_stream
   use pfunit
 
   implicit none
@@ -35,6 +36,8 @@ module log_mod_parallel_rank_limit_test
   @testCase
   type, public, extends(MpiTestCase) :: log_test_type
     character(:), allocatable :: pet_file
+    integer(i_def)            :: info_unit_original
+    integer(i_def)            :: alert_unit_original
   contains
     procedure :: setUp
     procedure :: tearDown
@@ -52,6 +55,10 @@ contains
 
     character(str_long) :: str_filename
     integer(i_def)      :: status
+
+    ! Store original logger unit numbers to restore at end of test
+    this%info_unit_original  = log_get_info_stream()
+    this%alert_unit_original = log_get_alert_stream()
 
     if (this%getNumProcesses() > 1) then
       write( str_filename, &
@@ -77,6 +84,10 @@ contains
       open( log_unit, file=this%pet_file, action='write', iostat=status )
       if (status == 0) close( log_unit, status='delete' )
     end if
+
+    ! Ensure subsequent tests use the official log units
+    call log_set_info_stream(this%info_unit_original)
+    call log_set_alert_stream(this%alert_unit_original)
 
   end subroutine tearDown
 
@@ -221,7 +232,7 @@ contains
     integer(i_def)            :: found_zone
     character(8)              :: found_tag
     character(80)             :: found_message
-    integer(i_def)         :: status
+    integer(i_def)            :: status
 
     open( INFO_UNIT, status='scratch', action='readwrite', iostat=status )
     @assertEqual( 0, status )

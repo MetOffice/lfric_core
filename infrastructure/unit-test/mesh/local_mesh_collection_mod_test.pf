@@ -18,6 +18,9 @@ module local_mesh_collection_mod_test
   use local_mesh_collection_mod,  only : local_mesh_collection_type, &
                                          local_mesh_collection
   use local_mesh_mod,             only : local_mesh_type
+  use log_mod,                    only : log_level_always, &
+                                         log_set_level,    &
+                                         log_level
   use partition_mod,              only : partition_type,     &
                                          partitioner_planar, &
                                          partitioner_interface
@@ -100,6 +103,7 @@ contains
     type(local_mesh_type), pointer :: local_mesh_ptr1,  local_mesh_ptr2
     integer(i_def) :: local_mesh_id
     integer(i_def) :: unit_test_local_mesh_id
+    integer(i_def) :: logger_level
 
     logical(l_def) :: generate_inner_halos
     logical(l_def), parameter :: enforce_constraints = .false.
@@ -126,6 +130,11 @@ contains
     decomposition = custom_decomposition_type(1,1)
     max_stencil_depth = 1
     generate_inner_halos = .true.
+
+    ! Suppress log message from partitioner as they confuse the output
+    logger_level = log_level()
+    call log_set_level(log_level_always)
+
     partition = partition_type( global_mesh_ptr,       &
                                 partitioner_ptr,       &
                                 decomposition,         &
@@ -134,6 +143,9 @@ contains
                                 enforce_constraints,   &
                                 this%getProcessRank(), &
                                 this%getNumProcesses() )
+
+    ! Reset log level to original setting
+    call log_set_level(logger_level)
 
     ! Put two different local meshes in the collection
     call local_mesh%initialise( global_mesh_ptr, partition )
