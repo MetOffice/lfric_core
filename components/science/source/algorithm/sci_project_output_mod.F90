@@ -20,16 +20,18 @@ contains
   !> @details This procedure uses the galerkin projection and a precomputed
   !>          mass matrix to project a field
   !>
+  !> @param[in]    config           Application configuration object
   !> @param[in]    field            To be projected.
   !> @param[inout] projected_field  Receives projection.
   !> @param[in]    chi              Field entity co-ordinates.
   !> @param[in]    panel_id         Cell orientation map.
   !> @param[in]    output_fs        Desired output function space.
   !>
-  subroutine project_output( field, projected_field, &
+  subroutine project_output( config, field, projected_field, &
                              chi, panel_id,          &
                              output_fs )
 
+    use config_mod,                only: config_type
     use constants_mod,             only: r_def, str_max_filename, i_def
     use field_mod,                 only: field_type
     use field_parent_mod,          only: write_interface
@@ -42,13 +44,18 @@ contains
 
     implicit none
 
+    type(config_type), intent(in) :: config
+
     ! Input field to project from
     type(field_type),         intent(in)    :: field
+
     ! Output field to project to
     type(field_type),         intent(inout) :: projected_field(:)
+
     ! Co-ordinate system
     type(field_type),         intent(in)    :: chi(:)
     type(field_type),         intent(in)    :: panel_id
+
     ! Output function space
     integer(i_def),           intent(in)    :: output_fs
 
@@ -84,9 +91,8 @@ contains
     end do
 
     ! do the projection
-    call galerkin_projection_algorithm(         &
-      projected_field, field, chi, panel_id, qr &
-    )
+    call galerkin_projection_algorithm(config, projected_field, field, &
+                                       chi, panel_id, qr)
 
   end subroutine project_output
 

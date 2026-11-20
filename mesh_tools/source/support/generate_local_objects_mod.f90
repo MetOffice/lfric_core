@@ -6,6 +6,7 @@
 !> @brief Support routine to generate local mesh objects for mesh generators.
 module generate_local_objects_mod
 
+  use config_mod,                     only: config_type
   use constants_mod,                  only: i_def, l_def, str_def
   use local_mesh_mod,                 only: local_mesh_type
   use local_mesh_collection_mod,      only: local_mesh_collection_type
@@ -35,47 +36,31 @@ contains
 !>          (1 per partition). Additionally, for planar meshes, local LBC mesh
 !>          objects are produce if an lbc_parent_name is specified.
 !>
+!> @param[in]      config             Application configuration object
+!> @param[in]      partition_id       Partition number being generated.
 !> @param[in, out] local_mesh_bank    Collection for local meshes.
 !> @param[in]      global_mesh_bank   Collection of global meshes to partition.
-!> @param[in]      mesh_names         Names of meshes to partition.
-!> @param[in]      partition_id       Partition number being generated.
-
-!> @param[in]      n_partitions       Total number of partitions for each mesh.
-!> @param[in]      max_stencil_depth  Maximum stencil depth that the partitions
-!>                                    should support.
 !> @param [in]     decomposition      Object containing decomposition parameters
 !>                                    and method
 !> @param[in]      partitioner        Partitioner to apply on meshes.
-!> @param[in]      lbc_parent_name    Optional, Name of mesh to produce
-!>                                              corresponding local LBC meshes
-!>                                              (Planar meshes only).
 !-----------------------------------------------------------------------------
-subroutine generate_local_objects( local_mesh_bank,       &
-                                   global_mesh_bank,      &
-                                   mesh_names,            &
+subroutine generate_local_objects( config,                &
                                    partition_id,          &
-                                   n_partitions,          &
-                                   max_stencil_depth,     &
-                                   generate_inner_halos,  &
+                                   local_mesh_bank,       &
+                                   global_mesh_bank,      &
                                    decomposition,         &
-                                   partitioner,           &
-                                   lbc_parent_name )
+                                   partitioner )
 
   implicit none
 
+  type(config_type), intent(in) :: config
+  integer(i_def),    intent(in) :: partition_id
+
   type(local_mesh_collection_type),  intent(inout) :: local_mesh_bank
   type(global_mesh_collection_type), intent(in)    :: global_mesh_bank
+  class(panel_decomposition_type),   intent(in)    :: decomposition
 
-  character(str_def), intent(in) :: mesh_names(:)
-  integer(i_def),     intent(in) :: partition_id
-  integer(i_def),     intent(in) :: n_partitions
-  integer(i_def),     intent(in) :: max_stencil_depth
-  logical(l_def),     intent(in) :: generate_inner_halos
-
-  class(panel_decomposition_type),   intent(in) :: decomposition
   procedure(partitioner_interface),  intent(in), pointer :: partitioner
-
-  character(str_def), optional,      intent(in) :: lbc_parent_name
 
   ! Local variables
   type(local_mesh_type) :: local_mesh
@@ -110,6 +95,26 @@ subroutine generate_local_objects( local_mesh_bank,       &
   integer(i_def), allocatable :: cell_lbc_lam_map(:)
 
   logical(l_def), parameter :: enforce_constraints = .false.
+
+  character(str_def), allocatable :: mesh_names(:)
+
+  integer(i_def) :: n_partitions
+  integer(i_def) :: max_stencil_depth
+  logical(l_def) :: generate_inner_halos
+
+  logical(l_def)     :: create_lbc_mesh
+  character(str_def) :: lbc_parent_name
+
+  mesh_names           = config%mesh%mesh_names()
+  n_partitions         = config%partitions%n_partitions()
+  max_stencil_depth    = config%partitions%max_stencil_depth()
+  generate_inner_halos = config%partitions%generate_inner_halos()
+
+  create_lbc_mesh = .false.
+  if (config%namelist_exists('planar_mesh')) then
+    create_lbc_mesh = config%planar_mesh%create_lbc_mesh()
+    lbc_parent_name = config%planar_mesh%lbc_parent_mesh()
+  end if
 
   n_meshes = size(mesh_names)
 
@@ -148,9 +153,9 @@ subroutine generate_local_objects( local_mesh_bank,       &
   end do ! i
 
   !====================================================================
-  ! Partition an LBC mesh if an lbc_parent_name is provided.
+  ! Partition an LBC mesh if an lbc_parent_name if configured.
   !====================================================================
-  if ( present(lbc_parent_name) ) then
+  if ( create_lbc_mesh ) then
 
     ! Source mesh is the LBC mesh.
     ! Target mesh is the LBC parent mesh.

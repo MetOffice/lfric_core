@@ -3,6 +3,8 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
+! Some content in this file was generated or refactored with assistance from
+! - Met Office Github Copilot Enterprise (Claude Opus 5.5)
 !
 !> @brief   Defines key-value pair objects.
 !> @details An abstract key-value pair object is defined (key_value_type) along
@@ -58,6 +60,7 @@ module key_value_mod
   contains
     procedure :: key_value_initialise
     procedure :: get_key => get_key_value_key
+    procedure :: is_key => key_value_is_key
   end type key_value_type
 
   !=======================================================================
@@ -364,6 +367,21 @@ function get_key_value_key( self ) result( key )
   return
 end function get_key_value_key
 
+
+!> @brief Tests whether the pair's key matches a given string.
+function key_value_is_key( self, name ) result( match )
+
+  implicit none
+
+  class(key_value_type), intent(in) :: self
+  character(*),          intent(in) :: name
+
+  logical :: match
+
+  match = .false.
+  if ( allocated(self%key) ) match = ( trim(self%key) == trim(name) )
+
+end function key_value_is_key
 
 !=================================================
 ! Concrete initialisers

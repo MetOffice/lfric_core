@@ -121,22 +121,22 @@ $(WORKING_DIR)/%.x90 | $$(dir $$@) $(WORKING_DIR)/kernel
 #
 ifeq ("$(FORTRAN_COMPILER)", "nvfortran")
 $(WORKING_DIR)/%.x90: $(SOURCE_DIR)/%.X90 | $$(dir $$@)
-	$(call MESSAGE,Preprocessing, $(subst $(SOURCE_DIR)/,,$<))
+	$(call MESSAGE,Preprocessing algorithm, $(subst $(SOURCE_DIR)/,,$<))
 	$Q$(FPP) $(FPPFLAGS) $(MACRO_ARGS) -o $@ $<
 else
 $(WORKING_DIR)/%.x90: $(SOURCE_DIR)/%.X90 | $$(dir $$@)
-	$(call MESSAGE,Preprocessing, $(subst $(SOURCE_DIR)/,,$<))
+	$(call MESSAGE,Preprocessing algorithm, $(subst $(SOURCE_DIR)/,,$<))
 	$Q$(FPP) $(FPPFLAGS) $(MACRO_ARGS) $< $@
 endif
 
 # Little x90 files are just copied to the workspace.
 #
 $(WORKING_DIR)/%.x90: $(SOURCE_DIR)/%.x90 | $$(dir $$@)
-	$(call MESSAGE,Copying, $(subst $(SOURCE_DIR)/,,$<))
+	$(call MESSAGE,Copying algorithm, $(subst $(SOURCE_DIR)/,,$<))
 	$Qcp $< $@
 
 # Create directories in the workspace as needed.
 #
-$(DIRECTORIES):
+$(DIRECTORIES) $(WORKING_DIR)/kernel:
 	$(call MESSAGE,Creating,$@)
 	$Qmkdir -p $@

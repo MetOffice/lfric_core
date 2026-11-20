@@ -10,21 +10,18 @@
 !>
 module sci_compute_mass_matrix_kernel_w2_mod
 
-  use argument_mod,            only: arg_type, func_type,       &
-                                     GH_OPERATOR, GH_FIELD,     &
-                                     GH_READ, GH_WRITE,         &
-                                     GH_REAL, ANY_W2,           &
-                                     ANY_DISCONTINUOUS_SPACE_3, &
-                                     ANY_SPACE_9,               &
-                                     GH_BASIS, GH_DIFF_BASIS,   &
+  use argument_mod,            only: arg_type, func_type,         &
+                                     GH_OPERATOR,                 &
+                                     GH_FIELD, GH_SCALAR,         &
+                                     GH_READ, GH_WRITE,           &
+                                     GH_REAL, GH_INTEGER, ANY_W2, &
+                                     ANY_DISCONTINUOUS_SPACE_3,   &
+                                     ANY_SPACE_9,                 &
+                                     GH_BASIS, GH_DIFF_BASIS,     &
                                      CELL_COLUMN, GH_QUADRATURE_XYoZ
   use constants_mod,           only: i_def, r_def
   use sci_coordinate_jacobian_mod, only: coordinate_jacobian
   use kernel_mod,              only: kernel_type
-
-  use base_mesh_config_mod,      only: geometry, topology
-  use finite_element_config_mod, only: coord_system
-  use planet_config_mod,         only: scaled_radius
 
   implicit none
 
@@ -36,10 +33,14 @@ module sci_compute_mass_matrix_kernel_w2_mod
 
   type, public, extends(kernel_type) :: compute_mass_matrix_kernel_w2_type
     private
-    type(arg_type) :: meta_args(3) = (/                                      &
-         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, ANY_W2, ANY_W2),           &
-         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),              &
-         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3) &
+    type(arg_type) :: meta_args(7) = (/                                       &
+         arg_type(GH_OPERATOR, GH_REAL, GH_WRITE, ANY_W2, ANY_W2),            & ! mm
+         arg_type(GH_FIELD*3,  GH_REAL, GH_READ,  ANY_SPACE_9),               & ! chi1, chi2, chi3
+         arg_type(GH_FIELD,    GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! panel_id
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! geometry
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! topology
+         arg_type(GH_SCALAR,   GH_INTEGER, GH_READ),                          & ! coord_system
+         arg_type(GH_SCALAR,   GH_REAL,    GH_READ)                           & ! scaled_radius
          /)
     type(func_type) :: meta_funcs(2) = (/                                    &
          func_type(ANY_W2,      GH_BASIS),                                   &
@@ -68,6 +69,10 @@ contains
 !! @param[in] chi2     2nd coordinate field in Wchi
 !! @param[in] chi3     3rd coordinate field in Wchi
 !! @param[in] panel_id Field giving the ID for mesh panels
+!! @param[in] geometry      Mesh geometry enumeration
+!! @param[in] topology      Mesh topology enumeration
+!! @param[in] coord_system  Finite-element coordinate system enumeration
+!! @param[in] scaled_radius Scaled planet radius
 !! @param[in] ndf_w2   Degrees of freedom per cell
 !! @param[in] basis_w2 Vector basis functions evaluated at quadrature points
 !! @param[in] ndf_chi  Degrees of freedom per cell for chi field
@@ -88,6 +93,8 @@ subroutine compute_mass_matrix_w2_code(cell, nlayers, ncell_3d,     &
                                        mm,                          &
                                        chi1, chi2, chi3,            &
                                        panel_id,                    &
+                                       geometry, topology,          &
+                                       coord_system, scaled_radius, &
                                        ndf_w2, basis_w2,            &
                                        ndf_chi, undf_chi, map_chi,  &
                                        basis_chi,                   &
@@ -119,6 +126,11 @@ subroutine compute_mass_matrix_w2_code(cell, nlayers, ncell_3d,     &
   real(kind=r_def),      intent(in) :: panel_id(undf_pid)
   real(kind=r_def),      intent(in) :: wqp_h(nqp_h)
   real(kind=r_def),      intent(in) :: wqp_v(nqp_v)
+
+  integer(kind=i_def), intent(in) :: geometry
+  integer(kind=i_def), intent(in) :: topology
+  integer(kind=i_def), intent(in) :: coord_system
+  real(kind=r_def),    intent(in) :: scaled_radius
 
   ! Internal variables
   integer(kind=i_def)                          :: df, df2, k, ik, ipanel
