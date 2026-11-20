@@ -681,6 +681,23 @@ contains
 
       min_lon = 2.0_r_def*PI
       max_lon = -2.0_r_def*PI
+
+      ! In order to safely handle dateline, first get range of longitudes for
+      ! this cell
+      do vert = 1, nverts
+        v_xyz(:) = vertex_local_coords(:,vert)
+
+        ! Un-rotate coordinates
+        if (to_rotate) then
+          v_xyz = matmul(inverse_rot_matrix, v_xyz)
+        end if
+        call xyz2llr(v_xyz(1),v_xyz(2),v_xyz(3),v_lon,v_lat,v_r)
+
+        min_lon = MIN(min_lon, v_lon)
+        max_lon = MAX(max_lon, v_lon)
+      end do
+
+      ! Now loop through DoFs to compute the coordinates at each DoF
       do df = 1, ndf
         dfk = map(df)+k
         ! Compute interpolation weights
@@ -698,8 +715,13 @@ contains
           if (to_rotate) then
             v_xyz = matmul(inverse_rot_matrix, v_xyz)
           end if
-
           call xyz2llr(v_xyz(1),v_xyz(2),v_xyz(3),v_lon,v_lat,v_r)
+
+          ! If cell spans the dateline, adjust the negative longitudes
+          if ( max_lon - min_lon > PI ) then
+            if ( v_lon < 0.0_r_def ) v_lon = v_lon + 2.0_r_def*PI
+          end if
+
           longitude = longitude + interp_weight*v_lon
           latitude = latitude + interp_weight*v_lat
           radius = radius + interp_weight*v_r
@@ -708,19 +730,8 @@ contains
         chi_1(dfk) = longitude
         chi_2(dfk) = latitude
         chi_3(dfk) = radius - scaled_radius
-
-        min_lon = MIN(longitude, min_lon)
-        max_lon = MAX(longitude, max_lon)
       end do
 
-      ! If cell spans the dateline, adjust the negative longitudes
-      if ( max_lon - min_lon > PI ) then
-        do df = 1, ndf
-          if ( chi_1(map(df)+k) < 0.0_r_def ) then
-            chi_1(map(df)+k) = chi_1(map(df)+k) + 2.0_r_def*PI
-          end if
-        end do
-      end if
       if (k == 0) then
         do df = 1, ndf
           write(log_scratch_space,*) 'COORDS', map_pid(1), df, map(df),        &
