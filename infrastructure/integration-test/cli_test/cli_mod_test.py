@@ -35,6 +35,12 @@ class cli_mod_normal_test(Test):
                 )
             )
 
+        # Ignore cray warning
+        out = out.replace(
+            "[CRAYBLAS_WARNING] Application linked against multiple cray-libsci libraries",
+            ""
+        )
+
         if out.strip() != self._INJECT:
             raise TestFailed(
                 'Expected filename "{expected}" but found "{found}"'.format(
