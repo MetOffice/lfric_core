@@ -1,0 +1,125 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+!-----------------------------------------------------------------------------
+! Some of the content of this file has been produced with the assistance of
+! Met Office Github Copilot Enterprise
+!-----------------------------------------------------------------------------
+
+!> Test splitting a W1 field into its W1h and W1v components
+
+module split_w1_field_kernel_mod_test
+
+  use constants_mod, only : i_def, r_def
+  use funit
+
+  implicit none
+
+  private
+  public :: test_all
+
+  @TestCase
+  type, extends(TestCase), public :: split_w1_field_test_type
+    private
+  contains
+    procedure test_all
+  end type split_w1_field_test_type
+
+contains
+
+  @test
+  subroutine test_all( this )
+
+    use sci_split_w1_field_kernel_mod, only : split_w1_field_code
+
+    implicit none
+
+    class(split_w1_field_test_type), intent(inout) :: this
+
+    real(kind=r_def), parameter :: tol = 1.0e-9_r_def
+
+    integer(kind=i_def), parameter :: nlayers = 1
+
+    ! W1 space (base)
+    integer(kind=i_def), parameter       :: ndf_w1  = 12_i_def
+    integer(kind=i_def), parameter       :: undf_w1 = 24_i_def
+    integer(kind=i_def), dimension(ndf_w1) :: map_w1
+    real(kind=r_def),    dimension(undf_w1) :: uvw
+
+    ! W1h space
+    integer(kind=i_def), parameter        :: ndf_w1h  = 8_i_def
+    integer(kind=i_def), parameter        :: undf_w1h = 16_i_def
+    integer(kind=i_def), dimension(ndf_w1h) :: map_w1h
+    real(kind=r_def),    dimension(undf_w1h) :: uv
+
+    ! W1v space
+    integer(kind=i_def), parameter        :: ndf_w1v  = 4_i_def
+    integer(kind=i_def), parameter        :: undf_w1v = 8_i_def
+    integer(kind=i_def), dimension(ndf_w1v) :: map_w1v
+    real(kind=r_def),    dimension(undf_w1v) :: w
+
+    ! 2D W3 space (selectors)
+    integer(kind=i_def), parameter        :: ndf_w3_2d  = 1_i_def
+    integer(kind=i_def), parameter        :: undf_w3_2d = 1_i_def
+    integer(kind=i_def), dimension(ndf_w3_2d) :: map_w3_2d
+    integer(kind=i_def), dimension(undf_w3_2d) :: face_selector_ew
+    integer(kind=i_def), dimension(undf_w3_2d) :: face_selector_ns
+    integer(kind=i_def), dimension(undf_w3_2d) :: vert_edge_selector
+
+    integer(kind=i_def) :: i, edge
+
+    do i = 1, ndf_w1
+      map_w1(i) = 2*i - 1
+    end do
+    do i = 1, ndf_w1h
+      map_w1h(i) = 2*i - 1
+    end do
+    do i = 1, ndf_w1v
+      map_w1v(i) = 2*i - 1
+    end do
+    map_w3_2d(1) = 1
+
+    ! Own all four horizontal directions (W, E, S, N) and all four vertical
+    ! edges (SW, SE, NE, NW) in this column
+    face_selector_ew(1)    = 2
+    face_selector_ns(1)    = 2
+    vert_edge_selector(1)  = 15
+
+    uvw(:) = 0.0_r_def
+    uv(:)  = 0.0_r_def
+    w(:)   = 0.0_r_def
+
+    ! Populate the "bottom" and "top" horizontal-edge base entries
+    do i = 1, 4
+      uvw(map_w1(i))     = 100.0_r_def*real(i,r_def)
+      uvw(map_w1(i) + 1) = 100.0_r_def*real(i,r_def) + 1.0_r_def
+    end do
+    ! Populate the vertical-edge base entries (SW=5, SE=6, NE=7, NW=8)
+    do edge = 5, 8
+      uvw(map_w1(edge)) = 100.0_r_def*real(edge,r_def)
+    end do
+
+    call split_w1_field_code(nlayers,                             &
+                              uv, w, uvw,                         &
+                              face_selector_ew, face_selector_ns, &
+                              vert_edge_selector,                 &
+                              ndf_w1h,   undf_w1h,   map_w1h,     &
+                              ndf_w1v,   undf_w1v,   map_w1v,     &
+                              ndf_w1,    undf_w1,    map_w1,      &
+                              ndf_w3_2d, undf_w3_2d, map_w3_2d    )
+
+    ! Horizontal-edge component: each direction's bottom and top value
+    do i = 1, 4
+      @assertEqual(100.0_r_def*real(i,r_def), uv(map_w1h(i)), tol)
+      @assertEqual(100.0_r_def*real(i,r_def) + 1.0_r_def, uv(map_w1h(i) + 1), tol)
+    end do
+
+    ! Vertical-edge component: local W1v dof (edge - 4) for each edge
+    do edge = 5, 8
+      @assertEqual(100.0_r_def*real(edge,r_def), w(map_w1v(edge - 4)), tol)
+    end do
+
+  end subroutine test_all
+
+end module split_w1_field_kernel_mod_test

@@ -2,6 +2,8 @@
 ! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
 ! For further details please refer to the file LICENCE which you
 ! should have received as part of this distribution.
+! Some of the content of this file has been produced with the assistance of
+! Met Office Github Copilot Enterprise
 !-----------------------------------------------------------------------------
 !
 !-------------------------------------------------------------------------------
@@ -9,7 +11,7 @@ module function_space_mod_test
 
   use pfunit
   use constants_mod,         only : i_def, l_def, r_def, str_long
-  use fs_continuity_mod,     only : W0, W1, W2, W3, Wtheta, W2V, W2H, Wchi, &
+  use fs_continuity_mod,     only : W0, W1, W1V, W1H, W2, W3, Wtheta, W2V, W2H, Wchi, &
                                     W2trace, W2Htrace, W2Vtrace
   use fs_test_data_mod,      only : fs0k0_nodal_coords,            &
                                     fs0k0_dofmap,                  &
@@ -19,6 +21,14 @@ module function_space_mod_test
                                     fs1k0_dofmap,                  &
                                     fs1k0_basis_function,          &
                                     fs1k0_basis_diff_function,     &
+                                    fs1vk0_nodal_coords,           &
+                                    fs1vk0_dofmap,                 &
+                                    fs1vk0_basis_function,         &
+                                    fs1vk0_basis_diff_function,    &
+                                    fs1hk0_nodal_coords,           &
+                                    fs1hk0_dofmap,                 &
+                                    fs1hk0_basis_function,         &
+                                    fs1hk0_basis_diff_function,    &
                                     fs2k0_nodal_coords,            &
                                     fs2k0_dofmap,                  &
                                     fs2k0_basis_function,          &
@@ -173,7 +183,7 @@ contains
 
     implicit none
 
-    type(function_space_parameter_type) :: parameters(44)
+    type(function_space_parameter_type) :: parameters(52)
 
     ! function_space_parameter_type extends MPITestParameter
     ! The following calls to the constructor require numProcessesRequested from
@@ -189,6 +199,14 @@ contains
                function_space_parameter_type(1, W1,       1, 0, 33, 396, 3, 3, .false.), &
                function_space_parameter_type(1, W1,       0, 1, 20, 180, 3, 3, .false.), &
                function_space_parameter_type(1, W1,       1, 1, 54, 720, 3, 3, .false.), &
+               function_space_parameter_type(1, W1V,      0, 0,  4,  27, 3, 3, .true. ), &
+               function_space_parameter_type(1, W1V,      1, 0,  9, 108, 3, 3, .false.), &
+               function_space_parameter_type(1, W1V,      0, 1,  8,  54, 3, 3, .false.), &
+               function_space_parameter_type(1, W1V,      1, 1, 18, 216, 3, 3, .false.), &
+               function_space_parameter_type(1, W1H,      0, 0,  8,  72, 3, 3, .true. ), &
+               function_space_parameter_type(1, W1H,      1, 0, 24, 288, 3, 3, .false.), &
+               function_space_parameter_type(1, W1H,      0, 1, 12, 126, 3, 3, .false.), &
+               function_space_parameter_type(1, W1H,      1, 1, 36, 504, 3, 3, .false.), &
                function_space_parameter_type(1, W2,       0, 0,  6,  90, 3, 1, .true. ), &
                function_space_parameter_type(1, W2,       1, 0, 20, 360, 3, 1, .false.), &
                function_space_parameter_type(1, W2,       0, 1, 11, 171, 3, 1, .true. ), &
@@ -368,6 +386,16 @@ contains
         dofmap         => fs1k0_dofmap
         basis_function => fs1k0_basis_function
         basis_diff_function => fs1k0_basis_diff_function
+      case (W1V)
+        nodal_coords   => fs1vk0_nodal_coords
+        dofmap         => fs1vk0_dofmap
+        basis_function => fs1vk0_basis_function
+        basis_diff_function => fs1vk0_basis_diff_function
+      case (W1H)
+        nodal_coords   => fs1hk0_nodal_coords
+        dofmap         => fs1hk0_dofmap
+        basis_function => fs1hk0_basis_function
+        basis_diff_function => fs1hk0_basis_diff_function
       case (W2)
         select case(this%element_order_h + 10*this%element_order_v)
           case(0)
@@ -889,6 +917,85 @@ contains
             idx2 = idx1 + ndof_edge_v - 1
           end if
           reference(idx1:idx2) = edge_array(edge) + EDGE_OFFSET
+        end do
+
+      case (W1V)
+        ! On a side face (1-4), only the vertical-tangent component
+        ! belongs to W1V; B/T faces (5,6) carry no W1V dofs.
+        ndof_edge_h = 0
+        ndof_edge_v = (k_v + 1)
+        ndof_face_h = k_h*(k_v + 1)
+        ndof_face_v = 0
+        ndof_vol    = k_h*k_h*(k_v + 1)
+
+        idx1 = 1
+        idx2 = ndof_vol
+        if (idx1 <= idx2) then
+          reference(idx1:idx2) = V
+        end if
+
+        do face = 1, 6
+          idx1 = idx2 + 1
+          if (face <= 4) then
+            idx2 = idx1 + ndof_face_h - 1
+          else
+            idx2 = idx1 + ndof_face_v - 1
+          end if
+          if (idx1 <= idx2) then
+            reference(idx1:idx2) = face_array(face) + FACE_OFFSET
+          end if
+        end do
+
+        do edge = 1, 12
+          idx1 = idx2 + 1
+          if (edge <= 4 .or. edge > 8) then
+            idx2 = idx1 + ndof_edge_h - 1
+          else
+            idx2 = idx1 + ndof_edge_v - 1
+          end if
+          if (idx1 <= idx2) then
+            reference(idx1:idx2) = edge_array(edge) + EDGE_OFFSET
+          end if
+        end do
+
+      case (W1H)
+        ! On a side face (1-4), only the horizontal-tangent component
+        ! belongs to W1H; B/T faces (5,6) carry both horizontal-tangent
+        ! components, so get the full W1 face_v count.
+        ndof_edge_h = (k_h + 1)
+        ndof_edge_v = 0
+        ndof_face_h = k_v*(k_h + 1)
+        ndof_face_v = 2*(k_h + 1)*k_h
+        ndof_vol    = 2*k_h*(k_h + 1)*k_v
+
+        idx1 = 1
+        idx2 = ndof_vol
+        if (idx1 <= idx2) then
+          reference(idx1:idx2) = V
+        end if
+
+        do face = 1, 6
+          idx1 = idx2 + 1
+          if (face <= 4) then
+            idx2 = idx1 + ndof_face_h - 1
+          else
+            idx2 = idx1 + ndof_face_v - 1
+          end if
+          if (idx1 <= idx2) then
+            reference(idx1:idx2) = face_array(face) + FACE_OFFSET
+          end if
+        end do
+
+        do edge = 1, 12
+          idx1 = idx2 + 1
+          if (edge <= 4 .or. edge > 8) then
+            idx2 = idx1 + ndof_edge_h - 1
+          else
+            idx2 = idx1 + ndof_edge_v - 1
+          end if
+          if (idx1 <= idx2) then
+            reference(idx1:idx2) = edge_array(edge) + EDGE_OFFSET
+          end if
         end do
 
       case (W2)

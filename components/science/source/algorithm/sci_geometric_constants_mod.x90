@@ -17,7 +17,7 @@ module sci_geometric_constants_mod
   ! Infrastructure
   use constants_mod,                 only: i_def, r_def, l_def, str_def
   use extrusion_mod,                 only: TWOD, PRIME_EXTRUSION
-  use fs_continuity_mod,             only: W0, W1, W2, W2H, W3, Wtheta
+  use fs_continuity_mod,             only: W0, W1, W2, W2H, W3, W1V, Wtheta
   use function_space_collection_mod, only: function_space_collection
   use log_mod,                       only: log_event, LOG_LEVEL_ERROR
   use mesh_collection_mod,           only: mesh_collection
@@ -97,6 +97,9 @@ module sci_geometric_constants_mod
   type(inventory_by_local_mesh_type)         :: face_selector_ew_inventory
   type(inventory_by_local_mesh_type)         :: face_selector_ns_inventory
 
+  ! Vertical-edge selector, used to avoid doubly-iterating over vertical edges
+  type(inventory_by_local_mesh_type)         :: vert_edge_selector_inventory
+
   ! ========================================================================== !
   ! Public functions for accessing the module contents
   ! ========================================================================== !
@@ -123,12 +126,14 @@ module sci_geometric_constants_mod
   public :: get_longitude_fv
   public :: get_face_selector_ew
   public :: get_face_selector_ns
+  public :: get_vert_edge_selector
   public :: get_chi_inventory
   public :: get_panel_id_inventory
 
   ! Private routines for creating constants
   private :: compute_latlon
   private :: compute_face_selectors
+  private :: compute_vert_edge_selector
 
 contains
 
@@ -320,6 +325,96 @@ contains
     if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
 
   end subroutine compute_face_selectors
+
+  !> @brief Private routine for computing the vertical-edge selector field
+  !> @param[in]  mesh  Mesh used to determine local mesh for
+  !!                   computing the field for
+  subroutine compute_vert_edge_selector(mesh)
+
+    use sci_psykal_light_mod,                   only: invoke_deep_int_setval_c
+    use sci_vert_edge_selector_kernel_mod,      only:                          &
+        vert_edge_selector_kernel_type
+    use sci_vert_edge_selector_halo_kernel_mod, only:                          &
+        vert_edge_selector_halo_kernel_type
+
+    implicit none
+
+    type(mesh_type), intent(in) :: mesh
+
+    ! Internal variables
+    type(mesh_type),           pointer :: twod_mesh
+    type(local_mesh_type),     pointer :: local_mesh
+    type(integer_field_type),  pointer :: vert_edge_selector
+    type(integer_field_type)           :: vert_edge_counter
+    type(function_space_type), pointer :: w1v_2d_fs
+    type(function_space_type), pointer :: w3_2d_fs
+    integer(kind=i_def)                :: depth, max_halo_depth
+    integer(kind=tik)                  :: id
+
+    if ( LPROF ) call start_timing( id, 'runtime_constants.geometric' )
+
+    twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
+    local_mesh => mesh%get_local_mesh()
+    w1v_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W1V)
+    w3_2d_fs => function_space_collection%get_fs(twod_mesh, 0, 0, W3)
+    max_halo_depth = twod_mesh%get_halo_depth()
+
+    ! Temporary W1V field, tracking the count for each vertical edge
+    call vert_edge_counter%initialise(w1v_2d_fs, halo_depth=max_halo_depth)
+
+    call vert_edge_selector_inventory%add_field(                               &
+            vert_edge_selector, w3_2d_fs, local_mesh,                          &
+            halo_depth=max_halo_depth                                          &
+    )
+
+    ! ------------------------------------------------------------------------ !
+    ! Initialise vertical-edge selector to zero
+    ! ------------------------------------------------------------------------ !
+
+    call invoke_deep_int_setval_c(vert_edge_selector, 0, max_halo_depth)
+
+    ! ------------------------------------------------------------------------ !
+    ! Setting vertical-edge selector in owned cells
+    ! ------------------------------------------------------------------------ !
+
+    ! Set edge counter to be one for halo DoFs, but zero for owned (and
+    ! annexed, if using) DoFs. The use of annexed DoFs will be picked up by
+    ! using normal int_setval_c invoke, but need to use psykal-lite
+    ! implementation to ensure halo DoFs are set to the correct value
+    call invoke_deep_int_setval_c(vert_edge_counter, 1, max_halo_depth)
+    call invoke( int_setval_c(vert_edge_counter, 0) )
+
+    ! Compute vertical-edge selector in owned cell region
+    call invoke(                                                               &
+        vert_edge_selector_kernel_type(                                        &
+            vert_edge_selector, vert_edge_counter                              &
+        )                                                                      &
+    )
+
+    ! ------------------------------------------------------------------------ !
+    ! Setting vertical-edge selector in halos
+    ! ------------------------------------------------------------------------ !
+
+    ! Set edge counter to be zero for halo DoFs, but one for owned (and
+    ! annexed, if using) DoFs. The use of annexed DoFs will be picked up by
+    ! using normal int_setval_c invoke, but need to use psykal-lite
+    ! implementation to ensure halo DoFs are set to the correct value
+    call invoke_deep_int_setval_c(vert_edge_counter, 0, max_halo_depth)
+    call invoke( int_setval_c(vert_edge_counter, 1) )
+
+    ! Loop through different halo depths, setting the vertical-edge selector
+    ! in the halos at each depth as we go
+    do depth = 1, max_halo_depth
+      call invoke(                                                             &
+          vert_edge_selector_halo_kernel_type(                                 &
+              vert_edge_selector, vert_edge_counter, depth                     &
+          )                                                                    &
+      )
+    end do
+
+    if ( LPROF ) call stop_timing( id, 'runtime_constants.geometric' )
+
+  end subroutine compute_vert_edge_selector
 
   ! ========================================================================== !
   ! GETTERS FOR FINITE ELEMENT COORDINATE FIELDS
@@ -1664,6 +1759,38 @@ contains
   end function get_face_selector_ns
 
   ! ========================================================================== !
+  ! VERTICAL-EDGE SELECTOR
+  ! ========================================================================== !
+
+  !> @brief Returns a pointer to the vertical-edge selector
+  !> @param[in] mesh  Mesh to get the object for
+  !> @return The vertical-edge selector
+  function get_vert_edge_selector(mesh) result(selector)
+
+    implicit none
+
+    type(mesh_type), intent(in) :: mesh
+
+    type(local_mesh_type),    pointer :: local_mesh
+    type(integer_field_type), pointer :: selector
+    logical(kind=l_def)               :: constant_exists
+
+    ! Initialise inventory if this is the first time getting this constant
+    if (.not. vert_edge_selector_inventory%is_initialised()) then
+      call vert_edge_selector_inventory%initialise(name="vert_edge_selector")
+    end if
+
+    local_mesh => mesh%get_local_mesh()
+    constant_exists = &
+        vert_edge_selector_inventory%paired_object_exists(local_mesh%get_id())
+
+    if (.not. constant_exists) call compute_vert_edge_selector(mesh)
+
+    call vert_edge_selector_inventory%get_field(local_mesh, selector)
+
+  end function get_vert_edge_selector
+
+  ! ========================================================================== !
   ! GETTERS FOR INVENTORIES
   ! ========================================================================== !
   ! These are two special inventories, which are set up in the driver
@@ -1731,6 +1858,9 @@ contains
     call dx_at_w2_inventory%clear()
     call dz_at_wtheta_inventory%clear()
     call dA_msl_proj_inventory%clear()
+    call face_selector_ew_inventory%clear()
+    call face_selector_ns_inventory%clear()
+    call vert_edge_selector_inventory%clear()
 
   end subroutine final_geometric_constants
 

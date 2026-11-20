@@ -2,6 +2,8 @@
 ! Copyright (c) 2017,  Met Office, on behalf of HMSO and Queen's Printer
 ! For further details please refer to the file LICENCE which you
 ! should have received as part of this distribution.
+! Some of the content of this file has been produced with the assistance of
+! Met Office Github Copilot Enterprise
 !-----------------------------------------------------------------------------
 !
 !> @brief Define enumerator variables that describe the different types of
@@ -28,6 +30,8 @@ module fs_continuity_mod
   !-------------------------------------------------------------------------------
   integer(i_def), public, parameter :: W0        = 173
   integer(i_def), public, parameter :: W1        = 194
+  integer(i_def), public, parameter :: W1V       = 195
+  integer(i_def), public, parameter :: W1H       = 196
   integer(i_def), public, parameter :: W2        = 889
   integer(i_def), public, parameter :: W2V       = 857
   integer(i_def), public, parameter :: W2H       = 884
@@ -40,7 +44,7 @@ module fs_continuity_mod
   integer(i_def), public, parameter :: Wtheta    = 274
   integer(i_def), public, parameter :: Wchi      = 869
 
-  integer(i_def), private, parameter :: num_fs   = 13
+  integer(i_def), private, parameter :: num_fs   = 15
 
   integer(i_def), private, parameter :: fs_enumerator(num_fs, 3) = &
          transpose(reshape( [                                      &
@@ -48,6 +52,8 @@ module fs_continuity_mod
 !                           continuous      continuous
               W0,           1,              1, &
               W1,           1,              1, &
+              W1V,          1,              0, &
+              W1H,          1,              1, &
               W2,           1,              1, &
               W2V,          0,              1, &
               W2H,          1,              0, &
@@ -65,14 +71,16 @@ module fs_continuity_mod
          [character(str_short) ::                               &
              'W0',        &
              'W1',        &
+             'W1V',       &
+             'W1H',       &
              'W2',        &
              'W2V',       &
              'W2H',       &
              'W2broken',  &
              'W2Hbroken', &
              'W2trace',   &
-             'W2Htrace',  &
              'W2Vtrace',  &
+             'W2Htrace',  &
              'W3',        &
              'Wtheta',    &
              'Wchi' ]
