@@ -44,10 +44,28 @@ conflict. For example, in the ``skeleton`` miniapp, transformation scripts are
 grouped by the PSyclone method of operation they require (psykal,  transmute)::
 
     optimisation/
-    └── platform/ (ex1a, minimum, xc40, etc.)
+    └── architecture/ (minimum, cpu, gpu, etc.)
         ├── psykal
         │   ├── global.py
         │   └── sub_directory/
         └── transmute/
             ├── global.py
             └── sub_directory/
+
+The platform folder has been updated to represent the architecture used
+by a given site. Given there have not been too many distinct
+requirements yet, initially there is:
+
+* minimum
+* cpu
+
+With scope to expand this like so:
+(Please use underscore rather than a dash in the names, this
+causes issues with FAB):
+
+* minimum
+* cpu
+* cpu_ex
+* gpu
+* gpu_nvidia
+* gpu_amd
