@@ -43,19 +43,12 @@ program io_demo
 
   call parse_command_line( filename )
   call modeldb%values%initialise()
-  call modeldb%configuration%initialise( program_name, table_len=10 )
   call modeldb%config%initialise(program_name)
 
-  write(log_scratch_space,&
-        '("Application built with ", A, "-bit real numbers")') &
-        trim(precision_real)
-  call log_event( log_scratch_space, log_level_trace )
   modeldb%mpi => global_mpi
-  call init_comm(program_name, modeldb)
 
-  call init_config(filename,                            &
-                   io_demo_required_namelists,          &
-                   configuration=modeldb%configuration, &
+  call init_comm(program_name, modeldb)
+  call init_config(filename, io_demo_required_namelists, &
                    config=modeldb%config)
 
   deallocate( filename )
@@ -63,6 +56,11 @@ program io_demo
   call init_logger( modeldb%config, &
                     modeldb%mpi%get_comm(), &
                     program_name )
+
+  write(log_scratch_space,&
+        '("Application built with ", A, "-bit real numbers")') &
+        trim(precision_real)
+  call log_event( log_scratch_space, log_level_trace )
 
   subroutine_timers = modeldb%config%io%subroutine_timers()
   timer_output_path = modeldb%config%io%timer_output_path()
