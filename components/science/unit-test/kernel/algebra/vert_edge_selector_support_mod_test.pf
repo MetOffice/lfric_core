@@ -1,0 +1,294 @@
+!-----------------------------------------------------------------------------
+! (C) Crown copyright Met Office. All rights reserved.
+! The file LICENCE, distributed with this code, contains details of the terms
+! under which the code may be used.
+! Some of the content of this file has been produced with the assistance of
+! Met Office Github Copilot Enterprise
+!-----------------------------------------------------------------------------
+
+module vert_edge_selector_support_mod_test
+
+  use funit
+  use constants_mod,         only : i_def, IMDI
+  use reference_element_mod, only : SW, SE, NE, NW
+
+  implicit none
+
+  private
+  public :: vert_edge_selector_test_type, test_compute_vert_edge_selector, &
+            test_num_vert_edges_to_do, test_decode_vert_edge_selector
+
+  @TestCase
+  type, extends(TestCase) :: vert_edge_selector_test_type
+    private
+  contains
+    procedure test_compute_vert_edge_selector
+    procedure test_num_vert_edges_to_do
+    procedure test_decode_vert_edge_selector
+  end type vert_edge_selector_test_type
+
+contains
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_compute_vert_edge_selector( this )
+
+    use sci_vert_edge_selector_support_mod, only : compute_vert_edge_selector
+
+    implicit none
+
+    class(vert_edge_selector_test_type), intent(inout) :: this
+
+    integer(kind=i_def)              :: ndf_w3, ndf_w1v
+    integer(kind=i_def)              :: undf_w3, undf_w1v
+    integer(kind=i_def), allocatable :: map_w3(:), map_w1v(:)
+    integer(kind=i_def), allocatable :: vert_edge_selector(:)
+    integer(kind=i_def), allocatable :: vert_edge_counter(:)
+    integer(kind=i_def), allocatable :: vert_edge_selector_answer(:)
+    integer(kind=i_def), allocatable :: vert_edge_counter_answer(:)
+
+    ! Set integer values to describe mesh (single layer, single column)
+    undf_w3 = 1
+    ndf_w3 = 1
+    undf_w1v = 4
+    ndf_w1v = 4
+
+    allocate(map_w3(undf_w3))
+    allocate(map_w1v(undf_w1v))
+    allocate(vert_edge_selector(undf_w3))
+    allocate(vert_edge_counter(undf_w1v))
+
+    allocate(vert_edge_selector_answer(undf_w3))
+    allocate(vert_edge_counter_answer(undf_w1v))
+
+    ! DoF map. Local dofs 1, 2, 3, 4 correspond to the SW, SE, NE, NW
+    ! vertical edges respectively
+    map_w3 = (/ 1 /)
+    map_w1v = (/ 1, 2, 3, 4 /)
+
+    ! Test 1 -------------------------------------------------------------------
+    ! If the selector has already been computed, nothing should change
+    vert_edge_selector(1) = 5
+    vert_edge_counter = (/ 1, 0, 1, 0 /)
+    vert_edge_selector_answer = vert_edge_selector
+    vert_edge_counter_answer = vert_edge_counter
+
+    call compute_vert_edge_selector( vert_edge_selector, &
+                                     vert_edge_counter,  &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
+                                     map_w1v )
+
+    ! Check values!
+    @assertEqual( vert_edge_selector_answer, vert_edge_selector )
+    @assertEqual( vert_edge_counter_answer, vert_edge_counter )
+
+    ! Test 2 -------------------------------------------------------------------
+    ! SW and NE already claimed, SE and NW are not
+    vert_edge_selector(1) = 0
+    vert_edge_counter = (/ 1, 0, 1, 0 /)
+    vert_edge_selector_answer(1) = 2 + 8
+    vert_edge_counter_answer = (/ 1, 1, 1, 1 /)
+
+    call compute_vert_edge_selector( vert_edge_selector, &
+                                     vert_edge_counter,  &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
+                                     map_w1v )
+
+    ! Check values!
+    @assertEqual( vert_edge_selector_answer, vert_edge_selector )
+    @assertEqual( vert_edge_counter_answer, vert_edge_counter )
+
+    ! Test 3 -------------------------------------------------------------------
+    ! All four vertical edges already claimed
+    vert_edge_selector(1) = 0
+    vert_edge_counter = (/ 1, 1, 1, 1 /)
+    vert_edge_selector_answer(1) = 0
+    vert_edge_counter_answer = (/ 1, 1, 1, 1 /)
+
+    call compute_vert_edge_selector( vert_edge_selector, &
+                                     vert_edge_counter,  &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
+                                     map_w1v )
+
+    ! Check values!
+    @assertEqual( vert_edge_selector_answer, vert_edge_selector )
+    @assertEqual( vert_edge_counter_answer, vert_edge_counter )
+
+    ! Test 4 -------------------------------------------------------------------
+    ! No vertical edges yet claimed, all four should become claimed
+    vert_edge_selector(1) = 0
+    vert_edge_counter = (/ 0, 0, 0, 0 /)
+    vert_edge_selector_answer(1) = 1 + 2 + 4 + 8
+    vert_edge_counter_answer = (/ 1, 1, 1, 1 /)
+
+    call compute_vert_edge_selector( vert_edge_selector, &
+                                     vert_edge_counter,  &
+                                     ndf_w3,             &
+                                     undf_w3,            &
+                                     map_w3,             &
+                                     ndf_w1v,            &
+                                     undf_w1v,           &
+                                     map_w1v )
+
+    ! Check values!
+    @assertEqual( vert_edge_selector_answer, vert_edge_selector )
+    @assertEqual( vert_edge_counter_answer, vert_edge_counter )
+
+    deallocate(map_w3)
+    deallocate(map_w1v)
+    deallocate(vert_edge_selector)
+    deallocate(vert_edge_counter)
+    deallocate(vert_edge_selector_answer)
+    deallocate(vert_edge_counter_answer)
+
+  end subroutine test_compute_vert_edge_selector
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_num_vert_edges_to_do( this )
+
+    use sci_vert_edge_selector_support_mod, only : num_vert_edges_to_do
+
+    implicit none
+
+    class(vert_edge_selector_test_type), intent(inout) :: this
+
+    ! No bits set
+    @assertEqual( 0, num_vert_edges_to_do(0) )
+
+    ! Single bits set
+    @assertEqual( 1, num_vert_edges_to_do(1) )
+    @assertEqual( 1, num_vert_edges_to_do(2) )
+    @assertEqual( 1, num_vert_edges_to_do(4) )
+    @assertEqual( 1, num_vert_edges_to_do(8) )
+
+    ! Pairs of bits set
+    @assertEqual( 2, num_vert_edges_to_do(1 + 2) )
+    @assertEqual( 2, num_vert_edges_to_do(1 + 4) )
+    @assertEqual( 2, num_vert_edges_to_do(1 + 8) )
+    @assertEqual( 2, num_vert_edges_to_do(2 + 4) )
+    @assertEqual( 2, num_vert_edges_to_do(2 + 8) )
+    @assertEqual( 2, num_vert_edges_to_do(4 + 8) )
+
+    ! Triples of bits set
+    @assertEqual( 3, num_vert_edges_to_do(1 + 2 + 4) )
+    @assertEqual( 3, num_vert_edges_to_do(1 + 2 + 8) )
+    @assertEqual( 3, num_vert_edges_to_do(1 + 4 + 8) )
+    @assertEqual( 3, num_vert_edges_to_do(2 + 4 + 8) )
+
+    ! All four bits set
+    @assertEqual( 4, num_vert_edges_to_do(1 + 2 + 4 + 8) )
+
+  end subroutine test_num_vert_edges_to_do
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  @Test
+  subroutine test_decode_vert_edge_selector( this )
+
+    use sci_vert_edge_selector_support_mod, only : num_vert_edges_to_do, &
+                                                   decode_vert_edge_selector
+
+    implicit none
+
+    class(vert_edge_selector_test_type), intent(inout) :: this
+
+    integer(kind=i_def) :: j
+    integer(kind=i_def) :: vert_edge_selector
+    integer(kind=i_def) :: edge
+    integer(kind=i_def) :: answer(4)
+
+    ! (SW) -----------------------------------------------------------------
+    vert_edge_selector = 1
+    answer = (/ SW, IMDI, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SE) -----------------------------------------------------------------
+    vert_edge_selector = 2
+    answer = (/ SE, IMDI, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (NE) -----------------------------------------------------------------
+    vert_edge_selector = 4
+    answer = (/ NE, IMDI, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (NW) -----------------------------------------------------------------
+    vert_edge_selector = 8
+    answer = (/ NW, IMDI, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SW, SE) ---------------------------------------------------------------
+    vert_edge_selector = 1 + 2
+    answer = (/ SW, SE, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SW, NE) ---------------------------------------------------------------
+    vert_edge_selector = 1 + 4
+    answer = (/ SW, NE, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SE, NW) ---------------------------------------------------------------
+    vert_edge_selector = 2 + 8
+    answer = (/ SE, NW, IMDI, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SW, SE, NE) ------------------------------------------------------------
+    vert_edge_selector = 1 + 2 + 4
+    answer = (/ SW, SE, NE, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SE, NE, NW) ------------------------------------------------------------
+    vert_edge_selector = 2 + 4 + 8
+    answer = (/ SE, NE, NW, IMDI /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+    ! (SW, SE, NE, NW) --------------------------------------------------------
+    vert_edge_selector = 1 + 2 + 4 + 8
+    answer = (/ SW, SE, NE, NW /)
+    do j = 1, num_vert_edges_to_do(vert_edge_selector)
+      edge = decode_vert_edge_selector(j, vert_edge_selector)
+      @assertEqual(answer(j), edge)
+    end do
+
+  end subroutine test_decode_vert_edge_selector
+
+end module vert_edge_selector_support_mod_test
