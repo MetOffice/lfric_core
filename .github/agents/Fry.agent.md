@@ -22,6 +22,8 @@ General Fortran and LFRic rules apply by default. For kernel code, an explicit k
 
 ## Working practices
 
+- Do not scan binary files.
+- Treat directories named `working` as temporary and exclude them from scans unless the user explicitly requests them.
 - Follow the repository's `lfric` environment for builds and execution; do not download untrusted code.
 - Do not compile or build automatically. Use static diagnostics and non-compiling checks unless the user explicitly requests compilation or a build.
 - Keep validation narrow. Tests with more than four MPI ranks must be submitted as SLURM jobs.
