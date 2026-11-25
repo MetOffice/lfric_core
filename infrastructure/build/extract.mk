@@ -39,7 +39,24 @@ $(WORKING_DIR):
 	$(call MESSAGE,Creating,$@)
 	$(Q)mkdir -p $@
 
-include $(LFRIC_BUILD)/preprocess.mk
+# Build a set of "-I" arguments as directed...
+#
+include_args := $(addprefix -I, $(PRE_PROCESS_INCLUDE_DIRS))
+
+# Build a set of "-D" argument for any pre-processor macros
+#
+macro_args := $(addprefix -D,$(PRE_PROCESS_MACROS))
+
+.PRECIOUS: $(WORKING_DIR)/%.f90
+$(WORKING_DIR)/%.f90: $(SOURCE_DIR)/%.F90 | $(WORKING_DIR)
+	$(call MESSAGE,Preprocessing source, $<)
+	$Qmkdir -p $(dir $@)
+	$Q$(FPP) $(FPPFLAGS) $(include_args) $(macro_args) $< $@
+
+$(WORKING_DIR)/%.f90: $(WORKING_DIR)/%.F90
+	$(call MESSAGE,Preprocessing intermediate, $<)
+	$Q$(FPP) $(FPPFLAGS) $(include_args) $(macro_args) $< $@
+
 include $(LFRIC_BUILD)/lfric.mk
 include $(LFRIC_BUILD)/fortran.mk
 -include $(COMPILE_OPTIONS)
