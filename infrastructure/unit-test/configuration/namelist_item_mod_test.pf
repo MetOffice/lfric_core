@@ -21,7 +21,7 @@ module namelist_item_mod_test
 
   private
 
-  public :: test_array
+  public :: test_array, test_is_key
 
 
 contains
@@ -150,5 +150,35 @@ contains
 
     return
   end subroutine test_array
+
+  @test
+  subroutine test_is_key()
+
+    implicit none
+
+    type(namelist_item_type) :: uninitialised
+    type(namelist_item_type) :: test_scalar
+    type(namelist_item_type) :: test_arr
+
+    character(*), parameter :: scalar_key = 'n_partitions'
+    character(*), parameter :: arr_key    = 'mesh_names'
+
+    ! An item with no key-value pair has no key to match
+    @assertFalse( uninitialised%is_key( scalar_key ) )
+
+    call test_scalar%initialise( scalar_key, 6_int32 )
+    call test_arr%initialise( arr_key, ['dynamics', 'physics '] )
+
+    @assertTrue( test_scalar%is_key( scalar_key ) )
+    @assertTrue( test_scalar%is_key( scalar_key//'   ' ) )
+    @assertFalse( test_scalar%is_key( 'n_partition' ) )
+    @assertFalse( test_scalar%is_key( 'N_PARTITIONS' ) )
+    @assertFalse( test_scalar%is_key( arr_key ) )
+    @assertFalse( test_scalar%is_key( '' ) )
+
+    @assertTrue( test_arr%is_key( arr_key ) )
+    @assertFalse( test_arr%is_key( scalar_key ) )
+
+  end subroutine test_is_key
 
 end module namelist_item_mod_test

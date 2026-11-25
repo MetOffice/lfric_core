@@ -2,6 +2,8 @@
 ! (C) Crown copyright 2023 Met Office. All rights reserved.
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
+! Some content in this file was generated or refactored with assistance from
+! - Met Office Github Copilot Enterprise (Claude Opus 5.5)
 !-----------------------------------------------------------------------------
 !
 !> @brief   Defines a generic namelist object to contain namelist
@@ -464,14 +466,14 @@ contains
     integer(i_def) :: i
     integer(i_def) :: member_index
 
-    character(:), allocatable :: key
-
     member_index = -1
 
     if ( allocated(self%members) ) then
       do i=1, size(self%members)
-        key = self%members(i)%get_key()
-        if ( trim(key) == trim(name) ) then
+        ! This used to use members%get_key() to test against the name but
+        ! gfortran's deferred-length string return is not safe in OpenMP,
+        ! Perform the test in an OpenMP safe way.
+        if ( self%members(i)%is_key( name ) ) then
           member_index = i
           return
         end if
