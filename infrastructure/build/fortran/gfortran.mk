@@ -55,4 +55,8 @@ ifeq ($(shell test $(GFORTRAN_VERSION) -ge 100000; echo $$?), 0)
 	FFLAGS_COMPILER += -fallow-argument-mismatch
 endif
 
-FPPFLAGS = -P
+# Because Fortran source is preprocessed on import, it is done by a Fortran
+# preprocessor, not the compiler. As such we have to set up the compiler
+# identification macros as though the compiler had done so.
+#
+FPPFLAGS = -P -D__GFORTRAN__
