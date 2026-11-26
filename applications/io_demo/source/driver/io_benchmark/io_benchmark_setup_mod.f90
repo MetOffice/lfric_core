@@ -9,6 +9,7 @@
 !!          benchmark the speed of XIOS reading and writing
 module io_benchmark_setup_mod
 
+  use config_mod,                    only: config_type
   use constants_mod,                 only: i_def, str_def
   use driver_modeldb_mod,            only: modeldb_type
   use field_collection_mod,          only: field_collection_type
@@ -82,17 +83,19 @@ contains
 
   end subroutine create_io_benchmark_fields
 
-  subroutine setup_io_benchmark_files(file_list, modeldb)
+  subroutine setup_io_benchmark_files(config, file_list, modeldb)
 
     implicit none
 
+    type(config_type),            intent(in)    :: config
     type(linked_list_type),       intent(out)   :: file_list
     type(modeldb_type), optional, intent(inout) :: modeldb
 
-    integer(i_def)                       :: diagnostic_frequency
     type(field_collection_type), pointer :: io_benchmark_fields
 
-    diagnostic_frequency = modeldb%config%io%diagnostic_frequency()
+    integer(i_def) :: diagnostic_frequency
+
+    diagnostic_frequency = config%io%diagnostic_frequency()
 
     io_benchmark_fields => modeldb%fields%get_field_collection("io_benchmark_fields")
 
