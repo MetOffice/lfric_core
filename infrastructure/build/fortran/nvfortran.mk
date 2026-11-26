@@ -11,17 +11,19 @@
 #
 NVFORT_VERSION := $(shell nvfortran -V | awk '/^nvfortran +[0-9]+\.[0-9]+/ { split($$2, a, "[.-]"); printf "%03i%02i%02i\n", a[1],a[2],a[3] }')
 $(info ** Chosen Nvidia Fortran compiler version $(NVFORT_VERSION))
+
 ifeq ($(shell test $(NVFORT_VERSION) -lt 0241100; echo $$?), 0)
   $(error nvFort is too old to build LFRic. Must be at least 24.11)
 endif
 
 F_MOD_DESTINATION_ARG = -module$(SPACE)
+F_MOD_SOURCE_ARG          = -I
 
 FFLAGS_COMPILER           =
 FFLAGS_COMPILER          += -Mfree -Mpreprocess
 FFLAGS_NO_OPTIMISATION    = -O0
-FFLAGS_SAFE_OPTIMISATION  = -O2
-FFLAGS_RISKY_OPTIMISATION = -O4
+FFLAGS_SAFE_OPTIMISATION  = -O2 -Mnofma -Mnovect
+FFLAGS_RISKY_OPTIMISATION = -Ofast
 FFLAGS_DEBUG              = -g -traceback
 FFLAGS_RUNTIME            =
 # Option for checking code meets Fortran standard (not available for PGI)
@@ -35,15 +37,22 @@ LDFLAGS_COMPILER = -g
 ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "omp")
 	FFLAGS_OPENMP  = -mp=gpu -gpu=mem:managed
 	LDFLAGS_OPENMP = -mp=gpu -gpu=mem:managed -cuda
+else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "omp_uniform")
+	FFLAGS_OPENMP  = -mp=gpu -gpu=mem:unified,math_uniform
+	LDFLAGS_OPENMP = -mp=gpu -gpu=mem:unified,math_uniform -cuda
 else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "acc")
 	FFLAGS_OPENMP  = -acc=gpu -gpu=mem:managed -mp=multicore
 	LDFLAGS_OPENMP = -acc=gpu -gpu=mem:managed -mp=multicore -cuda
+else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "acc_uniform")
+	FFLAGS_OPENMP  = -acc=gpu -gpu=mem:unified,math_uniform -mp=multicore
+	LDFLAGS_OPENMP = -acc=gpu -gpu=mem:unified,math_uniform -mp=multicore -cuda
 else
 	FFLAGS_OPENMP  = -mp
 	LDFLAGS_OPENMP = -mp
 endif
 
-FPP = nvfortran -E
+# Import rules require a preprocessor accepting input and output filenames.
+FPP = cpp -traditional-cpp
 
 # Because Fortran source is preprocessed on import, it is done by a Fortran
 # preprocessor, not the compiler. As such we have to set up the compiler
