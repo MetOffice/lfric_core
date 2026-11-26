@@ -32,6 +32,7 @@ program lfric_xios_time_read_test
                                              test_db%comm, &
                                              test_db%chi, test_db%panel_id, &
                                              test_db%clock, test_db%calendar )
+    call io_context%close_context_definition()
 
     allocate(check(10))
     check = [ xios_date(2024, 1, 1, 15, 1, 0), &
