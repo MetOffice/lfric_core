@@ -41,6 +41,12 @@ class LogModErrorSerialTest(MpiTest):  # pylint: disable=too-few-public-methods
         elif returncode > 128:
             raise TestFailed("Execution fault such as segmentation fault")
 
+        # Ignore cray warning
+        out = out.replace(
+            "[CRAYBLAS_WARNING] Application linked against multiple cray-libsci libraries",
+            ""
+        )
+
         if out.strip() != "":
             message = (
                 "Expected no output on standard out:\n"
@@ -112,6 +118,12 @@ class LogModErrorParallelTest(LFRicLoggingTest):
         if returncode == 0:
             message = "Logging an error did not cause termination to end"
             raise TestFailed(message)
+
+        # Ignore cray warning
+        out = out.replace(
+            "[CRAYBLAS_WARNING] Application linked against multiple cray-libsci libraries",
+            ""
+        )
 
         if out != "":
             message = (

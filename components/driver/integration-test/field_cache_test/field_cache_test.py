@@ -47,6 +47,12 @@ class Field_CacheTest(MpiTest):
                              stdout=out,
                              stderr=err)
 
+        # Ignore cray warning
+        out = out.replace(
+            "[CRAYBLAS_WARNING] Application linked against multiple cray-libsci libraries",
+            ""
+        )
+
         # Setup expected field values for comparison
         before_cache_expected = uniform_field_data(6, [1.1] * 27)
         after_change_expected = uniform_field_data(6, [2.2] * 27)
