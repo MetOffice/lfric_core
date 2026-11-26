@@ -32,4 +32,11 @@ FFLAGS_FORTRAN_STANDARD   = -std=f2018
 
 LDFLAGS_COMPILER =
 
+# Because Fortran source is preprocessed on import, it is done by a Fortran
+# preprocessor, not the compiler. As such we have to set up the compiler
+# identification macros as though the compiler had done so.
+#
+# As of 17/11/2026, AOCC Flang does not set any macros so it is impossible to
+# identify.
+#
 FPPFLAGS = -P
