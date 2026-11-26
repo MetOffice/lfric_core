@@ -20,8 +20,8 @@ F_MOD_DESTINATION_ARG = -module$(SPACE)
 FFLAGS_COMPILER           =
 FFLAGS_COMPILER          += -Mfree -Mpreprocess
 FFLAGS_NO_OPTIMISATION    = -O0
-FFLAGS_SAFE_OPTIMISATION  = -O2
-FFLAGS_RISKY_OPTIMISATION = -O4
+FFLAGS_SAFE_OPTIMISATION  = -O2 -Mnofma -Mnovect
+FFLAGS_RISKY_OPTIMISATION = -Ofast
 FFLAGS_DEBUG              = -g -traceback
 FFLAGS_RUNTIME            =
 # Option for checking code meets Fortran standard (not available for PGI)
@@ -35,15 +35,22 @@ LDFLAGS_COMPILER = -g
 ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "omp")
 	FFLAGS_OPENMP  = -mp=gpu -gpu=mem:managed
 	LDFLAGS_OPENMP = -mp=gpu -gpu=mem:managed -cuda
+else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "omp_uniform")
+	FFLAGS_OPENMP  = -mp=gpu -gpu=mem:unified,math_uniform
+	LDFLAGS_OPENMP = -mp=gpu -gpu=mem:unified,math_uniform -cuda
 else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "acc")
 	FFLAGS_OPENMP  = -acc=gpu -gpu=mem:managed -mp=multicore
 	LDFLAGS_OPENMP = -acc=gpu -gpu=mem:managed -mp=multicore -cuda
+else ifeq ("$(LFRIC_OFFLOAD_DIRECTIVES)", "acc_uniform")
+	FFLAGS_OPENMP  = -acc=gpu -gpu=mem:unified,math_uniform -mp=multicore
+	LDFLAGS_OPENMP = -acc=gpu -gpu=mem:unified,math_uniform -mp=multicore -cuda
 else
 	FFLAGS_OPENMP  = -mp
 	LDFLAGS_OPENMP = -mp
 endif
 
-FPP = nvfortran -E
+# Import rules require a preprocessor accepting input and output filenames.
+FPP = cpp -traditional-cpp
 
 # Because Fortran source is preprocessed on import, it is done by a Fortran
 # preprocessor, not the compiler. As such we have to set up the compiler
