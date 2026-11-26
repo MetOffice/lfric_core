@@ -3,6 +3,14 @@ name: lfric-kernel
 description: "Use when creating, modifying, or reviewing LFRic Fortran kernel modules, kernel metadata, or PSyclone kernel interfaces."
 ---
 
+<!--
+-----------------------------------------------------------------------------
+Some of the content of this file has been produced with the assistance of
+Met Office Github Copilot Enterprise.
+- [Institution Name] [AI Tool] ([Model Version]); PRs #[<PR numbers>]
+-----------------------------------------------------------------------------
+-->
+
 # LFRic Kernel Writing
 
 ## Rule precedence

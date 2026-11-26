@@ -28,7 +28,7 @@ module copy_dof_kernel_mod
   !> @details Both field arguments use the Wtheta function space.
   type, public, extends(kernel_type) :: copy_dof_kernel_type
     private
-    type(arg_type) :: meta_args(2) = (/                           &
+    type(arg_type) :: meta_args(2) = (/                 &
          arg_type(GH_FIELD, GH_REAL, GH_WRITE, Wtheta), & ! result
          arg_type(GH_FIELD, GH_REAL, GH_READ,  Wtheta)  & ! source
          /)

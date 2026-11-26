@@ -7,6 +7,7 @@ description: "Use when creating, modifying, reviewing, or debugging LFRic Rose m
 -----------------------------------------------------------------------------
 Some of the content of this file has been produced with the assistance of
 Met Office Github Copilot Enterprise.
+- [Institution Name] [AI Tool] ([Model Version]); PRs #[<PR numbers>]
 -----------------------------------------------------------------------------
 -->
 
@@ -25,7 +26,8 @@ Met Office Github Copilot Enterprise.
 - Start from the requested setting, consuming configuration accessor, or owning namelist. Read its existing metadata section and one nearby example before editing. Establish the datatype, units, meaning, valid values, and whether the value is required; do not invent these from its name.
 - Metadata normally lives under `<owner>/rose-meta/lfric-<name>/HEAD/rose-meta.conf`, alongside released version directories. Follow the actual ownership and import chain, not an assumed location. Top-level `rose-meta` entries may expose metadata held elsewhere; avoid creating a second independent definition.
 - Follow `import=` entries and confirm the application selects the modified metadata version. Change the owning definition instead of introducing an accidental override. Preserve unrelated imports, property ordering, comments, and formatting.
-- Modify development metadata under `HEAD` unless the task explicitly targets a release. Do not rewrite historical version directories merely to keep them identical. For compatibility changes, inspect neighbouring upgrade macros and versioning conventions before deciding what migration is required.
+- For ordinary development metadata or upgrade-macro changes, default to editing the owning `HEAD/rose-meta.conf` or `versions.py`, respectively. The `versionXX_XX.py` files are maintained by the systems teams for releases; do not suggest or edit them unless the user has a specific release-related use case.
+- Do not rewrite historical metadata directories merely to keep them identical. For compatibility changes, inspect the owning package's `versions.py` and its conventions before deciding what migration is required.
 
 ## Syntax and LFRic extensions
 
@@ -138,6 +140,80 @@ Use this example only where the solver contract actually has those semantics.
 - Update affected runtime configurations, examples, and test fixtures with suitable values, particularly when adding a compulsory member. Do not assume changing `description`, `help`, or `compulsory` inserts a value into existing configurations.
 - For renamed, removed, newly required, or semantically changed settings, assess version upgrades and migration macros. Preserve compatibility where required and test the upgrade using existing project procedures; do not invent a macro name or version transition.
 - Use the normal configuration-generation path before relying on new accessors or enumeration constants. Inspect `lfric_build/configurator.py` and the owning build setup for how `rose_picker` resolves imports and supplies metadata to the generators. Read configuration through the generated API; for kernels, pass values through algorithm-layer arguments rather than passing a configuration object into the kernel.
+
+## Writing Rose upgrade macros
+
+- An upgrade macro migrates a user's existing configuration between Rose metadata versions; it does not change the metadata itself. Not every metadata change needs a macro: presentation-only edits or changes that do not affect old configurations may need none. Consider one when settings are added, renamed, removed, or change meaning, and decide migration behaviour from the setting's semantics.
+- Add developer-written upgrade macros to the owning package's `versions.py`. `versionXX_XX.py` modules are updated by the systems teams when preparing a release, so use one only when a release-specific task explicitly calls for it. Inspect the owning `versions.py` and nearby macros for conventions, and choose `BEFORE_TAG`/`AFTER_TAG` values that connect the new macro to the intended upgrade chain. Use a unique macro class identifier consistent with local practice.
+- Follow the repository pattern: subclass `metomi.rose.upgrade.MacroUpgrade`, implement `upgrade(self, config, meta_config=None)`, use Rose helper methods with setting paths as lists, then return `config, self.reports`. Use Rose-formatted values (for example `".false."` or `"'Wchi'"`) and verify quoting and datatypes against the target metadata and nearby macros.
+- Only insert a default when it is semantically correct for existing configurations. A newly compulsory setting does not by itself establish a safe default; ask for the intended migration if one is not clear. Preserve user values when renaming or transforming settings.
+
+Replace the placeholder PR identifier and version tags below with the identifier and connected tags used by your change and the owning upgrade chain:
+
+Add a setting to an existing namelist:
+
+```python
+from metomi.rose.upgrade import MacroUpgrade
+
+
+class vnX_tPR_NUMBER(MacroUpgrade):
+    BEFORE_TAG = "vnX.X"
+    AFTER_TAG = "vnX.X_tPR_NUMBER"
+
+    def upgrade(self, config, meta_config=None):
+        self.add_setting(config, ["namelist:example", "new_flag"], ".false.")
+        return config, self.reports
+```
+
+Use this only when the target namelist and the default are appropriate for every configuration traversing this migration. If the namelist is optional, guard the addition so the macro does not create it unnecessarily:
+
+```python
+if config.get(["namelist:example"]) is not None:
+    self.add_setting(config, ["namelist:example", "new_flag"], ".false.")
+```
+
+Rename a setting while retaining its configured value:
+
+```python
+nml = "namelist:example"
+self.rename_setting(config, [nml, "old_name"], [nml, "new_name"])
+```
+
+Remove a setting only when it is genuinely obsolete and its behaviour is no longer required:
+
+```python
+self.remove_setting(config, ["namelist:example", "obsolete_setting"])
+```
+
+Move settings to a different namelist by reading their values before removing the old entries, then adding the values at their new paths:
+
+```python
+old_nml = "namelist:old_group"
+new_nml = "namelist:new_group"
+old_value_a = self.get_setting_value(config, [old_nml, "old_value_a"])
+old_value_b = self.get_setting_value(config, [old_nml, "old_value_b"])
+self.add_setting(config, [new_nml, "new_value_a"], old_value_a)
+self.add_setting(config, [new_nml, "new_value_b"], old_value_b)
+self.remove_setting(config, [old_nml, "old_value_a"])
+self.remove_setting(config, [old_nml, "old_value_b"])
+```
+
+For changes that add a new namelist, update `file:configuration.nml`'s `source` as well as adding its section and members. Preserve existing source entries. Use parentheses around the source only when the namelist may be trigger-ignored; otherwise keep it required.
+
+```python
+source = self.get_setting_value(config, ["file:configuration.nml", "source"])
+source = source + "\n" + " (namelist:new_group)"
+self.change_setting_value(config, ["file:configuration.nml", "source"], source)
+self.add_setting(config, ["namelist:new_group"])
+self.add_setting(config, ["namelist:new_group", "new_value"], "1")
+```
+
+This illustrates an optional source entry; omit its parentheses if that namelist is always active. Match the application's existing source-list formatting and avoid adding duplicate entries.
+
+- If a new setting depends on an old choice, derive it from that choice only when the old choices and their meanings are known. Map every valid old choice deliberately; do not use a catch-all `else` that silently assigns a value to an unknown choice. For example, an old mode may determine which new switches are enabled.
+- If a scalar becomes an array, repeated setting, or duplicate namelist, treat it as a structural migration rather than a rename. Preserve each old value and its association, calculate and check the new cardinality, and maintain unique character instance keys for duplicate namelists. Update the Rose `source` selector to the repeated form where required. Test empty, singleton, and multiple-entry configurations as applicable. If old parallel arrays become keyed duplicate namelists, preserve the association between each row's values and verify that every generated key is unique; avoid copying a large domain-specific migration wholesale.
+- For a value change, inspect the old value and map known old choices explicitly with `get_setting_value` and `change_setting_value`; define what happens to every valid old value, and do not silently coerce an unrecognised value. For a setting that changes meaning, determine whether preserving the old value is still correct.
+- Keep each macro's before/after tags connected to its neighbours and ensure the package's version-module imports expose it. Test migration from representative old configurations, including ones where affected optional namelists are absent. Review the resulting configuration diff for lost values, unintended new namelists, and correct `source` entries. Check the installed Rose command's help and repository procedures for the exact upgrade-test invocation; do not assume one command works across Rose versions.
 
 ## Validation
 

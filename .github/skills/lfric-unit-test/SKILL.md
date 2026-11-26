@@ -7,6 +7,7 @@ description: "Use when creating, modifying, reviewing, or debugging LFRic pFUnit
 -----------------------------------------------------------------------------
 Some of the content of this file has been produced with the assistance of
 Met Office Github Copilot Enterprise.
+- [Institution Name] [AI Tool] ([Model Version]); PRs #[<PR numbers>]
 -----------------------------------------------------------------------------
 -->
 
