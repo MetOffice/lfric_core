@@ -17,7 +17,9 @@ module log_mod_parallel_clock_test
                             log_forget_timestep,  &
                             log_set_level,        &
                             log_set_info_stream,  &
-                            log_set_alert_stream
+                            log_set_alert_stream, &
+                            log_get_info_stream,  &
+                            log_get_alert_stream
   use pfunit
 
   implicit none
@@ -185,6 +187,12 @@ contains
     character(80)       :: info_message, alert_message
     character(1)        :: info_field, alert_field
     integer(i_timestep) :: info_step, alert_step
+    integer(i_def)      :: info_unit_original
+    integer(i_def)      :: alert_unit_original
+
+    ! Store original logger unit numbers to restore at end of test
+    info_unit_original  = log_get_info_stream()
+    alert_unit_original = log_get_alert_stream()
 
     open( info_unit, status='scratch', action='readwrite', &
           iostat=condition )
@@ -266,6 +274,10 @@ contains
     @assertEqual( 0, condition )
     close( info_unit, iostat=condition )
     @assertEqual( 0, condition )
+
+    ! Ensure future tests use the official log units
+    call log_set_info_stream(info_unit_original)
+    call log_set_alert_stream(alert_unit_original)
 
   end subroutine log_clock_serial_test
 

@@ -21,6 +21,9 @@ module local_mesh_mod_test
                                         lfric_comm_type
   use local_mesh_map_mod,         only: local_mesh_map_type
   use local_mesh_mod,             only: local_mesh_type
+  use log_mod,                    only: log_level_always, &
+                                        log_set_level,    &
+                                        log_level
   use ncdf_quad_mod,              only: ncdf_quad_type
   use partition_mod,              only: partition_type,                 &
                                         partitioner_planar,             &
@@ -137,6 +140,7 @@ contains
     integer(i_def) :: edge_cell_owner
     integer(i_def) :: cell_next(4)
     integer(i_def) :: known_cell_next(4)
+    integer(i_def) :: logger_level
     real(r_def)    :: vert_coords(2)
     real(r_def)    :: cell_coords(2)
     real(r_def)    :: known_vert_coords(2)
@@ -184,6 +188,10 @@ contains
     generate_inner_halos = .true.
     decomposition = custom_decomposition_type(xproc, yproc)
 
+    ! Suppress log message from partitioner as they confuse the output
+    logger_level = log_level()
+    call log_set_level(log_level_always)
+
     partition = partition_type( global_mesh_ptr,       &
                                 partitioner_ptr,       &
                                 decomposition,         &
@@ -192,6 +200,9 @@ contains
                                 enforce_constraints,   &
                                 this%getProcessRank(), &
                                 this%getNumProcesses() )
+
+    ! Reset log level to original setting
+    call log_set_level(logger_level)
 
     call local_mesh%initialise( global_mesh_ptr, partition )
     call local_mesh%init_cell_owner()

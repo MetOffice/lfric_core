@@ -9,12 +9,16 @@
 module global_mesh_collection_mod_test
 
   use constants_mod,                  only: i_def, IMDI, l_def, &
-                                            str_max_filename, str_def
+                                            str_max_filename, str_def, &
+                                            str_long
   use global_mesh_mod,                only: global_mesh_type
   use global_mesh_map_mod,            only: global_mesh_map_type
   use global_mesh_map_collection_mod, only: global_mesh_map_collection_type
   use global_mesh_collection_mod,     only: global_mesh_collection_type, &
                                             global_mesh_collection
+  use log_mod,                        only: log_level_always, &
+                                            log_set_level, &
+                                            log_level
   use ugrid_mesh_data_mod,            only: ugrid_mesh_data_type
   use ugrid_2d_mod,   only: ugrid_2d_type
   use ugrid_file_mod, only: ugrid_file_type
@@ -234,6 +238,8 @@ contains
     integer (i_def) :: test_integer
     integer (i_def) :: kgo_integer
 
+    integer (i_def) :: logger_level
+
     type(ncdf_quad_type) :: file_handler
     type(ugrid_2d_type) :: ugrid_2d
 
@@ -248,6 +254,11 @@ contains
     ! This is done because the intergrid map ids are based
     ! on the global mesh ids. So all the required global mesh
     ! topologies must be read in first.
+
+    ! Suppress log warning message from mesh code as they confuse the output
+    logger_level = log_level()
+    call log_set_level(log_level_always)
+
     do i=1, size(multigrid_mesh_names)
 
       call ugrid_mesh_data%read_from_file( trim(filename), &
@@ -268,7 +279,10 @@ contains
     call ugrid_2d%file_handler_close()
     if (allocated(file_handler_)) deallocate( file_handler_ )
 
-    ! Now get the ids of the `chains` from the collection
+    ! Reset log level to original setting
+    call log_set_level(logger_level)
+
+     ! Now get the ids of the `chains` from the collection
     do i=1, size(multigrid_mesh_names)
       multiGrid_ids(i) = global_mesh_collection%get_mesh_id(multigrid_mesh_names(i))
     end do

@@ -18,6 +18,9 @@ module mesh_tiling_mod_test
                                         finalise_halo_comms
   use lfric_mpi_mod,              only: global_mpi, &
                                         lfric_comm_type
+  use log_mod,                    only : log_level_always, &
+                                         log_set_level,    &
+                                         log_level
   use panel_decomposition_mod,    only: custom_decomposition_type
   use ugrid_2d_mod,   only: ugrid_2d_type
   use ugrid_file_mod, only: ugrid_file_type
@@ -116,6 +119,7 @@ contains
 
     character(str_def), parameter             :: mesh_name ='unit_test'
     integer(i_def)                            :: global_mesh_id
+    integer(i_def)                            :: logger_level
     type(ugrid_mesh_data_type)                :: ugrid_mesh_data
     type(global_mesh_type), target            :: global_mesh
     type(global_mesh_type), pointer           :: global_mesh_ptr => null()
@@ -145,6 +149,11 @@ contains
     global_mesh_ptr => global_mesh_collection%get_global_mesh( global_mesh_id )
 
     partitioner_ptr => partitioner_planar
+
+    ! Suppress log message from partitioner as they confuse the output
+    logger_level = log_level()
+    call log_set_level(log_level_always)
+
     partition = partition_type( global_mesh_ptr,      &
                                 partitioner_ptr,      &
                                 decomposition,        &
@@ -153,6 +162,9 @@ contains
                                 enforce_constraints,  &
                                 local_rank,           &
                                 total_ranks )
+
+    ! Reset log level to original setting
+    call log_set_level(logger_level)
 
     call local_mesh%initialise( global_mesh_ptr, partition )
     call local_mesh%init_cell_owner()

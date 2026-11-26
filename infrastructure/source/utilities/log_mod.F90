@@ -44,7 +44,8 @@ module log_mod
          log_set_alert_stream, log_set_info_stream, &
          log_set_timestep, log_forget_timestep,     &
          log_set_level, log_level, log_at_level,    &
-         log_event
+         log_event, log_get_info_stream,            &
+         log_get_alert_stream
 
   !> Named logging level.
   !>
@@ -282,7 +283,6 @@ contains
 
   end subroutine log_forget_timestep
 
-
   !> Set where information goes.
   !>
   !> If this routine is never called then information will default to standard
@@ -300,6 +300,19 @@ contains
 
   end subroutine log_set_info_stream
 
+  !> Get the unit number used by the logger.
+  !>
+  !> @result unit The unit currently used for log info messages
+  !>
+  function log_get_info_stream() result (unit)
+
+    implicit none
+
+    integer :: unit
+
+    unit = info_unit
+
+  end function log_get_info_stream
 
   !> Set where alerts go.
   !>
@@ -318,6 +331,19 @@ contains
 
   end subroutine log_set_alert_stream
 
+  !> Get the unit number used by the logger for alert messages
+  !>
+  !> @result unit The unit currently used for alert messages
+  !>
+  function log_get_alert_stream() result (unit)
+
+    implicit none
+
+    integer :: unit
+
+    unit = alert_unit
+
+  end function log_get_alert_stream
 
   !> Set the level this logger responds to.
   !>

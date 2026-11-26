@@ -140,15 +140,24 @@ pattern of use - dissimilar log levels may not give the behaviour you expect.
 Get the Log Level
 -----------------
 
-The ``log_level`` function returns the current log level if you need it. Most
-situations where it would be useful will be covered by the ``log_at_level``
-function mentioned previously.
+The ``log_level`` function returns the current log level if you need it. Within
+an application, this function would be useful in situations described by the
+``log_at_level`` function mentioned previously. Witin a testing framework, some
+tests may need to modify the log level using the ``log_set_level``
+function. Using the ``log_level`` function to obtain the initial log level
+allows the setting to be restored at the end of the test.
 
 Output Streams
 --------------
 
-By default the logger will send low level messages to the standard output and
-high level messages (warnings and errors) to the standard error stream.
+In a non-parallel application, the logger defaults to sending low level messages
+to the standard output and high level messages (warnings and errors) to the
+standard error stream. In a parallel application, both types of messages default
+to unit 10, but a separate output file is created for each rank.
 
-If you have alternative needs an I/O unit number can be passed to
-``log_set_info_stream()`` or ``log_set_alert_stream()``.
+The ``log_get_info_stream()`` and ``log_get_alert_stream()`` functions return
+the unit number for low level and high level messages, respectively. To
+temporarily divert output to a different location, a unit number attached to a
+different file can be passed to ``log_set_info_stream()`` or
+``log_set_alert_stream()`` before using the results of ``log_get_info_stream()``
+and ``log_get_alert_stream()`` to revert to the original log files.
