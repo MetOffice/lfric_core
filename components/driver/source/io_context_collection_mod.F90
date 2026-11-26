@@ -17,6 +17,10 @@ module io_context_collection_mod
   use hash_mod,        only : hash_string
   use log_mod,         only : log_event, log_scratch_space, LOG_LEVEL_ERROR
 
+#ifdef USE_XIOS
+  use lfric_xios_context_mod, only : lfric_xios_context_type
+#endif
+
   ! Types which can be stored in collection
   use empty_io_context_mod, only : empty_io_context_type
 
@@ -142,7 +146,6 @@ contains
 
 #ifdef USE_XIOS
   subroutine get_lfric_xios_context(this, context_name, context)
-    use lfric_xios_context_mod, only : lfric_xios_context_type
     implicit none
     class(io_context_collection_type), intent(in) :: this
     type(lfric_xios_context_type), pointer, intent(out) :: context
@@ -301,9 +304,28 @@ contains
     class(io_context_collection_type) , intent(inout) :: this
     integer(i_def) :: i
 
+    type(linked_list_item_type), pointer :: loop => null()
+
     if(allocated(this%context_list))then
       do i=0,this%get_table_len()-1
-        call this%context_list(i)%clear
+
+        ! Start at the head of the collection linked list
+        loop => this%context_list(i)%get_head()
+
+        do while( associated(loop) )
+
+#ifdef USE_XIOS
+          ! Finalise I/O contexts in collection
+          select type(listcontext => loop%payload)
+          type is (lfric_xios_context_type)
+            call listcontext%finalise_xios_context()
+          end select
+#endif
+          loop => loop%next
+        end do
+
+        call this%context_list(i)%clear()
+
       end do
       deallocate(this%context_list)
     end if
