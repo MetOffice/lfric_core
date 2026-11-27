@@ -16,13 +16,6 @@
     {% set inherit.str = inherit.str~","~family|upper %}
 {% endfor %}
 
-{# Set the psyclone transformation #}
-{% if task_values["psyclone_transformation"] == "default" %}
-    {% set psyclone_transformation = SITE~"-"~task_ns.platform %}
-{% else %}
-    {% set psyclone_transformation = task_values["psyclone_transformation"] %}
-{% endif %}
-
     [[{{task}}]]
         inherit={{inherit.str|upper}}
         script = 'module list; rose task-run --app-key=compile'
@@ -38,7 +31,7 @@
             WORKING_DIR             = {{working_dir}}
             TARGET                  = build
             PROFILE                 = {{task_values["optlevel"]}}
-            PSYCLONE_TRANSFORMATION = {{psyclone_transformation}}
+{{ set_psyclone_transformation(task_values["psyclone_transformation"]) }}
             UM_FCM_TARGET_PLATFORM  = {{SITE}}-{{task_ns.platform}}
             LFRIC_TARGET_PLATFORM   = {{SITE}}-{{task_ns.platform}}
             MAKE_THREADS            = 4
