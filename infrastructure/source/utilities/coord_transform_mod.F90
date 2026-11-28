@@ -946,8 +946,8 @@ subroutine alphabetar2llr(alpha, beta, radius, panel_id, long, lat)
 end subroutine alphabetar2llr
 
 !-----------------------------------------------------------------------------
-!> @brief Convert a vector with (alpha,beta,r) components to one with
-!>        global Cartesian (x,y,z) components
+!> @brief Convert a vector with contravariant (alpha,beta,r) components to one
+!!        with global Cartesian (x,y,z) components
 !!
 !! @param[in] sphere_vec Input vector with (alpha,beta,r) components
 !! @param[in] abr        The (alpha,beta,r) coordinates of the point
@@ -973,15 +973,15 @@ function alphabetar2xyz_vector(sphere_vec, abr, panel_id) result (cart_vec)
   ! in terms of XYZ Cartesian unit basis vectors
   ! f_X = f_alpha dot(e_alpha, e_X) + f_beta dot(e_beta, e_X) + f_r dot(e_r, e_X)
   transform_matrix(1,:) = 1 / panel_rho * &
-  (/ -cos(abr(2))*tan(abr(2)), -cos(abr(1))*tan(abr(2)), 1.0_r_def /)
+  (/ -cos(abr(2))*tan(abr(1)), -cos(abr(1))*tan(abr(2)), 1.0_r_def /)
 
   ! f_Y = f_alpha dot(e_alpha, e_Y) + f_beta dot(e_beta, e_Y) + f_r dot(e_r, e_Y)
   transform_matrix(2,:) = 1 / panel_rho * &
-  (/ 1.0_r_def/cos(abr(2)), -cos(abr(1))*tan(abr(1))*tan(abr(2)), tan(abr(1)) /)
+  (/ 1.0_r_def/cos(abr(2)), -sin(abr(1))*tan(abr(2)), tan(abr(1)) /)
 
   ! f_Z = f_alpha dot(e_alpha, e_Z) + f_beta dot(e_beta, e_Z) + f_r dot(e_r, e_Z)
   transform_matrix(3,:) = 1 / panel_rho * &
-  (/ -cos(abr(2))*tan(abr(1))*tan(abr(2)), 1.0_r_def/cos(abr(1)), tan(abr(1)) /)
+  (/ -sin(abr(2))*tan(abr(1)), 1.0_r_def/cos(abr(1)), tan(abr(2)) /)
 
   ! Obtain the XYZ vector components if point was on panel 1
   panel_1_vec(:) = matmul(transform_matrix(:,:), sphere_vec(:))
@@ -995,7 +995,7 @@ end function alphabetar2xyz_vector
 
 !-----------------------------------------------------------------------------
 !> @brief Convert a vector with global Cartesian (x,y,z) components
-!>        to one with (alpha,beta,r) components
+!!       to one with contravariant (alpha,beta,r) components
 !!
 !! @param[in] cart_vec   Input vector with global Cartesian components
 !! @param[in] xyz        The (x,y,z) coordinates of the point

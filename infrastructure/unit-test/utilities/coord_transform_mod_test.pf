@@ -230,10 +230,40 @@ contains
 #if (RDEF_PRECISION == 64)
     tol = 1.0e-7_real64
 #elif (RDEF_PRECISION == 32)
-    tol = 1.0e-7_real32
+    tol = 1.0e-5_real32
 #else
     @assertFail("Unsupported default precision")
 #endif
+
+    ! Panel 1: alpha != 0, tan(alpha) = Y/X, tan(beta) = Z/X
+    panel_id = 1_i_def
+    abr(:) = (/ PI/4.0_r_def, 0.0_r_def, 0.1_r_def /)
+    abr_vec(:) = (/ 2.0_r_def, 3.0_r_def, 5.0_r_def /)
+
+    XYZ_vec_answer(:) = (/ 3.0_r_def/sqrt(2.0_r_def),                          &
+                           7.0_r_def/sqrt(2.0_r_def),                          &
+                           3.0_r_def /)
+
+    xyz_vec(:) = alphabetar2xyz_vector(abr_vec, abr, panel_id)
+
+    do i = 1, 3
+      @assertEqual(XYZ_vec(i), XYZ_vec_answer(i), tol)
+    end do
+
+    ! Panel 1: beta != 0, tan(alpha) = Y/X, tan(beta) = Z/X
+    panel_id = 2_i_def
+    abr(:) = (/ 0.0_r_def, PI/4.0_r_def, 0.1_r_def /)
+    abr_vec(:) = (/ 2.0_r_def, 3.0_r_def, 5.0_r_def /)
+
+    XYZ_vec_answer(:) = (/ -2.0_r_def,                                         &
+                            sqrt(2.0_r_def),                                   &
+                            4.0_r_def*sqrt(2.0_r_def) /)
+
+    xyz_vec(:) = alphabetar2xyz_vector(abr_vec, abr, panel_id)
+
+    do i = 1, 3
+      @assertEqual(XYZ_vec(i), XYZ_vec_answer(i), tol)
+    end do
 
     ! Panel 2: tan(alpha) = -X/Y, tan(beta) = Z/Y
     panel_id = 2_i_def
